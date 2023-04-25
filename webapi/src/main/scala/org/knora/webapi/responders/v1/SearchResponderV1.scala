@@ -476,8 +476,9 @@ final case class SearchResponderV1Live(
                 case OntologyConstants.KnoraBase.TextValue =>
                   // http://www.morelab.deusto.es/code_injection/
                   // http://stackoverflow.com/questions/29601839/prevent-sparql-injection-generic-solution-triplestore-independent
-                  val searchString = stringFormatter
-                    .toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
+                  val searchString = StringFormatter
+                    .toSparqlEncodedString(searchval)
+                    .getOrElse(throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                   val (matchBooleanPositiveTerms, matchBooleanNegativeTerms) =
                     if (compop == SearchComparisonOperatorV1.MATCH_BOOLEAN) {
@@ -545,9 +546,9 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.GeonameValue =>
                   // sanitize Geoname search string
-                  val searchString = stringFormatter
-                    .toSparqlEncodedString(
-                      searchval,
+                  val searchString = StringFormatter
+                    .toSparqlEncodedString(searchval)
+                    .getOrElse(
                       throw BadRequestException(s"Invalid Geoname search string: '$searchval'")
                     )
 
@@ -556,8 +557,9 @@ final case class SearchResponderV1Live(
                 case OntologyConstants.KnoraBase.UriValue =>
                   // validate URI
                   val searchString =
-                    stringFormatter
-                      .validateAndEscapeIri(searchval, throw BadRequestException(s"Invalid URI: $searchval"))
+                    StringFormatter
+                      .validateAndEscapeIri(searchval)
+                      .getOrElse(throw BadRequestException(s"Invalid URI: $searchval"))
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                 case OntologyConstants.KnoraBase.ListValue =>

@@ -210,18 +210,18 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val listInfo = received.list.listinfo
         listInfo.projectIri should be(imagesProjectIri)
 
-        listInfo.name should be(Some(stringFormatter.fromSparqlEncodedString(nameWithSpecialCharacter)))
+        listInfo.name should be(Some(StringFormatter.fromSparqlEncodedString(nameWithSpecialCharacter)))
 
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
         val givenLabel = labels.head
-        givenLabel.value shouldEqual stringFormatter.fromSparqlEncodedString(labelWithSpecialCharacter)
+        givenLabel.value shouldEqual StringFormatter.fromSparqlEncodedString(labelWithSpecialCharacter)
         givenLabel.language shouldEqual Some("de")
 
         val comments     = received.list.listinfo.comments.stringLiterals
         val givenComment = comments.head
         givenComment.language shouldEqual Some("de")
-        givenComment.value shouldEqual stringFormatter.fromSparqlEncodedString(commentWithSpecialCharacter)
+        givenComment.value shouldEqual StringFormatter.fromSparqlEncodedString(commentWithSpecialCharacter)
 
         val children = received.list.children
         children.size should be(0)

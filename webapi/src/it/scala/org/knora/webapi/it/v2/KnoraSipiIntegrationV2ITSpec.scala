@@ -228,10 +228,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedImage(savedValue: JsonLDObject): SavedImage = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val iiifUrl = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     val width  = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
@@ -254,10 +256,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedDocument(savedValue: JsonLDObject): SavedDocument = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedDocument(
@@ -275,10 +279,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedTextFile(savedValue: JsonLDObject): SavedTextFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedTextFile(
@@ -296,10 +302,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedAudioFile(savedValue: JsonLDObject): SavedAudioFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedAudioFile(
@@ -316,11 +324,12 @@ class KnoraSipiIntegrationV2ITSpec
    */
   private def savedValueToSavedVideoFile(savedValue: JsonLDObject): SavedVideoFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
-
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedVideoFile(

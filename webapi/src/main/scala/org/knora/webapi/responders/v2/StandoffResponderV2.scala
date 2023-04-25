@@ -416,14 +416,16 @@ final case class StandoffResponderV2Live(
                 .text
 
               MappingXMLAttribute(
-                attributeName = stringFormatter.toSparqlEncodedString(
-                  attrName,
-                  throw BadRequestException(s"tagname $attrName contains invalid characters")
-                ),
-                namespace = stringFormatter.toSparqlEncodedString(
-                  attributeNamespace,
-                  throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")
-                ),
+                attributeName = StringFormatter
+                  .toSparqlEncodedString(attrName)
+                  .getOrElse(
+                    throw BadRequestException(s"tagname $attrName contains invalid characters")
+                  ),
+                namespace = StringFormatter
+                  .toSparqlEncodedString(attributeNamespace)
+                  .getOrElse(
+                    throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")
+                  ),
                 standoffProperty = stringFormatter.validateAndEscapeIri(
                   propIri,
                   throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")
@@ -459,10 +461,11 @@ final case class StandoffResponderV2Live(
                 Some(
                   MappingStandoffDatatypeClass(
                     datatype = dataType.toString, // safe because it is an enumeration
-                    attributeName = stringFormatter.toSparqlEncodedString(
-                      dataTypeAttribute,
-                      throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")
-                    ),
+                    attributeName = StringFormatter
+                      .toSparqlEncodedString(dataTypeAttribute)
+                      .getOrElse(
+                        throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")
+                      ),
                     mappingStandoffDataTypeClassElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
                   )
                 )
@@ -471,30 +474,34 @@ final case class StandoffResponderV2Live(
               }
 
             MappingElement(
-              tagName = stringFormatter.toSparqlEncodedString(
-                tagName,
-                throw BadRequestException(
-                  s"tagname $tagName contains invalid characters"
-                )
-              ),
-              namespace = stringFormatter.toSparqlEncodedString(
-                tagNamespace,
-                throw BadRequestException(
-                  s"namespace $tagNamespace contains invalid characters"
-                )
-              ),
-              className = stringFormatter.toSparqlEncodedString(
-                className,
-                throw BadRequestException(
-                  s"classname $className contains invalid characters"
-                )
-              ),
-              standoffClass = stringFormatter.validateAndEscapeIri(
-                standoffClassIri,
-                throw BadRequestException(
-                  s"standoff class IRI $standoffClassIri is not a valid IRI"
-                )
-              ),
+              tagName = StringFormatter
+                .toSparqlEncodedString(tagName)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"tagname $tagName contains invalid characters"
+                  )
+                ),
+              namespace = StringFormatter
+                .toSparqlEncodedString(tagNamespace)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"namespace $tagNamespace contains invalid characters"
+                  )
+                ),
+              className = StringFormatter
+                .toSparqlEncodedString(className)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"classname $className contains invalid characters"
+                  )
+                ),
+              standoffClass = StringFormatter
+                .validateAndEscapeIri(standoffClassIri)
+                .getOrElse(
+                  throw BadRequestException(
+                    s"standoff class IRI $standoffClassIri is not a valid IRI"
+                  )
+                ),
               attributes = attributes,
               standoffDataTypeClass = standoffDataTypeOption,
               mappingElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
@@ -540,7 +547,7 @@ final case class StandoffResponderV2Live(
             .toString()
 
         // Do the update.
-        createResourceResponse <- triplestoreService.sparqlHttpUpdate(createNewMappingSparql)
+        _ <- triplestoreService.sparqlHttpUpdate(createNewMappingSparql)
 
         // check if the mapping has been created
         newMappingResponse <- triplestoreService.sparqlHttpConstruct(getExistingMappingSparql)
@@ -581,7 +588,7 @@ final case class StandoffResponderV2Live(
 
     for {
       // Don't allow anonymous users to create a mapping.
-      userIri <-
+      _ <-
         ZIO.attempt {
           if (requestingUser.isAnonymousUser) {
             throw ForbiddenException("Anonymous users aren't allowed to create mappings")
@@ -777,7 +784,7 @@ final case class StandoffResponderV2Live(
   /**
    * The name of the mapping cache.
    */
-  val mappingCacheName = "mappingCache"
+  private val mappingCacheName = "mappingCache"
 
   /**
    * Gets a mapping either from the cache or by making a request to the triplestore.
@@ -1066,7 +1073,7 @@ final case class StandoffResponderV2Live(
                val requiredPropsForClass: Set[SmartIri] = standoffClassEntities
                  .standoffClassInfoMap(standoffClass.toSmartIri)
                  .allCardinalities
-                 .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
+                 .filter { case (_: SmartIri, card: KnoraCardinalityInfo) =>
                    card.cardinality == ExactlyOne || card.cardinality == AtLeastOne
                  }
                  .keySet -- StandoffProperties.systemProperties.map(
@@ -1116,7 +1123,7 @@ final case class StandoffResponderV2Live(
    * @param result the standoff result.
    * @param next the next task/step, or `None` if there is no more standoff to query in the text value.
    */
-  case class StandoffTaskResult(
+  private case class StandoffTaskResult(
     override val result: StandoffTaskUnderlyingResult,
     override val next: Option[GetStandoffTask]
   ) extends ResultAndNext[StandoffTaskUnderlyingResult]

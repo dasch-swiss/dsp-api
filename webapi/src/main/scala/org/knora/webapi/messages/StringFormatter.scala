@@ -1555,34 +1555,6 @@ class StringFormatter private (
     Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
 
   /**
-   * Makes a string safe to be entered in the triplestore by escaping special chars.
-   *
-   * @param s        a string.
-   * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
-   *                 a carriage return (`\r`).
-   * @return the same string, escaped or unescaped as requested.
-   */
-  @deprecated("Use StringFormatter.toSparqlEncodedString(String) instead")
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = toSparqlEncodedString(s).getOrElse(errorFun)
-
-  /**
-   * Makes a string safe to be entered in the triplestore by escaping special chars.
-   *
-   * @param s        a string.
-   * @return the same string escaped
-   *         [[None]] if the string is empty or contains a carriage return (`\r`).
-   */
-  def toSparqlEncodedString(s: String): Option[String] = StringFormatter.toSparqlEncodedString(s)
-
-  /**
-   * Unescapes a string that has been escaped for SPARQL.
-   *
-   * @param s the string to be unescaped.
-   * @return the unescaped string.
-   */
-  def fromSparqlEncodedString(s: String): String = StringFormatter.fromSparqlEncodedString(s)
-
-  /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
    *
    * @param s the string to be encoded.

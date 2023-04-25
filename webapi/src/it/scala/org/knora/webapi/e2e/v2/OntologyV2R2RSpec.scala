@@ -546,7 +546,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            stringFormatter.fromSparqlEncodedString(comment)
+            StringFormatter.fromSparqlEncodedString(comment)
           )
         )
         barIri.set(ontologyIri)
@@ -590,7 +590,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            stringFormatter.fromSparqlEncodedString(comment)
+            StringFormatter.fromSparqlEncodedString(comment)
           )
         )
       }
@@ -668,7 +668,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == barIri.get)
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            stringFormatter.fromSparqlEncodedString(newComment)
+            StringFormatter.fromSparqlEncodedString(newComment)
           )
         )
 

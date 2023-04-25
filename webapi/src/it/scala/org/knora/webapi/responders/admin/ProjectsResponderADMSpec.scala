@@ -310,16 +310,16 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
-        received.project.longname should contain(stringFormatter.fromSparqlEncodedString(longnameWithSpecialCharacter))
+        received.project.longname should contain(StringFormatter.fromSparqlEncodedString(longnameWithSpecialCharacter))
         received.project.description should be(
           Seq(
             V2.StringLiteralV2(
-              value = stringFormatter.fromSparqlEncodedString(descriptionWithSpecialCharacter),
+              value = StringFormatter.fromSparqlEncodedString(descriptionWithSpecialCharacter),
               language = Some("en")
             )
           )
         )
-        received.project.keywords should contain(stringFormatter.fromSparqlEncodedString(keywordWithSpecialCharacter))
+        received.project.keywords should contain(StringFormatter.fromSparqlEncodedString(keywordWithSpecialCharacter))
 
       }
 

@@ -101,16 +101,12 @@ object CreateOntologyRequestV2 {
       OntologyConstants.KnoraApiV2Complex.OntologyName,
       (s: String, errorFun) => ValuesValidator.validateProjectSpecificOntologyName(s).getOrElse(errorFun)
     )
+    val validationFun: (String, => Nothing) => String = (s: String, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val label: String =
-      jsonLDDocument.body.requireStringWithValidation(
-        OntologyConstants.Rdfs.Label,
-        stringFormatter.toSparqlEncodedString
-      )
+      jsonLDDocument.body.requireStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
     val comment: Option[String] =
-      jsonLDDocument.body.maybeStringWithValidation(
-        OntologyConstants.Rdfs.Comment,
-        stringFormatter.toSparqlEncodedString
-      )
+      jsonLDDocument.body.maybeStringWithValidation(OntologyConstants.Rdfs.Comment, validationFun)
     val projectIri: SmartIri = jsonLDDocument.body.requireIriInObject(
       OntologyConstants.KnoraApiV2Complex.AttachedToProject,
       stringFormatter.toSmartIriWithErr
@@ -1657,11 +1653,14 @@ object InputOntologyV2 {
       stringFormatter.toSmartIriWithErr
     )
 
+    val validationFun: (String, => Nothing) => String =
+      (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+
     val ontologyLabel: Option[String] =
-      ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+      ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
 
     val ontologyComment: Option[String] =
-      ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Comment, stringFormatter.toSparqlEncodedString)
+      ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Comment, validationFun)
 
     val lastModificationDate: Option[Instant] = ontologyObj.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
@@ -1860,7 +1859,7 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
   def unescape: PredicateInfoV2 =
     copy(
       objects = objects.map {
-        case StringLiteralV2(str, lang) => StringLiteralV2(stringFormatter.fromSparqlEncodedString(str), lang)
+        case StringLiteralV2(str, lang) => StringLiteralV2(StringFormatter.fromSparqlEncodedString(str), lang)
         case other                      => other
       }
     )
@@ -2147,11 +2146,9 @@ sealed trait EntityInfoContentV2 {
  */
 object EntityInfoContentV2 {
   private def stringToLiteral(str: String): StringLiteralV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    StringLiteralV2(
-      stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid predicate object: $str"))
-    )
+    val value =
+      StringFormatter.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
+    StringLiteralV2(value)
   }
 
   /**
@@ -3430,8 +3427,8 @@ case class OntologyMetadataV2(
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     copy(
-      label = label.map(stringFormatter.fromSparqlEncodedString),
-      comment = comment.map(stringFormatter.fromSparqlEncodedString)
+      label = label.map(StringFormatter.fromSparqlEncodedString),
+      comment = comment.map(StringFormatter.fromSparqlEncodedString)
     )
   }
 

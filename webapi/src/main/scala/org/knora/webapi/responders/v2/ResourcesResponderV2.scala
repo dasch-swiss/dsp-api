@@ -507,7 +507,7 @@ final case class ResourcesResponderV2Live(
 
         _ = updateResourceMetadataRequestV2.maybeLabel match {
               case Some(newLabel) =>
-                if (!updatedResource.label.contains(stringFormatter.fromSparqlEncodedString(newLabel))) {
+                if (!updatedResource.label.contains(StringFormatter.fromSparqlEncodedString(newLabel))) {
                   throw UpdateNotPerformedException()
                 }
 
@@ -1368,7 +1368,7 @@ final case class ResourcesResponderV2Live(
           }
 
       // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
-      unescapedLabel: String = stringFormatter.fromSparqlEncodedString(
+      unescapedLabel: String = StringFormatter.fromSparqlEncodedString(
                                  resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel
                                )
 

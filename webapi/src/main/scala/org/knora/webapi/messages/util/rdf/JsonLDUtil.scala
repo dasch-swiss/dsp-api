@@ -1123,13 +1123,15 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   def toObjsWithLang()(implicit stringFormatter: StringFormatter): Seq[StringLiteralV2] =
     value.map {
       case obj: JsonLDObject =>
-        val lang = obj.requireStringWithValidation(JsonLDKeywords.LANGUAGE, stringFormatter.toSparqlEncodedString)
+        val validationFun: (String, => Nothing) => String =
+          (s, errFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errFun)
+        val lang = obj.requireStringWithValidation(JsonLDKeywords.LANGUAGE, validationFun)
 
         if (!LanguageCodes.SupportedLanguageCodes(lang)) {
           throw BadRequestException(s"Unsupported language code: $lang")
         }
 
-        val text = obj.requireStringWithValidation(JsonLDKeywords.VALUE, stringFormatter.toSparqlEncodedString)
+        val text = obj.requireStringWithValidation(JsonLDKeywords.VALUE, validationFun)
         StringLiteralV2(text, Some(lang))
 
       case other => throw BadRequestException(s"Expected JSON-LD object: $other")

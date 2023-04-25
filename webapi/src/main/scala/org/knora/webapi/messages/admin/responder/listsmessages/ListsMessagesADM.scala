@@ -569,7 +569,7 @@ case class ListRootNodeInfoADM(
 
     val unescapedName: Option[String] = name match {
       case None        => None
-      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
     }
 
     copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
@@ -633,7 +633,7 @@ case class ListChildNodeInfoADM(
 
     val unescapedName: Option[String] = name match {
       case None        => None
-      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
     }
 
     copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
@@ -758,7 +758,7 @@ case class ListRootNodeADM(
 
     val unescapedName: Option[String] = name match {
       case None        => None
-      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
     }
 
     copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
@@ -844,7 +844,7 @@ case class ListChildNodeADM(
     }
 
     val unescapedName: Option[String] = name match {
-      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
       case None        => None
     }
 

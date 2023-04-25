@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import zio._
 import zio.prelude.Validation
-import zio.prelude.ZValidation
+
 import scala.concurrent.Future
 import scala.util.control.Exception.catching
 
