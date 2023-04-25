@@ -54,6 +54,24 @@ import XmlPatterns.nCNameRegex
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
+
+  // Characters that are escaped in strings that will be used in SPARQL.
+  private val SparqlEscapeInput = Array(
+    "\\",
+    "\"",
+    "'",
+    "\t",
+    "\n"
+  )
+
+  // Escaped characters as they are used in SPARQL.
+  private val SparqlEscapeOutput = Array(
+    "\\\\",
+    "\\\"",
+    "\\'",
+    "\\t",
+    "\\n"
+  )
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
 
@@ -309,6 +327,25 @@ object StringFormatter {
     Validation
       .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
+
+  /**
+   * Makes a string safe to be entered in the triplestore by escaping special chars.
+   *
+   * @param s a string.
+   * @return the same string escaped
+   *         [[None]] if the string is empty or contains a carriage return (`\r`).
+   */
+  def toSparqlEncodedString(s: String): Option[String] =
+    if (s.isEmpty || s.contains("\r")) None
+    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
+
+  /**
+   * Unescapes a string that has been escaped for SPARQL.
+   *
+   * @param s the string to be unescaped.
+   * @return the unescaped string.
+   */
+  def fromSparqlEncodedString(s: String): String = StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -667,24 +704,6 @@ class StringFormatter private (
   // Reserved words that cannot be used in project-specific ontology names.
   private val reservedIriWords =
     Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
-
-  // Characters that are escaped in strings that will be used in SPARQL.
-  private val SparqlEscapeInput = Array(
-    "\\",
-    "\"",
-    "'",
-    "\t",
-    "\n"
-  )
-
-  // Escaped characters as they are used in SPARQL.
-  private val SparqlEscapeOutput = Array(
-    "\\\\",
-    "\\\"",
-    "\\'",
-    "\\t",
-    "\\n"
-  )
 
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
   private val ProjectIDPattern: String =
@@ -1543,9 +1562,8 @@ class StringFormatter private (
    *                 a carriage return (`\r`).
    * @return the same string, escaped or unescaped as requested.
    */
-  @deprecated("Use toSparqlEncodedString(String) instead")
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = // --
-    toSparqlEncodedString(s).getOrElse(errorFun)
+  @deprecated("Use StringFormatter.toSparqlEncodedString(String) instead")
+  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = toSparqlEncodedString(s).getOrElse(errorFun)
 
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
@@ -1554,9 +1572,7 @@ class StringFormatter private (
    * @return the same string escaped
    *         [[None]] if the string is empty or contains a carriage return (`\r`).
    */
-  def toSparqlEncodedString(s: String): Option[String] =
-    if (s.isEmpty || s.contains("\r")) None
-    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
+  def toSparqlEncodedString(s: String): Option[String] = StringFormatter.toSparqlEncodedString(s)
 
   /**
    * Unescapes a string that has been escaped for SPARQL.
@@ -1564,12 +1580,7 @@ class StringFormatter private (
    * @param s the string to be unescaped.
    * @return the unescaped string.
    */
-  def fromSparqlEncodedString(s: String): String =
-    StringUtils.replaceEach(
-      s,
-      SparqlEscapeOutput,
-      SparqlEscapeInput
-    )
+  def fromSparqlEncodedString(s: String): String = StringFormatter.fromSparqlEncodedString(s)
 
   /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.

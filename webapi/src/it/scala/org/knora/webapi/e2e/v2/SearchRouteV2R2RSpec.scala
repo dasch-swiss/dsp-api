@@ -51,7 +51,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val searchPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(SearchRouteV2(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(
+      SearchRouteV2(routeData.appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute
+    )
   private val resourcePath =
     DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(routeData, runtime).makeRoute)
   private val standoffPath =
