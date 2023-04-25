@@ -118,8 +118,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
             obj = IriRef(
               iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
               propertyPathOperator = None
-            ),
-            namedGraph = None
+            )
           ),
           OptionalPattern(
             patterns = Vector(
@@ -129,8 +128,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                   iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
                   propertyPathOperator = None
                 ),
-                obj = QueryVariable(variableName = "decimal"),
-                namedGraph = None
+                obj = QueryVariable(variableName = "decimal")
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
@@ -230,8 +228,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
             obj = IriRef(
               iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
               propertyPathOperator = None
-            ),
-            namedGraph = None
+            )
           ),
           OptionalPattern(
             patterns = Vector(
@@ -241,8 +238,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                   iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
                   propertyPathOperator = None
                 ),
-                obj = QueryVariable(variableName = "decimalVal"),
-                namedGraph = None
+                obj = QueryVariable(variableName = "decimalVal")
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -250,8 +246,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                   iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
                   propertyPathOperator = None
                 ),
-                obj = QueryVariable(variableName = "decimal"),
-                namedGraph = None
+                obj = QueryVariable(variableName = "decimal")
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),

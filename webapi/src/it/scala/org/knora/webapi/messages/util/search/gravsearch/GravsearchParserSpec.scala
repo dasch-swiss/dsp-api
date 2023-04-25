@@ -590,8 +590,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "letter"),
@@ -599,14 +598,12 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "date"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "date")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "letter"),
           pred = QueryVariable(variableName = "linkingProp1"),
-          obj = QueryVariable(variableName = "person1"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "person1")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "person1"),
@@ -614,8 +611,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "name"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "name")
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -639,8 +635,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "letter"),
@@ -651,8 +646,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "letter"),
@@ -660,8 +654,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "date"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "date")
         ),
         StatementPattern(
           subj = IriRef(
@@ -675,8 +668,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "date"),
@@ -687,14 +679,12 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "letter"),
           pred = QueryVariable(variableName = "linkingProp1"),
-          obj = QueryVariable(variableName = "person1"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "person1")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "person1"),
@@ -705,8 +695,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "linkingProp1"),
@@ -717,8 +706,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = IriRef(
@@ -732,8 +720,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = IriRef(
@@ -747,8 +734,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         OptionalPattern(
           patterns = Vector(
@@ -758,8 +744,7 @@ class GravsearchParserSpec extends CoreSpec {
                 iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "name"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "name")
             ),
             StatementPattern(
               subj = IriRef(
@@ -773,8 +758,7 @@ class GravsearchParserSpec extends CoreSpec {
               obj = IriRef(
                 iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
                 propertyPathOperator = None
-              ),
-              namedGraph = None
+              )
             ),
             StatementPattern(
               subj = QueryVariable(variableName = "name"),
@@ -785,8 +769,7 @@ class GravsearchParserSpec extends CoreSpec {
               obj = IriRef(
                 iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
                 propertyPathOperator = None
-              ),
-              namedGraph = None
+              )
             ),
             FilterPattern(expression =
               CompareExpression(
@@ -888,8 +871,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
@@ -897,8 +879,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "bookPublisher"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "bookPublisher")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
@@ -906,8 +887,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publoc".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "bookPubLoc"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "bookPubLoc")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "page"),
@@ -915,8 +895,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#isPartOf".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "book"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "book")
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -935,8 +914,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         OptionalPattern(
           patterns = Vector(
@@ -946,8 +924,7 @@ class GravsearchParserSpec extends CoreSpec {
                 iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "bookPublisher"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "bookPublisher")
             ),
             StatementPattern(
               subj = QueryVariable(variableName = "book"),
@@ -955,8 +932,7 @@ class GravsearchParserSpec extends CoreSpec {
                 iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publoc".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "bookPubLoc"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "bookPubLoc")
             )
           )
         ),
@@ -966,8 +942,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "pubdate"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "pubdate")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "page"),
@@ -978,8 +953,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "page"),
@@ -987,8 +961,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#isPartOf".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "book"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "book")
         ),
         UnionPattern(
           blocks = Vector(
@@ -1002,8 +975,7 @@ class GravsearchParserSpec extends CoreSpec {
                 obj = XsdLiteral(
                   value = "a7r",
                   datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
-                ),
-                namedGraph = None
+                )
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "page"),
@@ -1014,8 +986,7 @@ class GravsearchParserSpec extends CoreSpec {
                 obj = XsdLiteral(
                   value = "14",
                   datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
-                ),
-                namedGraph = None
+                )
               )
             ),
             Vector(
@@ -1028,8 +999,7 @@ class GravsearchParserSpec extends CoreSpec {
                 obj = XsdLiteral(
                   value = "a8r",
                   datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
-                ),
-                namedGraph = None
+                )
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "page"),
@@ -1040,8 +1010,7 @@ class GravsearchParserSpec extends CoreSpec {
                 obj = XsdLiteral(
                   value = "16",
                   datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
-                ),
-                namedGraph = None
+                )
               )
             ),
             Vector(
@@ -1054,8 +1023,7 @@ class GravsearchParserSpec extends CoreSpec {
                 obj = XsdLiteral(
                   value = "a9r",
                   datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
-                ),
-                namedGraph = None
+                )
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "page"),
@@ -1063,8 +1031,7 @@ class GravsearchParserSpec extends CoreSpec {
                   iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#seqnum".toSmartIri,
                   propertyPathOperator = None
                 ),
-                obj = QueryVariable(variableName = "seqnum"),
-                namedGraph = None
+                obj = QueryVariable(variableName = "seqnum")
               ),
               FilterPattern(expression =
                 CompareExpression(
@@ -1154,8 +1121,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1181,8 +1147,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "thing"),
@@ -1193,8 +1158,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         )
       ),
       positiveEntities = Set(
@@ -1236,8 +1200,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "thing"),
@@ -1248,8 +1211,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://rdfh.ch/a-thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1268,8 +1230,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "thing"),
@@ -1277,8 +1238,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://rdfh.ch/a-thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         FilterPattern(
           expression = OrExpression(
@@ -1349,8 +1309,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1369,8 +1328,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         FilterNotExistsPattern(
           patterns = Vector(
@@ -1380,8 +1338,7 @@ class GravsearchParserSpec extends CoreSpec {
                 iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherThing".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "aThing"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "aThing")
             )
           )
         )
@@ -1417,8 +1374,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1437,8 +1393,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         MinusPattern(
           patterns = Vector(
@@ -1448,8 +1403,7 @@ class GravsearchParserSpec extends CoreSpec {
                 iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherThing".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "aThing"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "aThing")
             )
           )
         )
@@ -1485,8 +1439,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1505,8 +1458,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         )
       ),
       positiveEntities = Set(
@@ -1540,8 +1492,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "mainRes"),
@@ -1549,8 +1500,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "propVal0"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "propVal0")
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1569,8 +1519,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "mainRes"),
@@ -1581,8 +1530,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "mainRes"),
@@ -1590,8 +1538,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "propVal0"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "propVal0")
         ),
         StatementPattern(
           subj = IriRef(
@@ -1605,8 +1552,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "propVal0"),
@@ -1617,8 +1563,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         FilterPattern(
           expression = RegexFunction(
@@ -1676,8 +1621,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1696,8 +1640,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "thing"),
@@ -1705,8 +1648,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "text"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "text")
         ),
         FilterPattern(
           expression = FunctionCallExpression(
@@ -1760,8 +1702,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1780,8 +1721,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "thing"),
@@ -1789,8 +1729,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "text"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "text")
         ),
         FilterPattern(
           expression = FunctionCallExpression(
@@ -1844,8 +1783,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1864,8 +1802,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "thing"),
@@ -1873,8 +1810,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "text"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "text")
         ),
         FilterPattern(
           expression = CompareExpression(
@@ -1923,8 +1859,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
@@ -1932,8 +1867,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "bookTitle"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "bookTitle")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "page"),
@@ -1941,8 +1875,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#isPartOf".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "book"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "book")
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -1961,8 +1894,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         OptionalPattern(
           patterns = Vector(
@@ -1972,8 +1904,7 @@ class GravsearchParserSpec extends CoreSpec {
                 iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "publisher"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "publisher")
             ),
             OptionalPattern(patterns =
               Vector(
@@ -1983,8 +1914,7 @@ class GravsearchParserSpec extends CoreSpec {
                     iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,
                     propertyPathOperator = None
                   ),
-                  obj = QueryVariable(variableName = "bookTitle"),
-                  namedGraph = None
+                  obj = QueryVariable(variableName = "bookTitle")
                 )
               )
             ),
@@ -2006,8 +1936,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "pubdate"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "pubdate")
         ),
         FilterPattern(
           expression = CompareExpression(
@@ -2090,8 +2019,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "true",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "letter"),
@@ -2099,8 +2027,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "text"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "text")
         )
       ),
       querySchema = Some(ApiV2Complex)
@@ -2119,8 +2046,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#letter".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "letter"),
@@ -2128,8 +2054,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "text"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "text")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "text"),
@@ -2137,8 +2062,7 @@ class GravsearchParserSpec extends CoreSpec {
             iri = "http://api.knora.org/ontology/knora-api/v2#textValueHasStandoff".toSmartIri,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "standoffLinkTag"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "standoffLinkTag")
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "standoffLinkTag"),
@@ -2149,8 +2073,7 @@ class GravsearchParserSpec extends CoreSpec {
           obj = IriRef(
             iri = "http://api.knora.org/ontology/knora-api/v2#StandoffLinkTag".toSmartIri,
             propertyPathOperator = None
-          ),
-          namedGraph = None
+          )
         ),
         FilterPattern(
           expression = FunctionCallExpression(
