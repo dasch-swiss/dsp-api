@@ -54,6 +54,24 @@ import XmlPatterns.nCNameRegex
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
+
+  // Characters that are escaped in strings that will be used in SPARQL.
+  private val SparqlEscapeInput = Array(
+    "\\",
+    "\"",
+    "'",
+    "\t",
+    "\n"
+  )
+
+  // Escaped characters as they are used in SPARQL.
+  private val SparqlEscapeOutput = Array(
+    "\\\\",
+    "\\\"",
+    "\\'",
+    "\\t",
+    "\\n"
+  )
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
 
@@ -309,6 +327,25 @@ object StringFormatter {
     Validation
       .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
+
+  /**
+   * Makes a string safe to be entered in the triplestore by escaping special chars.
+   *
+   * @param s a string.
+   * @return the same string escaped
+   *         [[None]] if the string is empty or contains a carriage return (`\r`).
+   */
+  def toSparqlEncodedString(s: String): Option[String] =
+    if (s.isEmpty || s.contains("\r")) None
+    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
+
+  /**
+   * Unescapes a string that has been escaped for SPARQL.
+   *
+   * @param s the string to be unescaped.
+   * @return the unescaped string.
+   */
+  def fromSparqlEncodedString(s: String): String = StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -668,24 +705,6 @@ class StringFormatter private (
   private val reservedIriWords =
     Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
 
-  // Characters that are escaped in strings that will be used in SPARQL.
-  private val SparqlEscapeInput = Array(
-    "\\",
-    "\"",
-    "'",
-    "\t",
-    "\n"
-  )
-
-  // Escaped characters as they are used in SPARQL.
-  private val SparqlEscapeOutput = Array(
-    "\\\\",
-    "\\\"",
-    "\\'",
-    "\\t",
-    "\\n"
-  )
-
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
   private val ProjectIDPattern: String =
     """\p{XDigit}{4,4}"""
@@ -787,7 +806,7 @@ class StringFormatter private (
     def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) =
       this(iriStr, parsedIriInfo, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
-    private val iri: IRI = validateAndEscapeIri(iriStr, errorFun)
+    private val iri: IRI = StringFormatter.validateAndEscapeIri(iriStr).getOrElse(errorFun)
 
     /**
      * Determines the API v2 schema of an external IRI.
@@ -1464,18 +1483,6 @@ class StringFormatter private (
     }
 
   /**
-   * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
-   *
-   * @param s        the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 IRI.
-   * @return the same string.
-   */
-  @deprecated("Use validateAndEscapeIri(String) instead")
-  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI =
-    StringFormatter.validateAndEscapeIri(s).getOrElse(errorFun)
-
-  /**
    * Returns `true` if an IRI string looks like a Knora project IRI
    *
    * @param iri the IRI to be checked.
@@ -1531,42 +1538,6 @@ class StringFormatter private (
    */
   def isKnoraPermissionIriStr(iri: IRI): Boolean = // V2 / value objects
     Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
-
-  /**
-   * Makes a string safe to be entered in the triplestore by escaping special chars.
-   *
-   * @param s        a string.
-   * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
-   *                 a carriage return (`\r`).
-   * @return the same string, escaped or unescaped as requested.
-   */
-  @deprecated("Use toSparqlEncodedString(String) instead")
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = // --
-    toSparqlEncodedString(s).getOrElse(errorFun)
-
-  /**
-   * Makes a string safe to be entered in the triplestore by escaping special chars.
-   *
-   * @param s        a string.
-   * @return the same string escaped
-   *         [[None]] if the string is empty or contains a carriage return (`\r`).
-   */
-  def toSparqlEncodedString(s: String): Option[String] =
-    if (s.isEmpty || s.contains("\r")) None
-    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
-
-  /**
-   * Unescapes a string that has been escaped for SPARQL.
-   *
-   * @param s the string to be unescaped.
-   * @return the unescaped string.
-   */
-  def fromSparqlEncodedString(s: String): String =
-    StringUtils.replaceEach(
-      s,
-      SparqlEscapeOutput,
-      SparqlEscapeInput
-    )
 
   /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
@@ -2270,7 +2241,9 @@ class StringFormatter private (
   def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
     val mappingIri = s"$projectIri/mappings/$mappingName"
     // check that the mapping IRI is valid (mappingName is user input)
-    validateAndEscapeIri(mappingIri, throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+    validateAndEscapeIri(mappingIri).getOrElse(
+      throw BadRequestException(s"the created mapping IRI $mappingIri is invalid")
+    )
   }
 
   /**

@@ -976,9 +976,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
@@ -1042,9 +1042,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
@@ -1091,9 +1091,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
 
@@ -1132,9 +1132,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
@@ -1179,9 +1179,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri == customIRI)
     }
 
@@ -1275,9 +1275,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
@@ -1288,7 +1288,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceGetResponseAsJsonLD = getResponseAsJsonLD(resourceGetRequest)
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
         .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
-        .requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        .requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIRI)
     }
 
@@ -1322,9 +1322,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
@@ -1373,9 +1373,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
@@ -1438,9 +1438,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri == customResourceIRI)
 
       // Request the newly created resource.
@@ -1453,7 +1453,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
         .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
-        .requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        .requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIRI)
 
       val valueUUID = resourceGetResponseAsJsonLD.body
@@ -1511,14 +1511,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
-      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
       val savedAttachedToUser: IRI =
         responseJsonDoc.body.requireIriInObject(
           OntologyConstants.KnoraApiV2Complex.AttachedToUser,
-          stringFormatter.validateAndEscapeIri
+          validationFun
         )
       assert(savedAttachedToUser == SharedTestDataADM.anythingUser1.id)
     }
@@ -1562,9 +1562,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val responseJsonDoc: JsonLDDocument = getResponseAsJsonLD(request)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = getResponseAsJsonLD(request)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
 
@@ -1843,11 +1843,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val resourceCreateResponseAsJsonLD: JsonLDDocument = getResponseAsJsonLD(resourceCreateRequest)
+      val validationFun: (String, => Nothing) => String  = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
-        resourceCreateResponseAsJsonLD.body.requireStringWithValidation(
-          JsonLDKeywords.ID,
-          stringFormatter.validateAndEscapeIri
-        )
+        resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
       hamletResourceIri.set(resourceIri)
     }
@@ -1903,8 +1901,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val maybeTextValueAsXml: Option[String] =
         textValue.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
       assert(maybeTextValueAsXml.isEmpty)
-      val textValueIri: IRI =
-        textValue.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val textValueIri: IRI                             = textValue.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       val resourceIriEncoded: IRI  = URLEncoder.encode(hamletResourceIri.get, "UTF-8")
       val textValueIriEncoded: IRI = URLEncoder.encode(textValueIri, "UTF-8")
@@ -2021,9 +2019,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
@@ -2073,9 +2071,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       // Request the newly created resource in the complex schema, and check that it matches the ontology.
@@ -2196,9 +2194,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceResponse: HttpResponse = singleAwaitingRequest(resourceRequest)
 
       assert(resourceResponse.status == StatusCodes.OK, resourceResponse.toString)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
-        responseToJsonLDDocument(resourceResponse).body
-          .requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        responseToJsonLDDocument(resourceResponse).body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
 
       // get resource back
       val resourceComplexGetRequest = Get(

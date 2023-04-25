@@ -68,7 +68,7 @@ final case class ValuesRouteV2()(
           requestTask,
           requestContext,
           targetSchemaTask,
-          Some(RouteUtilV2.getSchemaOptionsUnsafe(requestContext))
+          RouteUtilV2.getSchemaOptions(requestContext).map(Some(_))
         )
       }
   }

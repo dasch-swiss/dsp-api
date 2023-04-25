@@ -94,7 +94,5 @@ object RouteUtilZ {
   def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
 
   def toSparqlEncodedString(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, String] =
-    ZIO.serviceWithZIO[StringFormatter](sf =>
-      ZIO.fromOption(sf.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
-    )
+    ZIO.fromOption(StringFormatter.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
 }

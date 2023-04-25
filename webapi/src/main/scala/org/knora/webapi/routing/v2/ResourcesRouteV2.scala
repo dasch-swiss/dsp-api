@@ -94,10 +94,11 @@ final case class ResourcesRouteV2(
     path(resourcesBasePath / "iiifmanifest" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
         val resourceIri: IRI =
-          stringFormatter.validateAndEscapeIri(
-            resourceIriStr,
-            throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
-          )
+          StringFormatter
+            .validateAndEscapeIri(resourceIriStr)
+            .getOrElse(
+              throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
+            )
         val requestTask = Authenticator.getUserADM(requestContext).map(ResourceIIIFManifestGetRequestV2(resourceIri, _))
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
@@ -181,11 +182,11 @@ final case class ResourcesRouteV2(
       val page: Int =
         ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
 
-      val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+      val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
 
       val requestTask = for {
         targetSchema   <- targetSchemaTask
+        schemaOptions  <- RouteUtilV2.getSchemaOptions(requestContext)
         requestingUser <- Authenticator.getUserADM(requestContext)
       } yield SearchResourcesByProjectAndClassRequestV2(
         projectIri,
@@ -205,10 +206,11 @@ final case class ResourcesRouteV2(
     path(resourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
         val resourceIri =
-          stringFormatter.validateAndEscapeIri(
-            resourceIriStr,
-            throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
-          )
+          StringFormatter
+            .validateAndEscapeIri(resourceIriStr)
+            .getOrElse(
+              throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
+            )
         val params: Map[String, String] = requestContext.request.uri.query().toMap
         val startDate: Option[Instant] = params
           .get("startDate")
@@ -305,7 +307,9 @@ final case class ResourcesRouteV2(
         )
 
       val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
-        stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
+        StringFormatter
+          .validateAndEscapeIri(resIri)
+          .getOrElse(throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
       }
 
       val params: Map[String, String] = requestContext.request.uri.query().toMap
@@ -318,12 +322,13 @@ final case class ResourcesRouteV2(
             .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
             .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
         )
-      val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+      val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+      val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
 
       val requestTask = for {
         targetSchema   <- targetSchemaTask
         requestingUser <- Authenticator.getUserADM(requestContext)
+        schemaOptions  <- schemaOptionsTask
       } yield ResourcesGetRequestV2(
         resourceIris,
         versionDate = versionDate,
@@ -331,7 +336,7 @@ final case class ResourcesRouteV2(
         schemaOptions = schemaOptions,
         requestingUser = requestingUser
       )
-      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
     }
   }
 
@@ -343,7 +348,9 @@ final case class ResourcesRouteV2(
             s"List of provided resource Iris exceeds limit of ${routeData.appConfig.v2.resourcesSequence.resultsPerPage}"
           )
         val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
-          stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
+          StringFormatter
+            .validateAndEscapeIri(resIri)
+            .getOrElse(throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
         }
         val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
         val requestTask = for {
@@ -362,7 +369,9 @@ final case class ResourcesRouteV2(
     get { requestContext =>
       val params: Map[String, String] = requestContext.request.uri.query().toMap
       val resourceIri: IRI =
-        stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
+        StringFormatter
+          .validateAndEscapeIri(resIri)
+          .getOrElse(throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
       val textProperty: SmartIri             = getTextPropertyFromParams(params)
       val mappingIri: Option[IRI]            = getMappingIriFromParams(params)
       val gravsearchTemplateIri: Option[IRI] = getGravsearchTemplateIriFromParams(params)
@@ -377,10 +386,11 @@ final case class ResourcesRouteV2(
   private def getResourcesGraph(): Route = path("v2" / "graph" / Segment) { resIriStr: String =>
     get { requestContext =>
       val resourceIri: IRI =
-        stringFormatter.validateAndEscapeIri(
-          resIriStr,
-          throw BadRequestException(s"Invalid resource IRI: <$resIriStr>")
-        )
+        StringFormatter
+          .validateAndEscapeIri(resIriStr)
+          .getOrElse(
+            throw BadRequestException(s"Invalid resource IRI: <$resIriStr>")
+          )
       val params: Map[String, String] = requestContext.request.uri.query().toMap
       val depth: Int                  = params.get(Depth).map(_.toInt).getOrElse(routeData.appConfig.v2.graphRoute.defaultGraphDepth)
 
@@ -490,19 +500,17 @@ final case class ResourcesRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getMappingIriFromParams(params: Map[String, String]): Option[IRI] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val mappingIriStr                             = params.get(Mapping_Iri)
-
-    mappingIriStr match {
+  private def getMappingIriFromParams(params: Map[String, String]): Option[IRI] =
+    params.get(Mapping_Iri) match {
       case Some(mapping: String) =>
         Some(
-          stringFormatter.validateAndEscapeIri(mapping, throw BadRequestException(s"Invalid mapping IRI: <$mapping>"))
+          StringFormatter
+            .validateAndEscapeIri(mapping)
+            .getOrElse(throw BadRequestException(s"Invalid mapping IRI: <$mapping>"))
         )
 
       case None => None
     }
-  }
 
   /**
    * Gets the Iri of Gravsearch template to be used to query for the resource's metadata.
@@ -510,22 +518,19 @@ final case class ResourcesRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getGravsearchTemplateIriFromParams(params: Map[String, String]): Option[IRI] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val gravsearchTemplateIriStr                  = params.get(GravsearchTemplate_Iri)
-
-    gravsearchTemplateIriStr match {
+  private def getGravsearchTemplateIriFromParams(params: Map[String, String]): Option[IRI] =
+    params.get(GravsearchTemplate_Iri) match {
       case Some(gravsearch: String) =>
         Some(
-          stringFormatter.validateAndEscapeIri(
-            gravsearch,
-            throw BadRequestException(s"Invalid template IRI: <$gravsearch>")
-          )
+          StringFormatter
+            .validateAndEscapeIri(gravsearch)
+            .getOrElse(
+              throw BadRequestException(s"Invalid template IRI: <$gravsearch>")
+            )
         )
 
       case None => None
     }
-  }
 
   /**
    * Gets the Iri of the XSL transformation to be used to convert the TEI header's metadata.
@@ -533,17 +538,15 @@ final case class ResourcesRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getHeaderXSLTIriFromParams(params: Map[String, String]): Option[IRI] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val headerXSLTIriStr                          = params.get(TEIHeader_XSLT_IRI)
-
-    headerXSLTIriStr match {
+  private def getHeaderXSLTIriFromParams(params: Map[String, String]): Option[IRI] =
+    params.get(TEIHeader_XSLT_IRI) match {
       case Some(xslt: String) =>
-        Some(stringFormatter.validateAndEscapeIri(xslt, throw BadRequestException(s"Invalid XSLT IRI: <$xslt>")))
+        Some(
+          StringFormatter.validateAndEscapeIri(xslt).getOrElse(throw BadRequestException(s"Invalid XSLT IRI: <$xslt>"))
+        )
 
       case None => None
     }
-  }
 
   /**
    * Checks if the MIME types of the given values are allowed by the configuration

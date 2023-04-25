@@ -97,7 +97,7 @@ final case class GroupsRouteADM(
     put {
       entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
         val checkedGroupIri =
-          stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+          StringFormatter.validateAndEscapeIri(value).getOrElse(throw BadRequestException(s"Invalid group IRI $value"))
 
         /**
          * The api request is already checked at time of creation.
@@ -136,7 +136,9 @@ final case class GroupsRouteADM(
       put {
         entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
           val checkedGroupIri =
-            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+            StringFormatter
+              .validateAndEscapeIri(value)
+              .getOrElse(throw BadRequestException(s"Invalid group IRI $value"))
 
           /**
            * The api request is already checked at time of creation.

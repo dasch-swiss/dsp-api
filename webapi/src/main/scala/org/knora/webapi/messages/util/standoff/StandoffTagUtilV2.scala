@@ -380,10 +380,9 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
                 StandoffTagStringAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = stringFormatter.toSparqlEncodedString(
-                    attr.value,
-                    throw BadRequestException(s"Invalid string attribute: '${attr.value}'")
-                  )
+                  value = StringFormatter
+                    .toSparqlEncodedString(attr.value)
+                    .getOrElse(throw BadRequestException(s"Invalid string attribute: '${attr.value}'"))
                 )
 
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
@@ -675,10 +674,9 @@ object StandoffTagUtilV2 {
             originalXMLID = hierarchicalStandoffTag.originalID match {
               case Some(id: String) =>
                 Some(
-                  stringFormatter.toSparqlEncodedString(
-                    id,
-                    throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")
-                  )
+                  StringFormatter
+                    .toSparqlEncodedString(id)
+                    .getOrElse(throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string"))
                 )
               case None => None
             },
@@ -697,10 +695,9 @@ object StandoffTagUtilV2 {
             originalXMLID = freeStandoffTag.originalID match {
               case Some(id: String) =>
                 Some(
-                  stringFormatter.toSparqlEncodedString(
-                    id,
-                    throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")
-                  )
+                  StringFormatter
+                    .toSparqlEncodedString(id)
+                    .getOrElse(throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string"))
                 )
               case None => None
             },
@@ -839,8 +836,9 @@ object StandoffTagUtilV2 {
 
           val uriValue = StandoffTagUriAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri.toSmartIri,
-            value =
-              stringFormatter.validateAndEscapeIri(uriString, throw BadRequestException(s"URI invalid: $uriString"))
+            value = StringFormatter
+              .validateAndEscapeIri(uriString)
+              .getOrElse(throw BadRequestException(s"URI invalid: $uriString"))
           )
 
           val classSpecificProps =
