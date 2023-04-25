@@ -35,7 +35,7 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
       querySchemaMaybe      = constructQuery.querySchema
       sanitizedWhereClause <- GravsearchTypeInspectionUtil.removeTypeAnnotations(whereClause)
       typeInspectionResult <- inspectionRunner.flatMap(_.inspectTypes(whereClause, anythingAdminUser))
-      _                    <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(constructClause, typeInspectionResult))
+      _                    <- GravsearchQueryChecker.checkConstructClause(constructClause, typeInspectionResult)
       querySchema          <- ZIO.fromOption(querySchemaMaybe).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       transformer = new GravsearchToPrequeryTransformer(
                       constructClause = constructClause,

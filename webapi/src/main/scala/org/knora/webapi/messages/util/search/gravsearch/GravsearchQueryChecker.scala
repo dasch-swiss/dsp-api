@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.util.search.gravsearch
 
+import zio._
+
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi._
@@ -121,16 +123,23 @@ object GravsearchQueryChecker {
   def checkConstructClause(
     constructClause: ConstructClause,
     typeInspectionResult: GravsearchTypeInspectionResult
-  ): Unit =
-    for (statementPattern <- constructClause.statements) {
-      checkStatement(
-        statementPattern = statementPattern,
-        querySchema =
-          constructClause.querySchema.getOrElse(throw AssertionException(s"ConstructClause has no QuerySchema")),
-        typeInspectionResult = typeInspectionResult,
-        inConstructClause = true
-      )
-    }
+  ): Task[Unit] =
+    for {
+      querySchema <-
+        ZIO
+          .fromOption(constructClause.querySchema)
+          .orElseFail(AssertionException(s"ConstructClause has no QuerySchema"))
+      _ <- ZIO.attempt(
+             for (statementPattern <- constructClause.statements) {
+               checkStatement(
+                 statementPattern = statementPattern,
+                 querySchema = querySchema,
+                 typeInspectionResult = typeInspectionResult,
+                 inConstructClause = true
+               )
+             }
+           )
+    } yield ()
 
   // A set of predicates that aren't allowed in Gravsearch.
   val forbiddenPredicates: Set[IRI] = Set(
