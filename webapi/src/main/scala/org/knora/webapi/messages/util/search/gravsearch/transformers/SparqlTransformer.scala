@@ -175,6 +175,21 @@ object SparqlTransformer {
 
 final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit val stringFormatter: StringFormatter) {
 
+  private def unionize(statementPattern: StatementPattern, subProperties: Seq[SmartIri]): Seq[QueryPattern] =
+    // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
+    // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
+    // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
+    if (subProperties.length > 1) {
+      Seq(
+        UnionPattern(
+          subProperties.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+        )
+      )
+    } else {
+      // if no subproperties are available, the initial statement can be used
+      Seq(statementPattern)
+    }
+
   /**
    * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
    *
@@ -187,8 +202,7 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
     statementPattern: StatementPattern,
     simulateInference: Boolean,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Task[Seq[QueryPattern]] = {
-
+  ): Task[Seq[QueryPattern]] =
     (statementPattern.pred, simulateInference) match {
       case (iriRef: IriRef, _) if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
         // Simulate knora-api:standoffTagHasStartAncestor, using knora-api:standoffTagHasStartParent.
@@ -234,20 +248,7 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
                     }
                   }
               }
-
-              // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
-              // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
-              // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
-              if (relevantSubClasses.length > 1) {
-                Seq(
-                  UnionPattern(
-                    relevantSubClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
-                  )
-                )
-              } else {
-                // if no subclasses are available, the initial statement can be used.
-                Seq(statementPattern)
-              }
+              unionize(statementPattern, relevantSubClasses)
             } else {
               // No. Expand using rdfs:subPropertyOf*.
 
@@ -274,20 +275,7 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
                     }
                   }
               }
-
-              // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
-              // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
-              // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
-              if (relevantSubProps.length > 1) {
-                Seq(
-                  UnionPattern(
-                    relevantSubProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
-                  )
-                )
-              } else {
-                // if no subproperties are available, the initial statement can be used
-                Seq(statementPattern)
-              }
+              unionize(statementPattern, relevantSubProps)
             }
           }
         }
@@ -295,7 +283,6 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
         // The predicate isn't a property IRI, so no expansion needed.
         ZIO.succeed(Seq(statementPattern))
     }
-  }
 
   /**
    * Transforms a [[LuceneQueryPattern]] for Fuseki.
