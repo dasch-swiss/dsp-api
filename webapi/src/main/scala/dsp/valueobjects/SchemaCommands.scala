@@ -1,4 +1,4 @@
-package dsp.schema.domain
+package dsp.valueobjects
 
 import zio.prelude.Validation
 
@@ -7,14 +7,9 @@ import java.time.Instant
 import dsp.errors.ValidationException
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema
+import org.knora.webapi.messages.SmartIri
 
-/**
- * SmartIri placeholder value object.
- * WARNING: don't use this in production code. First find a solution how we deal with SmartIri in the new codebase.
- *
- * // TODO: this is only a placeholder for SmartIri - eventually we need a proper solution for IRI value objects.
- */
-case class SmartIri(value: String)
+// below file was moved from dsp-shared, for more info refer to issue DEV-745 and BL
 
 /**
  * Command/Value object representing a command to create a property on a schema/ontology.
