@@ -469,7 +469,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   /**
    * Get the IRI value from this JSON-LD object value representation.
    *
-   * @return The IRI of JSON-LD object.
+   * @return The IRI of the JSON-LD object.
    *         Fails if this JSON-LD object does not represent an IRI.
    *         Fails if the [[JsonLDKeywords.ID]] key is not present.
    */
