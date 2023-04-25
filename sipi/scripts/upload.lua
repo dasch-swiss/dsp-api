@@ -8,7 +8,6 @@
 require "file_info"
 require "send_response"
 require "jwt"
-require "clean_temp_dir"
 require "util"
 local json = require "json"
 
@@ -315,8 +314,6 @@ for file_index, file_params in pairs(server.uploads) do
 
 end
 
--- Clean up old temporary files.
-clean_temp_dir()
 -- Return the file upload data in the response.
 local response = {}
 response["uploadedFiles"] = file_upload_data
