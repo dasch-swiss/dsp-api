@@ -154,19 +154,6 @@ if prefix ~= token_prefix then
     return
 end
 
--- Check that original file storage directory exists
-local originals_dir = config.imgroot .. "/originals/" .. prefix .. "/"
-success, msg = check_create_dir(config.imgroot .. "/originals/")
-if not success then
-    send_error(500, msg)
-    return
-end
-success, msg = check_create_dir(originals_dir)
-if not success then
-    send_error(500, msg)
-    return
-end
-
 --
 -- Get the submitted filename and check consistency.
 --
@@ -242,13 +229,6 @@ end
 --
 -- Move sidecarfile if it exists
 --
-local originals_dir = config.imgroot .. "/originals/" .. prefix .. "/"
-success, msg = check_create_dir(originals_dir)
-if not success then
-    send_error(500, msg)
-    return
-end
-
 local hashed_sidecar =  get_file_basename(hashed_filename) .. ".info"
 local source_sidecar = config.imgroot .. "/tmp/" .. hashed_sidecar
 success, readable = server.fs.is_readable(source_sidecar)
@@ -268,25 +248,17 @@ if readable then
         return
     end
 
-    -- copy sidecar to IIIF directory for this project
+    -- move sidecar file to storage location
     local destination_sidecar = storage_dir .. hashed_sidecar
-    success, error_msg = server.fs.copyFile(source_sidecar, destination_sidecar)
-    if not success then
-        send_error(500, "server.fs.copyFile() failed: " .. error_msg)
-        return
-    end
-
-    -- move sidecar file to originals directory
-    local destination2_sidecar = originals_dir .. hashed_sidecar
-    success, error_msg = server.fs.moveFile(source_sidecar, destination2_sidecar)
+    success, error_msg = server.fs.moveFile(source_sidecar, destination_sidecar)
     if not success then
         send_error(500, "server.fs.moveFile() failed: " .. error_msg)
         return
     end
 
-    -- move the original file to the originals directory
+    -- move the original file to the storage location
     local source_original = config.imgroot .. "/tmp/" .. sidecar["originalInternalFilename"]
-    local destination_original = originals_dir .. sidecar["originalInternalFilename"]
+    local destination_original = storage_dir .. sidecar["originalInternalFilename"]
     success, error_msg = server.fs.moveFile(source_original, destination_original)
     if not success then
         send_error(500, "server.fs.moveFile() failed: " .. error_msg)
