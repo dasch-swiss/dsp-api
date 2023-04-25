@@ -80,11 +80,11 @@ final case class ListsResponderV1Live(
   ): Task[ListGetResponseV1] =
     for {
       maybeChildren <- listGetV1(rootNodeIri, userProfile)
-
-      children = maybeChildren match {
-                   case children: Seq[ListNodeV1] if children.nonEmpty => children
-                   case _                                              => throw NotFoundException(s"List not found: $rootNodeIri")
-                 }
+      children <-
+        maybeChildren match {
+          case children: Seq[ListNodeV1] if children.nonEmpty => ZIO.succeed(children)
+          case _                                              => ZIO.fail(NotFoundException(s"List not found: $rootNodeIri"))
+        }
 
       // consider routing path here ("hlists" | "selections") and return the correct case class
       result = pathType match {
