@@ -17,8 +17,7 @@ import java.time.Instant
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import dsp.schema.domain.CreatePropertyCommand
-import dsp.schema.domain.{SmartIri => SmartIriV3}
+import dsp.valueobjects.CreatePropertyCommand
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
@@ -510,39 +509,40 @@ final case class OntologiesRouteV2()(
                             .validate(validatedGuiAttributes, validatedGuiElement)
                             .flatMap(values => GuiObject.make(values._1, values._2))
 
-              ontologyIri =
-                Validation.succeed(SmartIriV3(inputOntology.ontologyMetadata.ontologyIri.toString))
+              ontologyIri         <- IriConverter.asSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString)
               lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-              propertyIri          = Validation.succeed(SmartIriV3(propertyInfoContent.propertyIri.toString))
+              propertyIri         <- IriConverter.asSmartIri(propertyInfoContent.propertyIri.toString)
               subClassConstraintSmartIri <-
                 RouteUtilZ.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint, "Should not happen")
-              subjectType = propertyInfoContent.predicates.get(subClassConstraintSmartIri) match {
-                              case None => Validation.succeed(None)
-                              case Some(value) =>
-                                value.objects.head match {
-                                  case objectType: SmartIriLiteralV2 =>
-                                    Validation.succeed(
-                                      Some(SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString))
-                                    )
-                                  case other =>
-                                    Validation.fail(ValidationException(s"Unexpected subject type for $other"))
-                                }
-                            }
+              subjectType <-
+                propertyInfoContent.predicates.get(subClassConstraintSmartIri) match {
+                  case None => ZIO.succeed(None)
+                  case Some(value) =>
+                    value.objects.head match {
+                      case objectType: SmartIriLiteralV2 =>
+                        IriConverter
+                          .asSmartIri(
+                            objectType.value.toOntologySchema(InternalSchema).toString
+                          )
+                          .map(Some(_))
+                      case other =>
+                        ZIO.fail(ValidationException(s"Unexpected subject type for $other"))
+                    }
+                }
               objectTypeSmartIri <- RouteUtilZ
                                       .toSmartIri(OntologyConstants.KnoraApiV2Complex.ObjectType, "Should not happen")
-              objectType = propertyInfoContent.predicates.get(objectTypeSmartIri) match {
-                             case None =>
-                               Validation.fail(ValidationException(s"Object type cannot be empty."))
-                             case Some(value) =>
-                               value.objects.head match {
-                                 case objectType: SmartIriLiteralV2 =>
-                                   Validation.succeed(
-                                     SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString)
-                                   )
-                                 case other =>
-                                   Validation.fail(ValidationException(s"Unexpected object type for $other"))
-                               }
-                           }
+              objectType <-
+                propertyInfoContent.predicates.get(objectTypeSmartIri) match {
+                  case None =>
+                    ZIO.fail(ValidationException(s"Object type cannot be empty."))
+                  case Some(value) =>
+                    value.objects.head match {
+                      case objectType: SmartIriLiteralV2 =>
+                        IriConverter.asSmartIri(objectType.value.toOntologySchema(InternalSchema).toString)
+                      case other =>
+                        ZIO.fail(ValidationException(s"Unexpected object type for $other"))
+                    }
+                }
               labelSmartIri <- RouteUtilZ.toSmartIri(OntologyConstants.Rdfs.Label, "Should not happen")
               label = propertyInfoContent.predicates.get(labelSmartIri) match {
                         case None => Validation.fail(ValidationException("Label missing"))
@@ -567,7 +567,7 @@ final case class OntologiesRouteV2()(
                             }
                         }
               superProperties =
-                propertyInfoContent.subPropertyOf.toList.map(smartIri => SmartIriV3(smartIri.toString)) match {
+                propertyInfoContent.subPropertyOf.toList match {
                   case Nil        => Validation.fail(ValidationException("SuperProperties cannot be empty."))
                   case superProps => Validation.succeed(superProps)
                 }
@@ -575,17 +575,16 @@ final case class OntologiesRouteV2()(
               _ <-
                 Validation
                   .validate(
-                    ontologyIri,
                     lastModificationDate,
-                    propertyIri,
-                    subjectType,
-                    objectType,
                     label,
                     comment,
                     superProperties,
                     guiObject
                   )
-                  .flatMap(v => CreatePropertyCommand.make(v._1, v._2, v._3, v._4, v._5, v._6, v._7, v._8, v._9))
+                  .flatMap(v =>
+                    CreatePropertyCommand
+                      .make(ontologyIri, v._1, propertyIri, subjectType, objectType, v._2, v._3, v._4, v._5)
+                  )
                   .toZIO
             } yield requestMessage
 
