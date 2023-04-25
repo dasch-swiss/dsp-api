@@ -678,14 +678,14 @@ object CreateResourceRequestV2 {
     implicit stringFormatter =>
       for {
         // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLDDocument.requireTypeAsKnoraTypeIri)
+        resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
 
         // Get the custom resource IRI if provided.
-        maybeCustomResourceIri <- ZIO.attempt(jsonLDDocument.maybeIDAsKnoraDataIri)
+        maybeCustomResourceIri <- ZIO.attempt(jsonLDDocument.body.maybeIDAsKnoraDataIri)
 
         // Get the resource's rdfs:label.
         label <- ZIO.attempt(
-                   jsonLDDocument.requireStringWithValidation(
+                   jsonLDDocument.body.requireStringWithValidation(
                      OntologyConstants.Rdfs.Label,
                      stringFormatter.toSparqlEncodedString
                    )
@@ -693,7 +693,7 @@ object CreateResourceRequestV2 {
 
         // Get information about the project that the resource should be created in.
         projectIri <- ZIO.attempt(
-                        jsonLDDocument.requireIriInObject(
+                        jsonLDDocument.body.requireIriInObject(
                           OntologyConstants.KnoraApiV2Complex.AttachedToProject,
                           stringFormatter.toSmartIriWithErr
                         )
@@ -716,7 +716,7 @@ object CreateResourceRequestV2 {
 
         // Get the resource's permissions.
         permissions <- ZIO.attempt(
-                         jsonLDDocument.maybeStringWithValidation(
+                         jsonLDDocument.body.maybeStringWithValidation(
                            OntologyConstants.KnoraApiV2Complex.HasPermissions,
                            stringFormatter.toSparqlEncodedString
                          )
@@ -725,7 +725,7 @@ object CreateResourceRequestV2 {
         // Get the user who should be indicated as the creator of the resource, if specified.
 
         maybeAttachedToUserIri <- ZIO.attempt(
-                                    jsonLDDocument.maybeIriInObject(
+                                    jsonLDDocument.body.maybeIriInObject(
                                       OntologyConstants.KnoraApiV2Complex.AttachedToUser,
                                       stringFormatter.toSmartIriWithErr
                                     )
@@ -740,7 +740,7 @@ object CreateResourceRequestV2 {
                                }
 
         creationDate <- ZIO.attempt(
-                          jsonLDDocument.maybeDatatypeValueInObject(
+                          jsonLDDocument.body.maybeDatatypeValueInObject(
                             key = OntologyConstants.KnoraApiV2Complex.CreationDate,
                             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                             validationFun =
@@ -767,7 +767,7 @@ object CreateResourceRequestV2 {
             propertyIriStrs.map { propertyIriStr =>
               val propertyIri: SmartIri =
                 propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-              val valuesArray: JsonLDArray = jsonLDDocument.requireArray(propertyIriStr)
+              val valuesArray: JsonLDArray = jsonLDDocument.body.requireArray(propertyIriStr)
 
               val valueFuturesSeq = ZIO.foreach(valuesArray.value) { valueJsonLD =>
                 for {
@@ -908,7 +908,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
   ): UpdateResourceMetadataRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val resourceIri: SmartIri = jsonLDDocument.requireIDAsKnoraDataIri
+    val resourceIri: SmartIri = jsonLDDocument.body.requireIDAsKnoraDataIri
 
     if (!resourceIri.isKnoraResourceIri) {
       throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
@@ -916,22 +916,22 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
 
     stringFormatter.validateUUIDOfResourceIRI(resourceIri)
 
-    val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
+    val resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
 
-    val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+    val maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
       validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
     val maybeLabel: Option[String] =
-      jsonLDDocument.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
-    val maybePermissions: Option[String] = jsonLDDocument.maybeStringWithValidation(
+      jsonLDDocument.body.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+    val maybePermissions: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.HasPermissions,
       stringFormatter.toSparqlEncodedString
     )
 
-    val maybeNewModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+    val maybeNewModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.NewModificationDate,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
       validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
@@ -1093,26 +1093,26 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
   ): DeleteOrEraseResourceRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val resourceIri: SmartIri = jsonLDDocument.requireIDAsKnoraDataIri
+    val resourceIri: SmartIri = jsonLDDocument.body.requireIDAsKnoraDataIri
 
     if (!resourceIri.isKnoraResourceIri) {
       throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
     }
 
-    val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
+    val resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
 
-    val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+    val maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
       validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
-    val maybeDeleteComment: Option[String] = jsonLDDocument.maybeStringWithValidation(
+    val maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.DeleteComment,
       stringFormatter.toSparqlEncodedString
     )
 
-    val maybeDeleteDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+    val maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
       expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
       validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)

@@ -81,7 +81,9 @@ class RdfFormatUtilSpec() extends CoreSpec {
   }
 
   private def checkJsonLDDocumentForRdfTypeBook(jsonLDDocument: JsonLDDocument): Unit =
-    assert(jsonLDDocument.requireString(JsonLDKeywords.TYPE) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book")
+    assert(
+      jsonLDDocument.body.requireString(JsonLDKeywords.TYPE) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"
+    )
 
   "RdfFormatUtil" should {
     "parse RDF in Turtle format, producing an RdfModel, then format it as Turtle again" in {

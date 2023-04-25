@@ -149,14 +149,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.requireArray(propertyIriInResult.toString)
+    resource.body.requireArray(propertyIriInResult.toString)
 
   private def getValueFromResource(
     resource: JsonLDDocument,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI
   ): JsonLDObject = {
-    val resourceIri: IRI = resource.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+    val resourceIri: IRI =
+      resource.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
     val propertyValues: JsonLDArray =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
 
@@ -185,7 +186,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   }
 
   private def parseResourceLastModificationDate(resource: JsonLDDocument): Option[Instant] =
-    resource.maybeObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate).map { jsonLDObject =>
+    resource.body.maybeObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate).map { jsonLDObject =>
       jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.validateAndEscapeIri) should ===(
         OntologyConstants.Xsd.DateTimeStamp
       )
@@ -234,7 +235,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       userEmail = userEmail
     )
 
-    val receivedResourceIri: IRI = resource.requireIDAsKnoraDataIri.toString
+    val receivedResourceIri: IRI = resource.body.requireIDAsKnoraDataIri.toString
 
     if (receivedResourceIri != resourceIri) {
       throw AssertionException(s"Expected resource $resourceIri, received $receivedResourceIri")

@@ -173,14 +173,17 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val label: String =
-      jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+      jsonLDDocument.body.requireStringWithValidation(
+        OntologyConstants.Rdfs.Label,
+        stringFormatter.toSparqlEncodedString
+      )
 
-    val projectIri: SmartIri = jsonLDDocument.requireIriInObject(
+    val projectIri: SmartIri = jsonLDDocument.body.requireIriInObject(
       OntologyConstants.KnoraApiV2Complex.AttachedToProject,
       stringFormatter.toSmartIriWithErr
     )
 
-    val mappingName: String = jsonLDDocument.requireStringWithValidation(
+    val mappingName: String = jsonLDDocument.body.requireStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.MappingHasName,
       stringFormatter.toSparqlEncodedString
     )

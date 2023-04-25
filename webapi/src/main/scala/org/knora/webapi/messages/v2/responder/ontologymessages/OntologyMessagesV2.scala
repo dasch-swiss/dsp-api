@@ -97,19 +97,26 @@ object CreateOntologyRequestV2 {
   ): CreateOntologyRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val ontologyName: String = jsonLDDocument.requireStringWithValidation(
+    val ontologyName: String = jsonLDDocument.body.requireStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.OntologyName,
       (s: String, errorFun) => ValuesValidator.validateProjectSpecificOntologyName(s).getOrElse(errorFun)
     )
     val label: String =
-      jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+      jsonLDDocument.body.requireStringWithValidation(
+        OntologyConstants.Rdfs.Label,
+        stringFormatter.toSparqlEncodedString
+      )
     val comment: Option[String] =
-      jsonLDDocument.maybeStringWithValidation(OntologyConstants.Rdfs.Comment, stringFormatter.toSparqlEncodedString)
-    val projectIri: SmartIri = jsonLDDocument.requireIriInObject(
+      jsonLDDocument.body.maybeStringWithValidation(
+        OntologyConstants.Rdfs.Comment,
+        stringFormatter.toSparqlEncodedString
+      )
+    val projectIri: SmartIri = jsonLDDocument.body.requireIriInObject(
       OntologyConstants.KnoraApiV2Complex.AttachedToProject,
       stringFormatter.toSmartIriWithErr
     )
-    val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2Complex.IsShared).exists(identity)
+    val isShared: Boolean =
+      jsonLDDocument.body.maybeBoolean(OntologyConstants.KnoraApiV2Complex.IsShared).exists(identity)
 
     CreateOntologyRequestV2(
       ontologyName = ontologyName,
