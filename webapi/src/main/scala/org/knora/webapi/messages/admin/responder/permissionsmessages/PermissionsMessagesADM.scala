@@ -147,7 +147,9 @@ case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends Permissions
   if (forGroup.isEmpty) {
     throw BadRequestException(s"IRI of new group cannot be empty.")
   }
-  stringFormatter.validateAndEscapeIri(forGroup, throw BadRequestException(s"Invalid IRI $forGroup is given."))
+  StringFormatter
+    .validateAndEscapeIri(forGroup)
+    .getOrElse(throw BadRequestException(s"Invalid IRI $forGroup is given."))
 
   def toJsValue: JsValue = changePermissionGroupApiRequestADMFormat.write(this)
 }
@@ -177,10 +179,11 @@ case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) ext
     throw BadRequestException(s"Resource class IRI cannot be empty.")
   }
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeIri(
-    forResourceClass,
-    throw BadRequestException(s"Invalid resource class IRI $forResourceClass is given.")
-  )
+  StringFormatter
+    .validateAndEscapeIri(forResourceClass)
+    .getOrElse(
+      throw BadRequestException(s"Invalid resource class IRI $forResourceClass is given.")
+    )
 
   def toJsValue: JsValue = changePermissionResourceClassApiRequestADMFormat.write(this)
 }
@@ -194,11 +197,9 @@ case class ChangePermissionPropertyApiRequestADM(forProperty: IRI) extends Permi
   if (forProperty.isEmpty) {
     throw BadRequestException(s"Property IRI cannot be empty.")
   }
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeIri(
-    forProperty,
-    throw BadRequestException(s"Invalid property IRI $forProperty is given.")
-  )
+  StringFormatter
+    .validateAndEscapeIri(forProperty)
+    .getOrElse(throw BadRequestException(s"Invalid property IRI $forProperty is given."))
 
   def toJsValue: JsValue = changePermissionPropertyApiRequestADMFormat.write(this)
 }

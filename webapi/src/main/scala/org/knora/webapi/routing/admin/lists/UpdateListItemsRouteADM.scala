@@ -55,7 +55,9 @@ final case class UpdateListItemsRouteADM(
       put {
         entity(as[ChangeNodeNameApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+            StringFormatter
+              .validateAndEscapeIri(iri)
+              .getOrElse(throw BadRequestException(s"Invalid param node IRI: $iri"))
           val namePayload: NodeNameChangePayloadADM =
             NodeNameChangePayloadADM(ListName.make(apiRequest.name).fold(e => throw e.head, v => v))
           val task = getUserUuid(requestContext)
@@ -73,7 +75,9 @@ final case class UpdateListItemsRouteADM(
       put {
         entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+            StringFormatter
+              .validateAndEscapeIri(iri)
+              .getOrElse(throw BadRequestException(s"Invalid param node IRI: $iri"))
           val labelsPayload: NodeLabelsChangePayloadADM =
             NodeLabelsChangePayloadADM(Labels.make(apiRequest.labels).fold(e => throw e.head, v => v))
           val task = getUserUuid(requestContext)
@@ -91,7 +95,9 @@ final case class UpdateListItemsRouteADM(
       put {
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+            StringFormatter
+              .validateAndEscapeIri(iri)
+              .getOrElse(throw BadRequestException(s"Invalid param node IRI: $iri"))
           val commentsPayload: NodeCommentsChangePayloadADM =
             NodeCommentsChangePayloadADM(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
           val task = getUserUuid(requestContext)

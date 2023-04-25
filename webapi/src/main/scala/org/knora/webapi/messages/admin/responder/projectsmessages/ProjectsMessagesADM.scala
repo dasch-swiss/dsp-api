@@ -112,14 +112,14 @@ case class ChangeProjectApiRequestADM(
 
     val validatedLongName: Option[String] =
       longname.map(l =>
-        stringFormatter
+        StringFormatter
           .toSparqlEncodedString(l)
           .getOrElse(throw BadRequestException(s"The supplied longname: '$l' is not valid."))
       )
 
     val validatedLogo: Option[String] =
       logo.map(l =>
-        stringFormatter
+        StringFormatter
           .toSparqlEncodedString(l)
           .getOrElse(throw BadRequestException(s"The supplied logo: '$l' is not valid."))
       )
@@ -128,10 +128,9 @@ case class ChangeProjectApiRequestADM(
       case Some(descriptions: Seq[V2.StringLiteralV2]) =>
         val escapedDescriptions = descriptions.map { des =>
           val escapedValue =
-            stringFormatter.toSparqlEncodedString(
-              des.value,
-              errorFun = throw BadRequestException(s"The supplied description: '${des.value}' is not valid.")
-            )
+            StringFormatter
+              .toSparqlEncodedString(des.value)
+              .getOrElse(throw BadRequestException(s"The supplied description: '${des.value}' is not valid."))
           V2.StringLiteralV2(value = escapedValue, language = des.language)
         }
         Some(escapedDescriptions)
@@ -141,10 +140,11 @@ case class ChangeProjectApiRequestADM(
     val validatedKeywords: Option[Seq[String]] = keywords match {
       case Some(givenKeywords: Seq[String]) =>
         val escapedKeywords = givenKeywords.map(keyword =>
-          stringFormatter.toSparqlEncodedString(
-            keyword,
-            errorFun = throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")
-          )
+          StringFormatter
+            .toSparqlEncodedString(keyword)
+            .getOrElse(
+              throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")
+            )
         )
         Some(escapedKeywords)
       case None => None
@@ -478,12 +478,12 @@ case class ProjectADM(
   def unescape: ProjectADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
-      V2.StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
+      V2.StringLiteralV2(value = StringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
     )
-    val unescapedKeywords: Seq[String] = keywords.map(key => stringFormatter.fromSparqlEncodedString(key))
+    val unescapedKeywords: Seq[String] = keywords.map(key => StringFormatter.fromSparqlEncodedString(key))
     copy(
-      shortcode = stringFormatter.fromSparqlEncodedString(shortcode),
-      shortname = stringFormatter.fromSparqlEncodedString(shortname),
+      shortcode = StringFormatter.fromSparqlEncodedString(shortcode),
+      shortname = StringFormatter.fromSparqlEncodedString(shortname),
       longname = stringFormatter.unescapeOptionalString(longname),
       logo = stringFormatter.unescapeOptionalString(logo),
       description = unescapedDescriptions,

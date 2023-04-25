@@ -926,7 +926,7 @@ final case class ListsResponderADMLive(
                                )
       _ = if (!projectUniqueNodeName) {
             val escapedName   = name.get.value
-            val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
+            val unescapedName = StringFormatter.fromSparqlEncodedString(escapedName)
             throw BadRequestException(
               s"The node name ${unescapedName} is already used by a list inside the project ${projectIri.value}."
             )

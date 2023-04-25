@@ -12,7 +12,6 @@ import org.knora.webapi.messages.StringFormatter
  * Holds an optional, mutable IRI for use in tests.
  */
 class MutableTestIri {
-  private val stringFormatter       = StringFormatter.getGeneralInstance
   private var maybeIri: Option[IRI] = None
 
   /**
@@ -21,7 +20,9 @@ class MutableTestIri {
    * @param iri the IRI to be stored.
    */
   def set(iri: IRI): Unit =
-    maybeIri = Some(stringFormatter.validateAndEscapeIri(iri, throw TestIriException(s"Got an invalid IRI: <$iri>")))
+    maybeIri = Some(
+      StringFormatter.validateAndEscapeIri(iri).getOrElse(throw TestIriException(s"Got an invalid IRI: <$iri>"))
+    )
 
   /**
    * Removes any stored IRI.

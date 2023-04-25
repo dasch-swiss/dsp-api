@@ -126,7 +126,6 @@ object RouteUtilV1 {
    *                                       resources. In a bulk import, this allows standoff links to resources
    *                                       that are to be created by the import.
    * @param userProfile                    the user making the request.
-   * @param log                            a logging adapter.
    * @return a [[TextWithStandoffTagsV2]].
    */
   def convertXMLtoStandoffTagV1(
@@ -286,11 +285,7 @@ object RouteUtilV1 {
     ZIO.fail(BadRequestException(errorMessage)).when(params.length != length)
 
   def toSparqlEncodedString(str: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
-    ZIO
-      .service[StringFormatter]
-      .map(_.toSparqlEncodedString(str))
-      .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadRequestException(errorMsg))
+    ZIO.fromOption(StringFormatter.toSparqlEncodedString(str)).orElseFail(BadRequestException(errorMsg))
 
   def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): Task[Set[IRI]] =
     ZIO.attempt(StandoffStringUtil.getResourceIrisFromStandoffTags(tags))

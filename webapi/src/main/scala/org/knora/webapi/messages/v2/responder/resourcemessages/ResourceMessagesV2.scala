@@ -144,7 +144,9 @@ case class ResourceHistoryEventsGetRequestV2(
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeIri(resourceIri, throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
+  StringFormatter
+    .validateAndEscapeIri(resourceIri)
+    .getOrElse(throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
   if (!stringFormatter.toSmartIri(resourceIri).isKnoraResourceIri) {
     throw BadRequestException(s"Given IRI is not a resource IRI: $resourceIri")
   }
@@ -161,7 +163,9 @@ case class ProjectResourcesWithHistoryGetRequestV2(
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI: $projectIri"))
+  StringFormatter
+    .validateAndEscapeIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
   if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
     throw BadRequestException("Given IRI is not a project IRI.")
   }
@@ -676,6 +680,8 @@ object CreateResourceRequestV2 {
     requestingUser: UserADM
   ): ZIO[StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
     implicit stringFormatter =>
+      val validationFun: (String, => Nothing) => String =
+        (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
       for {
         // Get the resource class.
         resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
@@ -684,12 +690,8 @@ object CreateResourceRequestV2 {
         maybeCustomResourceIri <- ZIO.attempt(jsonLDDocument.body.maybeIDAsKnoraDataIri)
 
         // Get the resource's rdfs:label.
-        label <- ZIO.attempt(
-                   jsonLDDocument.body.requireStringWithValidation(
-                     OntologyConstants.Rdfs.Label,
-                     stringFormatter.toSparqlEncodedString
-                   )
-                 )
+        label <-
+          ZIO.attempt(jsonLDDocument.body.requireStringWithValidation(OntologyConstants.Rdfs.Label, validationFun))
 
         // Get information about the project that the resource should be created in.
         projectIri <- ZIO.attempt(
@@ -716,10 +718,8 @@ object CreateResourceRequestV2 {
 
         // Get the resource's permissions.
         permissions <- ZIO.attempt(
-                         jsonLDDocument.body.maybeStringWithValidation(
-                           OntologyConstants.KnoraApiV2Complex.HasPermissions,
-                           stringFormatter.toSparqlEncodedString
-                         )
+                         jsonLDDocument.body
+                           .maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, validationFun)
                        )
 
         // Get the user who should be indicated as the creator of the resource, if specified.
@@ -821,7 +821,7 @@ object CreateResourceRequestV2 {
                   maybePermissions <- ZIO.attempt(
                                         valueJsonLDObject.maybeStringWithValidation(
                                           OntologyConstants.KnoraApiV2Complex.HasPermissions,
-                                          stringFormatter.toSparqlEncodedString
+                                          validationFun
                                         )
                                       )
                 } yield CreateValueInNewResourceV2(
@@ -924,11 +924,14 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
       validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+
     val maybeLabel: Option[String] =
-      jsonLDDocument.body.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+      jsonLDDocument.body.maybeStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
     val maybePermissions: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.HasPermissions,
-      stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     val maybeNewModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
@@ -1067,7 +1070,7 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
+   * @param appActor            a reference to the application actor.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
@@ -1107,9 +1110,12 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
       validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
     )
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+
     val maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
       OntologyConstants.KnoraApiV2Complex.DeleteComment,
-      stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     val maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(

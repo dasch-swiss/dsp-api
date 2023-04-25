@@ -495,7 +495,9 @@ final case class UsersRouteADM(
         }
 
         val checkedGroupIri =
-          stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
+          StringFormatter
+            .validateAndEscapeIri(groupIri)
+            .getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
 
         val task = getIriUserUuid(groupIri, requestContext).map(r =>
           UserGroupMembershipAddRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
@@ -524,7 +526,9 @@ final case class UsersRouteADM(
         }
 
         val checkedGroupIri =
-          stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
+          StringFormatter
+            .validateAndEscapeIri(groupIri)
+            .getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
 
         val task = getIriUserUuid(groupIri, requestContext).map(r =>
           UserGroupMembershipRemoveRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)

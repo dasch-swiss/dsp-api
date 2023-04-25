@@ -198,24 +198,13 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  @deprecated("use getSchemaOptions() instead")
-  def getSchemaOptionsUnsafe(requestContext: RequestContext): Set[SchemaOption] =
-    getSchemaOptions(requestContext).fold(
-      errors => throw errors.head,
-      schemaOptions => schemaOptions
-    )
-
-  /**
-   * Gets the schema options submitted in the request.
-   *
-   * @param requestContext the request context.
-   * @return the set of schema options submitted in the request, including default options.
-   */
-  def getSchemaOptions(requestContext: RequestContext): Validation[BadRequestException, Set[SchemaOption]] =
-    for {
-      standoffRendering <- getStandoffRendering(requestContext)
-      jsonLDRendering   <- getJsonLDRendering(requestContext)
-    } yield Set(standoffRendering, jsonLDRendering).flatten
+  def getSchemaOptions(requestContext: RequestContext): IO[BadRequestException, Set[SchemaOption]] =
+    Validation
+      .validateWith(
+        getStandoffRendering(requestContext),
+        getJsonLDRendering(requestContext)
+      )((standoff, jsonLd) => Set(standoff, jsonLd).flatten)
+      .toZIO
 
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
@@ -277,7 +266,12 @@ object RouteUtilV2 {
     targetSchema: OntologySchema = ApiV2Complex,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
   )(implicit runtime: Runtime[MessageRelay with AppConfig]): Future[RouteResult] =
-    runRdfRouteZ(ZIO.fromFuture(_ => requestMessageF), requestContext, ZIO.succeed(targetSchema), schemaOptionsOption)
+    runRdfRouteZ(
+      ZIO.fromFuture(_ => requestMessageF),
+      requestContext,
+      ZIO.succeed(targetSchema),
+      ZIO.succeed(schemaOptionsOption)
+    )
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
@@ -293,7 +287,7 @@ object RouteUtilV2 {
     requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: Option[Set[SchemaOption]] = None
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
   )(implicit runtime: Runtime[R with MessageRelay with AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
     completeResponse(responseZio, requestContext, targetSchemaTask, schemaOptionsOption)
@@ -320,11 +314,11 @@ object RouteUtilV2 {
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: Option[Set[SchemaOption]] = None
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
   )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
       targetSchema      <- targetSchemaTask
-      schemaOptions     <- ZIO.fromOption(schemaOptionsOption).orElse(getSchemaOptions(requestContext).toZIO)
+      schemaOptions     <- schemaOptionsOption.some.orElse(getSchemaOptions(requestContext))
       appConfig         <- ZIO.service[AppConfig]
       knoraResponse     <- responseTask
       responseMediaType <- chooseRdfMediaTypeForResponse(requestContext)

@@ -783,7 +783,7 @@ case class TextValueWithStandoffV1(
     other match {
       case otherText: TextValueV1 =>
         // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
-        stringFormatter.fromSparqlEncodedString(utf8str) == otherText.utf8str
+        StringFormatter.fromSparqlEncodedString(utf8str) == otherText.utf8str
       case otherValue =>
         throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
     }
@@ -803,7 +803,7 @@ case class TextValueWithStandoffV1(
       case textValueWithStandoffV1: TextValueWithStandoffV1 =>
         // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
         val utf8strIdentical: Boolean =
-          stringFormatter.fromSparqlEncodedString(utf8str) == textValueWithStandoffV1.utf8str
+          StringFormatter.fromSparqlEncodedString(utf8str) == textValueWithStandoffV1.utf8str
 
         // Compare standoff tags.
         val thisComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(standoff)
