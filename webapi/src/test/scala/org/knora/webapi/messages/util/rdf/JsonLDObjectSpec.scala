@@ -685,9 +685,9 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
     val propertyIri                 = "http://api.knora.org/ontology/knora-api/v2#hasText"
     val someText                    = "some text"
-    val textJsonLdString            = JsonLDObject(Map("@valueAsString" -> JsonLDString(someText)))
+    val textJsonLdObject            = JsonLDObject(Map("@valueAsString" -> JsonLDString(someText)))
     val smartPropertyIri            = sf.toSmartIri(propertyIri)
-    val jsonLDObjectWithPropertyIri = JsonLDObject(Map(propertyIri -> textJsonLdString))
+    val jsonLDObjectWithPropertyIri = JsonLDObject(Map(propertyIri -> textJsonLdObject))
 
     suite("when given a valid value")(
       test("requireTypeAsKnoraApiV2ComplexTypeIri should return smart iri") {
@@ -703,12 +703,12 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       test("requireResourcePropertyApiV2ComplexValue should return smart iri") {
         for {
           actual <- ZIO.attempt(jsonLDObjectWithPropertyIri.requireResourcePropertyApiV2ComplexValue)
-        } yield assertTrue(actual == (smartPropertyIri, textJsonLdString))
+        } yield assertTrue(actual == (smartPropertyIri, textJsonLdObject))
       },
       test("getRequiredResourcePropertyApiV2ComplexValue should return smart iri") {
         for {
           actual <- jsonLDObjectWithPropertyIri.getRequiredResourcePropertyApiV2ComplexValue
-        } yield assertTrue(actual == (smartPropertyIri, textJsonLdString))
+        } yield assertTrue(actual == (smartPropertyIri, textJsonLdObject))
       }
     )
   }
