@@ -482,13 +482,24 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    * Checks that the IRI's ontology schema, if present, corresponds to the specified schema.
    *
    * @param schema the schema to be allowed.
-   * @return [[Boolean]] if the [[OntologySchema]] is present and matches the specified schema.
+   * @return `true` if the [[OntologySchema]] is present and matches the specified schema or if the iri does not have a schema.
    */
-  def isOntologySchema(schema: OntologySchema): Boolean = getOntologySchema.contains(schema)
+  def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean = getOntologySchema match {
+    case Some(schema) => schema == allowedSchema
+    case None         => true
+  }
 
-  def isApiV2ComplexSchema: Boolean = isOntologySchema(ApiV2Complex)
-  def isApiV2SimpleSchema: Boolean  = isOntologySchema(ApiV2Simple)
-  def isInternalSchema: Boolean     = isOntologySchema(InternalSchema)
+  /**
+   * Checks that the IRI's ontology schema, if present, corresponds to the specified schema.
+   *
+   * @param schema the schema to be allowed.
+   * @return `true` if the [[OntologySchema]] is present and matches the specified schema.
+   *         `false` otherwise.
+   */
+  private def isOntologySchema(schema: OntologySchema): Boolean = getOntologySchema.contains(schema)
+  def isApiV2ComplexSchema: Boolean                             = isOntologySchema(ApiV2Complex)
+  def isApiV2SimpleSchema: Boolean                              = isOntologySchema(ApiV2Simple)
+  def isInternalSchema: Boolean                                 = isOntologySchema(InternalSchema)
 
   /**
    * Converts this IRI to another ontology schema.

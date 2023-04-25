@@ -38,7 +38,7 @@ object GravsearchQueryChecker {
     for (entity <- Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj)) {
       entity match {
         case iriRef: IriRef =>
-          if (iriRef.iri.isOntologySchema(querySchema)) iriRef.iri
+          if (iriRef.iri.isApiV2Schema(querySchema)) iriRef.iri
           else throw GravsearchException(s"${iriRef.toSparql} is not in the correct schema")
 
           if (inConstructClause && iriRef.iri.toString.contains('#')) {
@@ -57,11 +57,11 @@ object GravsearchQueryChecker {
             case Some(typeInfo: GravsearchEntityTypeInfo) =>
               typeInfo match {
                 case propertyTypeInfo: PropertyTypeInfo =>
-                  if (propertyTypeInfo.objectTypeIri.isOntologySchema(querySchema)) propertyTypeInfo.objectTypeIri
+                  if (propertyTypeInfo.objectTypeIri.isApiV2Schema(querySchema)) propertyTypeInfo.objectTypeIri
                   else throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
 
                 case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                  if (nonPropertyTypeInfo.typeIri.isOntologySchema(querySchema)) nonPropertyTypeInfo.typeIri
+                  if (nonPropertyTypeInfo.typeIri.isApiV2Schema(querySchema)) nonPropertyTypeInfo.typeIri
                   else throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
 
                   // If it's a variable that doesn't represent a property, and we're using the complex schema and the statement

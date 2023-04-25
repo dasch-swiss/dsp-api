@@ -142,7 +142,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
 
     val annotationPropIri: SmartIri = statementPattern.pred match {
       case IriRef(iri, _) =>
-        if (iri.isOntologySchema(querySchema)) iri
+        if (iri.isApiV2Schema(querySchema)) iri
         else throw GravsearchException(s"Invalid schema in IRI: $iri")
       case other => throw AssertionException(s"Not a type annotation predicate: $other")
     }
@@ -154,7 +154,7 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
 
     val typeIri: SmartIri = statementPattern.obj match {
       case IriRef(iri, _) =>
-        if (iri.isOntologySchema(querySchema)) iri
+        if (iri.isApiV2Schema(querySchema)) iri
         else throw GravsearchException(s"Invalid schema in IRI: $iri")
       case other => throw AssertionException(s"Not a valid type in a type annotation: $other")
     }
@@ -165,5 +165,4 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
       typeIri = typeIri
     )
   }
-
 }
