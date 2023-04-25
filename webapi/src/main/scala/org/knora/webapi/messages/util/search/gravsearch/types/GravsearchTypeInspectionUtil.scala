@@ -13,15 +13,11 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.AnnotationRemovingWhereTransformer
 
 /**
  * Utilities for Gravsearch type inspection.
  */
 object GravsearchTypeInspectionUtil {
-
-  val layer: ZLayer[QueryTraverser, Nothing, GravsearchTypeInspectionUtil] =
-    ZLayer.fromFunction(GravsearchTypeInspectionUtil.apply _)
 
   /**
    * A trait for case objects representing type annotation properties.
@@ -158,28 +154,6 @@ object GravsearchTypeInspectionUtil {
     entities.flatMap(entity => maybeTypeableEntity(entity)).toSet
 
   /**
-   * A [[WhereTransformer]] for removing Gravsearch type annotations from a WHERE clause.
-   */
-  private class AnnotationRemovingWhereTransformer extends WhereTransformer {
-    override def transformStatementInWhere(
-      statementPattern: StatementPattern,
-      inputOrderBy: Seq[OrderCriterion],
-      limitInferenceToOntologies: Option[Set[SmartIri]] = None
-    ): Task[Seq[QueryPattern]] = ZIO.attempt {
-      if (mustBeAnnotationStatement(statementPattern)) {
-        Seq.empty[QueryPattern]
-      } else {
-        Seq(statementPattern)
-      }
-    }
-
-    override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.succeed(patterns)
-
-    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
-      ZIO.succeed(Seq(luceneQueryPattern))
-  }
-
-  /**
    * Determines whether a statement pattern must represent a Gravsearch type annotation.
    *
    * @param statementPattern the statement pattern.
@@ -250,9 +224,6 @@ object GravsearchTypeInspectionUtil {
       case _ => false
     }
   }
-}
-
-final case class GravsearchTypeInspectionUtil(queryTraverser: QueryTraverser) {
 
   /**
    * Removes Gravsearch type annotations from a WHERE clause.
@@ -260,12 +231,24 @@ final case class GravsearchTypeInspectionUtil(queryTraverser: QueryTraverser) {
    * @param whereClause the WHERE clause.
    * @return the same WHERE clause, minus any type annotations.
    */
-  def removeTypeAnnotations(whereClause: WhereClause): Task[WhereClause] =
-    for {
-      wherePatterns <- queryTraverser.transformWherePatterns(
-                         patterns = whereClause.patterns,
-                         inputOrderBy = Seq.empty[OrderCriterion],
-                         whereTransformer = new AnnotationRemovingWhereTransformer
-                       )
-    } yield whereClause.copy(patterns = wherePatterns)
+  def removeTypeAnnotations(whereClause: WhereClause): Task[WhereClause] = {
+    val patterns = whereClause.patterns.flatMap(transformPattern)
+    ZIO.succeed(whereClause.copy(patterns = patterns))
+  }
+
+  private def transformPattern(pattern: QueryPattern): Seq[QueryPattern] =
+    pattern match {
+      case filterNotExistsPattern: FilterNotExistsPattern =>
+        Seq(FilterNotExistsPattern(filterNotExistsPattern.patterns.flatMap(transformPattern)))
+      case minusPattern: MinusPattern             => Seq(MinusPattern(minusPattern.patterns.flatMap(transformPattern)))
+      case optionalPattern: OptionalPattern       => Seq(OptionalPattern(optionalPattern.patterns.flatMap(transformPattern)))
+      case unionPattern: UnionPattern             => Seq(UnionPattern(unionPattern.blocks.map(_.flatMap(transformPattern))))
+      case filterPattern: FilterPattern           => Seq(filterPattern)
+      case luceneQueryPattern: LuceneQueryPattern => Seq(luceneQueryPattern)
+      case valuesPattern: ValuesPattern           => Seq(valuesPattern)
+      case bindPattern: BindPattern               => Seq(bindPattern)
+      case statementPattern: StatementPattern =>
+        if (mustBeAnnotationStatement(statementPattern)) Seq.empty[QueryPattern]
+        else Seq(statementPattern)
+    }
 }
