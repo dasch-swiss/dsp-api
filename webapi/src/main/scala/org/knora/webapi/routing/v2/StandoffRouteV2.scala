@@ -65,7 +65,7 @@ final case class StandoffRouteV2()(
             user         <- Authenticator.getUserADM(requestContext)
           } yield GetStandoffPageRequestV2(resourceIri.toString, valueIri.toString, offset, targetSchema, user)
           val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, schemaOptionsOption = Some(schemaOptions))
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, schemaOptionsOption = ZIO.succeed(Some(schemaOptions)))
         }
     } ~ path("v2" / "mapping") {
       post {

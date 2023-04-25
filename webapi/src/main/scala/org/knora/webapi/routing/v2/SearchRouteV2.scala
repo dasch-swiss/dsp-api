@@ -171,8 +171,8 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   private def fullTextSearch(): Route = path("v2" / "search" / Segment) {
     searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
       get { requestContext =>
-        val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+        val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+        val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
         val requestTask = for {
@@ -185,6 +185,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           returnFiles           = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
           requestingUser       <- Authenticator.getUserADM(requestContext)
           targetSchema         <- targetSchemaTask
+          schemaOptions        <- schemaOptionsTask
         } yield FulltextSearchRequestV2(
           searchValue = escapedSearchStr,
           offset = offset,
@@ -196,7 +197,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           targetSchema = targetSchema,
           schemaOptions = schemaOptions
         )
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
       }
   }
 
@@ -227,14 +228,15 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     "v2" / "searchextended" / Segment
   ) { sparql => // Segment is a URL encoded string representing a Gravsearch query
     get { requestContext =>
-      val constructQuery   = GravsearchParser.parseQuery(sparql)
-      val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions    = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+      val constructQuery    = GravsearchParser.parseQuery(sparql)
+      val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+      val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
       val requestMessage = for {
         targetSchema   <- targetSchemaTask
         requestingUser <- Authenticator.getUserADM(requestContext)
+        schemaOptions  <- schemaOptionsTask
       } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask, Some(schemaOptions))
+      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
     }
   }
 
@@ -242,15 +244,15 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     post {
       entity(as[String]) { gravsearchQuery => requestContext =>
         {
-          val constructQuery                   = GravsearchParser.parseQuery(gravsearchQuery)
-          val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+          val constructQuery    = GravsearchParser.parseQuery(gravsearchQuery)
+          val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+          val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
           val requestTask = for {
             targetSchema   <- targetSchemaTask
-            schemaOptions  <- RouteUtilV2.getSchemaOptions(requestContext).toZIO
+            schemaOptions  <- schemaOptionsTask
             requestingUser <- Authenticator.getUserADM(requestContext)
           } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
         }
       }
     }

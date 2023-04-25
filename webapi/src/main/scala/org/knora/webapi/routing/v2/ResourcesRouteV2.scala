@@ -181,11 +181,11 @@ final case class ResourcesRouteV2(
       val page: Int =
         ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
 
-      val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+      val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
 
       val requestTask = for {
         targetSchema   <- targetSchemaTask
+        schemaOptions  <- RouteUtilV2.getSchemaOptions(requestContext)
         requestingUser <- Authenticator.getUserADM(requestContext)
       } yield SearchResourcesByProjectAndClassRequestV2(
         projectIri,
@@ -318,12 +318,13 @@ final case class ResourcesRouteV2(
             .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
             .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
         )
-      val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+      val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+      val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
 
       val requestTask = for {
         targetSchema   <- targetSchemaTask
         requestingUser <- Authenticator.getUserADM(requestContext)
+        schemaOptions  <- schemaOptionsTask
       } yield ResourcesGetRequestV2(
         resourceIris,
         versionDate = versionDate,
@@ -331,7 +332,7 @@ final case class ResourcesRouteV2(
         schemaOptions = schemaOptions,
         requestingUser = requestingUser
       )
-      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
+      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
     }
   }
 
