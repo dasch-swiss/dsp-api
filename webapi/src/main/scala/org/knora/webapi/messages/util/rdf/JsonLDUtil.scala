@@ -968,8 +968,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         IriConverter
           .asSmartIri(str)
           .mapError(_.getMessage)
-          .filterOrFail(_.isKnoraEntityIri)(s"Invalid Knora entity IRI: $str")
-          .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(s"Invalid Knora API v2 complex type IRI: $str")
+          .filterOrFail(iri => iri.isKnoraEntityIri && iri.isApiV2ComplexSchema)(
+            s"Invalid Knora API v2 complex type IRI: $str"
+          )
       case None => ZIO.fail(s"No ${JsonLDKeywords.TYPE} provided")
     }
 

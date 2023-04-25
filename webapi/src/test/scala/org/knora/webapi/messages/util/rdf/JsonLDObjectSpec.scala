@@ -650,7 +650,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   // smartIri related tests
   private val smartIriValueSuite = suite("getting smart iri values")(
-    smartIriValueSuiteGivenEmptyMap + smartIriValueSuiteGivenValidValue
+    smartIriValueSuiteGivenEmptyMap + smartIriValueSuiteGivenValidValue + smartIriValueSuiteGivenInvalidValue
   )
 
   private def smartIriValueSuiteGivenEmptyMap = suite("when given an empty map")(
@@ -711,5 +711,71 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == (smartPropertyIri, textJsonLdObject))
       }
     )
+  }
+
+  private def smartIriValueSuiteGivenInvalidValue = {
+    def typeIriSuite = {
+      val invalidTypeIri                 = "http://api.knora.org/ontology/knora-api/v2"
+      val expectedError                  = s"Invalid Knora API v2 complex type IRI: $invalidTypeIri"
+      val jsonLDObjectWithInvalidTypeIri = JsonLDObject(Map("@type" -> JsonLDString(invalidTypeIri)))
+      suite("when given an invalid type value")(
+        test("requireTypeAsKnoraApiV2ComplexTypeIri should fail with a BadRequestException") {
+          for {
+            actual <- ZIO.attempt(jsonLDObjectWithInvalidTypeIri.requireTypeAsKnoraApiV2ComplexTypeIri).exit
+          } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
+        },
+        test("getRequiredTypeAsKnoraApiV2ComplexTypeIri should fail with correct message") {
+          for {
+            actual <- jsonLDObjectWithInvalidTypeIri.getRequiredTypeAsKnoraApiV2ComplexTypeIri.exit
+          } yield assertTrue(actual == Exit.fail(expectedError))
+        }
+      )
+    }
+
+    def propertyIriSuite = {
+      val hasTextPropIri    = "http://api.knora.org/ontology/knora-api/v2#hasText"
+      val hasCommentPropIri = "http://api.knora.org/ontology/knora-api/v2#hasComment"
+      val invalidPropIri    = "http://api.knora.org/ontology/knora-api/v2"
+      val someText          = "some text"
+      val textJsonLdObject  = JsonLDObject(Map("@valueAsString" -> JsonLDString(someText)))
+
+      suite("when given an invalid property value")(
+        {
+          val jsonLDObjectWithMoreThanOnePropertyIri =
+            JsonLDObject(Map(hasTextPropIri -> textJsonLdObject, hasCommentPropIri -> textJsonLdObject))
+          val expectedError = "Only one value can be submitted per request using this route"
+          suite("case more than one property")(
+            test("requireResourcePropertyApiV2ComplexValue should fail with a BadRequestException") {
+              for {
+                actual <-
+                  ZIO.attempt(jsonLDObjectWithMoreThanOnePropertyIri.requireResourcePropertyApiV2ComplexValue).exit
+              } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
+            },
+            test("getRequiredResourcePropertyApiV2ComplexValue should fail with correct message") {
+              for {
+                actual <- jsonLDObjectWithMoreThanOnePropertyIri.getRequiredResourcePropertyApiV2ComplexValue.exit
+              } yield assertTrue(actual == Exit.fail(expectedError))
+            }
+          )
+        }, {
+          val jsonLDObjectWithInvalidPropertyValue = JsonLDObject(Map(invalidPropIri -> textJsonLdObject))
+          val expectedError2                       = s"Invalid Knora API v2 complex property IRI: $invalidPropIri"
+          suite("case invalid property iri")(
+            test("requireResourcePropertyApiV2ComplexValue should fail with a BadRequestException") {
+              for {
+                actual <-
+                  ZIO.attempt(jsonLDObjectWithInvalidPropertyValue.requireResourcePropertyApiV2ComplexValue).exit
+              } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError2)))
+            },
+            test("getRequiredResourcePropertyApiV2ComplexValue should fail with correct message") {
+              for {
+                actual <- jsonLDObjectWithInvalidPropertyValue.getRequiredResourcePropertyApiV2ComplexValue.exit
+              } yield assertTrue(actual == Exit.fail(expectedError2))
+            }
+          )
+        }
+      )
+    }
+    typeIriSuite + propertyIriSuite
   }
 }
