@@ -61,7 +61,7 @@ function clean_dir_entries(dir_path, current_time)
 end
 
 --- Deletes a file if its last modification date is too far in the past.
--- @param full_file_path the file's path.
+-- @param file_path the file's path.
 -- @param current_time the current time in milliseconds since the epoch.
 -- @return true on success, false on failure.
 function maybe_delete_temp_file(file_path, current_time)
@@ -73,20 +73,20 @@ function maybe_delete_temp_file(file_path, current_time)
         return true
     end
 
-    if success then
-        local file_age = current_time - last_mod_time
+    local file_age = current_time - last_mod_time
 
-        if file_age > config.max_temp_file_age then
-            server.log("clean_temp_dir: removing " .. file_path, server.loglevel.LOG_DEBUG)
-            local error_msg
-            success, error_msg = server.fs.unlink(file_path)
+    if file_age > config.max_temp_file_age then
+        server.log("clean_temp_dir: removing " .. file_path, server.loglevel.LOG_DEBUG)
+        local error_msg
+        success, error_msg = server.fs.unlink(file_path)
 
-            if not success then
-                -- If we couldn't delete the file, maybe it has already been deleted.
-                server.log(error_msg, server.loglevel.LOG_WARNING)
-            end
+        if not success then
+            -- If we couldn't delete the file, maybe it has already been deleted.
+            server.log(error_msg, server.loglevel.LOG_WARNING)
         end
     end
 
     return true
 end
+
+clean_temp_dir()

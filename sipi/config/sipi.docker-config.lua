@@ -200,5 +200,10 @@ routes = {
         method = 'POST',
         route = '/upload_without_processing',
         script = 'upload_without_processing.lua'
+    },
+    {
+        method = 'GET',
+        route = '/clean_temp_dir',
+        script = 'clean_temp_dir.lua'
     }
 }

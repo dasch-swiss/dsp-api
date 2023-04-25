@@ -29,19 +29,11 @@ or more file uploads submitted to Sipi. It converts uploaded images to JPEG 2000
 format, and stores them in Sipi's `tmp` directory. The usage of this script is described in
 [Upload Files to Sipi](../../../03-endpoints/api-v2/editing-values.md#upload-files-to-sipi).
 
-Each time `upload.lua` processes a request, it also deletes old temporary files
-from `tmp` and (recursively) from any subdirectories. The maximum allowed age of
-temporary files can be set in Sipi's configuration file, using the parameter
-`max_temp_file_age`, which takes a value in seconds, and defaults to
-86400 (1 day).
-
 ### upload_without_processing.lua
 
 The `upload_without_processing.lua` script is available at Sipi's `upload_without_processing` route. 
 It receives files submitted to Sipi but does not process them. 
 Instead, it stores them as is in Sipi's `tmp` directory.
-
-Other than `upload.lua`, old temporary files are not deleted.
 
 ### store.lua
 
@@ -69,6 +61,12 @@ must be a JSON object containing:
 
 - `permission`: must be `DeleteTempFile`
 - `filename`: must be the same as the filename submitted in the URL
+
+### clean_temp_dir.lua
+The `clean_temp_dir.lua` script is available at Sipi's `clean_temp_dir` route.
+When called, it deletes old temporary files from `tmp` and (recursively) from any subdirectories. 
+The maximum allowed age of temporary files can be set in Sipi's configuration file, 
+using the parameter `max_temp_file_age`, which takes a value in seconds.
 
 ## SipiConnector
 
