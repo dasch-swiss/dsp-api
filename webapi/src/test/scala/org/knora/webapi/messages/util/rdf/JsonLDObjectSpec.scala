@@ -685,7 +685,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
     val propertyIri                 = "http://api.knora.org/ontology/knora-api/v2#hasText"
     val someText                    = "some text"
-    val textJsonLdString            = JsonLDObject(Map("@valuAsString" -> JsonLDString(someText)))
+    val textJsonLdString            = JsonLDObject(Map("@valueAsString" -> JsonLDString(someText)))
     val smartPropertyIri            = sf.toSmartIri(propertyIri)
     val jsonLDObjectWithPropertyIri = JsonLDObject(Map(propertyIri -> textJsonLdString))
 
