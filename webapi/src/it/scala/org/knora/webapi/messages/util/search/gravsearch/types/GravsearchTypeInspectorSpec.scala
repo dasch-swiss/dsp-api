@@ -1319,8 +1319,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
       val whereClauseWithoutAnnotations = UnsafeZioRun.runOrThrow {
         for {
           parsedQuery <- ZIO.attempt(GravsearchParser.parseQuery(QueryWithExplicitTypeAnnotations))
-          util        <- ZIO.service[GravsearchTypeInspectionUtil]
-          result      <- util.removeTypeAnnotations(parsedQuery.whereClause)
+          result      <- GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
         } yield result
       }
       whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)

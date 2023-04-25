@@ -41,6 +41,9 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -60,7 +63,6 @@ trait SearchResponderV2
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
   private val triplestoreService: TriplestoreService,
-  private val gravsearchTypeInspectionUtil: GravsearchTypeInspectionUtil,
   private val messageRelay: MessageRelay,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyCache: OntologyCache,
@@ -375,35 +377,33 @@ final case class SearchResponderV2Live(
       // Do type inspection and remove type annotations from the WHERE clause.
       typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
 
-      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
+      _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
 
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      nonTriplestoreSpecificConstructToSelectTransformer: GravsearchToCountPrequeryTransformer =
+      gravsearchToCountTransformer: GravsearchToCountPrequeryTransformer =
         new GravsearchToCountPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = querySchema
         )
 
-      nonTriplestoreSpecificPrequery <-
+      prequery <-
         queryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(
             whereClause = whereClauseWithoutAnnotations,
             orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
           ),
-          transformer = nonTriplestoreSpecificConstructToSelectTransformer
+          transformer = gravsearchToCountTransformer
         )
 
-      // Convert the non-triplestore-specific query to a triplestore-specific one.
-
-      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
+      selectTransformer: SelectToSelectTransformer =
         new SelectToSelectTransformer(
-          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
+          simulateInference = gravsearchToCountTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
         )
@@ -411,13 +411,13 @@ final case class SearchResponderV2Live(
       ontologiesForInferenceMaybe <-
         inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
 
-      triplestoreSpecificCountQuery <- queryTraverser.transformSelectToSelect(
-                                         inputQuery = nonTriplestoreSpecificPrequery,
-                                         transformer = triplestoreSpecificQueryPatternTransformerSelect,
-                                         ontologiesForInferenceMaybe
-                                       )
+      countQuery <- queryTraverser.transformSelectToSelect(
+                      inputQuery = prequery,
+                      transformer = selectTransformer,
+                      ontologiesForInferenceMaybe
+                    )
 
-      countResponse <- triplestoreService.sparqlHttpSelect(triplestoreSpecificCountQuery.toSparql, isGravsearch = true)
+      countResponse <- triplestoreService.sparqlHttpSelect(countQuery.toSparql, isGravsearch = true)
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -452,15 +452,15 @@ final case class SearchResponderV2Live(
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
       typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
-      whereClauseWithoutAnnotations <- gravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- ZIO.attempt(GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult))
+      _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
 
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      nonTriplestoreSpecificConstructToSelectTransformer: GravsearchToPrequeryTransformer =
+      gravsearchToPrequeryTransformer: GravsearchToPrequeryTransformer =
         new GravsearchToPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
@@ -474,44 +474,43 @@ final case class SearchResponderV2Live(
       ontologiesForInferenceMaybe <-
         inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
 
-      nonTriplestoreSpecificPrequery <-
+      prequery <-
         queryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
-          transformer = nonTriplestoreSpecificConstructToSelectTransformer
+          transformer = gravsearchToPrequeryTransformer
         )
 
       // variable representing the main resources
-      mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
+      mainResourceVar: QueryVariable = gravsearchToPrequeryTransformer.mainResourceVariable
 
-      // Convert the non-triplestore-specific query to a triplestore-specific one.
-      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
+      selectTransformer: SelectToSelectTransformer =
         new SelectToSelectTransformer(
-          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference,
+          simulateInference = gravsearchToPrequeryTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
         )
 
       // Convert the preprocessed query to a non-triplestore-specific query.
 
-      triplestoreSpecificPrequery <-
+      transformedPrequery <-
         queryTraverser.transformSelectToSelect(
-          inputQuery = nonTriplestoreSpecificPrequery,
-          transformer = triplestoreSpecificQueryPatternTransformerSelect,
+          inputQuery = prequery,
+          transformer = selectTransformer,
           limitInferenceToOntologies = ontologiesForInferenceMaybe
         )
 
-      triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
+      prequerySparql = transformedPrequery.toSparql
 
       start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
         triplestoreService
-          .sparqlHttpSelect(triplestoreSpecificPrequerySparql, isGravsearch = true)
-          .logError(s"Gravsearch timed out for prequery:\n$triplestoreSpecificPrequerySparql")
+          .sparqlHttpSelect(prequerySparql, isGravsearch = true)
+          .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
 
       end     <- Clock.instant.map(_.toEpochMilli)
       duration = (end - start) / 1000.0
       _ = if (duration < 3) logger.debug(s"Prequery took: ${duration}s")
-          else logger.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql")
+          else logger.warn(s"Slow Prequery ($duration):\n$prequerySparql")
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
@@ -537,7 +536,7 @@ final case class SearchResponderV2Live(
           val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource =
             GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(
               prequeryResponse = prequeryResponse,
-              transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+              transformer = gravsearchToPrequeryTransformer,
               mainResourceVar = mainResourceVar
             )
 
@@ -564,7 +563,7 @@ final case class SearchResponderV2Live(
             : GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris =
             GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
               prequeryResponse = prequeryResponse,
-              transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+              transformer = gravsearchToPrequeryTransformer,
               mainResourceVar = mainResourceVar
             )
 
@@ -592,16 +591,15 @@ final case class SearchResponderV2Live(
 
           for {
 
-            triplestoreSpecificMainQuery <- queryTraverser.transformConstructToConstruct(
-                                              inputQuery = mainQuery,
-                                              transformer = queryPatternTransformerConstruct,
-                                              limitInferenceToOntologies = ontologiesForInferenceMaybe
-                                            )
+            mainQuery <- queryTraverser.transformConstructToConstruct(
+                           inputQuery = mainQuery,
+                           transformer = queryPatternTransformerConstruct,
+                           limitInferenceToOntologies = ontologiesForInferenceMaybe
+                         )
 
             // Convert the result to a SPARQL string and send it to the triplestore.
-            triplestoreSpecificMainQuerySparql = triplestoreSpecificMainQuery.toSparql
-            mainQueryResponse <-
-              triplestoreService.sparqlHttpExtendedConstruct(triplestoreSpecificMainQuerySparql, isGravsearch = true)
+            mainQuerySparql    = mainQuery.toSparql
+            mainQueryResponse <- triplestoreService.sparqlHttpExtendedConstruct(mainQuerySparql, isGravsearch = true)
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions =
@@ -617,7 +615,7 @@ final case class SearchResponderV2Live(
                     valueObjectVarsAndIrisPerMainResource,
                     allResourceVariablesFromTypeInspection,
                     dependentResourceIrisFromTypeInspection,
-                    nonTriplestoreSpecificConstructToSelectTransformer,
+                    gravsearchToPrequeryTransformer,
                     typeInspectionResult,
                     inputQuery
                   )
@@ -1069,7 +1067,6 @@ object SearchResponderV2Live {
   val layer: ZLayer[
     AppConfig
       with TriplestoreService
-      with GravsearchTypeInspectionUtil
       with MessageRelay
       with ConstructResponseUtilV2
       with OntologyCache
@@ -1086,7 +1083,6 @@ object SearchResponderV2Live {
       for {
         appConfig                    <- ZIO.service[AppConfig]
         triplestoreService           <- ZIO.service[TriplestoreService]
-        gravsearchTypeInspectionUtil <- ZIO.service[GravsearchTypeInspectionUtil]
         messageRelay                 <- ZIO.service[MessageRelay]
         constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
         ontologyCache                <- ZIO.service[OntologyCache]
@@ -1101,7 +1097,6 @@ object SearchResponderV2Live {
                      new SearchResponderV2Live(
                        appConfig,
                        triplestoreService,
-                       gravsearchTypeInspectionUtil,
                        messageRelay,
                        constructResponseUtilV2,
                        ontologyCache,
