@@ -107,12 +107,6 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
             obj = XsdLiteral(
               value = "false",
               datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-            ),
-            namedGraph = Some(
-              IriRef(
-                iri = "http://www.knora.org/explicit".toSmartIri,
-                propertyPathOperator = None
-              )
             )
           ),
           StatementPattern(
@@ -147,12 +141,6 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                 obj = XsdLiteral(
                   value = "false",
                   datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                ),
-                namedGraph = Some(
-                  IriRef(
-                    iri = "http://www.knora.org/explicit".toSmartIri,
-                    propertyPathOperator = None
-                  )
                 )
               ),
               StatementPattern(
@@ -161,13 +149,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                   iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
                   propertyPathOperator = None
                 ),
-                obj = QueryVariable(variableName = "decimal__valueHasDecimal"),
-                namedGraph = Some(
-                  IriRef(
-                    iri = "http://www.knora.org/explicit".toSmartIri,
-                    propertyPathOperator = None
-                  )
-                )
+                obj = QueryVariable(variableName = "decimal__valueHasDecimal")
               ),
               FilterPattern(expression =
                 CompareExpression(
@@ -237,12 +219,6 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
             obj = XsdLiteral(
               value = "false",
               datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-            ),
-            namedGraph = Some(
-              IriRef(
-                iri = "http://www.knora.org/explicit".toSmartIri,
-                propertyPathOperator = None
-              )
             )
           ),
           StatementPattern(
@@ -286,12 +262,6 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                 obj = XsdLiteral(
                   value = "false",
                   datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                ),
-                namedGraph = Some(
-                  IriRef(
-                    iri = "http://www.knora.org/explicit".toSmartIri,
-                    propertyPathOperator = None
-                  )
                 )
               ),
               FilterPattern(expression =
