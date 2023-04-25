@@ -198,17 +198,13 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
         // Inference is not being simulated, so just return the statement as it is.
         ZIO.succeed(Seq(statementPattern))
       case (iriRef: IriRef, _) =>
+        val predIri     = iriRef.iri
+        val propertyIri = iriRef.iri.toString
         ontologyCache.getCacheData.flatMap { ontoCache =>
           ZIO.attempt {
-
-            // Yes.
-            val predIri     = iriRef.iri
-            val propertyIri = predIri.toString
-
             // Is the property rdf:type?
             if (propertyIri == OntologyConstants.Rdf.Type) {
               // Yes. Expand using rdfs:subClassOf*.
-
               val baseClassIri: IriRef = statementPattern.obj match {
                 case iriRef: IriRef => iriRef
                 case other =>
@@ -295,7 +291,6 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
             }
           }
         }
-
       case _ =>
         // The predicate isn't a property IRI, so no expansion needed.
         ZIO.succeed(Seq(statementPattern))
