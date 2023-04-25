@@ -639,7 +639,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *         Fails if the value is not a [[JsonLDObject]].
    *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
    */
-  def getIdIriInObject(key: String): IO[String, Option[String]] =
+  def getIriInObject(key: String): IO[String, Option[String]] =
     getObject(key).flatMap(ZIO.foreach(_)(_.getIri()))
 
   /**

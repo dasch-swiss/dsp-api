@@ -1669,7 +1669,7 @@ object TextValueContentV2 {
 
   private def getIriFromObject(obj: JsonLDObject, key: String): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
     obj
-      .getIdIriInObject(key)
+      .getIriInObject(key)
       .mapError(BadRequestException(_))
       .flatMap(ZIO.foreach(_)(it => RouteUtilZ.validateAndEscapeIri(it, s"Invalid key: $key: $it")))
 

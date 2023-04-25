@@ -63,7 +63,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     },
     test("getIdIriInObject should return None") {
       for {
-        actual <- emptyJsonLdObject.getIdIriInObject(someKey)
+        actual <- emptyJsonLdObject.getIriInObject(someKey)
       } yield assertTrue(actual.isEmpty)
     }
   )
@@ -90,7 +90,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getIdIriInObject contains expected value") {
         for {
-          actual <- jsonLdObjectWithIriInObject.getIdIriInObject(someKey)
+          actual <- jsonLdObjectWithIriInObject.getIriInObject(someKey)
         } yield assertTrue(actual.contains(someResourceIri))
       }
     )
@@ -128,7 +128,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getIdIriInObject fails with correct error messageexpected value") {
         for {
-          actual <- jsonLdObjectWithIriInObject.getIdIriInObject(someKey).exit
+          actual <- jsonLdObjectWithIriInObject.getIriInObject(someKey).exit
         } yield assertTrue(
           actual == Exit.fail(expectedError)
         )
