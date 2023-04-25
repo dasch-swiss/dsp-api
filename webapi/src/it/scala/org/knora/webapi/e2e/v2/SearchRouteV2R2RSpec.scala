@@ -9173,11 +9173,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val resourceCreateResponseStr = responseAs[String]
         assert(status == StatusCodes.OK, resourceCreateResponseStr)
         val resourceCreateResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceCreateResponseStr)
+        val validationFun: (String, => Nothing) => String =
+          (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
         val resourceIri: IRI =
-          resourceCreateResponseAsJsonLD.body.requireStringWithValidation(
-            JsonLDKeywords.ID,
-            stringFormatter.validateAndEscapeIri
-          )
+          resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         assert(resourceIri.toSmartIri.isKnoraDataIri)
         hamletResourceIri.set(resourceIri)
       }
@@ -9245,7 +9244,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           val createTargetResourceResponseStr = responseAs[String]
           assert(response.status == StatusCodes.OK, createTargetResourceResponseStr)
           val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+          val validationFun: (String, => Nothing) => String =
+            (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         }
 
       assert(targetResourceIri.toSmartIri.isKnoraDataIri)
@@ -9279,7 +9280,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           val createSourceResource1ResponseStr = responseAs[String]
           assert(response.status == StatusCodes.OK, createSourceResource1ResponseStr)
           val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+          val validationFun: (String, => Nothing) => String =
+            (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         }
 
       assert(sourceResource1Iri.toSmartIri.isKnoraDataIri)
@@ -9313,7 +9316,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           val createSourceResource2ResponseStr = responseAs[String]
           assert(response.status == StatusCodes.OK, createSourceResource2ResponseStr)
           val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+          val validationFun: (String, => Nothing) => String =
+            (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         }
 
       assert(sourceResource2Iri.toSmartIri.isKnoraDataIri)
@@ -9342,7 +9347,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val searchResponseStr = responseAs[String]
         assert(status == StatusCodes.OK, searchResponseStr)
         val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        val validationFun: (String, => Nothing) => String =
+          (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       }
 
       assert(searchResultIri == targetResourceIri)
@@ -9596,11 +9603,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val resourceCreateResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+        val validationFun: (String, => Nothing) => String =
+          (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
         val resourceIri: IRI =
-          resourceCreateResponseAsJsonLD.body.requireStringWithValidation(
-            JsonLDKeywords.ID,
-            stringFormatter.validateAndEscapeIri
-          )
+          resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         assert(resourceIri.toSmartIri.isKnoraDataIri)
         timeTagResourceIri.set(resourceIri)
       }
@@ -9633,8 +9639,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseStr)
 
         val responseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
-        val resourceIri: IRI =
-          responseAsJsonLD.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        val validationFun: (String, => Nothing) => String =
+          (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+        val resourceIri: IRI = responseAsJsonLD.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         assert(resourceIri == timeTagResourceIri.get)
 
         val xmlFromResponse: String = responseAsJsonLD.body

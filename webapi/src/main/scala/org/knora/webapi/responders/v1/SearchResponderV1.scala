@@ -526,10 +526,11 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.Resource =>
                   // check if string is a valid IRI
-                  val searchString = stringFormatter.validateAndEscapeIri(
-                    searchval,
-                    throw BadRequestException(s"Given searchval is not a valid IRI: $searchval")
-                  )
+                  val searchString = StringFormatter
+                    .validateAndEscapeIri(searchval)
+                    .getOrElse(
+                      throw BadRequestException(s"Given searchval is not a valid IRI: $searchval")
+                    )
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                 case OntologyConstants.KnoraBase.ColorValue =>
@@ -564,10 +565,11 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.ListValue =>
                   // check if string represents a node in a list
-                  val searchString = stringFormatter.validateAndEscapeIri(
-                    searchval,
-                    throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval")
-                  )
+                  val searchString = StringFormatter
+                    .validateAndEscapeIri(searchval)
+                    .getOrElse(
+                      throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval")
+                    )
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                 case OntologyConstants.KnoraBase.BooleanValue =>

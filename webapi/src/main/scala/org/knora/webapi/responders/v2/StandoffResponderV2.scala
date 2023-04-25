@@ -336,14 +336,15 @@ final case class StandoffResponderV2Live(
           mappingXML \ "defaultXSLTransformation" match {
             case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
               // check if the IRI is valid
-              val transIri = stringFormatter.validateAndEscapeIri(
-                defaultTrans.headOption
-                  .getOrElse(
-                    throw BadRequestException("could not access <defaultXSLTransformation>")
-                  )
-                  .text,
-                throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI")
-              )
+              val transIri = StringFormatter
+                .validateAndEscapeIri(
+                  defaultTrans.headOption
+                    .getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>"))
+                    .text
+                )
+                .getOrElse(
+                  throw BadRequestException(s"XSL transformation ${defaultTrans.head.text} is not a valid IRI")
+                )
 
               // try to obtain the XSL transformation to make sure that it really exists
               for {
@@ -426,10 +427,11 @@ final case class StandoffResponderV2Live(
                   .getOrElse(
                     throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")
                   ),
-                standoffProperty = stringFormatter.validateAndEscapeIri(
-                  propIri,
-                  throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")
-                ),
+                standoffProperty = StringFormatter
+                  .validateAndEscapeIri(propIri)
+                  .getOrElse(
+                    throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")
+                  ),
                 mappingXMLAttributeElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
               )
 

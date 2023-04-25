@@ -62,6 +62,9 @@ class ValuesV2R2RSpec extends R2RSpec {
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
+  private val validationFun: (String, => Nothing) => String = (s, e) =>
+    StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
@@ -99,7 +102,7 @@ class ValuesV2R2RSpec extends R2RSpec {
     expectedValueIri: IRI
   ): JsonLDObject = {
     val resourceIri: IRI =
-      resource.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
     val propertyValues: JsonLDArray =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
 
@@ -107,7 +110,7 @@ class ValuesV2R2RSpec extends R2RSpec {
       case jsonLDObject: JsonLDObject
           if jsonLDObject.requireStringWithValidation(
             JsonLDKeywords.ID,
-            stringFormatter.validateAndEscapeIri
+            validationFun
           ) == expectedValueIri =>
         jsonLDObject
     }
@@ -184,7 +187,7 @@ class ValuesV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
         val valueIri: IRI =
-          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+          responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
         stillImageFileValueIri.set(valueIri)
         val valueType: SmartIri =
           responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)

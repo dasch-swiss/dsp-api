@@ -806,7 +806,7 @@ class StringFormatter private (
     def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) =
       this(iriStr, parsedIriInfo, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
-    private val iri: IRI = validateAndEscapeIri(iriStr, errorFun)
+    private val iri: IRI = StringFormatter.validateAndEscapeIri(iriStr).getOrElse(errorFun)
 
     /**
      * Determines the API v2 schema of an external IRI.
@@ -1484,18 +1484,6 @@ class StringFormatter private (
       // No. Convert it to a SmartIri without caching it.
       new SmartIriImpl(iri, None, errorFun)
     }
-
-  /**
-   * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
-   *
-   * @param s        the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 IRI.
-   * @return the same string.
-   */
-  @deprecated("Use validateAndEscapeIri(String) instead")
-  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI =
-    StringFormatter.validateAndEscapeIri(s).getOrElse(errorFun)
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
@@ -2256,7 +2244,9 @@ class StringFormatter private (
   def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
     val mappingIri = s"$projectIri/mappings/$mappingName"
     // check that the mapping IRI is valid (mappingName is user input)
-    validateAndEscapeIri(mappingIri, throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+    validateAndEscapeIri(mappingIri).getOrElse(
+      throw BadRequestException(s"the created mapping IRI $mappingIri is invalid")
+    )
   }
 
   /**

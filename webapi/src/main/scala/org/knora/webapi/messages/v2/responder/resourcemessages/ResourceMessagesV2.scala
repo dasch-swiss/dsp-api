@@ -144,7 +144,9 @@ case class ResourceHistoryEventsGetRequestV2(
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeIri(resourceIri, throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
+  StringFormatter
+    .validateAndEscapeIri(resourceIri)
+    .getOrElse(throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
   if (!stringFormatter.toSmartIri(resourceIri).isKnoraResourceIri) {
     throw BadRequestException(s"Given IRI is not a resource IRI: $resourceIri")
   }
@@ -161,7 +163,9 @@ case class ProjectResourcesWithHistoryGetRequestV2(
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI: $projectIri"))
+  StringFormatter
+    .validateAndEscapeIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
   if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
     throw BadRequestException("Given IRI is not a project IRI.")
   }

@@ -836,8 +836,9 @@ object StandoffTagUtilV2 {
 
           val uriValue = StandoffTagUriAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri.toSmartIri,
-            value =
-              stringFormatter.validateAndEscapeIri(uriString, throw BadRequestException(s"URI invalid: $uriString"))
+            value = StringFormatter
+              .validateAndEscapeIri(uriString)
+              .getOrElse(throw BadRequestException(s"URI invalid: $uriString"))
           )
 
           val classSpecificProps =
