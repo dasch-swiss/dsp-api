@@ -31,11 +31,6 @@ function pre_flight(prefix, identifier, cookie)
 
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
-    if prefix == "thumbs" then
-        -- always allow thumbnails
-        return 'allow', filepath
-    end
-
     if prefix == "tmp" then
         -- always allow access to tmp folder
         return 'allow', filepath
