@@ -14,49 +14,50 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
+import com.typesafe.scalalogging.LazyLogging
 import zio.Exit.Failure
 import zio.Exit.Success
 import zio._
 import zio.json._
 
 import java.time.Instant
-import java.util.UUID
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.GraphRoute
+import org.knora.webapi.config.Sipi
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
+import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilV2.getRequiredProjectFromHeaderUnsafe
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
-final case class ResourcesRouteV2(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[
-    AppConfig with Authenticator with StringFormatter with MessageRelay with RestResourceInfoService
+final case class ResourcesRouteV2(appConfig: AppConfig)(
+  private implicit val runtime: Runtime[
+    AppConfig with Authenticator with StringFormatter with IriConverter with MessageRelay with RestResourceInfoService
   ]
-) extends KnoraRoute(routeData, runtime) {
+) extends LazyLogging {
+  private val sipiConfig: Sipi             = appConfig.sipi
+  private val resultsPerPage: Int          = appConfig.v2.resourcesSequence.resultsPerPage
+  private val graphRouteConfig: GraphRoute = appConfig.v2.graphRoute
 
   private val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
 
@@ -71,10 +72,7 @@ final case class ResourcesRouteV2(
   private val Outbound               = "outbound"
   private val Both                   = "both"
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     getIIIFManifest() ~
       createResource() ~
       updateResourceMetadata() ~
@@ -93,13 +91,13 @@ final case class ResourcesRouteV2(
   private def getIIIFManifest(): Route =
     path(resourcesBasePath / "iiifmanifest" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
-        val resourceIri: IRI =
-          StringFormatter
-            .validateAndEscapeIri(resourceIriStr)
-            .getOrElse(
-              throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
-            )
-        val requestTask = Authenticator.getUserADM(requestContext).map(ResourceIIIFManifestGetRequestV2(resourceIri, _))
+        val requestTask = for {
+          resourceIri <- StringFormatter
+                           .validateAndEscapeIri(resourceIriStr)
+                           .toZIO
+                           .orElseFail(BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+          user <- Authenticator.getUserADM(requestContext)
+        } yield ResourceIIIFManifestGetRequestV2(resourceIri, user)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
@@ -114,7 +112,7 @@ final case class ResourcesRouteV2(
             apiRequestId   <- RouteUtilZ.randomUuid()
             requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
             // check for each value which represents a file value if the file's MIME type is allowed
-            _ <- ZIO.fromFuture(_ => checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues))
+            _ <- checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues)
           } yield requestMessage
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
@@ -126,21 +124,13 @@ final case class ResourcesRouteV2(
     put {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-          val requestMessageFuture: Future[UpdateResourceMetadataRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-
-            requestMessage: UpdateResourceMetadataRequestV2 <- UpdateResourceMetadataRequestV2.fromJsonLD(
-                                                                 requestDoc,
-                                                                 apiRequestID = UUID.randomUUID,
-                                                                 requestingUser = requestingUser,
-                                                                 appActor = appActor,
-                                                                 log = log
-                                                               )
+          val requestMessageFuture = for {
+            requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
+            requestingUser <- Authenticator.getUserADM(requestContext)
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            requestMessage <- UpdateResourceMetadataRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield requestMessage
-
-          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteZ(requestMessageFuture, requestContext)
         }
       }
     }
@@ -148,49 +138,56 @@ final case class ResourcesRouteV2(
 
   private def getResourcesInProject(): Route = path(resourcesBasePath) {
     get { requestContext =>
-      val projectIri: SmartIri = RouteUtilV2
-        .getProjectIriUnsafe(requestContext)
-        .getOrElse(throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
       val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-      val resourceClassStr: String =
-        params.getOrElse(
-          "resourceClass",
-          throw BadRequestException(s"This route requires the parameter 'resourceClass'")
+      val getResourceClass = ZIO
+        .fromOption(params.get("resourceClass"))
+        .orElseFail(BadRequestException(s"This route requires the parameter 'resourceClass'"))
+        .flatMap(iri =>
+          IriConverter.asSmartIri(iri).orElseFail(BadRequestException(s"Invalid resource class IRI: $iri"))
         )
-      val resourceClass: SmartIri =
-        resourceClassStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr"))
+        .filterOrElseWith(it => it.isKnoraApiV2EntityIri && it.isApiV2ComplexSchema)(it =>
+          ZIO.fail(BadRequestException(s"Invalid resource class IRI: $it"))
+        )
+        .flatMap(IriConverter.asInternalSmartIri)
 
-      if (!(resourceClass.isKnoraApiV2EntityIri && resourceClass.getOntologySchema.contains(ApiV2Complex))) {
-        throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr")
-      }
-
-      val maybeOrderByPropertyStr: Option[String] = params.get("orderByProperty")
-      val maybeOrderByProperty: Option[SmartIri] = maybeOrderByPropertyStr.map { orderByPropertyStr =>
-        val orderByProperty =
-          orderByPropertyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
-
-        if (!(orderByProperty.isKnoraApiV2EntityIri && orderByProperty.getOntologySchema.contains(ApiV2Complex))) {
-          throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
+      val getOrderByProperty: ZIO[IriConverter, Throwable, Option[SmartIri]] =
+        ZIO.foreach(params.get("orderByProperty")) { orderByPropertyStr =>
+          IriConverter
+            .asSmartIri(orderByPropertyStr)
+            .orElseFail(BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
+            .filterOrFail(iri => iri.isKnoraApiV2EntityIri && iri.isApiV2ComplexSchema)(
+              BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
+            )
+            .flatMap(IriConverter.asInternalSmartIri)
         }
 
-        orderByProperty.toOntologySchema(ApiV2Complex)
-      }
+      val getPage = ZIO
+        .fromOption(params.get("page"))
+        .orElseFail(BadRequestException(s"This route requires the parameter 'page'"))
+        .flatMap(pageStr =>
+          ZIO
+            .fromOption(ValuesValidator.validateInt(pageStr))
+            .orElseFail(BadRequestException(s"Invalid page number: $pageStr"))
+        )
 
-      val pageStr: String =
-        params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
-      val page: Int =
-        ValuesValidator.validateInt(pageStr).getOrElse(throw BadRequestException(s"Invalid page number: $pageStr"))
+      val getProjectIri = RouteUtilV2
+        .getProjectIri(requestContext)
+        .some
+        .orElseFail(BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
 
       val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
-
       val requestTask = for {
-        targetSchema   <- targetSchemaTask
-        schemaOptions  <- RouteUtilV2.getSchemaOptions(requestContext)
-        requestingUser <- Authenticator.getUserADM(requestContext)
+        maybeOrderByProperty <- getOrderByProperty
+        resourceClass        <- getResourceClass
+        projectIri           <- getProjectIri
+        page                 <- getPage
+        targetSchema         <- targetSchemaTask
+        schemaOptions        <- RouteUtilV2.getSchemaOptions(requestContext)
+        requestingUser       <- Authenticator.getUserADM(requestContext)
       } yield SearchResourcesByProjectAndClassRequestV2(
         projectIri,
-        resourceClass.toOntologySchema(ApiV2Complex),
+        resourceClass,
         maybeOrderByProperty,
         page,
         targetSchema,
@@ -205,42 +202,45 @@ final case class ResourcesRouteV2(
   private def getResourceHistory(): Route =
     path(resourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
-        val resourceIri =
-          StringFormatter
-            .validateAndEscapeIri(resourceIriStr)
-            .getOrElse(
-              throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
-            )
-        val params: Map[String, String] = requestContext.request.uri.query().toMap
-        val startDate: Option[Instant] = params
-          .get("startDate")
-          .map(dateStr =>
-            ValuesValidator
-              .xsdDateTimeStampToInstant(dateStr)
-              .getOrElse(throw BadRequestException(s"Invalid start date: $dateStr"))
-          )
-        val endDate = params
-          .get("endDate")
-          .map(dateStr =>
-            ValuesValidator
-              .xsdDateTimeStampToInstant(dateStr)
-              .getOrElse(throw BadRequestException(s"Invalid start date: $dateStr"))
-          )
-
-        val requestTask = Authenticator
-          .getUserADM(requestContext)
-          .map(requestingUser =>
-            ResourceVersionHistoryGetRequestV2(
-              resourceIri = resourceIri,
-              startDate = startDate,
-              endDate = endDate,
-              requestingUser = requestingUser
-            )
-          )
-
+        val getResourceIri = StringFormatter
+          .validateAndEscapeIri(resourceIriStr)
+          .toZIO
+          .orElseFail(BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+        val params = requestContext.request.uri.query().toMap
+        val getStartDate =
+          getInstantFromParams(params, "startDate", "start date", xsdDateTimeStampToInstant)
+        val getEndDate =
+          getInstantFromParams(params, "endDate", "end date", xsdDateTimeStampToInstant)
+        val requestTask = for {
+          resourceIri    <- getResourceIri
+          startDate      <- getStartDate
+          endDate        <- getEndDate
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield ResourceVersionHistoryGetRequestV2(
+          resourceIri,
+          withDeletedResource = false,
+          startDate,
+          endDate,
+          requestingUser
+        )
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
       }
     }
+
+  private def getInstantFromParams(
+    params: Map[String, String],
+    key: String,
+    name: String,
+    dateParser: String => Option[Instant]
+  ): IO[BadRequestException, Option[Instant]] =
+    params
+      .get(key)
+      .map(dateStr =>
+        ZIO
+          .fromOption(dateParser(dateStr))
+          .mapBoth(_ => BadRequestException(s"Invalid $name: $dateStr"), Some(_))
+      )
+      .getOrElse(ZIO.none)
 
   private def getResourceHistoryEvents(): Route =
     path(resourcesBasePath / "resourceHistoryEvents" / Segment) { resourceIri: IRI =>
@@ -267,16 +267,11 @@ final case class ResourcesRouteV2(
   private def getStringQueryParam(requestContext: RequestContext, key: String): Option[String] =
     getQueryParamsMap(requestContext).get(key)
 
-  private def getRequiredStringQueryParam(requestContext: RequestContext, key: String): String =
-    getStringQueryParam(requestContext, key).getOrElse(
-      throw BadRequestException(s"This route requires the parameter '$key'")
-    )
-
   private def unsafeRunZioAndMapJsonResponse[R, E, A](
     zioAction: ZIO[R, E, A]
   )(implicit r: Runtime[R], encoder: JsonEncoder[A]) =
     unsafeRunZio(zioAction) match {
-      case Failure(cause) => log.error(cause.prettyPrint); HttpResponse(InternalServerError)
+      case Failure(cause) => logger.error(cause.prettyPrint); HttpResponse(InternalServerError)
       case Success(dto)   => HttpResponse(status = OK, entity = HttpEntity(`application/json`, dto.toJson))
     }
 
@@ -285,47 +280,39 @@ final case class ResourcesRouteV2(
 
   private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
     get { ctx =>
-      val projectIri       = getRequiredProjectFromHeaderUnsafe(ctx).toIri
-      val resourceClassIri = getRequiredStringQueryParam(ctx, "resourceClass")
-      val orderBy = getStringQueryParam(ctx, "orderBy") match {
-        case None    => lastModificationDate
-        case Some(s) => OrderBy.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for orderBy"))
+      val getResourceClassIri = ZIO
+        .fromOption(getStringQueryParam(ctx, "resourceClass"))
+        .orElseFail(BadRequestException(s"This route requires the parameter 'resourceClass'"))
+      val getOrderBy: ZIO[Any, BadRequestException, OrderBy] = getStringQueryParam(ctx, "orderBy") match {
+        case None => ZIO.succeed(lastModificationDate)
+        case Some(s) =>
+          ZIO.fromOption(OrderBy.make(s)).orElseFail(BadRequestException(s"Invalid value '$s', for orderBy"))
       }
-      val order: Order = getStringQueryParam(ctx, "order") match {
-        case None    => ASC
-        case Some(s) => Order.make(s).getOrElse(throw BadRequestException(s"Invalid value '$s', for order"))
+      val getOrder: IO[BadRequestException, Order] = getStringQueryParam(ctx, "order") match {
+        case None => ZIO.succeed(ASC)
+        case Some(s) =>
+          ZIO.fromOption(Order.make(s)).orElseFail(BadRequestException(s"Invalid value '$s', for order"))
       }
-      val action = RestResourceInfoService.findByProjectAndResourceClass(projectIri, resourceClassIri, (orderBy, order))
+      val action = for {
+        resourceClassIri <- getResourceClassIri
+        orderBy          <- getOrderBy
+        order            <- getOrder
+        projectIri       <- RouteUtilV2.getRequiredProjectIri(ctx)
+        result <-
+          RestResourceInfoService.findByProjectAndResourceClass(projectIri.toIri, resourceClassIri, (orderBy, order))
+      } yield result
       ctx.complete(unsafeRunZioAndMapJsonResponse(action))
     }
   }
   private def getResources(): Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
     get { requestContext =>
-      if (resIris.size > routeData.appConfig.v2.resourcesSequence.resultsPerPage)
-        throw BadRequestException(
-          s"List of provided resource Iris exceeds limit of ${routeData.appConfig.v2.resourcesSequence.resultsPerPage}"
-        )
-
-      val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
-        StringFormatter
-          .validateAndEscapeIri(resIri)
-          .getOrElse(throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
-      }
-
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-      val versionDate: Option[Instant] = params
-        .get("version")
-        .map(versionStr =>
-          ValuesValidator
-            .xsdDateTimeStampToInstant(versionStr)
-            .orElse(ValuesValidator.arkTimestampToInstant(versionStr))
-            .getOrElse(throw BadRequestException(s"Invalid version date: $versionStr"))
-        )
-      val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-
+      val targetSchemaTask      = RouteUtilV2.getOntologySchema(requestContext)
+      val schemaOptionsTask     = RouteUtilV2.getSchemaOptions(requestContext)
+      val params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
+      val versionDateParser     = (s: String) => xsdDateTimeStampToInstant(s).orElse(arkTimestampToInstant(s))
       val requestTask = for {
+        resourceIris   <- getResourceIris(resIris)
+        versionDate    <- getInstantFromParams(params, "version", "version date", versionDateParser)
         targetSchema   <- targetSchemaTask
         requestingUser <- Authenticator.getUserADM(requestContext)
         schemaOptions  <- schemaOptionsTask
@@ -340,27 +327,26 @@ final case class ResourcesRouteV2(
     }
   }
 
+  private def getResourceIris(resIris: Seq[IRI]): IO[BadRequestException, Seq[IRI]] =
+    ZIO
+      .fail(BadRequestException(s"List of provided resource Iris exceeds limit of $resultsPerPage"))
+      .when(resIris.size > resultsPerPage) *>
+      ZIO.foreach(resIris) { resIri: IRI =>
+        StringFormatter
+          .validateAndEscapeIri(resIri)
+          .toZIO
+          .orElseFail(BadRequestException(s"Invalid resource IRI: <$resIri>"))
+      }
+
   private def getResourcesPreview(): Route =
     path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
       get { requestContext =>
-        if (resIris.size > routeData.appConfig.v2.resourcesSequence.resultsPerPage)
-          throw BadRequestException(
-            s"List of provided resource Iris exceeds limit of ${routeData.appConfig.v2.resourcesSequence.resultsPerPage}"
-          )
-        val resourceIris: Seq[IRI] = resIris.map { resIri: String =>
-          StringFormatter
-            .validateAndEscapeIri(resIri)
-            .getOrElse(throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
-        }
         val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
         val requestTask = for {
+          resourceIris <- getResourceIris(resIris)
           targetSchema <- targetSchemaTask
           user         <- Authenticator.getUserADM(requestContext)
-        } yield ResourcesPreviewGetRequestV2(
-          resourceIris = resourceIris,
-          targetSchema = targetSchema,
-          requestingUser = user
-        )
+        } yield ResourcesPreviewGetRequestV2(resourceIris, withDeletedResource = true, targetSchema, user)
         RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
       }
     }
@@ -368,56 +354,64 @@ final case class ResourcesRouteV2(
   private def getResourcesTei(): Route = path("v2" / "tei" / Segment) { resIri: String =>
     get { requestContext =>
       val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val resourceIri: IRI =
+      val getResourceIri =
         StringFormatter
           .validateAndEscapeIri(resIri)
-          .getOrElse(throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
-      val textProperty: SmartIri             = getTextPropertyFromParams(params)
-      val mappingIri: Option[IRI]            = getMappingIriFromParams(params)
-      val gravsearchTemplateIri: Option[IRI] = getGravsearchTemplateIriFromParams(params)
-      val headerXSLTIri                      = getHeaderXSLTIriFromParams(params)
-      val requestTask = Authenticator
-        .getUserADM(requestContext)
-        .map(ResourceTEIGetRequestV2(resourceIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, _))
+          .toZIO
+          .orElseFail(BadRequestException(s"Invalid resource IRI: <$resIri>"))
+      val requestTask = for {
+        resourceIri           <- getResourceIri
+        mappingIri            <- getMappingIriFromParams(params)
+        textProperty          <- getTextPropertyFromParams(params)
+        gravsearchTemplateIri <- getGravsearchTemplateIriFromParams(params)
+        headerXSLTIri         <- getHeaderXSLTIriFromParams(params)
+        user                  <- Authenticator.getUserADM(requestContext)
+      } yield ResourceTEIGetRequestV2(resourceIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, user)
       RouteUtilV2.runTEIXMLRoute(requestTask, requestContext)
     }
   }
 
   private def getResourcesGraph(): Route = path("v2" / "graph" / Segment) { resIriStr: String =>
     get { requestContext =>
-      val resourceIri: IRI =
+      val getResourceIri =
         StringFormatter
           .validateAndEscapeIri(resIriStr)
-          .getOrElse(
-            throw BadRequestException(s"Invalid resource IRI: <$resIriStr>")
-          )
+          .toZIO
+          .orElseFail(BadRequestException(s"Invalid resource IRI: <$resIriStr>"))
       val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val depth: Int                  = params.get(Depth).map(_.toInt).getOrElse(routeData.appConfig.v2.graphRoute.defaultGraphDepth)
+      val getDepth: IO[BadRequestException, Int] =
+        ZIO
+          .succeed(params.get(Depth).flatMap(ValuesValidator.validateInt).getOrElse(graphRouteConfig.defaultGraphDepth))
+          .filterOrFail(_ >= 1)(BadRequestException(s"$Depth must be at least 1"))
+          .filterOrFail(_ <= graphRouteConfig.maxGraphDepth)(
+            BadRequestException(s"$Depth cannot be greater than ${graphRouteConfig.maxGraphDepth}")
+          )
 
-      if (depth < 1) {
-        throw BadRequestException(s"$Depth must be at least 1")
-      }
-
-      if (depth > routeData.appConfig.v2.graphRoute.maxGraphDepth) {
-        throw BadRequestException(s"$Depth cannot be greater than ${routeData.appConfig.v2.graphRoute.maxGraphDepth}")
-      }
-
-      val direction: String = params.getOrElse(Direction, Outbound)
-      val excludeProperty: Option[SmartIri] = params
+      val getExcludeProperty: ZIO[IriConverter, BadRequestException, Option[SmartIri]] = params
         .get(ExcludeProperty)
         .map(propIriStr =>
-          propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propIriStr>"))
+          IriConverter
+            .asSmartIri(propIriStr)
+            .mapBoth(_ => BadRequestException(s"Invalid property IRI: <$propIriStr>"), Some(_))
         )
+        .getOrElse(ZIO.none)
 
-      val (inbound: Boolean, outbound: Boolean) = direction match {
-        case Inbound  => (true, false)
-        case Outbound => (false, true)
-        case Both     => (true, true)
-        case other    => throw BadRequestException(s"Invalid direction: $other")
-      }
-      val requestTask = Authenticator
-        .getUserADM(requestContext)
-        .map(GraphDataGetRequestV2(resourceIri, depth, inbound, outbound, excludeProperty, _))
+      val getInboundOutbound: IO[BadRequestException, (Boolean, Boolean)] =
+        params.getOrElse(Direction, Outbound) match {
+          case Inbound  => ZIO.succeed((true, false))
+          case Outbound => ZIO.succeed((false, true))
+          case Both     => ZIO.succeed((true, true))
+          case other    => ZIO.fail(BadRequestException(s"Invalid direction: $other"))
+        }
+
+      val requestTask = for {
+        resourceIri        <- getResourceIri
+        depth              <- getDepth
+        excludeProperty    <- getExcludeProperty
+        t                  <- getInboundOutbound
+        (inbound, outbound) = t
+        requestingUser     <- Authenticator.getUserADM(requestContext)
+      } yield GraphDataGetRequestV2(resourceIri, depth, inbound, outbound, excludeProperty, requestingUser)
       RouteUtilV2.runRdfRouteZ(requestTask, requestContext, RouteUtilV2.getOntologySchema(requestContext))
     }
   }
@@ -426,20 +420,13 @@ final case class ResourcesRouteV2(
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-          val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
-                                                                requestDoc,
-                                                                apiRequestID = UUID.randomUUID,
-                                                                requestingUser = requestingUser,
-                                                                appActor = appActor,
-                                                                log = log
-                                                              )
-          } yield requestMessage
-
-          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+          val requestTask = for {
+            requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            requestingUser <- Authenticator.getUserADM(requestContext)
+            msg            <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
+          } yield msg
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
       }
     }
@@ -449,21 +436,13 @@ final case class ResourcesRouteV2(
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-          val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-
-            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
-                                                                requestDoc,
-                                                                apiRequestID = UUID.randomUUID,
-                                                                requestingUser = requestingUser,
-                                                                appActor = appActor,
-                                                                log = log
-                                                              )
+          val requestTask = for {
+            requestDoc     <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonRequest))
+            apiRequestId   <- RouteUtilZ.randomUuid()
+            requestingUser <- Authenticator.getUserADM(requestContext)
+            requestMessage <- DeleteOrEraseResourceRequestV2.fromJsonLD(requestDoc, requestingUser, apiRequestId)
           } yield requestMessage.copy(erase = true)
-
-          RouteUtilV2.runRdfRouteF(requestMessageFuture, requestContext)
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
       }
     }
@@ -475,24 +454,19 @@ final case class ResourcesRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getTextPropertyFromParams(params: Map[String, String]): SmartIri = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val textProperty                              = params.get(Text_Property)
-
-    textProperty match {
-      case Some(textPropIriStr: String) =>
-        val externalResourceClassIri =
-          textPropIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
-
-        if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
-          throw BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI")
-        }
-
-        externalResourceClassIri.toOntologySchema(InternalSchema)
-
-      case None => throw BadRequestException(s"param $Text_Property not set")
-    }
-  }
+  private def getTextPropertyFromParams(params: Map[String, String]): ZIO[IriConverter, Throwable, SmartIri] =
+    ZIO
+      .fromOption(params.get(Text_Property))
+      .orElseFail(BadRequestException(s"param $Text_Property not set"))
+      .flatMap { textPropIriStr =>
+        IriConverter
+          .asSmartIri(textPropIriStr)
+          .orElseFail(BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
+          .filterOrFail(_.isKnoraApiV2EntityIri)(
+            BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI")
+          )
+          .mapAttempt(_.toOntologySchema(InternalSchema))
+      }
 
   /**
    * Gets the Iri of the mapping to be used to convert standoff to XML.
@@ -500,17 +474,16 @@ final case class ResourcesRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getMappingIriFromParams(params: Map[String, String]): Option[IRI] =
-    params.get(Mapping_Iri) match {
-      case Some(mapping: String) =>
-        Some(
-          StringFormatter
-            .validateAndEscapeIri(mapping)
-            .getOrElse(throw BadRequestException(s"Invalid mapping IRI: <$mapping>"))
-        )
-
-      case None => None
-    }
+  private def getMappingIriFromParams(params: Map[String, String]): IO[BadRequestException, Option[IRI]] =
+    params
+      .get(Mapping_Iri)
+      .map { mapping =>
+        StringFormatter
+          .validateAndEscapeIri(mapping)
+          .toZIO
+          .mapBoth(_ => BadRequestException(s"Invalid mapping IRI: <$mapping>"), Some(_))
+      }
+      .getOrElse(ZIO.none)
 
   /**
    * Gets the Iri of Gravsearch template to be used to query for the resource's metadata.
@@ -518,19 +491,16 @@ final case class ResourcesRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getGravsearchTemplateIriFromParams(params: Map[String, String]): Option[IRI] =
-    params.get(GravsearchTemplate_Iri) match {
-      case Some(gravsearch: String) =>
-        Some(
-          StringFormatter
-            .validateAndEscapeIri(gravsearch)
-            .getOrElse(
-              throw BadRequestException(s"Invalid template IRI: <$gravsearch>")
-            )
-        )
-
-      case None => None
-    }
+  private def getGravsearchTemplateIriFromParams(params: Map[String, String]): IO[BadRequestException, Option[IRI]] =
+    params
+      .get(GravsearchTemplate_Iri)
+      .map { gravsearch =>
+        StringFormatter
+          .validateAndEscapeIri(gravsearch)
+          .toZIO
+          .mapBoth(_ => BadRequestException(s"Invalid template IRI: <$gravsearch>"), Some(_))
+      }
+      .getOrElse(ZIO.none)
 
   /**
    * Gets the Iri of the XSL transformation to be used to convert the TEI header's metadata.
@@ -538,15 +508,16 @@ final case class ResourcesRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getHeaderXSLTIriFromParams(params: Map[String, String]): Option[IRI] =
-    params.get(TEIHeader_XSLT_IRI) match {
-      case Some(xslt: String) =>
-        Some(
-          StringFormatter.validateAndEscapeIri(xslt).getOrElse(throw BadRequestException(s"Invalid XSLT IRI: <$xslt>"))
-        )
-
-      case None => None
-    }
+  private def getHeaderXSLTIriFromParams(params: Map[String, String]): IO[BadRequestException, Option[IRI]] =
+    params
+      .get(TEIHeader_XSLT_IRI)
+      .map { xslt =>
+        StringFormatter
+          .validateAndEscapeIri(xslt)
+          .toZIO
+          .mapBoth(_ => BadRequestException(s"Invalid XSLT IRI: <$xslt>"), Some(_))
+      }
+      .getOrElse(ZIO.none)
 
   /**
    * Checks if the MIME types of the given values are allowed by the configuration
@@ -555,41 +526,36 @@ final case class ResourcesRouteV2(
    */
   private def checkMimeTypesForFileValueContents(
     values: Iterable[CreateValueInNewResourceV2]
-  ): Future[Unit] =
-    Future {
-      def badRequestException(fileValueContent: FileValueContentV2): BadRequestException =
-        BadRequestException(
-          s"File ${fileValueContent.fileValue.internalFilename} has MIME type ${fileValueContent.fileValue.internalMimeType}, which is not supported for still image files"
-        )
-      values.foreach { value =>
+  ): Task[Unit] = {
+    def failBadRequest(fileValueContent: FileValueContentV2): IO[BadRequestException, Unit] = {
+      val msg =
+        s"File ${fileValueContent.fileValue.internalFilename} has MIME type ${fileValueContent.fileValue.internalMimeType}, which is not supported for still image files"
+      ZIO.fail(BadRequestException(msg))
+    }
+    ZIO
+      .foreach(values) { value =>
         value.valueContent match {
           case fileValueContent: StillImageFileValueContentV2 =>
-            if (!routeData.appConfig.sipi.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
-              throw badRequestException(fileValueContent)
-            }
+            failBadRequest(fileValueContent)
+              .when(!sipiConfig.imageMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
           case fileValueContent: DocumentFileValueContentV2 =>
-            if (!routeData.appConfig.sipi.documentMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
-              throw badRequestException(fileValueContent)
-            }
+            failBadRequest(fileValueContent)
+              .when(!sipiConfig.documentMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
           case fileValueContent: ArchiveFileValueContentV2 =>
-            if (!routeData.appConfig.sipi.archiveMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
-              throw badRequestException(fileValueContent)
-            }
+            failBadRequest(fileValueContent)
+              .when(!sipiConfig.archiveMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
           case fileValueContent: TextFileValueContentV2 =>
-            if (!routeData.appConfig.sipi.textMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
-              throw badRequestException(fileValueContent)
-            }
+            failBadRequest(fileValueContent)
+              .when(!sipiConfig.textMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
           case fileValueContent: AudioFileValueContentV2 =>
-            if (!routeData.appConfig.sipi.audioMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
-              throw badRequestException(fileValueContent)
-            }
+            failBadRequest(fileValueContent)
+              .when(!sipiConfig.audioMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
           case fileValueContent: MovingImageFileValueContentV2 =>
-            if (!routeData.appConfig.sipi.videoMimeTypes.contains(fileValueContent.fileValue.internalMimeType)) {
-              throw badRequestException(fileValueContent)
-            }
-          case _ => ()
-
+            failBadRequest(fileValueContent)
+              .when(!sipiConfig.videoMimeTypes.contains(fileValueContent.fileValue.internalMimeType))
+          case _ => ZIO.unit
         }
       }
-    }
+      .unit
+  }
 }

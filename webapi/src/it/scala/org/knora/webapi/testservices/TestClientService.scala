@@ -1,8 +1,6 @@
 package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
