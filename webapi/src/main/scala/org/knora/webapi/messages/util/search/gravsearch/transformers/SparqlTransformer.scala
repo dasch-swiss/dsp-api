@@ -284,15 +284,12 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
     simulateInference: Boolean,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[Seq[QueryPattern]] =
-    (statementPattern.pred, simulateInference) match {
-      case (iriRef: IriRef, _) if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
+    statementPattern.pred match {
+      case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
         // Simulate knora-api:standoffTagHasStartAncestor, using knora-api:standoffTagHasStartParent.
         val pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
         ZIO.succeed(Seq(statementPattern.copy(pred = pred)))
-      case (_, false) =>
-        // Inference is not being simulated, so just return the statement as it is.
-        ZIO.succeed(Seq(statementPattern))
-      case (iriRef: IriRef, _) =>
+      case iriRef: IriRef if simulateInference =>
         for {
           ontoCache <- ontologyCache.getCacheData
           patternsWithInference <-
@@ -301,7 +298,7 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
             else inferSubproperties(statementPattern, iriRef.iri, ontoCache, limitInferenceToOntologies)
         } yield patternsWithInference
       case _ =>
-        // The predicate isn't a property IRI, so no expansion needed.
+        // The predicate isn't a property IRI or no inference should be done, so no expansion needed.
         ZIO.succeed(Seq(statementPattern))
     }
 
