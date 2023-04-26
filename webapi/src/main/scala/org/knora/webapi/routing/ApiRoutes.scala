@@ -121,7 +121,7 @@ private final case class ApiRoutesImpl(
                 ProjectsRouteV1().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
                 SearchRouteV2(routeData.appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
-                ResourcesRouteV2(routeData, runtime).makeRoute ~
+                ResourcesRouteV2(routeData.appConfig).makeRoute ~
                 ValuesRouteV2().makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 ListsRouteV2().makeRoute ~
