@@ -57,14 +57,12 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
-          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
-          None
+          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
         ),
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
-          QueryVariable("title"),
-          None
+          QueryVariable("title")
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -74,32 +72,27 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri, None),
-          None
+          IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
-          None
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
-          QueryVariable("title"),
-          None
+          QueryVariable("title")
         ),
         StatementPattern(
           IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None),
-          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
-          None
+          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("title"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
-          None
+          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None)
         ),
         FilterPattern(
           CompareExpression(
@@ -211,14 +204,12 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
-          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
-          None
+          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
         ),
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
-          QueryVariable("title"),
-          None
+          QueryVariable("title")
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -228,32 +219,27 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri, None),
-          None
+          IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
-          None
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("book"),
           IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
-          QueryVariable("title"),
-          None
+          QueryVariable("title")
         ),
         StatementPattern(
           IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None),
-          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
-          None
+          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("title"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
-          None
+          IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None)
         ),
         FilterPattern(
           CompareExpression(
@@ -346,20 +332,17 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
-          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
-          None
+          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
         ),
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
-          QueryVariable("seqnum"),
-          None
+          QueryVariable("seqnum")
         ),
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
-          QueryVariable("file"),
-          None
+          QueryVariable("file")
         )
       ),
       querySchema = Some(ApiV2Simple)
@@ -369,50 +352,42 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation".toSmartIri, None),
-          None
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
-          None
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isPartOf".toSmartIri, None),
-          IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
-          None
+          IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None)
         ),
         StatementPattern(
           IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
-          None
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
-          QueryVariable("seqnum"),
-          None
+          QueryVariable("seqnum")
         ),
         StatementPattern(
           QueryVariable("seqnum"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://www.w3.org/2001/XMLSchema#integer".toSmartIri, None),
-          None
+          IriRef("http://www.w3.org/2001/XMLSchema#integer".toSmartIri, None)
         ),
         StatementPattern(
           QueryVariable("page"),
           IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
-          QueryVariable("file"),
-          None
+          QueryVariable("file")
         ),
         StatementPattern(
           QueryVariable("file"),
           IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#File".toSmartIri, None),
-          None
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#File".toSmartIri, None)
         )
       ),
       positiveEntities = Set(

@@ -84,17 +84,17 @@ object FullTextMainQueryGenerator {
         resourceVar,
         resourceIris.map(iri => IriRef(iri.toSmartIri))
       ), // a ValuePattern that binds the resource IRIs to the resource variable
-      StatementPattern.makeInferred(
+      StatementPattern(
         subj = resourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
       ),
-      StatementPattern.makeExplicit(
+      StatementPattern(
         subj = resourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
         obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
       ),
-      StatementPattern.makeExplicit(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
+      StatementPattern(subj = resourceVar, pred = resourcePropVar, obj = resourceObjectVar)
     )
 
     //  mark resources as the main resource and a knora-base:Resource in CONSTRUCT clause and return direct assertions about resources
@@ -118,18 +118,18 @@ object FullTextMainQueryGenerator {
       // WHERE patterns for statements about the resources' values
       val wherePatternsForValueObjects = Seq(
         ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
-        StatementPattern.makeInferred(
+        StatementPattern(
           subj = resourceVar,
           pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
           obj = resourceValueObject
         ),
-        StatementPattern.makeExplicit(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
-        StatementPattern.makeExplicit(
+        StatementPattern(subj = resourceVar, pred = resourceValueProp, obj = resourceValueObject),
+        StatementPattern(
           subj = resourceValueObject,
           pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
           obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
         ),
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = resourceValueObject,
           pred = resourceValueObjectProp,
           obj = resourceValueObjectObj
@@ -154,13 +154,13 @@ object FullTextMainQueryGenerator {
       val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
         Seq(
           ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
-          StatementPattern.makeExplicit(
+          StatementPattern(
             subj = resourceValueObject,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
             obj = standoffNodeVar
           ),
-          StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
-          StatementPattern.makeExplicit(
+          StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
+          StatementPattern(
             subj = standoffNodeVar,
             pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri),
             obj = standoffStartIndexVar

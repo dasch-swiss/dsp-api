@@ -428,45 +428,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         an[BadRequestException] should be thrownBy ChangeProjectApiRequestADM(None, None, None, None, None, None, None)
 
-        /*
-                actorUnderTest ! ProjectChangeRequestADM(
-                    projectIri = "http://rdfh.ch/projects/notexisting",
-                    changeProjectRequest = ChangeProjectApiRequestADM(None, None, None, None, None, None, None, None, None, None),
-                    SharedAdminTestData.rootUser,
-                    UUID.randomUUID()
-                )
-                expectMsg(Failure(BadRequestException("No data would be changed. Aborting update request.")))
-         */
       }
     }
-
-    /*
-        "used to query named graphs" should {
-            "return all named graphs" in {
-                actorUnderTest ! ProjectsNamedGraphGetADM(SharedTestDataADM.rootUser)
-
-                val received: Seq[NamedGraphADM] = expectMsgType[Seq[NamedGraphADM]]
-                received.size should be (7)
-            }
-
-            "return all named graphs after adding a new ontology" in {
-                actorUnderTest ! ProjectOntologyAddADM(
-                    projectIri = imagesProjectIri,
-                    ontologyIri = "http://wwww.knora.org/ontology/00FF/blabla1",
-
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-                val received01: ProjectADM = expectMsgType[ProjectADM](timeout)
-                received01.ontologies.size should be (2)
-
-                actorUnderTest ! ProjectsNamedGraphGetADM(SharedTestDataADM.rootUser)
-
-                val received02: Seq[NamedGraphADM] = expectMsgType[Seq[NamedGraphADM]]
-                received02.size should be (8)
-            }
-        }
-     */
 
     "used to query members" should {
       "return all members of a project identified by IRI" in {

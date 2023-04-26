@@ -709,16 +709,6 @@ class StringFormatterSpec extends CoreSpec {
       assert(dataIri.isKnoraDataIri)
     }
 
-    "parse http://www.knora.org/explicit" in {
-      val namedGraphIri = "http://www.knora.org/explicit".toSmartIri
-      assert(namedGraphIri.isKnoraDataIri)
-    }
-
-    "parse http://www.ontotext.com/explicit" in {
-      val namedGraphIri = "http://www.ontotext.com/explicit".toSmartIri
-      assert(!namedGraphIri.isKnoraIri)
-    }
-
     "parse http://www.w3.org/2001/XMLSchema#integer" in {
       val xsdIri = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
       assert(
