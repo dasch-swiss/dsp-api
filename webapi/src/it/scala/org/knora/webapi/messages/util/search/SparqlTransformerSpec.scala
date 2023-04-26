@@ -61,17 +61,17 @@ class SparqlTransformerSpec extends CoreSpec {
     }
 
     "optimise knora-base:isDeleted" in {
-      val typeStatement = StatementPattern.makeExplicit(
+      val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(thingIRI)
       )
-      val isDeletedStatement = StatementPattern.makeExplicit(
+      val isDeletedStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
         obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
       )
-      val linkStatement = StatementPattern.makeExplicit(
+      val linkStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(hasOtherThingIRI),
         obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri)
@@ -87,7 +87,7 @@ class SparqlTransformerSpec extends CoreSpec {
         linkStatement,
         FilterNotExistsPattern(
           Seq(
-            StatementPattern.makeExplicit(
+            StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
               obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
@@ -99,13 +99,13 @@ class SparqlTransformerSpec extends CoreSpec {
     }
 
     "move a BIND pattern to the beginning of a block" in {
-      val typeStatement = StatementPattern.makeExplicit(
+      val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(thingIRI)
       )
       val hasValueStatement =
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasTextIRI),
           obj = QueryVariable("text")
@@ -128,13 +128,13 @@ class SparqlTransformerSpec extends CoreSpec {
 
     "move a Lucene query pattern to the beginning of a block" in {
       val hasValueStatement =
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasTextIRI),
           obj = QueryVariable("text")
         )
       val valueHasStringStatement =
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = QueryVariable("text"),
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
           QueryVariable("text__valueHasString")
@@ -160,7 +160,7 @@ class SparqlTransformerSpec extends CoreSpec {
     }
 
     "not simulate any RDF inference for a class, if there are no known subclasses" in {
-      val typeStatement = StatementPattern.makeInferred(
+      val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(blueThingIRI)
@@ -175,8 +175,7 @@ class SparqlTransformerSpec extends CoreSpec {
         StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-          obj = IriRef(blueThingIRI),
-          namedGraph = None
+          obj = IriRef(blueThingIRI)
         )
       )
 
@@ -184,7 +183,7 @@ class SparqlTransformerSpec extends CoreSpec {
     }
 
     "create a union pattern to simulate RDF inference for a class, if there are known subclasses" in {
-      val typeStatement = StatementPattern.makeInferred(
+      val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(thingIRI)
@@ -195,32 +194,28 @@ class SparqlTransformerSpec extends CoreSpec {
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef(thingIRI),
-              namedGraph = None
+              obj = IriRef(thingIRI)
             )
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef(blueThingIRI),
-              namedGraph = None
+              obj = IriRef(blueThingIRI)
             )
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri),
-              namedGraph = None
+              obj = IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri)
             )
           ),
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),
               pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-              obj = IriRef("http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri),
-              namedGraph = None
+              obj = IriRef("http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri)
             )
           )
         )
@@ -238,7 +233,7 @@ class SparqlTransformerSpec extends CoreSpec {
 
     "not simulate any RDF inference for a property, if there are no known subproperties" in {
       val hasValueStatement =
-        StatementPattern.makeInferred(
+        StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasTextIRI),
           obj = QueryVariable("text")
@@ -250,8 +245,7 @@ class SparqlTransformerSpec extends CoreSpec {
             iri = hasTextIRI,
             propertyPathOperator = None
           ),
-          obj = QueryVariable(variableName = "text"),
-          namedGraph = None
+          obj = QueryVariable(variableName = "text")
         )
       )
       val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhereForNoInference(
@@ -263,7 +257,7 @@ class SparqlTransformerSpec extends CoreSpec {
 
     "create a union pattern to simulate RDF inference for a property, if there are known subproperties" in {
       val hasValueStatement =
-        StatementPattern.makeInferred(
+        StatementPattern(
           subj = QueryVariable("foo"),
           pred = IriRef(hasOtherThingIRI),
           obj = QueryVariable("text")
@@ -277,8 +271,7 @@ class SparqlTransformerSpec extends CoreSpec {
                 iri = "http://www.knora.org/ontology/0001/something#hasOtherSomething".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "text"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "text")
             )
           ),
           Seq(
@@ -288,8 +281,7 @@ class SparqlTransformerSpec extends CoreSpec {
                 iri = hasOtherThingIRI,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "text"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "text")
             )
           ),
           Seq(
@@ -299,8 +291,7 @@ class SparqlTransformerSpec extends CoreSpec {
                 iri = "http://www.knora.org/ontology/0001/anything#hasBlueThing".toSmartIri,
                 propertyPathOperator = None
               ),
-              obj = QueryVariable(variableName = "text"),
-              namedGraph = None
+              obj = QueryVariable(variableName = "text")
             )
           )
         )

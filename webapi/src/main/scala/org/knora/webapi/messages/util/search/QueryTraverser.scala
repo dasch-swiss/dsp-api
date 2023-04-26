@@ -266,7 +266,7 @@ final case class QueryTraverser(
     for {
       mainResourceName <-
         query.constructClause.statements.collectFirst {
-          case StatementPattern(QueryVariable(name), IriRef(pred, _), _, _)
+          case StatementPattern(QueryVariable(name), IriRef(pred, _), _)
               if pred
                 .toOntologySchema(InternalSchema)
                 .toString == OntologyConstants.KnoraBase.IsMainResource =>
@@ -274,12 +274,12 @@ final case class QueryTraverser(
         }
       mainResourceTypeStatement <-
         query.whereClause.patterns.collectFirst {
-          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef, _)
+          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef)
               if pred.toIri == OntologyConstants.Rdf.Type &&
                 obj.iri.toOntologySchema(InternalSchema).toIri != OntologyConstants.KnoraBase.Resource =>
             stmt.copy(obj = obj.copy(iri = obj.iri.toOntologySchema(InternalSchema)))
         }.orElse(query.whereClause.patterns.collectFirst {
-          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef, _)
+          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef)
               if pred.toIri == OntologyConstants.Rdf.Type =>
             stmt.copy(obj = obj.copy(iri = obj.iri.toOntologySchema(InternalSchema)))
         })

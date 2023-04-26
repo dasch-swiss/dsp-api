@@ -115,7 +115,7 @@ final case class InferringGravsearchTypeInspector(
         case Some(statements) =>
           // Yes. If it's been used with the predicate rdf:type with an IRI object, collect those objects.
           val rdfTypes: Set[SmartIri] = statements.collect {
-            case StatementPattern(_, IriRef(predIri, _), IriRef(objIri, _), _)
+            case StatementPattern(_, IriRef(predIri, _), IriRef(objIri, _))
                 if predIri.toString == OntologyConstants.Rdf.Type =>
               objIri
           }
