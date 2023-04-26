@@ -22,37 +22,44 @@ function file_checksum(path)
 end
 --------------------------------------------------------------------------
 
+----------------------------------------------------
+-- Check if a directory exists. If not, create it --
+----------------------------------------------------
+function check_create_dir(path)
+    local exists
+    success, exists = server.fs.exists(path)
+    if not success then
+        return success, "server.fs.exists() failed: " .. exists
+    end
+    if not exists then
+        success, error_msg = server.fs.mkdir(path, 511)
+        if not success then
+            return success, "server.fs.mkdir() failed: " .. error_msg
+        end
+    end
+    return true, "OK"
+end
+----------------------------------------------------
+
 -- Buffer the response (helps with error handling).
-local success, error_msg
-success, error_msg = server.setBuffer()
+local success, error_msg = server.setBuffer()
 if not success then
     send_error(500, "server.setBuffer() failed: " .. error_msg)
     return
 end
 
--- Check for a valid JSON Web Token from Knora.
+-- Check for a valid JSON Web Token.
 local token = get_knora_token()
 if token == nil then
     return
 end
 
 -- Check that the temp folder is created
-local tmpFolder = config.imgroot .. '/tmp/'
-local exists
-success, exists = server.fs.exists(tmpFolder)
-if not success then -- tests server.fs.exists
-    -- fs.exist was not run successful. This does not mean, that the tmp folder is not there.
-    send_error(500, "server.fs.exists() failed: " .. exists)
+local tmp_folder_root = config.imgroot .. '/tmp'
+success, error_msg = check_create_dir(tmp_folder_root)
+if not success then
+    send_error(500, error_msg)
     return
-end
-if not exists then -- checks the response of server.fs.exists
-    -- tmp folder does not exist
-    server.log("temp folder missing: " .. tmpFolder, server.loglevel.LOG_ERR)
-    success, error_msg = server.fs.mkdir(tmpFolder, 511)
-    if not success then
-        send_error(500, "server.fs.mkdir() failed: " .. error_msg)
-        return
-    end
 end
 
 -- A table of data about each file that was uploaded.
@@ -134,12 +141,31 @@ for file_index, file_params in pairs(server.uploads) do
         return
     end
 
-    local tmp_storage_file_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_filename
-    local tmp_storage_sidecar_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_sidecar
-    local tmp_storage_original_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_original
+    -- create tmp folder and subfolders for the file
+    local first_character_of_filename = hashed_tmp_storage_filename:sub(1, 1)
+    local second_character_of_filename = hashed_tmp_storage_filename:sub(2, 2)
+
+    local tmp_folder_level_1 = tmp_folder_root .. '/' .. first_character_of_filename
+    success, error_msg = check_create_dir(tmp_folder_level_1)
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+
+    local tmp_folder = tmp_folder_level_1 .. '/' .. second_character_of_filename
+    success, error_msg = check_create_dir(tmp_folder)
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+
+    local tmp_storage_file_path = tmp_folder .. '/' .. hashed_tmp_storage_filename
+    local tmp_storage_sidecar_path = tmp_folder .. '/' .. hashed_tmp_storage_sidecar
+    local tmp_storage_original_path = tmp_folder .. '/' .. hashed_tmp_storage_original
+
 
     -- Create a IIIF base URL for the converted file.
-    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. tmp_storage_filename
+    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/' .. tmp_storage_file_path
 
     -- Copy original file also to tmp
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_original_path)

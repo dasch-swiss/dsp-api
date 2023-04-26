@@ -23,10 +23,13 @@ require "log_util"
 function pre_flight(prefix, identifier, cookie)
     log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
 
+    local first_character_of_identifier = identifier:sub(1, 1)
+    local second_character_of_identifier = identifier:sub(2, 2)
+
     if config.prefix_as_path then
-        filepath = config.imgroot .. '/' .. prefix .. '/' .. identifier
+        filepath = config.imgroot .. '/' .. prefix .. '/' .. first_character_of_identifier .. '/' .. second_character_of_identifier .. '/' .. identifier
     else
-        filepath = config.imgroot .. '/' .. identifier
+        filepath = config.imgroot .. '/' .. first_character_of_identifier .. '/' .. second_character_of_identifier .. '/' .. identifier
     end
 
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
@@ -61,8 +64,6 @@ function pre_flight(prefix, identifier, cookie)
     if webapi_hostname == nil then
         webapi_hostname = config.knora_path
     end
-    log("pre_flight - webapi_hostname: " .. webapi_hostname,
-        server.loglevel.LOG_DEBUG)
 
     --
     -- Allows to set SIPI_WEBAPI_PORT environment variable and use its value.
@@ -71,7 +72,6 @@ function pre_flight(prefix, identifier, cookie)
     if webapi_port == nil then
         webapi_port = config.knora_port
     end
-    log("pre_flight - webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
 
     api_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 

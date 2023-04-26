@@ -116,10 +116,7 @@ if not success then
     return
 end
 
---
--- Check that this request is really from Knora and that the user has permission
--- to store the file.
---
+-- Check for a valid JSON Web Token and permissions.
 local token = get_knora_token()
 if token == nil then
     return
@@ -181,11 +178,18 @@ if not success then
     return
 end
 
+local first_character_of_filename = hashed_filename:sub(1, 1)
+local second_character_of_filename = hashed_filename:sub(2, 2)
+
+local tmp_folder_root = config.imgroot .. '/tmp'
+local tmp_folder = tmp_folder_root .. '/' .. first_character_of_filename .. '/' .. second_character_of_filename
+
+local source_path = tmp_folder .. '/' .. hashed_filename
+local source_key_frames = source_path:match("(.+)%..+")
+
 --
 -- Make sure the source file is readable.
 --
-local source_path = config.imgroot .. "/tmp/" .. hashed_filename
-local source_key_frames = source_path:match("(.+)%..+")
 local readable
 success, readable = server.fs.is_readable(source_path)
 if not success then
@@ -200,14 +204,27 @@ end
 --
 -- Move the temporary files to the permanent storage directory.
 --
-local storage_dir = config.imgroot .. "/" .. prefix .. "/"
-success, msg = check_create_dir(storage_dir)
+local project_folder_root = config.imgroot .. "/" .. prefix
+success, error_msg = check_create_dir(project_folder_root)
 if not success then
-    send_error(500, msg)
+    send_error(500, error_msg)
     return
 end
 
-local destination_path = storage_dir .. hashed_filename
+local project_folder_level_1 = project_folder_root .. '/' .. first_character_of_filename
+success, error_msg = check_create_dir(project_folder_level_1)
+if not success then
+    send_error(500, error_msg)
+    return
+end
+local project_folder = project_folder_level_1 .. '/' .. second_character_of_filename
+success, error_msg = check_create_dir(project_folder)
+if not success then
+    send_error(500, error_msg)
+    return
+end
+
+local destination_path = project_folder .. '/' .. hashed_filename
 local destination_key_frames = destination_path:match("(.+)%..+")
 success, error_msg = server.fs.moveFile(source_path, destination_path)
 if not success then
@@ -227,10 +244,10 @@ if source_key_frames_exists then
 end
 
 --
--- Move sidecarfile if it exists
+-- Move sidecar and original file to final storage location
 --
 local hashed_sidecar =  get_file_basename(hashed_filename) .. ".info"
-local source_sidecar = config.imgroot .. "/tmp/" .. hashed_sidecar
+local source_sidecar = tmp_folder .. "/" .. hashed_sidecar
 success, readable = server.fs.is_readable(source_sidecar)
 if not success then
     send_error(500, "server.fs.is_readable() failed: " .. readable)
@@ -249,7 +266,7 @@ if readable then
     end
 
     -- move sidecar file to storage location
-    local destination_sidecar = storage_dir .. hashed_sidecar
+    local destination_sidecar = project_folder .. "/" .. hashed_sidecar
     success, error_msg = server.fs.moveFile(source_sidecar, destination_sidecar)
     if not success then
         send_error(500, "server.fs.moveFile() failed: " .. error_msg)
@@ -257,8 +274,8 @@ if readable then
     end
 
     -- move the original file to the storage location
-    local source_original = config.imgroot .. "/tmp/" .. sidecar["originalInternalFilename"]
-    local destination_original = storage_dir .. sidecar["originalInternalFilename"]
+    local source_original = tmp_folder .. "/" .. sidecar["originalInternalFilename"]
+    local destination_original = project_folder .. "/" .. sidecar["originalInternalFilename"]
     success, error_msg = server.fs.moveFile(source_original, destination_original)
     if not success then
         send_error(500, "server.fs.moveFile() failed: " .. error_msg)
