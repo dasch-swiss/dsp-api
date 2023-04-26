@@ -222,16 +222,16 @@ object RouteUtilV2 {
   }
 
   /**
-   * Gets the required project IRI specified in a Knora-specific HTTP header.
+   * Gets the required project IRI specified in a Knora-specific HTTP header [[PROJECT_HEADER]].
    *
    * @param requestContext The akka-http [[RequestContext]].
-   * @return The specified project IRI, or [[None]] if no project header was included in the request.
+   * @return The  [[SmartIri]] of the project provided in the header.
    *         Fails with a [[BadRequestException]] if the project IRI is invalid.
    *         Fails with a [[BadRequestException]] if the project header is missing.
    */
-  def getRequiredProjectIri(ctx: RequestContext): ZIO[IriConverter, BadRequestException, SmartIri] =
+  def getRequiredProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, SmartIri] =
     RouteUtilV2
-      .getProjectIri(ctx)
+      .getProjectIri(requestContext)
       .some
       .orElseFail(BadRequestException(s"This route requires the request header $PROJECT_HEADER"))
 
