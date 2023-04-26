@@ -300,7 +300,7 @@ final case class ResourcesRouteV1()(
                       ZIO.serviceWithZIO[MessageRelay](
                         _.ask[GetFileMetadataResponse](GetFileMetadataRequest(tempFilePath, userADM))
                       )
-                    fileValue <- ZIO.attempt(makeFileValue(filename, fileMetadataResponse, project.shortcode))
+                    fileValue <- makeFileValue(filename, fileMetadataResponse, project.shortcode)
                   } yield Some(fileValue)
                 case None => ZIO.none
               }
@@ -329,7 +329,8 @@ final case class ResourcesRouteV1()(
                                ZIO.serviceWithZIO[MessageRelay](
                                  _.ask[GetFileMetadataResponse](GetFileMetadataRequest(tempFile, userProfile))
                                )
-                           } yield Some(makeFileValue(filename, fileMetadataResponse, projectShortcode))
+                             fileValue <- makeFileValue(filename, fileMetadataResponse, projectShortcode)
+                           } yield Some(fileValue)
                          case None => ZIO.none
                        }
       label <- RouteUtilV1.toSparqlEncodedString(
@@ -718,12 +719,9 @@ final case class ResourcesRouteV1()(
     for {
       mainOntologyIri <-
         ZIO.serviceWithZIO[StringFormatter](sf =>
-          ZIO.attempt(
-            sf.xmlImportNamespaceToInternalOntologyIriV1(
-              defaultNamespace,
-              throw BadRequestException(s"Invalid XML import namespace: $defaultNamespace")
-            )
-          )
+          ZIO
+            .fromOption(sf.xmlImportNamespaceToInternalOntologyIriV1(defaultNamespace))
+            .orElseFail(BadRequestException(s"Invalid XML import namespace: $defaultNamespace"))
         )
       // Generate a bundle of XML schemas for validating the submitted XML.
       schemaBundle <- generateSchemasFromOntologies(mainOntologyIri.toString, userADM)
@@ -752,11 +750,10 @@ final case class ResourcesRouteV1()(
 
   private def xmlImportElementNameToInternalOntologyIriV1(
     namespace: String,
-    elementLabel: String,
-    errorFun: => Nothing
-  ): ZIO[StringFormatter, Throwable, IRI] =
+    elementLabel: String
+  ): ZIO[StringFormatter, Option[Nothing], IRI] =
     ZIO.serviceWithZIO[StringFormatter] { sf =>
-      ZIO.attempt(sf.xmlImportElementNameToInternalOntologyIriV1(namespace, elementLabel, errorFun))
+      ZIO.fromOption(sf.xmlImportElementNameToInternalOntologyIriV1(namespace, elementLabel))
     }
 
   private def toPropertyIriFromOtherOntologyInXmlImport(
@@ -796,15 +793,12 @@ final case class ResourcesRouteV1()(
         val elementNamespace: String = resourceNode.getNamespace(resourceNode.prefix)
 
         for {
-          restype_id <- ZIO.serviceWithZIO[StringFormatter](sf =>
-                          ZIO.attempt(
-                            sf.xmlImportElementNameToInternalOntologyIriV1(
-                              elementNamespace,
-                              resourceNode.label,
-                              throw BadRequestException(s"Invalid XML namespace: $elementNamespace")
-                            )
-                          )
-                        )
+          restype_id <-
+            ZIO.serviceWithZIO[StringFormatter](sf =>
+              ZIO
+                .fromOption(sf.xmlImportElementNameToInternalOntologyIriV1(elementNamespace, resourceNode.label))
+                .orElseFail(BadRequestException(s"Invalid XML namespace: $elementNamespace"))
+            )
 
           // Get the child elements of the resource element.
           childElements: Seq[Node] = resourceNode.child.filterNot(_.label == "#PCDATA")
@@ -845,8 +839,9 @@ final case class ResourcesRouteV1()(
                                                          propertyNode.getNamespace(propertyNode.prefix)
                                                        xmlImportElementNameToInternalOntologyIriV1(
                                                          propertyNodeNamespace,
-                                                         propertyNode.label,
-                                                         throw BadRequestException(
+                                                         propertyNode.label
+                                                       ).orElseFail(
+                                                         BadRequestException(
                                                            s"Invalid XML namespace: $propertyNodeNamespace"
                                                          )
                                                        )
@@ -1077,7 +1072,7 @@ final case class ResourcesRouteV1()(
    * @param mainNamespace the XML namespace corresponding to the main ontology to be used in the XML import.
    * @param schemas       a map of XML namespaces to schemas.
    */
-  case class XmlImportSchemaBundleV1(mainNamespace: IRI, schemas: Map[IRI, XmlImportSchemaV1])
+  private case class XmlImportSchemaBundleV1(mainNamespace: IRI, schemas: Map[IRI, XmlImportSchemaV1])
 
   /**
    * An implementation of [[LSResourceResolver]] that resolves resources from a [[XmlImportSchemaBundleV1]].
