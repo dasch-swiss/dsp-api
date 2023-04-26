@@ -77,6 +77,10 @@ final case class OntologyResponderV1Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
+  private def noClassConstraintException(iri: IRI) = InconsistentRepositoryDataException(
+    s"Property $iri has no knora-base:objectClassConstraint"
+  )
+
   /**
    * Loads and caches all ontology information.
    *
@@ -234,18 +238,11 @@ final case class OntologyResponderV1Live(
                     // It is a linking prop: its valuetype_id is knora-base:LinkValue.
                     // It is restricted to the resource class that is given for knora-base:objectClassConstraint
                     // for the given property which goes in the attributes that will be read by the GUI.
-
                     for {
                       attributeResType <-
                         ZIO
-                          .fromOption(
-                            entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-                          )
-                          .orElseFail(
-                            InconsistentRepositoryDataException(
-                              s"Property $propertyIri has no knora-base:objectClassConstraint"
-                            )
-                          )
+                          .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                          .orElseFail(noClassConstraintException(propertyIri))
                     } yield PropertyDefinitionV1(
                       id = propertyIri,
                       name = propertyIri,
@@ -284,14 +281,8 @@ final case class OntologyResponderV1Live(
                     for {
                       valueTypeId <-
                         ZIO
-                          .fromOption(
-                            entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-                          )
-                          .orElseFail(
-                            InconsistentRepositoryDataException(
-                              s"Property $propertyIri has no knora-base:objectClassConstraint"
-                            )
-                          )
+                          .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                          .orElseFail(noClassConstraintException(propertyIri))
                     } yield PropertyDefinitionV1(
                       id = propertyIri,
                       name = propertyIri,
@@ -602,11 +593,7 @@ final case class OntologyResponderV1Live(
                   attributeResType <-
                     ZIO
                       .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
-                      .orElseFail(
-                        InconsistentRepositoryDataException(
-                          s"Property $propertyIri has no knora-base:objectClassConstraint"
-                        )
-                      )
+                      .orElseFail(noClassConstraintException(propertyIri))
                 } yield PropertyDefinitionInNamedGraphV1(
                   id = propertyIri,
                   name = propertyIri,
@@ -635,11 +622,7 @@ final case class OntologyResponderV1Live(
                   valueTypeId <-
                     ZIO
                       .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
-                      .orElseFail(
-                        InconsistentRepositoryDataException(
-                          s"Property $propertyIri has no knora-base:objectClassConstraint"
-                        )
-                      )
+                      .orElseFail(noClassConstraintException(propertyIri))
                 } yield PropertyDefinitionInNamedGraphV1(
                   id = propertyIri,
                   name = propertyIri,
