@@ -5,15 +5,10 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import akka.actor.ActorRef
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
 import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 import dsp.errors._
 import org.knora.webapi._
@@ -874,7 +869,7 @@ case class UpdateResourceMetadataRequestV2(
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
-object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateResourceMetadataRequestV2] {
+object UpdateResourceMetadataRequestV2 {
 
   /**
    * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
@@ -882,78 +877,62 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
-   * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
     requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
+    apiRequestID: UUID
+  ): ZIO[StringFormatter, Throwable, UpdateResourceMetadataRequestV2] = ZIO.serviceWithZIO { implicit stringFormatter =>
+    ZIO.attempt {
+
+      val resourceIri: SmartIri = jsonLDDocument.body.requireIDAsKnoraDataIri
+
+      if (!resourceIri.isKnoraResourceIri) {
+        throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+      }
+
+      stringFormatter.validateUUIDOfResourceIRI(resourceIri)
+
+      val resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
+
+      val maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
+        key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+      )
+
+      val validationFun: (String, => Nothing) => String =
+        (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+
+      val maybeLabel: Option[String] =
+        jsonLDDocument.body.maybeStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
+      val maybePermissions: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
+        OntologyConstants.KnoraApiV2Complex.HasPermissions,
+        validationFun
+      )
+
+      val maybeNewModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
+        key = OntologyConstants.KnoraApiV2Complex.NewModificationDate,
+        expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+        validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+      )
+
+      if (Seq(maybeLabel, maybePermissions, maybeNewModificationDate).forall(_.isEmpty)) {
+        throw BadRequestException(s"No updated resource metadata provided")
+      }
+
+      UpdateResourceMetadataRequestV2(
+        resourceIri = resourceIri.toString,
+        resourceClassIri = resourceClassIri,
+        maybeLastModificationDate = maybeLastModificationDate,
+        maybeLabel = maybeLabel,
+        maybePermissions = maybePermissions,
+        maybeNewModificationDate = maybeNewModificationDate,
         requestingUser = requestingUser,
         apiRequestID = apiRequestID
       )
     }
-
-  def fromJsonLDSync(
-    jsonLDDocument: JsonLDDocument,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): UpdateResourceMetadataRequestV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val resourceIri: SmartIri = jsonLDDocument.body.requireIDAsKnoraDataIri
-
-    if (!resourceIri.isKnoraResourceIri) {
-      throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
-    }
-
-    stringFormatter.validateUUIDOfResourceIRI(resourceIri)
-
-    val resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
-
-    val maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-      key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
-      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-    )
-
-    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
-      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
-
-    val maybeLabel: Option[String] =
-      jsonLDDocument.body.maybeStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
-    val maybePermissions: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
-      OntologyConstants.KnoraApiV2Complex.HasPermissions,
-      validationFun
-    )
-
-    val maybeNewModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-      key = OntologyConstants.KnoraApiV2Complex.NewModificationDate,
-      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-    )
-
-    if (Seq(maybeLabel, maybePermissions, maybeNewModificationDate).forall(_.isEmpty)) {
-      throw BadRequestException(s"No updated resource metadata provided")
-    }
-
-    UpdateResourceMetadataRequestV2(
-      resourceIri = resourceIri.toString,
-      resourceClassIri = resourceClassIri,
-      maybeLastModificationDate = maybeLastModificationDate,
-      maybeLabel = maybeLabel,
-      maybePermissions = maybePermissions,
-      maybeNewModificationDate = maybeNewModificationDate,
-      requestingUser = requestingUser,
-      apiRequestID = apiRequestID
-    )
   }
 }
 
@@ -1062,7 +1041,7 @@ case class DeleteOrEraseResourceRequestV2(
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
 
-object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteOrEraseResourceRequestV2] {
+object DeleteOrEraseResourceRequestV2 {
 
   /**
    * Converts JSON-LD input into an instance of [[DeleteOrEraseResourceRequestV2]].
@@ -1070,70 +1049,55 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActor            a reference to the application actor.
-   * @param log                  a logging adapter.
    * @return a case class instance representing the input.
    */
-  override def fromJsonLD(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM,
-    appActor: ActorRef,
-    log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] =
-    Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        requestingUser = requestingUser,
-        apiRequestID = apiRequestID
-      )
-    }
-
-  def fromJsonLDSync(
+  def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): DeleteOrEraseResourceRequestV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  ): ZIO[StringFormatter, Throwable, DeleteOrEraseResourceRequestV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
+      ZIO.attempt {
 
-    val resourceIri: SmartIri = jsonLDDocument.body.requireIDAsKnoraDataIri
+        val resourceIri: SmartIri = jsonLDDocument.body.requireIDAsKnoraDataIri
 
-    if (!resourceIri.isKnoraResourceIri) {
-      throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+        if (!resourceIri.isKnoraResourceIri) {
+          throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+        }
+
+        val resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
+
+        val maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
+          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        )
+
+        val validationFun: (String, => Nothing) => String =
+          (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+
+        val maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
+          OntologyConstants.KnoraApiV2Complex.DeleteComment,
+          validationFun
+        )
+
+        val maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
+          key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
+          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        )
+
+        DeleteOrEraseResourceRequestV2(
+          resourceIri = resourceIri.toString,
+          resourceClassIri = resourceClassIri,
+          maybeDeleteComment = maybeDeleteComment,
+          maybeDeleteDate = maybeDeleteDate,
+          maybeLastModificationDate = maybeLastModificationDate,
+          requestingUser = requestingUser,
+          apiRequestID = apiRequestID
+        )
+      }
     }
-
-    val resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
-
-    val maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-      key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
-      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-    )
-
-    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
-      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
-
-    val maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
-      OntologyConstants.KnoraApiV2Complex.DeleteComment,
-      validationFun
-    )
-
-    val maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-      key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
-      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-      validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-    )
-
-    DeleteOrEraseResourceRequestV2(
-      resourceIri = resourceIri.toString,
-      resourceClassIri = resourceClassIri,
-      maybeDeleteComment = maybeDeleteComment,
-      maybeDeleteDate = maybeDeleteDate,
-      maybeLastModificationDate = maybeLastModificationDate,
-      requestingUser = requestingUser,
-      apiRequestID = apiRequestID
-    )
-  }
 }
 
 /**

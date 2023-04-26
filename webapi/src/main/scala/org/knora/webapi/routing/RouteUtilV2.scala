@@ -19,14 +19,13 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
@@ -210,45 +209,31 @@ object RouteUtilV2 {
    * Gets the project IRI specified in a Knora-specific HTTP header.
    *
    * @param requestContext the akka-http [[RequestContext]].
-   * @return the specified project IRI, or [[None]] if no project header was included in the request.
+   * @return The specified project IRI, or [[None]] if no project header was included in the request.
+   *         Fails with a [[BadRequestException]] if the project IRI is invalid.
    */
-  @deprecated("Use getProjectIri instead")
-  def getProjectIriUnsafe(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] =
-    requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map { header =>
-      val projectIriStr = header.value
-      projectIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $projectIriStr"))
-    }
-
-  /**
-   * Gets the project IRI specified in a Knora-specific HTTP header.
-   *
-   * @param requestContext the akka-http [[RequestContext]].
-   * @return the specified project IRI, or [[None]] if no project header was included in the request.
-   *         fails with a [[BadRequestException]] if the project IRI is invalid.
-   */
-  def getProjectIri(requestContext: RequestContext): ZIO[StringFormatter, BadRequestException, Option[SmartIri]] = {
+  def getProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, Option[SmartIri]] = {
     val maybeProjectIriStr = requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value())
-    ZIO.serviceWithZIO[StringFormatter] { sf =>
-      ZIO.foreach(maybeProjectIriStr)(iri =>
-        ZIO.attempt(sf.toSmartIri(iri)).orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
-      )
-    }
+    ZIO.foreach(maybeProjectIriStr)(iri =>
+      IriConverter
+        .asSmartIri(iri)
+        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $PROJECT_HEADER"))
+    )
   }
 
   /**
-   * Gets the project IRI specified in a Knora-specific HTTP header.
-   * Throws [[BadRequestException]] if no project was provided, the project IRI is invalid, or cannot be found.
+   * Gets the required project IRI specified in a Knora-specific HTTP header [[PROJECT_HEADER]].
    *
-   * @param ctx The akka-http [[RequestContext]].
-   *
-   * @param stringFormatter An instance of the [[StringFormatter]].
-   * @return The [[SmartIri]] contains the specified project IRI.
+   * @param requestContext The akka-http [[RequestContext]].
+   * @return The  [[SmartIri]] of the project provided in the header.
+   *         Fails with a [[BadRequestException]] if the project IRI is invalid.
+   *         Fails with a [[BadRequestException]] if the project header is missing.
    */
-  @deprecated("Use getRequiredProjectFromHeader(ctx: RequestContext) instead")
-  def getRequiredProjectFromHeaderUnsafe(ctx: RequestContext)(implicit stringFormatter: StringFormatter): SmartIri =
-    getProjectIriUnsafe(ctx).getOrElse(
-      throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}")
-    )
+  def getRequiredProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, SmartIri] =
+    RouteUtilV2
+      .getProjectIri(requestContext)
+      .some
+      .orElseFail(BadRequestException(s"This route requires the request header $PROJECT_HEADER"))
 
   /**
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
