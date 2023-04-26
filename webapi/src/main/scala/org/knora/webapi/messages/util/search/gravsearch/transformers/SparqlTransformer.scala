@@ -119,8 +119,7 @@ object SparqlTransformer {
       case StatementPattern(
             _,
             IriRef(SmartIri(OntologyConstants.KnoraBase.IsDeleted), _),
-            XsdLiteral("false", SmartIri(OntologyConstants.Xsd.Boolean)),
-            _
+            XsdLiteral("false", SmartIri(OntologyConstants.Xsd.Boolean))
           ) =>
         true
       case _ => false
@@ -131,7 +130,7 @@ object SparqlTransformer {
       case statementPattern: StatementPattern =>
         FilterNotExistsPattern(
           Seq(
-            StatementPattern.makeExplicit(
+            StatementPattern(
               subj = statementPattern.subj,
               pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
               obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
