@@ -29,6 +29,7 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
+import org.knora.webapi.routing.RouteUtilZ
 
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
@@ -72,42 +73,15 @@ final case class UsersRouteADM(
   }
 
   /* create a new user */
-  def addUser(): Route = path(usersBasePath) {
+  private def addUser(): Route = path(usersBasePath) {
     post {
-      entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
-        // get all values from request and make value objects from it
-        val iri: Validation[Throwable, Option[UserIri]] = apiRequest.id match {
-          case Some(iri) => UserIri.make(iri).map(Some(_))
-          case None      => Validation.succeed(None)
-        }
-        val username: Validation[Throwable, Username]         = Username.make(apiRequest.username)
-        val email: Validation[Throwable, Email]               = Email.make(apiRequest.email)
-        val givenName: Validation[Throwable, GivenName]       = GivenName.make(apiRequest.givenName)
-        val familyName: Validation[Throwable, FamilyName]     = FamilyName.make(apiRequest.familyName)
-        val password: Validation[Throwable, Password]         = Password.make(apiRequest.password)
-        val status: Validation[Throwable, UserStatus]         = UserStatus.make(apiRequest.status)
-        val languageCode: Validation[Throwable, LanguageCode] = LanguageCode.make(apiRequest.lang)
-        val systemAdmin: Validation[Throwable, SystemAdmin]   = SystemAdmin.make(apiRequest.systemAdmin)
-
-        // TODO try this out with ZIO.collectAllPar (https://zio.github.io/zio-prelude/docs/functionaldatatypes/validation#accumulating-errors)
-        val validatedUserCreatePayload: Validation[Throwable, UserCreatePayloadADM] =
-          Validation.validateWith(
-            iri,
-            username,
-            email,
-            givenName,
-            familyName,
-            password,
-            status,
-            languageCode,
-            systemAdmin
-          )(UserCreatePayloadADM)
-
+      entity(as[CreateUserApiRequestADM]) { apiRequest => ctx =>
         val requestTask = for {
-          payload <- validatedUserCreatePayload.toZIO
-          r       <- getUserUuid(requestContext)
-        } yield UserCreateRequestADM(payload, r.user, r.uuid)
-        runJsonRouteZ(requestTask, requestContext)
+          payload        <- UserCreatePayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
+          requestingUser <- Authenticator.getUserADM(ctx)
+          apiRequestId   <- RouteUtilZ.randomUuid()
+        } yield UserCreateRequestADM(payload, requestingUser, apiRequestId)
+        runJsonRouteZ(requestTask, ctx)
       }
     }
   }
