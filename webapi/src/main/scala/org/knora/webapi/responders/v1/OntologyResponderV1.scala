@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v1
 
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
