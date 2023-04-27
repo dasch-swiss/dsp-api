@@ -20,6 +20,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.v2.responder._
+import zio.prelude.NonEmptySet
 
 /**
  * An abstract trait for messages that can be sent to `SearchResponderV2`.
@@ -92,8 +93,17 @@ case class GravsearchRequestV2(
   constructQuery: ConstructQuery,
   targetSchema: ApiV2Schema,
   schemaOptions: Set[SchemaOption] = Set.empty[SchemaOption],
-  requestingUser: UserADM
+  requestingUser: UserADM,
+  inferenceLimit: InferenceLimit = InferenceLimit.AllInference
 ) extends SearchResponderRequestV2
+
+sealed trait InferenceLimit
+object InferenceLimit {
+  final case object NoInference                                      extends InferenceLimit
+  final case object AllInference                                     extends InferenceLimit
+  final case class LimitedToProject(projectIri: IRI)                 extends InferenceLimit
+  final case class LimitedToOntologies(ontologies: NonEmptySet[IRI]) extends InferenceLimit
+}
 
 /**
  * Requests a search of resources by their label. A successful response will be a [[ResourceCountV2]].
