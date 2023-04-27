@@ -14,7 +14,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
@@ -369,33 +368,6 @@ final case class QueryTraverser(
                   )
       whereClause = WhereClause(patterns)
     } yield inputQuery.copy(fromClause = fromClause, whereClause = whereClause)
-
-  /**
-   * Traverses a CONSTRUCT query, delegating transformation tasks to a [[ConstructToConstructTransformer]], and returns the transformed query.
-   *
-   * @param inputQuery                 the query to be transformed.
-   * @param transformer                the [[ConstructToConstructTransformer]] to be used.
-   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
-   * @return the transformed query.
-   */
-  def transformConstructToConstruct(
-    inputQuery: ConstructQuery,
-    transformer: ConstructToConstructTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Task[ConstructQuery] =
-    for {
-      wherePatterns <- transformWherePatterns(
-                         patterns = inputQuery.whereClause.patterns,
-                         inputOrderBy = inputQuery.orderBy,
-                         whereTransformer = transformer,
-                         limitInferenceToOntologies = limitInferenceToOntologies
-                       )
-      constructStatements <-
-        ZIO.foreach(inputQuery.constructClause.statements)(transformer.transformStatementInConstruct).map(_.flatten)
-    } yield ConstructQuery(
-      constructClause = ConstructClause(constructStatements),
-      whereClause = WhereClause(wherePatterns)
-    )
 }
 
 object QueryTraverser {

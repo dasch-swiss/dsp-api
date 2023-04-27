@@ -58,6 +58,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport._
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 trait SearchResponderV2
 final case class SearchResponderV2Live(
@@ -71,7 +72,8 @@ final case class SearchResponderV2Live(
   private val sparqlTransformerLive: SparqlTransformerLive,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
-  implicit private val stringFormatter: StringFormatter
+  implicit private val stringFormatter: StringFormatter,
+  private val iriConverter: IriConverter
 ) extends SearchResponderV2
     with MessageHandler
     with LazyLogging {
@@ -310,9 +312,9 @@ final case class SearchResponderV2Live(
           )
 
           val queryPatternTransformerConstruct =
-            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
+            new ConstructToConstructTransformer(sparqlTransformerLive, ???) // XXX
           for {
-            query          <- queryTraverser.transformConstructToConstruct(mainQuery, queryPatternTransformerConstruct)
+            query          <- queryPatternTransformerConstruct.transformConstructToConstruct(mainQuery)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
@@ -587,15 +589,15 @@ final case class SearchResponderV2Live(
           )
 
           val queryPatternTransformerConstruct: ConstructToConstructTransformer =
-            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
+            ConstructToConstructTransformer(sparqlTransformerLive, iriConverter)
 
           for {
 
-            mainQuery <- queryTraverser.transformConstructToConstruct(
-                           inputQuery = mainQuery,
-                           transformer = queryPatternTransformerConstruct,
-                           limitInferenceToOntologies = ontologiesForInferenceMaybe
-                         )
+            mainQuery <- queryPatternTransformerConstruct
+                           .transformConstructToConstruct(
+                             inputQuery = mainQuery,
+                             limitInferenceToOntologies = ontologiesForInferenceMaybe
+                           )
 
             // Convert the result to a SPARQL string and send it to the triplestore.
             mainQuerySparql    = mainQuery.toSparql
@@ -1075,6 +1077,7 @@ object SearchResponderV2Live {
       with SparqlTransformerLive
       with GravsearchTypeInspectionRunner
       with InferenceOptimizationService
+      with IriConverter
       with StringFormatter,
     Nothing,
     SearchResponderV2Live
@@ -1093,6 +1096,7 @@ object SearchResponderV2Live {
         mr                           <- ZIO.service[MessageRelay]
         typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
         inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
+        iriConverter                 <- ZIO.service[IriConverter]
         handler <- mr.subscribe(
                      new SearchResponderV2Live(
                        appConfig,
@@ -1105,7 +1109,8 @@ object SearchResponderV2Live {
                        sparqlTransformerLive,
                        typeInspectionRunner,
                        inferenceOptimizationService,
-                       stringFormatter
+                       stringFormatter,
+                       iriConverter
                      )
                    )
       } yield handler
