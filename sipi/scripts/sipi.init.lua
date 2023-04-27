@@ -176,9 +176,9 @@ function file_pre_flight(identifier, cookie)
     log("file_pre_flight - shortcode: " .. shortcode, server.loglevel.LOG_DEBUG)
 
     -- get the file name
+    file_name_preview  = ''
     if #segments == 4 then
         file_name = segments[4]
-        file_name_preview  = ''
     -- in case of a preview file of a video, get the file path of the video file to check permissions on the video
     elseif #segments == 5 then
         log("file_pre_flight - found 5 segments, it's assumed to the preview file for a video", server.loglevel.LOG_ERR)

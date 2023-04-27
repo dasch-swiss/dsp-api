@@ -89,4 +89,23 @@ function maybe_delete_temp_file(file_path, current_time)
     return true
 end
 
-clean_temp_dir()
+success, auth = server.requireAuth()
+
+local clean_temp_dir_user = os.getenv("CLEAN_TMP_DIR_USER")
+local clean_temp_dir_pw = os.getenv("CLEAN_TMP_DIR_PW")
+
+if clean_temp_dir_user == nil then
+    clean_temp_dir_user = config.clean_temp_dir_user
+end
+
+if clean_temp_dir_pw == nil then
+    clean_temp_dir_pw = config.clean_temp_dir_pw
+end
+
+if auth.username == clean_temp_dir_user and auth.password == clean_temp_dir_pw then
+    server.log("clean_temp_dir.lua: authentication was successful", server.loglevel.LOG_DEBUG)
+    clean_temp_dir()
+else
+    server.log("clean_temp_dir.lua: failed to authenticate user", server.loglevel.LOG_DEBUG)
+    return 
+end

@@ -45,6 +45,8 @@ services:
       - SIPI_WEBAPI_PORT=3333
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
+      - CLEAN_TMP_DIR_USER=test@test.org
+      - CLEAN_TMP_DIR_PW=test1234
     # entrypoint: [ "valgrind", "--leak-check=yes", "/sipi/sipi" ] ## uncomment to run SIPI under valgrind
     # command: --config=/sipi/config/sipi.docker-test-config.lua ## command variant to start the sipi container with test routes enabled
     command: --config=/sipi/config/sipi.docker-config.lua
