@@ -10,11 +10,8 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio._
-import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri.UserIri
-import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter

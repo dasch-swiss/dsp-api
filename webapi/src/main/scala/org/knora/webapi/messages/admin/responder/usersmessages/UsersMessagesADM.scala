@@ -8,7 +8,7 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 import zio.prelude.Validation
-import zio.prelude.ZValidation
+
 import java.util.UUID
 
 import dsp.errors.BadRequestException
