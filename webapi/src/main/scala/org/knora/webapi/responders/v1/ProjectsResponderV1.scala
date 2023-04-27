@@ -31,7 +31,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 /**
  * Returns information about Knora projects.
  */
-trait ProjectsResponderV1 {}
+trait ProjectsResponderV1
 
 final case class ProjectsResponderV1Live(
   messageRelay: MessageRelay,
