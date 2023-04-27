@@ -5,8 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import zio.IO
-import zio.ZIO
+import zio._
 
 import java.time.Instant
 import java.util.UUID
@@ -17,10 +16,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
-import org.knora.webapi.messages.OntologyConstants.Rdfs
-import org.knora.webapi.messages.OntologyConstants.Xsd
+import org.knora.webapi.messages.OntologyConstants._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -206,11 +202,11 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
     val historyAsJsonLD: Seq[JsonLDObject] = history.map { historyEntry: ResourceHistoryEntry =>
       JsonLDObject(
         Map(
-          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = historyEntry.versionDate.toString,
             datatype = Xsd.DateTimeStamp.toSmartIri
           ),
-          OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author)
+          KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author)
         )
       )
     }
@@ -219,10 +215,10 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
 
     val context = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
-        "rdf"                                            -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs"                                           -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "xsd"                                            -> OntologyConstants.Xsd.XsdPrefixExpansion,
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+        "rdf"                          -> Rdf.RdfPrefixExpansion,
+        "rdfs"                         -> Rdfs.RdfsPrefixExpansion,
+        "xsd"                          -> Xsd.XsdPrefixExpansion,
+        KnoraApi.KnoraApiOntologyLabel -> KnoraApiV2Complex.KnoraApiV2PrefixExpansion
       )
     )
 
@@ -454,11 +450,11 @@ case class ReadResourceV2(
 
     val metadataForComplexSchema: Map[IRI, JsonLDValue] = if (targetSchema == ApiV2Complex) {
       val requiredMetadataForComplexSchema: Map[IRI, JsonLDValue] = Map(
-        OntologyConstants.KnoraApiV2Complex.AttachedToUser    -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-        OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
-        OntologyConstants.KnoraApiV2Complex.HasPermissions    -> JsonLDString(permissions),
-        OntologyConstants.KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
-        OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        KnoraApiV2Complex.AttachedToUser    -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
+        KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
+        KnoraApiV2Complex.HasPermissions    -> JsonLDString(permissions),
+        KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
+        KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = creationDate.toString,
           datatype = Xsd.DateTimeStamp.toSmartIri
         )
@@ -479,7 +475,7 @@ case class ReadResourceV2(
       // If this is a past version of the resource, include knora-api:versionDate.
 
       val versionDateAsJsonLD = versionDate.map { definedVersionDate =>
-        OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = definedVersionDate.toString,
           datatype = Xsd.DateTimeStamp.toSmartIri
         )
@@ -495,21 +491,21 @@ case class ReadResourceV2(
     val resourceSmartIri: SmartIri = resourceIri.toSmartIri
 
     val arkUrlProp: IRI = targetSchema match {
-      case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.ArkUrl
-      case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.ArkUrl
+      case ApiV2Simple  => KnoraApiV2Simple.ArkUrl
+      case ApiV2Complex => KnoraApiV2Complex.ArkUrl
     }
 
     val arkUrlAsJsonLD: (IRI, JsonLDObject) =
       arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
         value = resourceSmartIri.fromResourceIriToArkUrl(),
-        datatype = OntologyConstants.Xsd.Uri.toSmartIri
+        datatype = Xsd.Uri.toSmartIri
       )
 
     // Make an ARK URL with a version timestamp.
 
     val versionArkUrlProp: IRI = targetSchema match {
-      case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.VersionArkUrl
-      case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.VersionArkUrl
+      case ApiV2Simple  => KnoraApiV2Simple.VersionArkUrl
+      case ApiV2Complex => KnoraApiV2Complex.VersionArkUrl
     }
 
     val arkTimestamp = versionDate.getOrElse(lastModificationDate.getOrElse(creationDate))
@@ -517,14 +513,14 @@ case class ReadResourceV2(
     val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
       versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
         value = resourceSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
-        datatype = OntologyConstants.Xsd.Uri.toSmartIri
+        datatype = Xsd.Uri.toSmartIri
       )
 
     JsonLDObject(
       Map(
-        JsonLDKeywords.ID            -> JsonLDString(resourceIri),
-        JsonLDKeywords.TYPE          -> JsonLDString(resourceClassIri.toString),
-        OntologyConstants.Rdfs.Label -> JsonLDString(label)
+        JsonLDKeywords.ID   -> JsonLDString(resourceIri),
+        JsonLDKeywords.TYPE -> JsonLDString(resourceClassIri.toString),
+        Rdfs.Label          -> JsonLDString(label)
       ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema + arkUrlAsJsonLD + versionArkUrlAsJsonLD
     )
   }
@@ -545,7 +541,7 @@ case class ReadResourceV2(
     ReadResourceV2(
       resourceIri = this.resourceIri,
       label = "Deleted Resource",
-      resourceClassIri = OntologyConstants.KnoraBase.DeletedResource.toSmartIri,
+      resourceClassIri = KnoraBase.DeletedResource.toSmartIri,
       attachedToUser = this.attachedToUser,
       projectADM = this.projectADM,
       permissions = this.permissions,
@@ -566,12 +562,12 @@ case class ReadResourceV2(
    */
   def withDeletedValues(): ReadResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val delIri: SmartIri                          = OntologyConstants.KnoraBase.DeletedValue.toSmartIri
+    val delIri: SmartIri                          = KnoraBase.DeletedValue.toSmartIri
     val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] =
       this.values.toList
         .foldLeft(Seq.empty[(SmartIri, ReadValueV2)])((aggregator, valueMap) =>
           valueMap match {
-            case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) => {
+            case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) =>
               val withDeletedSeq = valueSequence
                 .map(value =>
                   value.deletionInfo match {
@@ -582,7 +578,6 @@ case class ReadResourceV2(
                   }
                 )
               aggregator ++ withDeletedSeq
-            }
           }
         )
         .groupMap(_._1)(_._2)
@@ -691,12 +686,12 @@ object CreateResourceRequestV2 {
 
         // Get the resource's rdfs:label.
         label <-
-          ZIO.attempt(jsonLDDocument.body.requireStringWithValidation(OntologyConstants.Rdfs.Label, validationFun))
+          ZIO.attempt(jsonLDDocument.body.requireStringWithValidation(Rdfs.Label, validationFun))
 
         // Get information about the project that the resource should be created in.
         projectIri <- ZIO.attempt(
                         jsonLDDocument.body.requireIriInObject(
-                          OntologyConstants.KnoraApiV2Complex.AttachedToProject,
+                          KnoraApiV2Complex.AttachedToProject,
                           stringFormatter.toSmartIriWithErr
                         )
                       )
@@ -719,14 +714,14 @@ object CreateResourceRequestV2 {
         // Get the resource's permissions.
         permissions <- ZIO.attempt(
                          jsonLDDocument.body
-                           .maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, validationFun)
+                           .maybeStringWithValidation(KnoraApiV2Complex.HasPermissions, validationFun)
                        )
 
         // Get the user who should be indicated as the creator of the resource, if specified.
 
         maybeAttachedToUserIri <- ZIO.attempt(
                                     jsonLDDocument.body.maybeIriInObject(
-                                      OntologyConstants.KnoraApiV2Complex.AttachedToUser,
+                                      KnoraApiV2Complex.AttachedToUser,
                                       stringFormatter.toSmartIriWithErr
                                     )
                                   )
@@ -741,7 +736,7 @@ object CreateResourceRequestV2 {
 
         creationDate <- ZIO.attempt(
                           jsonLDDocument.body.maybeDatatypeValueInObject(
-                            key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                            key = KnoraApiV2Complex.CreationDate,
                             expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
                             validationFun = (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun)
                           )
@@ -753,11 +748,11 @@ object CreateResourceRequestV2 {
                                Set(
                                  JsonLDKeywords.ID,
                                  JsonLDKeywords.TYPE,
-                                 OntologyConstants.Rdfs.Label,
-                                 OntologyConstants.KnoraApiV2Complex.AttachedToProject,
-                                 OntologyConstants.KnoraApiV2Complex.AttachedToUser,
-                                 OntologyConstants.KnoraApiV2Complex.HasPermissions,
-                                 OntologyConstants.KnoraApiV2Complex.CreationDate
+                                 Rdfs.Label,
+                                 KnoraApiV2Complex.AttachedToProject,
+                                 KnoraApiV2Complex.AttachedToUser,
+                                 KnoraApiV2Complex.HasPermissions,
+                                 KnoraApiV2Complex.CreationDate
                                )
                            )
 
@@ -784,7 +779,7 @@ object CreateResourceRequestV2 {
 
                   maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
                   maybeCustomValueUUID: Option[UUID] =
-                    valueJsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+                    valueJsonLDObject.maybeUUID(KnoraApiV2Complex.ValueHasUUID)
 
                   // Get the value's creation date.
                   // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
@@ -792,7 +787,7 @@ object CreateResourceRequestV2 {
                                                     .attempt(
                                                       valueJsonLDObject
                                                         .maybeDatatypeValueInObject(
-                                                          key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                                                          key = KnoraApiV2Complex.ValueCreationDate,
                                                           expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
                                                           validationFun = (s, errorFun) =>
                                                             xsdDateTimeStampToInstant(s)
@@ -803,7 +798,7 @@ object CreateResourceRequestV2 {
                                                       if (it.isEmpty) {
                                                         ZIO.attempt(
                                                           valueJsonLDObject.maybeDatatypeValueInObject(
-                                                            key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                                                            key = KnoraApiV2Complex.CreationDate,
                                                             expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
                                                             validationFun = (s, errorFun) =>
                                                               xsdDateTimeStampToInstant(s)
@@ -815,7 +810,7 @@ object CreateResourceRequestV2 {
 
                   maybePermissions <- ZIO.attempt(
                                         valueJsonLDObject.maybeStringWithValidation(
-                                          OntologyConstants.KnoraApiV2Complex.HasPermissions,
+                                          KnoraApiV2Complex.HasPermissions,
                                           validationFun
                                         )
                                       )
@@ -995,23 +990,23 @@ case class UpdateResourceMetadataResponseV2(
     // Make the knora-api prefix for the target schema.
 
     val knoraApiPrefixExpansion: IRI = targetSchema match {
-      case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-      case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+      case ApiV2Simple  => KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+      case ApiV2Complex => KnoraApiV2Complex.KnoraApiV2PrefixExpansion
     }
 
     // Make the JSON-LD document.
 
     val context: JsonLDObject = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
-        "rdf"                                            -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs"                                           -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "xsd"                                            -> OntologyConstants.Xsd.XsdPrefixExpansion,
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
+        "rdf"                          -> Rdf.RdfPrefixExpansion,
+        "rdfs"                         -> Rdfs.RdfsPrefixExpansion,
+        "xsd"                          -> Xsd.XsdPrefixExpansion,
+        KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
       )
     )
 
     val label_map = maybeLabel match {
-      case Some(maybeLabel) => Map(OntologyConstants.Rdfs.Label -> JsonLDString(maybeLabel))
+      case Some(maybeLabel) => Map(Rdfs.Label -> JsonLDString(maybeLabel))
       case None             => Map.empty[String, JsonLDValue]
     }
 
@@ -1025,14 +1020,14 @@ case class UpdateResourceMetadataResponseV2(
 
     val permissions_map = maybePermissions match {
       case Some(maybePermissions) =>
-        Map(OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(maybePermissions))
+        Map(KnoraApiV2Complex.HasPermissions -> JsonLDString(maybePermissions))
       case None => Map.empty[String, JsonLDValue]
     }
 
     val resourceIri_resourceClassIri_map =
       Map(
-        OntologyConstants.KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
-        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString)
+        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString)
       )
 
     val body = JsonLDObject(
@@ -1102,12 +1097,12 @@ object DeleteOrEraseResourceRequestV2 {
           (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
 
         val maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.DeleteComment,
+          KnoraApiV2Complex.DeleteComment,
           validationFun
         )
 
         val maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
+          key = KnoraApiV2Complex.DeleteDate,
           expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1179,26 +1174,26 @@ case class ReadResourcesSequenceV2(
     // Make the knora-api prefix for the target schema.
 
     val knoraApiPrefixExpansion: IRI = targetSchema match {
-      case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-      case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+      case ApiV2Simple  => KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+      case ApiV2Complex => KnoraApiV2Complex.KnoraApiV2PrefixExpansion
     }
 
     // Make the JSON-LD document.
 
     val context: JsonLDObject = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
-        "rdf"                                            -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs"                                           -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "xsd"                                            -> OntologyConstants.Xsd.XsdPrefixExpansion,
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
+        "rdf"                          -> Rdf.RdfPrefixExpansion,
+        "rdfs"                         -> Rdfs.RdfsPrefixExpansion,
+        "xsd"                          -> Xsd.XsdPrefixExpansion,
+        KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
       ),
       knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
     )
 
     val mayHaveMoreResultsStatement: Option[(IRI, JsonLDBoolean)] = if (mayHaveMoreResults) {
       val mayHaveMoreResultsProp: IRI = targetSchema match {
-        case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.MayHaveMoreResults
-        case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.MayHaveMoreResults
+        case ApiV2Simple  => KnoraApiV2Simple.MayHaveMoreResults
+        case ApiV2Complex => KnoraApiV2Complex.MayHaveMoreResults
       }
 
       Some(mayHaveMoreResultsProp -> JsonLDBoolean(mayHaveMoreResults))
@@ -1382,18 +1377,18 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
     // Make the knora-api prefix for the target schema.
 
     val knoraApiPrefixExpansion = targetSchema match {
-      case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-      case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+      case ApiV2Simple  => KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+      case ApiV2Complex => KnoraApiV2Complex.KnoraApiV2PrefixExpansion
     }
 
     // Make the JSON-LD context.
 
     val context = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
-        "rdf"                                            -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs"                                           -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "xsd"                                            -> OntologyConstants.Xsd.XsdPrefixExpansion,
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
+        "rdf"                          -> Rdf.RdfPrefixExpansion,
+        "rdfs"                         -> Rdfs.RdfsPrefixExpansion,
+        "xsd"                          -> Xsd.XsdPrefixExpansion,
+        KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
       ),
       knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
     )
@@ -1405,9 +1400,9 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
     val nodesWithEdges: Seq[JsonLDObject] = sortedNodesInTargetSchema.map { node: GraphNodeV2 =>
       // Convert the node to JSON-LD.
       val jsonLDNodeMap = Map(
-        JsonLDKeywords.ID            -> JsonLDString(node.resourceIri),
-        JsonLDKeywords.TYPE          -> JsonLDString(node.resourceClassIri.toString),
-        OntologyConstants.Rdfs.Label -> JsonLDString(node.resourceLabel)
+        JsonLDKeywords.ID   -> JsonLDString(node.resourceIri),
+        JsonLDKeywords.TYPE -> JsonLDString(node.resourceClassIri.toString),
+        Rdfs.Label          -> JsonLDString(node.resourceLabel)
       )
 
       // Is this node the source of any edges?
@@ -1522,15 +1517,15 @@ case class ResourceEventBody(
     }
 
     val resourceLabel: Option[(IRI, JsonLDString)] = label.map { resourceLabel =>
-      OntologyConstants.Rdfs.Label -> JsonLDString(resourceLabel)
+      Rdfs.Label -> JsonLDString(resourceLabel)
     }
 
     val permissionAsJsonLD: Option[(IRI, JsonLDString)] = permissions.map { resourcePermission =>
-      OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(resourcePermission)
+      KnoraApiV2Complex.HasPermissions -> JsonLDString(resourcePermission)
     }
 
     val creationDateAsJsonLD: Option[(IRI, JsonLDValue)] = creationDate.map { resourceCreationDate =>
-      OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+      KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
         value = resourceCreationDate.toString,
         datatype = Xsd.DateTimeStamp.toSmartIri
       )
@@ -1548,9 +1543,9 @@ case class ResourceEventBody(
     }
     JsonLDObject(
       Map(
-        OntologyConstants.KnoraApiV2Complex.ResourceIri       -> JsonLDString(resourceIri),
-        OntologyConstants.KnoraApiV2Complex.ResourceClassIri  -> JsonLDString(resourceClassIri.toString),
-        OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id)
+        KnoraApiV2Complex.ResourceIri       -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceClassIri  -> JsonLDString(resourceClassIri.toString),
+        KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id)
       ) ++ resourceLabel ++ creationDateAsJsonLD ++ propertiesAndValuesAsJsonLD ++ lastModificationDateAsJsonLD
         ++ deletionInfoAsJsonLD ++ permissionAsJsonLD
     )
@@ -1646,17 +1641,17 @@ case class ValueEventBody(
     }
 
     val valueUUIDAsJsonLD: Option[(IRI, JsonLDValue)] = valueUUID.map { valueHasUUID =>
-      OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
+      KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
     }
 
     val valueCreationDateAsJsonLD: Option[(IRI, JsonLDValue)] = valueCreationDate.map { valueHasCreationDate =>
-      OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+      KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
         value = valueHasCreationDate.toString,
         datatype = Xsd.DateTimeStamp.toSmartIri
       )
     }
     val valuePermissionsAsJSONLD: Option[(IRI, JsonLDValue)] = permissions.map { hasPermissions =>
-      OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(hasPermissions)
+      KnoraApiV2Complex.HasPermissions -> JsonLDString(hasPermissions)
     }
 
     val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
@@ -1664,19 +1659,19 @@ case class ValueEventBody(
       case None                      => Map.empty[IRI, JsonLDValue]
     }
     val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueComment.map { definedComment =>
-      OntologyConstants.KnoraApiV2Complex.ValueHasComment -> JsonLDString(definedComment)
+      KnoraApiV2Complex.ValueHasComment -> JsonLDString(definedComment)
     }
 
     val previousValueAsJsonLD: Option[(IRI, JsonLDValue)] = previousValueIri.map { previousIri =>
-      OntologyConstants.KnoraBase.PreviousValue -> JsonLDString(previousIri.toString)
+      KnoraBase.PreviousValue -> JsonLDString(previousIri.toString)
     }
     JsonLDObject(
       Map(
-        JsonLDKeywords.ID                                    -> JsonLDString(valueIri),
-        JsonLDKeywords.TYPE                                  -> JsonLDString(valueTypeIri.toString),
-        OntologyConstants.KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
-        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
-        OntologyConstants.Rdf.Property                       -> JsonLDString(propertyIri.toString)
+        JsonLDKeywords.ID                  -> JsonLDString(valueIri),
+        JsonLDKeywords.TYPE                -> JsonLDString(valueTypeIri.toString),
+        KnoraApiV2Complex.ResourceIri      -> JsonLDString(resourceIri),
+        KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
+        Rdf.Property                       -> JsonLDString(propertyIri.toString)
       ) ++ previousValueAsJsonLD ++ contentAsJsonLD ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD
         ++ deletionInfoAsJsonLD ++ valueHasCommentAsJsonLD
     )
@@ -1721,13 +1716,13 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
 
       JsonLDObject(
         Map(
-          OntologyConstants.KnoraApiV2Complex.EventType -> JsonLDString(historyEntry.eventType),
-          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          KnoraApiV2Complex.EventType -> JsonLDString(historyEntry.eventType),
+          KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = historyEntry.versionDate.toString,
             datatype = Xsd.DateTimeStamp.toSmartIri
           ),
-          OntologyConstants.KnoraApiV2Complex.Author    -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
-          OntologyConstants.KnoraApiV2Complex.EventBody -> eventBodyAsJsonLD
+          KnoraApiV2Complex.Author    -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
+          KnoraApiV2Complex.EventBody -> eventBodyAsJsonLD
         )
       )
     }
@@ -1736,11 +1731,11 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
 
     val context = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
-        "rdf"                                              -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs"                                             -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "xsd"                                              -> OntologyConstants.Xsd.XsdPrefixExpansion,
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel   -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
-        OntologyConstants.KnoraBase.KnoraBaseOntologyLabel -> OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
+        "rdf"                            -> Rdf.RdfPrefixExpansion,
+        "rdfs"                           -> Rdfs.RdfsPrefixExpansion,
+        "xsd"                            -> Xsd.XsdPrefixExpansion,
+        KnoraApi.KnoraApiOntologyLabel   -> KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+        KnoraBase.KnoraBaseOntologyLabel -> KnoraBase.KnoraBasePrefixExpansion
       )
     )
 
