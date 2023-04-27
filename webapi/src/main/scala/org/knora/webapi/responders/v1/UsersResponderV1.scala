@@ -210,20 +210,15 @@ final case class UsersResponderV1Live(
     userProfile: UserProfileV1
   ): Task[UserProfileResponseV1] =
     for {
-      _ <-
-        ZIO
-          .fail(ForbiddenException("SystemAdmin permissions are required."))
-          .when(!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI))
+      _ <- ZIO
+             .fail(ForbiddenException("SystemAdmin permissions are required."))
+             .when(!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI))
 
-      maybeUserProfileToReturn <- userProfileByIRIGetV1(
-                                    userIri = userIRI,
-                                    profileType = profileType
-                                  )
+      maybeUserProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
 
-      result <- maybeUserProfileToReturn match {
-                  case Some(up) => ZIO.succeed(UserProfileResponseV1(up))
-                  case None     => ZIO.fail(NotFoundException(s"User '$userIRI' not found"))
-                }
+      result <- ZIO
+                  .fromOption(maybeUserProfileToReturn)
+                  .mapBoth(_ => NotFoundException(s"User '$userIRI' not found"), UserProfileResponseV1)
     } yield result
 
   /**
@@ -271,10 +266,8 @@ final case class UsersResponderV1Live(
    *
    * @param email                the email of the user.
    * @param profileType          the type of the requested profile (restricted or full).
-   *
    * @param userProfile          the requesting user's profile.
    * @return a [[UserProfileResponseV1]]
-   * @throws NotFoundException if the user with the supplied email is not found.
    */
   private def userProfileByEmailGetRequestV1(
     email: String,
@@ -282,16 +275,9 @@ final case class UsersResponderV1Live(
     userProfile: UserProfileV1
   ): Task[UserProfileResponseV1] =
     for {
-      maybeUserProfileToReturn <- userProfileByEmailGetV1(
-                                    email = email,
-                                    profileType = profileType
-                                  )
-
+      profile <- userProfileByEmailGetV1(email, profileType)
       result <-
-        maybeUserProfileToReturn match {
-          case Some(up: UserProfileV1) => ZIO.succeed(UserProfileResponseV1(up))
-          case None                    => ZIO.fail(NotFoundException(s"User '$email' not found"))
-        }
+        ZIO.fromOption(profile).mapBoth(_ => NotFoundException(s"User '$email' not found"), UserProfileResponseV1)
     } yield result
 
   /**
@@ -598,7 +584,6 @@ final case class UsersResponderV1Live(
    *
    * @param userProfile a [[UserProfileV1]].
    * @return true if writing was successful.
-   * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
   private def writeUserProfileV1ToCache(userProfile: UserProfileV1): Task[Unit] = for {
     iri <- ZIO
