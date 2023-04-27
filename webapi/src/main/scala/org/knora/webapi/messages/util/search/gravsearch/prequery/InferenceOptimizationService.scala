@@ -49,6 +49,7 @@ trait InferenceOptimizationService {
    * Calculates the strictest possible inference limit for a given query.
    * Given explicit inference limits passed by the client, and implicit limits based on the query,
    * this method returns the intersection of both.
+   * If no inference should be done, an empty set is returned.
    *
    * @param passedLimit The inference limit passed by the client.
    * @param inferredOntologies the set of ontologies inferred to be relevant based on the query
