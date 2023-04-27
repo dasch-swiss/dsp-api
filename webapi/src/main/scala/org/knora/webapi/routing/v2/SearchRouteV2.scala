@@ -6,8 +6,10 @@
 package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio._
+import zio.prelude.NonEmptySet
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
@@ -201,6 +203,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       }
   }
 
+  // TODO: count should get the same inference options
   private def gravsearchCountGet(): Route =
     path("v2" / "searchextended" / "count" / Segment) {
       gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
@@ -211,6 +214,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
         }
     }
 
+  // TODO: count should get the same inference options
   private def gravsearchCountPost(): Route =
     path("v2" / "searchextended" / "count") {
       post {
@@ -228,6 +232,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     "v2" / "searchextended" / Segment
   ) { sparql => // Segment is a URL encoded string representing a Gravsearch query
     get { requestContext =>
+      val inference         = getInferenceOptions(requestContext)
       val constructQuery    = GravsearchParser.parseQuery(sparql)
       val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
       val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
@@ -235,15 +240,15 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
         targetSchema   <- targetSchemaTask
         requestingUser <- Authenticator.getUserADM(requestContext)
         schemaOptions  <- schemaOptionsTask
-      } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
+      } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser, inference)
       RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
     }
   }
-
   private def gravsearchPost(): Route = path("v2" / "searchextended") {
     post {
       entity(as[String]) { gravsearchQuery => requestContext =>
         {
+          val inference         = getInferenceOptions(requestContext)
           val constructQuery    = GravsearchParser.parseQuery(gravsearchQuery)
           val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
           val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
@@ -251,11 +256,26 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
             targetSchema   <- targetSchemaTask
             schemaOptions  <- schemaOptionsTask
             requestingUser <- Authenticator.getUserADM(requestContext)
-          } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
+          } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser, inference)
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
         }
       }
     }
+  }
+
+  private def getInferenceOptions(requestContext: RequestContext) = {
+    val query                          = requestContext.request.uri.query()
+    val noInference: Boolean           = query.toMap.get("useInference").contains("false")
+    val limitToOntologies: Set[String] = query.toMultiMap.get("limitToOntology").toSet.flatten
+    val limitToProject: Option[String] = query.toMap.get("limitToProject")
+    val inference =
+      Option
+        .when(noInference)(InferenceLimit.NoInference)
+        .orElse(NonEmptySet.fromIterableOption(limitToOntologies).map(InferenceLimit.LimitedToOntologies(_)))
+        .orElse(limitToProject.map(InferenceLimit.LimitedToProject(_)))
+        .getOrElse(InferenceLimit.AllInference)
+    println(inference)
+    inference
   }
 
   private def searchByLabelCount(): Route =
