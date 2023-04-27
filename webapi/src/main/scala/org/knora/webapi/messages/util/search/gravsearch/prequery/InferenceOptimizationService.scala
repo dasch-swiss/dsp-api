@@ -8,6 +8,7 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 import zio._
 import zio.macros.accessible
 
+import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -37,10 +38,10 @@ trait InferenceOptimizationService {
    * Extracts all ontologies that are relevant to a gravsearch query, in order to allow optimized cache-based inference simulation.
    *
    * @param whereClause  the WHERE-clause of a gravsearch query.
-   * @return a set of ontology IRIs relevant to the query, or `None`, if no meaningful result could be produced.
-   *         In the latter case, inference should be done on the basis of all available ontologies.
+   * @return a set of ontology IRIs relevant to the query, or or a set of all existing ontologies,
+   *         if no meaningful result could be produced.
    */
-  def getOntologiesRelevantForInference(whereClause: WhereClause): Task[Option[Set[SmartIri]]]
+  def getOntologiesRelevantForInference(whereClause: WhereClause): Task[Set[IRI]]
 }
 
 final case class InferenceOptimizationServiceLive(
@@ -96,7 +97,7 @@ final case class InferenceOptimizationServiceLive(
 
   override def getOntologiesRelevantForInference(
     whereClause: WhereClause
-  ): Task[Option[Set[SmartIri]]] = {
+  ): Task[Set[IRI]] = {
     // gets a sequence of [[QueryPattern]] and returns the set of entities that the patterns consist of
     def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =
       patterns.flatMap { pattern =>
@@ -123,15 +124,13 @@ final case class InferenceOptimizationServiceLive(
       // resolve all entities from the WHERE clause to the ontology where they are defined
       relevantOntologies   <- ZIO.foreach(entities)(resolveEntity(_, entityMap))
       relevantOntologiesSet = relevantOntologies.flatten.toSet
-      relevantOntologiesMaybe =
-        relevantOntologiesSet match {
-          case ontologies =>
-            // if only knora-base was found, then None should be returned too
-            if (ontologies == Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))) None
-            // in all other cases, it should be made sure that knora-base is contained in the result
-            else Some(ontologies + stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
-        }
-    } yield relevantOntologiesMaybe
+      res = if (
+              relevantOntologiesSet.isEmpty || relevantOntologiesSet == Set(
+                stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
+              )
+            ) ontoCache.ontologies.keySet
+            else relevantOntologiesSet + stringFormatter.toSmartIri(OntologyConstants.KnoraBase.KnoraBaseOntologyIri)
+    } yield res.map(_.toIri)
   }
 }
 
