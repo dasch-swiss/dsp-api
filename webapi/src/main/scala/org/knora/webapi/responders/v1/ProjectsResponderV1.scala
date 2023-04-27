@@ -213,12 +213,8 @@ final case class ProjectsResponderV1Live(
   ): Task[ProjectInfoResponseV1] =
     for {
       maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, userProfile)
-      projectInfo <-
-        maybeProjectInfo match {
-          case Some(pi) => ZIO.succeed(pi)
-          case None     => ZIO.fail(NotFoundException(s"Project '$projectIri' not found"))
-        }
-    } yield ProjectInfoResponseV1(project_info = projectInfo)
+      projectInfo      <- ZIO.fromOption(maybeProjectInfo).orElseFail(NotFoundException(s"Project '$projectIri' not found"))
+    } yield ProjectInfoResponseV1(projectInfo)
 
   /**
    * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
@@ -286,8 +282,9 @@ final case class ProjectsResponderV1Live(
 
       // get project IRI from results rows
       projectIri <-
-        if (projectResponse.results.bindings.nonEmpty) ZIO.succeed(projectResponse.results.bindings.head.rowMap("s"))
-        else ZIO.fail(NotFoundException(s"Project '$shortName' not found"))
+        ZIO
+          .fromOption(projectResponse.results.bindings.headOption)
+          .mapBoth(_ => NotFoundException(s"Project '$shortName' not found"), _.rowMap("s"))
 
       ontologiesForProjects <- getOntologiesForProjects(
                                  projectIris = Set(projectIri),

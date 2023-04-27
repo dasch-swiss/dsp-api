@@ -18,6 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 @accessible
 trait IriConverter {
   def asSmartIri(iri: String): Task[SmartIri]
+  def asSmartIris(iris: Set[String]): Task[Set[SmartIri]]  = ZIO.foreach(iris)(asSmartIri)
   def asInternalIri(iri: String): Task[InternalIri]        = asSmartIri(iri).mapAttempt(_.toInternalIri)
   def asInternalSmartIri(iri: String): Task[SmartIri]      = asSmartIri(iri).mapAttempt(_.toOntologySchema(InternalSchema))
   def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)

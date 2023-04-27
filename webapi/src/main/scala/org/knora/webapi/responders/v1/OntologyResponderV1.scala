@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v1
 
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
@@ -16,10 +15,8 @@ import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -30,6 +27,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -38,13 +36,13 @@ import org.knora.webapi.util.ZioHelper
  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
  * the application.
  */
-trait OntologyResponderV1 {}
+trait OntologyResponderV1
 
 final case class OntologyResponderV1Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  valueUtilV1: ValueUtilV1,
-  implicit val stringFormatter: StringFormatter
+  iriConverter: IriConverter,
+  valueUtilV1: ValueUtilV1
 ) extends OntologyResponderV1
     with MessageHandler
     with LazyLogging {
@@ -106,13 +104,11 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[EntityInfoGetResponseV1] =
     for {
+      classIri <- iriConverter.asSmartIris(resourceClassIris)
+      propIri  <- iriConverter.asSmartIris(propertyIris)
       response <- messageRelay
                     .ask[EntityInfoGetResponseV2](
-                      EntityInfoGetRequestV2(
-                        resourceClassIris.map(_.toSmartIri),
-                        propertyIris.map(_.toSmartIri),
-                        userProfile
-                      )
+                      EntityInfoGetRequestV2(classIri, propIri, userProfile)
                     )
     } yield EntityInfoGetResponseV1(
       resourceClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.classInfoMap),
@@ -133,13 +129,11 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[StandoffEntityInfoGetResponseV1] =
     for {
+      classIri <- iriConverter.asSmartIris(standoffClassIris)
+      propIri  <- iriConverter.asSmartIris(standoffPropertyIris)
       response <- messageRelay
                     .ask[StandoffEntityInfoGetResponseV2](
-                      StandoffEntityInfoGetRequestV2(
-                        standoffClassIris.map(_.toSmartIri),
-                        standoffPropertyIris.map(_.toSmartIri),
-                        userProfile
-                      )
+                      StandoffEntityInfoGetRequestV2(classIri, propIri, userProfile)
                     )
 
     } yield StandoffEntityInfoGetResponseV1(
@@ -354,11 +348,13 @@ final case class OntologyResponderV1Live(
    */
   private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Task[CheckSubClassResponseV1] =
     for {
+      subIri   <- iriConverter.asSmartIri(checkSubClassRequest.subClassIri)
+      superIri <- iriConverter.asSmartIri(checkSubClassRequest.superClassIri)
       response <- messageRelay
                     .ask[CheckSubClassResponseV2](
                       CheckSubClassRequestV2(
-                        subClassIri = checkSubClassRequest.subClassIri.toSmartIri,
-                        superClassIri = checkSubClassRequest.superClassIri.toSmartIri,
+                        subClassIri = subIri,
+                        superClassIri = superIri,
                         checkSubClassRequest.userProfile
                       )
                     )
@@ -373,12 +369,10 @@ final case class OntologyResponderV1Live(
    */
   private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Task[SubClassesGetResponseV1] =
     for {
+      iri <- iriConverter.asSmartIri(getSubClassesRequest.resourceClassIri)
       response <- messageRelay
                     .ask[SubClassesGetResponseV2](
-                      SubClassesGetRequestV2(
-                        getSubClassesRequest.resourceClassIri.toSmartIri,
-                        getSubClassesRequest.userADM
-                      )
+                      SubClassesGetRequestV2(iri, getSubClassesRequest.userADM)
                     )
 
       subClasses = response.subClasses.map { subClassInfoV2 =>
@@ -404,14 +398,12 @@ final case class OntologyResponderV1Live(
   ): Task[NamedGraphsResponseV1] =
     for {
       projectsResponse <- messageRelay.ask[ProjectsGetResponseADM](ProjectsGetRequestADM(withSystemProjects = true))
+      iris             <- iriConverter.asSmartIris(projectIris)
 
       readOntologyMetadataV2 <-
         messageRelay
           .ask[ReadOntologyMetadataV2](
-            OntologyMetadataGetByProjectRequestV2(
-              projectIris = projectIris.map(_.toSmartIri),
-              requestingUser = userProfile
-            )
+            OntologyMetadataGetByProjectRequestV2(iris, userProfile)
           )
 
       projectsMap =
@@ -420,38 +412,40 @@ final case class OntologyResponderV1Live(
         }.toMap
 
       namedGraphs <-
-        ZIO.foreach {
-          readOntologyMetadataV2.ontologies.toVector
-            .map(_.toOntologySchema(InternalSchema))
-            .filter { ontologyMetadata =>
-              // In V1, the only built-in ontology we show is knora-base.
-              val ontologyLabel = ontologyMetadata.ontologyIri.getOntologyName
-              ontologyLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel || !OntologyConstants.BuiltInOntologyLabels
-                .contains(ontologyLabel)
-            }
-        } { ontologyMetadata =>
-          val project = projectsMap(ontologyMetadata.projectIri.get.toString)
+        ZIO
+          .attempt(ZIO.foreach {
+            readOntologyMetadataV2.ontologies.toVector
+              .map(_.toOntologySchema(InternalSchema))
+              .filter { ontologyMetadata =>
+                // In V1, the only built-in ontology we show is knora-base.
+                val ontologyLabel = ontologyMetadata.ontologyIri.getOntologyName
+                ontologyLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel || !OntologyConstants.BuiltInOntologyLabels
+                  .contains(ontologyLabel)
+              }
+          } { ontologyMetadata =>
+            val project = projectsMap(ontologyMetadata.projectIri.get.toString)
 
-          for {
-            longname <-
-              ZIO
-                .fromOption(project.longname)
-                .orElseFail(InconsistentRepositoryDataException(s"Project ${project.id} has no longname"))
-            description <-
-              ZIO
-                .fromOption(project.description.headOption)
-                .orElseFail(InconsistentRepositoryDataException(s"Project ${project.id} has no description"))
+            for {
+              longname <-
+                ZIO
+                  .fromOption(project.longname)
+                  .orElseFail(InconsistentRepositoryDataException(s"Project ${project.id} has no longname"))
+              description <-
+                ZIO
+                  .fromOption(project.description.headOption)
+                  .orElseFail(InconsistentRepositoryDataException(s"Project ${project.id} has no description"))
 
-          } yield NamedGraphV1(
-            id = ontologyMetadata.ontologyIri.toString,
-            shortname = project.shortname,
-            longname = longname,
-            description = description.toString,
-            project_id = project.id,
-            uri = ontologyMetadata.ontologyIri.toString,
-            active = project.status
-          )
-        }
+            } yield NamedGraphV1(
+              id = ontologyMetadata.ontologyIri.toString,
+              shortname = project.shortname,
+              longname = longname,
+              description = description.toString,
+              project_id = project.id,
+              uri = ontologyMetadata.ontologyIri.toString,
+              active = project.status
+            )
+          })
+          .flatten
 
       response = NamedGraphsResponseV1(vocabularies = namedGraphs)
     } yield response
@@ -468,8 +462,9 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[NamedGraphEntityInfoV1] =
     for {
+      iri <- iriConverter.asSmartIri(namedGraphIri)
       response <- messageRelay.ask[OntologyKnoraEntitiesIriInfoV2](
-                    OntologyKnoraEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)
+                    OntologyKnoraEntityIrisGetRequestV2(iri, userProfile)
                   )
 
       classIrisForV1    = response.classIris.map(_.toString) -- OntologyConstants.KnoraBase.AbstractResourceClasses
@@ -501,10 +496,7 @@ final case class OntologyResponderV1Live(
         for {
           label <-
             ZIO.fromOption(prop.label).orElseFail(InconsistentRepositoryDataException(s"No label given for ${prop.id}"))
-        } yield PropertyTypeV1(
-          id = prop.id,
-          label = label
-        )
+        } yield PropertyTypeV1(prop.id, label)
       }.toVector
     )
 
@@ -584,6 +576,17 @@ final case class OntologyResponderV1Live(
         propertyDefinitions <-
           ZIO
             .collectAll(propertyInfoMap.map { case (propertyIri: IRI, entityInfo: PropertyInfoV1) =>
+              val label = entityInfo.getPredicateObject(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+              )
+              val description = entityInfo.getPredicateObject(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+              )
+              val guiName = entityInfo
+                .getPredicateObject(SalsahGui.GuiElementProp)
+                .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
               if (entityInfo.isLinkProp) {
                 // It is a linking prop: its valuetype_id is knora-base:LinkValue.
                 // It is restricted to the resource class that is given for knora-base:objectClassConstraint
@@ -594,28 +597,23 @@ final case class OntologyResponderV1Live(
                     ZIO
                       .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
                       .orElseFail(noClassConstraintException(propertyIri))
-                } yield PropertyDefinitionInNamedGraphV1(
-                  id = propertyIri,
-                  name = propertyIri,
-                  label = entityInfo.getPredicateObject(
-                    predicateIri = OntologyConstants.Rdfs.Label,
-                    preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                  ),
-                  description = entityInfo.getPredicateObject(
-                    predicateIri = OntologyConstants.Rdfs.Comment,
-                    preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                  ),
-                  vocabulary = entityInfo.ontologyIri,
-                  valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                  attributes = valueUtilV1.makeAttributeString(
+                } yield {
+                  val attributes = valueUtilV1.makeAttributeString(
                     entityInfo
                       .getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute) + valueUtilV1
                       .makeAttributeRestype(attributeResType)
-                  ),
-                  gui_name = entityInfo
-                    .getPredicateObject(SalsahGui.GuiElementProp)
-                    .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
-                )
+                  )
+                  PropertyDefinitionInNamedGraphV1(
+                    id = propertyIri,
+                    name = propertyIri,
+                    label = label,
+                    description = description,
+                    vocabulary = entityInfo.ontologyIri,
+                    valuetype_id = OntologyConstants.KnoraBase.LinkValue,
+                    attributes = attributes,
+                    gui_name = guiName
+                  )
+                }
 
               } else {
                 for {
@@ -623,25 +621,19 @@ final case class OntologyResponderV1Live(
                     ZIO
                       .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
                       .orElseFail(noClassConstraintException(propertyIri))
+                  attributes =
+                    valueUtilV1.makeAttributeString(
+                      entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute)
+                    )
                 } yield PropertyDefinitionInNamedGraphV1(
                   id = propertyIri,
                   name = propertyIri,
-                  label = entityInfo.getPredicateObject(
-                    predicateIri = OntologyConstants.Rdfs.Label,
-                    preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                  ),
-                  description = entityInfo.getPredicateObject(
-                    predicateIri = OntologyConstants.Rdfs.Comment,
-                    preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                  ),
+                  label = label,
+                  description = description,
                   vocabulary = entityInfo.ontologyIri,
                   valuetype_id = valueTypeId,
-                  attributes = valueUtilV1.makeAttributeString(
-                    entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute)
-                  ),
-                  gui_name = entityInfo
-                    .getPredicateObject(SalsahGui.GuiElementProp)
-                    .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+                  attributes = attributes,
+                  gui_name = guiName
                 )
               }
             }.toVector)
@@ -655,10 +647,7 @@ final case class OntologyResponderV1Live(
         } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes)
       case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
         for {
-          projectNamedGraphsResponse <- getNamedGraphs(
-                                          userProfile = userProfile
-                                        )
-
+          projectNamedGraphsResponse     <- getNamedGraphs(userProfile = userProfile)
           projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
           propertyTypesPerProject: Seq[Task[Seq[PropertyDefinitionInNamedGraphV1]]] =
             projectNamedGraphIris.map(iri => getPropertiesForNamedGraph(iri, userProfile))
@@ -685,14 +674,17 @@ final case class OntologyResponderV1Live(
 }
 
 object OntologyResponderV1Live {
-  val layer: URLayer[ValueUtilV1 with StringFormatter with MessageRelay with AppConfig, OntologyResponderV1Live] =
+  val layer: URLayer[
+    ValueUtilV1 with MessageRelay with IriConverter with AppConfig,
+    OntologyResponderV1Live
+  ] =
     ZLayer.fromZIO {
       for {
         config  <- ZIO.service[AppConfig]
         mr      <- ZIO.service[MessageRelay]
-        sf      <- ZIO.service[StringFormatter]
+        ic      <- ZIO.service[IriConverter]
         vu      <- ZIO.service[ValueUtilV1]
-        handler <- mr.subscribe(OntologyResponderV1Live(config, mr, vu, sf))
+        handler <- mr.subscribe(OntologyResponderV1Live(config, mr, ic, vu))
       } yield handler
     }
 }
