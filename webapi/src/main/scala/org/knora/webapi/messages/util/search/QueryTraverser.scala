@@ -79,7 +79,7 @@ final case class QueryTraverser(
     patterns: Seq[QueryPattern],
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Set[SmartIri]
   ): Task[Seq[QueryPattern]] =
     for {
       // Optimization has to be called before WhereTransformer.transformStatementInWhere,
@@ -275,7 +275,7 @@ final case class QueryTraverser(
   def transformConstructToSelect(
     inputQuery: ConstructQuery,
     transformer: AbstractPrequeryGenerator,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Set[SmartIri]
   ): Task[SelectQuery] = for {
     transformedWherePatterns <- transformWherePatterns(
                                   patterns = inputQuery.whereClause.patterns,
@@ -301,8 +301,8 @@ final case class QueryTraverser(
 
   def transformSelectToSelect(
     inputQuery: SelectQuery,
-    transformer: SelectTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    transformer: SelectToSelectTransformer,
+    limitInferenceToOntologies: Set[SmartIri]
   ): Task[SelectQuery] =
     for {
       fromClause <- transformer.getFromClause

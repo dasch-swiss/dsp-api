@@ -31,11 +31,11 @@ class SelectTransformer(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Set[SmartIri]
   ): Task[Seq[QueryPattern]] =
     sparqlTransformerLive.transformStatementInWhere(
       statementPattern = statementPattern,
-      simulateInference = simulateInference,
+      // simulateInference = simulateInference, // XXX
       limitInferenceToOntologies = limitInferenceToOntologies
     )
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {

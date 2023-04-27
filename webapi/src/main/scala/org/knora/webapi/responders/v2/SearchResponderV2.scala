@@ -89,13 +89,7 @@ final case class SearchResponderV2Live(
           limitToStandoffClass,
           requestingUser
         ) =>
-      fulltextSearchCountV2(
-        searchValue,
-        limitToProject,
-        limitToResourceClass,
-        limitToStandoffClass,
-        requestingUser
-      )
+      fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
 
     case FulltextSearchRequestV2(
           searchValue,
@@ -122,31 +116,13 @@ final case class SearchResponderV2Live(
       )
 
     case GravsearchCountRequestV2(query, requestingUser) =>
-      gravsearchCountV2(
-        inputQuery = query,
-        requestingUser = requestingUser
-      )
+      gravsearchCountV2(query, requestingUser)
 
-    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) =>
-      gravsearchV2(
-        inputQuery = query,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions,
-        requestingUser = requestingUser
-      )
+    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser, inferenceLimit) =>
+      gravsearchV2(query, targetSchema, schemaOptions, requestingUser, inferenceLimit)
 
-    case SearchResourceByLabelCountRequestV2(
-          searchValue,
-          limitToProject,
-          limitToResourceClass,
-          requestingUser
-        ) =>
-      searchResourcesByLabelCountV2(
-        searchValue,
-        limitToProject,
-        limitToResourceClass,
-        requestingUser
-      )
+    case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) =>
+      searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser)
 
     case SearchResourceByLabelRequestV2(
           searchValue,
@@ -156,14 +132,7 @@ final case class SearchResponderV2Live(
           targetSchema,
           requestingUser
         ) =>
-      searchResourcesByLabelV2(
-        searchValue,
-        offset,
-        limitToProject,
-        limitToResourceClass,
-        targetSchema,
-        requestingUser
-      )
+      searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
 
     case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 =>
       searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
@@ -399,7 +368,8 @@ final case class SearchResponderV2Live(
             whereClause = whereClauseWithoutAnnotations,
             orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
           ),
-          transformer = gravsearchToCountTransformer
+          transformer = gravsearchToCountTransformer,
+          ??? // ontologiesForInferenceMaybe // XXX
         )
 
       selectTransformer: SelectTransformer =
@@ -409,13 +379,12 @@ final case class SearchResponderV2Live(
           stringFormatter
         )
 
-      ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
+      ontologiesForInferenceMaybe <- inferenceOptimizationService.getOntologiesFromQuery(inputQuery.whereClause)
 
       countQuery <- queryTraverser.transformSelectToSelect(
                       inputQuery = prequery,
                       transformer = selectTransformer,
-                      ontologiesForInferenceMaybe
+                      ??? // ontologiesForInferenceMaybe // XXX
                     )
 
       countResponse <- triplestoreService.sparqlHttpSelect(countQuery.toSparql, isGravsearch = true)
@@ -447,7 +416,8 @@ final case class SearchResponderV2Live(
     inputQuery: ConstructQuery,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    inferenceLimit: InferenceLimit
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
@@ -472,13 +442,19 @@ final case class SearchResponderV2Live(
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
+      inferredOntologies <- inferenceOptimizationService.getOntologiesFromQuery(inputQuery.whereClause)
+      inference <-
+        if (gravsearchToPrequeryTransformer.useInference)
+          inferenceOptimizationService.getInferenceLimit(inferenceLimit, inferredOntologies)
+        else ZIO.succeed(Set.empty[SmartIri])
+
+      // if no inference deduced from query, don't tdo inference
 
       prequery <-
         queryTraverser.transformConstructToSelect(
           inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
-          transformer = gravsearchToPrequeryTransformer
+          transformer = gravsearchToPrequeryTransformer,
+          ??? // inference // XXX
         )
 
       // variable representing the main resources
@@ -497,7 +473,7 @@ final case class SearchResponderV2Live(
         queryTraverser.transformSelectToSelect(
           inputQuery = prequery,
           transformer = selectTransformer,
-          limitInferenceToOntologies = ontologiesForInferenceMaybe
+          ??? // XXX
         )
 
       prequerySparql = transformedPrequery.toSparql
