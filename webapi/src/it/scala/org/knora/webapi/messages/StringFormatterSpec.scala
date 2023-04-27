@@ -24,13 +24,15 @@ class StringFormatterSpec extends CoreSpec {
   "The StringFormatter class" should {
     "recognize the url of the dhlab site as a valid IRI" in {
       val testUrl: String = "http://dhlab.unibas.ch/"
-      val validIri        = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
+      val validIri =
+        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
     "recognize the url of the DaSCH site as a valid IRI" in {
-      val testUrl  = "http://dasch.swiss"
-      val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
+      val testUrl = "http://dasch.swiss"
+      val validIri =
+        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
@@ -705,16 +707,6 @@ class StringFormatterSpec extends CoreSpec {
     "parse http://rdfh.ch/Ef9heHjPWDS7dMR_gGax2Q" in {
       val dataIri = "http://rdfh.ch/Ef9heHjPWDS7dMR_gGax2Q".toSmartIri
       assert(dataIri.isKnoraDataIri)
-    }
-
-    "parse http://www.knora.org/explicit" in {
-      val namedGraphIri = "http://www.knora.org/explicit".toSmartIri
-      assert(namedGraphIri.isKnoraDataIri)
-    }
-
-    "parse http://www.ontotext.com/explicit" in {
-      val namedGraphIri = "http://www.ontotext.com/explicit".toSmartIri
-      assert(!namedGraphIri.isKnoraIri)
     }
 
     "parse http://www.w3.org/2001/XMLSchema#integer" in {

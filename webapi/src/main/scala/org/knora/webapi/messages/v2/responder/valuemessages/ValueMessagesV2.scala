@@ -130,9 +130,11 @@ object CreateValueRequestV2 {
                                      )
 
                 maybePermissions <-
-                  ZIO.attempt(
-                    jsonLdObject.maybeStringWithValidation(HasPermissions, stringFormatter.toSparqlEncodedString)
-                  )
+                  ZIO.attempt {
+                    val validationFun: (String, => Nothing) => String =
+                      (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                    jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
+                  }
               } yield CreateValueV2(
                 resourceIri = resourceIri.toString,
                 resourceClassIri = resourceClassIri,
@@ -242,9 +244,11 @@ object UpdateValueRequestV2 {
         for {
           valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser)
           maybePermissions <-
-            ZIO.attempt(
-              jsonLDObject.maybeStringWithValidation(HasPermissions, stringFormatter.toSparqlEncodedString)
-            )
+            ZIO.attempt {
+              val validationFun: (String, => Nothing) => String =
+                (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+              jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
+            }
         } yield UpdateValueContentV2(
           resourceIri = resourceIri.toString,
           resourceClassIri = resourceClassIri,
@@ -274,12 +278,11 @@ object UpdateValueRequestV2 {
                            stringFormatter.toSmartIriWithErr
                          )
                        )
-          permissions <- ZIO.attempt(
-                           jsonLDObject.requireStringWithValidation(
-                             HasPermissions,
-                             stringFormatter.toSparqlEncodedString
-                           )
-                         )
+          permissions <- ZIO.attempt {
+                           val validationFun: (String, => Nothing) => String =
+                             (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                           jsonLDObject.requireStringWithValidation(HasPermissions, validationFun)
+                         }
         } yield UpdateValuePermissionsV2(
           resourceIri = resourceIri.toString,
           resourceClassIri = resourceClassIri,
@@ -478,12 +481,14 @@ object DeleteValueRequestV2 {
                        && !stringFormatter.isUuidSupported(valueIri.toString)
                    )
             valueTypeIri <- ZIO.attempt(jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri)
-            deleteComment <- ZIO.attempt(
+            deleteComment <- ZIO.attempt {
+                               val validationFun: (String, => Nothing) => String =
+                                 (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
                                jsonLDObject.maybeStringWithValidation(
                                  OntologyConstants.KnoraApiV2Complex.DeleteComment,
-                                 stringFormatter.toSparqlEncodedString
+                                 validationFun
                                )
-                             )
+                             }
             deleteDate <- ZIO.attempt(
                             jsonLDObject.maybeDatatypeValueInObject(
                               key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
@@ -1244,7 +1249,7 @@ case class DateValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -1612,7 +1617,7 @@ case class TextValueContentV2(
       standoffTag.copy(
         attributes = standoffTag.attributes.map {
           case stringAttribute: StandoffTagStringAttributeV2 =>
-            stringAttribute.copy(value = stringFormatter.fromSparqlEncodedString(stringAttribute.value))
+            stringAttribute.copy(value = StringFormatter.fromSparqlEncodedString(stringAttribute.value))
 
           case other => other
         }
@@ -1620,9 +1625,9 @@ case class TextValueContentV2(
     }
 
     copy(
-      maybeValueHasString = maybeValueHasString.map(str => stringFormatter.fromSparqlEncodedString(str)),
+      maybeValueHasString = maybeValueHasString.map(str => StringFormatter.fromSparqlEncodedString(str)),
       standoff = unescapedStandoff,
-      comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
     )
   }
 
@@ -1794,7 +1799,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -1873,7 +1878,7 @@ case class DecimalValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -1956,7 +1961,7 @@ case class BooleanValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     // Always returns true, because it doesn't make sense to have two instances of the same boolean property.
@@ -2030,8 +2035,8 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasGeometry = stringFormatter.fromSparqlEncodedString(valueHasGeometry),
-      comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasGeometry = StringFormatter.fromSparqlEncodedString(valueHasGeometry),
+      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2127,7 +2132,7 @@ case class IntervalValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2231,7 +2236,7 @@ case class TimeValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2330,8 +2335,8 @@ case class HierarchicalListValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(
-      listNodeLabel = listNodeLabel.map(labelStr => stringFormatter.fromSparqlEncodedString(labelStr)),
-      comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
+      listNodeLabel = listNodeLabel.map(labelStr => StringFormatter.fromSparqlEncodedString(labelStr)),
+      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2413,8 +2418,8 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasColor = stringFormatter.fromSparqlEncodedString(valueHasColor),
-      comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasColor = StringFormatter.fromSparqlEncodedString(valueHasColor),
+      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2447,12 +2452,11 @@ object ColorValueContentV2 {
   def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, ColorValueContentV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
-        colorValueAsColor <- ZIO.attempt(
-                               jsonLDObject.requireStringWithValidation(
-                                 ColorValueAsColor,
-                                 stringFormatter.toSparqlEncodedString
-                               )
-                             )
+        colorValueAsColor <- ZIO.attempt {
+                               val validationFun: (String, => Nothing) => String =
+                                 (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                               jsonLDObject.requireStringWithValidation(ColorValueAsColor, validationFun)
+                             }
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield ColorValueContentV2(ApiV2Complex, colorValueAsColor, comment)
     }
@@ -2496,8 +2500,8 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasUri = stringFormatter.fromSparqlEncodedString(valueHasUri),
-      comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasUri = StringFormatter.fromSparqlEncodedString(valueHasUri),
+      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2530,13 +2534,15 @@ object UriValueContentV2 {
   def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, UriValueContentV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
-        uriValueAsUri <- ZIO.attempt(
+        uriValueAsUri <- ZIO.attempt {
+                           val validationFun: (String, => Nothing) => String =
+                             (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
                            jsonLDObject.requireDatatypeValueInObject(
-                             key = UriValueAsUri,
-                             expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-                             validationFun = stringFormatter.toSparqlEncodedString
+                             UriValueAsUri,
+                             OntologyConstants.Xsd.Uri.toSmartIri,
+                             validationFun
                            )
-                         )
+                         }
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield UriValueContentV2(ApiV2Complex, uriValueAsUri, comment)
     }
@@ -2584,8 +2590,8 @@ case class GeonameValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasGeonameCode = stringFormatter.fromSparqlEncodedString(valueHasGeonameCode),
-      comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasGeonameCode = StringFormatter.fromSparqlEncodedString(valueHasGeonameCode),
+      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2618,12 +2624,14 @@ object GeonameValueContentV2 {
   def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, GeonameValueContentV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
-        geonameValueAsGeonameCode <- ZIO.attempt(
+        geonameValueAsGeonameCode <- ZIO.attempt {
+                                       val validationFun: (String, => Nothing) => String =
+                                         (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
                                        jsonLDObject.requireStringWithValidation(
                                          GeonameValueAsGeonameCode,
-                                         stringFormatter.toSparqlEncodedString
+                                         validationFun
                                        )
-                                     )
+                                     }
         comment <- JsonLDUtil.getComment(jsonLDObject)
       } yield GeonameValueContentV2(ApiV2Complex, geonameValueAsGeonameCode, comment)
     }
@@ -2658,12 +2666,11 @@ object FileValueWithSipiMetadata {
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       for {
         // The submitted value provides only Sipi's internal filename for the file.
-        internalFilename <- ZIO.attempt(
-                              jsonLDObject.requireStringWithValidation(
-                                FileValueHasFilename,
-                                stringFormatter.toSparqlEncodedString
-                              )
-                            )
+        internalFilename <- ZIO.attempt {
+                              val validationFun: (String, => Nothing) => String =
+                                (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                              jsonLDObject.requireStringWithValidation(FileValueHasFilename, validationFun)
+                            }
 
         // Ask Sipi about the rest of the file's metadata.
         tempFilePath <- ZIO.attempt(stringFormatter.makeSipiTempFilePath(internalFilename))
@@ -2762,7 +2769,7 @@ case class StillImageFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2853,7 +2860,7 @@ case class DocumentFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2914,7 +2921,7 @@ case class ArchiveFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3007,7 +3014,7 @@ case class TextFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3080,7 +3087,7 @@ case class AudioFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3155,7 +3162,7 @@ case class MovingImageFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3278,7 +3285,7 @@ case class LinkValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3347,7 +3354,7 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
   ): JsonLDValue = JsonLDObject(Map(OntologyConstants.KnoraBase.DeletedValue -> JsonLDString("DeletedValue")))
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = false
 

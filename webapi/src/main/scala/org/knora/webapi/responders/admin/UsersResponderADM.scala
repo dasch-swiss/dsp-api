@@ -1393,24 +1393,26 @@ final case class UsersResponderADMLive(
       maybeChangedGivenName = userUpdatePayload.givenName match {
                                 case Some(givenName) =>
                                   Some(
-                                    stringFormatter.toSparqlEncodedString(
-                                      givenName.value,
-                                      throw BadRequestException(
-                                        s"The supplied given name: '${givenName.value}' is not valid."
+                                    StringFormatter
+                                      .toSparqlEncodedString(givenName.value)
+                                      .getOrElse(
+                                        throw BadRequestException(
+                                          s"The supplied given name: '${givenName.value}' is not valid."
+                                        )
                                       )
-                                    )
                                   )
                                 case None => None
                               }
       maybeChangedFamilyName = userUpdatePayload.familyName match {
                                  case Some(familyName) =>
                                    Some(
-                                     stringFormatter.toSparqlEncodedString(
-                                       familyName.value,
-                                       throw BadRequestException(
-                                         s"The supplied family name: '${familyName.value}' is not valid."
+                                     StringFormatter
+                                       .toSparqlEncodedString(familyName.value)
+                                       .getOrElse(
+                                         throw BadRequestException(
+                                           s"The supplied family name: '${familyName.value}' is not valid."
+                                         )
                                        )
-                                     )
                                    )
                                  case None => None
                                }
@@ -1681,45 +1683,50 @@ final case class UsersResponderADMLive(
                                         adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                                         userIri = userIri,
                                         userClassIri = OntologyConstants.KnoraAdmin.User,
-                                        username = stringFormatter.toSparqlEncodedString(
-                                          userCreatePayloadADM.username.value,
-                                          errorFun = throw BadRequestException(
-                                            s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
-                                          )
-                                        ),
-                                        email = stringFormatter.toSparqlEncodedString(
-                                          userCreatePayloadADM.email.value,
-                                          errorFun = throw BadRequestException(
-                                            s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
-                                          )
-                                        ),
+                                        username = StringFormatter
+                                          .toSparqlEncodedString(userCreatePayloadADM.username.value)
+                                          .getOrElse(
+                                            throw BadRequestException(
+                                              s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
+                                            )
+                                          ),
+                                        email = StringFormatter
+                                          .toSparqlEncodedString(userCreatePayloadADM.email.value)
+                                          .getOrElse(
+                                            throw BadRequestException(
+                                              s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
+                                            )
+                                          ),
                                         password = hashedPassword,
-                                        givenName = stringFormatter.toSparqlEncodedString(
-                                          userCreatePayloadADM.givenName.value,
-                                          errorFun = throw BadRequestException(
-                                            s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
-                                          )
-                                        ),
-                                        familyName = stringFormatter.toSparqlEncodedString(
-                                          userCreatePayloadADM.familyName.value,
-                                          errorFun = throw BadRequestException(
-                                            s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
-                                          )
-                                        ),
+                                        givenName = StringFormatter
+                                          .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
+                                          .getOrElse(
+                                            throw BadRequestException(
+                                              s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
+                                            )
+                                          ),
+                                        familyName = StringFormatter
+                                          .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
+                                          .getOrElse(
+                                            throw BadRequestException(
+                                              s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
+                                            )
+                                          ),
                                         status = userCreatePayloadADM.status.value,
-                                        preferredLanguage = stringFormatter.toSparqlEncodedString(
-                                          userCreatePayloadADM.lang.value,
-                                          errorFun = throw BadRequestException(
-                                            s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
-                                          )
-                                        ),
+                                        preferredLanguage = StringFormatter
+                                          .toSparqlEncodedString(userCreatePayloadADM.lang.value)
+                                          .getOrElse(
+                                            throw BadRequestException(
+                                              s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
+                                            )
+                                          ),
                                         systemAdmin = userCreatePayloadADM.systemAdmin.value
                                       )
                                       .toString
 
         _ = logger.debug(s"createNewUser: $createNewUserSparqlString")
 
-        createNewUserResponse <- triplestoreService.sparqlHttpUpdate(createNewUserSparqlString)
+        _ <- triplestoreService.sparqlHttpUpdate(createNewUserSparqlString)
 
         // try to retrieve newly created user (will also add to cache)
         maybeNewUserADM <- getSingleUserADM(
@@ -1777,8 +1784,7 @@ final case class UsersResponderADMLive(
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user)
-              ZIO.succeed(Some(user))
+              writeUserADMToCache(user) *> ZIO.succeed(Some(user))
           }
         case Some(user) =>
           logger.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")

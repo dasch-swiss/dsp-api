@@ -246,12 +246,12 @@ object GravsearchMainQueryGenerator {
         mainResourceVar,
         mainResourceIris
       ), // a ValuePattern that binds the main resources' IRIs to the main resource variable
-      StatementPattern.makeInferred(
+      StatementPattern(
         subj = mainResourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
       ),
-      StatementPattern.makeExplicit(
+      StatementPattern(
         subj = mainResourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
         obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
@@ -275,17 +275,17 @@ object GravsearchMainQueryGenerator {
         mainAndDependentResourceVar,
         mainResourceIris ++ dependentResourceIris
       ), // a ValuePattern that binds the main and dependent resources' IRIs to a variable
-      StatementPattern.makeInferred(
+      StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
       ),
-      StatementPattern.makeExplicit(
+      StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
         obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
       ),
-      StatementPattern.makeExplicit(
+      StatementPattern(
         subj = mainAndDependentResourceVar,
         pred = mainAndDependentResourcePropVar,
         obj = mainAndDependentResourceObjectVar
@@ -316,22 +316,22 @@ object GravsearchMainQueryGenerator {
       // not including standoff markup in text values
       val wherePatternsForMainAndDependentResourcesValues = Seq(
         mainAndDependentResourcesValueObjectsValuePattern,
-        StatementPattern.makeInferred(
+        StatementPattern(
           subj = mainAndDependentResourceVar,
           pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
           obj = mainAndDependentResourceValueObject
         ),
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = mainAndDependentResourceVar,
           pred = mainAndDependentResourceValueProp,
           obj = mainAndDependentResourceValueObject
         ),
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = mainAndDependentResourceValueObject,
           pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
           obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
         ),
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = mainAndDependentResourceValueObject,
           pred = mainAndDependentResourceValueObjectProp,
           obj = mainAndDependentResourceValueObjectObj
@@ -371,25 +371,25 @@ object GravsearchMainQueryGenerator {
       val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
         Seq(
           mainAndDependentResourcesValueObjectsValuePattern,
-          StatementPattern.makeExplicit(
+          StatementPattern(
             subj = mainAndDependentResourceValueObject,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
             obj = standoffNodeVar
           ),
-          StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
-          StatementPattern.makeExplicit(
+          StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
+          StatementPattern(
             subj = standoffNodeVar,
             pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri),
             obj = standoffStartIndexVar
           ),
           OptionalPattern(
             Seq(
-              StatementPattern.makeExplicit(
+              StatementPattern(
                 subj = standoffNodeVar,
                 pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasInternalReference.toSmartIri),
                 obj = targetStandoffTagVar
               ),
-              StatementPattern.makeExplicit(
+              StatementPattern(
                 subj = targetStandoffTagVar,
                 pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID.toSmartIri),
                 obj = targetOriginalXMLIDVar

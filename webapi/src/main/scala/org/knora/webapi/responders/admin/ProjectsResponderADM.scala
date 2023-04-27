@@ -758,7 +758,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.shortname
         .map(_.value)
-        .map(stringFormatter.fromSparqlEncodedString)
+        .map(StringFormatter.fromSparqlEncodedString)
         .filter(_ == updatedProject.shortname)
         .getOrElse(
           throw UpdateNotPerformedException(
@@ -770,7 +770,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.longname
         .map(_.value)
-        .map(stringFormatter.fromSparqlEncodedString)
+        .map(StringFormatter.fromSparqlEncodedString)
         .filter(updatedProject.longname.contains(_))
         .getOrElse(
           throw UpdateNotPerformedException(
@@ -782,7 +782,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.description.nonEmpty) {
       projectUpdatePayload.description
         .map(_.value)
-        .map(_.map(d => V2.StringLiteralV2(stringFormatter.fromSparqlEncodedString(d.value), d.language)))
+        .map(_.map(d => V2.StringLiteralV2(StringFormatter.fromSparqlEncodedString(d.value), d.language)))
         .filter(updatedProject.description.diff(_).isEmpty)
         .getOrElse(
           throw UpdateNotPerformedException(
@@ -794,7 +794,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.keywords.nonEmpty) {
       projectUpdatePayload.keywords
         .map(_.value)
-        .map(_.map(key => stringFormatter.fromSparqlEncodedString(key)))
+        .map(_.map(key => StringFormatter.fromSparqlEncodedString(key)))
         .filter(_.sorted == updatedProject.keywords.sorted)
         .getOrElse(
           throw UpdateNotPerformedException(
@@ -806,7 +806,7 @@ final case class ProjectsResponderADMLive(
     if (projectUpdatePayload.logo.nonEmpty) {
       projectUpdatePayload.logo
         .map(_.value)
-        .map(stringFormatter.fromSparqlEncodedString)
+        .map(StringFormatter.fromSparqlEncodedString)
         .filter(updatedProject.logo.contains(_))
         .getOrElse(
           throw UpdateNotPerformedException(

@@ -2161,7 +2161,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
+        StringLiteralV2(StringFormatter.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -2204,7 +2204,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
+        StringLiteralV2(StringFormatter.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangePropertyLabelsOrCommentsRequestV2(
@@ -3289,7 +3289,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
+        StringLiteralV2(StringFormatter.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(
@@ -3328,7 +3328,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
       val newObjectsUnescaped = newObjects.map { case StringLiteralV2(text, lang) =>
-        StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
+        StringLiteralV2(StringFormatter.fromSparqlEncodedString(text), lang)
       }
 
       appActor ! ChangeClassLabelsOrCommentsRequestV2(

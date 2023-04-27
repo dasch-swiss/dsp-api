@@ -67,7 +67,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   private val ontologiesPath =
     DSPApiDirectives.handleErrors(system, appConfig)(OntologiesRouteV2().makeRoute)
   private val resourcesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(routeData, runtime).makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(appConfig).makeRoute)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     appConfig.defaultTimeoutAsDuration
@@ -546,7 +546,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            stringFormatter.fromSparqlEncodedString(comment)
+            StringFormatter.fromSparqlEncodedString(comment)
           )
         )
         barIri.set(ontologyIri)
@@ -590,7 +590,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            stringFormatter.fromSparqlEncodedString(comment)
+            StringFormatter.fromSparqlEncodedString(comment)
           )
         )
       }
@@ -668,7 +668,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == barIri.get)
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            stringFormatter.fromSparqlEncodedString(newComment)
+            StringFormatter.fromSparqlEncodedString(newComment)
           )
         )
 
@@ -3143,9 +3143,9 @@ class OntologyV2R2RSpec extends R2RSpec {
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      val responseJsonDoc                               = JsonLDUtil.parseJsonLD(responseStr)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
 
@@ -3424,9 +3424,10 @@ class OntologyV2R2RSpec extends R2RSpec {
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      val responseJsonDoc                               = JsonLDUtil.parseJsonLD(responseStr)
+      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
 
