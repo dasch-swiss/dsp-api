@@ -311,8 +311,7 @@ final case class SearchResponderV2Live(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct =
-            new ConstructToConstructTransformer(sparqlTransformerLive, ???) // XXX
+          val queryPatternTransformerConstruct = ConstructToConstructTransformer(sparqlTransformerLive, iriConverter)
           for {
             query          <- queryPatternTransformerConstruct.transformConstructToConstruct(mainQuery)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
