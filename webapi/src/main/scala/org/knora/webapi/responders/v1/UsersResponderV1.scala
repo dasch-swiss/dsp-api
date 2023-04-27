@@ -543,43 +543,6 @@ final case class UsersResponderV1Live(
     } yield result
 
   /**
-   * Helper method for checking if a project exists.
-   *
-   * @param projectIri the IRI of the project.
-   * @return a [[Boolean]].
-   */
-  def projectExists(projectIri: IRI): Task[Boolean] =
-    for {
-      askString <- ZIO.attempt(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByIri(projectIri = projectIri)
-                       .toString
-                   )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
-
-  /**
-   * Helper method for checking if a group exists.
-   *
-   * @param groupIri the IRI of the group.
-   * @return a [[Boolean]].
-   */
-  def groupExists(groupIri: IRI): Task[Boolean] =
-    for {
-      askString <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
-        )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
-
-  /**
    * Writes the user profile to cache.
    *
    * @param userProfile a [[UserProfileV1]].
@@ -598,7 +561,7 @@ final case class UsersResponderV1Live(
     _ = CacheUtil.put(USER_PROFILE_CACHE_NAME, iri, userProfile)
     _ <- ZIO
            .fail(ApplicationCacheException("Writing the user's profile to cache was not successful."))
-           .when((CacheUtil.get(USER_PROFILE_CACHE_NAME, iri).isEmpty))
+           .when(CacheUtil.get(USER_PROFILE_CACHE_NAME, iri).isEmpty)
 
     _ = CacheUtil.put(USER_PROFILE_CACHE_NAME, email, userProfile)
     _ <- ZIO
