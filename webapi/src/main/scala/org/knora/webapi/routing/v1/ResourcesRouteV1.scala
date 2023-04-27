@@ -315,24 +315,19 @@ final case class ResourcesRouteV1()(
     userProfile: UserADM
   ): ZIO[StringFormatter with MessageRelay, Throwable, OneOfMultipleResourceCreateRequestV1] =
     for {
+      sf    <- ZIO.service[StringFormatter]
+      relay <- ZIO.service[MessageRelay]
       valuesToBeCreated <- valuesToCreate(
                              resourceRequest.properties,
                              acceptStandoffLinksToClientIDs = true,
                              userProfile
                            )
-
-      convertedFile <- resourceRequest.file match {
-                         case Some(filename) =>
-                           for {
-                             tempFile <- ZIO.service[StringFormatter].map(_.makeSipiTempFilePath(filename))
-                             fileMetadataResponse <-
-                               ZIO.serviceWithZIO[MessageRelay](
-                                 _.ask[GetFileMetadataResponse](GetFileMetadataRequest(tempFile, userProfile))
-                               )
-                             fileValue <- makeFileValue(filename, fileMetadataResponse, projectShortcode)
-                           } yield Some(fileValue)
-                         case None => ZIO.none
-                       }
+      convertedFile <-
+        ZIO.foreach(resourceRequest.file) { filename =>
+          relay
+            .ask[GetFileMetadataResponse](GetFileMetadataRequest(sf.makeSipiTempFilePath(filename), userProfile))
+            .flatMap(makeFileValue(filename, _, projectShortcode))
+        }
       label <- RouteUtilV1.toSparqlEncodedString(
                  resourceRequest.label,
                  s"The resource label is invalid: '${resourceRequest.label}'"
@@ -1035,7 +1030,7 @@ final case class ResourcesRouteV1()(
                       .fromOption(ValuesValidator.validateBigDecimal(timeVal))
                       .orElseFail(BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'"))
                   }
-                  .map(it => CreateResourceValueV1(interval_value = Some(it)))
+                  .map(it => CreateResourceValueV1(interval_value = Some(it.toSeq)))
               }
             case Failure(_) =>
               ZIO.fail(BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'"))
