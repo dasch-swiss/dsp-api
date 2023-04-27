@@ -130,43 +130,14 @@ final case class UsersRouteADM(
           ) {
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
-
-          val maybeUsername: Option[Username] = apiRequest.username match {
-            case Some(username) => Username.make(username).fold(e => throw e.head, v => Some(v))
-            case None           => None
-          }
-
-          val maybeEmail: Option[Email] = apiRequest.email match {
-            case Some(email) => Email.make(email).fold(e => throw e.head, v => Some(v))
-            case None        => None
-          }
-
-          val maybeGivenName: Option[GivenName] = apiRequest.givenName match {
-            case Some(givenName) => GivenName.make(givenName).fold(e => throw e.head, v => Some(v))
-            case None            => None
-          }
-
-          val maybeFamilyName: Option[FamilyName] = apiRequest.familyName match {
-            case Some(familyName) => FamilyName.make(familyName).fold(e => throw e.head, v => Some(v))
-            case None             => None
-          }
-
-          val maybeLanguageCode: Option[LanguageCode] = apiRequest.lang match {
-            case Some(lang) => LanguageCode.make(lang).fold(e => throw e.head, v => Some(v))
-            case None       => None
-          }
-
-          val userUpdatePayload: UserUpdateBasicInformationPayloadADM =
-            UserUpdateBasicInformationPayloadADM(
-              maybeUsername,
-              maybeEmail,
-              maybeGivenName,
-              maybeFamilyName,
-              maybeLanguageCode
-            )
-
-          val task = getUserUuid(requestContext)
-            .map(r => UserChangeBasicInformationRequestADM(checkedUserIri, userUpdatePayload, r.user, r.uuid))
+          val task = for {
+            r <- getUserUuid(requestContext)
+            payload <- UserUpdateBasicInformationPayloadADM
+                         .make(apiRequest)
+                         .mapError(e => BadRequestException(e.getMessage))
+                         .toZIO
+                         .filterOrFail(_.isAtLeastOneParamSet)(BadRequestException("No data sent in API request."))
+          } yield UserChangeBasicInformationRequestADM(checkedUserIri, payload, r.user, r.uuid)
           RouteUtilADM.runJsonRouteZ(task, requestContext)
         }
       }
