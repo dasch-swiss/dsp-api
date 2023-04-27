@@ -17,14 +17,13 @@ import akka.http.scaladsl.server.Route
 import akka.stream.IOResult
 import akka.stream.scaladsl.FileIO
 import zio._
-import zio.prelude.Validation
 
 import java.nio.file.Files
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Try
 
 import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import org.knora.webapi.IRI
@@ -36,18 +35,14 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
 
-final case class ProjectsRouteADM(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
-) extends KnoraRoute(routeData, runtime)
-    with ProjectsADMJsonProtocol {
+final case class ProjectsRouteADM()(
+  private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay],
+  private implicit val executionContext: ExecutionContext
+) extends ProjectsADMJsonProtocol {
 
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     getProjects() ~
       addProject() ~
       getKeywords() ~
@@ -81,25 +76,10 @@ final case class ProjectsRouteADM(
   private def addProject(): Route = path(projectsBasePath) {
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
-        val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
-        val shortname: Validation[Throwable, ShortName]            = ShortName.make(apiRequest.shortname)
-        val shortcode: Validation[Throwable, ShortCode]            = ShortCode.make(apiRequest.shortcode)
-        val longname: Validation[Throwable, Option[Name]]          = Name.make(apiRequest.longname)
-        val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
-        val keywords: Validation[Throwable, Keywords]              = Keywords.make(apiRequest.keywords)
-        val logo: Validation[Throwable, Option[Logo]]              = Logo.make(apiRequest.logo)
-        val status: Validation[Throwable, ProjectStatus]           = ProjectStatus.make(apiRequest.status)
-        val selfjoin: Validation[Throwable, ProjectSelfJoin]       = ProjectSelfJoin.make(apiRequest.selfjoin)
-
-        val projectCreatePayload: Validation[Throwable, ProjectCreatePayloadADM] =
-          Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(
-            ProjectCreatePayloadADM.apply
-          )
-
         val requestTask = for {
-          projectCreatePayload <- projectCreatePayload.toZIO
+          projectCreatePayload <- ProjectCreatePayloadADM.make(apiRequest).toZIO
           requestingUser       <- Authenticator.getUserADM(requestContext)
-          uuid                 <- getApiRequestId
+          uuid                 <- RouteUtilZ.randomUuid()
         } yield ProjectCreateRequestADM(projectCreatePayload, requestingUser, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
@@ -164,31 +144,19 @@ final case class ProjectsRouteADM(
     path(projectsBasePath / "iri" / Segment) { value =>
       put {
         entity(as[ChangeProjectApiRequestADM]) { apiRequest => requestContext =>
-          val checkedProjectIri =
-            stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-          val projectIri: ProjectIri =
-            ProjectIri.make(checkedProjectIri).getOrElse(throw BadRequestException(s"Invalid Project IRI"))
-
-          val shortname: Validation[ValidationException, Option[ShortName]] = ShortName.make(apiRequest.shortname)
-          val longname: Validation[Throwable, Option[Name]]                 = Name.make(apiRequest.longname)
-          val description: Validation[Throwable, Option[ProjectDescription]] =
-            ProjectDescription.make(apiRequest.description)
-          val keywords: Validation[Throwable, Option[Keywords]]        = Keywords.make(apiRequest.keywords)
-          val logo: Validation[Throwable, Option[Logo]]                = Logo.make(apiRequest.logo)
-          val status: Validation[Throwable, Option[ProjectStatus]]     = ProjectStatus.make(apiRequest.status)
-          val selfjoin: Validation[Throwable, Option[ProjectSelfJoin]] = ProjectSelfJoin.make(apiRequest.selfjoin)
-
-          val projectUpdatePayloadValidation: Validation[Throwable, ProjectUpdatePayloadADM] =
-            Validation.validateWith(shortname, longname, description, keywords, logo, status, selfjoin)(
-              ProjectUpdatePayloadADM.apply
+          val getProjectIri = ZIO
+            .serviceWithZIO[StringFormatter](sf =>
+              ZIO
+                .fromOption(sf.validateAndEscapeProjectIri(value))
+                .orElseFail(BadRequestException(s"Invalid project IRI $value"))
             )
-
-          /* the api request is already checked at time of creation. see case class. */
+            .flatMap(ProjectIri.make(_).toZIO)
 
           val requestTask = for {
-            projectUpdatePayload <- projectUpdatePayloadValidation.toZIO
+            projectIri           <- getProjectIri
+            projectUpdatePayload <- ProjectUpdatePayloadADM.make(apiRequest).toZIO
             requestingUser       <- Authenticator.getUserADM(requestContext)
-            uuid                 <- getApiRequestId
+            uuid                 <- RouteUtilZ.randomUuid()
           } yield ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
           runJsonRouteZ(requestTask, requestContext)
         }
@@ -207,7 +175,7 @@ final case class ProjectsRouteADM(
         val projectUpdatePayload = ProjectUpdatePayloadADM(status = Some(projectStatus))
         val requestTask = for {
           requestingUser <- Authenticator.getUserADM(requestContext)
-          uuid           <- getApiRequestId
+          uuid           <- RouteUtilZ.randomUuid()
         } yield ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }

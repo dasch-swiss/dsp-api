@@ -6,7 +6,9 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import zio.json._
+import zio.prelude.Validation
 
+import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 
@@ -26,7 +28,23 @@ final case class ProjectCreatePayloadADM(
 )
 
 object ProjectCreatePayloadADM {
+
   implicit val codec: JsonCodec[ProjectCreatePayloadADM] = DeriveJsonCodec.gen[ProjectCreatePayloadADM]
+
+  def make(apiRequest: CreateProjectApiRequestADM): Validation[Throwable, ProjectCreatePayloadADM] = {
+    val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
+    val shortname: Validation[Throwable, ShortName]            = ShortName.make(apiRequest.shortname)
+    val shortcode: Validation[Throwable, ShortCode]            = ShortCode.make(apiRequest.shortcode)
+    val longname: Validation[Throwable, Option[Name]]          = Name.make(apiRequest.longname)
+    val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
+    val keywords: Validation[Throwable, Keywords]              = Keywords.make(apiRequest.keywords)
+    val logo: Validation[Throwable, Option[Logo]]              = Logo.make(apiRequest.logo)
+    val status: Validation[Throwable, ProjectStatus]           = ProjectStatus.make(apiRequest.status)
+    val selfjoin: Validation[Throwable, ProjectSelfJoin]       = ProjectSelfJoin.make(apiRequest.selfjoin)
+    Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(
+      ProjectCreatePayloadADM.apply
+    )
+  }
 }
 
 /**
@@ -43,5 +61,21 @@ final case class ProjectUpdatePayloadADM(
 )
 
 object ProjectUpdatePayloadADM {
+
   implicit val codec: JsonCodec[ProjectUpdatePayloadADM] = DeriveJsonCodec.gen[ProjectUpdatePayloadADM]
+
+  def make(apiRequest: ChangeProjectApiRequestADM): Validation[Throwable, ProjectUpdatePayloadADM] = {
+    val shortname: Validation[ValidationException, Option[ShortName]] = ShortName.make(apiRequest.shortname)
+    val longname: Validation[Throwable, Option[Name]]                 = Name.make(apiRequest.longname)
+    val description: Validation[Throwable, Option[ProjectDescription]] =
+      ProjectDescription.make(apiRequest.description)
+    val keywords: Validation[Throwable, Option[Keywords]]        = Keywords.make(apiRequest.keywords)
+    val logo: Validation[Throwable, Option[Logo]]                = Logo.make(apiRequest.logo)
+    val status: Validation[Throwable, Option[ProjectStatus]]     = ProjectStatus.make(apiRequest.status)
+    val selfjoin: Validation[Throwable, Option[ProjectSelfJoin]] = ProjectSelfJoin.make(apiRequest.selfjoin)
+
+    Validation.validateWith(shortname, longname, description, keywords, logo, status, selfjoin)(
+      ProjectUpdatePayloadADM.apply
+    )
+  }
 }
