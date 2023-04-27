@@ -30,6 +30,8 @@ import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.messages.v2.responder.searchmessages.InferenceLimit
+import org.knora.webapi.messages.v2.responder.searchmessages.InferenceLimit._
 
 @accessible
 trait InferenceOptimizationService {
@@ -41,7 +43,18 @@ trait InferenceOptimizationService {
    * @return a set of ontology IRIs relevant to the query, or or a set of all existing ontologies,
    *         if no meaningful result could be produced.
    */
-  def getOntologiesRelevantForInference(whereClause: WhereClause): Task[Set[IRI]]
+  def getOntologiesFromQuery(whereClause: WhereClause): Task[Set[IRI]]
+
+  /**
+   * Calculates the strictest possible inference limit for a given query.
+   * Given explicit inference limits passed by the client, and implicit limits based on the query,
+   * this method returns the intersection of both.
+   *
+   * @param passedLimit The inference limit passed by the client.
+   * @param inferredOntologies the set of ontologies inferred to be relevant based on the query
+   * @return a set of ontology IRIs to which inference should be limited.
+   */
+  def getInferenceLimit(passedLimit: InferenceLimit, inferredOntologies: Set[IRI]): Task[Set[SmartIri]]
 }
 
 final case class InferenceOptimizationServiceLive(
@@ -49,6 +62,27 @@ final case class InferenceOptimizationServiceLive(
   private val ontologyCache: OntologyCache,
   implicit private val stringFormatter: StringFormatter
 ) extends InferenceOptimizationService {
+
+  private def getOntologiesForProject(iri: IRI): Task[Set[SmartIri]] =
+    ontologyCache.getCacheData.flatMap { cache =>
+      ZIO.attempt {
+        val smartIri = stringFormatter.toSmartIri(iri)
+        cache.getOntologiesOfProject(smartIri)
+      }
+    }
+
+  override def getInferenceLimit(passedLimit: InferenceLimit, inferredOntologies: Set[IRI]): Task[Set[SmartIri]] =
+    passedLimit match {
+      case NoInference  => ZIO.succeed(Set.empty[SmartIri])
+      case AllInference => ZIO.foreach(inferredOntologies)(iri => ZIO.attempt(stringFormatter.toSmartIri(iri)))
+      case LimitedToOntologies(ontologies) =>
+        ZIO.foreach(ontologies.intersect(inferredOntologies))(iri => ZIO.attempt(stringFormatter.toSmartIri(iri)))
+      case LimitedToProject(projectIri) =>
+        for {
+          explicitOntologies <- getOntologiesForProject(projectIri)
+          implicitOntologies <- ZIO.attempt(inferredOntologies.map(iri => stringFormatter.toSmartIri(iri)))
+        } yield explicitOntologies.intersect(implicitOntologies)
+    }
 
   /**
    * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.
@@ -95,7 +129,7 @@ final case class InferenceOptimizationServiceLive(
     }
   }
 
-  override def getOntologiesRelevantForInference(
+  override def getOntologiesFromQuery(
     whereClause: WhereClause
   ): Task[Set[IRI]] = {
     // gets a sequence of [[QueryPattern]] and returns the set of entities that the patterns consist of
