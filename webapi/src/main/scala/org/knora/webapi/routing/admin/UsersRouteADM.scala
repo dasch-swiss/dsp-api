@@ -160,19 +160,10 @@ final case class UsersRouteADM(
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
-          val requesterPassword = apiRequest.requesterPassword match {
-            case Some(password) => Password.make(password).fold(e => throw e.head, v => v)
-            case None           => throw BadRequestException("The requester's password is missing.")
-          }
-          val changedPassword = apiRequest.newPassword match {
-            case Some(password) => Password.make(password).fold(e => throw e.head, v => v)
-            case None           => throw BadRequestException("The new password is missing.")
-          }
-
-          val updatePassword = UserUpdatePasswordPayloadADM(requesterPassword, changedPassword)
-          val task = getUserUuid(requestContext).map(r =>
-            UserChangePasswordRequestADM(checkedUserIri, updatePassword, r.user, r.uuid)
-          )
+          val task = for {
+            r       <- getUserUuid(requestContext)
+            payload <- UserUpdatePasswordPayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
+          } yield UserChangePasswordRequestADM(checkedUserIri, payload, r.user, r.uuid)
           RouteUtilADM.runJsonRouteZ(task, requestContext)
         }
       }

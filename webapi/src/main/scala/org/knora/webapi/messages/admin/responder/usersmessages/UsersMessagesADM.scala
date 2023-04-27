@@ -900,7 +900,18 @@ object UserUpdateBasicInformationPayloadADM {
     )(UserUpdateBasicInformationPayloadADM.apply)
 }
 
-case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password) {}
+case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password)
+object UserUpdatePasswordPayloadADM {
+  def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
+    val requesterPasswordValidation = apiRequest.requesterPassword
+      .map(Password.make(_).mapError(_.getMessage))
+      .getOrElse(Validation.fail("The requester's password is missing."))
+    val newPasswordValidation = apiRequest.newPassword
+      .map(Password.make(_).mapError(_.getMessage))
+      .getOrElse(Validation.fail("The new password is missing."))
+    Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
+  }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
