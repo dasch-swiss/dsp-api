@@ -37,4 +37,10 @@ case class OntologyCacheData(
       propertyIri -> readPropertyInfo.entityInfoContent
     })
     .toMap
+
+  def getOntologiesOfProject(projectIri: SmartIri): Set[SmartIri] =
+    ontologies.values
+      .filter(_.ontologyMetadata.projectIri.contains(projectIri))
+      .map(_.ontologyMetadata.ontologyIri)
+      .toSet
 }
