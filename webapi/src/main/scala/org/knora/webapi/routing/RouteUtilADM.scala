@@ -155,10 +155,8 @@ object RouteUtilADM {
   ): ZIO[Authenticator with StringFormatter, Throwable, IriUserUuid] =
     for {
       r    <- getIriUser(iri, requestContext)
-      uuid <- getApiRequestId
+      uuid <- RouteUtilZ.randomUuid()
     } yield IriUserUuid(r.iri, r.user, uuid)
-
-  def getApiRequestId: UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
 
   def getIriUser(
     iri: String,
@@ -175,6 +173,6 @@ object RouteUtilADM {
   def getUserUuid(ctx: RequestContext): ZIO[Authenticator, Throwable, UserUuid] =
     for {
       user <- Authenticator.getUserADM(ctx)
-      uuid <- getApiRequestId
+      uuid <- RouteUtilZ.randomUuid()
     } yield UserUuid(user, uuid)
 }
