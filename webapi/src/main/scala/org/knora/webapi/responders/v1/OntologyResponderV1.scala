@@ -11,15 +11,13 @@ import zio._
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
+import org.knora.webapi.IRI
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -30,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -38,13 +37,13 @@ import org.knora.webapi.util.ZioHelper
  * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
  * the application.
  */
-trait OntologyResponderV1 {}
+trait OntologyResponderV1
 
 final case class OntologyResponderV1Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  valueUtilV1: ValueUtilV1,
-  implicit val stringFormatter: StringFormatter
+  iriConverter: IriConverter,
+  valueUtilV1: ValueUtilV1
 ) extends OntologyResponderV1
     with MessageHandler
     with LazyLogging {
@@ -77,6 +76,10 @@ final case class OntologyResponderV1Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
+  private def noClassConstraintException(iri: IRI) = InconsistentRepositoryDataException(
+    s"Property $iri has no knora-base:objectClassConstraint"
+  )
+
   /**
    * Loads and caches all ontology information.
    *
@@ -102,13 +105,11 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[EntityInfoGetResponseV1] =
     for {
+      classIri <- iriConverter.asSmartIris(resourceClassIris)
+      propIri  <- iriConverter.asSmartIris(propertyIris)
       response <- messageRelay
                     .ask[EntityInfoGetResponseV2](
-                      EntityInfoGetRequestV2(
-                        resourceClassIris.map(_.toSmartIri),
-                        propertyIris.map(_.toSmartIri),
-                        userProfile
-                      )
+                      EntityInfoGetRequestV2(classIri, propIri, userProfile)
                     )
     } yield EntityInfoGetResponseV1(
       resourceClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.classInfoMap),
@@ -129,13 +130,11 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[StandoffEntityInfoGetResponseV1] =
     for {
+      classIri <- iriConverter.asSmartIris(standoffClassIris)
+      propIri  <- iriConverter.asSmartIris(standoffPropertyIris)
       response <- messageRelay
                     .ask[StandoffEntityInfoGetResponseV2](
-                      StandoffEntityInfoGetRequestV2(
-                        standoffClassIris.map(_.toSmartIri),
-                        standoffPropertyIris.map(_.toSmartIri),
-                        userProfile
-                      )
+                      StandoffEntityInfoGetRequestV2(classIri, propIri, userProfile)
                     )
 
     } yield StandoffEntityInfoGetResponseV1(
@@ -203,9 +202,10 @@ final case class OntologyResponderV1Live(
                                      resourceClassIris = Set(resourceTypeIri),
                                      userProfile = userProfile
                                    )
-      resourceClassInfo: ClassInfoV1 =
-        resourceClassInfoResponse.resourceClassInfoMap
-          .getOrElse(resourceTypeIri, throw NotFoundException(s"Resource class $resourceTypeIri not found"))
+      resourceClassInfo <-
+        ZIO
+          .fromOption(resourceClassInfoResponse.resourceClassInfoMap.get(resourceTypeIri))
+          .orElseFail(NotFoundException(s"Resource class $resourceTypeIri not found"))
 
       // Get all information about those properties.
       propertyInfo <- getEntityInfoResponseV1(
@@ -214,124 +214,112 @@ final case class OntologyResponderV1Live(
                       )
 
       // Build the property definitions.
-      propertyDefinitions: Vector[PropertyDefinitionV1] = resourceClassInfo.knoraResourceCardinalities.filterNot {
-                                                            // filter out the properties that point to LinkValue objects
-                                                            case (propertyIri, _) =>
-                                                              resourceClassInfo.linkValueProperties(
-                                                                propertyIri
-                                                              ) || propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo
-                                                          }.map {
-                                                            case (
-                                                                  propertyIri: IRI,
-                                                                  cardinalityInfo: KnoraCardinalityInfo
-                                                                ) =>
-                                                              propertyInfo.propertyInfoMap.get(propertyIri) match {
-                                                                case Some(entityInfo: PropertyInfoV1) =>
-                                                                  if (entityInfo.isLinkProp) {
-                                                                    // It is a linking prop: its valuetype_id is knora-base:LinkValue.
-                                                                    // It is restricted to the resource class that is given for knora-base:objectClassConstraint
-                                                                    // for the given property which goes in the attributes that will be read by the GUI.
+      propertyDefinitions <-
+        ZIO
+          .collectAll(resourceClassInfo.knoraResourceCardinalities.filterNot {
+            // filter out the properties that point to LinkValue objects
+            case (propertyIri, _) =>
+              resourceClassInfo.linkValueProperties(
+                propertyIri
+              ) || propertyIri == OntologyConstants.KnoraBase.HasStandoffLinkTo
+          }.map {
+            case (
+                  propertyIri: IRI,
+                  cardinalityInfo: KnoraCardinalityInfo
+                ) =>
+              propertyInfo.propertyInfoMap.get(propertyIri) match {
+                case Some(entityInfo: PropertyInfoV1) =>
+                  if (entityInfo.isLinkProp) {
+                    // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                    // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                    // for the given property which goes in the attributes that will be read by the GUI.
+                    for {
+                      attributeResType <-
+                        ZIO
+                          .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                          .orElseFail(noClassConstraintException(propertyIri))
+                    } yield PropertyDefinitionV1(
+                      id = propertyIri,
+                      name = propertyIri,
+                      label = entityInfo.getPredicateObject(
+                        predicateIri = OntologyConstants.Rdfs.Label,
+                        preferredLangs = Some(
+                          userProfile.lang,
+                          appConfig.fallbackLanguage
+                        )
+                      ),
+                      description = entityInfo.getPredicateObject(
+                        predicateIri = OntologyConstants.Rdfs.Comment,
+                        preferredLangs = Some(
+                          userProfile.lang,
+                          appConfig.fallbackLanguage
+                        )
+                      ),
+                      vocabulary = entityInfo.ontologyIri,
+                      occurrence = cardinalityInfo.cardinality.toString,
+                      valuetype_id = OntologyConstants.KnoraBase.LinkValue,
+                      attributes = valueUtilV1.makeAttributeString(
+                        entityInfo
+                          .getPredicateStringObjectsWithoutLang(
+                            SalsahGui.GuiAttribute
+                          ) + valueUtilV1.makeAttributeRestype(attributeResType)
+                      ),
+                      gui_name = entityInfo
+                        .getPredicateObject(
+                          SalsahGui.GuiElementProp
+                        )
+                        .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                      guiorder = cardinalityInfo.guiOrder
+                    )
 
-                                                                    PropertyDefinitionV1(
-                                                                      id = propertyIri,
-                                                                      name = propertyIri,
-                                                                      label = entityInfo.getPredicateObject(
-                                                                        predicateIri = OntologyConstants.Rdfs.Label,
-                                                                        preferredLangs = Some(
-                                                                          userProfile.lang,
-                                                                          appConfig.fallbackLanguage
-                                                                        )
-                                                                      ),
-                                                                      description = entityInfo.getPredicateObject(
-                                                                        predicateIri = OntologyConstants.Rdfs.Comment,
-                                                                        preferredLangs = Some(
-                                                                          userProfile.lang,
-                                                                          appConfig.fallbackLanguage
-                                                                        )
-                                                                      ),
-                                                                      vocabulary = entityInfo.ontologyIri,
-                                                                      occurrence = cardinalityInfo.cardinality.toString,
-                                                                      valuetype_id =
-                                                                        OntologyConstants.KnoraBase.LinkValue,
-                                                                      attributes = valueUtilV1.makeAttributeString(
-                                                                        entityInfo
-                                                                          .getPredicateStringObjectsWithoutLang(
-                                                                            SalsahGui.GuiAttribute
-                                                                          ) + valueUtilV1
-                                                                          .makeAttributeRestype(
-                                                                            entityInfo
-                                                                              .getPredicateObject(
-                                                                                OntologyConstants.KnoraBase.ObjectClassConstraint
-                                                                              )
-                                                                              .getOrElse(
-                                                                                throw InconsistentRepositoryDataException(
-                                                                                  s"Property $propertyIri has no knora-base:objectClassConstraint"
-                                                                                )
-                                                                              )
-                                                                          )
-                                                                      ),
-                                                                      gui_name = entityInfo
-                                                                        .getPredicateObject(
-                                                                          SalsahGui.GuiElementProp
-                                                                        )
-                                                                        .map(iri =>
-                                                                          SalsahGuiConversions.iri2SalsahGuiElement(iri)
-                                                                        ),
-                                                                      guiorder = cardinalityInfo.guiOrder
-                                                                    )
-
-                                                                  } else {
-
-                                                                    PropertyDefinitionV1(
-                                                                      id = propertyIri,
-                                                                      name = propertyIri,
-                                                                      label = entityInfo.getPredicateObject(
-                                                                        predicateIri = OntologyConstants.Rdfs.Label,
-                                                                        preferredLangs = Some(
-                                                                          userProfile.lang,
-                                                                          appConfig.fallbackLanguage
-                                                                        )
-                                                                      ),
-                                                                      description = entityInfo.getPredicateObject(
-                                                                        predicateIri = OntologyConstants.Rdfs.Comment,
-                                                                        preferredLangs = Some(
-                                                                          userProfile.lang,
-                                                                          appConfig.fallbackLanguage
-                                                                        )
-                                                                      ),
-                                                                      vocabulary = entityInfo.ontologyIri,
-                                                                      occurrence = cardinalityInfo.cardinality.toString,
-                                                                      valuetype_id = entityInfo
-                                                                        .getPredicateObject(
-                                                                          OntologyConstants.KnoraBase.ObjectClassConstraint
-                                                                        )
-                                                                        .getOrElse(
-                                                                          throw InconsistentRepositoryDataException(
-                                                                            s"Property $propertyIri has no knora-base:objectClassConstraint"
-                                                                          )
-                                                                        ),
-                                                                      attributes = valueUtilV1.makeAttributeString(
-                                                                        entityInfo.getPredicateStringObjectsWithoutLang(
-                                                                          SalsahGui.GuiAttribute
-                                                                        )
-                                                                      ),
-                                                                      gui_name = entityInfo
-                                                                        .getPredicateObject(
-                                                                          SalsahGui.GuiElementProp
-                                                                        )
-                                                                        .map(iri =>
-                                                                          SalsahGuiConversions.iri2SalsahGuiElement(iri)
-                                                                        ),
-                                                                      guiorder = cardinalityInfo.guiOrder
-                                                                    )
-                                                                  }
-                                                                case None =>
-                                                                  throw new InconsistentRepositoryDataException(
-                                                                    s"Resource type $resourceTypeIri is defined as having property $propertyIri, which doesn't exist"
-                                                                  )
-                                                              }
-                                                          }.toVector
-                                                            .sortBy(_.guiorder)
+                  } else {
+                    for {
+                      valueTypeId <-
+                        ZIO
+                          .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                          .orElseFail(noClassConstraintException(propertyIri))
+                    } yield PropertyDefinitionV1(
+                      id = propertyIri,
+                      name = propertyIri,
+                      label = entityInfo.getPredicateObject(
+                        predicateIri = OntologyConstants.Rdfs.Label,
+                        preferredLangs = Some(
+                          userProfile.lang,
+                          appConfig.fallbackLanguage
+                        )
+                      ),
+                      description = entityInfo.getPredicateObject(
+                        predicateIri = OntologyConstants.Rdfs.Comment,
+                        preferredLangs = Some(
+                          userProfile.lang,
+                          appConfig.fallbackLanguage
+                        )
+                      ),
+                      vocabulary = entityInfo.ontologyIri,
+                      occurrence = cardinalityInfo.cardinality.toString,
+                      valuetype_id = valueTypeId,
+                      attributes = valueUtilV1.makeAttributeString(
+                        entityInfo.getPredicateStringObjectsWithoutLang(
+                          SalsahGui.GuiAttribute
+                        )
+                      ),
+                      gui_name = entityInfo
+                        .getPredicateObject(
+                          SalsahGui.GuiElementProp
+                        )
+                        .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri)),
+                      guiorder = cardinalityInfo.guiOrder
+                    )
+                  }
+                case None =>
+                  ZIO.fail(
+                    new InconsistentRepositoryDataException(
+                      s"Resource type $resourceTypeIri is defined as having property $propertyIri, which doesn't exist"
+                    )
+                  )
+              }
+          }.toVector)
+          .map(_.sortBy(_.guiorder))
 
       // Build the API response.
       resourceTypeResponse = ResourceTypeResponseV1(
@@ -361,11 +349,13 @@ final case class OntologyResponderV1Live(
    */
   private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Task[CheckSubClassResponseV1] =
     for {
+      subIri   <- iriConverter.asSmartIri(checkSubClassRequest.subClassIri)
+      superIri <- iriConverter.asSmartIri(checkSubClassRequest.superClassIri)
       response <- messageRelay
                     .ask[CheckSubClassResponseV2](
                       CheckSubClassRequestV2(
-                        subClassIri = checkSubClassRequest.subClassIri.toSmartIri,
-                        superClassIri = checkSubClassRequest.superClassIri.toSmartIri,
+                        subClassIri = subIri,
+                        superClassIri = superIri,
                         checkSubClassRequest.userProfile
                       )
                     )
@@ -380,12 +370,10 @@ final case class OntologyResponderV1Live(
    */
   private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Task[SubClassesGetResponseV1] =
     for {
+      iri <- iriConverter.asSmartIri(getSubClassesRequest.resourceClassIri)
       response <- messageRelay
                     .ask[SubClassesGetResponseV2](
-                      SubClassesGetRequestV2(
-                        getSubClassesRequest.resourceClassIri.toSmartIri,
-                        getSubClassesRequest.userADM
-                      )
+                      SubClassesGetRequestV2(iri, getSubClassesRequest.userADM)
                     )
 
       subClasses = response.subClasses.map { subClassInfoV2 =>
@@ -411,55 +399,56 @@ final case class OntologyResponderV1Live(
   ): Task[NamedGraphsResponseV1] =
     for {
       projectsResponse <- messageRelay.ask[ProjectsGetResponseADM](ProjectsGetRequestADM(withSystemProjects = true))
+      iris             <- iriConverter.asSmartIris(projectIris)
 
-      readOntologyMetadataV2 <- messageRelay
-                                  .ask[ReadOntologyMetadataV2](
-                                    OntologyMetadataGetByProjectRequestV2(
-                                      projectIris = projectIris.map(_.toSmartIri),
-                                      requestingUser = userProfile
-                                    )
-                                  )
+      readOntologyMetadataV2 <-
+        messageRelay
+          .ask[ReadOntologyMetadataV2](
+            OntologyMetadataGetByProjectRequestV2(iris, userProfile)
+          )
 
-      projectsMap: Map[IRI, ProjectADM] = projectsResponse.projects.map { project =>
-                                            project.id -> project
-                                          }.toMap
+      projectsMap =
+        projectsResponse.projects.map { project =>
+          project.id -> project
+        }.toMap
 
-      namedGraphs: Seq[NamedGraphV1] = readOntologyMetadataV2.ontologies.toVector
-                                         .map(_.toOntologySchema(InternalSchema))
-                                         .filter { ontologyMetadata =>
-                                           // In V1, the only built-in ontology we show is knora-base.
-                                           val ontologyLabel = ontologyMetadata.ontologyIri.getOntologyName
-                                           ontologyLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel || !OntologyConstants.BuiltInOntologyLabels
-                                             .contains(ontologyLabel)
-                                         }
-                                         .map { ontologyMetadata =>
-                                           val project = projectsMap(ontologyMetadata.projectIri.get.toString)
+      namedGraphs <-
+        ZIO
+          .attempt(ZIO.foreach {
+            readOntologyMetadataV2.ontologies.toVector
+              .map(_.toOntologySchema(InternalSchema))
+              .filter { ontologyMetadata =>
+                // In V1, the only built-in ontology we show is knora-base.
+                val ontologyLabel = ontologyMetadata.ontologyIri.getOntologyName
+                ontologyLabel == OntologyConstants.KnoraBase.KnoraBaseOntologyLabel || !OntologyConstants.BuiltInOntologyLabels
+                  .contains(ontologyLabel)
+              }
+          } { ontologyMetadata =>
+            val project = projectsMap(ontologyMetadata.projectIri.get.toString)
 
-                                           NamedGraphV1(
-                                             id = ontologyMetadata.ontologyIri.toString,
-                                             shortname = project.shortname,
-                                             longname = project.longname
-                                               .getOrElse(
-                                                 throw InconsistentRepositoryDataException(
-                                                   s"Project ${project.id} has no longname"
-                                                 )
-                                               ),
-                                             description = project.description.headOption
-                                               .getOrElse(
-                                                 throw InconsistentRepositoryDataException(
-                                                   s"Project ${project.id} has no description"
-                                                 )
-                                               )
-                                               .toString,
-                                             project_id = project.id,
-                                             uri = ontologyMetadata.ontologyIri.toString,
-                                             active = project.status
-                                           )
-                                         }
+            for {
+              longname <-
+                ZIO
+                  .fromOption(project.longname)
+                  .orElseFail(InconsistentRepositoryDataException(s"Project ${project.id} has no longname"))
+              description <-
+                ZIO
+                  .fromOption(project.description.headOption)
+                  .orElseFail(InconsistentRepositoryDataException(s"Project ${project.id} has no description"))
 
-      response = NamedGraphsResponseV1(
-                   vocabularies = namedGraphs
-                 )
+            } yield NamedGraphV1(
+              id = ontologyMetadata.ontologyIri.toString,
+              shortname = project.shortname,
+              longname = longname,
+              description = description.toString,
+              project_id = project.id,
+              uri = ontologyMetadata.ontologyIri.toString,
+              active = project.status
+            )
+          })
+          .flatten
+
+      response = NamedGraphsResponseV1(vocabularies = namedGraphs)
     } yield response
 
   /**
@@ -474,8 +463,9 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[NamedGraphEntityInfoV1] =
     for {
+      iri <- iriConverter.asSmartIri(namedGraphIri)
       response <- messageRelay.ask[OntologyKnoraEntitiesIriInfoV2](
-                    OntologyKnoraEntityIrisGetRequestV2(namedGraphIri.toSmartIri, userProfile)
+                    OntologyKnoraEntityIrisGetRequestV2(iri, userProfile)
                   )
 
       classIrisForV1    = response.classIris.map(_.toString) -- OntologyConstants.KnoraBase.AbstractResourceClasses
@@ -500,49 +490,45 @@ final case class OntologyResponderV1Live(
     userProfile: UserADM
   ): Task[ResourceTypesForNamedGraphResponseV1] = {
 
+    def getProperties(
+      resInfo: ResourceTypeResponseV1
+    ): IO[InconsistentRepositoryDataException, Vector[PropertyTypeV1]] = ZIO.collectAll(
+      resInfo.restype_info.properties.map { prop =>
+        for {
+          label <-
+            ZIO.fromOption(prop.label).orElseFail(InconsistentRepositoryDataException(s"No label given for ${prop.id}"))
+        } yield PropertyTypeV1(prop.id, label)
+      }.toVector
+    )
+
     // get the resource types for a named graph
     def getResourceTypes(namedGraphIri: IRI): Task[Seq[ResourceTypeV1]] =
       for {
-
         // get NamedGraphEntityInfoV1 for the given named graph
-        namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(
-                                  namedGraphIri,
-                                  userProfile
-                                )
+        namedGraphEntityInfo <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
 
         // get resinfo for each resource class in namedGraphEntityInfo
-        resInfosForNamedGraphFuture: Set[Task[(String, ResourceTypeResponseV1)]] =
-          namedGraphEntityInfo.resourceClasses.map { resClassIri =>
+        resInfosForNamedGraph <-
+          ZIO.foreach(namedGraphEntityInfo.resourceClasses) { resClassIri =>
             for {
               resInfo <- getResourceTypeResponseV1(resClassIri, userProfile)
             } yield (resClassIri, resInfo)
           }
 
-        resInfosForNamedGraph <- ZioHelper.sequence(resInfosForNamedGraphFuture)
-
-        resourceTypes: Vector[ResourceTypeV1] = resInfosForNamedGraph.map { case (resClassIri, resInfo) =>
-                                                  val properties = resInfo.restype_info.properties.map { prop =>
-                                                    PropertyTypeV1(
-                                                      id = prop.id,
-                                                      label = prop.label.getOrElse(
-                                                        throw InconsistentRepositoryDataException(
-                                                          s"No label given for ${prop.id}"
-                                                        )
-                                                      )
-                                                    )
-                                                  }.toVector
-
-                                                  ResourceTypeV1(
-                                                    id = resClassIri,
-                                                    label = resInfo.restype_info.label.getOrElse(
-                                                      throw InconsistentRepositoryDataException(
-                                                        s"No label given for $resClassIri"
-                                                      )
-                                                    ),
-                                                    properties = properties
-                                                  )
-                                                }.toVector
-
+        resourceTypes <-
+          ZIO.collectAll(resInfosForNamedGraph.map { case (resClassIri, resInfo) =>
+            for {
+              label <-
+                ZIO
+                  .fromOption(resInfo.restype_info.label)
+                  .orElseFail(InconsistentRepositoryDataException(s"No label given for $resClassIri"))
+              props <- getProperties(resInfo)
+            } yield ResourceTypeV1(
+              id = resClassIri,
+              label = label,
+              properties = props
+            )
+          }.toVector)
       } yield resourceTypes
 
     // get resource types for named graph depending on given IRI-Option
@@ -554,17 +540,13 @@ final case class OntologyResponderV1Live(
 
       case None => // map over all named graphs and collect the resource types
         for {
-          projectNamedGraphsResponse <- getNamedGraphs(
-                                          userProfile = userProfile
-                                        )
-
+          projectNamedGraphsResponse     <- getNamedGraphs(userProfile = userProfile)
           projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
           resourceTypesPerProject: Seq[Task[Seq[ResourceTypeV1]]] =
             projectNamedGraphIris.map(iri => getResourceTypes(iri))
           resourceTypes <- ZioHelper.sequence(resourceTypesPerProject)
         } yield ResourceTypesForNamedGraphResponseV1(resourcetypes = resourceTypes.flatten)
     }
-
   }
 
   /**
@@ -579,7 +561,6 @@ final case class OntologyResponderV1Live(
     namedGraphIriOption: Option[IRI],
     userProfile: UserADM
   ): Task[PropertyTypesForNamedGraphResponseV1] = {
-
     def getPropertiesForNamedGraph(
       namedGraphIri: IRI,
       userProfile: UserADM
@@ -587,82 +568,76 @@ final case class OntologyResponderV1Live(
       for {
         namedGraphEntityInfo  <- getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
         propertyIris: Set[IRI] = namedGraphEntityInfo.propertyIris
-        entities <- getEntityInfoResponseV1(
-                      propertyIris = propertyIris,
-                      userProfile = userProfile
-                    )
+        entities              <- getEntityInfoResponseV1(propertyIris = propertyIris, userProfile = userProfile)
         propertyInfoMap: Map[IRI, PropertyInfoV1] =
           entities.propertyInfoMap.filterNot { case (_, propertyEntityInfo) =>
             propertyEntityInfo.isLinkValueProp
           }
 
-        propertyDefinitions: Vector[PropertyDefinitionInNamedGraphV1] =
-          propertyInfoMap.map { case (propertyIri: IRI, entityInfo: PropertyInfoV1) =>
-            if (entityInfo.isLinkProp) {
-              // It is a linking prop: its valuetype_id is knora-base:LinkValue.
-              // It is restricted to the resource class that is given for knora-base:objectClassConstraint
-              // for the given property which goes in the attributes that will be read by the GUI.
-
-              PropertyDefinitionInNamedGraphV1(
-                id = propertyIri,
-                name = propertyIri,
-                label = entityInfo.getPredicateObject(
-                  predicateIri = OntologyConstants.Rdfs.Label,
-                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                ),
-                description = entityInfo.getPredicateObject(
-                  predicateIri = OntologyConstants.Rdfs.Comment,
-                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                ),
-                vocabulary = entityInfo.ontologyIri,
-                valuetype_id = OntologyConstants.KnoraBase.LinkValue,
-                attributes = valueUtilV1.makeAttributeString(
-                  entityInfo
-                    .getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute) + valueUtilV1
-                    .makeAttributeRestype(
-                      entityInfo
-                        .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-                        .getOrElse(
-                          throw InconsistentRepositoryDataException(
-                            s"Property $propertyIri has no knora-base:objectClassConstraint"
-                          )
-                        )
-                    )
-                ),
-                gui_name = entityInfo
-                  .getPredicateObject(SalsahGui.GuiElementProp)
-                  .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+        propertyDefinitions <-
+          ZIO
+            .collectAll(propertyInfoMap.map { case (propertyIri: IRI, entityInfo: PropertyInfoV1) =>
+              val label = entityInfo.getPredicateObject(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
               )
-
-            } else {
-              PropertyDefinitionInNamedGraphV1(
-                id = propertyIri,
-                name = propertyIri,
-                label = entityInfo.getPredicateObject(
-                  predicateIri = OntologyConstants.Rdfs.Label,
-                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                ),
-                description = entityInfo.getPredicateObject(
-                  predicateIri = OntologyConstants.Rdfs.Comment,
-                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                ),
-                vocabulary = entityInfo.ontologyIri,
-                valuetype_id = entityInfo
-                  .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-                  .getOrElse(
-                    throw InconsistentRepositoryDataException(
-                      s"Property $propertyIri has no knora-base:objectClassConstraint"
-                    )
-                  ),
-                attributes = valueUtilV1.makeAttributeString(
-                  entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute)
-                ),
-                gui_name = entityInfo
-                  .getPredicateObject(SalsahGui.GuiElementProp)
-                  .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+              val description = entityInfo.getPredicateObject(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
               )
-            }
-          }.toVector
+              val guiName = entityInfo
+                .getPredicateObject(SalsahGui.GuiElementProp)
+                .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
+              if (entityInfo.isLinkProp) {
+                // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                // for the given property which goes in the attributes that will be read by the GUI.
+
+                for {
+                  attributeResType <-
+                    ZIO
+                      .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                      .orElseFail(noClassConstraintException(propertyIri))
+                } yield {
+                  val attributes = valueUtilV1.makeAttributeString(
+                    entityInfo
+                      .getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute) + valueUtilV1
+                      .makeAttributeRestype(attributeResType)
+                  )
+                  PropertyDefinitionInNamedGraphV1(
+                    id = propertyIri,
+                    name = propertyIri,
+                    label = label,
+                    description = description,
+                    vocabulary = entityInfo.ontologyIri,
+                    valuetype_id = OntologyConstants.KnoraBase.LinkValue,
+                    attributes = attributes,
+                    gui_name = guiName
+                  )
+                }
+
+              } else {
+                for {
+                  valueTypeId <-
+                    ZIO
+                      .fromOption(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                      .orElseFail(noClassConstraintException(propertyIri))
+                  attributes =
+                    valueUtilV1.makeAttributeString(
+                      entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute)
+                    )
+                } yield PropertyDefinitionInNamedGraphV1(
+                  id = propertyIri,
+                  name = propertyIri,
+                  label = label,
+                  description = description,
+                  vocabulary = entityInfo.ontologyIri,
+                  valuetype_id = valueTypeId,
+                  attributes = attributes,
+                  gui_name = guiName
+                )
+              }
+            }.toVector)
       } yield propertyDefinitions
 
     namedGraphIriOption match {
@@ -673,10 +648,7 @@ final case class OntologyResponderV1Live(
         } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes)
       case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
         for {
-          projectNamedGraphsResponse <- getNamedGraphs(
-                                          userProfile = userProfile
-                                        )
-
+          projectNamedGraphsResponse     <- getNamedGraphs(userProfile = userProfile)
           projectNamedGraphIris: Seq[IRI] = projectNamedGraphsResponse.vocabularies.map(_.uri)
           propertyTypesPerProject: Seq[Task[Seq[PropertyDefinitionInNamedGraphV1]]] =
             projectNamedGraphIris.map(iri => getPropertiesForNamedGraph(iri, userProfile))
@@ -703,14 +675,17 @@ final case class OntologyResponderV1Live(
 }
 
 object OntologyResponderV1Live {
-  val layer: URLayer[ValueUtilV1 with StringFormatter with MessageRelay with AppConfig, OntologyResponderV1Live] =
+  val layer: URLayer[
+    ValueUtilV1 with MessageRelay with IriConverter with AppConfig,
+    OntologyResponderV1Live
+  ] =
     ZLayer.fromZIO {
       for {
         config  <- ZIO.service[AppConfig]
         mr      <- ZIO.service[MessageRelay]
-        sf      <- ZIO.service[StringFormatter]
+        ic      <- ZIO.service[IriConverter]
         vu      <- ZIO.service[ValueUtilV1]
-        handler <- mr.subscribe(OntologyResponderV1Live(config, mr, vu, sf))
+        handler <- mr.subscribe(OntologyResponderV1Live(config, mr, ic, vu))
       } yield handler
     }
 }

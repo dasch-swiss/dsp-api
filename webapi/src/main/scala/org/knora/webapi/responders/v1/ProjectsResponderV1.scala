@@ -56,29 +56,23 @@ final case class ProjectsResponderV1Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
+  private val notFoundException = (iri: String, property: String) =>
+    InconsistentRepositoryDataException(s"Project: $iri has no $property defined.")
+
   /**
    * Gets all the projects and returns them as a [[ProjectsResponseV1]].
    *
    * @param userProfile          the profile of the user that is making the request.
-   * @return all the projects as a [[ProjectsResponseV1]].
-   *
-   *         [[NotFoundException]] if no projects are found.
+   * @return all the projects as a [[ProjectsResponseV1]] or [[NotFoundException]] if no projects are found.
    */
   private def projectsGetRequestV1(
     userProfile: Option[UserProfileV1]
   ): Task[ProjectsResponseV1] =
     for {
       projects <- projectsGetV1(userProfile)
-
-      result =
-        if (projects.nonEmpty) {
-          ProjectsResponseV1(
-            projects = projects
-          )
-        } else {
-          throw NotFoundException(s"No projects found")
-        }
-
+      result <-
+        if (projects.nonEmpty) ZIO.succeed(ProjectsResponseV1(projects))
+        else ZIO.fail(NotFoundException(s"No projects found"))
     } yield result
 
   /**
@@ -114,57 +108,44 @@ final case class ProjectsResponderV1Live(
                                  userProfile = userProfile
                                )
 
-      projects = projectsWithProperties.map { case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
-                   val keywordsSeq: Seq[String] =
-                     propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword, Seq.empty[String]).sorted
+      projects <-
+        ZIO.collectAll(projectsWithProperties.map { case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
+          val keywordsSeq: Seq[String] =
+            propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword, Seq.empty[String]).sorted
 
-                   val maybeKeywords: Option[String] = if (keywordsSeq.nonEmpty) {
-                     Some(keywordsSeq.mkString(", "))
-                   } else {
-                     None
-                   }
+          val maybeKeywords: Option[String] =
+            if (keywordsSeq.nonEmpty) Some(keywordsSeq.mkString(", "))
+            else None
 
-                   val ontologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
+          val ontologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
 
-                   ProjectInfoV1(
-                     id = projectIri,
-                     shortname = propsMap
-                       .getOrElse(
-                         OntologyConstants.KnoraAdmin.ProjectShortname,
-                         throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortname defined.")
-                       )
-                       .head,
-                     shortcode = propsMap
-                       .getOrElse(
-                         OntologyConstants.KnoraAdmin.ProjectShortcode,
-                         throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortcode defined.")
-                       )
-                       .head,
-                     longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname).map(_.head),
-                     description = propsMap.get(OntologyConstants.KnoraAdmin.ProjectDescription).map(_.head),
-                     keywords = maybeKeywords,
-                     logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo).map(_.head),
-                     institution = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToInstitution).map(_.head),
-                     ontologies = ontologies,
-                     status = propsMap
-                       .getOrElse(
-                         OntologyConstants.KnoraAdmin.Status,
-                         throw InconsistentRepositoryDataException(s"Project: $projectIri has no status defined.")
-                       )
-                       .head
-                       .toBoolean,
-                     selfjoin = propsMap
-                       .getOrElse(
-                         OntologyConstants.KnoraAdmin.HasSelfJoinEnabled,
-                         throw InconsistentRepositoryDataException(
-                           s"Project: $projectIri has no hasSelfJoinEnabled defined."
-                         )
-                       )
-                       .head
-                       .toBoolean
-                   )
-                 }.toSeq
-
+          for {
+            sn <- ZIO
+                    .fromOption(propsMap.get(OntologyConstants.KnoraAdmin.ProjectShortname))
+                    .orElseFail(notFoundException(projectIri, "shortname"))
+            sc <- ZIO
+                    .fromOption(propsMap.get(OntologyConstants.KnoraAdmin.ProjectShortcode))
+                    .orElseFail(notFoundException(projectIri, "shortcode"))
+            status <- ZIO
+                        .fromOption(propsMap.get(OntologyConstants.KnoraAdmin.Status))
+                        .orElseFail(notFoundException(projectIri, "status"))
+            sj <- ZIO
+                    .fromOption(propsMap.get(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled))
+                    .orElseFail(notFoundException(projectIri, "hasSelfJoinEnabled"))
+          } yield ProjectInfoV1(
+            id = projectIri,
+            shortname = sn.head,
+            shortcode = sc.head,
+            longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname).map(_.head),
+            description = propsMap.get(OntologyConstants.KnoraAdmin.ProjectDescription).map(_.head),
+            keywords = maybeKeywords,
+            logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo).map(_.head),
+            institution = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToInstitution).map(_.head),
+            ontologies = ontologies,
+            status = status.head.toBoolean,
+            selfjoin = sj.head.toBoolean
+          )
+        }.toSeq)
     } yield projects
 
   /**
@@ -222,35 +203,23 @@ final case class ProjectsResponderV1Live(
    * Gets the project with the given project IRI and returns the information as a [[ProjectInfoResponseV1]].
    *
    * @param projectIri           the IRI of the project requested.
-   *
    * @param userProfile          the profile of user that is making the request.
-   * @return information about the project as a [[ProjectInfoResponseV1]].
-   *
-   *         [[NotFoundException]] when no project for the given IRI can be found
+   * @return information about the project as a [[ProjectInfoResponseV1]] or [[NotFoundException]]
+   *         when no project for the given IRI can be found
    */
   private def projectInfoByIRIGetRequestV1(
     projectIri: IRI,
     userProfile: Option[UserProfileV1] = None
   ): Task[ProjectInfoResponseV1] =
     for {
-      maybeProjectInfo <- projectInfoByIRIGetV1(
-                            projectIri = projectIri,
-                            userProfile = userProfile
-                          )
-
-      projectInfo = maybeProjectInfo match {
-                      case Some(pi) => pi
-                      case None     => throw NotFoundException(s"Project '$projectIri' not found")
-                    }
-    } yield ProjectInfoResponseV1(
-      project_info = projectInfo
-    )
+      maybeProjectInfo <- projectInfoByIRIGetV1(projectIri, userProfile)
+      projectInfo      <- ZIO.fromOption(maybeProjectInfo).orElseFail(NotFoundException(s"Project '$projectIri' not found"))
+    } yield ProjectInfoResponseV1(projectInfo)
 
   /**
    * Gets the project with the given project IRI and returns the information as a [[ProjectInfoV1]].
    *
    * @param projectIri           the IRI of the project requested.
-   *
    * @param userProfile          the profile of user that is making the request.
    * @return information about the project as a [[ProjectInfoV1]].
    */
@@ -276,21 +245,16 @@ final case class ProjectsResponderV1Live(
 
       projectOntologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
 
-      projectInfo =
-        if (projectResponse.results.bindings.nonEmpty) {
-          Some(
-            createProjectInfoV1(
-              projectResponse = projectResponse.results.bindings,
-              projectIri = projectIri,
-              ontologies = projectOntologies,
-              userProfile
-            )
-          )
-        } else {
-          None
-        }
-
-    } yield projectInfo
+      result <-
+        if (projectResponse.results.bindings.nonEmpty)
+          createProjectInfoV1(
+            projectResponse = projectResponse.results.bindings,
+            projectIri = projectIri,
+            ontologies = projectOntologies,
+            userProfile
+          ).map(Some(_))
+        else ZIO.none
+    } yield result
 
   /**
    * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
@@ -317,12 +281,10 @@ final case class ProjectsResponderV1Live(
       projectResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
 
       // get project IRI from results rows
-      projectIri: IRI =
-        if (projectResponse.results.bindings.nonEmpty) {
-          projectResponse.results.bindings.head.rowMap("s")
-        } else {
-          throw NotFoundException(s"Project '$shortName' not found")
-        }
+      projectIri <-
+        ZIO
+          .fromOption(projectResponse.results.bindings.headOption)
+          .mapBoth(_ => NotFoundException(s"Project '$shortName' not found"), _.rowMap("s"))
 
       ontologiesForProjects <- getOntologiesForProjects(
                                  projectIris = Set(projectIri),
@@ -331,12 +293,13 @@ final case class ProjectsResponderV1Live(
 
       projectOntologies = ontologiesForProjects(projectIri)
 
-      projectInfo = createProjectInfoV1(
-                      projectResponse = projectResponse.results.bindings,
-                      projectIri = projectIri,
-                      ontologies = projectOntologies,
-                      userProfile
-                    )
+      projectInfo <-
+        createProjectInfoV1(
+          projectResponse = projectResponse.results.bindings,
+          projectIri = projectIri,
+          ontologies = projectOntologies,
+          userProfile
+        )
 
     } yield ProjectInfoResponseV1(
       project_info = projectInfo
@@ -359,7 +322,7 @@ final case class ProjectsResponderV1Live(
     projectIri: IRI,
     ontologies: Seq[IRI],
     userProfile: Option[UserProfileV1]
-  ): ProjectInfoV1 =
+  ): Task[ProjectInfoV1] =
     if (projectResponse.nonEmpty) {
 
       val projectProperties: Map[String, Seq[String]] = projectResponse.groupBy(_.rowMap("p")).map {
@@ -375,47 +338,34 @@ final case class ProjectsResponderV1Live(
         None
       }
 
-      /* create and return the project info */
-      ProjectInfoV1(
+      for {
+        sn <- ZIO
+                .fromOption(projectProperties.get(OntologyConstants.KnoraAdmin.ProjectShortname))
+                .orElseFail(notFoundException(projectIri, "shortname"))
+        sc <- ZIO
+                .fromOption(projectProperties.get(OntologyConstants.KnoraAdmin.ProjectShortcode))
+                .orElseFail(notFoundException(projectIri, "shortcode"))
+        status <- ZIO
+                    .fromOption(projectProperties.get(OntologyConstants.KnoraAdmin.Status))
+                    .orElseFail(notFoundException(projectIri, "status"))
+        sj <- ZIO
+                .fromOption(projectProperties.get(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled))
+                .orElseFail(notFoundException(projectIri, "hasSelfJoinEnabled"))
+      } yield ProjectInfoV1(
         id = projectIri,
-        shortname = projectProperties
-          .getOrElse(
-            OntologyConstants.KnoraAdmin.ProjectShortname,
-            throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortname defined.")
-          )
-          .head,
-        shortcode = projectProperties
-          .getOrElse(
-            OntologyConstants.KnoraAdmin.ProjectShortcode,
-            throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortcode defined.")
-          )
-          .head,
+        shortname = sn.head,
+        shortcode = sc.head,
         longname = projectProperties.get(OntologyConstants.KnoraAdmin.ProjectLongname).map(_.head),
         description = projectProperties.get(OntologyConstants.KnoraAdmin.ProjectDescription).map(_.head),
         keywords = maybeKeywords,
         logo = projectProperties.get(OntologyConstants.KnoraAdmin.ProjectLogo).map(_.head),
         institution = projectProperties.get(OntologyConstants.KnoraAdmin.BelongsToInstitution).map(_.head),
         ontologies = ontologies,
-        status = projectProperties
-          .getOrElse(
-            OntologyConstants.KnoraAdmin.Status,
-            throw InconsistentRepositoryDataException(s"Project: $projectIri has no status defined.")
-          )
-          .head
-          .toBoolean,
-        selfjoin = projectProperties
-          .getOrElse(
-            OntologyConstants.KnoraAdmin.HasSelfJoinEnabled,
-            throw InconsistentRepositoryDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")
-          )
-          .head
-          .toBoolean
+        status = status.head.toBoolean,
+        selfjoin = sj.head.toBoolean
       )
-
-    } else {
-      // no information was found for the given project IRI
-      throw NotFoundException(s"For the given project IRI $projectIri no information was found")
-    }
+    } else
+      ZIO.fail(NotFoundException(s"For the given project IRI $projectIri no information was found"))
 
   /**
    * Helper method for checking if a project identified by shortname exists.
