@@ -101,7 +101,6 @@ local clean_temp_dir_user = os.getenv("CLEAN_TMP_DIR_USER")
 local clean_temp_dir_pw = os.getenv("CLEAN_TMP_DIR_PW")
 
 if auth.username == clean_temp_dir_user and auth.password == clean_temp_dir_pw then
-    server.log("clean_temp_dir.lua: authentication was successful", server.loglevel.LOG_DEBUG)
     clean_temp_dir()
 else
     server.log("clean_temp_dir.lua: failed to authenticate user", server.loglevel.LOG_DEBUG)
