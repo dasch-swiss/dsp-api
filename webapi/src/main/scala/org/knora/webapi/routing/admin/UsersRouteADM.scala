@@ -75,9 +75,8 @@ final case class UsersRouteADM(
       entity(as[CreateUserApiRequestADM]) { apiRequest => ctx =>
         val requestTask = for {
           payload        <- UserCreatePayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
-          requestingUser <- Authenticator.getUserADM(ctx)
-          apiRequestId   <- RouteUtilZ.randomUuid()
-        } yield UserCreateRequestADM(payload, requestingUser, apiRequestId)
+          r       <- getUserUuid(ctx)
+        } yield UserCreateRequestADM(payload, r.user, r.uuid)
         runJsonRouteZ(requestTask, ctx)
       }
     }
@@ -161,8 +160,8 @@ final case class UsersRouteADM(
           }
 
           val task = for {
-            r       <- getUserUuid(requestContext)
             payload <- UserUpdatePasswordPayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
+            r       <- getUserUuid(requestContext)
           } yield UserChangePasswordRequestADM(checkedUserIri, payload, r.user, r.uuid)
           RouteUtilADM.runJsonRouteZ(task, requestContext)
         }
@@ -248,13 +247,12 @@ final case class UsersRouteADM(
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
-          val newSystemAdmin = apiRequest.systemAdmin match {
-            case Some(systemAdmin) => SystemAdmin.make(systemAdmin).fold(e => throw e.head, v => v)
-            case None              => throw BadRequestException("The systemAdmin is missing.")
-          }
-
-          val task = getUserUuid(requestContext)
-            .map(r => UserChangeSystemAdminMembershipStatusRequestADM(checkedUserIri, newSystemAdmin, r.user, r.uuid))
+          val task = for {
+            r <- getUserUuid(requestContext)
+            newSystemAdmin <- ZIO
+                                .fromOption(apiRequest.systemAdmin.map(SystemAdmin.make))
+                                .orElseFail(BadRequestException("The systemAdmin is missing."))
+          } yield UserChangeSystemAdminMembershipStatusRequestADM(checkedUserIri, newSystemAdmin, r.user, r.uuid)
           runJsonRouteZ(task, requestContext)
         }
       }

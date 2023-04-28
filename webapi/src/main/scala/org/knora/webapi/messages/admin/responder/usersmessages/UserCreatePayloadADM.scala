@@ -35,7 +35,7 @@ object UserCreatePayloadADM {
         Password.make(apiRequest.password),
         UserStatus.make(apiRequest.status),
         LanguageCode.make(apiRequest.lang),
-        SystemAdmin.make(apiRequest.systemAdmin)
+        Validation.succeed(SystemAdmin.make(apiRequest.systemAdmin))
       )(UserCreatePayloadADM.apply)
       .mapError(_.getMessage)
 }

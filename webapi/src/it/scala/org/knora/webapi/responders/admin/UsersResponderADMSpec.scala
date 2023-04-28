@@ -215,7 +215,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
             password = Password.make("test").fold(e => throw e.head, v => v),
             status = UserStatus.make(true).fold(error => throw error.head, value => value),
             lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
+            systemAdmin = SystemAdmin.make(false)
           ),
           requestingUser = SharedTestDataADM.anonymousUser,
           apiRequestID = UUID.randomUUID
@@ -239,7 +239,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
             password = Password.make("test").fold(e => throw e.head, v => v),
             status = UserStatus.make(true).fold(error => throw error.head, value => value),
             lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
+            systemAdmin = SystemAdmin.make(false)
           ),
           SharedTestDataADM.anonymousUser,
           UUID.randomUUID
@@ -257,7 +257,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
             password = Password.make("test").fold(e => throw e.head, v => v),
             status = UserStatus.make(true).fold(error => throw error.head, value => value),
             lang = LanguageCode.en,
-            systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
+            systemAdmin = SystemAdmin.make(false)
           ),
           SharedTestDataADM.anonymousUser,
           UUID.randomUUID
@@ -429,7 +429,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
       "UPDATE the user's system admin membership" in {
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.make(true).fold(e => throw e.head, v => v),
+          systemAdmin = SystemAdmin.make(true),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -439,7 +439,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v),
+          systemAdmin = SystemAdmin.make(false),
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -500,7 +500,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         /* System admin group membership */
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          systemAdmin = SystemAdmin.make(true).fold(e => throw e.head, v => v),
+          systemAdmin = SystemAdmin.make(true),
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID()
         )
@@ -548,7 +548,9 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
           rootUser,
           UUID.randomUUID()
         )
-        val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
+
+        // wait for the response before checking the project membership
+        expectMsgType[UserOperationResponseADM](timeout)
 
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
@@ -602,7 +604,7 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
-        received.members.map(_.id) should not contain (normalUser.id)
+        received.members.map(_.id) should not contain normalUser.id
       }
 
       "ADD user to project as project admin" in {
@@ -619,7 +621,8 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
           UUID.randomUUID()
         )
 
-        val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
+        // wait for the response before checking the project membership
+        expectMsgType[UserOperationResponseADM](timeout)
 
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
