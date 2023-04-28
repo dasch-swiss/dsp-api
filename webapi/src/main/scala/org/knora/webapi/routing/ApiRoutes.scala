@@ -141,5 +141,4 @@ private final case class ApiRoutesImpl(
         }
       }
     }
-
 }

@@ -17,7 +17,8 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -26,7 +27,6 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
-import org.knora.webapi.routing.RouteUtilZ
 
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
@@ -74,7 +74,7 @@ final case class UsersRouteADM(
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => ctx =>
         val requestTask = for {
-          payload        <- UserCreatePayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
+          payload <- UserCreatePayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
           r       <- getUserUuid(ctx)
         } yield UserCreateRequestADM(payload, r.user, r.uuid)
         runJsonRouteZ(requestTask, ctx)
@@ -114,20 +114,9 @@ final case class UsersRouteADM(
     path(usersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-          val checkedUserIri =
-            stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-          if (
-            checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-              KnoraSystemInstances.Users.AnonymousUser.id
-            )
-          ) {
-            throw BadRequestException("Changes to built-in users are not allowed.")
-          }
           val task = for {
-            r <- getUserUuid(requestContext)
+            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            r              <- getUserUuid(requestContext)
             payload <- UserUpdateBasicInformationPayloadADM
                          .make(apiRequest)
                          .mapError(e => BadRequestException(e.getMessage))
@@ -146,22 +135,10 @@ final case class UsersRouteADM(
     path(usersBasePath / "iri" / Segment / "Password") { userIri =>
       put {
         entity(as[ChangeUserPasswordApiRequestADM]) { apiRequest => requestContext =>
-          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-          val checkedUserIri =
-            stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-          if (
-            checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-              KnoraSystemInstances.Users.AnonymousUser.id
-            )
-          ) {
-            throw BadRequestException("Changes to built-in users are not allowed.")
-          }
-
           val task = for {
-            payload <- UserUpdatePasswordPayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
-            r       <- getUserUuid(requestContext)
+            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            payload        <- UserUpdatePasswordPayloadADM.make(apiRequest).mapError(BadRequestException(_)).toZIO
+            r              <- getUserUuid(requestContext)
           } yield UserChangePasswordRequestADM(checkedUserIri, payload, r.user, r.uuid)
           RouteUtilADM.runJsonRouteZ(task, requestContext)
         }
@@ -175,26 +152,13 @@ final case class UsersRouteADM(
     path(usersBasePath / "iri" / Segment / "Status") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-          val checkedUserIri =
-            stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-          if (
-            checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-              KnoraSystemInstances.Users.AnonymousUser.id
-            )
-          ) {
-            throw BadRequestException("Changes to built-in users are not allowed.")
-          }
-
-          val newStatus = apiRequest.status match {
-            case Some(status) => UserStatus.make(status).fold(error => throw error.head, value => value)
-            case None         => throw BadRequestException("The status is missing.")
-          }
-
-          val task =
-            getUserUuid(requestContext).map(r => UserChangeStatusRequestADM(checkedUserIri, newStatus, r.user, r.uuid))
+          val task = for {
+            newStatus <- ZIO
+                           .fromOption(apiRequest.status.map(UserStatus.make))
+                           .orElseFail(BadRequestException("The status is missing."))
+            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            r              <- getUserUuid(requestContext)
+          } yield UserChangeStatusRequestADM(checkedUserIri, newStatus, r.user, r.uuid)
           runJsonRouteZ(task, requestContext)
         }
       }
@@ -205,24 +169,10 @@ final case class UsersRouteADM(
    */
   private def deleteUser(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
     delete { requestContext =>
-      if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-      val checkedUserIri =
-        stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-      if (
-        checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-          KnoraSystemInstances.Users.AnonymousUser.id
-        )
-      ) {
-        throw BadRequestException("Changes to built-in users are not allowed.")
-      }
-
-      /* update existing user's status to false */
-      val status = UserStatus.make(false).fold(error => throw error.head, value => value)
-
-      val task = getUserUuid(requestContext)
-        .map(r => UserChangeStatusRequestADM(checkedUserIri, status, r.user, r.uuid))
+      val task = for {
+        checkedUserIri <- validateAndEscapeUserIri(userIri)
+        r              <- getUserUuid(requestContext)
+      } yield UserChangeStatusRequestADM(checkedUserIri, UserStatus.make(false), r.user, r.uuid)
       runJsonRouteZ(task, requestContext)
     }
   }
@@ -234,21 +184,9 @@ final case class UsersRouteADM(
     path(usersBasePath / "iri" / Segment / "SystemAdmin") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
-          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-          val checkedUserIri =
-            stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-          if (
-            checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-              KnoraSystemInstances.Users.AnonymousUser.id
-            )
-          ) {
-            throw BadRequestException("Changes to built-in users are not allowed.")
-          }
-
           val task = for {
-            r <- getUserUuid(requestContext)
+            checkedUserIri <- validateAndEscapeUserIri(userIri)
+            r              <- getUserUuid(requestContext)
             newSystemAdmin <- ZIO
                                 .fromOption(apiRequest.systemAdmin.map(SystemAdmin.make))
                                 .orElseFail(BadRequestException("The systemAdmin is missing."))
@@ -264,14 +202,10 @@ final case class UsersRouteADM(
   private def getUsersProjectMemberships(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships") { userIri =>
       get { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        val requestTask =
-          Authenticator.getUserADM(requestContext).map(UserProjectMembershipsGetRequestADM(checkedUserIri, _))
-
+        val requestTask = for {
+          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          requestingUser <- Authenticator.getUserADM(requestContext)
+        } yield UserProjectMembershipsGetRequestADM(checkedUserIri, requestingUser)
         runJsonRouteZ(requestTask, requestContext)
       }
     }
@@ -282,25 +216,33 @@ final case class UsersRouteADM(
   private def addUserToProjectMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        val task = getIriUserUuid(projectIri, requestContext).map(r =>
-          UserProjectMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
-        )
+        val task = for {
+          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          r              <- getIriUserUuid(projectIri, requestContext)
+        } yield UserProjectMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
+
+  private def validateAndEscapeUserIri(userIri: String): ZIO[StringFormatter, BadRequestException, String] =
+    for {
+      nonEmptyIri <- ZIO.succeed(userIri).filterOrFail(_.nonEmpty)(BadRequestException("User IRI cannot be empty"))
+      checkedUserIri <-
+        ZIO.serviceWithZIO[StringFormatter] { sf =>
+          ZIO
+            .fromOption(sf.validateAndEscapeUserIri(nonEmptyIri))
+            .orElseFail(BadRequestException(s"Invalid user IRI $userIri"))
+            .filterOrFail(it => it.equals(SystemUser.id) || it.equals(AnonymousUser.id))(
+              BadRequestException("Changes to built-in users are not allowed.")
+            )
+        }
+    } yield checkedUserIri
+
+  private def validateAndEscapeGroupIri(groupIri: String) =
+    StringFormatter
+      .validateAndEscapeIri(groupIri)
+      .toZIO
+      .orElseFail(BadRequestException(s"Invalid group IRI $groupIri"))
 
   /**
    * remove user from project (and all groups belonging to this project)
@@ -308,22 +250,10 @@ final case class UsersRouteADM(
   private def removeUserFromProjectMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        val task = getIriUserUuid(projectIri, requestContext).map(r =>
-          UserProjectMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
-        )
+        val task = for {
+          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          r              <- getIriUserUuid(projectIri, requestContext)
+        } yield UserProjectMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
@@ -348,22 +278,10 @@ final case class UsersRouteADM(
   private def addUserToProjectAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       post { ctx =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        val task = getIriUserUuid(projectIri, ctx).map(r =>
-          UserProjectAdminMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
-        )
+        val task = for {
+          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          r              <- getIriUserUuid(projectIri, ctx)
+        } yield UserProjectAdminMembershipAddRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, ctx)
       }
     }
@@ -374,22 +292,10 @@ final case class UsersRouteADM(
   private def removeUserFromProjectAdminMembership(): Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        val task = getIriUserUuid(projectIri, requestContext).map(r =>
-          UserProjectAdminMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
-        )
+        val task = for {
+          checkedUserIri <- validateAndEscapeUserIri(userIri)
+          r              <- getIriUserUuid(projectIri, requestContext)
+        } yield UserProjectAdminMembershipRemoveRequestADM(checkedUserIri, r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
@@ -412,27 +318,11 @@ final case class UsersRouteADM(
   private def addUserToGroupMembership(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       post { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        val checkedGroupIri =
-          StringFormatter
-            .validateAndEscapeIri(groupIri)
-            .getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
-
-        val task = getIriUserUuid(groupIri, requestContext).map(r =>
-          UserGroupMembershipAddRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
-        )
+        val task = for {
+          checkedUserIri  <- validateAndEscapeUserIri(userIri)
+          checkedGroupIri <- validateAndEscapeGroupIri(groupIri)
+          r               <- getIriUserUuid(groupIri, requestContext)
+        } yield UserGroupMembershipAddRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
@@ -443,27 +333,11 @@ final case class UsersRouteADM(
   private def removeUserFromGroupMembership(): Route =
     path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       delete { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        val checkedGroupIri =
-          StringFormatter
-            .validateAndEscapeIri(groupIri)
-            .getOrElse(throw BadRequestException(s"Invalid group IRI $groupIri"))
-
-        val task = getIriUserUuid(groupIri, requestContext).map(r =>
-          UserGroupMembershipRemoveRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
-        )
+        val task = for {
+          checkedUserIri  <- validateAndEscapeUserIri(userIri)
+          checkedGroupIri <- validateAndEscapeGroupIri(groupIri)
+          r               <- getIriUserUuid(groupIri, requestContext)
+        } yield UserGroupMembershipRemoveRequestADM(checkedUserIri, checkedGroupIri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }

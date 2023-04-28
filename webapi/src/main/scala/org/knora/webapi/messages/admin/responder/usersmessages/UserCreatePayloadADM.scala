@@ -33,7 +33,7 @@ object UserCreatePayloadADM {
         GivenName.make(apiRequest.givenName),
         FamilyName.make(apiRequest.familyName),
         Password.make(apiRequest.password),
-        UserStatus.make(apiRequest.status),
+        Validation.succeed(UserStatus.make(apiRequest.status)),
         LanguageCode.make(apiRequest.lang),
         Validation.succeed(SystemAdmin.make(apiRequest.systemAdmin))
       )(UserCreatePayloadADM.apply)
