@@ -239,11 +239,11 @@ final case class UsersRouteADM()(
           ZIO
             .fromOption(sf.validateAndEscapeUserIri(nonEmptyIri))
             .orElseFail(BadRequestException(s"Invalid user IRI $userIri"))
-            .filterOrFail(it => it.equals(SystemUser.id) || it.equals(AnonymousUser.id))(
-              BadRequestException("Changes to built-in users are not allowed.")
-            )
+            .filterOrFail(isNotBuildInUser)(BadRequestException("Changes to built-in users are not allowed."))
         }
     } yield checkedUserIri
+
+  private def isNotBuildInUser(it: String) = !it.equals(SystemUser.id) && !it.equals(AnonymousUser.id)
 
   private def validateAndEscapeGroupIri(groupIri: String) =
     StringFormatter

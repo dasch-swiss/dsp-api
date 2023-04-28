@@ -1,6 +1,7 @@
 package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -93,7 +94,14 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     duration: zio.Duration = 666.seconds
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
-      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ => akka.http.scaladsl.Http().singleRequest(request))
+      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
+        akka.http.scaladsl.Http().singleRequest(request).map { resp =>
+          Unmarshal(resp.entity).to[String].map { body =>
+            if (resp.status.isFailure()) println(s"Request failed with status ${resp.status} and body $body")
+          }
+          resp
+        }
+      )
       .timeout(duration)
       .some
       .mapError {

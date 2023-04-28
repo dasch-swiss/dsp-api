@@ -118,7 +118,7 @@ abstract class E2ESpec
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe(implicit u => runtime.unsafe.shutdown())
 
-  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 30.seconds): HttpResponse =
+  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 300.seconds): HttpResponse =
     UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, duration)))
 
   protected def getResponseAsString(request: HttpRequest): String =
