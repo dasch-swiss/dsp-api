@@ -682,6 +682,36 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     maybeObject(key).map(_.toDatatypeValueLiteral(expectedDatatype, validationFun))
 
   /**
+   * Gets the value as [[String]] of the object value of this JSON-LD at a specific key.
+   * Checks for the expected data type in the object value by looking at the `@type` property.
+   * Returns the `@value` property of the object value.
+   *
+   * @param key The key of the optional value.
+   * @param expectedDataType The IRI of the expected datatype.
+   * @return The value as [[String]] of the object value of this JSON-LD at a specific key, [[None]] if the key is not found.
+   *         Fails if the object value is not a DatatypeValue ([[isDatatypeValue]]).
+   *         Fails if the found object is not of the expected data type.
+   *         Fails if the found object is does not contain a value.
+   */
+  def getDataTypeValueInObject(key: String, expectedDataType: SmartIri): IO[String, Option[String]] = {
+    def getDataTypeValueStringValue(expectedType: SmartIri, obj: JsonLDObject): IO[String, String] =
+      if (obj.isDatatypeValue) {
+        for {
+          _ <- obj
+                 .getRequiredString(JsonLDKeywords.TYPE)
+                 .filterOrElseWith(_ == expectedType.toString)(actualType =>
+                   ZIO.fail(s"Expected data type '$expectedType', found data type '$actualType'")
+                 )
+          value <- obj.getRequiredString(JsonLDKeywords.VALUE)
+        } yield value
+      } else {
+        ZIO.fail(s"This JSON-LD object does not represent a datatype value: $this")
+      }
+
+    getObject(key).flatMap(ZIO.foreach(_)(getDataTypeValueStringValue(expectedDataType, _)))
+  }
+
+  /**
    * Gets the required object value of this JSON-LD object, throwing
    * [[BadRequestException]] if the property is not found or if its value is not an object.
    *
