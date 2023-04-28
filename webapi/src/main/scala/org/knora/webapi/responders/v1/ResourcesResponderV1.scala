@@ -357,9 +357,10 @@ final case class ResourcesResponderV1Live(
       response <- triplestoreService.sparqlHttpSelect(sparql)
       rows      = response.results.bindings
 
-      _ = if (rows.isEmpty) {
-            throw NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)")
-          }
+      _ <-
+        ZIO
+          .fail(NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)"))
+          .when(rows.isEmpty)
 
       firstRowMap = rows.head.rowMap
 
@@ -373,21 +374,23 @@ final case class ResourcesResponderV1Live(
                                    )
 
       // Make sure the user has permission to see the start node.
-      _ = if (
-            PermissionUtilADM
-              .getUserPermissionV1(
-                entityIri = startNode.nodeIri,
-                entityCreator = startNode.nodeCreator,
-                entityProject = startNode.nodeProject,
-                entityPermissionLiteral = startNode.nodePermissions,
-                userProfile = userProfileV1
-              )
-              .isEmpty
-          ) {
-            throw ForbiddenException(
+      permission =
+        PermissionUtilADM
+          .getUserPermissionV1(
+            entityIri = startNode.nodeIri,
+            entityCreator = startNode.nodeCreator,
+            entityProject = startNode.nodeProject,
+            entityPermissionLiteral = startNode.nodePermissions,
+            userProfile = userProfileV1
+          )
+      _ <-
+        ZIO
+          .fail(
+            ForbiddenException(
               s"User ${graphDataGetRequest.userADM.id} does not have permission to view resource ${graphDataGetRequest.resourceIri}"
             )
-          }
+          )
+          .when(permission.isEmpty)
 
       // Recursively get the graph containing outbound links.
       outboundQueryResults <- traverseGraph(
@@ -416,58 +419,45 @@ final case class ResourcesResponderV1Live(
       entityInfoResponse <- messageRelay.ask[EntityInfoGetResponseV1](entityInfoRequest)
 
       // Convert each node to a GraphNodeV1 for the API response message.
-      resultNodes: Vector[GraphNodeV1] = nodes.map { node =>
-                                           // Get the resource class's label from the ontology information.
-                                           val resourceClassLabel = entityInfoResponse
-                                             .resourceClassInfoMap(node.nodeClass)
-                                             .getPredicateObject(
-                                               predicateIri = OntologyConstants.Rdfs.Label,
-                                               preferredLangs = Some(
-                                                 graphDataGetRequest.userADM.lang,
-                                                 appConfig.fallbackLanguage
-                                               )
-                                             )
-                                             .getOrElse(
-                                               throw InconsistentRepositoryDataException(
-                                                 s"Resource class ${node.nodeClass} has no rdfs:label"
-                                               )
-                                             )
-
-                                           GraphNodeV1(
-                                             resourceIri = node.nodeIri,
-                                             resourceLabel = node.nodeLabel,
-                                             resourceClassIri = node.nodeClass,
-                                             resourceClassLabel = resourceClassLabel
-                                           )
-                                         }.toVector
+      resultNodes <-
+        ZIO.collectAll(nodes.map { node =>
+          for {
+            // Get the resource class's label from the ontology information.
+            resourceClassLabel <-
+              ZIO
+                .fromOption(
+                  entityInfoResponse
+                    .resourceClassInfoMap(node.nodeClass)
+                    .getPredicateObject(
+                      OntologyConstants.Rdfs.Label,
+                      Some(graphDataGetRequest.userADM.lang, appConfig.fallbackLanguage)
+                    )
+                )
+                .orElseFail(InconsistentRepositoryDataException(s"Resource class ${node.nodeClass} has no rdfs:label"))
+          } yield GraphNodeV1(node.nodeIri, node.nodeLabel, node.nodeClass, resourceClassLabel)
+        }.toVector)
 
       // Convert each edge to a GraphEdgeV1 for the API response message.
-      resultEdges: Vector[GraphEdgeV1] = edges.map { edge =>
-                                           // Get the link property's label from the ontology information.
-                                           val propertyLabel = entityInfoResponse
-                                             .propertyInfoMap(edge.linkProp)
-                                             .getPredicateObject(
-                                               predicateIri = OntologyConstants.Rdfs.Label,
-                                               preferredLangs = Some(
-                                                 graphDataGetRequest.userADM.lang,
-                                                 appConfig.fallbackLanguage
-                                               )
-                                             )
-                                             .getOrElse(
-                                               throw InconsistentRepositoryDataException(
-                                                 s"Property ${edge.linkProp} has no rdfs:label"
-                                               )
-                                             )
-
-                                           GraphEdgeV1(
-                                             source = edge.sourceNodeIri,
-                                             target = edge.targetNodeIri,
-                                             propertyIri = edge.linkProp,
-                                             propertyLabel = propertyLabel
-                                           )
-                                         }.toVector
-
-    } yield GraphDataGetResponseV1(nodes = resultNodes, edges = resultEdges)
+      resultEdges <-
+        ZIO.collectAll(
+          edges.map { edge =>
+            for {
+              // Get the link property's label from the ontology information.
+              propertyLabel <-
+                ZIO
+                  .fromOption(
+                    entityInfoResponse
+                      .propertyInfoMap(edge.linkProp)
+                      .getPredicateObject(
+                        OntologyConstants.Rdfs.Label,
+                        Some(graphDataGetRequest.userADM.lang, appConfig.fallbackLanguage)
+                      )
+                  )
+                  .orElseFail(InconsistentRepositoryDataException(s"Property ${edge.linkProp} has no rdfs:label"))
+            } yield GraphEdgeV1(edge.sourceNodeIri, edge.targetNodeIri, edge.linkProp, propertyLabel)
+          }.toVector
+        )
+    } yield GraphDataGetResponseV1(resultNodes, resultEdges)
   }
 
   /**
@@ -489,15 +479,16 @@ final case class ResourcesResponderV1Live(
            )
       userPermissions = t._1
       resInfo         = t._2
-    } yield userPermissions match {
-      case Some(_) =>
-        ResourceInfoResponseV1(
-          resource_info = Some(resInfo),
-          rights = userPermissions
-        )
-      case None =>
-        throw ForbiddenException(s"User ${userProfile.id} does not have permission to view resource $resourceIri")
-    }
+
+      result <-
+        userPermissions match {
+          case Some(_) => ZIO.succeed(ResourceInfoResponseV1(Some(resInfo), userPermissions))
+          case None =>
+            ZIO.fail(
+              ForbiddenException(s"User ${userProfile.id} does not have permission to view resource $resourceIri")
+            )
+        }
+    } yield result
 
   /**
    * Returns an instance of [[ResourceFullResponseV1]] representing a Knora resource
@@ -648,13 +639,14 @@ final case class ResourcesResponderV1Live(
                                               userProfile
                                             )
 
-                              linkValueV1: LinkValueV1 =
+                              linkValueV1 <-
                                 apiValueV1 match {
-                                  case linkValueV1: LinkValueV1 =>
-                                    linkValueV1
+                                  case linkValueV1: LinkValueV1 => ZIO.succeed(linkValueV1)
                                   case _ =>
-                                    throw InconsistentRepositoryDataException(
-                                      s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}"
+                                    ZIO.fail(
+                                      InconsistentRepositoryDataException(
+                                        s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}"
+                                      )
                                     )
                                 }
 
@@ -822,73 +814,66 @@ final case class ResourcesResponderV1Live(
                                 )
 
       // Create a PropertyV1 for each of those properties.
-      emptyProps: Set[PropertyV1] = emptyPropsIris.map { propertyIri =>
-                                      val propertyEntityInfo: PropertyInfoV1 =
-                                        emptyPropsInfoResponse.propertyInfoMap(propertyIri)
-                                      val guiOrder =
-                                        resourceTypeEntityInfo.knoraResourceCardinalities(propertyIri).guiOrder
+      emptyProps <-
+        ZIO.foreach(emptyPropsIris) { propertyIri =>
+          val propertyEntityInfo = emptyPropsInfoResponse.propertyInfoMap(propertyIri)
+          val guiOrder           = resourceTypeEntityInfo.knoraResourceCardinalities(propertyIri).guiOrder
 
-                                      if (propertyEntityInfo.isLinkProp) {
-                                        // It is a linking prop: its valuetype_id is knora-base:LinkValue.
-                                        // It is restricted to the resource class that is given for knora-base:objectClassConstraint
-                                        // for the given property which goes in the attributes that will be read by the GUI.
+          if (propertyEntityInfo.isLinkProp) {
+            // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+            // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+            // for the given property which goes in the attributes that will be read by the GUI.
+            for {
+              prop <-
+                ZIO
+                  .fromOption(propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                  .orElseFail(
+                    InconsistentRepositoryDataException(
+                      s"Property $propertyIri has no knora-base:objectClassConstraint"
+                    )
+                  )
+            } yield PropertyV1(
+              pid = propertyIri,
+              valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
+              guiorder = guiOrder,
+              guielement = propertyEntityInfo
+                .getPredicateObject(SalsahGui.GuiElementProp)
+                .map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+              label = propertyEntityInfo.getPredicateObject(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+              ),
+              occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+              attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
+                SalsahGui.GuiAttribute
+              ) + valueUtilV1.makeAttributeRestype(prop)).mkString(";"),
+              value_rights = Nil
+            )
 
-                                        PropertyV1(
-                                          pid = propertyIri,
-                                          valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
-                                          guiorder = guiOrder,
-                                          guielement = propertyEntityInfo
-                                            .getPredicateObject(SalsahGui.GuiElementProp)
-                                            .map(guiElementIri =>
-                                              SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)
-                                            ),
-                                          label = propertyEntityInfo.getPredicateObject(
-                                            predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                                          ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
-                                          attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
-                                            SalsahGui.GuiAttribute
-                                          ) + valueUtilV1.makeAttributeRestype(
-                                            propertyEntityInfo
-                                              .getPredicateObject(
-                                                OntologyConstants.KnoraBase.ObjectClassConstraint
-                                              )
-                                              .getOrElse(
-                                                throw InconsistentRepositoryDataException(
-                                                  s"Property $propertyIri has no knora-base:objectClassConstraint"
-                                                )
-                                              )
-                                          )).mkString(";"),
-                                          value_rights = Nil
-                                        )
-
-                                      } else {
-                                        PropertyV1(
-                                          pid = propertyIri,
-                                          valuetype_id = propertyEntityInfo.getPredicateObject(
-                                            OntologyConstants.KnoraBase.ObjectClassConstraint
-                                          ),
-                                          guiorder = guiOrder,
-                                          guielement = propertyEntityInfo
-                                            .getPredicateObject(SalsahGui.GuiElementProp)
-                                            .map(guiElementIri =>
-                                              SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)
-                                            ),
-                                          label = propertyEntityInfo.getPredicateObject(
-                                            predicateIri = OntologyConstants.Rdfs.Label,
-                                            preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
-                                          ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
-                                          attributes = propertyEntityInfo
-                                            .getPredicateStringObjectsWithoutLang(
-                                              SalsahGui.GuiAttribute
-                                            )
-                                            .mkString(";"),
-                                          value_rights = Nil
-                                        )
-                                      }
-                                    }
+          } else {
+            ZIO.succeed(
+              PropertyV1(
+                pid = propertyIri,
+                valuetype_id = propertyEntityInfo.getPredicateObject(
+                  OntologyConstants.KnoraBase.ObjectClassConstraint
+                ),
+                guiorder = guiOrder,
+                guielement = propertyEntityInfo
+                  .getPredicateObject(SalsahGui.GuiElementProp)
+                  .map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
+                label = propertyEntityInfo.getPredicateObject(
+                  predicateIri = OntologyConstants.Rdfs.Label,
+                  preferredLangs = Some(userProfile.lang, appConfig.fallbackLanguage)
+                ),
+                occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+                attributes = propertyEntityInfo
+                  .getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute)
+                  .mkString(";"),
+                value_rights = Nil
+              )
+            )
+          }
+        }
 
       // Add a fake property `__location__` if the resource has FileValues.
       properties: Seq[PropertyV1] =
