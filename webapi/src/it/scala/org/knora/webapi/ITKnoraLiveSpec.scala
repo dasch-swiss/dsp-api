@@ -154,7 +154,7 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
+  protected def singleAwaitingRequest(request: HttpRequest, duration: Option[zio.Duration] = None): HttpResponse =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(

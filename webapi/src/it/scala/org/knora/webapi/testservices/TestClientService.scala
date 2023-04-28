@@ -81,7 +81,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
 
     for {
       _ <- ZIO.logInfo("Loading test data started ...")
-      _ <- singleAwaitingRequest(loadRequest, 101.seconds)
+      _ <- singleAwaitingRequest(loadRequest)
       _ <- ZIO.logInfo("... loading test data done.")
     } yield ()
   }
@@ -91,18 +91,21 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
-    duration: zio.Duration = 666.seconds
+    timout: Option[zio.Duration] = None,
+    printFailure: Boolean = false
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
         akka.http.scaladsl.Http().singleRequest(request).map { resp =>
-          Unmarshal(resp.entity).to[String].map { body =>
-            if (resp.status.isFailure()) println(s"Request failed with status ${resp.status} and body $body")
+          if (printFailure && resp.status.isFailure()) {
+            Unmarshal(resp.entity).to[String].map { body =>
+              println(s"Request failed with status ${resp.status} and body $body")
+            }
           }
           resp
         }
       )
-      .timeout(duration)
+      .timeout(timout.getOrElse(10.seconds))
       .some
       .mapError {
         case None            => throw AssertionException("Request timed out.")

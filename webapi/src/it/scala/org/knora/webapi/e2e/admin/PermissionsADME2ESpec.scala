@@ -8,7 +8,6 @@ package org.knora.webapi.e2e.admin
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json._
-import zio._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -43,7 +42,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )
 
-        val response = singleAwaitingRequest(request, 1.seconds)
+        val response = singleAwaitingRequest(request)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
@@ -72,7 +71,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )
 
-        val response = singleAwaitingRequest(request, 1.seconds)
+        val response = singleAwaitingRequest(request)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permissions")
@@ -97,7 +96,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )
 
-        val response = singleAwaitingRequest(request, 1.seconds)
+        val response = singleAwaitingRequest(request)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permissions")
@@ -122,7 +121,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )
 
-        val response = singleAwaitingRequest(request, 1.seconds)
+        val response = singleAwaitingRequest(request)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("permissions")
