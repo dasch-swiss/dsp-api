@@ -1,5 +1,51 @@
 # Changelog
 
+## [28.1.2](https://github.com/dasch-swiss/dsp-api/compare/v28.1.1...v28.1.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* querying all projects don't return system projects ([#2607](https://github.com/dasch-swiss/dsp-api/issues/2607)) ([68e88d9](https://github.com/dasch-swiss/dsp-api/commit/68e88d9775a0441d91102e03f687906d30b69fb9))
+* search by label produces timeouts if too many resources match (DEV-2043) ([#2591](https://github.com/dasch-swiss/dsp-api/issues/2591)) ([78479d3](https://github.com/dasch-swiss/dsp-api/commit/78479d3dffd233e0e0478c1bfcae9e8006c85171))
+
+
+### Documentation
+
+* Add subproperty documentation to the cardinalities check (DEV-2039) ([#2603](https://github.com/dasch-swiss/dsp-api/issues/2603)) ([e39cc85](https://github.com/dasch-swiss/dsp-api/commit/e39cc85b237c703286cc4f074d5f645ca9c74fd0))
+
+
+### Maintenance
+
+* Add make command to init db from dev server (DEV-1989) ([#2574](https://github.com/dasch-swiss/dsp-api/issues/2574)) ([ab6dcce](https://github.com/dasch-swiss/dsp-api/commit/ab6dcce7d7de182d11ee8c4293e381d0d3b82846))
+* Extract methods from UpdateResourceMetadataRequestV2#fromJsonLD (NO-TICKET) ([#2626](https://github.com/dasch-swiss/dsp-api/issues/2626)) ([11fc9db](https://github.com/dasch-swiss/dsp-api/commit/11fc9db3f595a5c53ca7cf7212e420995654966c))
+* Extract standoff related functions from StringFormatter (NO-TICKET) ([#2609](https://github.com/dasch-swiss/dsp-api/issues/2609)) ([dbfb86e](https://github.com/dasch-swiss/dsp-api/commit/dbfb86e4e90a9245d56a256a69035c5dfaae7259))
+* improve export-moving-images-frames ([#2615](https://github.com/dasch-swiss/dsp-api/issues/2615)) ([680f286](https://github.com/dasch-swiss/dsp-api/commit/680f286c7de9df2cc95277ec40d0f0a9e7fd7a43))
+* move Gravsearch SPARQL transformers to separate package ([#2614](https://github.com/dasch-swiss/dsp-api/issues/2614)) ([3846c38](https://github.com/dasch-swiss/dsp-api/commit/3846c38174ad1af674de2976314e8aa2a89a157b))
+* remove dsp-shared project (DEV-2045) ([#2619](https://github.com/dasch-swiss/dsp-api/issues/2619)) ([772e77c](https://github.com/dasch-swiss/dsp-api/commit/772e77c6ea3a3794269050108bc8b37ce3dbe067))
+* remove errorFun from IRI related methods (DEV-1996) ([#2585](https://github.com/dasch-swiss/dsp-api/issues/2585)) ([12670fb](https://github.com/dasch-swiss/dsp-api/commit/12670fb9c4849bd74a200c8c2c42fa522957f3dd))
+* remove intermediate interfaces from query transformers (DEV-2077) ([#2610](https://github.com/dasch-swiss/dsp-api/issues/2610)) ([954677b](https://github.com/dasch-swiss/dsp-api/commit/954677b0855f2b96a48d04c8781854b004b17620))
+* remove knora explicit graph ([#2623](https://github.com/dasch-swiss/dsp-api/issues/2623)) ([95c55e7](https://github.com/dasch-swiss/dsp-api/commit/95c55e75de52c844b9437a3913b282b8eee2ed28))
+* remove more intermediate interfaces (DEV-2078) ([#2612](https://github.com/dasch-swiss/dsp-api/issues/2612)) ([2f33878](https://github.com/dasch-swiss/dsp-api/commit/2f338780085119065fc9595f1aeac743199a8811))
+* remove throws from health route and route utils ([#2584](https://github.com/dasch-swiss/dsp-api/issues/2584)) ([fba1b2f](https://github.com/dasch-swiss/dsp-api/commit/fba1b2f530faae482e9d8cba1b4ced57fe110380))
+* remove throws from UsersResponderV1 (DEV-2102) ([#2629](https://github.com/dasch-swiss/dsp-api/issues/2629)) ([e31f846](https://github.com/dasch-swiss/dsp-api/commit/e31f8467ac43b40d3b7933b3eccffba03eb24c60))
+* remove upload_for_processing route ([#2616](https://github.com/dasch-swiss/dsp-api/issues/2616)) ([4562a4a](https://github.com/dasch-swiss/dsp-api/commit/4562a4a054b99149c4fca3f0722c36f1fe3b8178))
+* Remove warnings by using non deprecated zio.logging functions ([#2606](https://github.com/dasch-swiss/dsp-api/issues/2606)) ([04ad6bb](https://github.com/dasch-swiss/dsp-api/commit/04ad6bbd906d2ad2003c9f9eec41b07add4ca29b))
+* rename gravsearch related variables ([#2618](https://github.com/dasch-swiss/dsp-api/issues/2618)) ([b975d01](https://github.com/dasch-swiss/dsp-api/commit/b975d01d79e3f17f3e46515f44175edac5af791f))
+* rename gravsearch utils (DEV-2074) ([#2608](https://github.com/dasch-swiss/dsp-api/issues/2608)) ([99acc8c](https://github.com/dasch-swiss/dsp-api/commit/99acc8c8ba375ca429997ca0b5bda89e21992ed9))
+* rework removing of type annotations (DEV-2079) ([#2611](https://github.com/dasch-swiss/dsp-api/issues/2611)) ([461b0b6](https://github.com/dasch-swiss/dsp-api/commit/461b0b6b89737e2565e70581878de932755c0137))
+* streamline gravsearch type inspection ([#2605](https://github.com/dasch-swiss/dsp-api/issues/2605)) ([f6e9eda](https://github.com/dasch-swiss/dsp-api/commit/f6e9eda83a2da86a93f39ce761d629e4dd579aa3))
+* streamline SPARQL transformation ([#2624](https://github.com/dasch-swiss/dsp-api/issues/2624)) ([c616581](https://github.com/dasch-swiss/dsp-api/commit/c616581ee0ad51c4a8bd4e1c84b667676deebb9d))
+* update dependencies ([#2602](https://github.com/dasch-swiss/dsp-api/issues/2602)) ([474b23c](https://github.com/dasch-swiss/dsp-api/commit/474b23c5faa37e9aaeea6eda679e537d0866ef1f))
+* ziofy AuthenticationRouteV2 * ListsRouteV2 * StandoffRouteV2 (DEV-2050) ([#2589](https://github.com/dasch-swiss/dsp-api/issues/2589)) ([cc4b7ba](https://github.com/dasch-swiss/dsp-api/commit/cc4b7ba4100bff70d0b21f40f407af369c494cb2))
+* ziofy JsonLDObject accessor methods (DEV-2084) ([#2613](https://github.com/dasch-swiss/dsp-api/issues/2613)) ([666ddcf](https://github.com/dasch-swiss/dsp-api/commit/666ddcf112fb4c6c56afbe9ee46f44dc7f9698b0))
+* ziofy OntologiesRouteV2 (DEV-2052) ([#2593](https://github.com/dasch-swiss/dsp-api/issues/2593)) ([c472ff7](https://github.com/dasch-swiss/dsp-api/commit/c472ff73bcdaf77bb2b575474f967c72bdfcd813))
+* ziofy ProjectRouteADM (DEV-2104) ([#2630](https://github.com/dasch-swiss/dsp-api/issues/2630)) ([edfb127](https://github.com/dasch-swiss/dsp-api/commit/edfb127ab214552b4e2ffcddf9ce26e60793158c))
+* ziofy ResourcesRouteV1 (DEV-2035) ([#2587](https://github.com/dasch-swiss/dsp-api/issues/2587)) ([e36605d](https://github.com/dasch-swiss/dsp-api/commit/e36605d217f3be0e8bdc22d0ab996f92c8cc72ad))
+* ziofy ResourcesRouteV2 (DEV-2091) ([#2625](https://github.com/dasch-swiss/dsp-api/issues/2625)) ([7285b3c](https://github.com/dasch-swiss/dsp-api/commit/7285b3c24823707b3f3df3adab9d8c89fe545971))
+* ziofy RouteUtilV1 and change deprecated code (DEV-2079) ([#2628](https://github.com/dasch-swiss/dsp-api/issues/2628)) ([3dacbf4](https://github.com/dasch-swiss/dsp-api/commit/3dacbf44052921b1cf5b523716cc2b88ce511900))
+* ziofy SearchRouteV2 DEV-2088 ([#2622](https://github.com/dasch-swiss/dsp-api/issues/2622)) ([3105996](https://github.com/dasch-swiss/dsp-api/commit/3105996961c833177d3b385478d66505a2210fe0))
+* ziofy ValuesRouteV2 (DEV-2051) ([#2604](https://github.com/dasch-swiss/dsp-api/issues/2604)) ([b3f15db](https://github.com/dasch-swiss/dsp-api/commit/b3f15db66518395b01f5877e510f6d86e9a23547))
+
 ## [28.1.1](https://github.com/dasch-swiss/dsp-api/compare/v28.1.0...v28.1.1) (2023-04-13)
 
 
