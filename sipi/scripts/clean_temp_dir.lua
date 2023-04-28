@@ -1,6 +1,12 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
+--
+-- Deletes old files from Sipi's tmp directory.
+--
+
+require "send_response"
+
 --- Removes old temporary files.
 -- @return true on success, false on failure.
 function clean_temp_dir()
@@ -94,18 +100,10 @@ success, auth = server.requireAuth()
 local clean_temp_dir_user = os.getenv("CLEAN_TMP_DIR_USER")
 local clean_temp_dir_pw = os.getenv("CLEAN_TMP_DIR_PW")
 
-if clean_temp_dir_user == nil then
-    clean_temp_dir_user = config.clean_temp_dir_user
-end
-
-if clean_temp_dir_pw == nil then
-    clean_temp_dir_pw = config.clean_temp_dir_pw
-end
-
 if auth.username == clean_temp_dir_user and auth.password == clean_temp_dir_pw then
     server.log("clean_temp_dir.lua: authentication was successful", server.loglevel.LOG_DEBUG)
     clean_temp_dir()
 else
     server.log("clean_temp_dir.lua: failed to authenticate user", server.loglevel.LOG_DEBUG)
-    return 
+    send_error(401, "Failed to authenticate user. Wrong username or password.")
 end
