@@ -180,9 +180,14 @@ end
 
 local first_character_of_filename = hashed_filename:sub(1, 1)
 local second_character_of_filename = hashed_filename:sub(2, 2)
+local third_character_of_filename = hashed_filename:sub(3, 3)
+local fourth_character_of_filename = hashed_filename:sub(4, 4)
+
+local first_subfolder = first_character_of_filename .. second_character_of_filename
+local second_subfolder = third_character_of_filename .. fourth_character_of_filename
 
 local tmp_folder_root = config.imgroot .. '/tmp'
-local tmp_folder = tmp_folder_root .. '/' .. first_character_of_filename .. '/' .. second_character_of_filename
+local tmp_folder = tmp_folder_root .. '/' .. first_subfolder .. '/' .. second_subfolder
 
 local source_path = tmp_folder .. '/' .. hashed_filename
 local source_key_frames = source_path:match("(.+)%..+")
@@ -211,13 +216,13 @@ if not success then
     return
 end
 
-local project_folder_level_1 = project_folder_root .. '/' .. first_character_of_filename
+local project_folder_level_1 = project_folder_root .. '/' .. first_subfolder
 success, error_msg = check_create_dir(project_folder_level_1)
 if not success then
     send_error(500, error_msg)
     return
 end
-local project_folder = project_folder_level_1 .. '/' .. second_character_of_filename
+local project_folder = project_folder_level_1 .. '/' .. second_subfolder
 success, error_msg = check_create_dir(project_folder)
 if not success then
     send_error(500, error_msg)

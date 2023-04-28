@@ -68,6 +68,8 @@ When called, it deletes old temporary files from `tmp` and (recursively) from an
 The maximum allowed age of temporary files can be set in Sipi's configuration file, 
 using the parameter `max_temp_file_age`, which takes a value in seconds.
 
+The `clean_temp_dir` route requires basic authentication.
+
 ## SipiConnector
 
 In DSP-API, the `org.knora.webapi.iiif.SipiConnector` handles all communication

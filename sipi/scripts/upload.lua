@@ -144,15 +144,20 @@ for file_index, file_params in pairs(server.uploads) do
     -- create tmp folder and subfolders for the file
     local first_character_of_filename = hashed_tmp_storage_filename:sub(1, 1)
     local second_character_of_filename = hashed_tmp_storage_filename:sub(2, 2)
+    local third_character_of_filename = hashed_tmp_storage_filename:sub(3, 3)
+    local fourth_character_of_filename = hashed_tmp_storage_filename:sub(4, 4)
 
-    local tmp_folder_level_1 = tmp_folder_root .. '/' .. first_character_of_filename
+    local first_subfolder = first_character_of_filename .. second_character_of_filename
+    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
+
+    local tmp_folder_level_1 = tmp_folder_root .. '/' .. first_subfolder
     success, error_msg = check_create_dir(tmp_folder_level_1)
     if not success then
         send_error(500, error_msg)
         return
     end
 
-    local tmp_folder = tmp_folder_level_1 .. '/' .. second_character_of_filename
+    local tmp_folder = tmp_folder_level_1 .. '/' .. second_subfolder
     success, error_msg = check_create_dir(tmp_folder)
     if not success then
         send_error(500, error_msg)

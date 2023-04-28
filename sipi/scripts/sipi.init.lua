@@ -25,11 +25,16 @@ function pre_flight(prefix, identifier, cookie)
 
     local first_character_of_identifier = identifier:sub(1, 1)
     local second_character_of_identifier = identifier:sub(2, 2)
+    local third_character_of_identifier = identifier:sub(3, 3)
+    local fourth_character_of_identifier = identifier:sub(4, 4)
+
+    local first_subfolder = first_character_of_identifier .. second_character_of_identifier
+    local second_subfolder = third_character_of_identifier .. fourth_character_of_identifier
 
     if config.prefix_as_path then
-        filepath = config.imgroot .. '/' .. prefix .. '/' .. first_character_of_identifier .. '/' .. second_character_of_identifier .. '/' .. identifier
+        filepath = config.imgroot .. '/' .. prefix .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' .. identifier
     else
-        filepath = config.imgroot .. '/' .. first_character_of_identifier .. '/' .. second_character_of_identifier .. '/' .. identifier
+        filepath = config.imgroot .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' .. identifier
     end
 
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
@@ -175,6 +180,10 @@ function file_pre_flight(identifier, cookie)
     shortcode = segments[3]
     log("file_pre_flight - shortcode: " .. shortcode, server.loglevel.LOG_DEBUG)
 
+    if shortcode == "082A" then -- SVA / 082A allows file access even when permissions are set to restricted!
+        return "allow", filepath
+    end
+
     -- get the file name
     file_name_preview  = ''
     if #segments == 4 then
@@ -189,18 +198,18 @@ function file_pre_flight(identifier, cookie)
         return "deny"
     end
 
-    
     log("file_pre_flight - file name: " .. file_name, server.loglevel.LOG_DEBUG)
 
     local first_character_of_identifier = file_name:sub(1, 1)
     local second_character_of_identifier = file_name:sub(2, 2)
+    local third_character_of_identifier = file_name:sub(3, 3)
+    local fourth_character_of_identifier = file_name:sub(4, 4)
 
-    filepath = config.imgroot .. '/' .. shortcode .. '/' .. first_character_of_identifier .. '/' .. second_character_of_identifier .. '/' .. file_name
-    filepath_preview = config.imgroot .. '/' .. shortcode .. '/' .. first_character_of_identifier .. '/' .. second_character_of_identifier .. '/' .. file_name_preview
+    local first_subfolder = first_character_of_identifier .. second_character_of_identifier
+    local second_subfolder = third_character_of_identifier .. fourth_character_of_identifier
 
-    if shortcode == "082A" then -- SVA / 082A allows file access even when permissions are set to restricted
-        return "allow", filepath
-    end
+    filepath = config.imgroot .. '/' .. shortcode .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' .. file_name
+    filepath_preview = config.imgroot .. '/' .. shortcode .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' .. file_name_preview
 
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
