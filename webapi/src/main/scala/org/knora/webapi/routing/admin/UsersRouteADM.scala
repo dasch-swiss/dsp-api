@@ -20,8 +20,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 import org.knora.webapi.routing.RouteUtilADM.getIriUser
 import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
@@ -31,17 +29,13 @@ import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
-final case class UsersRouteADM(
-  private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
-) extends KnoraRoute(routeData, runtime) {
+final case class UsersRouteADM()(
+  private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+) {
 
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     getUsers() ~
       addUser() ~
       getUserByIri() ~
@@ -86,10 +80,25 @@ final case class UsersRouteADM(
    * return a single user identified by iri
    */
   private def getUserByIri(): Route =
-    path(usersBasePath / "iri" / Segment)(userIri => get(getUser(UserIdentifierADM(maybeIri = Some(userIri)), _)))
+    path(usersBasePath / "iri" / Segment)(userIri => get(getUser(makeUserIdFromIri(userIri), _)))
 
-  private def getUser(id: UserIdentifierADM, ctx: RequestContext) = {
-    val task = Authenticator.getUserADM(ctx).map(UserGetRequestADM(id, UserInformationTypeADM.Restricted, _))
+  private def makeUserIdFromIri(iri: String) = ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
+    ZIO.attempt(UserIdentifierADM(maybeIri = Some(iri)))
+  }
+
+  private def makeUserIdFromEmail(email: String) = ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
+    ZIO.attempt(UserIdentifierADM(maybeEmail = Some(email)))
+  }
+
+  private def makeUserIdFromUsername(username: String) = ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
+    ZIO.attempt(UserIdentifierADM(maybeUsername = Some(username)))
+  }
+
+  private def getUser(id: ZIO[StringFormatter, Throwable, UserIdentifierADM], ctx: RequestContext) = {
+    val task = for {
+      userId         <- id
+      requestingUser <- Authenticator.getUserADM(ctx)
+    } yield UserGetRequestADM(userId, UserInformationTypeADM.Restricted, requestingUser)
     runJsonRouteZ(task, ctx)
   }
 
@@ -97,15 +106,13 @@ final case class UsersRouteADM(
    * return a single user identified by email
    */
   private def getUserByEmail(): Route =
-    path(usersBasePath / "email" / Segment)(email => get(getUser(UserIdentifierADM(maybeEmail = Some(email)), _)))
+    path(usersBasePath / "email" / Segment)(email => get(getUser(makeUserIdFromEmail(email), _)))
 
   /**
    * return a single user identified by username
    */
   private def getUserByUsername(): Route =
-    path(usersBasePath / "username" / Segment)(username =>
-      get(getUser(UserIdentifierADM(maybeUsername = Some(username)), _))
-    )
+    path(usersBasePath / "username" / Segment)(username => get(getUser(makeUserIdFromUsername(username), _)))
 
   /**
    * Change existing user's basic information.

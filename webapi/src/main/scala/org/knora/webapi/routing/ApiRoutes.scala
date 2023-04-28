@@ -134,7 +134,7 @@ private final case class ApiRoutesImpl(
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
                 ProjectsRouteADM().makeRoute ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
-                UsersRouteADM(routeData, runtime).makeRoute ~
+                UsersRouteADM().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute
             }
           }
