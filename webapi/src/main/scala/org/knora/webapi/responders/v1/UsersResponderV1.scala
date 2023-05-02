@@ -47,9 +47,6 @@ final case class UsersResponderV1Live(
     with MessageHandler
     with LazyLogging {
 
-  // The IRI used to lock user creation and update
-  val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
-
   val USER_PROFILE_CACHE_NAME = "userProfileCache"
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[UsersResponderRequestV1]
@@ -85,11 +82,10 @@ final case class UsersResponderV1Live(
    */
   private def usersGetV1(userProfileV1: UserProfileV1): Task[Seq[UserDataV1]] =
     for {
-      _ <- ZIO.attempt(
-             if (!userProfileV1.permissionData.isSystemAdmin) {
-               throw ForbiddenException("SystemAdmin permissions are required.")
-             }
-           )
+      _ <-
+        ZIO
+          .fail(ForbiddenException("SystemAdmin permissions are required."))
+          .when(!userProfileV1.permissionData.isSystemAdmin)
 
       sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -131,10 +127,11 @@ final case class UsersResponderV1Live(
   private def usersGetRequestV1(userProfileV1: UserProfileV1): Task[UsersGetResponseV1] =
     for {
       maybeUsersListToReturn <- usersGetV1(userProfileV1)
-      result = maybeUsersListToReturn match {
-                 case users: Seq[UserDataV1] if users.nonEmpty => UsersGetResponseV1(users = users)
-                 case _                                        => throw NotFoundException(s"No users found")
-               }
+      result <-
+        maybeUsersListToReturn match {
+          case users: Seq[UserDataV1] if users.nonEmpty => ZIO.succeed(UsersGetResponseV1(users))
+          case _                                        => ZIO.fail(NotFoundException(s"No users found"))
+        }
     } yield result
 
   /**
@@ -192,9 +189,7 @@ final case class UsersResponderV1Live(
                                   userDataQueryResponse = userDataQueryResponse
                                 )
 
-          _ = if (maybeUserProfileV1.nonEmpty) {
-                writeUserProfileV1ToCache(maybeUserProfileV1.get)
-              }
+          _ <- ZIO.foreachDiscard(maybeUserProfileV1)(writeUserProfileV1ToCache)
 
           result = maybeUserProfileV1.map(_.ofType(profileType))
         } yield result // UserProfileV1(userData, groups, projects_info, sessionId, isSystemUser, permissionData)
@@ -215,20 +210,15 @@ final case class UsersResponderV1Live(
     userProfile: UserProfileV1
   ): Task[UserProfileResponseV1] =
     for {
-      _ <- ZIO.attempt(
-             if (!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI)) {
-               throw ForbiddenException("SystemAdmin permissions are required.")
-             }
-           )
-      maybeUserProfileToReturn <- userProfileByIRIGetV1(
-                                    userIri = userIRI,
-                                    profileType = profileType
-                                  )
+      _ <- ZIO
+             .fail(ForbiddenException("SystemAdmin permissions are required."))
+             .when(!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI))
 
-      result = maybeUserProfileToReturn match {
-                 case Some(up) => UserProfileResponseV1(up)
-                 case None     => throw NotFoundException(s"User '$userIRI' not found")
-               }
+      maybeUserProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
+
+      result <- ZIO
+                  .fromOption(maybeUserProfileToReturn)
+                  .mapBoth(_ => NotFoundException(s"User '$userIRI' not found"), UserProfileResponseV1)
     } yield result
 
   /**
@@ -265,9 +255,7 @@ final case class UsersResponderV1Live(
                                   userDataQueryResponse = userDataQueryResponse
                                 )
 
-          _ = if (maybeUserProfileV1.nonEmpty) {
-                writeUserProfileV1ToCache(maybeUserProfileV1.get)
-              }
+          _ <- ZIO.foreachDiscard(maybeUserProfileV1)(writeUserProfileV1ToCache)
 
           result = maybeUserProfileV1.map(_.ofType(profileType))
         } yield result // UserProfileV1(userDataV1, groupIris, projectIris)
@@ -278,10 +266,8 @@ final case class UsersResponderV1Live(
    *
    * @param email                the email of the user.
    * @param profileType          the type of the requested profile (restricted or full).
-   *
    * @param userProfile          the requesting user's profile.
    * @return a [[UserProfileResponseV1]]
-   * @throws NotFoundException if the user with the supplied email is not found.
    */
   private def userProfileByEmailGetRequestV1(
     email: String,
@@ -289,15 +275,9 @@ final case class UsersResponderV1Live(
     userProfile: UserProfileV1
   ): Task[UserProfileResponseV1] =
     for {
-      maybeUserProfileToReturn <- userProfileByEmailGetV1(
-                                    email = email,
-                                    profileType = profileType
-                                  )
-
-      result = maybeUserProfileToReturn match {
-                 case Some(up: UserProfileV1) => UserProfileResponseV1(up)
-                 case None                    => throw NotFoundException(s"User '$email' not found")
-               }
+      profile <- userProfileByEmailGetV1(email, profileType)
+      result <-
+        ZIO.fromOption(profile).mapBoth(_ => NotFoundException(s"User '$email' not found"), UserProfileResponseV1)
     } yield result
 
   /**
@@ -563,76 +543,31 @@ final case class UsersResponderV1Live(
     } yield result
 
   /**
-   * Helper method for checking if a project exists.
-   *
-   * @param projectIri the IRI of the project.
-   * @return a [[Boolean]].
-   */
-  def projectExists(projectIri: IRI): Task[Boolean] =
-    for {
-      askString <- ZIO.attempt(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByIri(projectIri = projectIri)
-                       .toString
-                   )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
-
-  /**
-   * Helper method for checking if a group exists.
-   *
-   * @param groupIri the IRI of the group.
-   * @return a [[Boolean]].
-   */
-  def groupExists(groupIri: IRI): Task[Boolean] =
-    for {
-      askString <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
-        )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
-
-  /**
    * Writes the user profile to cache.
    *
    * @param userProfile a [[UserProfileV1]].
    * @return true if writing was successful.
-   * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
-  private def writeUserProfileV1ToCache(userProfile: UserProfileV1): Boolean = {
+  private def writeUserProfileV1ToCache(userProfile: UserProfileV1): Task[Unit] = for {
+    iri <- ZIO
+             .fromOption(userProfile.userData.user_id)
+             .orElseFail(ApplicationCacheException("A user profile without an IRI is invalid. Not writing to cache."))
 
-    val iri = if (userProfile.userData.user_id.nonEmpty) {
-      userProfile.userData.user_id.get
-    } else {
-      throw ApplicationCacheException("A user profile without an IRI is invalid. Not writing to cache.")
-    }
+    email <-
+      ZIO
+        .fromOption(userProfile.userData.email)
+        .orElseFail(ApplicationCacheException("A user profile without an email is invalid. Not writing to cache."))
 
-    val email = if (userProfile.userData.email.nonEmpty) {
-      userProfile.userData.email.get
-    } else {
-      throw ApplicationCacheException("A user profile without an email is invalid. Not writing to cache.")
-    }
+    _ = CacheUtil.put(USER_PROFILE_CACHE_NAME, iri, userProfile)
+    _ <- ZIO
+           .fail(ApplicationCacheException("Writing the user's profile to cache was not successful."))
+           .when(CacheUtil.get(USER_PROFILE_CACHE_NAME, iri).isEmpty)
 
-    CacheUtil.put(USER_PROFILE_CACHE_NAME, iri, userProfile)
-
-    if (CacheUtil.get(USER_PROFILE_CACHE_NAME, iri).isEmpty) {
-      throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
-    }
-
-    CacheUtil.put(USER_PROFILE_CACHE_NAME, email, userProfile)
-    if (CacheUtil.get(USER_PROFILE_CACHE_NAME, email).isEmpty) {
-      throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
-    }
-
-    true
-  }
+    _ = CacheUtil.put(USER_PROFILE_CACHE_NAME, email, userProfile)
+    _ <- ZIO
+           .fail(ApplicationCacheException("Writing the user's profile to cache was not successful."))
+           .when(CacheUtil.get(USER_PROFILE_CACHE_NAME, email).isEmpty)
+  } yield ()
 }
 
 object UsersResponderV1Live {
