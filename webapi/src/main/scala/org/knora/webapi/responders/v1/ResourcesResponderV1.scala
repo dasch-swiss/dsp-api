@@ -2099,14 +2099,14 @@ final case class ResourcesResponderV1Live(
 
       createdResourceResponse <- triplestoreService.sparqlHttpSelect(createdResourcesSparql)
 
-      _ = if (createdResourceResponse.results.bindings.isEmpty) {
-            logger.error(
-              s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql"
-            )
-            throw UpdateNotPerformedException(
+      _ <-
+        ZIO
+          .fail(
+            UpdateNotPerformedException(
               s"Resource $resourceIri was not created. Please report this as a possible bug."
             )
-          }
+          )
+          .when(createdResourceResponse.results.bindings.isEmpty)
 
       // Verify that all the requested values were created.
       verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
@@ -2315,22 +2315,17 @@ final case class ResourcesResponderV1Live(
     apiRequestID: UUID
   ): Task[ResourceCreateResponseV1] =
     for {
-
       // Get user's IRI and don't allow anonymous users to create resources.
-      userIri <- ZIO.attempt {
-                   if (userProfile.isAnonymousUser) {
-                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
-                   } else {
-                     userProfile.id
-                   }
-                 }
+      userIri <-
+        if (userProfile.isAnonymousUser)
+          ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources"))
+        else ZIO.succeed(userProfile.id)
 
-      _ = if (resourceClassIri == OntologyConstants.KnoraBase.Resource) {
-            throw BadRequestException(
-              s"Instances of knora-base:Resource cannot be created, only instances of subclasses"
-            )
-          }
-
+      _ <- ZIO
+             .fail(
+               BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
+             )
+             .when(resourceClassIri == OntologyConstants.KnoraBase.Resource)
       // Get project info
       projectResponse <-
         messageRelay
@@ -2343,18 +2338,17 @@ final case class ResourcesResponderV1Live(
           )
 
       // Ensure that the project isn't the system project or the shared ontologies project.
+      iri: IRI = projectResponse.project.id
 
-      resourceProjectIri: IRI = projectResponse.project.id
-
-      _ =
-        if (
-          resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-        ) {
-          throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
-        }
+      _ <-
+        ZIO
+          .fail(BadRequestException(s"Resources cannot be created in project $iri"))
+          .when(
+            iri == OntologyConstants.KnoraAdmin.SystemProject ||
+              iri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+          )
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
-
       resourceClassOntologyIri: SmartIri = resourceClassIri.toSmartIri.getOntologyFromEntity
       readOntologyMetadataV2 <- messageRelay.ask[ReadOntologyMetadataV2](
                                   OntologyMetadataGetByIriRequestV2(
@@ -2370,28 +2364,32 @@ final case class ResourcesResponderV1Live(
           .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
           .toString
 
-      _ =
-        if (
-          resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
-        ) {
-          throw BadRequestException(
-            s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project"
+      _ <-
+        ZIO
+          .fail(
+            BadRequestException(
+              s"Cannot create a resource in project $iri with resource class $resourceClassIri, " +
+                s"which is defined in a non-shared ontology in another project"
+            )
           )
-        }
+          .when(
+            iri != ontologyProjectIri &&
+              !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri ||
+                ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
+          )
 
       namedGraph       = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
       resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectResponse.project.shortcode)
 
       // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
       // create a new resource in the given project.
-      _ =
-        if (
-          !userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), resourceProjectIri, None)
-        ) {
-          throw ForbiddenException(
-            s"User $userIri does not have permissions to create a resource in project $resourceProjectIri"
-          )
-        }
+      hasPermission =
+        !userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), iri, None)
+
+      _ <-
+        ZIO
+          .fail(ForbiddenException(s"User $userIri does not have permissions to create a resource in project $iri"))
+          .when(hasPermission)
 
       result <- IriLocker.runWithIriLock(
                   apiRequestID,
@@ -2430,16 +2428,17 @@ final case class ResourcesResponderV1Live(
         permissionCode = t._1
         resourceInfo   = t._2
 
-        _ = if (
-              !PermissionUtilADM.impliesPermissionCodeV1(
-                userHasPermissionCode = permissionCode,
-                userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission
-              )
-            ) {
-              throw ForbiddenException(
+        hasPermission =
+          !PermissionUtilADM.impliesPermissionCodeV1(permissionCode, OntologyConstants.KnoraBase.DeletePermission)
+
+        _ <-
+          ZIO
+            .fail(
+              ForbiddenException(
                 s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted"
               )
-            }
+            )
+            .when(hasPermission)
 
         projectInfoResponse <- messageRelay
                                  .ask[ProjectInfoResponseV1](
@@ -2476,25 +2475,24 @@ final case class ResourcesResponderV1Live(
         sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
         rows                  = sparqlSelectResponse.results.bindings
 
-        _ =
-          if (
-            rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false)
-          ) {
-            throw UpdateNotPerformedException(
-              s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug."
+        _ <-
+          ZIO
+            .fail(
+              UpdateNotPerformedException(
+                s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug."
+              )
             )
-          }
+            .when(
+              rows.isEmpty ||
+                !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false)
+            )
       } yield ResourceDeleteResponseV1(id = resourceDeleteRequest.resourceIri)
 
     for {
       // Don't allow anonymous users to delete resources.
-      userIri <- ZIO.attempt {
-                   if (resourceDeleteRequest.userADM.isAnonymousUser) {
-                     throw ForbiddenException("Anonymous users aren't allowed to mark resources as deleted")
-                   } else {
-                     resourceDeleteRequest.userADM.id
-                   }
-                 }
+      userIri <- if (resourceDeleteRequest.userADM.isAnonymousUser)
+                   ZIO.fail(ForbiddenException("Anonymous users aren't allowed to mark resources as deleted"))
+                 else ZIO.succeed(resourceDeleteRequest.userADM.id)
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
@@ -2528,14 +2526,13 @@ final case class ResourcesResponderV1Live(
            )
       permissionCode = t._1
       resourceInfo   = t._2
-      _ = if (
-            !PermissionUtilADM.impliesPermissionCodeV1(
-              userHasPermissionCode = permissionCode,
-              userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission
-            )
-          ) {
-            throw ForbiddenException(s"User ${userProfile.id} does not have permission to view resource $resourceIri")
-          }
+      hasPermission =
+        !PermissionUtilADM.impliesPermissionCodeV1(permissionCode, OntologyConstants.KnoraBase.RestrictedViewPermission)
+
+      _ <-
+        ZIO
+          .fail(ForbiddenException(s"User ${userProfile.id} does not have permission to view resource $resourceIri"))
+          .when(hasPermission)
 
       checkSubClassRequest = CheckSubClassRequestV1(
                                subClassIri = resourceInfo.restype_id,
@@ -2575,16 +2572,15 @@ final case class ResourcesResponderV1Live(
         resourceInfo   = t._2
 
         // check if the given user may change its label
-        _ = if (
-              !PermissionUtilADM.impliesPermissionCodeV1(
-                userHasPermissionCode = permissionCode,
-                userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
-              )
-            ) {
-              throw ForbiddenException(
-                s"User $userIri does not have permission to change the label of resource $resourceIri"
-              )
-            }
+        hasPermission =
+          !PermissionUtilADM.impliesPermissionCodeV1(permissionCode, OntologyConstants.KnoraBase.ModifyPermission)
+
+        _ <-
+          ZIO
+            .fail(
+              ForbiddenException(s"User $userIri does not have permission to change the label of resource $resourceIri")
+            )
+            .when(hasPermission)
 
         projectInfoResponse <- messageRelay
                                  .ask[ProjectInfoResponseV1](
@@ -2625,23 +2621,23 @@ final case class ResourcesResponderV1Live(
         rows                  = sparqlSelectResponse.results.bindings
 
         // we expect exactly one row to be returned if the label was updated correctly in the data.
-        _ = if (rows.length != 1) {
-              throw UpdateNotPerformedException(
+        _ <-
+          ZIO
+            .fail(
+              UpdateNotPerformedException(
                 s"The label of the resource $resourceIri was not updated correctly. Please report this as a possible bug."
               )
-            }
+            )
+            .when(rows.length != 1)
 
       } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label)
 
     for {
       // Don't allow anonymous users to change a resource's label.
-      userIri <- ZIO.attempt {
-                   if (userProfile.isAnonymousUser) {
-                     throw ForbiddenException("Anonymous users aren't allowed to change a resource's label")
-                   } else {
-                     userProfile.id
-                   }
-                 }
+      userIri <-
+        if (userProfile.isAnonymousUser)
+          ZIO.fail(throw ForbiddenException("Anonymous users aren't allowed to change a resource's label"))
+        else ZIO.succeed(userProfile.id)
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
