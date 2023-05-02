@@ -41,7 +41,7 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
@@ -74,7 +74,7 @@ final case class SearchResponderV2Live(
   private val inferenceOptimizationService: InferenceOptimizationService,
   implicit private val stringFormatter: StringFormatter,
   private val iriConverter: IriConverter,
-  private val constructTransformer: ConstructToConstructTransformer
+  private val constructTransformer: ConstructTransformer
 ) extends SearchResponderV2
     with MessageHandler
     with LazyLogging {
@@ -1070,6 +1070,7 @@ object SearchResponderV2Live {
       with GravsearchTypeInspectionRunner
       with InferenceOptimizationService
       with IriConverter
+      with ConstructTransformer
       with StringFormatter,
     Nothing,
     SearchResponderV2Live
@@ -1089,10 +1090,7 @@ object SearchResponderV2Live {
         typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
         inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
         iriConverter                 <- ZIO.service[IriConverter]
-        constructTransformer = ConstructToConstructTransformer(
-                                 sparqlTransformerLive,
-                                 iriConverter
-                               ) // TODO: will be changed to a regular service in a separate PR
+        constructTransformer         <- ZIO.service[ConstructTransformer]
         handler <- mr.subscribe(
                      new SearchResponderV2Live(
                        appConfig,
