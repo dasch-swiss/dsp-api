@@ -30,6 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.LogAspect
@@ -154,17 +155,11 @@ abstract class ITKnoraLiveSpec
         .getOrThrowFiberFailure()
     }
 
-  protected def singleAwaitingRequest(request: HttpRequest, duration: Option[zio.Duration] = None): HttpResponse =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            testClient <- ZIO.service[TestClientService]
-            result     <- testClient.singleAwaitingRequest(request, duration)
-          } yield result
-        )
-        .getOrThrowFiberFailure()
-    }
+  protected def singleAwaitingRequest(request: HttpRequest): HttpResponse =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request)))
+
+  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration): HttpResponse =
+    UnsafeZioRun.runOrThrow(ZIO.serviceWithZIO[TestClientService](_.singleAwaitingRequest(request, Some(duration))))
 
   protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument =
     Unsafe.unsafe { implicit u =>

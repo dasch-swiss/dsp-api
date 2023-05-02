@@ -88,6 +88,10 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
 
   /**
    * Performs a http request.
+   *
+   * @param request the request to be performed.
+   * @param timout the timeout for the request. Default timeout is 10 seconds.
+   * @return the response.
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
@@ -105,7 +109,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
           resp
         }
       )
-      .timeout(timout.getOrElse(10.seconds))
+      .timeout(timout.getOrElse(5.seconds))
       .some
       .mapError {
         case None            => throw AssertionException("Request timed out.")
