@@ -90,7 +90,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    * Performs a http request.
    *
    * @param request the request to be performed.
-   * @param timout the timeout for the request. Default timeout is 5 seconds.
+   * @param timeout the timeout for the request. Default timeout is 5 seconds.
    * @param printFailure If true, the response body will be printed if the request fails.
    *                     This flag is intended to be used for debugging purposes only.
    *                     Since this is unsafe, it is false by default.
@@ -100,7 +100,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
-    timout: Option[zio.Duration] = None,
+    timeout: Option[zio.Duration] = None,
     printFailure: Boolean = false
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
@@ -114,7 +114,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
           resp
         }
       )
-      .timeout(timout.getOrElse(5.seconds))
+      .timeout(timeout.getOrElse(5.seconds))
       .some
       .mapError {
         case None            => throw AssertionException("Request timed out.")
