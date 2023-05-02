@@ -75,5 +75,5 @@ final case class RestPermissionServiceLive() extends RestPermissionService {
 }
 
 object RestPermissionServiceLive {
-  val layer: ULayer[RestPermissionServiceLive] = zio.ZLayer.fromFunction(RestPermissionServiceLive.apply _)
+  val layer: ULayer[RestPermissionServiceLive] = ZLayer.fromFunction(RestPermissionServiceLive.apply _)
 }
