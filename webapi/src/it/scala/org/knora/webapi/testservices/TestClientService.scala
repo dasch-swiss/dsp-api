@@ -90,7 +90,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    * Performs a http request.
    *
    * @param request the request to be performed.
-   * @param timout the timeout for the request. Default timeout is 10 seconds.
+   * @param timout the timeout for the request. Default timeout is 5 seconds.
    * @param printFailure If true, the response body will be printed if the request fails.
    *                     This flag is intended to be used for debugging purposes only.
    *                     Since this is unsafe, it is false by default.
