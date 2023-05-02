@@ -10,7 +10,6 @@ import zio.http._
 import zio.http.model.Status
 import zio.mock.Expectation
 import zio.test._
-
 import java.net.URLEncoder
 import java.nio.file
 
@@ -24,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectADMRestServiceMock
+import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
@@ -405,7 +405,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .GetAllProjectData(
           assertion = Assertion.equalTo(identifier, user),
-          result = Expectation.value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
+          result = Expectation
+          .value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
         )
         .toLayer
       for {

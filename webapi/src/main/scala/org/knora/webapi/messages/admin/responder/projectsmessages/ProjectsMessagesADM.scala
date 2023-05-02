@@ -13,7 +13,6 @@ import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 import zio.prelude.Validation
 
-import java.nio.file.Path
 import java.util.UUID
 
 import dsp.errors.BadRequestException
@@ -354,13 +353,6 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
 case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
-
-/**
- * Represents a project's data in TriG format.
- *
- * @param projectDataFile a file containing the project's data in TriG format.
- */
-case class ProjectDataGetResponseADM(projectDataFile: Path)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
