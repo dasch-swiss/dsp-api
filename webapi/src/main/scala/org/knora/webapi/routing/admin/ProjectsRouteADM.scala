@@ -34,9 +34,12 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 final case class ProjectsRouteADM()(
-  private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay],
+  private implicit val runtime: Runtime[
+    Authenticator with StringFormatter with MessageRelay with ProjectADMRestService
+  ],
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {
 
@@ -293,7 +296,7 @@ final case class ProjectsRouteADM()(
       val requestTask = for {
         id             <- IriIdentifier.fromString(projectIri).toZIO
         requestingUser <- Authenticator.getUserADM(requestContext)
-        projectData    <- MessageRelay.ask[ProjectDataGetResponseADM](ProjectDataGetRequestADM(id, requestingUser))
+        projectData    <- ProjectADMRestService.getAllProjectData(id, requestingUser)
         response <- ZIO.attemptBlocking(
                       HttpEntity(
                         ContentTypes.`application/octet-stream`,

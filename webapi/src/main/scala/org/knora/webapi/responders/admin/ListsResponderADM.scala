@@ -39,6 +39,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
@@ -933,7 +934,7 @@ final case class ListsResponderADMLive(
           }
 
       // calculate the data named graph
-      dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
+      dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(project).value
 
       // if parent node is known, find the root node of the list and the position of the new child node
       positionAndNode <-
@@ -2187,7 +2188,7 @@ final case class ListsResponderADMLive(
                             }
 
       // Get the IRI of the named graph from which the resource will be erased.
-      dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
+      dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(project).value
     } yield dataNamedGraph
 
   /**
