@@ -63,7 +63,7 @@ class KnoraSipiAuthenticationITSpec
       loginToken.nonEmpty should be(true)
     }
 
-    "successfuly get an image with provided credentials inside cookie" in {
+    "successfully get an image with provided credentials inside cookie" in {
 
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
       val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
