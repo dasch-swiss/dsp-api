@@ -13,7 +13,7 @@ import org.knora.webapi.messages.util.search._
 
 import SparqlTransformer._
 
-class SelectToSelectTransformer(
+class SelectTransformer(
   simulateInference: Boolean,
   sparqlTransformerLive: SparqlTransformerLive,
   implicit val stringFormatter: StringFormatter

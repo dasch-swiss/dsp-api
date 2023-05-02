@@ -14,7 +14,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
@@ -355,7 +355,7 @@ final case class QueryTraverser(
 
   def transformSelectToSelect(
     inputQuery: SelectQuery,
-    transformer: SelectToSelectTransformer,
+    transformer: SelectTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]]
   ): Task[SelectQuery] =
     for {

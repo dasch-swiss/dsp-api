@@ -42,7 +42,7 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCou
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
@@ -402,8 +402,8 @@ final case class SearchResponderV2Live(
           transformer = gravsearchToCountTransformer
         )
 
-      selectTransformer: SelectToSelectTransformer =
-        new SelectToSelectTransformer(
+      selectTransformer: SelectTransformer =
+        new SelectTransformer(
           simulateInference = gravsearchToCountTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
@@ -484,8 +484,8 @@ final case class SearchResponderV2Live(
       // variable representing the main resources
       mainResourceVar: QueryVariable = gravsearchToPrequeryTransformer.mainResourceVariable
 
-      selectTransformer: SelectToSelectTransformer =
-        new SelectToSelectTransformer(
+      selectTransformer: SelectTransformer =
+        new SelectTransformer(
           simulateInference = gravsearchToPrequeryTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
