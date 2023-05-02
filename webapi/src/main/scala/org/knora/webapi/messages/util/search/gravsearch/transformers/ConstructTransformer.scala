@@ -12,7 +12,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-final case class ConstructToConstructTransformer(
+final case class ConstructTransformer(
   sparqlTransformerLive: SparqlTransformerLive,
   iriConverter: IriConverter
 ) {
@@ -75,4 +75,9 @@ final case class ConstructToConstructTransformer(
       obj       = XsdLiteral(pattern.queryString.getQueryString, datatype)
     } yield Seq(StatementPattern(pattern.subj, IriRef(predIri), obj))
 
+}
+
+object ConstructTransformer {
+  val layer: URLayer[SparqlTransformerLive & IriConverter, ConstructTransformer] =
+    ZLayer.fromFunction(ConstructTransformer.apply _)
 }
