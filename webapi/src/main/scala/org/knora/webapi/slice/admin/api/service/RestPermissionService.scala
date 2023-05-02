@@ -48,30 +48,34 @@ object RestPermissionService {
   def isActive(userADM: UserADM): Boolean                           = userADM.status
   def isSystemAdmin(user: UserADM): Boolean                         = user.permissions.isSystemAdmin
   def isProjectAdmin(user: UserADM, project: KnoraProject): Boolean = user.permissions.isProjectAdmin(project.id)
-  def isSystemOrProjectAdmin(userADM: UserADM, project: KnoraProject): Boolean =
+  def isSystemOrProjectAdmin(project: KnoraProject)(userADM: UserADM): Boolean =
     isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
 }
 
 final case class RestPermissionServiceLive() extends RestPermissionService {
-  override def ensureSystemAdmin(user: UserADM): IO[ForbiddenException, Unit] =
-    ensureIsActive(user) *>
-      failUnless(
-        isSystemAdmin(user),
-        s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
-      )
+  override def ensureSystemAdmin(user: UserADM): IO[ForbiddenException, Unit] = {
+    lazy val msg =
+      s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
+    checkActiveUser(user, isSystemAdmin, msg)
+  }
 
-  private def failUnless(condition: Boolean, errorMsg: String): ZIO[Any, ForbiddenException, Unit] =
-    ZIO.fail(ForbiddenException(errorMsg)).unless(condition).unit
+  private def checkActiveUser(
+    user: UserADM,
+    condition: UserADM => Boolean,
+    errorMsg: String
+  ): ZIO[Any, ForbiddenException, Unit] =
+    ensureIsActive(user) *> ZIO.fail(ForbiddenException(errorMsg)).unless(condition(user)).unit
 
-  private def ensureIsActive(userADM: UserADM): IO[ForbiddenException, Unit] =
-    failUnless(isActive(userADM), s"The account with username '${userADM.username}' is not active.")
+  private def ensureIsActive(user: UserADM): IO[ForbiddenException, Unit] = {
+    lazy val msg = s"The account with username '${user.username}' is not active."
+    ZIO.fail(ForbiddenException(msg)).unless(isActive(user)).unit
+  }
 
-  override def ensureSystemOrProjectAdmin(user: UserADM, project: KnoraProject): IO[ForbiddenException, Unit] =
-    ensureIsActive(user) *>
-      failUnless(
-        isSystemOrProjectAdmin(user, project),
-        s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
-      )
+  override def ensureSystemOrProjectAdmin(user: UserADM, project: KnoraProject): IO[ForbiddenException, Unit] = {
+    lazy val msg =
+      s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
+    checkActiveUser(user, isSystemOrProjectAdmin(project), msg)
+  }
 }
 
 object RestPermissionServiceLive {
