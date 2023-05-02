@@ -1584,21 +1584,25 @@ final case class ResourcesResponderV1Live(
                                     )
                                   )
 
-      _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
-            val ontologyProjectIri: IRI = ontologyMetadata.projectIri
-              .getOrElse(
-                throw InconsistentRepositoryDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")
-              )
-              .toString
+      _ <-
+        ZIO.foreachDiscard(readOntologyMetadataV2.ontologies) { metadata =>
+          val ontologyProjectIri: IRI = ZIO
+            .fromOption(metadata.projectIri)
+            .orElseFail(InconsistentRepositoryDataException(s"Ontology ${metadata.ontologyIri} has no project"))
+            .toString
 
-            if (
-              resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
-            ) {
-              throw BadRequestException(
-                s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology ${ontologyMetadata.ontologyIri}, which belongs to another project and is not shared"
+          ZIO
+            .fail(
+              BadRequestException(
+                s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology " +
+                  s"${metadata.ontologyIri}, which belongs to another project and is not shared"
               )
-            }
-          }
+            )
+            .when(
+              resourceProjectIri != ontologyProjectIri &&
+                !(metadata.ontologyIri.isKnoraBuiltInDefinitionIri || metadata.ontologyIri.isKnoraSharedDefinitionIri)
+            )
+        }
 
       resourceClassesEntityInfoResponse <- messageRelay
                                              .ask[EntityInfoGetResponseV1](
@@ -1851,23 +1855,21 @@ final case class ResourcesResponderV1Live(
       // point to it.
       _ <- ZIO.collectAll {
              values.foldLeft(Vector.empty[Task[Unit]]) { case (acc, (propertyIri, valuesWithComments)) =>
-               val propertyInfo =
-                 propertyInfoMap.getOrElse(
-                   propertyIri,
-                   throw NotFoundException(
-                     s"Property not found: $propertyIri"
-                   )
-                 )
-               val propertyObjectClassConstraint =
-                 propertyInfo
-                   .getPredicateObject(
-                     OntologyConstants.KnoraBase.ObjectClassConstraint
-                   )
-                   .getOrElse {
-                     throw InconsistentRepositoryDataException(
-                       s"Property $propertyIri has no knora-base:objectClassConstraint"
+               val checkedValue = for {
+                 propertyInfo <- ZIO
+                                   .fromOption(propertyInfoMap.get(propertyIri))
+                                   .orElseFail(NotFoundException(s"Property not found: $propertyIri"))
+
+                 result <-
+                   ZIO
+                     .fromOption(propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint))
+                     .orElseFail(
+                       InconsistentRepositoryDataException(
+                         s"Property $propertyIri has no knora-base:objectClassConstraint"
+                       )
                      )
-                   }
+
+               } yield result
 
                acc ++ valuesWithComments.map { valueV1WithComment: CreateValueV1WithComment =>
                  valueV1WithComment.updateValueV1 match {
@@ -1875,51 +1877,52 @@ final case class ResourcesResponderV1Live(
                      // We're creating a link to a resource that doesn't exist yet, because it
                      // will be created in the same transaction. Check that it will belong to a
                      // suitable class.
-                     val checkSubClassRequest = CheckSubClassRequestV1(
-                       subClassIri = clientResourceIDsToResourceClasses(
-                         targetClientID
-                       ),
-                       superClassIri = propertyObjectClassConstraint,
-                       userProfile = userProfile
-                     )
-
                      for {
-                       subClassResponse <- messageRelay.ask[CheckSubClassResponseV1](checkSubClassRequest)
+                       pop <- checkedValue
+                       checkSubClassRequest =
+                         CheckSubClassRequestV1(clientResourceIDsToResourceClasses(targetClientID), pop, userProfile)
 
-                       _ = if (!subClassResponse.isSubClass) {
-                             throw OntologyConstraintException(
-                               s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                       subClassResponse <- messageRelay.ask[CheckSubClassResponseV1](checkSubClassRequest)
+                       _ <-
+                         ZIO
+                           .fail(
+                             OntologyConstraintException(
+                               s"Resource $targetClientID cannot be the target of property $propertyIri, " +
+                                 s"because it is not a member of OWL class $checkedValue"
                              )
-                           }
+                           )
+                           .when(!subClassResponse.isSubClass)
                      } yield ()
 
                    case linkUpdate: LinkUpdateV1 =>
                      // We're creating a link to an existing resource. Check that it belongs to a
                      // suitable class.
                      for {
-                       checkTargetClassResponse <-
-                         checkResourceClass(
-                           resourceIri = linkUpdate.targetResourceIri,
-                           owlClass = propertyObjectClassConstraint,
-                           userProfile = userProfile
-                         )
-
-                       _ = if (!checkTargetClassResponse.isInClass) {
-                             throw OntologyConstraintException(
-                               s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                       value                    <- checkedValue
+                       checkTargetClassResponse <- checkResourceClass(linkUpdate.targetResourceIri, value, userProfile)
+                       _ <-
+                         ZIO
+                           .fail(
+                             OntologyConstraintException(
+                               s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, " +
+                                 s"because it is not a member of OWL class $checkedValue"
                              )
-                           }
+                           )
+                           .when(!checkTargetClassResponse.isInClass)
                      } yield ()
 
                    case otherValue =>
-                     // We're creating an ordinary value. Check that its type is valid for the property's
-                     // knora-base:objectClassConstraint.
-                     valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
-                       propertyIri = propertyIri,
-                       propertyObjectClassConstraint = propertyObjectClassConstraint,
-                       valueType = otherValue.valueTypeIri,
-                       userProfile = userProfile
-                     )
+                     for {
+                       value <- checkedValue
+                       // We're creating an ordinary value. Check that its type is valid for the property's
+                       // knora-base:objectClassConstraint.
+                       result <- valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
+                                   propertyIri,
+                                   value,
+                                   otherValue.valueTypeIri,
+                                   userProfile
+                                 )
+                     } yield result
                  }
                }
              }
@@ -1927,22 +1930,30 @@ final case class ResourcesResponderV1Live(
 
       // Check that the resource class has a suitable cardinality for each submitted value.
 
-      _ = values.foreach { case (propertyIri, valuesForProperty) =>
-            val cardinalityInfo = resourceClassInfo.knoraResourceCardinalities.getOrElse(
-              propertyIri,
-              throw OntologyConstraintException(
-                s"Resource class $resourceClassIri has no cardinality for property $propertyIri"
-              )
-            )
+      _ <-
+        ZIO.foreachDiscard(values) { case (propertyIri, valuesForProperty) =>
+          for {
+            cardinalityInfo <-
+              ZIO
+                .fromOption(resourceClassInfo.knoraResourceCardinalities.get(propertyIri))
+                .orElseFail(
+                  OntologyConstraintException(
+                    s"Resource class $resourceClassIri has no cardinality for property $propertyIri"
+                  )
+                )
 
-            if (
-              (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
-            ) {
-              throw OntologyConstraintException(
-                s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri"
-              )
-            }
-          }
+            _ <- ZIO
+                   .fail(
+                     OntologyConstraintException(
+                       s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri"
+                     )
+                   )
+                   .when(
+                     (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) &&
+                       valuesForProperty.size > 1
+                   )
+          } yield ()
+        }
 
       // Check that no required values are missing.
       requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter { case (_, cardinalityInfo) =>
@@ -1950,13 +1961,16 @@ final case class ResourcesResponderV1Live(
                                 }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
       submittedPropertyIris = values.keySet
+      missingProps          = (requiredProps -- submittedPropertyIris).mkString(", ")
 
-      _ = if (!requiredProps.subsetOf(submittedPropertyIris)) {
-            val missingProps = (requiredProps -- submittedPropertyIris).mkString(", ")
-            throw OntologyConstraintException(
-              s"Values were not submitted for the following property or properties, which are required by resource class $resourceClassIri: $missingProps"
-            )
-          }
+      _ <- ZIO
+             .fail(
+               OntologyConstraintException(
+                 s"Values were not submitted for the following property or properties, " +
+                   s"which are required by resource class $resourceClassIri: $missingProps"
+               )
+             )
+             .when(!requiredProps.subsetOf(submittedPropertyIris))
 
       // check if a file value is required by the ontology
       fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] =
