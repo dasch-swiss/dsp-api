@@ -9,6 +9,13 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]]) extends KnoraProjectRepo {
+
+  /**
+   * Retrieves an entity by its id.
+   *
+   * @param id The identifier of type [[ProjectIdentifierADM]].
+   * @return the entity with the given id or [[None]] if none found.
+   */
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = projects.get.map(
     _.find(
       id match {
@@ -22,7 +29,7 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]]) ext
   /**
    * Retrieves an entity by its id.
    *
-   * @param id The identifier of type [[Id]].
+   * @param id The identifier of type [[InternalIri]].
    * @return the entity with the given id or [[None]] if none found.
    */
   override def findById(id: InternalIri): Task[Option[KnoraProject]] = projects.get.map(_.find(_.id == id))

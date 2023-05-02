@@ -36,7 +36,6 @@ import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
@@ -1814,15 +1813,6 @@ class StringFormatter private (
    */
   def projectDataNamedGraphV1(projectInfo: ProjectInfoV1): IRI =
     OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
-
-  /**
-   * Given the [[ProjectADM]] calculates the project's data named graph.
-   *
-   * @param project the project's [[ProjectADM]].
-   * @return the IRI of the project's data named graph.
-   */
-  def projectDataNamedGraphV2(project: ProjectADM): IRI =
-    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname
 
   /**
    * Check that the supplied IRI represents a valid project IRI.

@@ -7,14 +7,7 @@ package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.UUID
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 import dsp.errors._
 import dsp.valueobjects.Iri
@@ -38,12 +31,9 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProje
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
-import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -172,8 +162,6 @@ trait ProjectsResponderADM {
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
 
-  def projectDataGetRequestADM(id: ProjectIdentifierADM, user: UserADM): Task[ProjectDataGetResponseADM]
-
 }
 
 final case class ProjectsResponderADMLive(
@@ -225,8 +213,6 @@ final case class ProjectsResponderADMLive(
         requestingUser,
         apiRequestID
       )
-    case ProjectDataGetRequestADM(projectIdentifier, requestingUser) =>
-      projectDataGetRequestADM(projectIdentifier, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -405,175 +391,6 @@ final case class ProjectsResponderADMLive(
                     .flatMap(ZIO.fromOption(_))
                     .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
     } yield keywords
-
-  override def projectDataGetRequestADM(
-    id: ProjectIdentifierADM,
-    user: UserADM
-  ): Task[ProjectDataGetResponseADM] = {
-
-    /**
-     * Represents a named graph to be saved to a TriG file.
-     *
-     * @param graphIri the IRI of the named graph.
-     * @param tempDir  the directory in which the file is to be saved.
-     */
-    case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
-      lazy val dataFile: Path = {
-        val filename = graphIri.replaceAll("[.:/]", "_") + ".trig"
-        tempDir.resolve(filename)
-      }
-    }
-
-    /**
-     * An [[RdfStreamProcessor]] for combining several named graphs into one.
-     *
-     * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the combined result.
-     */
-    class CombiningRdfProcessor(formattingStreamProcessor: RdfStreamProcessor) extends RdfStreamProcessor {
-      private var startedStatements = false
-
-      // Ignore this, since it will be done before the first file is written.
-      override def start(): Unit = {}
-
-      // Ignore this, since it will be done after the last file is written.
-      override def finish(): Unit = {}
-
-      override def processNamespace(prefix: IRI, namespace: IRI): Unit =
-        // Only accept namespaces from the first graph, to prevent conflicts.
-        if (!startedStatements) {
-          formattingStreamProcessor.processNamespace(prefix, namespace)
-        }
-
-      override def processStatement(statement: Statement): Unit = {
-        startedStatements = true
-        formattingStreamProcessor.processStatement(statement)
-      }
-    }
-
-    /**
-     * Combines several TriG files into one.
-     *
-     * @param namedGraphTrigFiles the TriG files to combine.
-     * @param resultFile          the output file.
-     */
-    def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: Path): Task[Unit] = ZIO.attempt {
-      val rdfFormatUtil: RdfFormatUtil                                = RdfFeatureFactory.getRdfFormatUtil()
-      var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
-
-      val trigFileTry: Try[Unit] = Try {
-        maybeBufferedFileOutputStream = Some(new BufferedOutputStream(Files.newOutputStream(resultFile)))
-
-        val formattingStreamProcessor: RdfStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
-          outputStream = maybeBufferedFileOutputStream.get,
-          rdfFormat = TriG
-        )
-
-        val combiningRdfProcessor = new CombiningRdfProcessor(formattingStreamProcessor)
-        formattingStreamProcessor.start()
-
-        for (namedGraphTrigFile: NamedGraphTrigFile <- namedGraphTrigFiles) {
-          val namedGraphTry: Try[Unit] = Try {
-            rdfFormatUtil.parseWithStreamProcessor(
-              rdfSource =
-                RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(namedGraphTrigFile.dataFile))),
-              rdfFormat = TriG,
-              rdfStreamProcessor = combiningRdfProcessor
-            )
-          }
-
-          Files.delete(namedGraphTrigFile.dataFile)
-
-          namedGraphTry match {
-            case Success(_)  => ()
-            case Failure(ex) => throw ex
-          }
-        }
-
-        formattingStreamProcessor.finish()
-      }
-
-      maybeBufferedFileOutputStream.foreach(_.close)
-
-      trigFileTry match {
-        case Success(_)  => ()
-        case Failure(ex) => throw ex
-      }
-    }
-
-    for {
-      // Get the project info.
-      project <- getProjectFromCacheOrTriplestore(id)
-                   .flatMap(ZIO.fromOption(_))
-                   .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
-
-      // Check that the user has permission to download the data.
-      _ <-
-        ZIO
-          .fail(
-            ForbiddenException(
-              s"You are logged in as ${user.username}, but only a system administrator or project administrator can request a project's data."
-            )
-          )
-          .when(!(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(project.id)))
-
-      // Make a temporary directory for the downloaded data.
-      tempDir = Files.createTempDirectory(project.shortname)
-      _      <- ZIO.logInfo("Downloading project data to temporary directory " + tempDir.toAbsolutePath)
-
-      // Download the project's named graphs.
-
-      projectDataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
-      graphsToDownload: Seq[IRI] = project.ontologies :+ projectDataNamedGraph
-      projectSpecificNamedGraphTrigFiles: Seq[NamedGraphTrigFile] =
-        graphsToDownload.map(graphIri => NamedGraphTrigFile(graphIri = graphIri, tempDir = tempDir))
-
-      projectSpecificNamedGraphTrigFileWriteFutures: Seq[Task[FileWrittenResponse]] =
-        projectSpecificNamedGraphTrigFiles.map { trigFile =>
-          for {
-            fileWrittenResponse <- messageRelay.ask[FileWrittenResponse](
-                                     NamedGraphFileRequest(
-                                       graphIri = trigFile.graphIri,
-                                       outputFile = trigFile.dataFile,
-                                       outputFormat = TriG
-                                     )
-                                   )
-          } yield fileWrittenResponse
-        }
-
-      _ <- ZioHelper.sequence(projectSpecificNamedGraphTrigFileWriteFutures)
-
-      // Download the project's admin data.
-
-      adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = adminDataGraph, tempDir = tempDir)
-
-      adminDataSparql = twirl.queries.sparql.admin.txt.getProjectAdminData(project.id)
-      _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = adminDataSparql.toString(),
-             graphIri = adminDataNamedGraphTrigFile.graphIri,
-             outputFile = adminDataNamedGraphTrigFile.dataFile,
-             outputFormat = TriG
-           )
-
-      // Download the project's permission data.
-
-      permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = permissionsDataGraph, tempDir = tempDir)
-
-      permissionDataSparql = twirl.queries.sparql.admin.txt.getProjectPermissions(project.id)
-      _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = permissionDataSparql.toString(),
-             graphIri = permissionDataNamedGraphTrigFile.graphIri,
-             outputFile = permissionDataNamedGraphTrigFile.dataFile,
-             outputFormat = TriG
-           )
-
-      // Stream the combined results into the output file.
-
-      namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
-        projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
-      resultFile: Path = tempDir.resolve(project.shortname + ".trig")
-      _               <- combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
-    } yield ProjectDataGetResponseADM(resultFile)
-  }
 
   /**
    * Get project's restricted view settings.

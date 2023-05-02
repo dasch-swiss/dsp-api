@@ -55,6 +55,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -619,7 +620,7 @@ final case class StandoffResponderV2Live(
             throw BadRequestException(s"Project with Iri ${projectIri.toString} does not exist")
 
       // put the mapping into the named graph of the project
-      namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectInfoMaybe.get)
+      namedGraph = ProjectADMService.projectDataNamedGraphV2(projectInfoMaybe.get).value
 
       result <-
         IriLocker.runWithIriLock(
