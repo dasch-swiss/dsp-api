@@ -278,9 +278,9 @@ function file_pre_flight(identifier, cookie)
         log("file_pre_flight - permission code 0 (no view), access denied", server.loglevel.LOG_WARNING)
         return 'deny'
     elseif response_json.permissionCode == 1 then
-        -- restricted view permission on file
-        log("file_pre_flight - permission code 1 (restricted view), access denied", server.loglevel.LOG_WARNING)
-        return 'deny'
+        -- restricted view permission on file (this doesn't have a meaning at the moment for files other than images)
+        log("file_pre_flight - permission code 1 (restricted view), access granted", server.loglevel.LOG_DEBUG)
+        return 'allow', filepath
     elseif response_json.permissionCode >= 2 then
         -- full view permissions on file
         log("file_pre_flight - access granted", server.loglevel.LOG_DEBUG)

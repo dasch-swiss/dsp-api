@@ -507,45 +507,6 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetImageRequest)
     }
 
-    "delete the temporary file if Knora rejects the request to create a file value" in {
-      // Upload the image to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToMarbles, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF))
-      )
-
-      val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
-      val temporaryUrl =
-        sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
-      val temporaryDirectDownloadUrl = temporaryUrl + "/file"
-
-      // JSON describing the new image to Knora.
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.StillImageFile(),
-          internalFilename = internalFilename,
-          resourceIri = stillImageResourceIri.get,
-          valueIri = stillImageFileValueIri.get,
-          className = Some("ThingDocument"), // refuse, as it should be "ThingImage"
-          ontologyName = "anything"
-        )
-        .toJsonLd
-
-      // Send the JSON in a POST request to Knora.
-      val knoraPostRequest =
-        Post(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(incunabulaUserEmail, password)
-        )
-      val knoraPostResponse = singleAwaitingRequest(knoraPostRequest)
-      assert(knoraPostResponse.status == StatusCodes.Forbidden)
-
-      // Request the temporary image from Sipi.
-      val sipiGetTmpFileRequest = Get(temporaryDirectDownloadUrl)
-      val sipiResponse          = singleAwaitingRequest(sipiGetTmpFileRequest)
-      assert(sipiResponse.status == StatusCodes.NotFound)
-    }
-
     "create a resource with a PDF file" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(

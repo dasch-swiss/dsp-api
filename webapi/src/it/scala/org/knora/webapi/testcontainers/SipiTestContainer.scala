@@ -47,10 +47,10 @@ object SipiTestContainer {
     )
 
     val incunabulaImageDirPath =
-      Paths.get("..", "sipi/images/0803/incunabula_0000000002.jp2")
+      Paths.get("..", "sipi/images/0803/in/cu/incunabula_0000000002.jp2")
     sipiContainer.withFileSystemBind(
       incunabulaImageDirPath.toString(),
-      "/sipi/images/0803/incunabula_0000000002.jp2",
+      "/sipi/images/0803/in/cu/incunabula_0000000002.jp2",
       BindMode.READ_ONLY
     )
 
