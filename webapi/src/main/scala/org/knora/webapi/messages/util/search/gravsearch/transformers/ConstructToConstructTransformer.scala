@@ -58,28 +58,28 @@ final case class ConstructToConstructTransformer(
             inputOrderBy = inputQuery.orderBy,
             limitInferenceToOntologies = limitInferenceToOntologies
           )
-        case FilterNotExistsPattern(patterns) => ZIO.foreach(patterns)(transformPattern(_).map(FilterNotExistsPattern))
-        case MinusPattern(patterns)           => ZIO.foreach(patterns)(transformPattern(_).map(MinusPattern))
-        case OptionalPattern(patterns)        => ZIO.foreach(patterns)(transformPattern(_).map(OptionalPattern))
-        case UnionPattern(blocks) =>
-          val transformedBlocks: Seq[Task[Seq[QueryPattern]]] =
-            blocks.flatMap(_.map(transformPattern))
-          ZIO.collectAll(transformedBlocks).map(blocks => Seq(UnionPattern(blocks))) // TODO: check if this is correct
+        case FilterNotExistsPattern(patterns)  => ZIO.foreach(patterns)(transformPattern(_).map(FilterNotExistsPattern))
+        case MinusPattern(patterns)            => ZIO.foreach(patterns)(transformPattern(_).map(MinusPattern))
+        case OptionalPattern(patterns)         => ZIO.foreach(patterns)(transformPattern(_).map(OptionalPattern))
+        case UnionPattern(blocks)              => ZIO.foreach(blocks)(transformPatterns).map(block => Seq(UnionPattern(block)))
         case lucenePattern: LuceneQueryPattern => transformLuceneQueryPattern(lucenePattern)
         case pattern: QueryPattern             => ZIO.succeed(Seq(pattern))
       }
 
-    for {
+    def transformPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = for {
       optimisedPatterns <-
         ZIO.attempt(
           SparqlTransformer.moveBindToBeginning(
             SparqlTransformer.optimiseIsDeletedWithFilter(
-              SparqlTransformer.moveLuceneToBeginning(inputQuery.whereClause.patterns)
+              SparqlTransformer.moveLuceneToBeginning(patterns)
             )
           )
         )
       transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern)
-      patterns             = transformedPatterns.flatten
+    } yield transformedPatterns.flatten
+
+    for {
+      patterns <- transformPatterns(inputQuery.whereClause.patterns)
     } yield inputQuery.copy(whereClause = WhereClause(patterns))
   }
 
