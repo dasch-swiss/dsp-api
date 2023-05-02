@@ -29,7 +29,7 @@ final case class RestPermissionServiceLive() extends RestPermissionService {
     ensureIsActive(user) *>
       failUnless(
         isSystemAdmin(user),
-        s"You are logged in as ${user.username}, but only a system administrator has permissions for this operation."
+        s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
       )
 
   private def failUnless(condition: Boolean, errorMsg: String): ZIO[Any, ForbiddenException, Unit] =
@@ -38,13 +38,13 @@ final case class RestPermissionServiceLive() extends RestPermissionService {
   private def ensureIsActive(userADM: UserADM) =
     failUnless(
       isActive(userADM),
-      s"The account for ${userADM.username} is not active."
+      s"The account with username '${userADM.username}' is not active."
     )
   override def ensureSystemOrProjectAdmin(user: UserADM, project: KnoraProject): IO[ForbiddenException, Unit] =
     ensureIsActive(user) *>
       failUnless(
         isSystemOrProjectAdmin(user, project),
-        s"You are logged in as ${user.username}, but only a system administrator or project administrator has permissions for this operation."
+        s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
       )
 }
 

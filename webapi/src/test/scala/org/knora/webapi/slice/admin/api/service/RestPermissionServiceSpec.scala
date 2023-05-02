@@ -33,7 +33,7 @@ object RestPermissionServiceSpec extends ZIOSpecDefault {
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
           actual <- RestPermissionService.ensureSystemAdmin(inactiveSystemAdmin).exit
-        } yield assertTrue(actual == Exit.fail(ForbiddenException("The account for username is not active.")))
+        } yield assertTrue(actual == Exit.fail(ForbiddenException("The account with username 'username' is not active.")))
       }
     ),
     suite("given a active system admin")(
@@ -53,7 +53,7 @@ object RestPermissionServiceSpec extends ZIOSpecDefault {
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
           actual <- RestPermissionService.ensureSystemAdmin(inactiveNormalUser).exit
-        } yield assertTrue(actual == Exit.fail(ForbiddenException("The account for username is not active.")))
+        } yield assertTrue(actual == Exit.fail(ForbiddenException("The account with username 'username' is not active.")))
       }
     ),
     suite("given an active normal user")(
@@ -66,7 +66,7 @@ object RestPermissionServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(
           actual == Exit.fail(
             ForbiddenException(
-              "You are logged in as username, but only a system administrator has permissions for this operation."
+              "You are logged in with username 'username', but only a system administrator has permissions for this operation."
             )
           )
         )
