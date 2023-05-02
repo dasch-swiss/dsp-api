@@ -73,7 +73,8 @@ final case class SearchResponderV2Live(
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
   implicit private val stringFormatter: StringFormatter,
-  private val iriConverter: IriConverter
+  private val iriConverter: IriConverter,
+  private val constructTransformer: ConstructToConstructTransformer
 ) extends SearchResponderV2
     with MessageHandler
     with LazyLogging {
@@ -311,9 +312,8 @@ final case class SearchResponderV2Live(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct = ConstructToConstructTransformer(sparqlTransformerLive, iriConverter)
           for {
-            query          <- queryPatternTransformerConstruct.transformConstructToConstruct(mainQuery)
+            query          <- constructTransformer.transform(mainQuery)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
@@ -587,16 +587,9 @@ final case class SearchResponderV2Live(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
-            ConstructToConstructTransformer(sparqlTransformerLive, iriConverter)
-
           for {
 
-            mainQuery <- queryPatternTransformerConstruct
-                           .transformConstructToConstruct(
-                             inputQuery = mainQuery,
-                             limitInferenceToOntologies = ontologiesForInferenceMaybe
-                           )
+            mainQuery <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe)
 
             // Convert the result to a SPARQL string and send it to the triplestore.
             mainQuerySparql    = mainQuery.toSparql
@@ -1096,6 +1089,10 @@ object SearchResponderV2Live {
         typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
         inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
         iriConverter                 <- ZIO.service[IriConverter]
+        constructTransformer = ConstructToConstructTransformer(
+                                 sparqlTransformerLive,
+                                 iriConverter
+                               ) // TODO: will be changed to a regular service in a separate PR
         handler <- mr.subscribe(
                      new SearchResponderV2Live(
                        appConfig,
@@ -1109,7 +1106,8 @@ object SearchResponderV2Live {
                        typeInspectionRunner,
                        inferenceOptimizationService,
                        stringFormatter,
-                       iriConverter
+                       iriConverter,
+                       constructTransformer
                      )
                    )
       } yield handler

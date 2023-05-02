@@ -63,14 +63,13 @@ final case class ConstructToConstructTransformer(
   } yield transformedPatterns.flatten
 
   /**
-   * Traverses a CONSTRUCT query, delegating transformation tasks, and returns the transformed query.
+   * Transforms a CONSTRUCT query, by applying opimization and inference.
    *
    * @param inputQuery                 the query to be transformed.
-   * @param transformer                the [[ConstructToConstructTransformer]] to be used.
    * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the transformed query.
    */
-  def transformConstructToConstruct(
+  def transform(
     inputQuery: ConstructQuery,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[ConstructQuery] =
