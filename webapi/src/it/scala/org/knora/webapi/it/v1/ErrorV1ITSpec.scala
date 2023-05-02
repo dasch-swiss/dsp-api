@@ -18,7 +18,8 @@ class ErrorV1ITSpec extends ITKnoraLiveSpec with TriplestoreJsonProtocol {
 
   "Make a request that causes an internal server error" in {
     val request  = Get(baseApiUrl + "/v1/error/unitMsg")
-    val response = singleAwaitingRequest(request, 1.seconds)
+    val response = singleAwaitingRequest(request, 1.second)
     assert(response.status == StatusCodes.InternalServerError)
   }
+
 }

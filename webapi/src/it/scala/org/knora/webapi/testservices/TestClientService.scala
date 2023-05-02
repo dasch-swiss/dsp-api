@@ -91,6 +91,11 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    *
    * @param request the request to be performed.
    * @param timout the timeout for the request. Default timeout is 10 seconds.
+   * @param printFailure If true, the response body will be printed if the request fails.
+   *                     This flag is intended to be used for debugging purposes only.
+   *                     Since this is unsafe, it is false by default.
+   *                     It is unsafe because the the response body can only be unmarshalled (i.e. printed) to a string once.
+   *                     It will fail if the test code is also unmarshalling the response.
    * @return the response.
    */
   def singleAwaitingRequest(
