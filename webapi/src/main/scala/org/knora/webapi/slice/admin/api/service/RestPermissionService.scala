@@ -29,7 +29,7 @@ final case class RestPermissionServiceLive() extends RestPermissionService {
       s"You are logged in as ${user.username}, but only a system administrator has permissions for this operation."
     )
 
-  private def failUnless(condition: => Boolean, errorMsg: String): ZIO[Any, ForbiddenException, Unit] =
+  private def failUnless(condition: Boolean, errorMsg: String): ZIO[Any, ForbiddenException, Unit] =
     ZIO.fail(ForbiddenException(errorMsg)).unless(condition).unit
 
   override def ensureSystemOrProjectAdmin(user: UserADM, project: KnoraProject): IO[ForbiddenException, Unit] =
