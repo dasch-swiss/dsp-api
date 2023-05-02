@@ -31,7 +31,7 @@ end
 -- The identifier is expected to look like: /sipi/images/:shortcode/:filename
 -------------------------------------------------------------------------------
 function get_segments_from_identifier(identifier)
-    segments = {}
+    local segments = {}
     for w in string.gmatch(identifier, "[^\\/]+") do
         table.insert(segments, w)
     end
@@ -45,7 +45,7 @@ function get_cookie_header(cookie)
     -- tries to extract the DSP session name and id from the cookie:
     -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
     -- returns nil if it cannot find it
-    session = get_session_id(cookie)
+    local session = get_session_id(cookie)
 
     if session == nil or session["name"] == nil or session["id"] == nil then
         -- no session could be extracted
@@ -64,7 +64,7 @@ end
 -- either from the environment variable or from config
 -------------------------------------------------------------------------------
 function get_api_hostname()
-    hostname = os.getenv("SIPI_WEBAPI_HOSTNAME")
+    local hostname = os.getenv("SIPI_WEBAPI_HOSTNAME")
     if hostname == nil then
         hostname = config.knora_path
     end
@@ -77,7 +77,7 @@ end
 -- either from the environment variable or from config
 -------------------------------------------------------------------------------
 function get_api_port()
-    port = os.getenv("SIPI_WEBAPI_PORT")
+    local port = os.getenv("SIPI_WEBAPI_PORT")
     if port == nil then
         port = config.knora_port
     end
@@ -112,7 +112,7 @@ function pre_flight(prefix, identifier, cookie)
     log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
     log("pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
 
-    filepath = get_tmp_filepath(prefix, identifier)
+    local filepath = get_tmp_filepath(prefix, identifier)
 
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
@@ -121,7 +121,7 @@ function pre_flight(prefix, identifier, cookie)
         return 'allow', filepath
     end
 
-    dsp_cookie_header = nil
+    local dsp_cookie_header = nil
 
     if cookie ~= '' then
         dsp_cookie_header = get_cookie_header(cookie)
@@ -130,11 +130,11 @@ function pre_flight(prefix, identifier, cookie)
     local webapi_hostname = get_api_hostname()
     local webapi_port = get_api_port()
 
-    api_url = get_api_url(webapi_hostname, webapi_port, prefix, identifier)
+    local api_url = get_api_url(webapi_hostname, webapi_port, prefix, identifier)
     log("pre_flight - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
     -- request the image over HTTP
-    success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
+    local success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
 
     if not success then
         log("pre_flight - Server.http() failed: " .. result, server.loglevel.LOG_ERR)
@@ -149,7 +149,7 @@ function pre_flight(prefix, identifier, cookie)
 
     log("pre_flight - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
 
-    success, response_json = server.json_to_table(result.body)
+    local success, response_json = server.json_to_table(result.body)
     if not success then
         log("pre_flight - Server.http() failed: " .. response_json, server.loglevel.LOG_ERR)
         return 'deny'
