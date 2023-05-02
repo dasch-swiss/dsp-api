@@ -4,41 +4,51 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import dsp.valueobjects.V2.StringLiteralV2
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
 object ProjectADMServiceSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] =
     suite("projectDataNamedGraphV2 should return the data named graph of a project with short code for")(
-      test("anythingProject") {
+      test("a ProjectADM") {
+        val shortname = "someProject"
+        val shortcode = "0001"
+        val p = ProjectADM(
+          id = IriTestConstants.Project.TestProject,
+          shortname = shortname,
+          shortcode = shortcode,
+          longname = None,
+          description = List(StringLiteralV2("description not used in test but is required by constructor", None)),
+          keywords = List.empty,
+          logo = None,
+          ontologies = List.empty,
+          status = true,
+          selfjoin = true
+        )
         assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(SharedTestDataADM.anythingProject).value ==
-            SharedOntologyTestDataADM.ANYTHING_DATA_IRI
+          ProjectADMService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname"
         )
       },
-      test("imagesProject") {
-        assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(SharedTestDataADM.imagesProject).value ==
-            SharedOntologyTestDataADM.IMAGES_DATA_IRI
+      test("a KnoraProject") {
+        val shortcode = "0002"
+        val shortname = "someOtherProject"
+        val p: KnoraProject = KnoraProject(
+          id = InternalIri(IriTestConstants.Project.TestProject),
+          shortname = shortname,
+          shortcode = shortcode,
+          longname = None,
+          description = List(StringLiteralV2("description not used in test but is required by constructor", None)),
+          keywords = List.empty,
+          logo = None,
+          status = true,
+          selfjoin = true
         )
-      },
-      test("anythingProject") {
         assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(SharedTestDataADM.beolProject).value ==
-            SharedOntologyTestDataADM.BEOL_DATA_IRI
-        )
-      },
-      test("anythingProject") {
-        assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(SharedTestDataADM.incunabulaProject).value ==
-            SharedOntologyTestDataADM.INCUNABULA_DATA_IRI
-        )
-      },
-      test("anythingProject") {
-        assertTrue(
-          ProjectADMService.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject).value ==
-            SharedOntologyTestDataADM.DOKUBIB_DATA_IRI
+          ProjectADMService.projectDataNamedGraphV2(p).value == s"http://www.knora.org/data/$shortcode/$shortname"
         )
       }
     )

@@ -71,7 +71,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
    */
   private def encode(iri: String) = URLEncoder.encode(iri, "utf-8")
 
-  def spec = suite("ProjectsRouteZ")(
+  def spec: Spec[TestEnvironment with Scope, Any] = suite("ProjectsRouteZ")(
     getProjectsSpec,
     getSingleProjectSpec,
     createProjectSpec,
@@ -85,7 +85,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     getProjectRestrictedViewSettings
   )
 
-  val getProjectsSpec = test("get all projects") {
+  val getProjectsSpec: Spec[Any, Serializable] = test("get all projects") {
     val request        = Request.get(url = URL(basePathProjects))
     val expectedResult = Expectation.value[ProjectsGetResponseADM](ProjectsGetResponseADM(Seq(getProjectADM())))
     val mockService    = ProjectADMRestServiceMock.GetProjects(expectedResult).toLayer
@@ -95,7 +95,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     } yield assertTrue(true)
   }
 
-  val getSingleProjectSpec = suite("get a single project by identifier")(
+  val getSingleProjectSpec: Spec[Any, Serializable] = suite("get a single project by identifier")(
     test("get a project by IRI") {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
@@ -104,7 +104,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId(id)))
           )
         )
         .toLayer
@@ -132,7 +132,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId(id)))
           )
         )
         .toLayer
@@ -160,7 +160,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         .GetSingleProject(
           assertion = Assertion.equalTo(identifier),
           result = Expectation.valueF[ProjectIdentifierADM, ProjectGetResponseADM](id =>
-            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId((id))))
+            ProjectGetResponseADM(getProjectADM(ProjectIdentifierADM.getId(id)))
           )
         )
         .toLayer
@@ -182,7 +182,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val createProjectSpec = suite("create a project")(
+  val createProjectSpec: Spec[Any, Serializable] = suite("create a project")(
     test("successfully create a project") {
       val projectCreatePayloadString =
         """|{
@@ -274,7 +274,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val deleteProjectSpec = suite("delete a project")(
+  val deleteProjectSpec: Spec[Any, Serializable] = suite("delete a project")(
     test("successfully delete a project by IRI") {
       val iri            = "http://rdfh.ch/projects/0001"
       val projectIri     = TestDataFactory.projectIri(iri)
@@ -304,7 +304,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val updateProjectSpec = suite("update a project")(
+  val updateProjectSpec: Spec[Any, Serializable] = suite("update a project")(
     test("successfully update a project") {
       val projectIri         = TestDataFactory.projectIri("http://rdfh.ch/projects/0001")
       val updatedShortname   = TestDataFactory.projectShortName("usn")
@@ -393,7 +393,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val getAllDataSpec = suite("get all data")(
+  val getAllDataSpec: Spec[Any, Serializable] = suite("get all data")(
     test("successfully get all data") {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
@@ -406,7 +406,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         .GetAllProjectData(
           assertion = Assertion.equalTo(identifier, user),
           result = Expectation
-          .value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
+            .value[ProjectDataGetResponseADM](ProjectDataGetResponseADM(testFile))
         )
         .toLayer
       for {
@@ -428,7 +428,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val getProjectMembersSpec = suite("get all members of a project")(
+  val getProjectMembersSpec: Spec[Any, Serializable] = suite("get all members of a project")(
     test("get all members by project IRI") {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
@@ -518,7 +518,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val getProjectAdminsSpec = suite("get all project admins of a project")(
+  val getProjectAdminsSpec: Spec[Any, Serializable] = suite("get all project admins of a project")(
     test("get all project admins by project IRI") {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
@@ -608,7 +608,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val getKeywordsSpec = test("get keywords of all projects") {
+  val getKeywordsSpec: Spec[Any, Serializable] = test("get keywords of all projects") {
     val request = Request.get(url = URL(basePathProjects / "Keywords"))
     val expectedResult =
       Expectation.value[ProjectsKeywordsGetResponseADM](ProjectsKeywordsGetResponseADM(Seq.empty[String]))
@@ -619,7 +619,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     } yield assertCompletes
   }
 
-  val getKeywordsByProjectSpec = suite("get all keywords of a specific project")(
+  val getKeywordsByProjectSpec: Spec[Any, Serializable] = suite("get all keywords of a specific project")(
     test("successfully get keywords") {
       val iri        = "http://rdfh.ch/projects/0001"
       val projectIri = TestDataFactory.projectIri(iri)
@@ -649,7 +649,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     }
   )
 
-  val getProjectRestrictedViewSettings = suite("get the restricted view settings of a project by project identifier")(
+  val getProjectRestrictedViewSettings: Spec[Any, Serializable] = suite("get the restricted view settings of a project by project identifier")(
     test("successfully get the settings by project IRI") {
       val iri        = "http://rdfh.ch/projects/0001"
       val identifier = TestDataFactory.projectIriIdentifier(iri)
