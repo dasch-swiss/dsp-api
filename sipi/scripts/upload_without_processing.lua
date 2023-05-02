@@ -20,28 +20,79 @@ function file_checksum(path)
 end
 --------------------------------------------------------------------------
 
---------------------------------------------------------------------------
--- Checks if the folder for video frames exists and if not, creates it.
---------------------------------------------------------------------------
-function check_if_frames_folder_exists_and_create_if_not(folder_name)
-    success, exists = server.fs.exists(folder_name)
+----------------------------------------------------
+-- Check if a directory exists. If not, create it --
+----------------------------------------------------
+function check_create_dir(path)
+    local exists
+    success, exists = server.fs.exists(path)
     if not success then
-        -- fs.exist was not run successful.
-        send_error(500, "server.fs.exists() failed: " .. exists)
-        return
+        return success, "server.fs.exists() failed: " .. exists
     end
     if not exists then
-        -- frames folder does not exist, try to create one
-        success, error_msg = server.fs.mkdir(folder_name, 511)
+        success, error_msg = server.fs.mkdir(path, 511)
         if not success then
-            server.log("frames folder missing and not able to create one: " .. folder_name, server.loglevel.LOG_ERR)
-            send_error(500, "server.fs.mkdir() failed: " .. error_msg)
-            return
+            return success, "server.fs.mkdir() failed: " .. error_msg
         end
     end
+    return true, "OK"
 end
---------------------------------------------------------------------------
+----------------------------------------------------
 
+--------------------------------------------------------
+-- Create the file specific tmp folder from its filename
+-- Returns the path
+--------------------------------------------------------
+function create_tmp_folder(root_folder, filename)
+    local first_character_of_filename = filename:sub(1, 1)
+    local second_character_of_filename = filename:sub(2, 2)
+    local third_character_of_filename = filename:sub(3, 3)
+    local fourth_character_of_filename = filename:sub(4, 4)
+
+    local first_subfolder = first_character_of_filename .. second_character_of_filename
+    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
+
+    local tmp_folder_level_1 = root_folder .. '/' .. first_subfolder
+    success, error_msg = check_create_dir(tmp_folder_level_1)
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+
+    local tmp_folder = tmp_folder_level_1 .. '/' .. second_subfolder
+    success, error_msg = check_create_dir(tmp_folder)
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+
+    return tmp_folder
+end
+--------------------------------------------------------
+
+--------------------------------------------------------
+-- Gets the file specific path to the tmp location
+--------------------------------------------------------
+function get_tmp_filepath(tmp_folder, filename)
+    local tmp_filepath = ''
+    -- if it is the preview file of a movie, the tmp folder is the movie's folder
+    if string.find(filename, "_m_") then
+        file_base_name, _ = filename:match("(.+)_m_(.+)")
+        success, error_msg = check_create_dir(tmp_folder .. "/" .. file_base_name)
+        if not success then
+            send_error(500, error_msg)
+            return
+        end
+        tmp_filepath = tmp_folder .. "/" .. file_base_name .. "/" .. filename
+
+    -- for all other cases
+    else
+        tmp_filepath = tmp_folder .. "/" .. filename
+    end
+
+    return tmp_filepath
+end
+--------------------------------------------------------
 
 
 -- Buffer the response (helps with error handling).
@@ -58,55 +109,29 @@ if token == nil then
     return
 end
 
--- Check that the temp folder is created
-local tmpFolder = config.imgroot .. '/tmp/'
-local exists
-success, exists = server.fs.exists(tmpFolder)
+-- Check that the root tmp folder is created
+local tmp_folder_root = config.imgroot .. '/' .. 'tmp'
+success, error_msg = check_create_dir(tmp_folder_root)
 if not success then
-    -- fs.exist was not run successful. This does not mean, that the tmp folder is not there.
-    send_error(500, "server.fs.exists() failed: " .. exists)
+    send_error(500, error_msg)
     return
-end
-if not exists then
-    -- tmp folder does not exist, trying to create one
-    success, error_msg = server.fs.mkdir(tmpFolder, 511)
-    if not success then
-        server.log("temp folder missing and not able to create one: " .. tmpFolder, server.loglevel.LOG_ERR)
-        send_error(500, "server.fs.mkdir() failed: " .. error_msg)
-        return
-    end
 end
 
 -- A table of data about each file that was uploaded.
 local file_upload_data = {}
 
-
 -- Process the uploaded files.
 for file_index, file_params in pairs(server.uploads) do
-    local tmp_storage_file_path = ""
     local file_base_name = ""
 
     -- get the filename
     local filename = file_params["origname"]
 
-    -- if it is the preview file of a move, move it to the movie's folder
-    if string.find(filename, "_m_") then
-        file_base_name, _ = filename:match("(.+)_m_(.+)")
-        check_if_frames_folder_exists_and_create_if_not(tmpFolder .. file_base_name)
-        tmp_storage_file_path = config.imgroot .. "/tmp/" .. file_base_name .. "/" .. filename
-        
-         
-    -- if it is a movie frame file, move it to the movie's frame folder
-    elseif string.find(filename, "_f_") then
-        file_base_name, _ = filename:match("(.+)_f_(.+)")
-        check_if_frames_folder_exists_and_create_if_not(tmpFolder .. file_base_name)
-        check_if_frames_folder_exists_and_create_if_not(tmpFolder .. file_base_name .. "/frames")
-        tmp_storage_file_path = config.imgroot .. "/tmp/" .. file_base_name .. "/frames/".. filename
+    -- create the file specific tmp folder
+    local tmp_folder = create_tmp_folder(tmp_folder_root, filename)
 
-    -- in all other cases, move it to Sipi's temporary storage location
-    else
-        tmp_storage_file_path = config.imgroot .. "/tmp/" .. filename
-    end
+    -- get the filepath
+    local tmp_storage_file_path = get_tmp_filepath(tmp_folder, filename)
 
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
     if not success then
