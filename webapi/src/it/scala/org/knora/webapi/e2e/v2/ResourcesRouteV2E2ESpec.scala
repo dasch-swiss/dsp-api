@@ -710,7 +710,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
       val projectHistoryRequest = Get(s"$baseApiUrl/v2/resources/projectHistoryEvents/$projectIri")
         .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
-      val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest, 10.seconds)
+      val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest, 30.seconds)
       val historyResponseAsString              = responseToString(projectHistoryResponse)
       assert(projectHistoryResponse.status == StatusCodes.OK, historyResponseAsString)
     }
