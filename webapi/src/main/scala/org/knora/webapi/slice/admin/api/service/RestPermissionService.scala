@@ -13,7 +13,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 /**
  * Provides methods for checking permissions.
  * This service is used by the REST API services.
- * All `ensure…` methods fail with a [[ForbiddenException]] if the user is not active or the respective check fails.
+ * All `ensure...` methods fail with a [[ForbiddenException]] if the user is not active or the respective check fails.
  * @see [[RestPermissionServiceLive]].
  */
 @accessible
@@ -31,7 +31,8 @@ trait RestPermissionService {
   /**
    * Checks if the user is a system or project administrator.
    * Checks if the user is active.
-   * @param user The [[UserADM]] to check.
+   *
+   * @param user    The [[UserADM]] to check.
    * @param project The [[KnoraProject]] to check.
    * @return [[Unit]] if the user is active and is a system or project administrator.
    *         Fails with a [[ForbiddenException]] otherwise.
