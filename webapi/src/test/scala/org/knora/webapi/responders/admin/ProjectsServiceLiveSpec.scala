@@ -19,9 +19,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.RestPermissionServiceLive
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.repo.service.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
+import org.knora.webapi.slice.common.api.RestPermissionServiceLive
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 

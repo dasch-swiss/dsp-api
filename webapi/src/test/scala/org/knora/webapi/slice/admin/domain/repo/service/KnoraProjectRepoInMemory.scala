@@ -1,4 +1,4 @@
-package org.knora.webapi.slice.admin.domain.service
+package org.knora.webapi.slice.admin.domain.repo.service
 
 import zio.Ref
 import zio.Task
@@ -7,7 +7,8 @@ import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.repo.service.AbstractInMemoryCrudRepository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])

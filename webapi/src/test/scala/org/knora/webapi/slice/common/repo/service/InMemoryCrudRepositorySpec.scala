@@ -1,4 +1,4 @@
-package org.knora.webapi.slice.common.repo
+package org.knora.webapi.slice.common.repo.service
 
 import zio.Ref
 import zio.ZIO

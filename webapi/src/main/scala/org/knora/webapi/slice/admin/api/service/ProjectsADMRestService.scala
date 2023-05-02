@@ -22,6 +22,7 @@ import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
+import org.knora.webapi.slice.common.api.RestPermissionService
 
 @accessible
 trait ProjectADMRestService {
