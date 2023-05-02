@@ -13,13 +13,14 @@ class ErrorV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   "Make a request that causes an internal server error (unit type message)" in {
     val request  = Get(baseApiUrl + "/v1/error/unitMsg")
-    val response = singleAwaitingRequest(request, 1.seconds)
+    val response = singleAwaitingRequest(request, 1.second)
     assert(response.status == StatusCodes.InternalServerError)
   }
 
   "Make a request that causes an internal server error (ise type message)" in {
     val request  = Get(baseApiUrl + "/v1/error/iseMsg")
-    val response = singleAwaitingRequest(request, 1.seconds)
+    val response = singleAwaitingRequest(request, 1.second)
     assert(response.status == StatusCodes.Conflict)
   }
+
 }

@@ -14,6 +14,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import org.knora.webapi._
@@ -911,6 +912,35 @@ object UserUpdatePasswordPayloadADM {
       .getOrElse(Validation.fail("The new password is missing."))
     Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
   }
+}
+
+final case class UserCreatePayloadADM(
+  id: Option[UserIri] = None,
+  username: Username,
+  email: Email,
+  givenName: GivenName,
+  familyName: FamilyName,
+  password: Password,
+  status: UserStatus,
+  lang: LanguageCode,
+  systemAdmin: SystemAdmin
+)
+
+object UserCreatePayloadADM {
+  def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
+    Validation
+      .validateWith(
+        apiRequest.id.map(UserIri.make(_).map(Some(_))).getOrElse(Validation.succeed(None)),
+        Username.make(apiRequest.username),
+        Email.make(apiRequest.email),
+        GivenName.make(apiRequest.givenName),
+        FamilyName.make(apiRequest.familyName),
+        Password.make(apiRequest.password),
+        Validation.succeed(UserStatus.make(apiRequest.status)),
+        LanguageCode.make(apiRequest.lang),
+        Validation.succeed(SystemAdmin.make(apiRequest.systemAdmin))
+      )(UserCreatePayloadADM.apply)
+      .mapError(_.getMessage)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
