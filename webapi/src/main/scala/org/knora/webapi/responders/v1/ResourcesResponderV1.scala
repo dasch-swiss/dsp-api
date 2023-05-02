@@ -1055,11 +1055,12 @@ final case class ResourcesResponderV1Live(
       userPermission = t._1
       resInfoV1      = t._2
 
-      _ = if (userPermission.isEmpty) {
-            throw ForbiddenException(
-              s"User $userIri does not have permission to query the context of resource $resourceIri"
-            )
-          }
+      _ <-
+        ZIO
+          .fail(
+            ForbiddenException(s"User $userIri does not have permission to query the context of resource $resourceIri")
+          )
+          .when(userPermission.isEmpty)
 
       // If this resource is part of another resource, get its parent resource.
       isPartOfSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1506,13 +1507,10 @@ final case class ResourcesResponderV1Live(
 
     val updateFuture: Task[MultipleResourceCreateResponseV1] = for {
       // Get user's IRI and don't allow anonymous users to create resources.
-      userIri <- ZIO.attempt {
-                   if (requestingUser.isAnonymousUser) {
-                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
-                   } else {
-                     requestingUser.id
-                   }
-                 }
+      userIri <-
+        if (requestingUser.isAnonymousUser)
+          ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources"))
+        else ZIO.succeed(requestingUser.id)
 
       // Get information about the project in which the resources will be created.
       projectInfoResponse <-
@@ -1531,12 +1529,13 @@ final case class ResourcesResponderV1Live(
 
       resourceProjectIri: IRI = projectADM.id
 
-      _ =
-        if (
-          resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-        ) {
-          throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
-        }
+      _ <-
+        ZIO
+          .fail(BadRequestException(s"Resources cannot be created in project $resourceProjectIri"))
+          .when(
+            resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject ||
+              resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+          )
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
@@ -1716,11 +1715,13 @@ final case class ResourcesResponderV1Live(
             defaultObjectAccessPermissions <-
               ZIO.attempt(defaultResourceClassAccessPermissionsMap(resourceCreateRequest.resourceTypeIri))
 
-            _ = if (resourceCreateRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
-                  throw BadRequestException(
-                    s"Instances of knora-base:Resource cannot be created, only instances of subclasses"
-                  )
-                }
+            _ <- ZIO
+                   .fail(
+                     BadRequestException(
+                       s"Instances of knora-base:Resource cannot be created, only instances of subclasses"
+                     )
+                   )
+                   .when(resourceCreateRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource)
 
             resourceIri = clientResourceIDsToResourceIris(resourceCreateRequest.clientResourceID)
 
