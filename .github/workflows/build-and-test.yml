@@ -34,7 +34,7 @@ jobs:
 
   integration-test:
     name: Build and integration-test
-    runs-on: actuated
+    runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
