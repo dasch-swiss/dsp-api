@@ -197,6 +197,6 @@ final case class ProjectExportServiceLive(
 object ProjectExportServiceLive {
   val layer: URLayer[
     OntologyRepo with ProjectADMService with StringFormatter with TriplestoreService,
-    ProjectExportServiceLive
-  ] = zio.ZLayer.fromFunction(ProjectExportServiceLive.apply _)
+    ProjectExportService
+  ] = ZLayer.fromFunction(ProjectExportServiceLive.apply _)
 }
