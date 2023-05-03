@@ -26,9 +26,9 @@ function get_tmp_filepath(shortcode, filename)
     return filepath
 end
 
+
 -------------------------------------------------------------------------------
 -- This function returns the segments from the identifier
--- The identifier is expected to look like: /sipi/images/:shortcode/:filename
 -------------------------------------------------------------------------------
 function get_segments_from_identifier(identifier)
     local segments = {}
@@ -38,10 +38,11 @@ function get_segments_from_identifier(identifier)
     return segments
 end
 
+
 -------------------------------------------------------------------------------
 -- This function checks the cookie and returns the cookie header
 -------------------------------------------------------------------------------
-function get_cookie_header(cookie)
+function check_and_get_cookie_header(cookie)
     -- tries to extract the DSP session name and id from the cookie:
     -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
     -- returns nil if it cannot find it
@@ -49,15 +50,15 @@ function get_cookie_header(cookie)
 
     if session == nil or session["name"] == nil or session["id"] == nil then
         -- no session could be extracted
-        log("check_cookie - cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
+        log("check_and_get_cookie_header - cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
     else
         dsp_cookie_header = { Cookie = session["name"] .. "=" .. session["id"] }
-        log("check_cookie - dsp_cookie_header: " ..
-        dsp_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
+        log("check_and_get_cookie_header - dsp_cookie_header: " .. dsp_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
     end
 
     return dsp_cookie_header
 end
+
 
 -------------------------------------------------------------------------------
 -- This function gets the hostname of the DSP-API
@@ -71,6 +72,7 @@ function get_api_hostname()
 
     return hostname
 end
+
 
 -------------------------------------------------------------------------------
 -- This function gets the port of the DSP-API 
@@ -92,88 +94,98 @@ end
 function get_api_url(webapi_hostname, webapi_port, prefix, identifier)
     return 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 end
+
+
 -------------------------------------------------------------------------------
--- This function is being called from sipi before the file is served.
--- DSP-API is called to ask for the user's permissions on the file
+-- This function gets the permissions defined on a file by requesting it from
+-- the DSP-API.
+-------------------------------------------------------------------------------
+function get_permission_on_file(shortcode, file_name, dsp_cookie_header)
+    local webapi_hostname = get_api_hostname()
+    local webapi_port = get_api_port()
+    local api_url = get_api_url(webapi_hostname, webapi_port, shortcode, file_name)
+    log("get_permission_on_file - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
+
+    -- request the permissions on the image from DSP-API
+    local success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
+    if not success then
+        log("get_permission_on_file - server.http() failed: " .. result, server.loglevel.LOG_ERR)
+        return 'deny'
+    end
+
+    if result.status_code ~= 200 then
+        log("get_permission_on_file - DSP-API returned HTTP status code " .. result.status_code, server.loglevel.LOG_ERR)
+        log("get_permission_on_file - result body: " .. result.body, server.loglevel.LOG_ERR)
+        return 'deny'
+    end
+
+    log("get_permission_on_file - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
+
+    local success, response_json = server.json_to_table(result.body)
+    if not success then
+        log("get_permission_on_file - server.json_to_table() failed: " .. response_json, server.loglevel.LOG_ERR)
+        return 'deny'
+    end
+
+    return response_json
+end
+
+
+-------------------------------------------------------------------------------
+-- This function is being called from Sipi before the file is served.
+-- DSP-API is called to ask for the user's permissions on the file.
+-- 
 -- Parameters:
---    prefix: This is the prefix that is given on the IIIF url
---    identifier: the identifier for the image
+--    prefix: This is the prefix that is given in the IIIF URL
+--    identifier: The identifier for the image
 --    cookie: The cookie that may be present
 --
 -- Returns:
 --    permission:
---       'allow' : the view is allowed with the given IIIF parameters
---       'restrict:watermark=<path-to-watermark>' : Add a watermark
---       'restrict:size=<iiif-size-string>' : reduce size/resolution
---       'deny' : no access!
---    filepath: server-path where the master file is located
+--       'allow': the view is allowed with the given IIIF parameters
+--       'restrict:watermark=<path-to-watermark>': Add a watermark
+--       'restrict:size=<iiif-size-string>': reduce size/resolution
+--       'deny': no access!
+--    filepath: path on the server where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix, identifier, cookie)
     log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
     log("pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
-
-    local filepath = get_tmp_filepath(prefix, identifier)
-
-    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     if prefix == "tmp" then
         -- always allow access to tmp folder
         return 'allow', filepath
     end
 
+    local filepath = get_tmp_filepath(prefix, identifier)
+    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
+
     local dsp_cookie_header = nil
-
     if cookie ~= '' then
-        dsp_cookie_header = get_cookie_header(cookie)
+        dsp_cookie_header = check_and_get_cookie_header(cookie)
     end
 
-    local webapi_hostname = get_api_hostname()
-    local webapi_port = get_api_port()
+    local permission_info = get_permission_on_file(prefix, identifier, dsp_cookie_header)
+    local permission_code = permission_info.permissionCode
+    log("pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
-    local api_url = get_api_url(webapi_hostname, webapi_port, prefix, identifier)
-    log("pre_flight - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
-
-    -- request the image over HTTP
-    local success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
-
-    if not success then
-        log("pre_flight - Server.http() failed: " .. result, server.loglevel.LOG_ERR)
-        return 'deny'
-    end
-
-    if result.status_code ~= 200 then
-        log("pre_flight - DSP-API returned HTTP status code " .. result.status_code, server.loglevel.LOG_ERR)
-        log("result body: " .. result.body, server.loglevel.LOG_ERR)
-        return 'deny'
-    end
-
-    log("pre_flight - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
-
-    local success, response_json = server.json_to_table(result.body)
-    if not success then
-        log("pre_flight - Server.http() failed: " .. response_json, server.loglevel.LOG_ERR)
-        return 'deny'
-    end
-
-    log("pre_flight - permission code: " .. response_json.permissionCode, server.loglevel.LOG_DEBUG)
-
-    if response_json.permissionCode == 0 then
+    if permission_code == 0 then
         -- no view permission on file
         log("pre_flight - permission code 0 (no view), access denied", server.loglevel.LOG_WARNING)
         return 'deny'
-    elseif response_json.permissionCode == 1 then
+    elseif permission_code == 1 then
         -- restricted view permission on file
-        -- either watermark or size (depends on project, should be returned with permission code by Sipi responder)
+        -- either watermark or size (depends on project, should be returned by DSP-API)
         -- currently, only size is used
 
         local restrictedViewSize
 
-        if response_json.restrictedViewSettings ~= nil then
-            log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+        if permission_info.restrictedViewSettings ~= nil then
+            log("pre_flight - restricted view settings - watermark: " .. tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
-            if response_json.restrictedViewSettings.size ~= nil then
-                log("pre_flight - restricted view settings - size: " .. tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
-                restrictedViewSize = response_json.restrictedViewSettings.size
+            if permission_info.restrictedViewSettings.size ~= nil then
+                restrictedViewSize = permission_info.restrictedViewSettings.size
+                log("pre_flight - restricted view settings - size: " .. tostring(restrictedViewSize), server.loglevel.LOG_DEBUG)
             else
                 log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
                 restrictedViewSize = config.thumb_size
@@ -187,7 +199,7 @@ function pre_flight(prefix, identifier, cookie)
                 type = 'restrict',
                 size = restrictedViewSize
             }, filepath
-    elseif response_json.permissionCode >= 2 then
+    elseif permission_info.permissionCode >= 2 then
         -- full view permissions on file
         return 'allow', filepath
     else
@@ -197,19 +209,19 @@ function pre_flight(prefix, identifier, cookie)
 end
 
 -------------------------------------------------------------------------------
--- This function is being called from sipi before the file is served.
--- DSP-API is called to ask for the user's permissions on the file
+-- This function is being called from Sipi before the file is served.
+-- DSP-API is called to ask for the user's permissions on the file.
+-- 
 -- Parameters:
---    identifier: the file path for the file
+--    identifier: The identifier for the image
 --    cookie: The cookie that may be present
 --
 -- Returns:
 --    permission:
---       'allow' : the view is allowed with the given IIIF parameters
---       'deny' : no access!
---    filepath: server-path where the master file is located
+--       'allow': the view is allowed with the given IIIF parameters
+--       'deny': no access!
+--    filepath: path on the server where the master file is located
 -------------------------------------------------------------------------------
-
 function file_pre_flight(identifier, cookie)
     log("file_pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
     log("file_pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
@@ -232,7 +244,7 @@ function file_pre_flight(identifier, cookie)
         log("file_pre_flight - file name: " .. file_name, server.loglevel.LOG_DEBUG)
     -- in case of a preview file of a video, get the file path of the video file to check permissions on the video
     elseif #segments == 5 then
-        log("file_pre_flight - found 5 segments, it's assumed to the preview file for a video", server.loglevel.LOG_ERR)
+        log("file_pre_flight - found 5 segments, it's assumed to be the preview file for a video", server.loglevel.LOG_ERR)
         file_name = segments[4] .. '.mp4'
         file_name_preview = segments[4] .. '/' .. segments[5]
         log("file_pre_flight - file name: " .. file_name, server.loglevel.LOG_DEBUG)
@@ -248,46 +260,19 @@ function file_pre_flight(identifier, cookie)
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     local dsp_cookie_header = nil
-
     if cookie ~= '' then
-        local dsp_cookie_header = get_cookie_header(cookie)
+        local dsp_cookie_header = check_and_get_cookie_header(cookie)
     end
 
-    local webapi_hostname = get_api_hostname()
-    local webapi_port = get_api_port()
+    local permission_info = get_permission_on_file(shortcode, file_name, dsp_cookie_header)
+    local permission_code = permission_info.permissionCode
+    log("file_pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
-    local api_url = get_api_url(webapi_hostname, webapi_port, shortcode, file_name)
-    log("file_pre_flight - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
-
-    -- request the image over HTTP
-    local success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
-
-    if not success then
-        log("file_pre_flight - Server.http() failed: " .. result, server.loglevel.LOG_ERR)
-        return 'deny'
-    end
-
-    if result.status_code ~= 200 then
-        log("file_pre_flight - DSP-API returned HTTP status code " .. result.status_code, server.loglevel.LOG_ERR)
-        log("result body: " .. result.body, server.loglevel.LOG_ERR)
-        return 'deny'
-    end
-
-    log("file_pre_flight - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
-
-    local success, response_json = server.json_to_table(result.body)
-    if not success then
-        log("file_pre_flight - Server.http() failed: " .. response_json, server.loglevel.LOG_WARNING)
-        return 'deny'
-    end
-
-    log("file_pre_flight - permission code: " .. response_json.permissionCode, server.loglevel.LOG_DEBUG)
-
-    if response_json.permissionCode == 0 then
+    if permission_code == 0 then
         -- no view permission on file
         log("file_pre_flight - permission code 0 (no view), access denied", server.loglevel.LOG_WARNING)
         return 'deny'
-    elseif response_json.permissionCode == 1 then
+    elseif permission_code == 1 then
         -- restricted view permission on file means full access !! Because, at the moment, this doesn't have a meaning for files other than images.
         log("file_pre_flight - permission code 1 (restricted view), access granted", server.loglevel.LOG_DEBUG)
         if #segments == 5 then
@@ -295,7 +280,7 @@ function file_pre_flight(identifier, cookie)
         else
             return 'allow', filepath
         end
-    elseif response_json.permissionCode >= 2 then
+    elseif permission_code >= 2 then
         -- full view permissions on file
         log("file_pre_flight - access granted", server.loglevel.LOG_DEBUG)
         if #segments == 5 then
