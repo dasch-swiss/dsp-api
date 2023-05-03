@@ -7,11 +7,14 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
+import zio.prelude.Validation
 
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
+import dsp.errors.ValidationException
+import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import org.knora.webapi._
@@ -880,22 +883,65 @@ case class UserUpdateBasicInformationPayloadADM(
   familyName: Option[FamilyName] = None,
   lang: Option[LanguageCode] = None
 ) {
+  def isAtLeastOneParamSet = Seq(username, email, givenName, familyName, lang).flatten.nonEmpty
+}
 
-  val parametersCount: Int = List(
-    username,
-    email,
-    givenName,
-    familyName,
-    lang
-  ).flatten.size
+object UserUpdateBasicInformationPayloadADM {
 
-  // something needs to be sent, i.e. everything 'None' is not allowed
-  if (parametersCount == 0) {
-    throw BadRequestException("No data sent in API request.")
+  private def validateWithOptionOrNone[I, O, E](opt: Option[I], f: I => Validation[E, O]): Validation[E, Option[O]] =
+    opt.map(f(_).map(Some(_))).getOrElse(Validation.succeed(None))
+
+  def make(req: ChangeUserApiRequestADM): Validation[ValidationException, UserUpdateBasicInformationPayloadADM] =
+    Validation.validateWith(
+      validateWithOptionOrNone(req.username, Username.make),
+      validateWithOptionOrNone(req.email, Email.make),
+      validateWithOptionOrNone(req.givenName, GivenName.make),
+      validateWithOptionOrNone(req.familyName, FamilyName.make),
+      validateWithOptionOrNone(req.lang, LanguageCode.make)
+    )(UserUpdateBasicInformationPayloadADM.apply)
+}
+
+case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password)
+object UserUpdatePasswordPayloadADM {
+  def make(apiRequest: ChangeUserPasswordApiRequestADM): Validation[String, UserUpdatePasswordPayloadADM] = {
+    val requesterPasswordValidation = apiRequest.requesterPassword
+      .map(Password.make(_).mapError(_.getMessage))
+      .getOrElse(Validation.fail("The requester's password is missing."))
+    val newPasswordValidation = apiRequest.newPassword
+      .map(Password.make(_).mapError(_.getMessage))
+      .getOrElse(Validation.fail("The new password is missing."))
+    Validation.validateWith(requesterPasswordValidation, newPasswordValidation)(UserUpdatePasswordPayloadADM.apply)
   }
 }
 
-case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password) {}
+final case class UserCreatePayloadADM(
+  id: Option[UserIri] = None,
+  username: Username,
+  email: Email,
+  givenName: GivenName,
+  familyName: FamilyName,
+  password: Password,
+  status: UserStatus,
+  lang: LanguageCode,
+  systemAdmin: SystemAdmin
+)
+
+object UserCreatePayloadADM {
+  def make(apiRequest: CreateUserApiRequestADM): Validation[String, UserCreatePayloadADM] =
+    Validation
+      .validateWith(
+        apiRequest.id.map(UserIri.make(_).map(Some(_))).getOrElse(Validation.succeed(None)),
+        Username.make(apiRequest.username),
+        Email.make(apiRequest.email),
+        GivenName.make(apiRequest.givenName),
+        FamilyName.make(apiRequest.familyName),
+        Password.make(apiRequest.password),
+        Validation.succeed(UserStatus.make(apiRequest.status)),
+        LanguageCode.make(apiRequest.lang),
+        Validation.succeed(SystemAdmin.make(apiRequest.systemAdmin))
+      )(UserCreatePayloadADM.apply)
+      .mapError(_.getMessage)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting

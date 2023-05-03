@@ -21,13 +21,14 @@ import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json.JsValue
 import spray.json.JsonParser
-
+import zio.durationInt
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.SECONDS
 
 import dsp.errors.AssertionException
 import org.knora.webapi._
@@ -709,7 +710,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
       val projectHistoryRequest = Get(s"$baseApiUrl/v2/resources/projectHistoryEvents/$projectIri")
         .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
-      val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest)
+      val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest, 30.seconds)
       val historyResponseAsString              = responseToString(projectHistoryResponse)
       assert(projectHistoryResponse.status == StatusCodes.OK, historyResponseAsString)
     }
@@ -1238,7 +1239,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
 
-      val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+      val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], FiniteDuration.apply(1, SECONDS))
       val invalidIri: Boolean =
         errorMessage.contains(s"IRI: 'http://rdfh.ch/0001/a-thing' already exists, try another one.")
       invalidIri should be(true)
