@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.admin.domain.service
 
 import org.apache.jena.graph.Triple
@@ -13,7 +18,6 @@ import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path

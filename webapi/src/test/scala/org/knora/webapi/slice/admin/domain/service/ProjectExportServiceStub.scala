@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.slice.admin.domain.service
 
 import zio.Task
@@ -21,7 +26,6 @@ object ProjectExportServiceStub {
      * * the triples of the project's ontologies
      *
      * @param project the project to be exported
-     * @param file    the path to the file to which the project should be exported
      * @return the [[Path]] to the file to which the project was exported
      */
     override def exportProjectTriples(project: KnoraProject): Task[Path] =

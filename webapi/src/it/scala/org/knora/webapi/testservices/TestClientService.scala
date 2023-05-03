@@ -1,6 +1,7 @@
 package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -80,21 +81,40 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
 
     for {
       _ <- ZIO.logInfo("Loading test data started ...")
-      _ <- singleAwaitingRequest(loadRequest, 101.seconds)
+      _ <- singleAwaitingRequest(loadRequest)
       _ <- ZIO.logInfo("... loading test data done.")
     } yield ()
   }
 
   /**
    * Performs a http request.
+   *
+   * @param request the request to be performed.
+   * @param timeout the timeout for the request. Default timeout is 5 seconds.
+   * @param printFailure If true, the response body will be printed if the request fails.
+   *                     This flag is intended to be used for debugging purposes only.
+   *                     Since this is unsafe, it is false by default.
+   *                     It is unsafe because the the response body can only be unmarshalled (i.e. printed) to a string once.
+   *                     It will fail if the test code is also unmarshalling the response.
+   * @return the response.
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
-    duration: zio.Duration = 666.seconds
+    timeout: Option[zio.Duration] = None,
+    printFailure: Boolean = false
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
-      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ => akka.http.scaladsl.Http().singleRequest(request))
-      .timeout(duration)
+      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
+        akka.http.scaladsl.Http().singleRequest(request).map { resp =>
+          if (printFailure && resp.status.isFailure()) {
+            Unmarshal(resp.entity).to[String].map { body =>
+              println(s"Request failed with status ${resp.status} and body $body")
+            }
+          }
+          resp
+        }
+      )
+      .timeout(timeout.getOrElse(10.seconds))
       .some
       .mapError {
         case None            => throw AssertionException("Request timed out.")

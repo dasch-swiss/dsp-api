@@ -5,11 +5,8 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.Task
 import zio._
 import zio.macros.accessible
-
-import java.nio.file.Files
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
@@ -168,7 +165,6 @@ final case class ProjectsADMRestServiceLive(
     for {
       project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
       _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
-      tmpFile <- ZIO.attempt(Files.createTempDirectory(project.shortname))
       result  <- projectExportService.exportProjectTriples(project)
     } yield ProjectDataGetResponseADM(result)
 
