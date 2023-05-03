@@ -211,7 +211,7 @@ object UserSpec extends ZIOSpecDefault {
 
   private val systemAdminTest = suite("SystemAdmin")(
     test("pass a valid object and successfully create value object") {
-      assertTrue(SystemAdmin.make(true).toOption.get.value == true)
+      assertTrue(SystemAdmin.make(true).value)
     }
   )
 }

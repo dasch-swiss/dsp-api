@@ -263,12 +263,11 @@ object User {
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[UserStatus] =
       JsonCodec[Boolean].transformOrFail(
-        value => UserStatus.make(value).toEitherWith(e => e.head.getMessage()),
+        value => Right(UserStatus.make(value)),
         userStatus => userStatus.value
       )
 
-    def make(value: Boolean): Validation[ValidationException, UserStatus] =
-      Validation.succeed(new UserStatus(value) {})
+    def make(value: Boolean): UserStatus = new UserStatus(value) {}
   }
 
   /**
@@ -280,12 +279,11 @@ object User {
     // the codec defines how to decode/encode the object from/into json
     implicit val codec: JsonCodec[SystemAdmin] =
       JsonCodec[Boolean].transformOrFail(
-        value => SystemAdmin.make(value).toEitherWith(e => e.head.getMessage()),
+        value => Right(SystemAdmin.make(value)),
         systemAdmin => systemAdmin.value
       )
 
-    def make(value: Boolean): Validation[ValidationException, SystemAdmin] =
-      Validation.succeed(new SystemAdmin(value) {})
+    def make(value: Boolean): SystemAdmin = new SystemAdmin(value) {}
   }
 }
 
