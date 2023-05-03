@@ -1,9 +1,10 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import zio.Task
+import zio.URLayer
 import zio.ZIO
+import zio.ZLayer
 import zio.macros.accessible
-
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.nio.file.Files
@@ -87,11 +88,10 @@ private class CombiningRdfProcessor(formattingStreamProcessor: RdfStreamProcesso
   }
 }
 final case class ProjectExportServiceLive(
-  ontologyRepo: OntologyRepo,
-  projectRepo: ProjectADMService,
-  stringFormatter: StringFormatter,
-  triplestoreService: TriplestoreService,
-  messageRelay: MessageRelay
+  private val ontologyRepo: OntologyRepo,
+  private val projectRepo: ProjectADMService,
+  private val stringFormatter: StringFormatter,
+  private val triplestoreService: TriplestoreService
 ) extends ProjectExportService {
 
   /**
@@ -158,18 +158,10 @@ final case class ProjectExportServiceLive(
         graphsToDownload.map(graphIri => NamedGraphTrigFile(graphIri = graphIri, tempDir = tempDir))
 
       _ <- ZIO.foreachDiscard(projectSpecificNamedGraphTrigFiles) { trigFile =>
-             for {
-               fileWrittenResponse <- messageRelay.ask[FileWrittenResponse](
-                                        NamedGraphFileRequest(
-                                          graphIri = trigFile.graphIri,
-                                          outputFile = trigFile.dataFile,
-                                          outputFormat = TriG
-                                        )
-                                      )
-             } yield fileWrittenResponse
+             triplestoreService.sparqlHttpGraphFile(trigFile.graphIri, trigFile.dataFile, TriG)
            }
 
-      // Download the project's admin data.
+      // Download the project's admin data
 
       adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = adminDataGraph, tempDir = tempDir)
 
@@ -183,7 +175,6 @@ final case class ProjectExportServiceLive(
            )
 
       // Download the project's permission data.
-
       permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = permissionsDataGraph, tempDir = tempDir)
 
       permissionDataSparql = twirl.queries.sparql.admin.txt.getProjectPermissions(projectIri)
@@ -203,7 +194,10 @@ final case class ProjectExportServiceLive(
     } yield resultFile
   }
 }
-object ProjectExportServiceLive {
 
-  val layer = zio.ZLayer.fromFunction(ProjectExportServiceLive.apply _)
+object ProjectExportServiceLive {
+  val layer: URLayer[
+    OntologyRepo with ProjectADMService with StringFormatter with TriplestoreService,
+    ProjectExportServiceLive
+  ] = zio.ZLayer.fromFunction(ProjectExportServiceLive.apply _)
 }
