@@ -24,7 +24,7 @@ object ProjectExportServiceStub {
      * @param file    the path to the file to which the project should be exported
      * @return the [[Path]] to the file to which the project was exported
      */
-    override def exportProjectTriples(project: KnoraProject, file: Path): Task[Path] =
+    override def exportProjectTriples(project: KnoraProject): Task[Path] =
       ZIO.die(new UnsupportedOperationException("Not implemented"))
   })
 }

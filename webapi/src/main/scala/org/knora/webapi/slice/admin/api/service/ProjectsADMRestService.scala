@@ -169,7 +169,7 @@ final case class ProjectsADMRestServiceLive(
       project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
       _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
       tmpFile <- ZIO.attempt(Files.createTempDirectory(project.shortname))
-      result  <- projectExportService.exportProjectTriples(project, tmpFile)
+      result  <- projectExportService.exportProjectTriples(project)
     } yield ProjectDataGetResponseADM(result)
 
   /**

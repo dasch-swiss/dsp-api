@@ -46,7 +46,7 @@ trait ProjectExportService {
    * @param file the path to the file to which the project should be exported
    * @return the [[Path]] to the file to which the project was exported
    */
-  def exportProjectTriples(project: KnoraProject, file: Path): Task[Path]
+  def exportProjectTriples(project: KnoraProject): Task[Path]
 }
 
 /**
@@ -144,7 +144,7 @@ final case class ProjectExportServiceLive(
     }
   }
 
-  override def exportProjectTriples(project: KnoraProject, file: Path): Task[Path] = {
+  override def exportProjectTriples(project: KnoraProject): Task[Path] = {
     val tempDir = Files.createTempDirectory(project.shortname)
     for {
       _                 <- ZIO.logInfo("Downloading project data to temporary directory " + tempDir.toAbsolutePath)
@@ -186,7 +186,6 @@ final case class ProjectExportServiceLive(
            )
 
       // Stream the combined results into the output file.
-
       namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
         projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
       resultFile: Path = tempDir.resolve(project.shortname + ".trig")
