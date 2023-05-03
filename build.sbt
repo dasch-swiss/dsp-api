@@ -42,7 +42,6 @@ lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
     sipi,
-    shared,
     schemaCore
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
@@ -262,7 +261,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
-  .dependsOn(shared, schemaCore)
+  .dependsOn(schemaCore)
 
 //////////////////////////////////////
 // DSP's new codebase
@@ -275,16 +274,5 @@ lazy val schemaCore = project
     scalacOptions ++= customScalacOptions,
     name := "schemaCore",
     libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared)
-
-// shared project
-lazy val shared = project
-  .in(file("dsp-shared"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "shared",
-    libraryDependencies ++= Dependencies.sharedLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )

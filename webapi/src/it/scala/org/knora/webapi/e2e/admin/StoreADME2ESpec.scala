@@ -33,7 +33,7 @@ class StoreADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         baseApiUrl + "/admin/store/ResetTriplestoreContent",
         HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
       )
-      val response = singleAwaitingRequest(request, 300.seconds)
+      val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.OK)
     }
   }

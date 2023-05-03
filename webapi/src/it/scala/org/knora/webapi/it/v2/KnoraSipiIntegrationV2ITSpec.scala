@@ -114,6 +114,9 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val thingDocumentIRI = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
 
+  private val validationFun: (String, => Nothing) => String = (s, e) =>
+    StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+
   /**
    * Represents the information that Knora returns about an image file value that was created.
    *
@@ -174,7 +177,7 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a JSON-LD array containing the values of the specified property.
    */
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.requireArray(propertyIriInResult.toString)
+    resource.body.requireArray(propertyIriInResult.toString)
 
   /**
    * Given a JSON-LD document representing a resource, returns a JSON-LD object representing the expected single
@@ -190,7 +193,8 @@ class KnoraSipiIntegrationV2ITSpec
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI
   ): JsonLDObject = {
-    val resourceIri: IRI = resource.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+    val resourceIri: IRI =
+      resource.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
     val propertyValues: JsonLDArray =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
 
@@ -198,7 +202,7 @@ class KnoraSipiIntegrationV2ITSpec
       case jsonLDObject: JsonLDObject
           if jsonLDObject.requireStringWithValidation(
             JsonLDKeywords.ID,
-            stringFormatter.validateAndEscapeIri
+            validationFun
           ) == expectedValueIri =>
         jsonLDObject
     }
@@ -227,10 +231,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedImage(savedValue: JsonLDObject): SavedImage = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val iiifUrl = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     val width  = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
@@ -253,10 +259,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedDocument(savedValue: JsonLDObject): SavedDocument = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedDocument(
@@ -274,10 +282,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedTextFile(savedValue: JsonLDObject): SavedTextFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedTextFile(
@@ -295,10 +305,12 @@ class KnoraSipiIntegrationV2ITSpec
   private def savedValueToSavedAudioFile(savedValue: JsonLDObject): SavedAudioFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedAudioFile(
@@ -315,11 +327,12 @@ class KnoraSipiIntegrationV2ITSpec
    */
   private def savedValueToSavedVideoFile(savedValue: JsonLDObject): SavedVideoFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
-
+    val validationFun: (String, => Nothing) => String = (s, errorFun) =>
+      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
-      validationFun = stringFormatter.toSparqlEncodedString
+      validationFun
     )
 
     SavedVideoFile(
@@ -409,7 +422,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
+        resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
       )
 
       // Get the new file value from the resource.
@@ -542,7 +555,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-      assert(resource.requireTypeAsKnoraTypeIri.toString == thingDocumentIRI)
+      assert(resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == thingDocumentIRI)
 
       // Get the new file value from the resource.
 
@@ -681,7 +694,7 @@ class KnoraSipiIntegrationV2ITSpec
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       csvResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
       // Get the resource from Knora.
@@ -810,7 +823,7 @@ class KnoraSipiIntegrationV2ITSpec
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       val resourceIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       xmlResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
       // Get the resource from Knora.
@@ -947,7 +960,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
 
-      resource.requireTypeAsKnoraTypeIri.toString should equal(
+      resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
       )
 
@@ -1060,7 +1073,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
 
-      resource.requireTypeAsKnoraTypeIri.toString should equal(
+      resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
       )
 
@@ -1119,7 +1132,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation"
+        resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation"
       )
 
       // Get the new file value from the resource.
@@ -1225,7 +1238,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation"
+        resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation"
       )
 
       // Get the new file value from the resource.

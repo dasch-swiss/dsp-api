@@ -13,7 +13,6 @@ import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -21,17 +20,15 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
  * Provides a function for API routes that deal with search.
  */
-final case class SearchRouteV2(
-  private val routeData: KnoraRouteData,
-  override implicit protected val runtime: Runtime[AppConfig with Authenticator with MessageRelay]
-) extends KnoraRoute(routeData, runtime) {
+final case class SearchRouteV2(searchValueMinLength: Int)(
+  private implicit val runtime: Runtime[AppConfig with Authenticator with IriConverter with MessageRelay]
+) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"
   private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
@@ -39,10 +36,7 @@ final case class SearchRouteV2(
   private val LIMIT_TO_STANDOFF_CLASS = "limitToStandoffClass"
   private val RETURN_FILES            = "returnFiles"
 
-  /**
-   * Returns the route.
-   */
-  override def makeRoute: Route =
+  def makeRoute: Route =
     fullTextSearchCount() ~
       fullTextSearch() ~
       gravsearchCountGet() ~
@@ -58,25 +52,18 @@ final case class SearchRouteV2(
    * @param params the GET parameters.
    * @return the offset to be used for paging.
    */
-  private def getOffsetFromParams(params: Map[String, String]): Int = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val offsetStr                                 = params.get(OFFSET)
-
-    offsetStr match {
-      case Some(offset: String) =>
-        val offsetInt: Int = ValuesValidator
-          .validateInt(offset)
-          .getOrElse(
-            throw BadRequestException(s"offset is expected to be an Integer, but $offset given")
+  private def getOffsetFromParams(params: Map[String, String]): IO[BadRequestException, Int] =
+    params
+      .get(OFFSET)
+      .map { offsetStr =>
+        ZIO
+          .fromOption(ValuesValidator.validateInt(offsetStr))
+          .orElseFail(BadRequestException(s"offset is expected to be an Integer, but $offsetStr given"))
+          .filterOrFail(_ >= 0)(
+            BadRequestException(s"offset is expected to be a positive Integer, but $offsetStr given")
           )
-
-        if (offsetInt < 0) throw BadRequestException(s"offset must be an Integer >= 0, but $offsetInt given.")
-
-        offsetInt
-
-      case None => 0
-    }
-  }
+      }
+      .getOrElse(ZIO.succeed(0))
 
   /**
    * Gets the the project the search should be restricted to, if any.
@@ -84,27 +71,16 @@ final case class SearchRouteV2(
    * @param params the GET parameters.
    * @return the project Iri, if any.
    */
-  private def getProjectFromParams(params: Map[String, String]): Option[IRI] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val limitToProjectIriStr                      = params.get(LIMIT_TO_PROJECT)
-
-    val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
-
-      case Some(projectIriStr: String) =>
-        val projectIri = stringFormatter.validateAndEscapeIri(
-          projectIriStr,
-          throw BadRequestException(s"$projectIriStr is not a valid Iri")
-        )
-
-        Some(projectIri)
-
-      case None => None
-
-    }
-
-    limitToProjectIri
-
-  }
+  private def getProjectFromParams(params: Map[String, String]): IO[BadRequestException, Option[IRI]] =
+    params
+      .get(LIMIT_TO_PROJECT)
+      .map { projectIriStr =>
+        StringFormatter
+          .validateAndEscapeIri(projectIriStr)
+          .toZIO
+          .mapBoth(_ => BadRequestException(s"$projectIriStr is not a valid Iri"), Some(_))
+      }
+      .getOrElse(ZIO.none)
 
   /**
    * Gets the resource class the search should be restricted to, if any.
@@ -112,25 +88,23 @@ final case class SearchRouteV2(
    * @param params the GET parameters.
    * @return the internal resource class, if any.
    */
-  private def getResourceClassFromParams(params: Map[String, String]): Option[SmartIri] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val limitToResourceClassIriStr                = params.get(LIMIT_TO_RESOURCE_CLASS)
+  private def getResourceClassFromParams(
+    params: Map[String, String]
+  ): ZIO[IriConverter, BadRequestException, Option[SmartIri]] =
+    params
+      .get(LIMIT_TO_RESOURCE_CLASS)
+      .map { resourceClassIriStr =>
+        IriConverter
+          .asSmartIri(resourceClassIriStr)
+          .orElseFail(BadRequestException(s"Invalid resource class IRI: $resourceClassIriStr"))
+          .filterOrFail(_.isKnoraApiV2EntityIri)(
+            BadRequestException(s"$resourceClassIriStr is not a valid knora-api resource class IRI")
+          )
+          .map(asSomeIriWithInternalSchema)
+      }
+      .getOrElse(ZIO.none)
 
-    limitToResourceClassIriStr match {
-      case Some(resourceClassIriStr: String) =>
-        val externalResourceClassIri = resourceClassIriStr.toSmartIriWithErr(
-          throw BadRequestException(s"Invalid resource class IRI: $resourceClassIriStr")
-        )
-
-        if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
-          throw BadRequestException(s"$resourceClassIriStr is not a valid knora-api resource class IRI")
-        }
-
-        Some(externalResourceClassIri.toOntologySchema(InternalSchema))
-
-      case None => None
-    }
-  }
+  private def asSomeIriWithInternalSchema(iri: SmartIri): Some[SmartIri] = Some(iri.toOntologySchema(InternalSchema))
 
   /**
    * Gets the standoff class the search should be restricted to.
@@ -138,108 +112,80 @@ final case class SearchRouteV2(
    * @param params the GET parameters.
    * @return the internal standoff class, if any.
    */
-  private def getStandoffClass(params: Map[String, String]): Option[SmartIri] = {
-    implicit val stringFormatter: StringFormatter  = StringFormatter.getGeneralInstance
-    val limitToStandoffClassIriStr: Option[String] = params.get(LIMIT_TO_STANDOFF_CLASS)
-
-    limitToStandoffClassIriStr match {
-      case Some(standoffClassIriStr: String) =>
-        val externalStandoffClassIri = standoffClassIriStr.toSmartIriWithErr(
-          throw BadRequestException(s"Invalid standoff class IRI: $limitToStandoffClassIriStr")
-        )
-
-        if (!externalStandoffClassIri.getOntologySchema.contains(ApiV2Complex)) {
-          throw BadRequestException(s"$externalStandoffClassIri is not a valid standoff class IRI")
-        }
-
-        Some(externalStandoffClassIri.toOntologySchema(InternalSchema))
-
-      case None => None
-    }
-  }
+  private def getStandoffClass(params: Map[String, String]): ZIO[IriConverter, BadRequestException, Option[SmartIri]] =
+    params
+      .get(LIMIT_TO_STANDOFF_CLASS)
+      .map { standoffClassIriStr =>
+        IriConverter
+          .asSmartIri(standoffClassIriStr)
+          .orElseFail(BadRequestException(s"Invalid standoff class IRI: $standoffClassIriStr"))
+          .filterOrFail(_.isApiV2ComplexSchema)(
+            BadRequestException(s"$standoffClassIriStr is not a valid knora-api standoff class IRI")
+          )
+          .map(asSomeIriWithInternalSchema)
+      }
+      .getOrElse(ZIO.none)
 
   private def fullTextSearchCount(): Route =
     path("v2" / "search" / "count" / Segment) {
       searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get { requestContext =>
-          if (searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname)) {
-            throw BadRequestException(
-              "It looks like you are submitting a Gravsearch request to a full-text search route"
-            )
-          }
-
-          val escapedSearchStr =
-            stringFormatter.toSparqlEncodedString(
-              searchStr,
-              throw BadRequestException(s"Invalid search string: '$searchStr'")
-            )
-
-          if (escapedSearchStr.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
-            throw BadRequestException(
-              s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}."
-            )
-          }
-
           val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-          val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-          val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
-          val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
-
-          val requestTask = Authenticator
-            .getUserADM(requestContext)
-            .map(
-              FullTextSearchCountRequestV2(
-                escapedSearchStr,
-                limitToProject,
-                limitToResourceClass,
-                limitToStandoffClass,
-                _
-              )
-            )
+          val requestTask = for {
+            _                    <- ensureIsNotFullTextSearch(searchStr)
+            escapedSearchStr     <- validateSearchString(searchStr)
+            limitToProject       <- getProjectFromParams(params)
+            limitToResourceClass <- getResourceClassFromParams(params)
+            limitToStandoffClass <- getStandoffClass(params)
+            user                 <- Authenticator.getUserADM(requestContext)
+          } yield FullTextSearchCountRequestV2(
+            escapedSearchStr,
+            limitToProject,
+            limitToResourceClass,
+            limitToStandoffClass,
+            user
+          )
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
     }
 
+  private def validateSearchString(searchStr: String) =
+    ZIO
+      .fromOption(StringFormatter.toSparqlEncodedString(searchStr))
+      .orElseFail(throw BadRequestException(s"Invalid search string: '$searchStr'"))
+      .filterOrElseWith(_.length >= searchValueMinLength) { it =>
+        val errorMsg =
+          s"A search value is expected to have at least length of $searchValueMinLength, but '$it' given of length ${it.length}."
+        ZIO.fail(BadRequestException(errorMsg))
+      }
+
+  private def ensureIsNotFullTextSearch(searchStr: String) =
+    ZIO
+      .fail(
+        BadRequestException(
+          "It looks like you are submitting a Gravsearch request to a full-text search route"
+        )
+      )
+      .when(searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname))
+
   private def fullTextSearch(): Route = path("v2" / "search" / Segment) {
     searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
       get { requestContext =>
-        if (searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname)) {
-          throw BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route")
-        }
-
-        val escapedSearchStr =
-          stringFormatter.toSparqlEncodedString(
-            searchStr,
-            throw BadRequestException(s"Invalid search string: '$searchStr'")
-          )
-
-        if (escapedSearchStr.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
-          throw BadRequestException(
-            s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$escapedSearchStr' given of length ${escapedSearchStr.length}."
-          )
-        }
+        val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+        val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-        val offset = getOffsetFromParams(params)
-
-        val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-        val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
-        val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
-
-        val returnFiles: Boolean = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
-
-        val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
-
         val requestTask = for {
-          requestingUser <- Authenticator.getUserADM(requestContext)
-          targetSchema   <- targetSchemaTask
+          _                    <- ensureIsNotFullTextSearch(searchStr)
+          escapedSearchStr     <- validateSearchString(searchStr)
+          offset               <- getOffsetFromParams(params)
+          limitToProject       <- getProjectFromParams(params)
+          limitToResourceClass <- getResourceClassFromParams(params)
+          limitToStandoffClass <- getStandoffClass(params)
+          returnFiles           = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
+          requestingUser       <- Authenticator.getUserADM(requestContext)
+          targetSchema         <- targetSchemaTask
+          schemaOptions        <- schemaOptionsTask
         } yield FulltextSearchRequestV2(
           searchValue = escapedSearchStr,
           offset = offset,
@@ -251,7 +197,7 @@ final case class SearchRouteV2(
           targetSchema = targetSchema,
           schemaOptions = schemaOptions
         )
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
+        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
       }
   }
 
@@ -282,14 +228,15 @@ final case class SearchRouteV2(
     "v2" / "searchextended" / Segment
   ) { sparql => // Segment is a URL encoded string representing a Gravsearch query
     get { requestContext =>
-      val constructQuery   = GravsearchParser.parseQuery(sparql)
-      val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptions    = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+      val constructQuery    = GravsearchParser.parseQuery(sparql)
+      val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+      val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
       val requestMessage = for {
         targetSchema   <- targetSchemaTask
         requestingUser <- Authenticator.getUserADM(requestContext)
+        schemaOptions  <- schemaOptionsTask
       } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask, Some(schemaOptions))
+      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
     }
   }
 
@@ -297,15 +244,15 @@ final case class SearchRouteV2(
     post {
       entity(as[String]) { gravsearchQuery => requestContext =>
         {
-          val constructQuery                   = GravsearchParser.parseQuery(gravsearchQuery)
-          val targetSchemaTask                 = RouteUtilV2.getOntologySchema(requestContext)
-          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptionsUnsafe(requestContext)
+          val constructQuery    = GravsearchParser.parseQuery(gravsearchQuery)
+          val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+          val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
           val requestTask = for {
             targetSchema   <- targetSchemaTask
-            schemaOptions  <- RouteUtilV2.getSchemaOptions(requestContext).toZIO
+            schemaOptions  <- schemaOptionsTask
             requestingUser <- Authenticator.getUserADM(requestContext)
           } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, Some(schemaOptions))
+          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
         }
       }
     }
@@ -315,32 +262,13 @@ final case class SearchRouteV2(
     path("v2" / "searchbylabel" / "count" / Segment) {
       searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get { requestContext =>
-          val searchString =
-            stringFormatter.toSparqlEncodedString(
-              searchval,
-              throw BadRequestException(s"Invalid search string: '$searchval'")
-            )
-
-          if (searchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
-            throw BadRequestException(
-              s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$searchString' given of length ${searchString.length}."
-            )
-          }
-
           val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-          val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-          val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
           val requestMessage = for {
-            requestingUser <- Authenticator.getUserADM(requestContext)
-          } yield SearchResourceByLabelCountRequestV2(
-            searchString,
-            limitToProject,
-            limitToResourceClass,
-            requestingUser
-          )
+            searchString         <- validateSearchString(searchval)
+            limitToProject       <- getProjectFromParams(params)
+            limitToResourceClass <- getResourceClassFromParams(params)
+            user                 <- Authenticator.getUserADM(requestContext)
+          } yield SearchResourceByLabelCountRequestV2(searchString, limitToProject, limitToResourceClass, user)
           RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
         }
     }
@@ -349,31 +277,15 @@ final case class SearchRouteV2(
     "v2" / "searchbylabel" / Segment
   ) { searchval =>
     get { requestContext =>
-      val sparqlEncodedSearchString =
-        stringFormatter.toSparqlEncodedString(
-          searchval,
-          throw BadRequestException(s"Invalid search string: '$searchval'")
-        )
-
-      if (sparqlEncodedSearchString.length < routeData.appConfig.v2.fulltextSearch.searchValueMinLength) {
-        throw BadRequestException(
-          s"A search value is expected to have at least length of ${routeData.appConfig.v2.fulltextSearch.searchValueMinLength}, but '$sparqlEncodedSearchString' given of length ${sparqlEncodedSearchString.length}."
-        )
-      }
-
+      val targetSchemaTask            = RouteUtilV2.getOntologySchema(requestContext)
       val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-      val offset = getOffsetFromParams(params)
-
-      val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-      val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
-      val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
-
       val requestMessage = for {
-        targetSchema   <- targetSchemaTask
-        requestingUser <- Authenticator.getUserADM(requestContext)
+        sparqlEncodedSearchString <- validateSearchString(searchval)
+        offset                    <- getOffsetFromParams(params)
+        limitToProject            <- getProjectFromParams(params)
+        limitToResourceClass      <- getResourceClassFromParams(params)
+        targetSchema              <- targetSchemaTask
+        requestingUser            <- Authenticator.getUserADM(requestContext)
       } yield SearchResourceByLabelRequestV2(
         searchValue = sparqlEncodedSearchString,
         offset = offset,

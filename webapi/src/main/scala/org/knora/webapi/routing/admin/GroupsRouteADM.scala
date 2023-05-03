@@ -21,6 +21,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM._
+import org.knora.webapi.routing.RouteUtilZ
 
 /**
  * Provides a routing function for API routes that deal with groups.
@@ -83,7 +84,7 @@ final case class GroupsRouteADM(
         val requestTask = for {
           payload        <- payloadValidation.toZIO
           requestingUser <- Authenticator.getUserADM(requestContext)
-          uuid           <- getApiRequestId
+          uuid           <- RouteUtilZ.randomUuid()
         } yield GroupCreateRequestADM(payload, requestingUser, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
@@ -97,7 +98,7 @@ final case class GroupsRouteADM(
     put {
       entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
         val checkedGroupIri =
-          stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+          StringFormatter.validateAndEscapeIri(value).getOrElse(throw BadRequestException(s"Invalid group IRI $value"))
 
         /**
          * The api request is already checked at time of creation.
@@ -121,7 +122,7 @@ final case class GroupsRouteADM(
         val requestTask = for {
           payload        <- validatedGroupUpdatePayload.toZIO
           requestingUser <- Authenticator.getUserADM(requestContext)
-          uuid           <- getApiRequestId
+          uuid           <- RouteUtilZ.randomUuid()
         } yield GroupChangeRequestADM(checkedGroupIri, payload, requestingUser, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
@@ -136,7 +137,9 @@ final case class GroupsRouteADM(
       put {
         entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
           val checkedGroupIri =
-            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+            StringFormatter
+              .validateAndEscapeIri(value)
+              .getOrElse(throw BadRequestException(s"Invalid group IRI $value"))
 
           /**
            * The api request is already checked at time of creation.
@@ -151,7 +154,7 @@ final case class GroupsRouteADM(
 
           val requestTask = for {
             requestingUser <- Authenticator.getUserADM(requestContext)
-            uuid           <- getApiRequestId
+            uuid           <- RouteUtilZ.randomUuid()
           } yield GroupChangeStatusRequestADM(checkedGroupIri, apiRequest, requestingUser, uuid)
           runJsonRouteZ(requestTask, requestContext)
         }

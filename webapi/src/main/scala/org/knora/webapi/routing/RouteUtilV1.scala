@@ -126,7 +126,6 @@ object RouteUtilV1 {
    *                                       resources. In a bulk import, this allows standoff links to resources
    *                                       that are to be created by the import.
    * @param userProfile                    the user making the request.
-   * @param log                            a logging adapter.
    * @return a [[TextWithStandoffTagsV2]].
    */
   def convertXMLtoStandoffTagV1(
@@ -213,48 +212,67 @@ object RouteUtilV1 {
     filename: String,
     fileMetadataResponse: GetFileMetadataResponse,
     projectShortcode: String
-  ): FileValueV1 =
+  ): Task[FileValueV1] =
     if (imageMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
-      StillImageFileValueV1(
+      for {
+        dimX <- ZIO
+                  .fromOption(fileMetadataResponse.width)
+                  .orElseFail(SipiException(s"Sipi did not return the width of the image"))
+        dimY <- ZIO
+                  .fromOption(fileMetadataResponse.height)
+                  .orElseFail(SipiException(s"Sipi did not return the height of the image"))
+      } yield StillImageFileValueV1(
         internalFilename = filename,
         internalMimeType = fileMetadataResponse.internalMimeType,
         originalFilename = fileMetadataResponse.originalFilename,
         originalMimeType = fileMetadataResponse.originalMimeType,
         projectShortcode = projectShortcode,
-        dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
-        dimY =
-          fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
+        dimX = dimX,
+        dimY = dimY
       )
     } else if (textMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
-      TextFileValueV1(
-        internalFilename = filename,
-        internalMimeType = fileMetadataResponse.internalMimeType,
-        originalFilename = fileMetadataResponse.originalFilename,
-        originalMimeType = fileMetadataResponse.originalMimeType,
-        projectShortcode = projectShortcode
+      ZIO.succeed(
+        TextFileValueV1(
+          internalFilename = filename,
+          internalMimeType = fileMetadataResponse.internalMimeType,
+          originalFilename = fileMetadataResponse.originalFilename,
+          originalMimeType = fileMetadataResponse.originalMimeType,
+          projectShortcode = projectShortcode
+        )
       )
     } else if (documentMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
-      DocumentFileValueV1(
-        internalFilename = filename,
-        internalMimeType = fileMetadataResponse.internalMimeType,
-        originalFilename = fileMetadataResponse.originalFilename,
-        originalMimeType = fileMetadataResponse.originalMimeType,
-        projectShortcode = projectShortcode,
-        pageCount = fileMetadataResponse.pageCount,
-        dimX = fileMetadataResponse.width,
-        dimY = fileMetadataResponse.height
+      ZIO.succeed(
+        DocumentFileValueV1(
+          internalFilename = filename,
+          internalMimeType = fileMetadataResponse.internalMimeType,
+          originalFilename = fileMetadataResponse.originalFilename,
+          originalMimeType = fileMetadataResponse.originalMimeType,
+          projectShortcode = projectShortcode,
+          pageCount = fileMetadataResponse.pageCount,
+          dimX = fileMetadataResponse.width,
+          dimY = fileMetadataResponse.height
+        )
       )
     } else if (audioMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
-      AudioFileValueV1(
-        internalFilename = filename,
-        internalMimeType = fileMetadataResponse.internalMimeType,
-        originalFilename = fileMetadataResponse.originalFilename,
-        originalMimeType = fileMetadataResponse.originalMimeType,
-        projectShortcode = projectShortcode,
-        duration = fileMetadataResponse.duration
+      ZIO.succeed(
+        AudioFileValueV1(
+          internalFilename = filename,
+          internalMimeType = fileMetadataResponse.internalMimeType,
+          originalFilename = fileMetadataResponse.originalFilename,
+          originalMimeType = fileMetadataResponse.originalMimeType,
+          projectShortcode = projectShortcode,
+          duration = fileMetadataResponse.duration
+        )
       )
     } else if (videoMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
-      MovingImageFileValueV1(
+      for {
+        dimX <- ZIO
+                  .fromOption(fileMetadataResponse.width)
+                  .orElseFail(SipiException(s"Sipi did not return the width of the video"))
+        dimY <- ZIO
+                  .fromOption(fileMetadataResponse.height)
+                  .orElseFail(SipiException(s"Sipi did not return the height of the video"))
+      } yield MovingImageFileValueV1(
         internalFilename = filename,
         internalMimeType = fileMetadataResponse.internalMimeType,
         originalFilename = fileMetadataResponse.originalFilename,
@@ -262,20 +280,21 @@ object RouteUtilV1 {
         projectShortcode = projectShortcode,
         duration = fileMetadataResponse.duration,
         fps = fileMetadataResponse.fps,
-        dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the video")),
-        dimY =
-          fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the video"))
+        dimX = dimX,
+        dimY = dimY
       )
     } else if (archiveMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
-      ArchiveFileValueV1(
-        internalFilename = filename,
-        internalMimeType = fileMetadataResponse.internalMimeType,
-        originalFilename = fileMetadataResponse.originalFilename,
-        originalMimeType = fileMetadataResponse.originalMimeType,
-        projectShortcode = projectShortcode
+      ZIO.succeed(
+        ArchiveFileValueV1(
+          internalFilename = filename,
+          internalMimeType = fileMetadataResponse.internalMimeType,
+          originalFilename = fileMetadataResponse.originalFilename,
+          originalMimeType = fileMetadataResponse.originalMimeType,
+          projectShortcode = projectShortcode
+        )
       )
     } else {
-      throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")
+      ZIO.fail(BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1"))
     }
 
   def verifyNumberOfParams[A](
@@ -286,11 +305,7 @@ object RouteUtilV1 {
     ZIO.fail(BadRequestException(errorMessage)).when(params.length != length)
 
   def toSparqlEncodedString(str: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
-    ZIO
-      .service[StringFormatter]
-      .map(_.toSparqlEncodedString(str))
-      .flatMap(ZIO.fromOption(_))
-      .orElseFail(BadRequestException(errorMsg))
+    ZIO.fromOption(StringFormatter.toSparqlEncodedString(str)).orElseFail(BadRequestException(errorMsg))
 
   def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): Task[Set[IRI]] =
     ZIO.attempt(StandoffStringUtil.getResourceIrisFromStandoffTags(tags))

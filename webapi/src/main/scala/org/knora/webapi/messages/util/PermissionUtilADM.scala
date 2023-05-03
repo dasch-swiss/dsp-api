@@ -942,7 +942,7 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
       validatedProjectSpecificGroupIris <-
         ZIO.attempt(
           projectSpecificGroupIris.map(iri =>
-            stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri"))
+            StringFormatter.validateAndEscapeIri(iri).getOrElse(throw BadRequestException(s"Invalid group IRI: $iri"))
           )
         )
 

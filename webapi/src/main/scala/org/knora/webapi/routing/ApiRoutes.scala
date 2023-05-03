@@ -12,6 +12,8 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import zio._
 
+import scala.concurrent.ExecutionContext
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -97,7 +99,8 @@ private final case class ApiRoutesImpl(
 ) extends ApiRoutes
     with AroundDirectives {
 
-  private implicit val system: actor.ActorSystem = routeData.system
+  private implicit val system: actor.ActorSystem          = routeData.system
+  private implicit val executionContext: ExecutionContext = system.dispatcher
 
   val routes: Route =
     logDuration {
@@ -120,8 +123,8 @@ private final case class ApiRoutesImpl(
                 UsersRouteV1().makeRoute ~
                 ProjectsRouteV1().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
-                SearchRouteV2(routeData, runtime).makeRoute ~
-                ResourcesRouteV2(routeData, runtime).makeRoute ~
+                SearchRouteV2(appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
+                ResourcesRouteV2(appConfig).makeRoute ~
                 ValuesRouteV2().makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 ListsRouteV2().makeRoute ~
@@ -129,14 +132,13 @@ private final case class ApiRoutesImpl(
                 GroupsRouteADM(routeData, runtime).makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
-                ProjectsRouteADM(routeData, runtime).makeRoute ~
+                ProjectsRouteADM().makeRoute ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
-                UsersRouteADM(routeData, runtime).makeRoute ~
+                UsersRouteADM().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute
             }
           }
         }
       }
     }
-
 }

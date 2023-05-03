@@ -321,7 +321,7 @@ abstract class AbstractPrequeryGenerator(
       // create additional statements in order to query permissions and other information for a resource
 
       Seq(
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = inputEntity,
           pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
           obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
@@ -381,18 +381,18 @@ abstract class AbstractPrequeryGenerator(
     // rdf:object, because there could be different link values representing links from the
     // same source with the same property but with different targets.
     Seq(
-      StatementPattern.makeInferred(subj = linkSource, pred = linkValueProp, obj = linkValueObjVar),
-      StatementPattern.makeExplicit(
+      StatementPattern(subj = linkSource, pred = linkValueProp, obj = linkValueObjVar),
+      StatementPattern(
         subj = linkValueObjVar,
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri)
       ),
-      StatementPattern.makeExplicit(
+      StatementPattern(
         subj = linkValueObjVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
         obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
       ),
-      StatementPattern.makeExplicit(
+      StatementPattern(
         subj = linkValueObjVar,
         pred = IriRef(OntologyConstants.Rdf.Object.toSmartIri),
         obj = linkTarget
@@ -449,7 +449,7 @@ abstract class AbstractPrequeryGenerator(
       // transforms the statement given in the input query so the list node and any of its subnodes are matched
       Seq(
         statementPatternToInternalSchema(statementPattern, typeInspectionResult).copy(obj = listNodeVar),
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = listNode,
           pred = IriRef(iri = OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
           obj = listNodeVar
@@ -531,7 +531,7 @@ abstract class AbstractPrequeryGenerator(
               // The variable refers to a value object.
 
               // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
-              val valueObjectIsNotDeleted = StatementPattern.makeExplicit(
+              val valueObjectIsNotDeleted = StatementPattern(
                 subj = statementPattern.obj,
                 pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
                 obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
@@ -576,7 +576,7 @@ abstract class AbstractPrequeryGenerator(
 
                 if (!variableForLiteralExists) {
                   // Generate a statement to get the literal value
-                  val statementPatternForSortCriterion = StatementPattern.makeExplicit(
+                  val statementPatternForSortCriterion = StatementPattern(
                     subj = criterion.queryVariable,
                     pred = IriRef(propertyIri),
                     obj = variableForLiteral
@@ -867,7 +867,8 @@ abstract class AbstractPrequeryGenerator(
     iriRef: IriRef,
     propInfo: PropertyTypeInfo
   ): TransformedFilterPattern = {
-    if (!iriRef.iri.isApiV2Schema(querySchema)) throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
+    if (!iriRef.iri.isApiV2Schema(querySchema))
+      throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
 
     // make sure that the comparison operator is a CompareExpressionOperator.EQUALS
     if (comparisonOperator != CompareExpressionOperator.EQUALS)
@@ -935,12 +936,12 @@ abstract class AbstractPrequeryGenerator(
       ), // compares the provided literal to the value object's literal value
       Seq(
         // connects the query variable with the list node label
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = queryVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri),
           listNodeVar
         ),
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = listNodeVar,
           pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri),
           obj = listNodeLabel
@@ -1009,7 +1010,7 @@ abstract class AbstractPrequeryGenerator(
         if (addGeneratedVariableForValueLiteral(queryVar, valueObjectLiteralVar)) {
           Seq(
             // connects the query variable with the value object (internal structure: values are represented as objects)
-            StatementPattern.makeExplicit(
+            StatementPattern(
               subj = queryVar,
               pred = IriRef(valueHasProperty.toSmartIri),
               valueObjectLiteralVar
@@ -1080,7 +1081,7 @@ abstract class AbstractPrequeryGenerator(
     // only generate a new statement if it has not already been created when handling the sort criteria
     val dateValStartStatementOption: Option[StatementPattern] = if (!dateValVarExists) {
       Some(
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = queryVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri),
           obj = dateValueHasStartVar
@@ -1091,7 +1092,7 @@ abstract class AbstractPrequeryGenerator(
     }
 
     // connects the value object with the periods end variable
-    val dateValEndStatement = StatementPattern.makeExplicit(
+    val dateValEndStatement = StatementPattern(
       subj = queryVar,
       pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri),
       obj = dateValueHasEndVar
@@ -1456,7 +1457,7 @@ abstract class AbstractPrequeryGenerator(
       ) {
         Seq(
           // connects the value object with the value language code
-          StatementPattern.makeExplicit(
+          StatementPattern(
             subj = langFunctionCall.textValueVar,
             pred = IriRef(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri),
             textValHasLanguage
@@ -1537,7 +1538,7 @@ abstract class AbstractPrequeryGenerator(
           if (addGeneratedVariableForValueLiteral(regexQueryVar, textValHasString)) {
             Seq(
               // connects the value object with the value literal
-              StatementPattern.makeExplicit(
+              StatementPattern(
                 subj = regexQueryVar,
                 pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
                 textValHasString
@@ -1611,7 +1612,7 @@ abstract class AbstractPrequeryGenerator(
     // if that statement hasn't been added already.
     val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
       Some(
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = textValueVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
           textValHasString
@@ -1696,7 +1697,7 @@ abstract class AbstractPrequeryGenerator(
     // if that statement hasn't been added already.
     val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
       Some(
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = textValueVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
           textValHasString
@@ -1781,7 +1782,7 @@ abstract class AbstractPrequeryGenerator(
     // Generate a statement to assign the literal to a variable, if that statement hasn't been added already.
     val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
       Some(
-        StatementPattern.makeExplicit(
+        StatementPattern(
           subj = textValueVar,
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
           textValHasString
@@ -1822,13 +1823,13 @@ abstract class AbstractPrequeryGenerator(
 
       Seq(
         // ?standoffTag knora-base:standoffTagHasStart ?standoffTag__start .
-        StatementPattern.makeExplicit(
+        StatementPattern(
           standoffTagVar,
           IriRef(OntologyConstants.KnoraBase.StandoffTagHasStart.toSmartIri),
           startVariable
         ),
         // ?standoffTag knora-base:standoffTagHasEnd ?standoffTag__end .
-        StatementPattern.makeExplicit(
+        StatementPattern(
           standoffTagVar,
           IriRef(OntologyConstants.KnoraBase.StandoffTagHasEnd.toSmartIri),
           endVariable
@@ -1971,8 +1972,7 @@ abstract class AbstractPrequeryGenerator(
 
     val rdfsLabelStatement = if (addGeneratedVariableForValueLiteral(resourceVar, rdfsLabelVar)) {
       Some(
-        StatementPattern
-          .makeExplicit(subj = resourceVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), rdfsLabelVar)
+        StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), rdfsLabelVar)
       )
     } else {
       None
@@ -2073,8 +2073,8 @@ abstract class AbstractPrequeryGenerator(
 
     // Generate statements linking the source resource and the standoff tag to the target resource.
     val linkStatements = Seq(
-      StatementPattern.makeExplicit(subj = linkSourceEntity, pred = hasStandoffLinkToIriRef, obj = linkTargetEntity),
-      StatementPattern.makeInferred(
+      StatementPattern(subj = linkSourceEntity, pred = hasStandoffLinkToIriRef, obj = linkTargetEntity),
+      StatementPattern(
         subj = standoffTagVar,
         pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri),
         obj = linkTargetEntity

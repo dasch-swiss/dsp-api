@@ -164,24 +164,9 @@ sealed trait QueryPattern extends SparqlGenerator
  * @param subj       the subject of the statement.
  * @param pred       the predicate of the statement.
  * @param obj        the object of the statement.
- * @param namedGraph the named graph this statement should be searched in. Defaults to [[None]].
  */
-case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None)
-    extends QueryPattern {
-  override def toSparql: String = {
-    val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
-
-    namedGraph match {
-      case Some(graph) =>
-        s"""GRAPH ${graph.toSparql} {
-           |    $triple
-           |}
-           |""".stripMargin
-
-      case None =>
-        triple + "\n"
-    }
-  }
+case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends QueryPattern {
+  override def toSparql: String = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} .\n"
 
   def toOntologySchema(targetSchema: OntologySchema): StatementPattern =
     copy(
@@ -226,47 +211,6 @@ case class LuceneQueryPattern(
 case class BindPattern(variable: QueryVariable, expression: Expression) extends QueryPattern {
   override def toSparql: String =
     s"BIND(${expression.toSparql} AS ${variable.toSparql})\n"
-}
-
-/**
- * Provides convenience methods for making statement patterns that are marked as needing inference or not.
- */
-object StatementPattern {
-
-  /**
-   * Makes a [[StatementPattern]] whose named graph is [[OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph]].
-   *
-   * @param subj the subject of the statement.
-   * @param pred the predicate of the statement.
-   * @param obj  the object of the statement.
-   * @return the statement pattern.
-   */
-  def makeExplicit(subj: Entity, pred: Entity, obj: Entity): StatementPattern = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    StatementPattern(
-      subj = subj,
-      pred = pred,
-      obj = obj,
-      namedGraph = Some(IriRef(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph.toSmartIri))
-    )
-  }
-
-  /**
-   * Makes a [[StatementPattern]] that doesn't specify a named graph.
-   *
-   * @param subj the subject of the statement.
-   * @param pred the predicate of the statement.
-   * @param obj  the object of the statement.
-   * @return the statement pattern.
-   */
-  def makeInferred(subj: Entity, pred: Entity, obj: Entity): StatementPattern =
-    StatementPattern(
-      subj = subj,
-      pred = pred,
-      obj = obj,
-      namedGraph = None
-    )
 }
 
 /**

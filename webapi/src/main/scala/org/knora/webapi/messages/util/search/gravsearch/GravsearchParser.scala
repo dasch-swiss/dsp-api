@@ -125,8 +125,7 @@ object GravsearchParser {
           StatementPattern(
             subj = makeEntityFromVar(nameToVar(constructStatementWithConstant.subj)),
             pred = makeEntityFromVar(nameToVar(constructStatementWithConstant.pred)),
-            obj = makeEntityFromVar(nameToVar(constructStatementWithConstant.obj)),
-            namedGraph = None
+            obj = makeEntityFromVar(nameToVar(constructStatementWithConstant.obj))
           )
       }
 

@@ -8,7 +8,7 @@ package org.knora.webapi.e2e.admin
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json._
-import zio._
+import zio.durationInt
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.ClientTestDataCollector
