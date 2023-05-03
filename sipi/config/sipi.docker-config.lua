@@ -200,5 +200,10 @@ routes = {
         method = 'POST',
         route = '/upload_without_processing',
         script = 'upload_without_processing.lua'
+    },
+    {
+        method = 'GET',
+        route = '/migrate_files_into_new_structure',
+        script = 'migrate_files_into_new_structure.lua'
     }
 }
