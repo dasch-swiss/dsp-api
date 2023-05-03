@@ -67,11 +67,11 @@ private case class NamedGraphTrigFile(graphIri: InternalIri, tempDir: Path) {
 
 private object TriGCombiner {
 
-  def combineTriGFiles(files: Seq[Path], outputFile: Path): Task[Path] = ZIO.scoped {
+  def combineTriGFiles(inputFiles: Iterable[Path], outputFile: Path): Task[Path] = ZIO.scoped {
     for {
       outFile   <- ZScopedJavaIoStreams.fileBufferedOutputStream(outputFile)
       outWriter <- createPrefixDedupStreamRDF(outFile).map { it => it.start(); it }
-      _ <- ZIO.foreachDiscard(files)(file =>
+      _ <- ZIO.foreachDiscard(inputFiles)(file =>
              // Combine the files and write the output to the given OutputStream
              for {
                is <- ZScopedJavaIoStreams.fileInputStream(file)
@@ -84,11 +84,11 @@ private object TriGCombiner {
   private def createPrefixDedupStreamRDF(os: OutputStream): ZIO[Scope, Throwable, StreamRDF] = {
     def acquire                    = ZIO.attempt(StreamRDFWriter.getWriterStream(os, Lang.TRIG))
     def release(writer: StreamRDF) = ZIO.attempt(writer.finish()).logError.ignore
-    ZIO.acquireRelease(acquire)(release).map(dedupStream)
+    ZIO.acquireRelease(acquire)(release).map(dedupPrefixStream)
   }
 
   // Define a custom StreamRDF implementation to filter out duplicate @prefix directives
-  private def dedupStream(writer: StreamRDF): StreamRDF = new StreamRDFBase {
+  private def dedupPrefixStream(writer: StreamRDF): StreamRDF = new StreamRDFBase {
     private val prefixes = mutable.Set[String]()
     override def prefix(prefix: String, iri: String): Unit =
       if (!prefixes.contains(prefix)) {
@@ -104,9 +104,7 @@ private object TriGCombiner {
 }
 
 final case class ProjectExportServiceLive(
-  private val ontologyRepo: OntologyRepo,
   private val projectService: ProjectADMService,
-  private val stringFormatter: StringFormatter,
   private val triplestoreService: TriplestoreService
 ) extends ProjectExportService {
 
@@ -156,8 +154,6 @@ final case class ProjectExportServiceLive(
 }
 
 object ProjectExportServiceLive {
-  val layer: URLayer[
-    OntologyRepo with ProjectADMService with StringFormatter with TriplestoreService,
-    ProjectExportService
-  ] = ZLayer.fromFunction(ProjectExportServiceLive.apply _)
+  val layer: URLayer[ProjectADMService with TriplestoreService, ProjectExportService] =
+    ZLayer.fromFunction(ProjectExportServiceLive.apply _)
 }
