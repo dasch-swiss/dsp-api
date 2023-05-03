@@ -40,6 +40,7 @@ function migrate_files()
                 if entry_type == "DIRECTORY" then
                     if string.len(item) ~= 2 then
                         migrate_folder(source_path, destination_path)
+                        delete_frames_folders(destination_path)
                     end
                 elseif entry_type == "FILE" then
                     migrate_file(source_path, destination_path)
@@ -92,12 +93,31 @@ function migrate_originals()
     check_and_delete_folder(originals_dir)
 end
 
------------------------------------------------------------
--- Recreates all sidecar files after the migration
------------------------------------------------------------
-function recreate_sidecar_files()
 
+-----------------------------------------------------------
+-- Deletes all frames folders as they are no longer needed
+-----------------------------------------------------------
+function delete_frames_folders(path)
+    local frames_path = path .. "/" .. "frames"
+    local folders
+    success, folders = server.fs.readdir(path)
+    if not success then
+        send_error(500, "delete_frames_folders - server.fs.readdir() failed: " .. folders)
+        return
+    end
+
+    for _, folder in pairs(folders) do 
+        if folder == "frames" then
+            local ok, err = os.execute("rm -r " .. frames_path)
+            if result == true then
+                server.log("delete_frames_folders - deleted " .. tostring(frames_path), server.loglevel.LOG_DEBUG)
+            else
+                server.log("delete_frames_folders - os.execute() failed: " .. err , server.loglevel.LOG_WARNING)
+            end
+        end
+    end
 end
+
 
 -----------------------------------------------------------
 -- Deletes the folder if it is empty
@@ -121,8 +141,12 @@ function check_and_delete_folder(path)
 
         if #items == 0 then
             -- delete the folder if it is empty
-            os.remove(folder_to_delete)
-            server.log("check_and_delete_folder - deleted " .. tostring(folder_to_delete), server.loglevel.LOG_DEBUG)
+            local ok, err = os.remove(folder_to_delete)
+            if result == true then
+                server.log("check_and_delete_folder - deleted " .. tostring(folder_to_delete), server.loglevel.LOG_DEBUG)
+            else
+                server.log("check_and_delete_folder - os.remove() failed: " .. err , server.loglevel.LOG_WARNING)
+            end
         end
     end
 end
@@ -206,4 +230,3 @@ end
 
 migrate_files()
 migrate_originals()
-recreate_sidecar_files()
