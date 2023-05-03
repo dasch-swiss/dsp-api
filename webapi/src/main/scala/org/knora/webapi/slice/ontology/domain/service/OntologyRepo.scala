@@ -8,6 +8,7 @@ package org.knora.webapi.slice.ontology.domain.service
 import zio.Task
 import zio.macros.accessible
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject

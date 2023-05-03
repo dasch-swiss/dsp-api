@@ -8,13 +8,13 @@ package org.knora.webapi.store.triplestore.api
 import play.twirl.api.TxtFormat
 import zio._
 import zio.macros.accessible
-
 import java.nio.file.Path
 
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 @accessible
 trait TriplestoreService {
@@ -97,6 +97,13 @@ trait TriplestoreService {
     outputFormat: QuadFormat
   ): Task[FileWrittenResponse]
 
+  def sparqlHttpConstructFile(
+    sparql: String,
+    graphIri: InternalIri,
+    outputFile: Path,
+    outputFormat: QuadFormat
+  ): Task[FileWrittenResponse] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
+
   /**
    * Performs a SPARQL update operation.
    *
@@ -127,6 +134,12 @@ trait TriplestoreService {
     outputFile: Path,
     outputFormat: QuadFormat
   ): Task[FileWrittenResponse]
+
+  def sparqlHttpGraphFile(
+    graphIri: InternalIri,
+    outputFile: Path,
+    outputFormat: QuadFormat
+  ): Task[FileWrittenResponse] = sparqlHttpGraphFile(graphIri.value, outputFile, outputFormat)
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.

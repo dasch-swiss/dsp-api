@@ -14,10 +14,7 @@ import scala.util.Success
 import scala.util.Try
 
 import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphFileRequest
 import org.knora.webapi.messages.twirl
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
@@ -29,6 +26,7 @@ import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 @accessible
@@ -43,7 +41,6 @@ trait ProjectExportService {
    *  * the triples of the project's ontologies
    *
    * @param project the project to be exported
-   * @param file the path to the file to which the project should be exported
    * @return the [[Path]] to the file to which the project was exported
    */
   def exportProjectTriples(project: KnoraProject): Task[Path]
@@ -55,9 +52,9 @@ trait ProjectExportService {
  * @param graphIri the IRI of the named graph.
  * @param tempDir  the directory in which the file is to be saved.
  */
-private case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
+private case class NamedGraphTrigFile(graphIri: InternalIri, tempDir: Path) {
   lazy val dataFile: Path = {
-    val filename = graphIri.replaceAll("[.:/]", "_") + ".trig"
+    val filename = graphIri.value.replaceAll("[.:/]", "_") + ".trig"
     tempDir.resolve(filename)
   }
 }
@@ -87,12 +84,57 @@ private class CombiningRdfProcessor(formattingStreamProcessor: RdfStreamProcesso
     formattingStreamProcessor.processStatement(statement)
   }
 }
+
 final case class ProjectExportServiceLive(
   private val ontologyRepo: OntologyRepo,
-  private val projectRepo: ProjectADMService,
+  private val projectService: ProjectADMService,
   private val stringFormatter: StringFormatter,
   private val triplestoreService: TriplestoreService
 ) extends ProjectExportService {
+
+  override def exportProjectTriples(project: KnoraProject): Task[Path] = {
+    val tempDir = Files.createTempDirectory(project.shortname)
+    for {
+      _ <-
+        ZIO.logDebug(s"Downloading project ${project.shortcode} data to temporary directory ${tempDir.toAbsolutePath}")
+      ontologyAndData <- downloadOntologyAndData(project, tempDir)
+      adminData       <- downloadProjectAdminData(project, tempDir)
+      permissionData  <- downloadPermissionData(project, tempDir)
+      resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, project, tempDir)
+    } yield resultFile
+  }
+
+  private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
+    allGraphsTrigFile <-
+      projectService.getNamedGraphsForProject(project).map(_.map(NamedGraphTrigFile(_, tempDir)))
+    files <- ZIO.foreach(allGraphsTrigFile)(file =>
+               triplestoreService.sparqlHttpGraphFile(file.graphIri, file.dataFile, TriG).as(file)
+             )
+  } yield files
+
+  private def downloadProjectAdminData(project: KnoraProject, tempDir: Path): Task[NamedGraphTrigFile] = {
+    val graphIri = adminDataGraph
+    val file     = NamedGraphTrigFile(graphIri, tempDir)
+    for {
+      query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectAdminData(project.id.value))
+      _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
+    } yield file
+  }
+
+  private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
+    val graphIri = permissionsDataGraph
+    val file     = NamedGraphTrigFile(graphIri, tempDir)
+    for {
+      query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectPermissions(project.id.value))
+      _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
+    } yield file
+  }
+
+  private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], project: KnoraProject, tempDir: Path): Task[Path] = {
+    val filename         = project.shortname + ".trig"
+    val resultFile: Path = tempDir.resolve(filename)
+    combineGraphs(allData, resultFile).as(resultFile)
+  }
 
   /**
    * Combines several TriG files into one.
@@ -142,55 +184,6 @@ final case class ProjectExportServiceLive(
       case Success(_)  => ()
       case Failure(ex) => throw ex
     }
-  }
-
-  override def exportProjectTriples(project: KnoraProject): Task[Path] = {
-    val tempDir = Files.createTempDirectory(project.shortname)
-    for {
-      _                 <- ZIO.logInfo("Downloading project data to temporary directory " + tempDir.toAbsolutePath)
-      projectOntologies <- ontologyRepo.findByProject(project).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
-
-      // Download the project's named graphs.
-
-      projectDataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(project).value
-      graphsToDownload: Seq[IRI] = projectOntologies :+ projectDataNamedGraph
-      projectSpecificNamedGraphTrigFiles: Seq[NamedGraphTrigFile] =
-        graphsToDownload.map(graphIri => NamedGraphTrigFile(graphIri = graphIri, tempDir = tempDir))
-
-      _ <- ZIO.foreachDiscard(projectSpecificNamedGraphTrigFiles) { trigFile =>
-             triplestoreService.sparqlHttpGraphFile(trigFile.graphIri, trigFile.dataFile, TriG)
-           }
-
-      // Download the project's admin data
-
-      adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = adminDataGraph, tempDir = tempDir)
-
-      projectIri      = project.id.value
-      adminDataSparql = twirl.queries.sparql.admin.txt.getProjectAdminData(projectIri)
-      _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = adminDataSparql.toString(),
-             graphIri = adminDataNamedGraphTrigFile.graphIri,
-             outputFile = adminDataNamedGraphTrigFile.dataFile,
-             outputFormat = TriG
-           )
-
-      // Download the project's permission data.
-      permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = permissionsDataGraph, tempDir = tempDir)
-
-      permissionDataSparql = twirl.queries.sparql.admin.txt.getProjectPermissions(projectIri)
-      _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = permissionDataSparql.toString(),
-             graphIri = permissionDataNamedGraphTrigFile.graphIri,
-             outputFile = permissionDataNamedGraphTrigFile.dataFile,
-             outputFormat = TriG
-           )
-
-      // Stream the combined results into the output file.
-      namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
-        projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
-      resultFile: Path = tempDir.resolve(project.shortname + ".trig")
-      _               <- combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
-    } yield resultFile
   }
 }
 

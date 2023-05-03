@@ -5,7 +5,9 @@
 
 package org.knora.webapi.slice.admin
 
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+
 object AdminConstants {
-  val adminDataGraph: String       = "http://www.knora.org/data/admin"
-  val permissionsDataGraph: String = "http://www.knora.org/data/permissions"
+  val adminDataGraph: InternalIri       = InternalIri("http://www.knora.org/data/admin")
+  val permissionsDataGraph: InternalIri = InternalIri("http://www.knora.org/data/permissions")
 }
