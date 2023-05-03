@@ -17,12 +17,35 @@ final case class ConstructToConstructTransformer(
   iriConverter: IriConverter
 ) {
 
-  private def transformLuceneQueryPattern(pattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+  /**
+   * Transforms a CONSTRUCT query, by applying opimization and inference.
+   *
+   * @param inputQuery                 the query to be transformed.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
+   * @return the transformed query.
+   */
+  def transform(
+    inputQuery: ConstructQuery,
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+  ): Task[ConstructQuery] =
     for {
-      predIri  <- iriConverter.asSmartIri("http://jena.apache.org/text#query")
-      datatype <- iriConverter.asSmartIri(OntologyConstants.Xsd.String)
-      obj       = XsdLiteral(pattern.queryString.getQueryString, datatype)
-    } yield Seq(StatementPattern(pattern.subj, IriRef(predIri), obj))
+      patterns <- optimizeAndTransformPatterns(inputQuery.whereClause.patterns, limitInferenceToOntologies)
+    } yield inputQuery.copy(whereClause = WhereClause(patterns))
+
+  private def optimizeAndTransformPatterns(
+    patterns: Seq[QueryPattern],
+    limit: Option[Set[SmartIri]]
+  ): Task[Seq[QueryPattern]] = for {
+    optimisedPatterns <-
+      ZIO.attempt(
+        SparqlTransformer.moveBindToBeginning(
+          SparqlTransformer.optimiseIsDeletedWithFilter(
+            SparqlTransformer.moveLuceneToBeginning(patterns)
+          )
+        )
+      )
+    transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern(_, limit))
+  } yield transformedPatterns.flatten
 
   private def transformPattern(
     pattern: QueryPattern,
@@ -40,39 +63,16 @@ final case class ConstructToConstructTransformer(
       case MinusPattern(patterns)    => ZIO.foreach(patterns)(transformPattern(_, limit).map(MinusPattern))
       case OptionalPattern(patterns) => ZIO.foreach(patterns)(transformPattern(_, limit).map(OptionalPattern))
       case UnionPattern(blocks) =>
-        ZIO.foreach(blocks)(transformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
+        ZIO.foreach(blocks)(optimizeAndTransformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
       case lucenePattern: LuceneQueryPattern => transformLuceneQueryPattern(lucenePattern)
       case pattern: QueryPattern             => ZIO.succeed(Seq(pattern))
     }
 
-  private def transformPatterns(
-    patterns: Seq[QueryPattern],
-    limit: Option[Set[SmartIri]]
-  ): Task[Seq[QueryPattern]] = for {
-    optimisedPatterns <-
-      ZIO.attempt(
-        SparqlTransformer.moveBindToBeginning(
-          SparqlTransformer.optimiseIsDeletedWithFilter(
-            SparqlTransformer.moveLuceneToBeginning(patterns)
-          )
-        )
-      )
-    transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern(_, limit))
-  } yield transformedPatterns.flatten
-
-  /**
-   * Transforms a CONSTRUCT query, by applying opimization and inference.
-   *
-   * @param inputQuery                 the query to be transformed.
-   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
-   * @return the transformed query.
-   */
-  def transform(
-    inputQuery: ConstructQuery,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Task[ConstructQuery] =
+  private def transformLuceneQueryPattern(pattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
     for {
-      patterns <- transformPatterns(inputQuery.whereClause.patterns, limitInferenceToOntologies)
-    } yield inputQuery.copy(whereClause = WhereClause(patterns))
+      predIri  <- iriConverter.asSmartIri("http://jena.apache.org/text#query")
+      datatype <- iriConverter.asSmartIri(OntologyConstants.Xsd.String)
+      obj       = XsdLiteral(pattern.queryString.getQueryString, datatype)
+    } yield Seq(StatementPattern(pattern.subj, IriRef(predIri), obj))
 
 }
