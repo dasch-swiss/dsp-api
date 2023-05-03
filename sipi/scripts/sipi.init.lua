@@ -199,7 +199,7 @@ function pre_flight(prefix, identifier, cookie)
                 type = 'restrict',
                 size = restrictedViewSize
             }, filepath
-    elseif permission_info.permissionCode >= 2 then
+    elseif permission_code >= 2 then
         -- full view permissions on file
         return 'allow', filepath
     else
@@ -242,8 +242,8 @@ function file_pre_flight(identifier, cookie)
     if #segments == 4 then
         file_name = segments[4]
         log("file_pre_flight - file name: " .. file_name, server.loglevel.LOG_DEBUG)
-    -- in case of a preview file of a video, get the file path of the video file to check permissions on the video
     elseif #segments == 5 then
+        -- in case of a preview file of a video, get the file path of the video file to check permissions on the video
         log("file_pre_flight - found 5 segments, it's assumed to be the preview file for a video", server.loglevel.LOG_ERR)
         file_name = segments[4] .. '.mp4'
         file_name_preview = segments[4] .. '/' .. segments[5]
