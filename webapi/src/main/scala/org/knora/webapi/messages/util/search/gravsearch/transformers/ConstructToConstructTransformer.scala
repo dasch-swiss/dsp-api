@@ -17,14 +17,12 @@ final case class ConstructToConstructTransformer(
   iriConverter: IriConverter
 ) {
 
-  private def transformLuceneQueryPattern(
-    luceneQueryPattern: LuceneQueryPattern
-  ): Task[Seq[QueryPattern]] =
+  private def transformLuceneQueryPattern(pattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
     for {
       predIri  <- iriConverter.asSmartIri("http://jena.apache.org/text#query")
       datatype <- iriConverter.asSmartIri(OntologyConstants.Xsd.String)
-      obj       = XsdLiteral(luceneQueryPattern.queryString.getQueryString, datatype)
-    } yield Seq(StatementPattern(luceneQueryPattern.subj, IriRef(predIri), obj))
+      obj       = XsdLiteral(pattern.queryString.getQueryString, datatype)
+    } yield Seq(StatementPattern(pattern.subj, IriRef(predIri), obj))
 
   private def transformPattern(
     pattern: QueryPattern,
