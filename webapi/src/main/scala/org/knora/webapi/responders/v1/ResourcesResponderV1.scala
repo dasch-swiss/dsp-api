@@ -897,18 +897,17 @@ final case class ResourcesResponderV1Live(
         }
 
       // Construct the API response. Return no data if the user has no view permissions on the queried resource.
-      resFullResponse =
-        if (resData.rights.nonEmpty) {
-          ResourceFullResponseV1(
-            resinfo = Some(resInfo),
-            resdata = Some(resData),
-            props = Some(PropsV1(properties)),
-            incoming = incomingRefs,
-            access = "OK"
+      resFullResponse <-
+        if (resData.rights.nonEmpty)
+          ZIO.succeed(
+            ResourceFullResponseV1(Some(resInfo), Some(resData), Some(PropsV1(properties)), incomingRefs, "OK")
           )
-        } else {
-          throw ForbiddenException(s"User ${userProfile.id} does not have permission to query resource $resourceIri")
-        }
+        else
+          ZIO.fail(
+            ForbiddenException(
+              s"User ${userProfile.id} does not have permission to query resource $resourceIri"
+            )
+          )
     } yield resFullResponse
   }
 
@@ -1881,9 +1880,9 @@ final case class ResourcesResponderV1Live(
                      // will be created in the same transaction. Check that it will belong to a
                      // suitable class.
                      for {
-                       pop <- checkedValue
+                       iri <- checkedValue
                        checkSubClassRequest =
-                         CheckSubClassRequestV1(clientResourceIDsToResourceClasses(targetClientID), pop, userProfile)
+                         CheckSubClassRequestV1(clientResourceIDsToResourceClasses(targetClientID), iri, userProfile)
 
                        subClassResponse <- messageRelay.ask[CheckSubClassResponseV1](checkSubClassRequest)
                        _ <-
@@ -1976,25 +1975,19 @@ final case class ResourcesResponderV1Live(
              .when(!requiredProps.subsetOf(submittedPropertyIris))
 
       // check if a file value is required by the ontology
-      fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] =
-        if (resourceClassInfo.fileValueProperties.nonEmpty) {
-          convertedFile match {
-            case Some(converted) =>
-              // TODO: check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
-              Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(converted)))
-
-            case None => throw BadRequestException(s"File required but none submitted")
-          }
-
-        } else {
-          if (convertedFile.nonEmpty) {
-            throw BadRequestException(
+      fileValues <-
+        if (resourceClassInfo.fileValueProperties.nonEmpty) for {
+          file <- ZIO
+                    .fromOption(convertedFile)
+                    .orElseFail(BadRequestException(s"File required but none submitted"))
+        } yield Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(file)))
+        else if (convertedFile.nonEmpty)
+          ZIO.fail(
+            BadRequestException(
               s"File params are given but resource class $resourceClassIri does not allow any representation"
             )
-          } else {
-            None
-          }
-        }
+          )
+        else ZIO.succeed(None)
     } yield fileValues
   }
 
@@ -2359,13 +2352,14 @@ final case class ResourcesResponderV1Live(
                                     userProfile
                                   )
                                 )
-      ontologyMetadata: OntologyMetadataV2 =
-        readOntologyMetadataV2.ontologies.headOption
-          .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-      ontologyProjectIri: IRI =
-        ontologyMetadata.projectIri
-          .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
-          .toString
+      ontologyMetadata <-
+        ZIO
+          .fromOption(readOntologyMetadataV2.ontologies.headOption)
+          .orElseFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+      ontologyProjectIri <-
+        ZIO
+          .fromOption(ontologyMetadata.projectIri)
+          .orElseFail(InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
 
       _ <-
         ZIO
@@ -2376,7 +2370,7 @@ final case class ResourcesResponderV1Live(
             )
           )
           .when(
-            iri != ontologyProjectIri &&
+            iri != ontologyProjectIri.toString &&
               !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri ||
                 ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
           )
@@ -2636,10 +2630,9 @@ final case class ResourcesResponderV1Live(
       } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label)
 
     for {
-      // Don't allow anonymous users to change a resource's label.
       userIri <-
         if (userProfile.isAnonymousUser)
-          ZIO.fail(throw ForbiddenException("Anonymous users aren't allowed to change a resource's label"))
+          ZIO.fail(ForbiddenException("Anonymous users aren't allowed to change a resource's label"))
         else ZIO.succeed(userProfile.id)
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
@@ -2713,8 +2706,9 @@ final case class ResourcesResponderV1Live(
                              )
 
       resclassQueryResponse <- triplestoreService.sparqlHttpSelect(resclassSparqlQuery)
-      resclass = resclassQueryResponse.results.bindings.headOption
-                   .getOrElse(throw InconsistentRepositoryDataException(s"No resource class given for $resourceIri"))
+      resclass <- ZIO
+                    .fromOption(resclassQueryResponse.results.bindings.headOption)
+                    .orElseFail(InconsistentRepositoryDataException(s"No resource class given for $resourceIri"))
 
       properties <- getResourceProperties(
                       resourceIri = resourceIri,
@@ -2791,8 +2785,9 @@ final case class ResourcesResponderV1Live(
                    )
                }
 
-      projectShortcode = resourceIri.toSmartIri.getProjectCode
-                           .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
+      projectShortcode <- ZIO
+                            .fromOption(resourceIri.toSmartIri.getProjectCode)
+                            .orElseFail(InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
 
       queryResult <- queryResults2PropertyV1s(
                        containingResourceIri = resourceIri,
@@ -3148,13 +3143,12 @@ final case class ResourcesResponderV1Live(
         case (propertyIri: IRI, valueObject: ValueObjects) =>
           val valueObjectsV1WithFuture: Iterable[Task[ValueObjectV1]] = valueObject.valueObjects.map {
             case (valObjIri: IRI, valueProps: ValueProps) =>
-              // Make sure the value object has an rdf:type.
-              valueProps.literalData.getOrElse(
-                OntologyConstants.Rdf.Type,
-                throw InconsistentRepositoryDataException(s"$valObjIri has no rdf:type")
-              )
-
               for {
+                // Make sure the value object has an rdf:type.
+                _ <- ZIO
+                       .fromOption(valueProps.literalData.get(OntologyConstants.Rdf.Type))
+                       .orElseFail(InconsistentRepositoryDataException(s"$valObjIri has no rdf:type"))
+
                 // Convert the SPARQL query results to a ValueV1.
                 valueV1 <- valueUtilV1.makeValueV1(valueProps, projectShortcode, userProfile)
 
