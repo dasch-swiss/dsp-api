@@ -5,6 +5,21 @@ require "get_knora_session"
 require "log_util"
 
 -------------------------------------------------------------------------------
+-- This function returns the filepath according to the old way the file was
+-- stored in.
+-------------------------------------------------------------------------------
+function get_old_tmp_filepath(shortcode, filename)
+    local filepath = ''
+    if config.prefix_as_path then
+        filepath = config.imgroot .. '/' .. shortcode .. '/' .. filename
+    else
+        filepath = config.imgroot .. '/' .. filename
+    end
+    return filepath
+end
+
+
+-------------------------------------------------------------------------------
 -- This function returns the filepath of the temporary location the file is 
 -- stored in. The path is created from the first four characters of the filename.
 -------------------------------------------------------------------------------
@@ -160,6 +175,15 @@ function pre_flight(prefix, identifier, cookie)
     local filepath = get_tmp_filepath(prefix, identifier)
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
+    -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
+    success, exists = server.fs.exists(filepath)
+    log("pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
+    if not exists then
+        filepath = get_old_tmp_filepath(prefix, identifier)
+        log("pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath, server.loglevel.LOG_DEBUG)
+    end
+    
+
     local dsp_cookie_header = nil
     if cookie ~= '' then
         dsp_cookie_header = check_and_get_cookie_header(cookie)
@@ -256,8 +280,16 @@ function file_pre_flight(identifier, cookie)
 
     local filepath = get_tmp_filepath(shortcode, file_name)
     local filepath_preview = get_tmp_filepath(shortcode, file_name_preview)
-
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
+
+    -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
+    success, exists = server.fs.exists(filepath)
+    log("file_pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
+    if not exists then
+        filepath = get_old_tmp_filepath(shortcode, file_name)
+        filepath_preview = get_old_tmp_filepath(shortcode, file_name_preview)
+        log("file_pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath, server.loglevel.LOG_DEBUG)
+    end
 
     local dsp_cookie_header = nil
     if cookie ~= '' then
