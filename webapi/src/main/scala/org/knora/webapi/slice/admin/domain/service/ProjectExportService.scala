@@ -67,9 +67,9 @@ private case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
 }
 
 /**
- * An [[RdfStreamProcessor]] for combining several named graphs into one.
+ * A [[RdfStreamProcessor]] for combining several named graphs into one.
  *
- * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the combined result.
+ * @param formattingStreamProcessor a [[RdfStreamProcessor]] for writing the combined result.
  */
 private class CombiningRdfProcessor(formattingStreamProcessor: RdfStreamProcessor) extends RdfStreamProcessor {
   private var startedStatements = false
