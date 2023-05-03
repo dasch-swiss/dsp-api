@@ -2845,15 +2845,18 @@ final case class ResourcesResponderV1Live(
             subject == OntologyConstants.KnoraBase.AttachedToProject
           }
 
-        resourceProject =
-          maybeResourceProjectStatement
-            .getOrElse(
-              throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
+        resourceProject <-
+          ZIO
+            .fromOption(maybeResourceProjectStatement)
+            .mapBoth(
+              _ => InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject"),
+              _._2
             )
-            ._2
-        projectShortcode: String =
-          resourceIri.toSmartIri.getProjectCode
-            .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI $resourceIri"))
+
+        projectShortcode <-
+          ZIO
+            .fromOption(resourceIri.toSmartIri.getProjectCode)
+            .orElseFail(InconsistentRepositoryDataException(s"Invalid resource IRI $resourceIri"))
 
         // Get the rows describing file values from the query results, grouped by file value IRI.
         fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] =
@@ -2888,26 +2891,20 @@ final case class ResourcesResponderV1Live(
                                                           }
 
         // Convert the ValueProps objects into FileValueV1 objects
-        fileValuesWithFuture: Seq[Task[FileValueV1]] = valuePropsForFileValues.map {
-                                                         case (fileValueIri, fileValueProps) =>
-                                                           for {
-                                                             valueV1 <-
-                                                               valueUtilV1.makeValueV1(
-                                                                 valueProps = fileValueProps,
-                                                                 projectShortcode = projectShortcode,
-                                                                 userProfile = userProfile
-                                                               )
-
-                                                           } yield valueV1 match {
-                                                             case fileValueV1: FileValueV1 => fileValueV1
-                                                             case otherValueV1 =>
-                                                               throw InconsistentRepositoryDataException(
-                                                                 s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}"
-                                                               )
-                                                           }
-                                                       }
-
-        fileValues <- ZIO.collectAll(fileValuesWithFuture)
+        fileValues <-
+          ZIO.foreach(valuePropsForFileValues) { case (fileValueIri, fileValueProps) =>
+            for {
+              value <- valueUtilV1.makeValueV1(fileValueProps, projectShortcode, userProfile)
+              fileValue <-
+                ZIO
+                  .whenCase(value) { case file: FileValueV1 => ZIO.succeed(file) }
+                  .someOrFail(
+                    InconsistentRepositoryDataException(
+                      s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${value.valueTypeIri}"
+                    )
+                  )
+            } yield fileValue
+          }
 
         // Generate a IIIF preview URL from the full-size image.
 
