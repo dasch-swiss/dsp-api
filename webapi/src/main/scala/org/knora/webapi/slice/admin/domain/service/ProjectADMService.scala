@@ -7,18 +7,44 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio._
 
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait ProjectADMService {
   def findAll: Task[List[ProjectADM]]
   def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]]
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
+}
+
+object ProjectADMService {
+
+  /**
+   * Given the [[ProjectADM]] constructs the project's data named graph.
+   *
+   * @param project A [[ProjectADM]].
+   * @return the [[InternalIri]] of the project's data named graph.
+   */
+  def projectDataNamedGraphV2(project: ProjectADM): InternalIri =
+    projectDataNamedGraphV2(project.shortcode, project.shortname)
+
+  /**
+   * Given the [[KnoraProject]] constructs the project's data named graph.
+   *
+   * @param project A [[KnoraProject]].
+   * @return the [[InternalIri]] of the project's data named graph.
+   */
+  def projectDataNamedGraphV2(project: KnoraProject): InternalIri =
+    projectDataNamedGraphV2(project.shortcode, project.shortname)
+
+  private def projectDataNamedGraphV2(projectShortcode: String, projectShortname: String) =
+    InternalIri(OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectShortcode + "/" + projectShortname)
 }
 
 final case class ProjectADMServiceLive(

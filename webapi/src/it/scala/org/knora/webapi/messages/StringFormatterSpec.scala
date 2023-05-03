@@ -14,6 +14,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 
 /**
  * Tests [[StringFormatter]].
@@ -938,23 +939,6 @@ class StringFormatterSpec extends CoreSpec {
       val expected  = s"http://www.knora.org/data/$shortcode/$shortname"
       val result    = stringFormatter.projectDataNamedGraphV1(SharedTestDataV1.imagesProjectInfo)
       result should be(expected)
-
-      // check consistency of our test data
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.anythingProject) should be(
-        SharedOntologyTestDataADM.ANYTHING_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.imagesProject) should be(
-        SharedOntologyTestDataADM.IMAGES_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.beolProject) should be(
-        SharedOntologyTestDataADM.BEOL_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.incunabulaProject) should be(
-        SharedOntologyTestDataADM.INCUNABULA_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject) should be(
-        SharedOntologyTestDataADM.DOKUBIB_DATA_IRI
-      )
     }
 
     "generate an ARK URL for a resource IRI without a timestamp" in {

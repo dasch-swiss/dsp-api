@@ -26,6 +26,7 @@ import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
@@ -47,6 +48,7 @@ object ApiRoutes {
       with IriConverter
       with KnoraProjectRepo
       with MessageRelay
+      with ProjectADMRestService
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
@@ -65,6 +67,7 @@ object ApiRoutes {
                        with IriConverter
                        with KnoraProjectRepo
                        with MessageRelay
+                       with ProjectADMRestService
                        with RestCardinalityService
                        with RestResourceInfoService
                        with StringFormatter
@@ -89,6 +92,7 @@ private final case class ApiRoutesImpl(
       with IriConverter
       with KnoraProjectRepo
       with MessageRelay
+      with ProjectADMRestService
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
