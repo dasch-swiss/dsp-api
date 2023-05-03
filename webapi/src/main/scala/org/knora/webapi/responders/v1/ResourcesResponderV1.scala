@@ -1586,22 +1586,25 @@ final case class ResourcesResponderV1Live(
 
       _ <-
         ZIO.foreachDiscard(readOntologyMetadataV2.ontologies) { metadata =>
-          val ontologyProjectIri: IRI = ZIO
-            .fromOption(metadata.projectIri)
-            .orElseFail(InconsistentRepositoryDataException(s"Ontology ${metadata.ontologyIri} has no project"))
-            .toString
+          for {
+            ontologyProjectIri <-
+              ZIO
+                .fromOption(metadata.projectIri)
+                .orElseFail(InconsistentRepositoryDataException(s"Ontology ${metadata.ontologyIri} has no project"))
 
-          ZIO
-            .fail(
-              BadRequestException(
-                s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology " +
-                  s"${metadata.ontologyIri}, which belongs to another project and is not shared"
-              )
-            )
-            .when(
-              resourceProjectIri != ontologyProjectIri &&
-                !(metadata.ontologyIri.isKnoraBuiltInDefinitionIri || metadata.ontologyIri.isKnoraSharedDefinitionIri)
-            )
+            _ <-
+              ZIO
+                .fail(
+                  BadRequestException(
+                    s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology " +
+                      s"${metadata.ontologyIri}, which belongs to another project and is not shared"
+                  )
+                )
+                .when(
+                  resourceProjectIri != ontologyProjectIri.toIri &&
+                    !(metadata.ontologyIri.isKnoraBuiltInDefinitionIri || metadata.ontologyIri.isKnoraSharedDefinitionIri)
+                )
+          } yield ()
         }
 
       resourceClassesEntityInfoResponse <- messageRelay
