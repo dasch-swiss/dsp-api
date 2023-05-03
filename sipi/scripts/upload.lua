@@ -41,6 +41,37 @@ function check_create_dir(path)
 end
 ----------------------------------------------------
 
+--------------------------------------------------------
+-- Create the file specific tmp folder from its filename
+-- Returns the path
+--------------------------------------------------------
+function create_tmp_folder(root_folder, filename)
+    local first_character_of_filename = filename:sub(1, 1)
+    local second_character_of_filename = filename:sub(2, 2)
+    local third_character_of_filename = filename:sub(3, 3)
+    local fourth_character_of_filename = filename:sub(4, 4)
+
+    local first_subfolder = first_character_of_filename .. second_character_of_filename
+    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
+
+    local tmp_folder_level_1 = root_folder .. '/' .. first_subfolder
+    success, error_msg = check_create_dir(tmp_folder_level_1)
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+
+    local tmp_folder = tmp_folder_level_1 .. '/' .. second_subfolder
+    success, error_msg = check_create_dir(tmp_folder)
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+
+    return tmp_folder
+end
+--------------------------------------------------------
+
 -- Buffer the response (helps with error handling).
 local success, error_msg = server.setBuffer()
 if not success then
@@ -141,28 +172,8 @@ for file_index, file_params in pairs(server.uploads) do
         return
     end
 
-    -- create tmp folder and subfolders for the file
-    local first_character_of_filename = hashed_tmp_storage_filename:sub(1, 1)
-    local second_character_of_filename = hashed_tmp_storage_filename:sub(2, 2)
-    local third_character_of_filename = hashed_tmp_storage_filename:sub(3, 3)
-    local fourth_character_of_filename = hashed_tmp_storage_filename:sub(4, 4)
-
-    local first_subfolder = first_character_of_filename .. second_character_of_filename
-    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
-
-    local tmp_folder_level_1 = tmp_folder_root .. '/' .. first_subfolder
-    success, error_msg = check_create_dir(tmp_folder_level_1)
-    if not success then
-        send_error(500, error_msg)
-        return
-    end
-
-    local tmp_folder = tmp_folder_level_1 .. '/' .. second_subfolder
-    success, error_msg = check_create_dir(tmp_folder)
-    if not success then
-        send_error(500, error_msg)
-        return
-    end
+    -- create tmp folder and subfolders for the files
+    local tmp_folder = create_tmp_folder(tmp_folder_root, hashed_tmp_storage_filename)
 
     local tmp_storage_file_path = tmp_folder .. '/' .. hashed_tmp_storage_filename
     local tmp_storage_sidecar_path = tmp_folder .. '/' .. hashed_tmp_storage_sidecar

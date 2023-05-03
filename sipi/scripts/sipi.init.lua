@@ -167,13 +167,13 @@ function pre_flight(prefix, identifier, cookie)
     log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
     log("pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
 
+    local filepath = get_tmp_filepath(prefix, identifier)
+    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
+
     if prefix == "tmp" then
         -- always allow access to tmp folder
         return 'allow', filepath
     end
-
-    local filepath = get_tmp_filepath(prefix, identifier)
-    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
     success, exists = server.fs.exists(filepath)
