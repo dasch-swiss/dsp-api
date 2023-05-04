@@ -53,7 +53,7 @@ final case class ConstructTransformer(
   ): Task[Seq[QueryPattern]] =
     pattern match {
       case statementPattern: StatementPattern =>
-        sparqlTransformerLive.transformStatementInWhereForNoInference(
+        sparqlTransformerLive.transformStatementInWhere(
           statementPattern = statementPattern,
           simulateInference = true,
           limitInferenceToOntologies = limit
