@@ -12,6 +12,7 @@ import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
+import zio.Random
 import zio.Scope
 import zio.Task
 import zio.URLayer
@@ -48,6 +49,20 @@ trait ProjectExportService {
    * @return the [[Path]] to the file to which the project was exported
    */
   def exportProjectTriples(project: KnoraProject): Task[Path]
+
+  /**
+   * Exports a project to a file.
+   * The file format is TriG.
+   * The data exported is:
+   * * the project metadata
+   * * the project's permission data
+   * * the triples of the project's ontologies
+   *
+   * @param project the project to be exported
+   * @param targetFile the file to which the project is to be exported
+   * @return the [[Path]] to the file to which the project was exported
+   */
+  def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path]
 }
 
 /**
@@ -107,16 +122,22 @@ final case class ProjectExportServiceLive(
 ) extends ProjectExportService {
 
   override def exportProjectTriples(project: KnoraProject): Task[Path] = {
-    val tempDir = Files.createTempDirectory(project.shortname)
+    val tempDir    = Files.createTempDirectory(project.shortname)
+    val targetFile = tempDir.resolve(project.shortname + ".trig")
+    exportProjectTriples(project: KnoraProject, targetFile)
+  }
+
+  override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] =
     for {
+      randomUuid <- Random.nextUUID
+      tempDir     = Files.createTempDirectory(project.shortname + randomUuid)
       _ <-
         ZIO.logDebug(s"Downloading project ${project.shortcode} data to temporary directory ${tempDir.toAbsolutePath}")
       ontologyAndData <- downloadOntologyAndData(project, tempDir)
       adminData       <- downloadProjectAdminData(project, tempDir)
       permissionData  <- downloadPermissionData(project, tempDir)
-      resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, project, tempDir)
+      resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, targetFile)
     } yield resultFile
-  }
 
   private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
     allGraphsTrigFile <-
@@ -144,11 +165,8 @@ final case class ProjectExportServiceLive(
     } yield file
   }
 
-  private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], project: KnoraProject, tempDir: Path): Task[Path] = {
-    val files      = allData.map(_.dataFile)
-    val targetFile = tempDir.resolve(project.shortname + ".trig")
-    TriGCombiner.combineTriGFiles(files, targetFile).as(tempDir.resolve(project.shortname + ".trig"))
-  }
+  private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
+    TriGCombiner.combineTriGFiles(allData.map(_.dataFile), targetFile)
 }
 
 object ProjectExportServiceLive {
