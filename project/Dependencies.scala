@@ -24,6 +24,7 @@ object Dependencies {
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.5.0"
   val ZioLoggingVersion           = "2.1.12"
+  val ZioNioVersion               = "2.0.1"
   val ZioMetricsConnectorsVersion = "2.0.8"
   val ZioPreludeVersion           = "1.0.0-RC19"
   val ZioSchemaVersion            = "0.2.0"
@@ -39,6 +40,7 @@ object Dependencies {
   val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
+  val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio" %% "zio-macros"                % ZioVersion
   val zioMetricsConnectors  = "dev.zio" %% "zio-metrics-connectors"    % ZioMetricsConnectorsVersion
   val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
@@ -159,6 +161,7 @@ object Dependencies {
     zioJson,
     zioLogging,
     zioLoggingSlf4jBridge,
+    zioNio,
     zioMacros,
     zioMetricsConnectors,
     zioPrelude
