@@ -1,10 +1,8 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
-
 --
 -- Moves a file from temporary to permanent storage.
 --
-
 require "send_response"
 require "jwt"
 
@@ -18,8 +16,8 @@ function get_file_name(path)
 
     -- Get file name + extension until first forward slash (/) and then break
     for i = str:len(), 1, -1 do
-        if str:sub(i,i) ~= "/" then
-            temp = temp..str:sub(i,i)
+        if str:sub(i, i) ~= "/" then
+            temp = temp .. str:sub(i, i)
         else
             break
         end
@@ -27,7 +25,7 @@ function get_file_name(path)
 
     -- Reverse order of full file name
     for j = temp:len(), 1, -1 do
-        result = result..temp:sub(j,j)
+        result = result .. temp:sub(j, j)
     end
 
     return result
@@ -43,8 +41,8 @@ function get_file_extension(path)
     local result = ""
 
     for i = str:len(), 1, -1 do
-        if str:sub(i,i) ~= "." then
-            temp = temp..str:sub(i,i)
+        if str:sub(i, i) ~= "." then
+            temp = temp .. str:sub(i, i)
         else
             break
         end
@@ -52,7 +50,7 @@ function get_file_extension(path)
 
     -- Reverse order of full file name
     for j = temp:len(), 1, -1 do
-        result = result..temp:sub(j,j)
+        result = result .. temp:sub(j, j)
     end
 
     return result
@@ -69,8 +67,10 @@ function get_file_basename(path)
     local pfound = false
 
     for i = str:len(), 1, -1 do
-        if str:sub(i,i) ~= "." then
-            if pfound then temp = temp..str:sub(i,i) end
+        if str:sub(i, i) ~= "." then
+            if pfound then
+                temp = temp .. str:sub(i, i)
+            end
         else
             pfound = true
         end
@@ -79,7 +79,7 @@ function get_file_basename(path)
     if pfound then
         -- Reverse order of full file name
         for j = temp:len(), 1, -1 do
-            result = result..temp:sub(j,j)
+            result = result .. temp:sub(j, j)
         end
     else
         result = str
@@ -88,7 +88,6 @@ function get_file_basename(path)
     return result
 end
 -------------------------------------------------------------------------------
-
 
 ----------------------------------------------------
 -- Check if a directory exists. If not, create it --
@@ -108,7 +107,6 @@ function check_create_dir(path)
     return true, "OK"
 end
 ----------------------------------------------------
-
 
 -- Buffer the response (helps with error handling).
 local success, error_msg = server.setBuffer()
@@ -179,10 +177,10 @@ if not success then
     return
 end
 
-local first_character_of_filename = hashed_filename:sub(1, 1)
-local second_character_of_filename = hashed_filename:sub(2, 2)
-local third_character_of_filename = hashed_filename:sub(3, 3)
-local fourth_character_of_filename = hashed_filename:sub(4, 4)
+local first_character_of_filename = string.lower(hashed_filename:sub(1, 1))
+local second_character_of_filename = string.lower(hashed_filename:sub(2, 2))
+local third_character_of_filename = string.lower(hashed_filename:sub(3, 3))
+local fourth_character_of_filename = string.lower(hashed_filename:sub(4, 4))
 
 local first_subfolder = first_character_of_filename .. second_character_of_filename
 local second_subfolder = third_character_of_filename .. fourth_character_of_filename
@@ -252,7 +250,7 @@ end
 --
 -- Move sidecar and original file to final storage location
 --
-local hashed_sidecar =  get_file_basename(hashed_filename) .. ".info"
+local hashed_sidecar = get_file_basename(hashed_filename) .. ".info"
 local source_sidecar = tmp_folder .. "/" .. hashed_sidecar
 success, readable = server.fs.is_readable(source_sidecar)
 if not success then

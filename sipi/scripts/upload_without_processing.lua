@@ -1,11 +1,9 @@
 --  Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 --  SPDX-License-Identifier: Apache-2.0
-
 --
 -- Upload route for binary files that skips transcoding. Directly puts the
 -- files in the temp folder.
 --
-
 require "jwt"
 require "send_response"
 
@@ -44,10 +42,10 @@ end
 -- Returns the path
 --------------------------------------------------------
 function create_tmp_folder(root_folder, filename)
-    local first_character_of_filename = filename:sub(1, 1)
-    local second_character_of_filename = filename:sub(2, 2)
-    local third_character_of_filename = filename:sub(3, 3)
-    local fourth_character_of_filename = filename:sub(4, 4)
+    local first_character_of_filename = string.lower(filename:sub(1, 1))
+    local second_character_of_filename = string.lower(filename:sub(2, 2))
+    local third_character_of_filename = string.lower(filename:sub(3, 3))
+    local fourth_character_of_filename = string.lower(filename:sub(4, 4))
 
     local first_subfolder = first_character_of_filename .. second_character_of_filename
     local second_subfolder = third_character_of_filename .. fourth_character_of_filename
@@ -85,7 +83,7 @@ function get_tmp_filepath(tmp_folder, filename)
         end
         tmp_filepath = tmp_folder .. "/" .. file_base_name .. "/" .. filename
 
-    -- for all other cases
+        -- for all other cases
     else
         tmp_filepath = tmp_folder .. "/" .. filename
     end
@@ -93,7 +91,6 @@ function get_tmp_filepath(tmp_folder, filename)
     return tmp_filepath
 end
 --------------------------------------------------------
-
 
 -- Buffer the response (helps with error handling).
 local success, error_msg
@@ -135,14 +132,15 @@ for file_index, file_params in pairs(server.uploads) do
 
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
     if not success then
-        send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+        send_error(500,
+            "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
         return
     end
     server.log("upload_without_processing.lua: wrote file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
 
     -- Calculate the checksum of the file
     local checksum = file_checksum(tmp_storage_file_path)
-    
+
     local this_file_upload_data = {
         filename = filename,
         checksum = checksum,

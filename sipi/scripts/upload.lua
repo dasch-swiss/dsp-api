@@ -1,10 +1,8 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
-
 --
 -- Upload route for binary files.
 --
-
 require "file_info"
 require "send_response"
 require "jwt"
@@ -46,10 +44,10 @@ end
 -- Returns the path
 --------------------------------------------------------
 function create_tmp_folder(root_folder, filename)
-    local first_character_of_filename = filename:sub(1, 1)
-    local second_character_of_filename = filename:sub(2, 2)
-    local third_character_of_filename = filename:sub(3, 3)
-    local fourth_character_of_filename = filename:sub(4, 4)
+    local first_character_of_filename = string.lower(filename:sub(1, 1))
+    local second_character_of_filename = string.lower(filename:sub(2, 2))
+    local third_character_of_filename = string.lower(filename:sub(3, 3))
+    local fourth_character_of_filename = string.lower(filename:sub(4, 4))
 
     local first_subfolder = first_character_of_filename .. second_character_of_filename
     local second_subfolder = third_character_of_filename .. fourth_character_of_filename
@@ -121,7 +119,7 @@ for file_index, file_params in pairs(server.uploads) do
     --
     local original_filename = file_params["origname"]
     local file_info = get_file_info(original_filename, mime_type)
-    
+
     if file_info == nil then
         server.log("file_info appears to be nil for: " .. tostring(original_filename), server.loglevel.LOG_ERR)
         send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
@@ -135,7 +133,6 @@ for file_index, file_params in pairs(server.uploads) do
         send_error(500, "server.uuid62() failed: " .. uuid62)
         return
     end
-
 
     -- Construct response data about the file that was uploaded.
     local media_type = file_info["media_type"]
@@ -179,14 +176,15 @@ for file_index, file_params in pairs(server.uploads) do
     local tmp_storage_sidecar_path = tmp_folder .. '/' .. hashed_tmp_storage_sidecar
     local tmp_storage_original_path = tmp_folder .. '/' .. hashed_tmp_storage_original
 
-
     -- Create a IIIF base URL for the converted file.
-    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/' .. tmp_storage_file_path
+    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() ..
+                                '/' .. tmp_storage_file_path
 
     -- Copy original file also to tmp
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_original_path)
     if not success then
-        send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_original_path) .. ": " .. tostring(error_msg))
+        send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_original_path) .. ": " ..
+            tostring(error_msg))
         return
     end
 
@@ -197,7 +195,10 @@ for file_index, file_params in pairs(server.uploads) do
         -- internal in-memory representation independent of the original image format.
         --
         local uploaded_image
-        success, uploaded_image = SipiImage.new(file_index, {original = original_filename, hash = "sha256"})
+        success, uploaded_image = SipiImage.new(file_index, {
+            original = original_filename,
+            hash = "sha256"
+        })
         if not success then
             send_error(500, "SipiImage.new() failed: " .. tostring(uploaded_image))
             return
@@ -218,28 +219,35 @@ for file_index, file_params in pairs(server.uploads) do
         -- Normalize image orientation to top-left --
         success, error_msg = uploaded_image:topleft()
         if not success then
-            server.log("upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg), server.loglevel.LOG_ERR)
-            send_error(500, "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            server.log(
+                "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " ..
+                    tostring(error_msg), server.loglevel.LOG_ERR)
+            send_error(500,
+                "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " ..
+                    tostring(error_msg))
             return
         end
 
         -- Convert the image to JPEG 2000 format.
         success, error_msg = uploaded_image:write(tmp_storage_file_path)
         if not success then
-            send_error(500, "uploaded_image:write() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500, "uploaded_image:write() failed for " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg))
             return
         end
         server.log("upload.lua: wrote image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
 
-    -- Is this a video file?
+        -- Is this a video file?
     elseif media_type == VIDEO then
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
-            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg))
             return
         end
         -- extract the frames from video file; they will be used for preview
-        success_key_frames, error_msg_key_frames = os.execute("./scripts/export-moving-image-frames.sh -i " .. tmp_storage_file_path)
+        success_key_frames, error_msg_key_frames = os.execute(
+            "./scripts/export-moving-image-frames.sh -i " .. tmp_storage_file_path)
         if not success_key_frames then
             send_error(500, "export-moving-image-frames.sh failed: " .. error_msg_key_frames)
             return
@@ -250,7 +258,8 @@ for file_index, file_params in pairs(server.uploads) do
         -- It's neither an image nor a video file. Move it to its temporary storage location.
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
-            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg))
             return
         end
         server.log("upload.lua: wrote non-image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
@@ -272,15 +281,17 @@ for file_index, file_params in pairs(server.uploads) do
     local sidecar_data = {}
 
     if media_type == VIDEO then
-        
+
         local handle
         -- get video file information with ffprobe: width, height, duration and frame rate (fps)
-        handle = io.popen("ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " .. tmp_storage_file_path)
+        handle = io.popen(
+            "ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " ..
+                tmp_storage_file_path)
         local file_meta = handle:read("*a")
         handle:close()
         -- decode ffprobe output into json, but only first stream
-        local file_meta_json = json.decode( file_meta )['streams'][1]
-        
+        local file_meta_json = json.decode(file_meta)['streams'][1]
+
         -- get video duration
         local duration = tonumber(file_meta_json['duration'])
         if not duration then
@@ -332,7 +343,6 @@ for file_index, file_params in pairs(server.uploads) do
             checksumDerivative = checksum_derivative
         }
     end
-
 
     local success, jsonstr = server.table_to_json(sidecar_data)
     if not success then
