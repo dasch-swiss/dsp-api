@@ -39,7 +39,7 @@ function migrate_files_and_folders()
                 end
 
                 if entry_type == "DIRECTORY" then
-                    if string.len(item) ~= 1 then
+                    if string.len(item) ~= 2 then
                         migrate_folder(source_path, destination_path)
                         delete_frames_folders(destination_path)
                     end
@@ -204,8 +204,13 @@ end
 -- Returns the path of the destination folder.
 -----------------------------------------------------------
 function create_destination_folder(root_folder, filename)
-    local first_subfolder = filename:sub(1, 1)
-    local second_subfolder = filename:sub(2, 2)
+    local first_character_of_filename = string.lower(filename:sub(1, 1))
+    local second_character_of_filename = string.lower(filename:sub(2, 2))
+    local third_character_of_filename = string.lower(filename:sub(3, 3))
+    local fourth_character_of_filename = string.lower(filename:sub(4, 4))
+
+    local first_subfolder = first_character_of_filename .. second_character_of_filename
+    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
 
     local subfolder_level_1 = root_folder .. '/' .. first_subfolder
     success, error_msg = check_create_dir(subfolder_level_1)
