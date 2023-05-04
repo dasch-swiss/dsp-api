@@ -58,7 +58,7 @@ sipi = {
     --
     -- Maximal size of a post request
     --
-    max_post_size = '250M',
+    max_post_size = '2G',
 
     --
     -- indicates the path to the root of the image directory. Depending on the settings of the variable
