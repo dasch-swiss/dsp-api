@@ -78,8 +78,12 @@ import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.api.service.RestPermissionService
+import org.knora.webapi.slice.admin.api.service.RestPermissionServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectExportService
+import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
@@ -152,6 +156,7 @@ object LayersTest {
       with PredicateObjectMapper
       with ProjectADMRestService
       with ProjectADMService
+      with ProjectExportService
       with ProjectsResponderADM
       with ProjectsResponderV1
       with QueryTraverser
@@ -161,6 +166,7 @@ object LayersTest {
       with ResourcesResponderV1
       with ResourcesResponderV2
       with RestCardinalityService
+      with RestPermissionService
       with RestResourceInfoService
       with SearchResponderV1
       with SearchResponderV2
@@ -216,6 +222,7 @@ object LayersTest {
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
+      ProjectExportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
@@ -228,6 +235,7 @@ object LayersTest {
       ResourcesResponderV1Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
+      RestPermissionServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
       SearchResponderV2Live.layer,

@@ -19,7 +19,6 @@ import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectDataGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
@@ -51,7 +50,6 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
       extends Effect[(ProjectCreatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
       extends Effect[(Iri.ProjectIri, ProjectUpdatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
-  object ProjectDataGetRequestADM extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectDataGetResponseADM]
 
   val compose: URLayer[mock.Proxy, ProjectsResponderADM] =
     ZLayer {
@@ -99,10 +97,6 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
-        override def projectDataGetRequestADM(
-          id: ProjectIdentifierADM,
-          user: UserADM
-        ): Task[ProjectDataGetResponseADM] = proxy(ProjectDataGetRequestADM, (id, user))
       }
     }
 }

@@ -22,6 +22,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -909,6 +910,7 @@ case class PermissionsDataADM(
   /* Is the user a member of the ProjectAdmin group */
   def isProjectAdmin(projectIri: IRI): Boolean =
     groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
+  def isProjectAdmin(projectIri: InternalIri): Boolean = isProjectAdmin(projectIri.value)
 
   /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
   def hasProjectAdminAllPermissionFor(projectIri: IRI): Boolean =
