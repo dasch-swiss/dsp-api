@@ -253,10 +253,6 @@ function file_pre_flight(identifier, cookie)
     local shortcode = segments[3]
     log("file_pre_flight - shortcode: " .. shortcode, server.loglevel.LOG_DEBUG)
 
-    if shortcode == "082A" then -- SVA / 082A allows file access even when permissions are set to restricted!
-        return "allow", identifier
-    end
-
     -- get the file name
     local file_name = ''
     local file_name_preview = ''
@@ -289,6 +285,11 @@ function file_pre_flight(identifier, cookie)
         filepath_preview = get_old_tmp_filepath(shortcode, file_name_preview)
         log("file_pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath,
             server.loglevel.LOG_DEBUG)
+    end
+
+    if shortcode == "082A" then -- SVA / 082A allows file access no matter what permissions are set!
+        log("file_pre_flight - file requested for 082A: " .. identifier, server.loglevel.LOG_WARNING)
+        return "allow", filepath
     end
 
     local dsp_cookie_header = nil
