@@ -48,6 +48,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
@@ -1524,7 +1525,7 @@ final case class ResourcesResponderV1Live(
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
-      namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectADM)
+      namedGraph = ProjectADMService.projectDataNamedGraphV2(projectADM).value
 
       // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
       clientResourceIDsToResourceIris <-
@@ -2352,7 +2353,7 @@ final case class ResourcesResponderV1Live(
                 ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
           )
 
-      namedGraph       = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
+      namedGraph       = ProjectADMService.projectDataNamedGraphV2(projectResponse.project).value
       resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectResponse.project.shortcode)
 
       // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to

@@ -17,7 +17,7 @@ object Dependencies {
 
   val AkkaActorVersion = "2.6.20"
   val AkkaHttpVersion  = "10.2.10"
-  val JenaVersion      = "4.7.0"
+  val JenaVersion      = "4.8.0"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioHttpVersionOld           = "2.0.0-RC11"
@@ -25,9 +25,9 @@ object Dependencies {
   val ZioJsonVersion              = "0.5.0"
   val ZioLoggingVersion           = "2.1.12"
   val ZioMetricsConnectorsVersion = "2.0.8"
-  val ZioPreludeVersion           = "1.0.0-RC18"
+  val ZioPreludeVersion           = "1.0.0-RC19"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.12"
+  val ZioVersion                  = "2.0.13"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio" %% "zio"                       % ZioVersion
@@ -76,7 +76,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.0.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.0.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.73"
 
   // caching
@@ -91,8 +91,8 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.3"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.3"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.4"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.4"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.1"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible

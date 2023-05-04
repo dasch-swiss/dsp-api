@@ -9,8 +9,6 @@ import zio._
 import zio.mock._
 import zio.test._
 
-import java.nio.file
-
 import dsp.valueobjects.V2._
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
@@ -21,6 +19,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
@@ -48,7 +47,6 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       createProjectSpec,
       deleteProjectSpec,
       updateProjectSpec,
-      getAllProjectDataSpec,
       getProjectMembers,
       getProjectAdmins,
       getKeywordsSpec,
@@ -57,7 +55,13 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     ).provide(StringFormatter.test)
 
   private def projectServiceLayer(exp: Expectation[ProjectsResponderADM]): ULayer[ProjectADMRestService] =
-    ZLayer.make[ProjectADMRestService](ProjectsADMRestServiceLive.layer, exp.toLayer)
+    ZLayer.make[ProjectADMRestService](
+      ProjectsADMRestServiceLive.layer,
+      exp.toLayer,
+      org.knora.webapi.slice.common.api.RestPermissionServiceLive.layer,
+      ProjectExportServiceStub.layer,
+      org.knora.webapi.slice.admin.domain.service.KnoraProjectRepoInMemory.layer
+    )
 
   val getAllProjectsSpec: Spec[Any, Throwable] = test("get all projects") {
     val expectedResponse = ProjectsGetResponseADM(Seq(projectADM))
@@ -167,21 +171,6 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
                       )
       _ <- ProjectADMRestService
              .updateProject(projectIri, projectUpdatePayload, SystemUser)
-             .provide(projectServiceLayer(mockResponder))
-    } yield assertCompletes
-  }
-
-  val getAllProjectDataSpec: Spec[Any, Throwable] = test("get all project data") {
-    val iri        = "http://rdfh.ch/projects/0001"
-    val identifier = TestDataFactory.projectIriIdentifier(iri)
-    val path       = file.Paths.get("...")
-    val mockResponder = ProjectsResponderADMMock.ProjectDataGetRequestADM(
-      assertion = Assertion.equalTo(identifier, SystemUser),
-      result = Expectation.value(ProjectDataGetResponseADM(path))
-    )
-    for {
-      _ <- ProjectADMRestService
-             .getAllProjectData(identifier, SystemUser)
              .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
