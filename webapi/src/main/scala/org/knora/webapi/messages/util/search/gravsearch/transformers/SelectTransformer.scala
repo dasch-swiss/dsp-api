@@ -33,7 +33,7 @@ class SelectTransformer(
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[Seq[QueryPattern]] =
-    sparqlTransformerLive.transformStatementInWhereForNoInference(
+    sparqlTransformerLive.transformStatementInWhere(
       statementPattern = statementPattern,
       simulateInference = simulateInference,
       limitInferenceToOntologies = limitInferenceToOntologies

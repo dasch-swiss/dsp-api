@@ -19,19 +19,6 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
-/**
- * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
- *
- * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
- */
-
-/**
- * Transforms a non-triplestore-specific CONSTRUCT query for a triplestore that does not have inference enabled (e.g., Fuseki).
- */
-
-/**
- * Functions for transforming generated SPARQL.
- */
 object SparqlTransformer {
 
   /**
@@ -279,7 +266,7 @@ final case class SparqlTransformerLive(ontologyCache: OntologyCache, implicit va
    * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the statement pattern as expanded to work without inference.
    */
-  def transformStatementInWhereForNoInference(
+  def transformStatementInWhere(
     statementPattern: StatementPattern,
     simulateInference: Boolean,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
