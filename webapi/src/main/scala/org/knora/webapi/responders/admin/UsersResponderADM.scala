@@ -41,6 +41,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
@@ -1443,7 +1444,7 @@ final case class UsersResponderADMLive(
       updateUserSparqlString <- ZIO.attempt(
                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                     .updateUser(
-                                      adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                      AdminConstants.adminDataNamedGraph.value,
                                       userIri = userIri,
                                       maybeUsername = maybeChangedUsername,
                                       maybeEmail = maybeChangedEmail,
@@ -1599,7 +1600,7 @@ final case class UsersResponderADMLive(
       updateUserSparqlString <- ZIO.attempt(
                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                     .updateUserPassword(
-                                      adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                      AdminConstants.adminDataNamedGraph.value,
                                       userIri = userIri,
                                       newPassword = password.value
                                     )
@@ -1680,7 +1681,7 @@ final case class UsersResponderADMLive(
         // Create the new user.
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                       .createNewUser(
-                                        adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                        AdminConstants.adminDataNamedGraph.value,
                                         userIri = userIri,
                                         userClassIri = OntologyConstants.KnoraAdmin.User,
                                         username = StringFormatter

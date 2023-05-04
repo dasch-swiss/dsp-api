@@ -1115,10 +1115,11 @@ object OntologyConstants {
     )
   )
 
+  /**
+   * For the named graphs in the admin slice refer to
+   * [[org.knora.webapi.slice.admin.AdminConstants]].
+   */
   object NamedGraphs {
-    val DataNamedGraphStart: IRI     = "http://www.knora.org/data"
-    val AdminNamedGraph: IRI         = "http://www.knora.org/data/admin"
-    val PermissionNamedGraph: IRI    = "http://www.knora.org/data/permissions"
-    val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
+    val DataNamedGraphStart: IRI = "http://www.knora.org/data"
   }
 }

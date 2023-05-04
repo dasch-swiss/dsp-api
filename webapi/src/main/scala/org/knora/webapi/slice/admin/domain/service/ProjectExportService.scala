@@ -16,24 +16,21 @@ import zio.RIO
 import zio.Random
 import zio.Scope
 import zio.Task
-import zio.UIO
-import zio.URIO
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
+
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Comparator
-import java.util.stream.Collectors
 import scala.collection.mutable
-import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 import org.knora.webapi.messages.twirl
 import org.knora.webapi.messages.util.rdf.TriG
-import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
-import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
+import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -166,7 +163,7 @@ final case class ProjectExportServiceLive(
   } yield files
 
   private def downloadProjectAdminData(project: KnoraProject, tempDir: Path): Task[NamedGraphTrigFile] = {
-    val graphIri = adminDataGraph
+    val graphIri = adminDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, tempDir)
     for {
       query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectAdminData(project.id.value))
@@ -175,7 +172,7 @@ final case class ProjectExportServiceLive(
   }
 
   private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
-    val graphIri = permissionsDataGraph
+    val graphIri = permissionsDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, tempDir)
     for {
       query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectPermissions(project.id.value))
