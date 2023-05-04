@@ -27,7 +27,7 @@ final case class OntologyInferencer(
     cache: OntologyCacheData,
     limitInferenceToOntologies: Option[Set[SmartIri]]
   ): IO[GravsearchException, Seq[QueryPattern]] = for {
-    // Yes. Expand using rdfs:subClassOf*.
+    // Expand using rdfs:subClassOf*.
     baseClassIri <-
       statementPattern.obj match {
         case iriRef: IriRef => ZIO.succeed(iriRef)
@@ -77,7 +77,7 @@ final case class OntologyInferencer(
     limitInferenceToOntologies: Option[Set[SmartIri]]
   ): IO[GravsearchException, Seq[QueryPattern]] = {
 
-    // No. Expand using rdfs:subPropertyOf*.
+    // Expand using rdfs:subPropertyOf*.
 
     // look up subproperties from ontology cache
     val superProps = cache.superPropertyOfRelations
