@@ -67,8 +67,8 @@ final case class KnoraProjectRepoLive(
       shortcode <- mapper.getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap).map(_.value)
       longname  <- mapper.getSingleOption[StringLiteralV2](ProjectLongname, propsMap).map(_.map(_.value))
       description <- mapper
-                       .getListOrFail[StringLiteralV2](ProjectDescription, propsMap)
-                       .map(_.map(desc => V2.StringLiteralV2(desc.value, desc.language)))
+                       .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propsMap)
+                       .map(_.map(it => V2.StringLiteralV2(it.value, it.language)))
       keywords <- mapper.getList[StringLiteralV2](ProjectKeyword, propsMap).map(_.map(_.value).sorted)
       logo     <- mapper.getSingleOption[StringLiteralV2](ProjectLogo, propsMap).map(_.map(_.value))
       status   <- mapper.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(_.value)
