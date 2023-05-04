@@ -24,13 +24,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 import scala.collection.mutable
 
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZScopedJavaIoStreams
