@@ -5,35 +5,34 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import org.apache.jena.graph.Triple
+import org.apache.jena.riot.Lang
+import org.apache.jena.riot.RDFParser
+import org.apache.jena.riot.system.StreamRDF
+import org.apache.jena.riot.system.StreamRDFBase
+import org.apache.jena.riot.system.StreamRDFWriter
+import org.apache.jena.sparql.core.Quad
+import zio.Random
+import zio.Scope
 import zio.Task
+import zio.URLayer
 import zio.ZIO
+import zio.ZLayer
 import zio.macros.accessible
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
+import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.collection.mutable
 
-import org.knora.webapi.IRI
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphFileRequest
 import org.knora.webapi.messages.twirl
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.messages.util.rdf.RdfFormatUtil
-import org.knora.webapi.messages.util.rdf.RdfInputStreamSource
-import org.knora.webapi.messages.util.rdf.RdfStreamProcessor
-import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util.ZScopedJavaIoStreams
 
 @accessible
 trait ProjectExportService {
@@ -47,10 +46,23 @@ trait ProjectExportService {
    *  * the triples of the project's ontologies
    *
    * @param project the project to be exported
-   * @param file the path to the file to which the project should be exported
    * @return the [[Path]] to the file to which the project was exported
    */
-  def exportProjectTriples(project: KnoraProject, file: Path): Task[Path]
+  def exportProjectTriples(project: KnoraProject): Task[Path]
+
+  /**
+   * Exports a project to a file.
+   * The file format is TriG.
+   * The data exported is:
+   * * the project metadata
+   * * the project's permission data
+   * * the triples of the project's ontologies
+   *
+   * @param project the project to be exported
+   * @param targetFile the file to which the project is to be exported
+   * @return the [[Path]] to the file to which the project was exported
+   */
+  def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path]
 }
 
 /**
@@ -59,156 +71,105 @@ trait ProjectExportService {
  * @param graphIri the IRI of the named graph.
  * @param tempDir  the directory in which the file is to be saved.
  */
-private case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
+private case class NamedGraphTrigFile(graphIri: InternalIri, tempDir: Path) {
   lazy val dataFile: Path = {
-    val filename = graphIri.replaceAll("[.:/]", "_") + ".trig"
+    val filename = graphIri.value.replaceAll("[.:/]", "_") + ".trig"
     tempDir.resolve(filename)
   }
 }
 
-/**
- * A [[RdfStreamProcessor]] for combining several named graphs into one.
- *
- * @param formattingStreamProcessor a [[RdfStreamProcessor]] for writing the combined result.
- */
-private class CombiningRdfProcessor(formattingStreamProcessor: RdfStreamProcessor) extends RdfStreamProcessor {
-  private var startedStatements = false
+private object TriGCombiner {
 
-  // Ignore this, since it will be done before the first file is written.
-  override def start(): Unit = {}
+  def combineTrigFiles(inputFiles: Iterable[Path], outputFile: Path): Task[Path] = ZIO.scoped {
+    for {
+      outFile   <- ZScopedJavaIoStreams.fileBufferedOutputStream(outputFile)
+      outWriter <- createPrefixDedupStreamRDF(outFile).map { it => it.start(); it }
+      _ <- ZIO.foreachDiscard(inputFiles)(file =>
+             // Combine the files and write the output to the given OutputStream
+             for {
+               is <- ZScopedJavaIoStreams.fileInputStream(file)
+               _  <- ZIO.attemptBlocking(RDFParser.source(is).lang(Lang.TRIG).parse(outWriter))
+             } yield ()
+           )
+    } yield outputFile
+  }
 
-  // Ignore this, since it will be done after the last file is written.
-  override def finish(): Unit = {}
+  private def createPrefixDedupStreamRDF(os: OutputStream): ZIO[Scope, Throwable, StreamRDF] = {
+    def acquire                    = ZIO.attempt(StreamRDFWriter.getWriterStream(os, Lang.TRIG))
+    def release(writer: StreamRDF) = ZIO.attempt(writer.finish()).logError.ignore
+    ZIO.acquireRelease(acquire)(release).map(dedupPrefixStream)
+  }
 
-  override def processNamespace(prefix: IRI, namespace: IRI): Unit =
-    // Only accept namespaces from the first graph, to prevent conflicts.
-    if (!startedStatements) {
-      formattingStreamProcessor.processNamespace(prefix, namespace)
-    }
-
-  override def processStatement(statement: Statement): Unit = {
-    startedStatements = true
-    formattingStreamProcessor.processStatement(statement)
+  // Define a custom StreamRDF implementation to filter out duplicate @prefix directives
+  private def dedupPrefixStream(writer: StreamRDF): StreamRDF = new StreamRDFBase {
+    private val prefixes = mutable.Set[String]()
+    override def prefix(prefix: String, iri: String): Unit =
+      if (!prefixes.contains(prefix)) {
+        writer.prefix(prefix, iri)
+        prefixes.add(prefix)
+      }
+    override def triple(triple: Triple): Unit = writer.triple(triple)
+    override def quad(quad: Quad): Unit       = writer.quad(quad)
+    override def base(base: String): Unit     = writer.base(base)
+    override def finish(): Unit               = writer.finish()
+    override def start(): Unit                = writer.start()
   }
 }
+
 final case class ProjectExportServiceLive(
-  ontologyRepo: OntologyRepo,
-  projectRepo: ProjectADMService,
-  stringFormatter: StringFormatter,
-  triplestoreService: TriplestoreService,
-  messageRelay: MessageRelay
+  private val projectService: ProjectADMService,
+  private val triplestoreService: TriplestoreService
 ) extends ProjectExportService {
 
-  /**
-   * Combines several TriG files into one.
-   *
-   * @param namedGraphTrigFiles the TriG files to combine.
-   * @param resultFile          the output file.
-   */
-  private def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: Path): Task[Unit] = ZIO.attempt {
-    val rdfFormatUtil: RdfFormatUtil                                = RdfFeatureFactory.getRdfFormatUtil()
-    var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
-
-    val trigFileTry: Try[Unit] = Try {
-      maybeBufferedFileOutputStream = Some(new BufferedOutputStream(Files.newOutputStream(resultFile)))
-
-      val formattingStreamProcessor: RdfStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
-        outputStream = maybeBufferedFileOutputStream.get,
-        rdfFormat = TriG
-      )
-
-      val combiningRdfProcessor = new CombiningRdfProcessor(formattingStreamProcessor)
-      formattingStreamProcessor.start()
-
-      for (namedGraphTrigFile: NamedGraphTrigFile <- namedGraphTrigFiles) {
-        val namedGraphTry: Try[Unit] = Try {
-          rdfFormatUtil.parseWithStreamProcessor(
-            rdfSource =
-              RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(namedGraphTrigFile.dataFile))),
-            rdfFormat = TriG,
-            rdfStreamProcessor = combiningRdfProcessor
-          )
-        }
-
-        Files.delete(namedGraphTrigFile.dataFile)
-
-        namedGraphTry match {
-          case Success(_)  => ()
-          case Failure(ex) => throw ex
-        }
-      }
-
-      formattingStreamProcessor.finish()
-    }
-
-    maybeBufferedFileOutputStream.foreach(_.close)
-
-    trigFileTry match {
-      case Success(_)  => ()
-      case Failure(ex) => throw ex
-    }
+  override def exportProjectTriples(project: KnoraProject): Task[Path] = {
+    val tempDir    = Files.createTempDirectory(project.shortname)
+    val targetFile = tempDir.resolve(project.shortname + ".trig")
+    exportProjectTriples(project: KnoraProject, targetFile)
   }
 
-  override def exportProjectTriples(project: KnoraProject, file: Path): Task[Path] = {
-    val tempDir = Files.createTempDirectory(project.shortname)
+  override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] =
     for {
-      _                 <- ZIO.logInfo("Downloading project data to temporary directory " + tempDir.toAbsolutePath)
-      projectOntologies <- ontologyRepo.findByProject(project).map(_.map(_.ontologyMetadata.ontologyIri.toIri))
-
-      // Download the project's named graphs.
-
-      projectDataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(project).value
-      graphsToDownload: Seq[IRI] = projectOntologies :+ projectDataNamedGraph
-      projectSpecificNamedGraphTrigFiles: Seq[NamedGraphTrigFile] =
-        graphsToDownload.map(graphIri => NamedGraphTrigFile(graphIri = graphIri, tempDir = tempDir))
-
-      _ <- ZIO.foreachDiscard(projectSpecificNamedGraphTrigFiles) { trigFile =>
-             for {
-               fileWrittenResponse <- messageRelay.ask[FileWrittenResponse](
-                                        NamedGraphFileRequest(
-                                          graphIri = trigFile.graphIri,
-                                          outputFile = trigFile.dataFile,
-                                          outputFormat = TriG
-                                        )
-                                      )
-             } yield fileWrittenResponse
-           }
-
-      // Download the project's admin data.
-
-      adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = adminDataGraph, tempDir = tempDir)
-
-      projectIri      = project.id.value
-      adminDataSparql = twirl.queries.sparql.admin.txt.getProjectAdminData(projectIri)
-      _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = adminDataSparql.toString(),
-             graphIri = adminDataNamedGraphTrigFile.graphIri,
-             outputFile = adminDataNamedGraphTrigFile.dataFile,
-             outputFormat = TriG
-           )
-
-      // Download the project's permission data.
-
-      permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = permissionsDataGraph, tempDir = tempDir)
-
-      permissionDataSparql = twirl.queries.sparql.admin.txt.getProjectPermissions(projectIri)
-      _ <- triplestoreService.sparqlHttpConstructFile(
-             sparql = permissionDataSparql.toString(),
-             graphIri = permissionDataNamedGraphTrigFile.graphIri,
-             outputFile = permissionDataNamedGraphTrigFile.dataFile,
-             outputFormat = TriG
-           )
-
-      // Stream the combined results into the output file.
-
-      namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
-        projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
-      resultFile: Path = tempDir.resolve(project.shortname + ".trig")
-      _               <- combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
+      randomUuid <- Random.nextUUID
+      tempDir     = Files.createTempDirectory(project.shortname + randomUuid)
+      _ <-
+        ZIO.logDebug(s"Downloading project ${project.shortcode} data to temporary directory ${tempDir.toAbsolutePath}")
+      ontologyAndData <- downloadOntologyAndData(project, tempDir)
+      adminData       <- downloadProjectAdminData(project, tempDir)
+      permissionData  <- downloadPermissionData(project, tempDir)
+      resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, targetFile)
     } yield resultFile
-  }
-}
-object ProjectExportServiceLive {
 
-  val layer = zio.ZLayer.fromFunction(ProjectExportServiceLive.apply _)
+  private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
+    allGraphsTrigFile <-
+      projectService.getNamedGraphsForProject(project).map(_.map(NamedGraphTrigFile(_, tempDir)))
+    files <- ZIO.foreach(allGraphsTrigFile)(file =>
+               triplestoreService.sparqlHttpGraphFile(file.graphIri, file.dataFile, TriG).as(file)
+             )
+  } yield files
+
+  private def downloadProjectAdminData(project: KnoraProject, tempDir: Path): Task[NamedGraphTrigFile] = {
+    val graphIri = adminDataGraph
+    val file     = NamedGraphTrigFile(graphIri, tempDir)
+    for {
+      query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectAdminData(project.id.value))
+      _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
+    } yield file
+  }
+
+  private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
+    val graphIri = permissionsDataGraph
+    val file     = NamedGraphTrigFile(graphIri, tempDir)
+    for {
+      query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectPermissions(project.id.value))
+      _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
+    } yield file
+  }
+
+  private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
+    TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
+}
+
+object ProjectExportServiceLive {
+  val layer: URLayer[ProjectADMService with TriplestoreService, ProjectExportService] =
+    ZLayer.fromFunction(ProjectExportServiceLive.apply _)
 }
