@@ -7,7 +7,6 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio.Task
 import zio.ULayer
-import zio.ZIO
 import zio.ZLayer
 
 import java.nio.file.Path
@@ -26,10 +25,22 @@ object ProjectExportServiceStub {
      * * the triples of the project's ontologies
      *
      * @param project the project to be exported
-     * @param file    the path to the file to which the project should be exported
      * @return the [[Path]] to the file to which the project was exported
      */
-    override def exportProjectTriples(project: KnoraProject, file: Path): Task[Path] =
-      ZIO.die(new UnsupportedOperationException("Not implemented"))
+    override def exportProjectTriples(project: KnoraProject): Task[Path] = ???
+
+    /**
+     * Exports a project to a file.
+     * The file format is TriG.
+     * The data exported is:
+     * * the project metadata
+     * * the project's permission data
+     * * the triples of the project's ontologies
+     *
+     * @param project    the project to be exported
+     * @param targetFile the file to which the project is to be exported
+     * @return the [[Path]] to the file to which the project was exported
+     */
+    override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ???
   })
 }

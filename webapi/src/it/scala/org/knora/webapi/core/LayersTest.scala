@@ -78,14 +78,14 @@ import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.api.service.RestPermissionService
-import org.knora.webapi.slice.admin.api.service.RestPermissionServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.service.PredicateObjectMapper
+import org.knora.webapi.slice.common.api.RestPermissionService
+import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService

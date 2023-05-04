@@ -17,6 +17,8 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.common.api.RestPermissionService
+import org.knora.webapi.slice.common.api.RestPermissionServiceLive
 
 object RestPermissionServiceSpec extends ZIOSpecDefault {
 
