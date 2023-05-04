@@ -80,7 +80,7 @@ private case class NamedGraphTrigFile(graphIri: InternalIri, tempDir: Path) {
 
 private object TriGCombiner {
 
-  def combineTriGFiles(inputFiles: Iterable[Path], outputFile: Path): Task[Path] = ZIO.scoped {
+  def combineTrigFiles(inputFiles: Iterable[Path], outputFile: Path): Task[Path] = ZIO.scoped {
     for {
       outFile   <- ZScopedJavaIoStreams.fileBufferedOutputStream(outputFile)
       outWriter <- createPrefixDedupStreamRDF(outFile).map { it => it.start(); it }
@@ -166,7 +166,7 @@ final case class ProjectExportServiceLive(
   }
 
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
-    TriGCombiner.combineTriGFiles(allData.map(_.dataFile), targetFile)
+    TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
 }
 
 object ProjectExportServiceLive {
