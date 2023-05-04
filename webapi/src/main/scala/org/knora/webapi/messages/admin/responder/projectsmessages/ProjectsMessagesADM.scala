@@ -13,7 +13,6 @@ import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 import zio.prelude.Validation
 
-import java.nio.file.Path
 import java.util.UUID
 
 import dsp.errors.BadRequestException
@@ -248,17 +247,6 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
 ) extends ProjectsResponderRequestADM
 
 /**
- * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
- *
- * @param projectIdentifier    the identifier of the project.
- * @param requestingUser       the user making the request.
- */
-case class ProjectDataGetRequestADM(
-  projectIdentifier: ProjectIdentifierADM,
-  requestingUser: UserADM
-) extends ProjectsResponderRequestADM
-
-/**
  * Requests the creation of a new project.
  *
  * @param createRequest        the [[ProjectCreatePayloadADM]] information for the creation of a new project.
@@ -366,13 +354,6 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 
-/**
- * Represents a project's data in TriG format.
- *
- * @param projectDataFile a file containing the project's data in TriG format.
- */
-case class ProjectDataGetResponseADM(projectDataFile: Path)
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -412,7 +393,6 @@ case class ProjectADM(
    */
   def compare(that: ProjectADM): Int = this.id.compareTo(that.id)
 
-  // ToDo: Refactor by using implicit conversions (when I manage to understand them)
   def asProjectInfoV1: ProjectInfoV1 = {
 
     val descriptionV1 = if (description.nonEmpty) {
