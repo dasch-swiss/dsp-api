@@ -7,40 +7,72 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio._
 
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-import SparqlTransformer._
-
-class ConstructToConstructTransformer(
+final case class ConstructToConstructTransformer(
   sparqlTransformerLive: SparqlTransformerLive,
-  implicit val stringFormatter: StringFormatter
-) extends WhereTransformer {
+  iriConverter: IriConverter
+) {
 
   /**
-   * Transforms a [[StatementPattern]] in a CONSTRUCT clause into zero or more statement patterns.
+   * Transforms a CONSTRUCT query, by applying opimization and inference.
    *
-   * @param statementPattern the statement to be transformed.
-   * @return the result of the transformation.
+   * @param inputQuery                 the query to be transformed.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
+   * @return the transformed query.
    */
-  def transformStatementInConstruct(statementPattern: StatementPattern): Task[Seq[StatementPattern]] =
-    ZIO.succeed(Seq(statementPattern))
-
-  override def transformStatementInWhere(
-    statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion],
+  def transform(
+    inputQuery: ConstructQuery,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
+  ): Task[ConstructQuery] =
+    for {
+      patterns <- optimizeAndTransformPatterns(inputQuery.whereClause.patterns, limitInferenceToOntologies)
+    } yield inputQuery.copy(whereClause = WhereClause(patterns))
+
+  private def optimizeAndTransformPatterns(
+    patterns: Seq[QueryPattern],
+    limit: Option[Set[SmartIri]]
+  ): Task[Seq[QueryPattern]] = for {
+    optimisedPatterns <-
+      ZIO.attempt(
+        SparqlTransformer.moveBindToBeginning(
+          SparqlTransformer.optimiseIsDeletedWithFilter(
+            SparqlTransformer.moveLuceneToBeginning(patterns)
+          )
+        )
+      )
+    transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern(_, limit))
+  } yield transformedPatterns.flatten
+
+  private def transformPattern(
+    pattern: QueryPattern,
+    limit: Option[Set[SmartIri]]
   ): Task[Seq[QueryPattern]] =
-    sparqlTransformerLive.transformStatementInWhereForNoInference(
-      statementPattern = statementPattern,
-      simulateInference = true,
-      limitInferenceToOntologies = limitInferenceToOntologies
-    )
+    pattern match {
+      case statementPattern: StatementPattern =>
+        sparqlTransformerLive.transformStatementInWhereForNoInference(
+          statementPattern = statementPattern,
+          simulateInference = true,
+          limitInferenceToOntologies = limit
+        )
+      case FilterNotExistsPattern(patterns) =>
+        ZIO.foreach(patterns)(transformPattern(_, limit).map(FilterNotExistsPattern))
+      case MinusPattern(patterns)    => ZIO.foreach(patterns)(transformPattern(_, limit).map(MinusPattern))
+      case OptionalPattern(patterns) => ZIO.foreach(patterns)(transformPattern(_, limit).map(OptionalPattern))
+      case UnionPattern(blocks) =>
+        ZIO.foreach(blocks)(optimizeAndTransformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
+      case lucenePattern: LuceneQueryPattern => transformLuceneQueryPattern(lucenePattern)
+      case pattern: QueryPattern             => ZIO.succeed(Seq(pattern))
+    }
 
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
-    ZIO.attempt(moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns))))
+  private def transformLuceneQueryPattern(pattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
+    for {
+      predIri  <- iriConverter.asSmartIri("http://jena.apache.org/text#query")
+      datatype <- iriConverter.asSmartIri(OntologyConstants.Xsd.String)
+      obj       = XsdLiteral(pattern.queryString.getQueryString, datatype)
+    } yield Seq(StatementPattern(pattern.subj, IriRef(predIri), obj))
 
-  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
-    sparqlTransformerLive.transformLuceneQueryPatternForFuseki(luceneQueryPattern)
 }
