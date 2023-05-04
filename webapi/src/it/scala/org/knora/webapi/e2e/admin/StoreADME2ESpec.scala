@@ -9,7 +9,6 @@ import akka.http.scaladsl.model.ContentTypes
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes
 import spray.json._
-import zio._
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol

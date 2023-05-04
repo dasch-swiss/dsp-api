@@ -20,6 +20,7 @@ object ZScopedJavaIoStreams {
     def acquire = ZIO.attempt(new BufferedInputStream(in))
     ZIO.acquireRelease(acquire)(release)
   }
+
   def bufferedOutputStream(in: OutputStream): ZIO[Any with Scope, Throwable, OutputStream] = {
     def acquire = ZIO.attempt(new BufferedOutputStream(in))
     ZIO.acquireRelease(acquire)(release)
@@ -41,8 +42,22 @@ object ZScopedJavaIoStreams {
   }
 
   /**
+   * Opens or creates a file, returning an output stream that may be used to write bytes to the file.
+   * Truncates and overwrites an existing file, or create the file if it doesn't initially exist.
+   * The resulting stream will be buffered.
+   *
+   * @param path The path to the file.
+   * @return The managed output stream.
+   */
+  def fileBufferedOutputStream(path: Path): ZIO[Any with Scope, Throwable, OutputStream] = {
+    def acquire = ZIO.attempt(Files.newOutputStream(path))
+    ZIO.acquireRelease(acquire)(release).flatMap(os => bufferedOutputStream(os))
+  }
+
+  /**
    * Creates a [[PipedInputStream]] so that it is connected to the piped output stream `out`.
-   * @param out
+   * @param out The piped output stream to connect to.
+   * @return The managed piped input stream.
    */
   def pipedInputStream(out: PipedOutputStream): ZIO[Any with Scope, Throwable, PipedInputStream] = {
     def acquire = ZIO.attempt(new PipedInputStream(out))
