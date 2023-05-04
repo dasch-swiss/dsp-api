@@ -14,6 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectExportResponse
 
 object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
@@ -90,6 +91,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
           proxy(GetRestrictedViewSettings, identifier)
 
+        override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse] = ???
       }
     }
 }

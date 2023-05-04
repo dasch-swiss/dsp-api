@@ -43,9 +43,9 @@ object ZScopedJavaIoStreams {
     }
   }
 
-  def fileOutputStream(file: File): ZIO[Scope, Throwable, FileOutputStream] = fileOutputStream(file.toPath)
-  def fileOutputStream(path: Path): ZIO[Scope, Throwable, FileOutputStream] = {
-    def acquire = ZIO.attempt(Files.newOutputStream(path).asInstanceOf[FileOutputStream])
+  def fileOutputStream(path: Path): ZIO[Scope, Throwable, FileOutputStream] = fileOutputStream(path.toFile)
+  def fileOutputStream(file: File): ZIO[Scope, Throwable, FileOutputStream] = {
+    def acquire = ZIO.attempt(new FileOutputStream(file))
     ZIO.acquireRelease(acquire)(release)
   }
 

@@ -38,6 +38,7 @@ import org.knora.webapi.util.ZScopedJavaIoStreams
 
 @accessible
 trait ProjectExportService {
+  def exportProject(project: KnoraProject): Task[zio.nio.file.Path]
 
   /**
    * Exports a project to a file.
@@ -144,7 +145,7 @@ final case class ProjectExportServiceLive(
   // Creates a unique temp directory in the default temporary-file directory for the [[KnoraProject]].
   // Removes the directory and all of its contents when the scope is closed.
   private def createTempDir(project: KnoraProject): RIO[Scope, Path] = {
-    def acquire = Random.nextUUID.map(rnd => s"${project.shortname}-$rnd").map(Files.createTempDirectory(_))
+    def acquire = ZIO.attempt(Files.createTempDirectory(project.shortname))
     def release(directoryPath: Path) = ZIO.attempt {
       if (Files.exists(directoryPath) && Files.isDirectory(directoryPath)) {
         val reverseOrder: Comparator[Path] = Comparator.reverseOrder()
@@ -182,6 +183,17 @@ final case class ProjectExportServiceLive(
 
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
+
+  override def exportProject(project: KnoraProject): Task[zio.nio.file.Path] = {
+    val tempDir = Files.createTempDirectory(s"export-${project.shortname}")
+    for {
+      projectData <- exportProjectTriples(project)
+      zipped <- ZipUtility.zipFolder(
+                  zio.nio.file.Path.fromJava(projectData.getParent),
+                  zio.nio.file.Path.fromJava(tempDir)
+                )
+    } yield zipped
+  }
 }
 
 object ProjectExportServiceLive {

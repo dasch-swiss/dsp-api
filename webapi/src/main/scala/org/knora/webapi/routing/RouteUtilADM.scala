@@ -12,6 +12,8 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import akka.util.ByteString
 import zio._
+import zio.json.EncoderOps
+import zio.json.JsonEncoder
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -136,14 +138,16 @@ object RouteUtilADM {
       knoraResponseExternal <- transformResponseIntoExternalFormat(knoraResponse)
     } yield okResponse(knoraResponseExternal)
 
-  private def okResponse(response: KnoraResponseADM) = {
-    val body   = response.toJsValue.asJsObject.compactPrint
-    val entity = HttpEntity(`application/json`, ByteString(body))
-    HttpResponse(OK, entity = entity)
-  }
+  def okResponse(response: KnoraResponseADM): HttpResponse                       = okResponse(response.toJsValue.asJsObject.compactPrint)
+  def okResponse[A](response: A)(implicit encoder: JsonEncoder[A]): HttpResponse = okResponse(response.toJson)
+  private def okResponse(body: String)                                           = HttpResponse(OK, entity = HttpEntity(`application/json`, ByteString(body)))
 
-  def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
+  private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
     ZIO.fromFuture(_ => ctx.complete(response))
+
+  def completeContext[R](ctx: RequestContext, response: ZIO[R, Throwable, HttpResponse])(implicit
+    runtime: Runtime[R]
+  ): Future[RouteResult] = UnsafeZioRun.runToFuture(response.flatMap(completeContext(ctx, _)))
 
   case class IriUserUuid(iri: IRI, user: UserADM, uuid: UUID)
   case class IriUser(iri: IRI, user: UserADM)

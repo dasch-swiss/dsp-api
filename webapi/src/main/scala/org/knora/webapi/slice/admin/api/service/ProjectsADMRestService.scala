@@ -12,6 +12,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -23,6 +24,7 @@ import org.knora.webapi.slice.common.api.RestPermissionService
 
 @accessible
 trait ProjectADMRestService {
+
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM]
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]
   def createProjectADMRequest(
@@ -39,6 +41,7 @@ trait ProjectADMRestService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
+  def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse]
   def getProjectMembers(
     projectIdentifier: ProjectIdentifierADM,
     requestingUser: UserADM
@@ -230,6 +233,13 @@ final case class ProjectsADMRestServiceLive(
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
+  override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse] = for {
+    _ <- permissionService.ensureSystemAdmin(requestingUser)
+    projectIri <-
+      IriIdentifier.fromString(projectIri).toZIO.orElseFail(BadRequestException(s"Invalid project IRI: $projectIri"))
+    project <- projectRepo.findById(projectIri).someOrFail(NotFoundException(s"Project $projectIri not found."))
+    zipFile <- projectExportService.exportProject(project)
+  } yield ProjectExportResponse(zipFile.toString)
 }
 
 object ProjectsADMRestServiceLive {
