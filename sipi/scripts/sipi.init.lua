@@ -1,5 +1,6 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
+
 require "get_knora_session"
 require "log_util"
 
@@ -7,7 +8,7 @@ require "log_util"
 -- This function returns the filepath according to the old way the file was
 -- stored in.
 -------------------------------------------------------------------------------
-function get_old_tmp_filepath(shortcode, filename)
+local function get_old_tmp_filepath(shortcode, filename)
     local filepath = ''
     if config.prefix_as_path then
         filepath = config.imgroot .. '/' .. shortcode .. '/' .. filename
@@ -18,10 +19,10 @@ function get_old_tmp_filepath(shortcode, filename)
 end
 
 -------------------------------------------------------------------------------
--- This function returns the filepath of the temporary location the file is 
+-- This function returns the filepath of the temporary location the file is
 -- stored in. The path is created from the first four characters of the filename.
 -------------------------------------------------------------------------------
-function get_tmp_filepath(shortcode, filename)
+local function get_tmp_filepath(shortcode, filename)
     local first_character_of_filename = string.lower(filename:sub(1, 1))
     local second_character_of_filename = string.lower(filename:sub(2, 2))
     local third_character_of_filename = string.lower(filename:sub(3, 3))
@@ -33,7 +34,7 @@ function get_tmp_filepath(shortcode, filename)
     local filepath = ''
     if config.prefix_as_path then
         filepath = config.imgroot .. '/' .. shortcode .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' ..
-                       filename
+            filename
     else
         filepath = config.imgroot .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' .. filename
     end
@@ -43,7 +44,7 @@ end
 -------------------------------------------------------------------------------
 -- This function returns the segments from the identifier
 -------------------------------------------------------------------------------
-function get_segments_from_identifier(identifier)
+local function get_segments_from_identifier(identifier)
     local segments = {}
     for w in string.gmatch(identifier, "[^\\/]+") do
         table.insert(segments, w)
@@ -54,31 +55,32 @@ end
 -------------------------------------------------------------------------------
 -- This function checks the cookie and returns the cookie header
 -------------------------------------------------------------------------------
-function check_and_get_cookie_header(cookie)
+local function check_and_get_cookie_header(cookie)
     -- tries to extract the DSP session name and id from the cookie:
     -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
     -- returns nil if it cannot find it
     local session = get_session_id(cookie)
+    local cookie_header
 
     if session == nil or session["name"] == nil or session["id"] == nil then
         -- no session could be extracted
         log("check_and_get_cookie_header - cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
     else
-        dsp_cookie_header = {
+        cookie_header = {
             Cookie = session["name"] .. "=" .. session["id"]
         }
-        log("check_and_get_cookie_header - dsp_cookie_header: " .. dsp_cookie_header["Cookie"],
+        log("check_and_get_cookie_header - dsp_cookie_header: " .. cookie_header["Cookie"],
             server.loglevel.LOG_DEBUG)
     end
 
-    return dsp_cookie_header
+    return cookie_header
 end
 
 -------------------------------------------------------------------------------
 -- This function gets the hostname of the DSP-API
 -- either from the environment variable or from config
 -------------------------------------------------------------------------------
-function get_api_hostname()
+local function get_api_hostname()
     local hostname = os.getenv("SIPI_WEBAPI_HOSTNAME")
     if hostname == nil then
         hostname = config.knora_path
@@ -88,10 +90,10 @@ function get_api_hostname()
 end
 
 -------------------------------------------------------------------------------
--- This function gets the port of the DSP-API 
+-- This function gets the port of the DSP-API
 -- either from the environment variable or from config
 -------------------------------------------------------------------------------
-function get_api_port()
+local function get_api_port()
     local port = os.getenv("SIPI_WEBAPI_PORT")
     if port == nil then
         port = config.knora_port
@@ -103,7 +105,7 @@ end
 -------------------------------------------------------------------------------
 -- This function returns the API URL from the given parameters
 -------------------------------------------------------------------------------
-function get_api_url(webapi_hostname, webapi_port, prefix, identifier)
+local function get_api_url(webapi_hostname, webapi_port, prefix, identifier)
     return 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 end
 
@@ -111,14 +113,14 @@ end
 -- This function gets the permissions defined on a file by requesting it from
 -- the DSP-API.
 -------------------------------------------------------------------------------
-function get_permission_on_file(shortcode, file_name, dsp_cookie_header)
+local function get_permission_on_file(shortcode, file_name, cookie_header)
     local webapi_hostname = get_api_hostname()
     local webapi_port = get_api_port()
     local api_url = get_api_url(webapi_hostname, webapi_port, shortcode, file_name)
     log("get_permission_on_file - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
     -- request the permissions on the image from DSP-API
-    local success, result = server.http("GET", api_url, dsp_cookie_header, 5000)
+    local success, result = server.http("GET", api_url, cookie_header, 5000)
     if not success then
         log("get_permission_on_file - server.http() failed: " .. result, server.loglevel.LOG_ERR)
         return 'deny'
@@ -132,7 +134,8 @@ function get_permission_on_file(shortcode, file_name, dsp_cookie_header)
 
     log("get_permission_on_file - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
 
-    local success, response_json = server.json_to_table(result.body)
+    local response_json
+    success, response_json = server.json_to_table(result.body)
     if not success then
         log("get_permission_on_file - server.json_to_table() failed: " .. response_json, server.loglevel.LOG_ERR)
         return 'deny'
@@ -144,7 +147,7 @@ end
 -------------------------------------------------------------------------------
 -- This function is being called from Sipi before the file is served.
 -- DSP-API is called to ask for the user's permissions on the file.
--- 
+--
 -- Parameters:
 --    prefix: This is the prefix that is given in the IIIF URL
 --    identifier: The identifier for the image
@@ -171,7 +174,7 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
-    success, exists = server.fs.exists(filepath)
+    local _, exists = server.fs.exists(filepath)
     log("pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
     if not exists then
         filepath = get_old_tmp_filepath(prefix, identifier)
@@ -201,7 +204,7 @@ function pre_flight(prefix, identifier, cookie)
 
         if permission_info.restrictedViewSettings ~= nil then
             log("pre_flight - restricted view settings - watermark: " ..
-                    tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+                tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
             if permission_info.restrictedViewSettings.size ~= nil then
                 restrictedViewSize = permission_info.restrictedViewSettings.size
@@ -232,7 +235,7 @@ end
 -------------------------------------------------------------------------------
 -- This function is being called from Sipi before the file is served.
 -- DSP-API is called to ask for the user's permissions on the file.
--- 
+--
 -- Parameters:
 --    identifier: The identifier for the image
 --    cookie: The cookie that may be present
@@ -278,7 +281,7 @@ function file_pre_flight(identifier, cookie)
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
-    success, exists = server.fs.exists(filepath)
+    local _, exists = server.fs.exists(filepath)
     log("file_pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
     if not exists then
         filepath = get_old_tmp_filepath(shortcode, file_name)
@@ -294,7 +297,7 @@ function file_pre_flight(identifier, cookie)
 
     local dsp_cookie_header = nil
     if cookie ~= '' then
-        local dsp_cookie_header = check_and_get_cookie_header(cookie)
+        dsp_cookie_header = check_and_get_cookie_header(cookie)
     end
 
     local permission_info = get_permission_on_file(shortcode, file_name, dsp_cookie_header)

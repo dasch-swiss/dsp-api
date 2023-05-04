@@ -3,6 +3,7 @@
 --
 -- Upload route for binary files.
 --
+
 require "file_info"
 require "send_response"
 require "jwt"
@@ -12,24 +13,25 @@ local json = require "json"
 --------------------------------------------------------------------------
 -- Calculate the SHA256 checksum of a file using the operating system tool
 --------------------------------------------------------------------------
-function file_checksum(path)
+local function file_checksum(path)
     local handle = io.popen("/usr/bin/sha256sum " .. path)
     local checksum_orig = handle:read("*a")
     handle:close()
     return string.match(checksum_orig, "%w*")
 end
+
 --------------------------------------------------------------------------
 
 ----------------------------------------------------
 -- Check if a directory exists. If not, create it --
 ----------------------------------------------------
-function check_create_dir(path)
-    local exists
-    success, exists = server.fs.exists(path)
+local function check_create_dir(path)
+    local success, exists = server.fs.exists(path)
     if not success then
         return success, "server.fs.exists() failed: " .. exists
     end
     if not exists then
+        local error_msg
         success, error_msg = server.fs.mkdir(path, 511)
         if not success then
             return success, "server.fs.mkdir() failed: " .. error_msg
@@ -37,13 +39,14 @@ function check_create_dir(path)
     end
     return true, "OK"
 end
+
 ----------------------------------------------------
 
 --------------------------------------------------------
 -- Create the file specific tmp folder from its filename
 -- Returns the path
 --------------------------------------------------------
-function create_tmp_folder(root_folder, filename)
+local function create_tmp_folder(root_folder, filename)
     local first_character_of_filename = string.lower(filename:sub(1, 1))
     local second_character_of_filename = string.lower(filename:sub(2, 2))
     local third_character_of_filename = string.lower(filename:sub(3, 3))
@@ -53,7 +56,7 @@ function create_tmp_folder(root_folder, filename)
     local second_subfolder = third_character_of_filename .. fourth_character_of_filename
 
     local tmp_folder_level_1 = root_folder .. '/' .. first_subfolder
-    success, error_msg = check_create_dir(tmp_folder_level_1)
+    local success, error_msg = check_create_dir(tmp_folder_level_1)
     if not success then
         send_error(500, error_msg)
         return
@@ -68,6 +71,7 @@ function create_tmp_folder(root_folder, filename)
 
     return tmp_folder
 end
+
 --------------------------------------------------------
 
 -- Buffer the response (helps with error handling).
@@ -178,7 +182,7 @@ for file_index, file_params in pairs(server.uploads) do
 
     -- Create a IIIF base URL for the converted file.
     local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() ..
-                                '/' .. tmp_storage_file_path
+        '/' .. tmp_storage_file_path
 
     -- Copy original file also to tmp
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_original_path)
@@ -221,10 +225,10 @@ for file_index, file_params in pairs(server.uploads) do
         if not success then
             server.log(
                 "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " ..
-                    tostring(error_msg), server.loglevel.LOG_ERR)
+                tostring(error_msg), server.loglevel.LOG_ERR)
             send_error(500,
                 "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " ..
-                    tostring(error_msg))
+                tostring(error_msg))
             return
         end
 
@@ -253,7 +257,6 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
         server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
-
     else
         -- It's neither an image nor a video file. Move it to its temporary storage location.
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
@@ -281,12 +284,11 @@ for file_index, file_params in pairs(server.uploads) do
     local sidecar_data = {}
 
     if media_type == VIDEO then
-
         local handle
         -- get video file information with ffprobe: width, height, duration and frame rate (fps)
         handle = io.popen(
             "ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " ..
-                tmp_storage_file_path)
+            tmp_storage_file_path)
         local file_meta = handle:read("*a")
         handle:close()
         -- decode ffprobe output into json, but only first stream
@@ -363,7 +365,6 @@ for file_index, file_params in pairs(server.uploads) do
         checksumDerivative = checksum_derivative
     }
     file_upload_data[file_index] = this_file_upload_data
-
 end
 
 -- Return the file upload data in the response.

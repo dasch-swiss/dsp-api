@@ -3,102 +3,53 @@
 --
 -- Moves a file from temporary to permanent storage.
 --
+
 require "send_response"
 require "jwt"
 
-----------------------------------------
--- Extract the full filename from a path
-----------------------------------------
-function get_file_name(path)
-    local str = path
-    local temp = ""
-    local result = ""
-
-    -- Get file name + extension until first forward slash (/) and then break
-    for i = str:len(), 1, -1 do
-        if str:sub(i, i) ~= "/" then
-            temp = temp .. str:sub(i, i)
-        else
-            break
-        end
-    end
-
-    -- Reverse order of full file name
-    for j = temp:len(), 1, -1 do
-        result = result .. temp:sub(j, j)
-    end
-
-    return result
-end
-----------------------------------------
-
---------------------------------------------------------------------------------
--- Get the extension of a string determined by a dot . at the end of the string.
---------------------------------------------------------------------------------
-function get_file_extension(path)
-    local str = path
-    local temp = ""
-    local result = ""
-
-    for i = str:len(), 1, -1 do
-        if str:sub(i, i) ~= "." then
-            temp = temp .. str:sub(i, i)
-        else
-            break
-        end
-    end
-
-    -- Reverse order of full file name
-    for j = temp:len(), 1, -1 do
-        result = result .. temp:sub(j, j)
-    end
-
-    return result
-end
---------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 -- Get the basename of a string determined by removing the extension
 --------------------------------------------------------------------------------
-function get_file_basename(path)
-    local str = path
+local function get_file_basename(path)
     local temp = ""
     local result = ""
-    local pfound = false
+    local found = false
 
-    for i = str:len(), 1, -1 do
-        if str:sub(i, i) ~= "." then
-            if pfound then
-                temp = temp .. str:sub(i, i)
+    for i = path:len(), 1, -1 do
+        if path:sub(i, i) ~= "." then
+            if found then
+                temp = temp .. path:sub(i, i)
             end
         else
-            pfound = true
+            found = true
         end
     end
 
-    if pfound then
+    if found then
         -- Reverse order of full file name
         for j = temp:len(), 1, -1 do
             result = result .. temp:sub(j, j)
         end
     else
-        result = str
+        result = path
     end
 
     return result
 end
+
 -------------------------------------------------------------------------------
 
 ----------------------------------------------------
 -- Check if a directory exists. If not, create it --
 ----------------------------------------------------
-function check_create_dir(path)
-    local exists
-    success, exists = server.fs.exists(path)
+local function check_create_dir(path)
+    local success, exists = server.fs.exists(path)
     if not success then
         return success, "server.fs.exists() failed: " .. exists
     end
     if not exists then
+        local error_msg
         success, error_msg = server.fs.mkdir(path, 511)
         if not success then
             return success, "server.fs.mkdir() failed: " .. error_msg
@@ -106,6 +57,7 @@ function check_create_dir(path)
     end
     return true, "OK"
 end
+
 ----------------------------------------------------
 
 -- Buffer the response (helps with error handling).

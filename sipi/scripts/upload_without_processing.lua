@@ -10,7 +10,7 @@ require "send_response"
 --------------------------------------------------------------------------
 -- Calculate the SHA256 checksum of a file using the operating system tool
 --------------------------------------------------------------------------
-function file_checksum(path)
+local function file_checksum(path)
     local handle = io.popen("/usr/bin/sha256sum " .. path)
     local checksum_orig = handle:read("*a")
     handle:close()
@@ -21,13 +21,13 @@ end
 ----------------------------------------------------
 -- Check if a directory exists. If not, create it --
 ----------------------------------------------------
-function check_create_dir(path)
-    local exists
-    success, exists = server.fs.exists(path)
+local function check_create_dir(path)
+    local success, exists = server.fs.exists(path)
     if not success then
         return success, "server.fs.exists() failed: " .. exists
     end
     if not exists then
+        local error_msg
         success, error_msg = server.fs.mkdir(path, 511)
         if not success then
             return success, "server.fs.mkdir() failed: " .. error_msg
@@ -41,7 +41,7 @@ end
 -- Create the file specific tmp folder from its filename
 -- Returns the path
 --------------------------------------------------------
-function create_tmp_folder(root_folder, filename)
+local function create_tmp_folder(root_folder, filename)
     local first_character_of_filename = string.lower(filename:sub(1, 1))
     local second_character_of_filename = string.lower(filename:sub(2, 2))
     local third_character_of_filename = string.lower(filename:sub(3, 3))
@@ -51,7 +51,7 @@ function create_tmp_folder(root_folder, filename)
     local second_subfolder = third_character_of_filename .. fourth_character_of_filename
 
     local tmp_folder_level_1 = root_folder .. '/' .. first_subfolder
-    success, error_msg = check_create_dir(tmp_folder_level_1)
+    local success, error_msg = check_create_dir(tmp_folder_level_1)
     if not success then
         send_error(500, error_msg)
         return
@@ -66,17 +66,18 @@ function create_tmp_folder(root_folder, filename)
 
     return tmp_folder
 end
+
 --------------------------------------------------------
 
 --------------------------------------------------------
 -- Gets the file specific path to the tmp location
 --------------------------------------------------------
-function get_tmp_filepath(tmp_folder, filename)
+local function get_tmp_filepath(tmp_folder, filename)
     local tmp_filepath = ''
     -- if it is the preview file of a movie, the tmp folder is the movie's folder
     if string.find(filename, "_m_") then
-        file_base_name, _ = filename:match("(.+)_m_(.+)")
-        success, error_msg = check_create_dir(tmp_folder .. "/" .. file_base_name)
+        local file_base_name, _ = filename:match("(.+)_m_(.+)")
+        local success, error_msg = check_create_dir(tmp_folder .. "/" .. file_base_name)
         if not success then
             send_error(500, error_msg)
             return
@@ -90,6 +91,7 @@ function get_tmp_filepath(tmp_folder, filename)
 
     return tmp_filepath
 end
+
 --------------------------------------------------------
 
 -- Buffer the response (helps with error handling).
@@ -147,7 +149,6 @@ for file_index, file_params in pairs(server.uploads) do
         checksumAlgorithm = "sha256"
     }
     file_upload_data[file_index] = this_file_upload_data
-
 end
 
 -- Return the file upload data in the response.
