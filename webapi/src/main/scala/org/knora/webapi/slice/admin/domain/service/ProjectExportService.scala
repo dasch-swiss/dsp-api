@@ -12,18 +12,23 @@ import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
+import zio.RIO
 import zio.Random
 import zio.Scope
 import zio.Task
+import zio.UIO
+import zio.URIO
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
-
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Comparator
+import java.util.stream.Collectors
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 import org.knora.webapi.messages.twirl
 import org.knora.webapi.messages.util.rdf.TriG
@@ -127,10 +132,9 @@ final case class ProjectExportServiceLive(
     exportProjectTriples(project: KnoraProject, targetFile)
   }
 
-  override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] =
+  override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ZIO.scoped {
     for {
-      randomUuid <- Random.nextUUID
-      tempDir     = Files.createTempDirectory(project.shortname + randomUuid)
+      tempDir <- createTempDir(project)
       _ <-
         ZIO.logDebug(s"Downloading project ${project.shortcode} data to temporary directory ${tempDir.toAbsolutePath}")
       ontologyAndData <- downloadOntologyAndData(project, tempDir)
@@ -138,6 +142,20 @@ final case class ProjectExportServiceLive(
       permissionData  <- downloadPermissionData(project, tempDir)
       resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, targetFile)
     } yield resultFile
+  }
+
+  // Creates a unique temp directory in the default temporary-file directory for the [[KnoraProject]].
+  // Removes the directory and all of its contents when the scope is closed.
+  private def createTempDir(project: KnoraProject): RIO[Scope, Path] = {
+    def acquire = Random.nextUUID.map(rnd => s"${project.shortname}-$rnd").map(Files.createTempDirectory(_))
+    def release(directoryPath: Path) = ZIO.attempt {
+      if (Files.exists(directoryPath) && Files.isDirectory(directoryPath)) {
+        val reverseOrder: Comparator[Path] = Comparator.reverseOrder()
+        Files.walk(directoryPath).sorted(reverseOrder).forEach(Files.delete(_))
+      }
+    }.logError.ignore
+    ZIO.acquireRelease(acquire)(release)
+  }
 
   private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
     allGraphsTrigFile <-
