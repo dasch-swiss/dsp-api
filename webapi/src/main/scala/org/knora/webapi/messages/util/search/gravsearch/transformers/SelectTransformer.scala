@@ -15,7 +15,7 @@ import SparqlTransformer._
 
 class SelectTransformer(
   simulateInference: Boolean,
-  sparqlTransformerLive: SparqlTransformerLive,
+  sparqlTransformerLive: OntologyInferencer,
   implicit val stringFormatter: StringFormatter
 ) extends WhereTransformer {
 

@@ -43,7 +43,7 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPre
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -69,7 +69,7 @@ final case class SearchResponderV2Live(
   private val ontologyCache: OntologyCache,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val queryTraverser: QueryTraverser,
-  private val sparqlTransformerLive: SparqlTransformerLive,
+  private val sparqlTransformerLive: OntologyInferencer,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
   implicit private val stringFormatter: StringFormatter,
@@ -1066,7 +1066,7 @@ object SearchResponderV2Live {
       with OntologyCache
       with StandoffTagUtilV2
       with QueryTraverser
-      with SparqlTransformerLive
+      with OntologyInferencer
       with GravsearchTypeInspectionRunner
       with InferenceOptimizationService
       with IriConverter
@@ -1084,7 +1084,7 @@ object SearchResponderV2Live {
         ontologyCache                <- ZIO.service[OntologyCache]
         standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
         queryTraverser               <- ZIO.service[QueryTraverser]
-        sparqlTransformerLive        <- ZIO.service[SparqlTransformerLive]
+        sparqlTransformerLive        <- ZIO.service[OntologyInferencer]
         stringFormatter              <- ZIO.service[StringFormatter]
         mr                           <- ZIO.service[MessageRelay]
         typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]

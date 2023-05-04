@@ -13,7 +13,7 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 final case class ConstructTransformer(
-  sparqlTransformerLive: SparqlTransformerLive,
+  sparqlTransformerLive: OntologyInferencer,
   iriConverter: IriConverter
 ) {
 
@@ -78,6 +78,6 @@ final case class ConstructTransformer(
 }
 
 object ConstructTransformer {
-  val layer: URLayer[SparqlTransformerLive & IriConverter, ConstructTransformer] =
+  val layer: URLayer[OntologyInferencer & IriConverter, ConstructTransformer] =
     ZLayer.fromFunction(ConstructTransformer.apply _)
 }

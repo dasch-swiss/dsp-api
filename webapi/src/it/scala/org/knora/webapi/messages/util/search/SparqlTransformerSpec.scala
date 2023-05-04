@@ -166,7 +166,7 @@ class SparqlTransformerSpec extends CoreSpec {
         obj = IriRef(blueThingIRI)
       )
 
-      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhere(
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = typeStatement,
         simulateInference = true
       )
@@ -220,7 +220,7 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhere(
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = typeStatement,
         simulateInference = true
       )
@@ -248,7 +248,7 @@ class SparqlTransformerSpec extends CoreSpec {
           obj = QueryVariable(variableName = "text")
         )
       )
-      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhere(
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = hasValueStatement,
         simulateInference = true
       )
@@ -296,7 +296,7 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-      val expandedStatements = getService[SparqlTransformerLive].transformStatementInWhere(
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
         statementPattern = hasValueStatement,
         simulateInference = true
       )
