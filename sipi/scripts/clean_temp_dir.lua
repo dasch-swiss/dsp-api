@@ -9,7 +9,7 @@ require "send_response"
 
 --- Removes old temporary files.
 -- @return true on success, false on failure.
-function clean_temp_dir()
+local function clean_temp_dir()
     server.log("clean_temp_dir starting, max_temp_file_age is " .. config.max_temp_file_age, server.loglevel.LOG_DEBUG)
     local current_time = server.systime()
     local temp_dir = config.imgroot .. '/tmp'
@@ -95,7 +95,7 @@ function maybe_delete_temp_file(file_path, current_time)
     return true
 end
 
-success, auth = server.requireAuth()
+local _, auth = server.requireAuth()
 
 local clean_temp_dir_user = os.getenv("CLEAN_TMP_DIR_USER")
 local clean_temp_dir_pw = os.getenv("CLEAN_TMP_DIR_PW")

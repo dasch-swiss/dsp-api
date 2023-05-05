@@ -19,6 +19,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -121,6 +122,29 @@ class KnoraSipiAuthenticationITSpec
       val sipiRequest  = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
       assert(sipiResponse.status == StatusCodes.Unauthorized)
+    }
+
+    "accept a request with valid credentials to clean_temp_dir route which requires basic auth" in {
+      // set the environment variables
+      val username = "clean_tmp_dir_user"
+      val password = "clean_tmp_dir_pw"
+
+      val request =
+        Get(s"$baseInternalSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
+
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK)
+    }
+
+    "not accept a request with invalid credentials to clean_temp_dir route which requires basic auth" in {
+      val username = "username"
+      val password = "password"
+
+      val request =
+        Get(s"$baseInternalSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
+
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.Unauthorized)
     }
   }
 }
