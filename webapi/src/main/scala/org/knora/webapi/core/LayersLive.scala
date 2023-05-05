@@ -19,7 +19,8 @@ import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
@@ -135,6 +136,7 @@ object LayersLive {
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with ConstructTransformer
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with HttpServer
@@ -174,7 +176,7 @@ object LayersLive {
       with SearchResponderV1
       with SearchResponderV2
       with SipiResponderADM
-      with SparqlTransformerLive
+      with OntologyInferencer
       with StandoffResponderV1
       with StandoffResponderV2
       with StandoffTagUtilV2
@@ -207,6 +209,7 @@ object LayersLive {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      ConstructTransformer.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
@@ -250,7 +253,7 @@ object LayersLive {
       SearchResponderV1Live.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
-      SparqlTransformerLive.layer,
+      OntologyInferencer.layer,
       StandoffResponderV1Live.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
