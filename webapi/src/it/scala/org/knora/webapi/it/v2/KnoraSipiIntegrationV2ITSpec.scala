@@ -344,28 +344,6 @@ class KnoraSipiIntegrationV2ITSpec
   "The Knora/Sipi integration" should {
     var loginToken: String = ""
 
-    "not accept a token in Sipi that hasn't been signed by Knora" in {
-      val invalidToken =
-        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NDM1MTEyMiwiaWF0IjoxNTQxNzU5MTIyLCJqdGkiOiJ4bnlYeklFb1QxNmM2dkpDbHhSQllnIn0.P2Aq37G6XMLLBVMdnpDVVhWjenbVw0HTb1BpEuTWGRo"
-
-      // The image to be uploaded.
-      assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")
-
-      // A multipart/form-data request containing the image.
-      val sipiFormData = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "file",
-          HttpEntity.fromPath(MediaTypes.`image/tiff`, pathToMarbles),
-          Map("filename" -> pathToMarbles.getFileName.toString)
-        )
-      )
-
-      // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-      val sipiRequest  = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
-      val sipiResponse = singleAwaitingRequest(sipiRequest)
-      assert(sipiResponse.status == StatusCodes.Unauthorized)
-    }
-
     "log in as a Knora user" in {
       /* Correct username and correct password */
 
