@@ -128,6 +128,19 @@ case class SipiUploadResponseEntry(
 )
 
 /**
+ * Represents the information that Sipi returns about each file that has been uploaded to the upload_without_processing route.
+ *
+ * @param filename            the filename that was submitted to Sipi.
+ * @param checksum            the checksum of the file
+ * @param checksumAlgorithm   the algorithm that was used to create the checksum of the file
+ */
+case class SipiUploadWithoutProcessingResponseEntry(
+  filename: String,
+  checksum: String,
+  checksumAlgorithm: String
+)
+
+/**
  * Represents Sipi's response to a file upload request.
  *
  * @param uploadedFiles the information about each file that was uploaded.
@@ -139,4 +152,22 @@ object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonP
     SipiUploadResponseEntry
   )
   implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
+}
+
+/**
+ * Represents Sipi's response to a file upload without processing request.
+ *
+ * @param uploadedFiles the information about each file that was uploaded.
+ */
+case class SipiUploadWithoutProcessingResponse(uploadedFiles: Seq[SipiUploadWithoutProcessingResponseEntry])
+
+object SipiUploadWithoutProcessingResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val sipiUploadWithoutProcessingResponseEntryFormat
+    : RootJsonFormat[SipiUploadWithoutProcessingResponseEntry] = jsonFormat3(
+    SipiUploadWithoutProcessingResponseEntry
+  )
+  implicit val sipiUploadWithoutProcessingResponseFormat: RootJsonFormat[SipiUploadWithoutProcessingResponse] =
+    jsonFormat1(
+      SipiUploadWithoutProcessingResponse
+    )
 }

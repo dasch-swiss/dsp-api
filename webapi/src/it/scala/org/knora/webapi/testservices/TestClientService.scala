@@ -31,6 +31,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -38,6 +39,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
+import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
 
 /**
  * Represents a file to be uploaded to the IIF Service.
@@ -169,7 +171,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     } yield json
 
   /**
-   * Uploads a file to the IIF Service and returns the information in Sipi's response.
+   * Uploads a file to the IIIF Service's "upload" route and returns the information in Sipi's response.
    * The upload creates a multipart/form-data request which can contain multiple files.
    *
    * @param loginToken    the login token to be included in the request to Sipi.
@@ -212,6 +214,56 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
       // _            <- ZIO.debug(req)
       response     <- doSipiRequest(req)
       sipiResponse <- ZIO.succeed(response.parseJson.asJsObject.convertTo[SipiUploadResponse])
+    } yield sipiResponse
+  }
+
+  /**
+   * Uploads a file to the IIIF Service's "upload_without_processing" route and returns the information in Sipi's response.
+   * The upload creates a multipart/form-data request which can contain multiple files.
+   *
+   * @param loginToken    the login token to be included in the request to Sipi.
+   * @param filesToUpload the files to be uploaded.
+   * @return a [[SipiUploadWithoutProcessingResponse]] representing Sipi's response.
+   */
+  def uploadWithoutProcessingToSipi(
+    loginToken: String,
+    filesToUpload: Seq[FileToUpload]
+  ): Task[SipiUploadWithoutProcessingResponse] = {
+
+    // builds the url for the operation
+    def uploadWithoutProcessingUrl(token: String) =
+      ZIO.succeed(s"${config.sipi.internalBaseUrl}/upload_without_processing?token=$token")
+
+    // create the entity builder
+    val builder: MultipartEntityBuilder = MultipartEntityBuilder.create()
+    builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+
+    // add each file to the entity builder
+    filesToUpload.foreach { fileToUpload =>
+      builder.addBinaryBody(
+        "file",
+        fileToUpload.path.toFile(),
+        fileToUpload.mimeType,
+        fileToUpload.path.getFileName.toString
+      )
+    }
+
+    // build our entity
+    val requestEntity: http.HttpEntity = builder.build()
+
+    // build the request
+    def request(url: String, requestEntity: http.HttpEntity) = {
+      val req = new http.client.methods.HttpPost(url)
+      req.setEntity(requestEntity)
+      req
+    }
+
+    for {
+      url          <- uploadWithoutProcessingUrl(loginToken)
+      entity       <- ZIO.succeed(requestEntity)
+      req          <- ZIO.succeed(request(url, entity))
+      response     <- doSipiRequest(req)
+      sipiResponse <- ZIO.succeed(response.parseJson.asJsObject.convertTo[SipiUploadWithoutProcessingResponse])
     } yield sipiResponse
   }
 
