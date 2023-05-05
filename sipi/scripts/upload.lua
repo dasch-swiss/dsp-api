@@ -346,7 +346,8 @@ for file_index, file_params in pairs(server.uploads) do
         }
     end
 
-    local success, jsonstr = server.table_to_json(sidecar_data)
+    local jsonstr
+    success, jsonstr = server.table_to_json(sidecar_data)
     if not success then
         send_error(500, "Couldn't create json string!")
         return

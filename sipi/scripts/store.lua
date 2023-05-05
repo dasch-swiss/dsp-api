@@ -60,6 +60,22 @@ end
 
 ----------------------------------------------------
 
+----------------------------------------------------
+-- Gets the file specific tmp folder from its filename
+-- Returns the path
+----------------------------------------------------
+local function get_tmp_folder(root_folder, filename)
+    local first_character_of_filename = string.lower(filename:sub(1, 1))
+    local second_character_of_filename = string.lower(filename:sub(2, 2))
+    local third_character_of_filename = string.lower(filename:sub(3, 3))
+    local fourth_character_of_filename = string.lower(filename:sub(4, 4))
+
+    local first_subfolder = first_character_of_filename .. second_character_of_filename
+    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
+
+    return root_folder .. '/' .. first_subfolder .. '/' .. second_subfolder
+end
+
 -- Buffer the response (helps with error handling).
 local success, error_msg = server.setBuffer()
 if not success then
@@ -129,16 +145,8 @@ if not success then
     return
 end
 
-local first_character_of_filename = string.lower(hashed_filename:sub(1, 1))
-local second_character_of_filename = string.lower(hashed_filename:sub(2, 2))
-local third_character_of_filename = string.lower(hashed_filename:sub(3, 3))
-local fourth_character_of_filename = string.lower(hashed_filename:sub(4, 4))
-
-local first_subfolder = first_character_of_filename .. second_character_of_filename
-local second_subfolder = third_character_of_filename .. fourth_character_of_filename
-
 local tmp_folder_root = config.imgroot .. '/tmp'
-local tmp_folder = tmp_folder_root .. '/' .. first_subfolder .. '/' .. second_subfolder
+local tmp_folder = get_tmp_folder(tmp_folder_root, hashed_filename)
 
 local source_path = tmp_folder .. '/' .. hashed_filename
 local source_key_frames = source_path:match("(.+)%..+")
