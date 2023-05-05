@@ -147,9 +147,20 @@ final case class ProjectExportServiceLive(
              )
   } yield files
 
-  private def downloadProjectAdminData(project: KnoraProject, tempDir: Path): Task[NamedGraphTrigFile] = {
+  /**
+   * Downloads the admin related project metadata.
+   * The data is saved to a file in TriG format.
+   * The data contains:
+   * * the project itself
+   * * the users which are members of the project
+   * * the groups which belong to the project
+   * @param project The project to be exported.
+   * @param targetFolder The folder in which the file is to be saved.
+   * @return A [[NamedGraphTrigFile]] containing the named graph and location of the file.
+   */
+  private def downloadProjectAdminData(project: KnoraProject, targetFolder: Path): Task[NamedGraphTrigFile] = {
     val graphIri = adminDataNamedGraph
-    val file     = NamedGraphTrigFile(graphIri, tempDir)
+    val file     = NamedGraphTrigFile(graphIri, targetFolder)
     for {
       query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectAdminData(project.id.value))
       _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
