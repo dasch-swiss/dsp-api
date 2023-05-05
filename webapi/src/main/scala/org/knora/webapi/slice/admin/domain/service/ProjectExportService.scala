@@ -183,15 +183,24 @@ final case class ProjectExportServiceLive(
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
 
-  override def exportProject(project: KnoraProject): Task[zio.nio.file.Path] = {
-    val tempDir = Files.createTempDirectory(s"export-${project.shortname}")
+  override def exportProject(project: KnoraProject): Task[zio.nio.file.Path] = ZIO.scoped {
+    val exportDir = Files.createTempDirectory(s"export-${project.shortname}")
     for {
-      projectData <- exportProjectTriples(project)
+      collectDir <- createTempDir(project)
+      _          <- exportProjectTriples(project, collectDir)
+      _          <- exportProjectAssets(project, zio.nio.file.Path.fromJava(collectDir))
       zipped <- ZipUtility.zipFolder(
-                  zio.nio.file.Path.fromJava(projectData.getParent),
-                  zio.nio.file.Path.fromJava(tempDir)
+                  zio.nio.file.Path.fromJava(collectDir),
+                  zio.nio.file.Path.fromJava(exportDir)
                 )
     } yield zipped
+  }
+
+  private def exportProjectAssets(project: KnoraProject, tempDir: zio.nio.file.Path) = {
+    val exportedAssetsDir = tempDir / "assets"
+    for {
+      _ <- zio.nio.file.Files.createDirectory(exportedAssetsDir)
+    } yield exportedAssetsDir
   }
 }
 
