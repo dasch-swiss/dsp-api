@@ -91,7 +91,7 @@ sipi = {
     -- for certain prefixes *not* to use subdirs. A list of these prefix-directories
     -- can be given with this configuration parameter.
     --
-    subdir_excludes = { "knora", "thumbs" },
+    subdir_excludes = { "knora" },
 
     --
     -- Lua script which is executed on initialization of the Lua interpreter
@@ -200,5 +200,10 @@ routes = {
         method = 'POST',
         route = '/upload_without_processing',
         script = 'upload_without_processing.lua'
+    },
+    {
+        method = 'GET',
+        route = '/clean_temp_dir',
+        script = 'clean_temp_dir.lua'
     }
 }

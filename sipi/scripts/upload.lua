@@ -8,59 +8,34 @@
 require "file_info"
 require "send_response"
 require "jwt"
-require "clean_temp_dir"
 require "util"
+require "file_specific_folder_util"
 local json = require "json"
 
---------------------------------------------------------------------------
--- Calculate the SHA256 checksum of a file using the operating system tool
---------------------------------------------------------------------------
-function file_checksum(path)
-    local handle = io.popen("/usr/bin/sha256sum " .. path)
-    local checksum_orig = handle:read("*a")
-    handle:close()
-    return string.match(checksum_orig, "%w*")
-end
---------------------------------------------------------------------------
 
 -- Buffer the response (helps with error handling).
-local success, error_msg
-success, error_msg = server.setBuffer()
+local success, error_msg = server.setBuffer()
 if not success then
-    send_error(500, "server.setBuffer() failed: " .. error_msg)
+    send_error(500, "upload.lua: server.setBuffer() failed: " .. error_msg)
     return
 end
 
--- Check for a valid JSON Web Token from Knora.
+-- Check for a valid JSON Web Token.
 local token = get_knora_token()
 if token == nil then
     return
 end
 
 -- Check that the temp folder is created
-local tmpFolder = config.imgroot .. '/tmp/'
-local exists
-success, exists = server.fs.exists(tmpFolder)
-if not success then -- tests server.fs.exists
-    -- fs.exist was not run successful. This does not mean, that the tmp folder is not there.
-    send_error(500, "server.fs.exists() failed: " .. exists)
+local tmp_folder_root = config.imgroot .. '/tmp'
+success, error_msg = check_create_dir(tmp_folder_root)
+if not success then
+    send_error(500, error_msg)
     return
-end
-if not exists then -- checks the response of server.fs.exists
-    -- tmp folder does not exist
-    server.log("temp folder missing: " .. tmpFolder, server.loglevel.LOG_ERR)
-    success, error_msg = server.fs.mkdir(tmpFolder, 511)
-    if not success then
-        send_error(500, "server.fs.mkdir() failed: " .. error_msg)
-        return
-    end
 end
 
 -- A table of data about each file that was uploaded.
 local file_upload_data = {}
-
--- additional sidecar data in case of video or audio (e.g. duration)
-local additional_sidecar_data = {}
 
 -- Process the uploaded files.
 for file_index, file_params in pairs(server.uploads) do
@@ -70,12 +45,12 @@ for file_index, file_params in pairs(server.uploads) do
     local mime_info
     success, mime_info = server.file_mimetype(file_index)
     if not success then
-        send_error(415, "server.file_mimetype() failed: " .. tostring(mime_info))
+        send_error(415, "upload.lua: server.file_mimetype() failed: " .. tostring(mime_info))
         return
     end
     local mime_type = mime_info["mimetype"]
     if mime_type == nil then
-        send_error(415, "Could not determine MIME type of uploaded file")
+        send_error(415, "upload.lua: Could not determine MIME type of uploaded file")
         return
     end
 
@@ -84,10 +59,11 @@ for file_index, file_params in pairs(server.uploads) do
     --
     local original_filename = file_params["origname"]
     local file_info = get_file_info(original_filename, mime_type)
-    
+
     if file_info == nil then
-        server.log("file_info appears to be nil for: " .. tostring(original_filename), server.loglevel.LOG_ERR)
-        send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
+        server.log("upload.lua: file_info appears to be nil for: " .. tostring(original_filename),
+            server.loglevel.LOG_ERR)
+        send_error(415, "upload.lua: Unsupported MIME type: " .. tostring(mime_type))
         return
     end
 
@@ -95,10 +71,9 @@ for file_index, file_params in pairs(server.uploads) do
     local uuid62
     success, uuid62 = server.uuid62()
     if not success then
-        send_error(500, "server.uuid62() failed: " .. uuid62)
+        send_error(500, "upload.lua: server.uuid62() failed: " .. uuid62)
         return
     end
-
 
     -- Construct response data about the file that was uploaded.
     local media_type = file_info["media_type"]
@@ -113,7 +88,7 @@ for file_index, file_params in pairs(server.uploads) do
     local hashed_tmp_storage_filename
     success, hashed_tmp_storage_filename = helper.filename_hash(tmp_storage_filename)
     if not success then
-        send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_filename))
+        send_error(500, "upload.lua: helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_filename))
         return
     end
 
@@ -122,7 +97,7 @@ for file_index, file_params in pairs(server.uploads) do
     local hashed_tmp_storage_sidecar
     success, hashed_tmp_storage_sidecar = helper.filename_hash(tmp_storage_sidecar)
     if not success then
-        send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_sidecar))
+        send_error(500, "upload.lua: helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_sidecar))
         return
     end
 
@@ -131,21 +106,26 @@ for file_index, file_params in pairs(server.uploads) do
     local hashed_tmp_storage_original
     success, hashed_tmp_storage_original = helper.filename_hash(tmp_storage_original)
     if not success then
-        send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_original))
+        send_error(500, "upload.lua: helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_original))
         return
     end
 
-    local tmp_storage_file_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_filename
-    local tmp_storage_sidecar_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_sidecar
-    local tmp_storage_original_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_original
+    -- create tmp folder and subfolders for the files
+    local tmp_folder = check_and_create_file_specific_folder(tmp_folder_root, hashed_tmp_storage_filename)
+
+    local tmp_storage_file_path = tmp_folder .. '/' .. hashed_tmp_storage_filename
+    local tmp_storage_sidecar_path = tmp_folder .. '/' .. hashed_tmp_storage_sidecar
+    local tmp_storage_original_path = tmp_folder .. '/' .. hashed_tmp_storage_original
 
     -- Create a IIIF base URL for the converted file.
-    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. tmp_storage_filename
+    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() ..
+        '/' .. tmp_storage_file_path
 
     -- Copy original file also to tmp
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_original_path)
     if not success then
-        send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_original_path) .. ": " .. tostring(error_msg))
+        send_error(500, "upload.lua: server.copyTmpfile() failed for " .. tostring(tmp_storage_original_path) .. ": " ..
+            tostring(error_msg))
         return
     end
 
@@ -156,9 +136,12 @@ for file_index, file_params in pairs(server.uploads) do
         -- internal in-memory representation independent of the original image format.
         --
         local uploaded_image
-        success, uploaded_image = SipiImage.new(file_index, {original = original_filename, hash = "sha256"})
+        success, uploaded_image = SipiImage.new(file_index, {
+            original = original_filename,
+            hash = "sha256"
+        })
         if not success then
-            send_error(500, "SipiImage.new() failed: " .. tostring(uploaded_image))
+            send_error(500, "upload.lua: SipiImage.new() failed: " .. tostring(uploaded_image))
             return
         end
 
@@ -177,39 +160,47 @@ for file_index, file_params in pairs(server.uploads) do
         -- Normalize image orientation to top-left --
         success, error_msg = uploaded_image:topleft()
         if not success then
-            server.log("upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg), server.loglevel.LOG_ERR)
-            send_error(500, "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            server.log(
+                "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg), server.loglevel.LOG_ERR)
+            send_error(500,
+                "upload.lua: normalize image orientation failed for: " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg))
             return
         end
 
         -- Convert the image to JPEG 2000 format.
         success, error_msg = uploaded_image:write(tmp_storage_file_path)
         if not success then
-            send_error(500, "uploaded_image:write() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500,
+                "upload.lua: uploaded_image:write() failed for " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg))
             return
         end
         server.log("upload.lua: wrote image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
 
-    -- Is this a video file?
+        -- Is this a video file?
     elseif media_type == VIDEO then
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
-            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500, "upload.lua: server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg))
             return
         end
         -- extract the frames from video file; they will be used for preview
-        success_key_frames, error_msg_key_frames = os.execute("./scripts/export-moving-image-frames.sh -i " .. tmp_storage_file_path)
+        local success_key_frames, error_msg_key_frames = os.execute("./scripts/export-moving-image-frames.sh -i " ..
+            tmp_storage_file_path)
         if not success_key_frames then
-            send_error(500, "export-moving-image-frames.sh failed: " .. error_msg_key_frames)
+            send_error(500, "upload.lua: export-moving-image-frames.sh failed: " .. error_msg_key_frames)
             return
         end
         server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
-
     else
         -- It's neither an image nor a video file. Move it to its temporary storage location.
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
-            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500, "upload.lua: server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " ..
+                tostring(error_msg))
             return
         end
         server.log("upload.lua: wrote non-image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
@@ -231,15 +222,23 @@ for file_index, file_params in pairs(server.uploads) do
     local sidecar_data = {}
 
     if media_type == VIDEO then
-        
         local handle
+        local file_meta
         -- get video file information with ffprobe: width, height, duration and frame rate (fps)
-        handle = io.popen("ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " .. tmp_storage_file_path)
-        local file_meta = handle:read("*a")
-        handle:close()
+        handle = io.popen(
+            "ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " ..
+            tmp_storage_file_path)
+        if handle ~= nil then
+            file_meta = handle:read("*a")
+            handle:close()
+        else
+            send_error(500, "upload.lua: running ffprobe failed for: " .. tostring(tmp_storage_file_path))
+            return
+        end
+
         -- decode ffprobe output into json, but only first stream
-        local file_meta_json = json.decode( file_meta )['streams'][1]
-        
+        local file_meta_json = json.decode(file_meta)['streams'][1]
+
         -- get video duration
         local duration = tonumber(file_meta_json['duration'])
         if not duration then
@@ -292,15 +291,20 @@ for file_index, file_params in pairs(server.uploads) do
         }
     end
 
-
-    local success, jsonstr = server.table_to_json(sidecar_data)
+    local jsonstr
+    success, jsonstr = server.table_to_json(sidecar_data)
     if not success then
-        send_error(500, "Couldn't create json string!")
+        send_error(500, "upload.lua: Couldn't create json string!")
         return
     end
     local sidecar = io.open(tmp_storage_sidecar_path, "w")
-    sidecar:write(jsonstr)
-    sidecar:close()
+    if sidecar ~= nil then
+        sidecar:write(jsonstr)
+        sidecar:close()
+    else
+        send_error(500, "upload.lua: io.open() failed for " .. tostring(tmp_storage_sidecar_path))
+        return
+    end
 
     local this_file_upload_data = {
         internalFilename = tmp_storage_filename,
@@ -308,15 +312,12 @@ for file_index, file_params in pairs(server.uploads) do
         temporaryUrl = tmp_storage_url,
         fileType = media_type,
         sidecarFile = tmp_storage_sidecar,
-        checksumOriginal = checksum_orig,
+        checksumOriginal = checksum_original,
         checksumDerivative = checksum_derivative
     }
     file_upload_data[file_index] = this_file_upload_data
-
 end
 
--- Clean up old temporary files.
-clean_temp_dir()
 -- Return the file upload data in the response.
 local response = {}
 response["uploadedFiles"] = file_upload_data
