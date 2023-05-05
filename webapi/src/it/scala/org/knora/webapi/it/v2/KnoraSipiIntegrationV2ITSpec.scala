@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 
 import java.net.URLEncoder
+import java.nio.file.Files
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
