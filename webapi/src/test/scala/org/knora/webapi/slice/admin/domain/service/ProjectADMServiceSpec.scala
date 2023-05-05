@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.NonEmptyChunk
 import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
@@ -46,7 +47,8 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           shortname = shortname,
           shortcode = shortcode,
           longname = None,
-          description = List(StringLiteralV2("description not used in test but is required by constructor", None)),
+          description =
+            NonEmptyChunk(StringLiteralV2("description not used in test but is required by constructor", None)),
           keywords = List.empty,
           logo = None,
           status = true,

@@ -11,7 +11,7 @@ import zio.macros.accessible
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.common.service.Repository
+import org.knora.webapi.slice.common.repo.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 @accessible
