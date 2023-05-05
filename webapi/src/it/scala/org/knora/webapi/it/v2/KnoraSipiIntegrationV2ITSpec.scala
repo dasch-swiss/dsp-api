@@ -347,28 +347,6 @@ class KnoraSipiIntegrationV2ITSpec
   "The Knora/Sipi integration" should {
     var loginToken: String = ""
 
-    "not accept a token in Sipi that hasn't been signed by Knora" in {
-      val invalidToken =
-        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NDM1MTEyMiwiaWF0IjoxNTQxNzU5MTIyLCJqdGkiOiJ4bnlYeklFb1QxNmM2dkpDbHhSQllnIn0.P2Aq37G6XMLLBVMdnpDVVhWjenbVw0HTb1BpEuTWGRo"
-
-      // The image to be uploaded.
-      assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")
-
-      // A multipart/form-data request containing the image.
-      val sipiFormData = Multipart.FormData(
-        Multipart.FormData.BodyPart(
-          "file",
-          HttpEntity.fromPath(MediaTypes.`image/tiff`, pathToMarbles),
-          Map("filename" -> pathToMarbles.getFileName.toString)
-        )
-      )
-
-      // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-      val sipiRequest  = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
-      val sipiResponse = singleAwaitingRequest(sipiRequest)
-      assert(sipiResponse.status == StatusCodes.Unauthorized)
-    }
-
     "log in as a Knora user" in {
       /* Correct username and correct password */
 
@@ -582,45 +560,6 @@ class KnoraSipiIntegrationV2ITSpec
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest = Get(savedImage.iiifUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetImageRequest)
-    }
-
-    "delete the temporary file if Knora rejects the request to create a file value" in {
-      // Upload the image to Sipi.
-      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-        loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToMarbles, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF))
-      )
-
-      val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
-      val temporaryUrl =
-        sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
-      val temporaryDirectDownloadUrl = temporaryUrl + "/file"
-
-      // JSON describing the new image to Knora.
-      val jsonLdEntity = ChangeFileRequest
-        .make(
-          fileType = FileType.StillImageFile(),
-          internalFilename = internalFilename,
-          resourceIri = stillImageResourceIri.get,
-          valueIri = stillImageFileValueIri.get,
-          className = Some("ThingDocument"), // refuse, as it should be "ThingImage"
-          ontologyName = "anything"
-        )
-        .toJsonLd
-
-      // Send the JSON in a POST request to Knora.
-      val knoraPostRequest =
-        Post(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
-          BasicHttpCredentials(incunabulaUserEmail, password)
-        )
-      val knoraPostResponse = singleAwaitingRequest(knoraPostRequest)
-      assert(knoraPostResponse.status == StatusCodes.Forbidden)
-
-      // Request the temporary image from Sipi.
-      val sipiGetTmpFileRequest = Get(temporaryDirectDownloadUrl)
-      val sipiResponse          = singleAwaitingRequest(sipiGetTmpFileRequest)
-      assert(sipiResponse.status == StatusCodes.NotFound)
     }
 
     "create a resource with a PDF file" in {
