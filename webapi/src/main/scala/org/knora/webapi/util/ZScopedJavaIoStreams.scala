@@ -33,7 +33,10 @@ object ZScopedJavaIoStreams {
     ZIO.acquireRelease(acquire)(release)
   }
 
-  def fileInputStream(file: File): ZIO[Any with Scope, Throwable, InputStream] = fileInputStream(file.toPath)
+  def fileInputStream(path: zio.nio.file.Path): ZIO[Any with Scope, Throwable, InputStream] =
+    fileInputStream(path.toFile)
+  def fileInputStream(file: File): ZIO[Any with Scope, Throwable, InputStream] =
+    fileInputStream(file.toPath)
   def fileInputStream(path: Path): ZIO[Any with Scope, Throwable, InputStream] = {
     def acquire = ZIO.attempt(Files.newInputStream(path))
     if (!Files.exists(path)) {
@@ -62,6 +65,8 @@ object ZScopedJavaIoStreams {
    * @param path The path to the file.
    * @return The managed output stream.
    */
+  def fileBufferedOutputStream(path: zio.nio.file.Path): ZIO[Any with Scope, Throwable, OutputStream] =
+    fileBufferedOutputStream(path.toFile.toPath)
   def fileBufferedOutputStream(path: Path): ZIO[Any with Scope, Throwable, OutputStream] = {
     def acquire = ZIO.attempt(Files.newOutputStream(path))
     ZIO.acquireRelease(acquire)(release).flatMap(os => bufferedOutputStream(os))

@@ -9,8 +9,7 @@ import zio.Task
 import zio.ULayer
 import zio.ZLayer
 import zio.nio.file
-
-import java.nio.file.Path
+import zio.nio.file.Path
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 

@@ -12,18 +12,16 @@ import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
-import zio.RIO
 import zio.Scope
 import zio.Task
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.io.OutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.Comparator
 import scala.collection.mutable
 
 import org.knora.webapi.messages.twirl
@@ -37,7 +35,7 @@ import org.knora.webapi.util.ZScopedJavaIoStreams
 
 @accessible
 trait ProjectExportService {
-  def exportProject(project: KnoraProject): Task[zio.nio.file.Path]
+  def exportProject(project: KnoraProject): Task[Path]
 
   /**
    * Exports a project to a file.
@@ -76,7 +74,7 @@ trait ProjectExportService {
 private case class NamedGraphTrigFile(graphIri: InternalIri, tempDir: Path) {
   lazy val dataFile: Path = {
     val filename = graphIri.value.replaceAll("[.:/]", "_") + ".trig"
-    tempDir.resolve(filename)
+    tempDir / filename
   }
 }
 
@@ -123,35 +121,22 @@ final case class ProjectExportServiceLive(
   private val triplestoreService: TriplestoreService
 ) extends ProjectExportService {
 
-  override def exportProjectTriples(project: KnoraProject): Task[Path] = {
-    val tempDir    = Files.createTempDirectory(project.shortname)
-    val targetFile = tempDir.resolve(project.shortname + ".trig")
-    exportProjectTriples(project: KnoraProject, targetFile)
-  }
+  override def exportProjectTriples(project: KnoraProject): Task[Path] =
+    Files
+      .createTempDirectory(Some(project.shortname), fileAttributes = Nil)
+      .map(trigExportFile(project, _))
+      .flatMap(exportProjectTriples(project, _))
+
+  private def trigExportFile(project: KnoraProject, tempDir: Path) = tempDir / s"${project.shortname}.trig"
 
   override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ZIO.scoped {
     for {
-      tempDir <- createTempDir(project)
-      _ <-
-        ZIO.logDebug(s"Downloading project ${project.shortcode} data to temporary directory ${tempDir.toAbsolutePath}")
+      tempDir         <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
       ontologyAndData <- downloadOntologyAndData(project, tempDir)
       adminData       <- downloadProjectAdminData(project, tempDir)
       permissionData  <- downloadPermissionData(project, tempDir)
       resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, targetFile)
     } yield resultFile
-  }
-
-  // Creates a unique temp directory in the default temporary-file directory for the [[KnoraProject]].
-  // Removes the directory and all of its contents when the scope is closed.
-  private def createTempDir(project: KnoraProject): RIO[Scope, Path] = {
-    def acquire = ZIO.attempt(Files.createTempDirectory(project.shortname))
-    def release(directoryPath: Path) = ZIO.attempt {
-      if (Files.exists(directoryPath) && Files.isDirectory(directoryPath)) {
-        val reverseOrder: Comparator[Path] = Comparator.reverseOrder()
-        Files.walk(directoryPath).sorted(reverseOrder).forEach(Files.delete(_))
-      }
-    }.logError.ignore
-    ZIO.acquireRelease(acquire)(release)
   }
 
   private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
@@ -183,23 +168,20 @@ final case class ProjectExportServiceLive(
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
 
-  override def exportProject(project: KnoraProject): Task[zio.nio.file.Path] = ZIO.scoped {
-    val exportDir = Files.createTempDirectory(s"export-${project.shortname}")
+  override def exportProject(project: KnoraProject): Task[Path] = ZIO.scoped {
     for {
-      collectDir <- createTempDir(project)
-      _          <- exportProjectTriples(project, collectDir)
-      _          <- exportProjectAssets(project, zio.nio.file.Path.fromJava(collectDir))
-      zipped <- ZipUtility.zipFolder(
-                  zio.nio.file.Path.fromJava(collectDir),
-                  zio.nio.file.Path.fromJava(exportDir)
-                )
+      exportDir  <- Files.createTempDirectory(Some(s"export-${project.shortname}"), fileAttributes = Nil)
+      collectDir <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
+      _          <- exportProjectTriples(project, trigExportFile(project, collectDir))
+      _          <- exportProjectAssets(project, collectDir)
+      zipped     <- ZipUtility.zipFolder(collectDir, exportDir)
     } yield zipped
   }
 
-  private def exportProjectAssets(project: KnoraProject, tempDir: zio.nio.file.Path) = {
+  private def exportProjectAssets(project: KnoraProject, tempDir: Path) = {
     val exportedAssetsDir = tempDir / "assets"
     for {
-      _ <- zio.nio.file.Files.createDirectory(exportedAssetsDir)
+      _ <- Files.createDirectory(exportedAssetsDir)
     } yield exportedAssetsDir
   }
 }

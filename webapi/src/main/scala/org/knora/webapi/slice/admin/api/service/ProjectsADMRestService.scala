@@ -168,7 +168,7 @@ final case class ProjectsADMRestServiceLive(
     for {
       project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
       _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
-      result  <- projectExportService.exportProjectTriples(project)
+      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
     } yield ProjectDataGetResponseADM(result)
 
   /**

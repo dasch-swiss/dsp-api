@@ -101,6 +101,12 @@ trait TriplestoreService {
   def sparqlHttpConstructFile(
     sparql: String,
     graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
+    outputFormat: QuadFormat
+  ): Task[FileWrittenResponse] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile.toFile.toPath, outputFormat)
+  def sparqlHttpConstructFile(
+    sparql: String,
+    graphIri: InternalIri,
     outputFile: Path,
     outputFormat: QuadFormat
   ): Task[FileWrittenResponse] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
@@ -135,7 +141,11 @@ trait TriplestoreService {
     outputFile: Path,
     outputFormat: QuadFormat
   ): Task[FileWrittenResponse]
-
+  def sparqlHttpGraphFile(
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
+    outputFormat: QuadFormat
+  ): Task[FileWrittenResponse] = sparqlHttpGraphFile(graphIri.value, outputFile.toFile.toPath, outputFormat)
   def sparqlHttpGraphFile(
     graphIri: InternalIri,
     outputFile: Path,
