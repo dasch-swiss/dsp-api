@@ -133,12 +133,19 @@ end
 -- Move the temporary files to the permanent storage directory.
 --
 local project_folder = config.imgroot .. "/" .. prefix
+success, error_msg = check_create_dir(project_folder)
+if not success then
+    send_error(500, error_msg)
+    return
+end
 local destination_folder = check_and_create_file_specific_folder(project_folder, hashed_filename)
 local destination_file = get_file_specific_path(project_folder, hashed_filename)
 local destination_preview = destination_file:match("(.+)%..+")
 success, error_msg = server.fs.moveFile(source_file, destination_file)
 if not success then
-    send_error(500, "store.lua: server.fs.moveFile() failed: " .. error_msg)
+    send_error(500,
+        "store.lua: server.fs.moveFile() from " ..
+        tostring(source_file) .. " to " .. tostring(destination_file) .. " failed: " .. error_msg)
     return
 end
 
@@ -180,7 +187,8 @@ if readable then
     local destination_sidecar = destination_folder .. "/" .. hashed_sidecar
     success, error_msg = server.fs.moveFile(source_sidecar, destination_sidecar)
     if not success then
-        send_error(500, "store.lua: server.fs.moveFile() failed: " .. error_msg)
+        send_error(500, "store.lua: server.fs.moveFile() from " ..
+            tostring(source_sidecar) .. " to " .. tostring(destination_sidecar) .. " failed: " .. error_msg)
         return
     end
 
@@ -189,7 +197,8 @@ if readable then
     local destination_original = destination_folder .. "/" .. sidecar["originalInternalFilename"]
     success, error_msg = server.fs.moveFile(source_original, destination_original)
     if not success then
-        send_error(500, "store.lua: server.fs.moveFile() failed: " .. error_msg)
+        send_error(500, "store.lua: server.fs.moveFile() from " ..
+            tostring(source_original) .. " to " .. tostring(destination_original) .. " failed: " .. error_msg)
         return
     end
 
