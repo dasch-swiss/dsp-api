@@ -37,6 +37,7 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
@@ -725,7 +726,7 @@ final case class PermissionsResponderADMLive(
         createAdministrativePermissionSparqlString =
           twirl.queries.sparql.admin.txt
             .createNewAdministrativePermission(
-              namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+              AdminConstants.permissionsDataNamedGraph.value,
               permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
               permissionIri = newPermissionIri,
               projectIri = project.id,
@@ -1597,7 +1598,7 @@ final case class PermissionsResponderADMLive(
         createNewDefaultObjectAccessPermissionSparqlString =
           twirl.queries.sparql.admin.txt
             .createNewDefaultObjectAccessPermission(
-              namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+              AdminConstants.permissionsDataNamedGraph.value,
               permissionIri = newPermissionIri,
               permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
               projectIri = project.id,
@@ -2224,7 +2225,7 @@ final case class PermissionsResponderADMLive(
       sparqlChangePermission <- ZIO.attempt(
                                   twirl.queries.sparql.admin.txt
                                     .updatePermission(
-                                      namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+                                      AdminConstants.permissionsDataNamedGraph.value,
                                       permissionIri = permissionIri,
                                       maybeGroup = maybeGroup,
                                       maybeHasPermissions = maybeHasPermissions,
@@ -2248,7 +2249,7 @@ final case class PermissionsResponderADMLive(
       sparqlDeletePermission <- ZIO.attempt(
                                   twirl.queries.sparql.admin.txt
                                     .deletePermission(
-                                      namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+                                      AdminConstants.permissionsDataNamedGraph.value,
                                       permissionIri = permissionIri
                                     )
                                     .toString()
