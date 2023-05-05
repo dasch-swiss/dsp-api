@@ -11,7 +11,7 @@ jobs:
     name: Build and test
     runs-on: actuated
     concurrency:
-      group: ${{ github.ref }}
+      group: ${{ github.ref }}-bt
       cancel-in-progress: true
     steps:
       - name: Run preparatory steps
@@ -47,7 +47,7 @@ jobs:
     name: Build and integration-test
     runs-on: actuated
     concurrency:
-      group: ${{ github.ref }}
+      group: ${{ github.ref }}-it
       cancel-in-progress: true
     steps:
       - name: Run preparatory steps
