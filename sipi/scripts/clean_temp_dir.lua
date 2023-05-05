@@ -1,9 +1,15 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
+--
+-- Deletes old files from Sipi's tmp directory.
+--
+
+require "send_response"
+
 --- Removes old temporary files.
 -- @return true on success, false on failure.
-function clean_temp_dir()
+local function clean_temp_dir()
     server.log("clean_temp_dir starting, max_temp_file_age is " .. config.max_temp_file_age, server.loglevel.LOG_DEBUG)
     local current_time = server.systime()
     local temp_dir = config.imgroot .. '/tmp'
@@ -61,7 +67,7 @@ function clean_dir_entries(dir_path, current_time)
 end
 
 --- Deletes a file if its last modification date is too far in the past.
--- @param full_file_path the file's path.
+-- @param file_path the file's path.
 -- @param current_time the current time in milliseconds since the epoch.
 -- @return true on success, false on failure.
 function maybe_delete_temp_file(file_path, current_time)
@@ -73,20 +79,30 @@ function maybe_delete_temp_file(file_path, current_time)
         return true
     end
 
-    if success then
-        local file_age = current_time - last_mod_time
+    local file_age = current_time - last_mod_time
 
-        if file_age > config.max_temp_file_age then
-            server.log("clean_temp_dir: removing " .. file_path, server.loglevel.LOG_DEBUG)
-            local error_msg
-            success, error_msg = server.fs.unlink(file_path)
+    if file_age > config.max_temp_file_age then
+        server.log("clean_temp_dir: removing " .. file_path, server.loglevel.LOG_DEBUG)
+        local error_msg
+        success, error_msg = server.fs.unlink(file_path)
 
-            if not success then
-                -- If we couldn't delete the file, maybe it has already been deleted.
-                server.log(error_msg, server.loglevel.LOG_WARNING)
-            end
+        if not success then
+            -- If we couldn't delete the file, maybe it has already been deleted.
+            server.log(error_msg, server.loglevel.LOG_WARNING)
         end
     end
 
     return true
+end
+
+local _, auth = server.requireAuth()
+
+local clean_temp_dir_user = os.getenv("CLEAN_TMP_DIR_USER")
+local clean_temp_dir_pw = os.getenv("CLEAN_TMP_DIR_PW")
+
+if auth.username == clean_temp_dir_user and auth.password == clean_temp_dir_pw then
+    clean_temp_dir()
+else
+    server.log("clean_temp_dir.lua: failed to authenticate user", server.loglevel.LOG_DEBUG)
+    send_error(401, "Failed to authenticate user. Wrong username or password.")
 end
