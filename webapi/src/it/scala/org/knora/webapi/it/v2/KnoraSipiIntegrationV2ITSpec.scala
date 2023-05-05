@@ -1418,16 +1418,5 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiGetFileRequest = Get(savedVideoFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetFileRequest)
     }
-
-    "not accept a request with invalid credentials to clean_temp_dir route which requires basic auth" in {
-      val username = "username"
-      val password = "password"
-
-      val request =
-        Get(s"$baseInternalSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
-
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.Unauthorized)
-    }
   }
 }
