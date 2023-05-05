@@ -1,8 +1,10 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
+require "file_specific_folder_util"
 require "get_knora_session"
 require "log_util"
+require "util"
 
 -------------------------------------------------------------------------------
 -- This function returns the filepath according to the old way the file was
@@ -18,28 +20,6 @@ local function get_old_tmp_filepath(shortcode, filename)
     return filepath
 end
 
--------------------------------------------------------------------------------
--- This function returns the filepath of the temporary location the file is
--- stored in. The path is created from the first four characters of the filename.
--------------------------------------------------------------------------------
-local function get_tmp_filepath(shortcode, filename)
-    local first_character_of_filename = string.lower(filename:sub(1, 1))
-    local second_character_of_filename = string.lower(filename:sub(2, 2))
-    local third_character_of_filename = string.lower(filename:sub(3, 3))
-    local fourth_character_of_filename = string.lower(filename:sub(4, 4))
-
-    local first_subfolder = first_character_of_filename .. second_character_of_filename
-    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
-
-    local filepath = ''
-    if config.prefix_as_path then
-        filepath = config.imgroot .. '/' .. shortcode .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' ..
-            filename
-    else
-        filepath = config.imgroot .. '/' .. first_subfolder .. '/' .. second_subfolder .. '/' .. filename
-    end
-    return filepath
-end
 
 -------------------------------------------------------------------------------
 -- This function returns the segments from the identifier
@@ -76,31 +56,6 @@ local function check_and_get_cookie_header(cookie)
     return cookie_header
 end
 
--------------------------------------------------------------------------------
--- This function gets the hostname of the DSP-API
--- either from the environment variable or from config
--------------------------------------------------------------------------------
-local function get_api_hostname()
-    local hostname = os.getenv("SIPI_WEBAPI_HOSTNAME")
-    if hostname == nil then
-        hostname = config.knora_path
-    end
-
-    return hostname
-end
-
--------------------------------------------------------------------------------
--- This function gets the port of the DSP-API
--- either from the environment variable or from config
--------------------------------------------------------------------------------
-local function get_api_port()
-    local port = os.getenv("SIPI_WEBAPI_PORT")
-    if port == nil then
-        port = config.knora_port
-    end
-
-    return port
-end
 
 -------------------------------------------------------------------------------
 -- This function returns the API URL from the given parameters
@@ -165,11 +120,18 @@ function pre_flight(prefix, identifier, cookie)
     log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
     log("pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
 
-    local filepath = get_tmp_filepath(prefix, identifier)
+    local root_folder = ''
+    if config.prefix_as_path then
+        root_folder = config.imgroot .. '/' .. prefix
+    else
+        root_folder = config.imgroot
+    end
+
+    local filepath = get_file_specific_path(root_folder, identifier)
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     if prefix == "tmp" then
-        -- always allow access to tmp folder
+        log("pre_flight - always allow access to tmp folder", server.loglevel.LOG_DEBUG)
         return 'allow', filepath
     end
 
@@ -276,8 +238,15 @@ function file_pre_flight(identifier, cookie)
         return "deny"
     end
 
-    local filepath = get_tmp_filepath(shortcode, file_name)
-    local filepath_preview = get_tmp_filepath(shortcode, file_name_preview)
+    local root_folder = ''
+    if config.prefix_as_path then
+        root_folder = config.imgroot .. '/' .. shortcode
+    else
+        root_folder = config.imgroot
+    end
+
+    local filepath = get_file_specific_path(root_folder, file_name)
+    local filepath_preview = get_file_specific_path(root_folder, file_name_preview)
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     -- handle old way of file path - TODO: remove this block of code as soon as migration is done!

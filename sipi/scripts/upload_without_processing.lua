@@ -1,98 +1,16 @@
 --  Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 --  SPDX-License-Identifier: Apache-2.0
 --
+
 -- Upload route for binary files that skips transcoding. Directly puts the
 -- files in the temp folder.
 --
+
+require "file_specific_folder_util"
 require "jwt"
 require "send_response"
+require "util"
 
---------------------------------------------------------------------------
--- Calculate the SHA256 checksum of a file using the operating system tool
---------------------------------------------------------------------------
-local function file_checksum(path)
-    local handle = io.popen("/usr/bin/sha256sum " .. path)
-    local checksum_orig = handle:read("*a")
-    handle:close()
-    return string.match(checksum_orig, "%w*")
-end
---------------------------------------------------------------------------
-
-----------------------------------------------------
--- Check if a directory exists. If not, create it --
-----------------------------------------------------
-local function check_create_dir(path)
-    local success, exists = server.fs.exists(path)
-    if not success then
-        return success, "server.fs.exists() failed: " .. exists
-    end
-    if not exists then
-        local error_msg
-        success, error_msg = server.fs.mkdir(path, 511)
-        if not success then
-            return success, "server.fs.mkdir() failed: " .. error_msg
-        end
-    end
-    return true, "OK"
-end
-----------------------------------------------------
-
---------------------------------------------------------
--- Create the file specific tmp folder from its filename
--- Returns the path
---------------------------------------------------------
-local function create_tmp_folder(root_folder, filename)
-    local first_character_of_filename = string.lower(filename:sub(1, 1))
-    local second_character_of_filename = string.lower(filename:sub(2, 2))
-    local third_character_of_filename = string.lower(filename:sub(3, 3))
-    local fourth_character_of_filename = string.lower(filename:sub(4, 4))
-
-    local first_subfolder = first_character_of_filename .. second_character_of_filename
-    local second_subfolder = third_character_of_filename .. fourth_character_of_filename
-
-    local tmp_folder_level_1 = root_folder .. '/' .. first_subfolder
-    local success, error_msg = check_create_dir(tmp_folder_level_1)
-    if not success then
-        send_error(500, error_msg)
-        return
-    end
-
-    local tmp_folder = tmp_folder_level_1 .. '/' .. second_subfolder
-    success, error_msg = check_create_dir(tmp_folder)
-    if not success then
-        send_error(500, error_msg)
-        return
-    end
-
-    return tmp_folder
-end
-
---------------------------------------------------------
-
---------------------------------------------------------
--- Gets the file specific path to the tmp location
---------------------------------------------------------
-local function get_tmp_filepath(tmp_folder, filename)
-    local tmp_filepath = ''
-    -- if it is the preview file of a movie, the tmp folder is the movie's folder
-    if string.find(filename, "_m_") then
-        local file_base_name, _ = filename:match("(.+)_m_(.+)")
-        local success, error_msg = check_create_dir(tmp_folder .. "/" .. file_base_name)
-        if not success then
-            send_error(500, error_msg)
-            return
-        end
-        tmp_filepath = tmp_folder .. "/" .. file_base_name .. "/" .. filename
-
-        -- for all other cases
-    else
-        tmp_filepath = tmp_folder .. "/" .. filename
-    end
-
-    return tmp_filepath
-end
-
---------------------------------------------------------
 
 -- Buffer the response (helps with error handling).
 local success, error_msg
@@ -121,16 +39,14 @@ local file_upload_data = {}
 
 -- Process the uploaded files.
 for file_index, file_params in pairs(server.uploads) do
-    local file_base_name = ""
-
     -- get the filename
     local filename = file_params["origname"]
 
     -- create the file specific tmp folder
-    local tmp_folder = create_tmp_folder(tmp_folder_root, filename)
+    local tmp_folder = check_and_create_file_specific_folder(tmp_folder_root, filename)
 
     -- get the filepath
-    local tmp_storage_file_path = get_tmp_filepath(tmp_folder, filename)
+    local tmp_storage_file_path = get_path_from_folder_and_filename(tmp_folder, filename)
 
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
     if not success then
