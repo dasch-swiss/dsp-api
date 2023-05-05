@@ -1,4 +1,4 @@
-name: CI
+name: CI-build-and-test
 
 on:
   push:
@@ -9,21 +9,10 @@ on:
 jobs:
   build-and-test:
     name: Build and test
-    runs-on: actuated
-    concurrency:
-      group: ${{ github.ref }}-bt
-      cancel-in-progress: true
+    runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-      - name: add packages
-        run: |
-          echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
-          echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
-          curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo -H gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
-          sudo chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
-          sudo apt-get update
-          sudo apt install -qyyy --no-install-recommends sbt
       - name: Run all tests
         run: sbt -v coverage test coverageAggregate
       - name: WebApi Unit Test Report
@@ -106,21 +95,10 @@ jobs:
 
   test-client-test-data:
     name: Test client-test-data
-    runs-on: actuated
-    concurrency:
-      group: ${{ github.ref }}-td
-      cancel-in-progress: true
+    runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-      - name: add packages
-        run: |
-          echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
-          echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
-          curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo -H gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
-          sudo chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
-          sudo apt-get update
-          sudo apt install -qyyy --no-install-recommends sbt
       - name: Create client-test-data
         run: make client-test-data
 
@@ -133,7 +111,7 @@ jobs:
       - name: Test repository upgrade
         run: make test-repository-upgrade
       - name: Dump docker logs
-        uses: jwalton/gh-docker-logs@v1
+        uses: jwalton/gh-docker-logs@v2
 
   test-docs-build:
     name: Test docs
