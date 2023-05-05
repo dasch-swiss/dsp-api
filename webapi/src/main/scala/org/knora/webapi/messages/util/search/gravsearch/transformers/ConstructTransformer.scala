@@ -12,8 +12,8 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-final case class ConstructToConstructTransformer(
-  sparqlTransformerLive: SparqlTransformerLive,
+final case class ConstructTransformer(
+  sparqlTransformerLive: OntologyInferencer,
   iriConverter: IriConverter
 ) {
 
@@ -53,7 +53,7 @@ final case class ConstructToConstructTransformer(
   ): Task[Seq[QueryPattern]] =
     pattern match {
       case statementPattern: StatementPattern =>
-        sparqlTransformerLive.transformStatementInWhereForNoInference(
+        sparqlTransformerLive.transformStatementInWhere(
           statementPattern = statementPattern,
           simulateInference = true,
           limitInferenceToOntologies = limit
@@ -75,4 +75,9 @@ final case class ConstructToConstructTransformer(
       obj       = XsdLiteral(pattern.queryString.getQueryString, datatype)
     } yield Seq(StatementPattern(pattern.subj, IriRef(predIri), obj))
 
+}
+
+object ConstructTransformer {
+  val layer: URLayer[OntologyInferencer & IriConverter, ConstructTransformer] =
+    ZLayer.fromFunction(ConstructTransformer.apply _)
 }
