@@ -13,7 +13,6 @@ import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
 import zio.RIO
-import zio.Random
 import zio.Scope
 import zio.Task
 import zio.URLayer
