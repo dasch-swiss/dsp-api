@@ -21,6 +21,7 @@ trait ProjectADMService {
   def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]]
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
+  def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]]
 }
 
 object ProjectADMService {
@@ -85,6 +86,14 @@ final case class ProjectADMServiceLive(
       keywordsMaybe = projectMaybe.map(_.keywords)
       result        = keywordsMaybe.map(ProjectKeywordsGetResponseADM(_))
     } yield result
+
+  override def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]] = {
+    val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
+    ontologyRepo
+      .findByProject(project.id)
+      .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
+      .map(_ :+ projectGraph)
+  }
 }
 
 object ProjectADMServiceLive {

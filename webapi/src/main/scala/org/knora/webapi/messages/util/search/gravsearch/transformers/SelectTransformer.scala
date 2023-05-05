@@ -13,9 +13,9 @@ import org.knora.webapi.messages.util.search._
 
 import SparqlTransformer._
 
-class SelectToSelectTransformer(
+class SelectTransformer(
   simulateInference: Boolean,
-  sparqlTransformerLive: SparqlTransformerLive,
+  sparqlTransformerLive: OntologyInferencer,
   implicit val stringFormatter: StringFormatter
 ) extends WhereTransformer {
 
@@ -33,7 +33,7 @@ class SelectToSelectTransformer(
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Task[Seq[QueryPattern]] =
-    sparqlTransformerLive.transformStatementInWhereForNoInference(
+    sparqlTransformerLive.transformStatementInWhere(
       statementPattern = statementPattern,
       simulateInference = simulateInference,
       limitInferenceToOntologies = limitInferenceToOntologies

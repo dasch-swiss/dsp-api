@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.admin.api.service
+package org.knora.webapi.slice.common.api
 
 import zio._
 import zio.macros.accessible
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.slice.admin.api.service.RestPermissionService.isActive
-import org.knora.webapi.slice.admin.api.service.RestPermissionService.isSystemAdmin
-import org.knora.webapi.slice.admin.api.service.RestPermissionService.isSystemOrProjectAdmin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.common.api.RestPermissionService.isActive
+import org.knora.webapi.slice.common.api.RestPermissionService.isSystemAdmin
+import org.knora.webapi.slice.common.api.RestPermissionService.isSystemOrProjectAdmin
 
 /**
  * Provides methods for checking permissions.
@@ -85,5 +85,5 @@ final case class RestPermissionServiceLive() extends RestPermissionService {
 }
 
 object RestPermissionServiceLive {
-  val layer: ULayer[RestPermissionServiceLive] = ZLayer.fromFunction(RestPermissionServiceLive.apply _)
+  val layer: ULayer[RestPermissionService] = ZLayer.fromFunction(RestPermissionServiceLive.apply _)
 }
