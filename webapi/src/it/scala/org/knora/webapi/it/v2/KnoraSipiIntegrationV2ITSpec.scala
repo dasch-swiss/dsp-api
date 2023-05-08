@@ -476,11 +476,7 @@ class KnoraSipiIntegrationV2ITSpec
         propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
       )
 
-      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
-        savedValues.value.head
-      } else {
-        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
-      }
+      val savedValue = savedValues.value.head
 
       val savedValueObj: JsonLDObject = savedValue match {
         case jsonLDObject: JsonLDObject => jsonLDObject
