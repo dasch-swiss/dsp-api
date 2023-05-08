@@ -56,7 +56,7 @@ function migrate_files_and_folders()
 end
 
 -----------------------------------------------------------
--- Moves the .orig files from the "originals" folder to the 
+-- Moves the .orig files from the "originals" folder to the
 -- project folder and deletes the original folder in the end.
 -----------------------------------------------------------
 function migrate_originals()
@@ -229,5 +229,16 @@ function create_destination_folder(root_folder, filename)
     return destination_folder
 end
 
-migrate_files_and_folders()
-migrate_originals()
+local _, auth = server.requireAuth()
+
+-- takes the same credentials as the one for the clean_temp_dir route
+local user = os.getenv("CLEAN_TMP_DIR_USER")
+local pw = os.getenv("CLEAN_TMP_DIR_PW")
+
+if auth.username == user and auth.password == pw then
+    migrate_files_and_folders()
+    migrate_originals()
+else
+    server.log("migrate_files_into_new_structure.lua: failed to authenticate user", server.loglevel.LOG_DEBUG)
+    send_error(401, "Failed to authenticate user. Wrong username or password.")
+end
