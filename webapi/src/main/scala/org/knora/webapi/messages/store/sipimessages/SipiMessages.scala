@@ -132,12 +132,12 @@ case class SipiUploadResponseEntry(
  *
  * @param filename            the filename that was submitted to Sipi.
  * @param checksum            the checksum of the file
- * @param checksumAlgorithm   the algorithm that was used to create the checksum of the file
+ * @param algorithm           the algorithm that was used to create the checksum of the file
  */
 case class SipiUploadWithoutProcessingResponseEntry(
   filename: String,
   checksum: String,
-  checksumAlgorithm: String
+  algorithm: String
 )
 
 /**
