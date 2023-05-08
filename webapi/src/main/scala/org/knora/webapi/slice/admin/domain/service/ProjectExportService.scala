@@ -12,23 +12,22 @@ import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
 import org.apache.jena.riot.system.StreamRDFWriter
 import org.apache.jena.sparql.core.Quad
-import zio.Random
 import zio.Scope
 import zio.Task
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.macros.accessible
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.io.OutputStream
-import java.nio.file.Files
-import java.nio.file.Path
 import scala.collection.mutable
 
 import org.knora.webapi.messages.twirl
 import org.knora.webapi.messages.util.rdf.TriG
-import org.knora.webapi.slice.admin.AdminConstants.adminDataGraph
-import org.knora.webapi.slice.admin.AdminConstants.permissionsDataGraph
+import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
+import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -36,6 +35,7 @@ import org.knora.webapi.util.ZScopedJavaIoStreams
 
 @accessible
 trait ProjectExportService {
+  def exportProject(project: KnoraProject): Task[Path]
 
   /**
    * Exports a project to a file.
@@ -74,7 +74,7 @@ trait ProjectExportService {
 private case class NamedGraphTrigFile(graphIri: InternalIri, tempDir: Path) {
   lazy val dataFile: Path = {
     val filename = graphIri.value.replaceAll("[.:/]", "_") + ".trig"
-    tempDir.resolve(filename)
+    tempDir / filename
   }
 }
 
@@ -121,23 +121,23 @@ final case class ProjectExportServiceLive(
   private val triplestoreService: TriplestoreService
 ) extends ProjectExportService {
 
-  override def exportProjectTriples(project: KnoraProject): Task[Path] = {
-    val tempDir    = Files.createTempDirectory(project.shortname)
-    val targetFile = tempDir.resolve(project.shortname + ".trig")
-    exportProjectTriples(project: KnoraProject, targetFile)
-  }
+  override def exportProjectTriples(project: KnoraProject): Task[Path] =
+    Files
+      .createTempDirectory(Some(project.shortname), fileAttributes = Nil)
+      .map(trigExportFile(project, _))
+      .flatMap(exportProjectTriples(project, _))
 
-  override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] =
+  private def trigExportFile(project: KnoraProject, tempDir: Path) = tempDir / s"${project.shortname}.trig"
+
+  override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ZIO.scoped {
     for {
-      randomUuid <- Random.nextUUID
-      tempDir     = Files.createTempDirectory(project.shortname + randomUuid)
-      _ <-
-        ZIO.logDebug(s"Downloading project ${project.shortcode} data to temporary directory ${tempDir.toAbsolutePath}")
+      tempDir         <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
       ontologyAndData <- downloadOntologyAndData(project, tempDir)
       adminData       <- downloadProjectAdminData(project, tempDir)
       permissionData  <- downloadPermissionData(project, tempDir)
       resultFile      <- mergeDataToFile(ontologyAndData :+ adminData :+ permissionData, targetFile)
     } yield resultFile
+  }
 
   private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
     allGraphsTrigFile <-
@@ -148,7 +148,7 @@ final case class ProjectExportServiceLive(
   } yield files
 
   private def downloadProjectAdminData(project: KnoraProject, tempDir: Path): Task[NamedGraphTrigFile] = {
-    val graphIri = adminDataGraph
+    val graphIri = adminDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, tempDir)
     for {
       query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectAdminData(project.id.value))
@@ -157,7 +157,7 @@ final case class ProjectExportServiceLive(
   }
 
   private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
-    val graphIri = permissionsDataGraph
+    val graphIri = permissionsDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, tempDir)
     for {
       query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectPermissions(project.id.value))
@@ -167,6 +167,23 @@ final case class ProjectExportServiceLive(
 
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
+
+  override def exportProject(project: KnoraProject): Task[Path] = ZIO.scoped {
+    for {
+      exportDir  <- Files.createTempDirectory(Some(s"export-${project.shortname}"), fileAttributes = Nil)
+      collectDir <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
+      _          <- exportProjectTriples(project, trigExportFile(project, collectDir))
+      _          <- exportProjectAssets(project, collectDir)
+      zipped     <- ZipUtility.zipFolder(collectDir, exportDir)
+    } yield zipped
+  }
+
+  private def exportProjectAssets(project: KnoraProject, tempDir: Path) = {
+    val exportedAssetsDir = tempDir / "assets"
+    for {
+      _ <- Files.createDirectory(exportedAssetsDir)
+    } yield exportedAssetsDir
+  }
 }
 
 object ProjectExportServiceLive {

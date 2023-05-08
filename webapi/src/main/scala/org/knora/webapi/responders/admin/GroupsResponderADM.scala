@@ -35,6 +35,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
@@ -378,7 +379,7 @@ final case class GroupsResponderADMLive(
         createNewGroupSparqlString =
           twirl.queries.sparql.admin.txt
             .createNewGroup(
-              adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+              AdminConstants.adminDataNamedGraph.value,
               groupIri,
               groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
               name = createRequest.name.value,
