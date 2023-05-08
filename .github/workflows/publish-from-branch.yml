@@ -1,4 +1,4 @@
-name: Publish from branch
+name: Docker Publish from branch
 
 on:
   workflow_dispatch:

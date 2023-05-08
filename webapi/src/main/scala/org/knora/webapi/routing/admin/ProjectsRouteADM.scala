@@ -64,7 +64,8 @@ final case class ProjectsRouteADM()(
       getProjectRestrictedViewSettingsByIri() ~
       getProjectRestrictedViewSettingsByShortname() ~
       getProjectRestrictedViewSettingsByShortcode() ~
-      getProjectData()
+      getProjectData() ~
+      postExportProject
 
   /**
    * Returns all projects.
@@ -310,4 +311,14 @@ final case class ProjectsRouteADM()(
       requestTask.flatMap(response => ZIO.fromFuture(_ => requestContext.complete(response)))
     }
   }
+  private def postExportProject: Route =
+    path(projectsBasePath / "iri" / Segment / "export") { projectIri =>
+      post { ctx =>
+        val requestTask = for {
+          requestingUser <- Authenticator.getUserADM(ctx)
+          response       <- ProjectADMRestService.exportProject(projectIri, requestingUser)
+        } yield RouteUtilADM.okResponse(response)
+        RouteUtilADM.completeContext(ctx, requestTask)
+      }
+    }
 }

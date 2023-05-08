@@ -34,6 +34,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -791,7 +792,7 @@ final case class ProjectsResponderADMLive(
 
         createNewProjectSparqlString = twirl.queries.sparql.admin.txt
                                          .createNewProject(
-                                           adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                           AdminConstants.adminDataNamedGraph.value,
                                            projectIri = newProjectIRI,
                                            projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
                                            shortname = createProjectRequest.shortname.value,
