@@ -68,6 +68,9 @@ class KnoraSipiIntegrationV2ITSpec
   private val pathToMarblesWithWrongExtension =
     Paths.get("..", "test_data/test_route/images/marbles_with_wrong_extension.jpg")
 
+  private val jp2OriginalFilename = "67352ccc-d1b0-11e1-89ae-279075081939.jp2"
+  private val pathToJp2           = Paths.get("..", s"test_data/test_route/images/$jp2OriginalFilename")
+
   private val trp88OriginalFilename = "Trp88.tiff"
   private val pathToTrp88           = Paths.get("..", s"test_data/test_route/images/$trp88OriginalFilename")
   private val trp88Width            = 499
@@ -427,6 +430,63 @@ class KnoraSipiIntegrationV2ITSpec
       assert(savedImage.internalFilename == uploadedFile.internalFilename)
       assert(savedImage.width == marblesWidth)
       assert(savedImage.height == marblesHeight)
+    }
+
+    "create a resource with a still image file without processing" in {
+      // Upload the image to Sipi.
+      val sipiUploadResponse: SipiUploadWithoutProcessingResponse =
+        uploadWithoutProcessingToSipi(
+          loginToken = loginToken,
+          filesToUpload = Seq(FileToUpload(path = pathToJp2, mimeType = org.apache.http.entity.ContentType.IMAGE_JPEG))
+        )
+
+      val uploadedFile: SipiUploadWithoutProcessingResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.filename should ===(jp2OriginalFilename)
+
+      // Create the resource in the API.
+
+      val jsonLdEntity = UploadFileRequest
+        .make(
+          fileType = FileType.StillImageFile(),
+          internalFilename = uploadedFile.filename
+        )
+        .toJsonLd(
+          className = Some("ThingPicture"),
+          ontologyName = "anything"
+        )
+
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      stillImageResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
+      val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
+      assert(
+        resource.body.requireTypeAsKnoraApiV2ComplexTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
+      )
+
+      // Get the new file value from the resource.
+
+      val savedValues: JsonLDArray = getValuesFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+      )
+
+      val savedValue = savedValues.value.head
+
+      val savedValueObj: JsonLDObject = savedValue match {
+        case jsonLDObject: JsonLDObject => jsonLDObject
+        case other                      => throw AssertionException(s"Invalid value object: $other")
+      }
+
+      stillImageFileValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
+
+      val savedImage = savedValueToSavedImage(savedValueObj)
+      assert(savedImage.internalFilename == uploadedFile.filename)
     }
 
     "reject an image file with the wrong file extension" in {
