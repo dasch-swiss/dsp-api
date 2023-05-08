@@ -10,14 +10,12 @@ require "util"
 -- This function returns the filepath according to the old way the file was
 -- stored in.
 -------------------------------------------------------------------------------
-local function get_old_tmp_filepath(shortcode, filename)
-    local filepath = ''
+local function get_old_filepath(shortcode, filename)
     if config.prefix_as_path then
-        filepath = config.imgroot .. '/' .. shortcode .. '/' .. filename
+        return config.imgroot .. '/' .. shortcode .. '/' .. filename
     else
-        filepath = config.imgroot .. '/' .. filename
+        return config.imgroot .. '/' .. filename
     end
-    return filepath
 end
 
 
@@ -139,7 +137,7 @@ function pre_flight(prefix, identifier, cookie)
     local _, exists = server.fs.exists(filepath)
     log("pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
     if not exists then
-        filepath = get_old_tmp_filepath(prefix, identifier)
+        filepath = get_old_filepath(prefix, identifier)
         log("pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath,
             server.loglevel.LOG_DEBUG)
     end
@@ -253,8 +251,8 @@ function file_pre_flight(identifier, cookie)
     local _, exists = server.fs.exists(filepath)
     log("file_pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
     if not exists then
-        filepath = get_old_tmp_filepath(shortcode, file_name)
-        filepath_preview = get_old_tmp_filepath(shortcode, file_name_preview)
+        filepath = get_old_filepath(shortcode, file_name)
+        filepath_preview = get_old_filepath(shortcode, file_name_preview)
         log("file_pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath,
             server.loglevel.LOG_DEBUG)
     end
