@@ -12,7 +12,6 @@ import zio._
 import zio.prelude.Validation
 
 import java.util.UUID
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
@@ -52,36 +51,23 @@ final case class CreateListItemsRouteADM(
   private def createListRootNode(): Route = path(listsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIri]   = ProjectIri.make(apiRequest.projectIri)
-        val validatedProjectIri: ProjectIri = ProjectIri
-          .make(apiRequest.projectIri)
-          .fold(e => throw e.head, v => v)
+        val maybeId: Validation[Throwable, Option[ListIri]]    = ListIri.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIri]      = ProjectIri.make(apiRequest.projectIri)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
-        val validatedListRootNodeCreatePayload: Validation[Throwable, ListRootNodeCreatePayloadADM] =
+        val validatedPayload: Validation[Throwable, ListRootNodeCreatePayloadADM] =
           Validation.validateWith(maybeId, projectIri, maybeName, labels, comments)(ListRootNodeCreatePayloadADM)
 
-        val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
-          payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext)
-
-          // check if the requesting user is allowed to perform operation
-          _ =
-            if (
-              !requestingUser.permissions
-                .isProjectAdmin(validatedProjectIri.value) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(ListErrorMessages.ListCreatePermission)
-            }
-        } yield ListRootNodeCreateRequestADM(
-          createRootNode = payload,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        runJsonRouteF(requestMessage, requestContext)
+        val requestMessage = for {
+          payload <- validatedPayload.toZIO
+          user    <- Authenticator.getUserADM(requestContext)
+          _ <-
+            ZIO
+              .fail(ForbiddenException(ListErrorMessages.ListCreatePermission))
+              .when(!user.permissions.isProjectAdmin(payload.projectIri.value) && !user.permissions.isSystemAdmin)
+        } yield ListRootNodeCreateRequestADM(payload, user, UUID.randomUUID())
+        runJsonRouteZ(requestMessage, requestContext)
       }
     }
   }
@@ -92,45 +78,29 @@ final case class CreateListItemsRouteADM(
   private def createListChildNode(): Route = path(listsBasePath / Segment) { iri =>
     post {
       entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        // check if requested ListIri matches the Iri passed in the route
-        val parentNodeIri: Validation[Throwable, ListIri] = if (iri == apiRequest.parentNodeIri) {
-          ListIri.make(apiRequest.parentNodeIri)
-        } else {
-          Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
-        }
-
-        val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
-        val validatedProjectIri: ProjectIri                   = projectIri.fold(e => throw e.head, v => v)
-        val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
-        val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
-        val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
-        val validatedCreateChildNodePayload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
-          Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
-            ListChildNodeCreatePayloadADM
-          )
-
-        val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-          payload        <- toFuture(validatedCreateChildNodePayload)
-          requestingUser <- getUserADM(requestContext)
-
-          // check if the requesting user is allowed to perform operation
-          _ =
-            if (
-              !requestingUser.permissions
-                .isProjectAdmin(validatedProjectIri.value) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(ListErrorMessages.ListCreatePermission)
-            }
-        } yield ListChildNodeCreateRequestADM(
-          createChildNodeRequest = payload,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val validatedPayload = for {
+          _ <- ZIO
+                 .fail(BadRequestException("Route and payload parentNodeIri mismatch."))
+                 .when(iri != apiRequest.parentNodeIri)
+          parentNodeIri = ListIri.make(apiRequest.parentNodeIri)
+          id            = ListIri.make(apiRequest.id)
+          projectIri    = ProjectIri.make(apiRequest.projectIri)
+          name          = ListName.make(apiRequest.name)
+          position      = Position.make(apiRequest.position)
+          labels        = Labels.make(apiRequest.labels)
+          comments      = Comments.make(apiRequest.comments)
+        } yield Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
+          ListChildNodeCreatePayloadADM
         )
 
-        runJsonRouteF(requestMessage, requestContext)
+        val requestMessage = for {
+          payload <- validatedPayload.flatMap(_.toZIO)
+          user    <- Authenticator.getUserADM(requestContext)
+          _ <- ZIO
+                 .fail(ForbiddenException(ListErrorMessages.ListCreatePermission))
+                 .when(!user.permissions.isProjectAdmin(payload.projectIri.value) && !user.permissions.isSystemAdmin)
+        } yield ListChildNodeCreateRequestADM(payload, user, UUID.randomUUID())
+        runJsonRouteZ(requestMessage, requestContext)
       }
     }
   }
