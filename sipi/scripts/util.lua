@@ -96,3 +96,16 @@ function file_checksum(path)
     return
   end
 end
+
+--------------------------------------------------------------------------
+-- Copies a file from source to destination
+--------------------------------------------------------------------------
+function copy_file(source, destination)
+  local ok = os.execute("cp " .. "'" .. tostring(source) .. "'" .. " " .. "'" .. tostring(destination) .. "'")
+  if ok then
+    return true
+  else
+    send_error(500, "util.lua: copy_file() failed for: " .. tostring(source))
+    return false
+  end
+end
