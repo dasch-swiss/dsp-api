@@ -364,7 +364,6 @@ clean-sipi-tmp: ## deletes all files in Sipi's tmp folder
 .PHONY: clean-sipi-projects
 clean-sipi-projects: ## deletes all files uploaded within a project
 	@rm -rf sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
-	@rm -rf sipi/images/originals/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 
 .PHONY: check
 check: ## Run code formatting check 

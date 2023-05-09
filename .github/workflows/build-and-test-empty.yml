@@ -1,4 +1,4 @@
-name: CI
+name: CI-build-and-test-empty
 
 on:
   push:

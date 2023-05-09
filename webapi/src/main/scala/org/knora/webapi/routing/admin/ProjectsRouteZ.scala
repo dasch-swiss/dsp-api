@@ -50,6 +50,8 @@ final case class ProjectsRouteZ(
           updateProject(iriUrlEncoded, request, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "export", requestingUser) =>
+          postExportProject(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
           getProjectMembersByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "members", requestingUser) =>
@@ -143,6 +145,11 @@ final case class ProjectsRouteZ(
             body = Body.fromStream(fileStream)
           )
     } yield r
+
+  private def postExportProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] = for {
+    projectIri <- RouteUtilZ.urlDecode(iriUrlEncoded)
+    result     <- projectsService.exportProject(projectIri, requestingUser)
+  } yield Response.json(result.toJson)
 
   private def getProjectMembersByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
