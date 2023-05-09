@@ -1,6 +1,7 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 require "send_response"
+require "util"
 
 -----------------------------------------------------------
 --- Migrates files from the old structure to the new one.
@@ -32,6 +33,7 @@ function migrate_files_and_folders()
                 local destination_path = destination_root .. "/" .. item
 
                 local source_path = project_folder_path .. "/" .. item
+                local entry_type
                 success, entry_type = server.fs.ftype(source_path)
                 if not success then
                     server.log("server.fs.ftype() failed: " .. entry_type, server.loglevel.LOG_ERR)
@@ -112,7 +114,7 @@ function delete_frames_folders(path)
 
     for _, folder in pairs(folders) do
         if folder == "frames" then
-            local ok, err = os.execute("rm -r " .. frames_path)
+            local _, err = os.execute("rm -r " .. frames_path)
             if result == true then
                 server.log("delete_frames_folders - deleted " .. tostring(frames_path), server.loglevel.LOG_DEBUG)
             else
@@ -157,7 +159,7 @@ end
 -----------------------------------------------------------
 -- Move a file from source to destination.
 -----------------------------------------------------------
-function migrate_file(source_path, destination_path)
+function migrate_file_move(source_path, destination_path)
     local success, error_msg = server.fs.moveFile(source_path, destination_path)
     if not success then
         send_error(500, "server.fs.moveFile() failed: " .. error_msg)
@@ -165,6 +167,37 @@ function migrate_file(source_path, destination_path)
     end
     server.log("migrate_file - migrated file from " .. source_path .. " to " .. destination_path,
         server.loglevel.LOG_DEBUG)
+end
+
+function migrate_file(source_path, destination_path)
+    local checksum_source = file_checksum(source_path)
+
+    local ok = copy_file(source_path, destination_path)
+    if not ok then
+        send_error(500, "migrate_file - copy_file() failed for: " .. tostring(source_path))
+        return
+    end
+
+    local checksum_dest = file_checksum(destination_path)
+
+    -- compare checksums of source and destination
+    if checksum_source ~= checksum_dest then
+        send_error(500,
+            "migrate_file - Something went wrong. Checksum of source file " ..
+            tostring(source_path) .. " doesn't equal checksum of destination file " ..
+            tostring(destination_path)
+        )
+        return
+    else
+        -- if everything went well, delete the source file
+        local success, error_msg = server.fs.unlink(source_path)
+        if not success then
+            send_error(500, "migrate_file - server.fs.unlink() failed: " .. error_msg)
+            return
+        end
+        server.log("migrate_file - migrated file from " .. tostring(source_path) .. " to " .. tostring(destination_path),
+            server.loglevel.LOG_DEBUG)
+    end
 end
 
 -----------------------------------------------------------
