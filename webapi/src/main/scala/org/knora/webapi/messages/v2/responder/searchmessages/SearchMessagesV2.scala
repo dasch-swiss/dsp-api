@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.v2.responder.searchmessages
 
+import zio.prelude.NonEmptySet
+
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.IRI
 import org.knora.webapi.SchemaOption
@@ -20,7 +22,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.v2.responder._
-import zio.prelude.NonEmptySet
 
 /**
  * An abstract trait for messages that can be sent to `SearchResponderV2`.

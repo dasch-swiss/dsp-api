@@ -29,9 +29,9 @@ import org.knora.webapi.messages.util.search.StatementPattern
 import org.knora.webapi.messages.util.search.UnionPattern
 import org.knora.webapi.messages.util.search.ValuesPattern
 import org.knora.webapi.messages.util.search.WhereClause
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.messages.v2.responder.searchmessages.InferenceLimit
 import org.knora.webapi.messages.v2.responder.searchmessages.InferenceLimit._
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 @accessible
 trait InferenceOptimizationService {
