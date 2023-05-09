@@ -36,24 +36,10 @@ final case class OntologyInferencer(
       }
 
     // look up subclasses from ontology cache
-    superClasses = cache.classToSubclassLookup
-    knownSubClasses =
-      superClasses
-        .get(baseClassIri.iri)
-        .getOrElse({
-          Set(baseClassIri.iri)
-        })
-        .toSeq
+    knownSubClasses = cache.classToSubclassLookup.getOrElse(baseClassIri.iri, Set(baseClassIri.iri)).toSeq
 
     // limit the child classes to those that belong to relevant ontologies
-    subClasses = knownSubClasses.filter { subClass =>
-                   cache.classDefinedInOntology.get(subClass) match {
-                     case Some(ontologyOfSubclass) =>
-                       // return true, if the ontology of the subclass is contained in the set of relevant ontologies; false otherwise
-                       limitInferenceToOntologies.contains(ontologyOfSubclass)
-                     case None => false // should never happen
-                   }
-                 }
+    subClasses = knownSubClasses.filter(cache.classDefinedInOntology.get(_).forall(limitInferenceToOntologies.contains))
     // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
     // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
     // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
@@ -71,28 +57,12 @@ final case class OntologyInferencer(
     cache: OntologyCacheData,
     limitInferenceToOntologies: Set[SmartIri]
   ): IO[GravsearchException, Seq[QueryPattern]] = {
-
     // Expand using rdfs:subPropertyOf*.
+    val knownSubProps = cache.superPropertyOfRelations.getOrElse(predIri, Set(predIri)).toSeq
 
-    // look up subproperties from ontology cache
-    val superProps = cache.superPropertyOfRelations
-    val knownSubProps = superProps
-      .get(predIri)
-      .getOrElse({
-        Set(predIri)
-      })
-      .toSeq
-
-    // if provided, limit the child properties to those that belong to relevant ontologies
-    val subProps = knownSubProps.filter { subProperty =>
-      // filter the known subproperties against the relevant ontologies
-      cache.propertyDefinedInOntology.get(subProperty) match {
-        case Some(childOntologyIri) =>
-          // return true, if the ontology of the subproperty is contained in the set of relevant ontologies; false otherwise
-          limitInferenceToOntologies.contains(childOntologyIri)
-        case None => false // should never happen
-      }
-    }
+    // limit the child properties to those that belong to relevant ontologies
+    val subProps =
+      knownSubProps.filter(cache.propertyDefinedInOntology.get(_).forall(limitInferenceToOntologies.contains))
     // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
     // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
     // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
