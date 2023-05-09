@@ -25,7 +25,7 @@ final case class OntologyInferencer(
   private def inferSubclasses(
     statementPattern: StatementPattern,
     cache: OntologyCacheData,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Set[SmartIri]
   ): IO[GravsearchException, Seq[QueryPattern]] = for {
     // Expand using rdfs:subClassOf*.
     baseClassIri <-
@@ -45,19 +45,14 @@ final case class OntologyInferencer(
         })
         .toSeq
 
-    // if provided, limit the child classes to those that belong to relevant ontologies
-    subClasses = limitInferenceToOntologies match {
-                   case None                       => knownSubClasses
-                   case Some(relevantOntologyIris) =>
-                     // filter the known subclasses against the relevant ontologies
-                     knownSubClasses.filter { subClass =>
-                       cache.classDefinedInOntology.get(subClass) match {
-                         case Some(ontologyOfSubclass) =>
-                           // return true, if the ontology of the subclass is contained in the set of relevant ontologies; false otherwise
-                           relevantOntologyIris.contains(ontologyOfSubclass)
-                         case None => false // should never happen
-                       }
-                     }
+    // limit the child classes to those that belong to relevant ontologies
+    subClasses = knownSubClasses.filter { subClass =>
+                   cache.classDefinedInOntology.get(subClass) match {
+                     case Some(ontologyOfSubclass) =>
+                       // return true, if the ontology of the subclass is contained in the set of relevant ontologies; false otherwise
+                       limitInferenceToOntologies.contains(ontologyOfSubclass)
+                     case None => false // should never happen
+                   }
                  }
     // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
     // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
@@ -74,7 +69,7 @@ final case class OntologyInferencer(
     statementPattern: StatementPattern,
     predIri: SmartIri,
     cache: OntologyCacheData,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Set[SmartIri]
   ): IO[GravsearchException, Seq[QueryPattern]] = {
 
     // Expand using rdfs:subPropertyOf*.
@@ -89,18 +84,14 @@ final case class OntologyInferencer(
       .toSeq
 
     // if provided, limit the child properties to those that belong to relevant ontologies
-    val subProps = limitInferenceToOntologies match {
-      case None => knownSubProps
-      case Some(ontologyIris) =>
-        knownSubProps.filter { subProperty =>
-          // filter the known subproperties against the relevant ontologies
-          cache.propertyDefinedInOntology.get(subProperty) match {
-            case Some(childOntologyIri) =>
-              // return true, if the ontology of the subproperty is contained in the set of relevant ontologies; false otherwise
-              ontologyIris.contains(childOntologyIri)
-            case None => false // should never happen
-          }
-        }
+    val subProps = knownSubProps.filter { subProperty =>
+      // filter the known subproperties against the relevant ontologies
+      cache.propertyDefinedInOntology.get(subProperty) match {
+        case Some(childOntologyIri) =>
+          // return true, if the ontology of the subproperty is contained in the set of relevant ontologies; false otherwise
+          limitInferenceToOntologies.contains(childOntologyIri)
+        case None => false // should never happen
+      }
     }
     // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
     // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
@@ -128,15 +119,14 @@ final case class OntologyInferencer(
    */
   def transformStatementInWhere(
     statementPattern: StatementPattern,
-    simulateInference: Boolean,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Set[SmartIri]
   ): Task[Seq[QueryPattern]] =
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
         // Simulate knora-api:standoffTagHasStartAncestor, using knora-api:standoffTagHasStartParent.
         val pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
         ZIO.succeed(Seq(statementPattern.copy(pred = pred)))
-      case iriRef: IriRef if simulateInference =>
+      case iriRef: IriRef if limitInferenceToOntologies.nonEmpty =>
         for {
           ontoCache <- ontologyCache.getCacheData
           patternsWithInference <-

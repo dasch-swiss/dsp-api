@@ -301,7 +301,7 @@ final case class QueryTraverser(
 
   def transformSelectToSelect(
     inputQuery: SelectQuery,
-    transformer: SelectToSelectTransformer,
+    transformer: SelectTransformer,
     limitInferenceToOntologies: Set[SmartIri]
   ): Task[SelectQuery] =
     for {

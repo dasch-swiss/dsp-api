@@ -46,7 +46,7 @@ trait WhereTransformer {
   def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Set[SmartIri]
   ): Task[Seq[QueryPattern]]
 
   /**

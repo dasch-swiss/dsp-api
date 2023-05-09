@@ -26,7 +26,7 @@ final case class ConstructTransformer(
    */
   def transform(
     inputQuery: ConstructQuery,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Set[SmartIri]
   ): Task[ConstructQuery] =
     for {
       patterns <- optimizeAndTransformPatterns(inputQuery.whereClause.patterns, limitInferenceToOntologies)
@@ -34,7 +34,7 @@ final case class ConstructTransformer(
 
   private def optimizeAndTransformPatterns(
     patterns: Seq[QueryPattern],
-    limit: Option[Set[SmartIri]]
+    limit: Set[SmartIri]
   ): Task[Seq[QueryPattern]] = for {
     optimisedPatterns <-
       ZIO.attempt(
@@ -49,13 +49,12 @@ final case class ConstructTransformer(
 
   private def transformPattern(
     pattern: QueryPattern,
-    limit: Option[Set[SmartIri]]
+    limit: Set[SmartIri]
   ): Task[Seq[QueryPattern]] =
     pattern match {
       case statementPattern: StatementPattern =>
         sparqlTransformerLive.transformStatementInWhere(
           statementPattern = statementPattern,
-          simulateInference = true,
           limitInferenceToOntologies = limit
         )
       case FilterNotExistsPattern(patterns) =>

@@ -282,7 +282,7 @@ final case class SearchResponderV2Live(
           )
 
           for {
-            query          <- constructTransformer.transform(mainQuery)
+            query          <- constructTransformer.transform(mainQuery, Set.empty)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
@@ -408,7 +408,6 @@ final case class SearchResponderV2Live(
    * @param inputQuery           a Gravsearch query provided by the client.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   *
    * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
@@ -450,12 +449,9 @@ final case class SearchResponderV2Live(
 
       // if no inference deduced from query, don't tdo inference
 
+      queryWithoutAnnotations = inputQuery.copy(whereClause = whereClauseWithoutAnnotations)
       prequery <-
-        queryTraverser.transformConstructToSelect(
-          inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
-          transformer = gravsearchToPrequeryTransformer,
-          ??? // inference // XXX
-        )
+        queryTraverser.transformConstructToSelect(queryWithoutAnnotations, gravsearchToPrequeryTransformer, inference)
 
       // variable representing the main resources
       mainResourceVar: QueryVariable = gravsearchToPrequeryTransformer.mainResourceVariable
@@ -565,7 +561,7 @@ final case class SearchResponderV2Live(
 
           for {
 
-            mainQuery <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe)
+            mainQuery <- constructTransformer.transform(mainQuery, ???) // XXX: what's the limit?
 
             // Convert the result to a SPARQL string and send it to the triplestore.
             mainQuerySparql    = mainQuery.toSparql
