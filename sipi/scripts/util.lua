@@ -86,14 +86,26 @@ end
 -- Calculate the SHA256 checksum of a file using the operating system tool
 --------------------------------------------------------------------------
 function file_checksum(path)
-  local checksum_orig
   local handle = io.popen("/usr/bin/sha256sum " .. path)
   if handle ~= nil then
-    checksum_orig = handle:read("*a")
+    local checksum = handle:read("*a")
     handle:close()
-    return string.match(checksum_orig, "%w*")
+    return string.match(checksum, "%w*")
   else
     send_error(500, "util.lua: file_checksum() failed for: " .. tostring(path))
     return
+  end
+end
+
+--------------------------------------------------------------------------
+-- Copies a file from source to destination
+--------------------------------------------------------------------------
+function copy_file(source, destination)
+  local ok = os.execute("cp " .. "'" .. tostring(source) .. "'" .. " " .. "'" .. tostring(destination) .. "'")
+  if ok then
+    return true
+  else
+    send_error(500, "util.lua: copy_file() failed for: " .. tostring(source))
+    return false
   end
 end
