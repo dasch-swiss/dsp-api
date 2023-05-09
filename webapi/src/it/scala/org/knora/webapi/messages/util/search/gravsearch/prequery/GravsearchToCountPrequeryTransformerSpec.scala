@@ -49,7 +49,8 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                         whereClause = sanitizedWhereClause,
                         orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
                       ),
-                      transformer
+                      transformer,
+                      Set.empty
                     )
                   )
 

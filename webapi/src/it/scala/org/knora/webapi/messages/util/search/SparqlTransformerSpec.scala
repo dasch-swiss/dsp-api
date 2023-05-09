@@ -166,10 +166,7 @@ class SparqlTransformerSpec extends CoreSpec {
         obj = IriRef(blueThingIRI)
       )
 
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = typeStatement,
-        simulateInference = true
-      )
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(typeStatement, Set.empty)
 
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
@@ -220,10 +217,7 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = typeStatement,
-        simulateInference = true
-      )
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(typeStatement, Set.empty)
       UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>
           head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
@@ -248,10 +242,7 @@ class SparqlTransformerSpec extends CoreSpec {
           obj = QueryVariable(variableName = "text")
         )
       )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = hasValueStatement,
-        simulateInference = true
-      )
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(hasValueStatement, Set.empty)
       UnsafeZioRun.runOrThrow(expandedStatements) should equal(expectedStatements)
     }
 
@@ -296,10 +287,7 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(
-        statementPattern = hasValueStatement,
-        simulateInference = true
-      )
+      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(hasValueStatement, Set.empty)
       UnsafeZioRun.runOrThrow(expandedStatements) match {
         case (head: UnionPattern) :: Nil =>
           head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)

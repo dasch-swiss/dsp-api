@@ -45,7 +45,7 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
                     )
       preQuery <-
         ZIO.serviceWithZIO[QueryTraverser](
-          _.transformConstructToSelect(constructQuery.copy(whereClause = sanitizedWhereClause), transformer)
+          _.transformConstructToSelect(constructQuery.copy(whereClause = sanitizedWhereClause), transformer, Set.empty)
         )
     } yield preQuery
     UnsafeZioRun.runOrThrow(preQueryZio)
