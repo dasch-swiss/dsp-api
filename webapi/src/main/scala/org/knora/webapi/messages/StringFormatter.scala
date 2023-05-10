@@ -1895,10 +1895,6 @@ class StringFormatter private (
    * @param email the email.
    * @return the email
    */
-  @deprecated("Use validateEmailAndThrow(String) instead.")
-  def validateEmailAndThrow(email: String, errorFun: => Nothing): String = // V2 / value objects
-    validateEmail(email).getOrElse(errorFun)
-
   def validateEmail(email: String): Option[String] =
     EmailAddressRegex.findFirstIn(email)
 

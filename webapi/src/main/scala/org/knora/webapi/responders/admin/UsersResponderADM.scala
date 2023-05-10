@@ -2032,12 +2032,11 @@ final case class UsersResponderADMLive(
         if (maybeCurrent.contains(email.value)) {
           ZIO.succeed(true)
         } else {
-          stringFormatter.validateEmailAndThrow(
-            email.value,
-            throw BadRequestException(s"The email address '${email.value}' is invalid")
-          )
-
           for {
+            _ <- ZIO
+                   .fromOption(stringFormatter.validateEmail(email.value))
+                   .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
+
             askString <- ZIO.attempt(
                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                              .checkUserExistsByEmail(email = email.value)

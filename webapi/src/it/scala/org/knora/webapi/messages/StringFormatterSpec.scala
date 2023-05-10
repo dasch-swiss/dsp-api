@@ -1070,13 +1070,8 @@ class StringFormatterSpec extends CoreSpec {
     }
 
     "validate email" in {
-      stringFormatter.validateEmailAndThrow("donald.duck@example.com", throw AssertionException("not valid")) should be(
-        "donald.duck@example.com"
-      )
-
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateEmailAndThrow("donald.duck", throw AssertionException("not valid"))
-      }
+      stringFormatter.validateEmail("donald.duck@example.com") should be(Some("donald.duck@example.com"))
+      assert(stringFormatter.validateEmail("donald.duck").isEmpty)
     }
 
     "convert a UUID to Base-64 encoding and back again" in {
