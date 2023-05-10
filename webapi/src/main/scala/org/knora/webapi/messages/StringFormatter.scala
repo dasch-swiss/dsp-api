@@ -1883,14 +1883,8 @@ class StringFormatter private (
    * Check that the supplied IRI represents a valid user IRI.
    *
    * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 user IRI.
    * @return the same string but escaped.
    */
-  @deprecated("Use validateAndEscapeUserIri(IRI) instead.")
-  def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
-    toSparqlEncodedString(iri).getOrElse(errorFun)
-
   def validateAndEscapeUserIri(iri: IRI): Option[String] =
     if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
     else None
