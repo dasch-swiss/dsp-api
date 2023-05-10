@@ -32,6 +32,7 @@ function migrate_files_and_folders()
                 local destination_path = destination_root .. "/" .. item
 
                 local source_path = project_folder_path .. "/" .. item
+                local entry_type
                 success, entry_type = server.fs.ftype(source_path)
                 if not success then
                     server.log("server.fs.ftype() failed: " .. entry_type, server.loglevel.LOG_ERR)
@@ -112,7 +113,7 @@ function delete_frames_folders(path)
 
     for _, folder in pairs(folders) do
         if folder == "frames" then
-            local ok, err = os.execute("rm -r " .. frames_path)
+            local _, err = os.execute("rm -r " .. frames_path)
             if result == true then
                 server.log("delete_frames_folders - deleted " .. tostring(frames_path), server.loglevel.LOG_DEBUG)
             else
