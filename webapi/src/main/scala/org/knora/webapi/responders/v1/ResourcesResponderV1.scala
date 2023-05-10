@@ -374,23 +374,22 @@ final case class ResourcesResponderV1Live(
                                    )
 
       // Make sure the user has permission to see the start node.
-      permission =
-        PermissionUtilADM
-          .getUserPermissionV1(
-            entityIri = startNode.nodeIri,
-            entityCreator = startNode.nodeCreator,
-            entityProject = startNode.nodeProject,
-            entityPermissionLiteral = startNode.nodePermissions,
-            userProfile = userProfileV1
-          )
       _ <-
         ZIO
-          .fail(
+          .fromOption(
+            PermissionUtilADM.getUserPermissionV1(
+              startNode.nodeIri,
+              startNode.nodeCreator,
+              startNode.nodeProject,
+              startNode.nodePermissions,
+              userProfileV1
+            )
+          )
+          .orElseFail(
             ForbiddenException(
               s"User ${graphDataGetRequest.userADM.id} does not have permission to view resource ${graphDataGetRequest.resourceIri}"
             )
           )
-          .when(permission.isEmpty)
 
       // Recursively get the graph containing outbound links.
       outboundQueryResults <- traverseGraph(
