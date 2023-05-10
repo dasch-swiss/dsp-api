@@ -1695,14 +1695,8 @@ class StringFormatter private (
    * in the triplestore). The resulting IRI will not end in a # character.
    *
    * @param namespace the XML namespace.
-   * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
-   *                  valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology IRI.
    */
-  @deprecated("Use xmlImportNamespaceToInternalOntologyIriV1(String) instead.")
-  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri =
-    xmlImportNamespaceToInternalOntologyIriV1(namespace).getOrElse(errorFun)
-
   def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Option[SmartIri] =
     namespace match {
       case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
@@ -1733,17 +1727,8 @@ class StringFormatter private (
    *
    * @param namespace    the XML namespace.
    * @param elementLabel the XML element label.
-   * @param errorFun     a function that throws an exception. It will be called if the form of the namespace is not
-   *                     valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology entity IRI.
    */
-  @deprecated("Use xmlImportElementNameToInternalOntologyIriV1(String, String) instead.")
-  def xmlImportElementNameToInternalOntologyIriV1(
-    namespace: String,
-    elementLabel: String,
-    errorFun: => Nothing
-  ): IRI = xmlImportElementNameToInternalOntologyIriV1(namespace, elementLabel).getOrElse(errorFun)
-
   def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): Option[IRI] =
     xmlImportNamespaceToInternalOntologyIriV1(namespace).map(_.toString + "#" + elementLabel)
 
