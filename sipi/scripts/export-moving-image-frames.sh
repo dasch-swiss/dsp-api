@@ -182,3 +182,7 @@ while [ ${t} -lt "${nummatrix}" ]; do
   (( t=t+1 ))
 
 done
+
+# after the matrix file is created, delete the frames, they aren't needed anymore
+rm -rf ../frames
+

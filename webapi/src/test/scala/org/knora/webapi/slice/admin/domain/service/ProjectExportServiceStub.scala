@@ -8,8 +8,8 @@ package org.knora.webapi.slice.admin.domain.service
 import zio.Task
 import zio.ULayer
 import zio.ZLayer
-
-import java.nio.file.Path
+import zio.nio.file
+import zio.nio.file.Path
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
@@ -42,5 +42,7 @@ object ProjectExportServiceStub {
      * @return the [[Path]] to the file to which the project was exported
      */
     override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ???
+
+    override def exportProject(project: KnoraProject): Task[file.Path] = ???
   })
 }
