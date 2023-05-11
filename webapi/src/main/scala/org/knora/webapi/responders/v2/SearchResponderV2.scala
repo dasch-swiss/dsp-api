@@ -69,7 +69,7 @@ final case class SearchResponderV2Live(
   private val ontologyCache: OntologyCache,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val queryTraverser: QueryTraverser,
-  private val sparqlTransformerLive: OntologyInferencer,
+  private val ontologyInferencer: OntologyInferencer,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
   implicit private val stringFormatter: StringFormatter,
@@ -375,7 +375,7 @@ final case class SearchResponderV2Live(
       selectTransformer: SelectTransformer =
         new SelectTransformer(
           simulateInference = gravsearchToCountTransformer.useInference,
-          sparqlTransformerLive,
+          ontologyInferencer,
           stringFormatter
         )
 
@@ -459,7 +459,7 @@ final case class SearchResponderV2Live(
       selectTransformer: SelectTransformer =
         new SelectTransformer(
           simulateInference = gravsearchToPrequeryTransformer.useInference,
-          sparqlTransformerLive,
+          ontologyInferencer,
           stringFormatter
         )
 
@@ -1056,7 +1056,7 @@ object SearchResponderV2Live {
         ontologyCache                <- ZIO.service[OntologyCache]
         standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
         queryTraverser               <- ZIO.service[QueryTraverser]
-        sparqlTransformerLive        <- ZIO.service[OntologyInferencer]
+        ontologyInferencer           <- ZIO.service[OntologyInferencer]
         stringFormatter              <- ZIO.service[StringFormatter]
         mr                           <- ZIO.service[MessageRelay]
         typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
@@ -1072,7 +1072,7 @@ object SearchResponderV2Live {
                        ontologyCache,
                        standoffTagUtilV2,
                        queryTraverser,
-                       sparqlTransformerLive,
+                       ontologyInferencer,
                        typeInspectionRunner,
                        inferenceOptimizationService,
                        stringFormatter,

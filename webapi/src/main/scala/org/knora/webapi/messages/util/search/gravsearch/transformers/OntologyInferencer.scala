@@ -43,13 +43,13 @@ final case class OntologyInferencer(
     // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
     // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
     // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
-    x = if (subClasses.length > 1)
-          Seq(UnionPattern(subClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))))
-        else
-          // if no subclasses are available, the initial statement can be used.
-          Seq(statementPattern)
-
-  } yield x
+    union =
+      if (subClasses.length > 1)
+        Seq(UnionPattern(subClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))))
+      else
+        // if no subclasses are available, the initial statement can be used.
+        Seq(statementPattern)
+  } yield union
 
   private def inferSubproperties(
     statementPattern: StatementPattern,
