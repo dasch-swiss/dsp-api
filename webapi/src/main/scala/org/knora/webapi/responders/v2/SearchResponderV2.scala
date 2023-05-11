@@ -115,8 +115,8 @@ final case class SearchResponderV2Live(
         appConfig
       )
 
-    case GravsearchCountRequestV2(query, requestingUser) =>
-      gravsearchCountV2(query, requestingUser)
+    case GravsearchCountRequestV2(query, requestingUser, inferenceLimit) =>
+      gravsearchCountV2(query, requestingUser, inferenceLimit)
 
     case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser, inferenceLimit) =>
       gravsearchV2(query, targetSchema, schemaOptions, requestingUser, inferenceLimit)
@@ -336,7 +336,8 @@ final case class SearchResponderV2Live(
    */
   private def gravsearchCountV2(
     inputQuery: ConstructQuery,
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    inferenceLimit: InferenceLimit
   ): Task[ResourceCountV2] =
     for {
       _ <- // make sure that OFFSET is 0
@@ -345,8 +346,7 @@ final case class SearchResponderV2Live(
           .when(inputQuery.offset != 0)
 
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
-
+      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
       whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
@@ -362,31 +362,20 @@ final case class SearchResponderV2Live(
           querySchema = querySchema
         )
 
+      inferredOntologies <- inferenceOptimizationService.getOntologiesFromQuery(inputQuery.whereClause)
+      inference <-
+        if (gravsearchToCountTransformer.useInference)
+          inferenceOptimizationService.getInferenceLimit(inferenceLimit, inferredOntologies)
+        else ZIO.succeed(Set.empty[SmartIri])
+
+      queryWithoutAnnotations = inputQuery.copy(whereClause = whereClauseWithoutAnnotations)
       prequery <-
-        queryTraverser.transformConstructToSelect(
-          inputQuery = inputQuery.copy(
-            whereClause = whereClauseWithoutAnnotations,
-            orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
-          ),
-          transformer = gravsearchToCountTransformer,
-          ??? // ontologiesForInferenceMaybe // XXX
-        )
+        queryTraverser.transformConstructToSelect(queryWithoutAnnotations, gravsearchToCountTransformer, inference)
 
       selectTransformer: SelectTransformer =
-        new SelectTransformer(
-          simulateInference = gravsearchToCountTransformer.useInference,
-          ontologyInferencer,
-          stringFormatter
-        )
+        new SelectTransformer(inference.isEmpty, ontologyInferencer, stringFormatter)
 
-      ontologiesForInferenceMaybe <- inferenceOptimizationService.getOntologiesFromQuery(inputQuery.whereClause)
-
-      countQuery <- queryTraverser.transformSelectToSelect(
-                      inputQuery = prequery,
-                      transformer = selectTransformer,
-                      ??? // ontologiesForInferenceMaybe // XXX
-                    )
-
+      countQuery    <- queryTraverser.transformSelectToSelect(prequery, selectTransformer, inference)
       countResponse <- triplestoreService.sparqlHttpSelect(countQuery.toSparql, isGravsearch = true)
 
       _ <- // query response should contain one result with one row with the name "count"

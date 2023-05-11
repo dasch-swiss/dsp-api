@@ -79,7 +79,8 @@ case class FulltextSearchRequestV2(
  */
 case class GravsearchCountRequestV2(
   constructQuery: ConstructQuery,
-  requestingUser: UserADM
+  requestingUser: UserADM,
+  inferenceLimit: InferenceLimit = InferenceLimit.AllInference
 ) extends SearchResponderRequestV2
 
 /**

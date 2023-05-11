@@ -203,25 +203,27 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       }
   }
 
-  // TODO: count should get the same inference options
   private def gravsearchCountGet(): Route =
     path("v2" / "searchextended" / "count" / Segment) {
       gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
         get { requestContext =>
+          val inference      = getInferenceOptions(requestContext)
           val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-          val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
+          val requestTask =
+            Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _, inference))
           RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
         }
     }
 
-  // TODO: count should get the same inference options
   private def gravsearchCountPost(): Route =
     path("v2" / "searchextended" / "count") {
       post {
         entity(as[String]) { gravsearchQuery => requestContext =>
           {
+            val inference      = getInferenceOptions(requestContext)
             val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-            val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
+            val requestTask =
+              Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _, inference))
             RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
           }
         }
@@ -274,7 +276,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
         .orElse(NonEmptySet.fromIterableOption(limitToOntologies).map(InferenceLimit.LimitedToOntologies(_)))
         .orElse(limitToProject.map(InferenceLimit.LimitedToProject(_)))
         .getOrElse(InferenceLimit.AllInference)
-    println(inference)
+    println(inference) // XXX: remove
     inference
   }
 
