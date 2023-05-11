@@ -260,7 +260,7 @@ init-db-from-test: ## init local database with data from test server. Use as `ma
 	${MAKE} init-db-from-env ENV=db.test.dasch.swiss
 
 .PHONY: init-db-from-test-dump
-init-db-from-test-dump: ## init local database with data from local dump file of test server. Use as `make init-db-from-test-dump
+init-db-from-test-dump: ## init local database with data from local dump file of test server. Use as `make init-db-from-test-dump`
 	@echo $@
 	${MAKE} init-db-from-dump-file DUMP=db.test.dasch.swiss.trig
 
@@ -270,7 +270,7 @@ init-db-from-staging: ## init local database with data from staging server. Use 
 	${MAKE} init-db-from-env ENV=db.staging.dasch.swiss
 
 .PHONY: init-db-from-staging-dump
-init-db-from-staging-dump: ## init local database with data from local dump file of staging server. Use as `make init-db-from-staging-dump
+init-db-from-staging-dump: ## init local database with data from local dump file of staging server. Use as `make init-db-from-staging-dump`
 	@echo $@
 	${MAKE} init-db-from-dump-file DUMP=db.staging.dasch.swiss.trig
 
@@ -280,7 +280,7 @@ init-db-from-prod: ## init local database with data from prod server. Use as `ma
 	${MAKE} init-db-from-env ENV=db.dasch.swiss
 
 .PHONY: init-db-from-prod-dump
-init-db-from-prod-dump: ## init local database with data from local dump file of prod server. Use as `make init-db-from-prod-dump
+init-db-from-prod-dump: ## init local database with data from local dump file of prod server. Use as `make init-db-from-prod-dump`
 	@echo $@
 	${MAKE} init-db-from-dump-file DUMP=db.dasch.swiss.trig
 
@@ -290,7 +290,7 @@ init-db-from-dev: ## init local database with data from dev. Use as `make init-d
 	${MAKE} init-db-from-env ENV=db.dev.dasch.swiss
 
 .PHONY: init-db-from-dev-dump
-init-db-from-dev-dump: ## init local database with data from local dump file of dev server. Use as `make init-db-from-dev-dump
+init-db-from-dev-dump: ## init local database with data from local dump file of dev server. Use as `make init-db-from-dev-dump`
 	@echo $@
 	${MAKE} init-db-from-dump-file DUMP=db.dev.dasch.swiss.trig
 
@@ -300,7 +300,7 @@ init-db-from-ls-test-server: ## init local database with data from ls-test-serve
 	${MAKE} init-db-from-env ENV=db.ls-test-server.dasch.swiss
 
 .PHONY: init-db-from-ls-test-server-dump
-init-db-from-ls-test-server-dump: ## init local database with data from local dump file of ls-test-server server. Use as `make init-db-from-ls-test-server-dump
+init-db-from-ls-test-server-dump: ## init local database with data from local dump file of ls-test-server server. Use as `make init-db-from-ls-test-server-dump`
 	@echo $@
 	${MAKE} init-db-from-dump-file DUMP=db.ls-test-server.dasch.swiss.trig
 
