@@ -49,10 +49,10 @@ final case class UsersRouteADM()(
       getUsersProjectMemberships() ~
       addUserToProjectMembership() ~
       removeUserFromProjectMembership() ~
-      getUsersProjectAdminMemberships() ~
+      getUsersProjectAdminMemberships ~
       addUserToProjectAdminMembership() ~
       removeUserFromProjectAdminMembership() ~
-      getUsersGroupMemberships() ~
+      getUsersGroupMemberships ~
       addUserToGroupMembership() ~
       removeUserFromGroupMembership()
 
@@ -268,13 +268,13 @@ final case class UsersRouteADM()(
   /**
    * get user's project admin memberships
    */
-  private def getUsersProjectAdminMemberships(): Route =
+  private def getUsersProjectAdminMemberships: Route =
     path(usersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
       get { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-        val task = getIriUserUuid(userIri, requestContext).map(r =>
-          UserProjectAdminMembershipsGetRequestADM(r.iri, r.user, r.uuid)
-        )
+        val task = for {
+          _ <- ZIO.fail(BadRequestException("User IRI cannot be empty")).when(userIri.isEmpty)
+          r <- getIriUserUuid(userIri, requestContext)
+        } yield UserProjectAdminMembershipsGetRequestADM(r.iri, r.user, r.uuid)
         runJsonRouteZ(task, requestContext)
       }
     }
@@ -310,11 +310,13 @@ final case class UsersRouteADM()(
   /**
    * get user's group memberships
    */
-  private def getUsersGroupMemberships(): Route =
+  private def getUsersGroupMemberships: Route =
     path(usersBasePath / "iri" / Segment / "group-memberships") { userIri =>
       get { ctx =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-        val requestTask = getIriUser(userIri, ctx).map(r => UserGroupMembershipsGetRequestADM(r.iri, r.user))
+        val requestTask = for {
+          _ <- ZIO.fail(BadRequestException("User IRI cannot be empty")).when(userIri.isEmpty)
+          r <- getIriUser(userIri, ctx)
+        } yield UserGroupMembershipsGetRequestADM(r.iri, r.user)
         runJsonRouteZ(requestTask, ctx)
       }
     }
