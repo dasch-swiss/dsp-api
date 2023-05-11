@@ -21,7 +21,7 @@ final case class ConstructTransformer(
    * Transforms a CONSTRUCT query, by applying opimization and inference.
    *
    * @param inputQuery                 the query to be transformed.
-   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If empty, no possible inference will be done.
    * @return the transformed query.
    */
   def transform(

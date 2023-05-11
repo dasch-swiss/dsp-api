@@ -84,7 +84,7 @@ final case class OntologyInferencer(
    *
    * @param statementPattern           the statement pattern.
    * @param simulateInference          `true` if RDFS inference should be simulated on basis of the ontology cache.
-   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If empty, no possible inference will be done.
    * @return the statement pattern as expanded to work without inference.
    */
   def transformStatementInWhere(
