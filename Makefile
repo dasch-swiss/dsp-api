@@ -164,7 +164,6 @@ stack-down-delete-volumes: clean-local-tmp clean-sipi-tmp ## stops the dsp-stack
 stack-config: env-file
 	@docker compose -f docker-compose.yml config
 
-## stack without api
 .PHONY: stack-without-api
 stack-without-api: stack-up ## starts the dsp-stack without dsp-api: fuseki and sipi only.
 	@docker compose -f docker-compose.yml stop api
@@ -255,57 +254,55 @@ init-db-test-unit-minimal: env-file stack-down-delete-volumes stack-db-only ## i
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
-## Dump test data
-db_test_dump.trig:
+.PHONY: init-db-from-test
+init-db-from-test: ## init local database with data from test server. Use as `make init-db-from-test PW=database-password`
 	@echo $@
-	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_TEST_PASSWORD}" "https://db.test.dasch.swiss/dsp-repo" > "db_test_dump.trig"
+	${MAKE} init-db-from-env ENV=db.test.dasch.swiss
 
-## Dump staging data
-db_staging_dump.trig:
+.PHONY: init-db-from-test-dump
+init-db-from-test-dump: ## init local database with data from local dump file of test server. Use as `make init-db-from-test-dump`
 	@echo $@
-	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_STAGING_PASSWORD}" "https://db.staging.dasch.swiss/dsp-repo" > "db_staging_dump.trig"
+	${MAKE} init-db-from-dump-file DUMP=db.test.dasch.swiss.trig
 
-## Dump production data
-db_prod_dump.trig:
+.PHONY: init-db-from-staging
+init-db-from-staging: ## init local database with data from staging server. Use as `make init-db-from-staging PW=database-password`
 	@echo $@
-	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_PROD_PASSWORD}" "https://db.dasch.swiss/dsp-repo" > "db_prod_dump.trig"
+	${MAKE} init-db-from-env ENV=db.staging.dasch.swiss
 
-## Dump ls-test-server data
-db_ls_test_server_dump.trig:
+.PHONY: init-db-from-staging-dump
+init-db-from-staging-dump: ## init local database with data from local dump file of staging server. Use as `make init-db-from-staging-dump`
 	@echo $@
-	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_LSTESTSERVER_PASSWORD}" "https://db.ls-test-server.dasch.swiss/dsp-repo" > "db_ls_test_server_dump.trig"
+	${MAKE} init-db-from-dump-file DUMP=db.staging.dasch.swiss.trig
 
-.PHONY: init-db-test-from-test
-init-db-test-from-test: db_test_dump.trig init-db-test-empty ## init local database with data from test
+.PHONY: init-db-from-prod
+init-db-from-prod: ## init local database with data from prod server. Use as `make init-db-from-prod PW=database-password`
 	@echo $@
-	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_test_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	${MAKE} init-db-from-env ENV=db.dasch.swiss
 
-.PHONY: init-db-test-from-staging
-init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local database with data from staging
+.PHONY: init-db-from-prod-dump
+init-db-from-prod-dump: ## init local database with data from local dump file of prod server. Use as `make init-db-from-prod-dump`
 	@echo $@
-	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	${MAKE} init-db-from-dump-file DUMP=db.dasch.swiss.trig
 
-.PHONY: init-db-test-from-prod
-init-db-test-from-prod: db_prod_dump.trig init-db-test-empty ## init local database with data from production
-	@echo $@
-	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_prod_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
-
-.PHONY: init-db-test-from-dev
-init-db-test-from-dev: ## init local database with data from dev. Use as `make init-db-test-from-dev PW=database-password`
+.PHONY: init-db-from-dev
+init-db-from-dev: ## init local database with data from dev. Use as `make init-db-from-dev PW=database-password`
 	@echo $@
 	${MAKE} init-db-from-env ENV=db.dev.dasch.swiss
 
-.PHONY: init-db-test-from-ls-test-server
-init-db-test-from-ls-test-server: db_ls_test_server_dump.trig init-db-test-from-ls-test-server-trig-file ## init local database with data from ls-test-server
-
-.PHONY: init-db-test-from-ls-test-server-trig-file
-init-db-test-from-ls-test-server-trig-file: init-db-test-empty ## init local database with data from a local ls-test-server dump
+.PHONY: init-db-from-dev-dump
+init-db-from-dev-dump: ## init local database with data from local dump file of dev server. Use as `make init-db-from-dev-dump`
 	@echo $@
-	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	${MAKE} init-db-from-dump-file DUMP=db.dev.dasch.swiss.trig
+
+.PHONY: init-db-from-ls-test-server
+init-db-from-ls-test-server: ## init local database with data from ls-test-server. Use as `make init-db-from-ls-test-server PW=database-password`
+	@echo $@
+	${MAKE} init-db-from-env ENV=db.ls-test-server.dasch.swiss
+
+.PHONY: init-db-from-ls-test-server-dump
+init-db-from-ls-test-server-dump: ## init local database with data from local dump file of ls-test-server server. Use as `make init-db-from-ls-test-server-dump`
+	@echo $@
+	${MAKE} init-db-from-dump-file DUMP=db.ls-test-server.dasch.swiss.trig
 
 .PHONY: db-dump
 db-dump: ## Dump data from an env. Use as `make db_dump PW=database-password ENV=db.0000-test-server.dasch.swiss`
@@ -317,8 +314,7 @@ db-dump: ## Dump data from an env. Use as `make db_dump PW=database-password ENV
 init-db-from-dump-file: ## init local database from a specified dump file. Use as `make init-db-from-dump-file DUMP=some-dump-file.trig`
 	@echo $@
 	@echo dump file: ${DUMP}
-	@docker compose -f docker-compose.yml up -d db
-	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
+	${MAKE} init-db-test-empty
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/${DUMP}" -u "admin:test" "http://localhost:3030/knora-test"
 
