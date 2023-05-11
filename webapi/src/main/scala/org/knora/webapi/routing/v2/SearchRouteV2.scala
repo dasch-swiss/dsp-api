@@ -8,6 +8,7 @@ package org.knora.webapi.routing.v2
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import zio._
+import zio.metrics._
 
 import dsp.errors.BadRequestException
 import org.knora.webapi._
@@ -22,6 +23,9 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import akka.http.scaladsl.server.RequestContext
+import org.knora.webapi.messages.v2.responder.KnoraResponseV2
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 /**
  * Provides a function for API routes that deal with search.
@@ -226,36 +230,36 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
 
   private def gravsearchGet(): Route = path(
     "v2" / "searchextended" / Segment
-  ) { sparql => // Segment is a URL encoded string representing a Gravsearch query
-    get { requestContext =>
-      val constructQuery    = GravsearchParser.parseQuery(sparql)
-      val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-      val requestMessage = for {
-        targetSchema   <- targetSchemaTask
-        requestingUser <- Authenticator.getUserADM(requestContext)
-        schemaOptions  <- schemaOptionsTask
-      } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
-    }
+  ) { query => // Segment is a URL encoded string representing a Gravsearch query
+    get(requestContext => gravsearch(query, requestContext))
   }
 
   private def gravsearchPost(): Route = path("v2" / "searchextended") {
-    post {
-      entity(as[String]) { gravsearchQuery => requestContext =>
-        {
-          val constructQuery    = GravsearchParser.parseQuery(gravsearchQuery)
-          val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
-          val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-          val requestTask = for {
-            targetSchema   <- targetSchemaTask
-            schemaOptions  <- schemaOptionsTask
-            requestingUser <- Authenticator.getUserADM(requestContext)
-          } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
-        }
+    post(entity(as[String])(query => requestContext => gravsearch(query, requestContext)))
+  }
+
+  private def gravsearch(query: String, requestContext: RequestContext) = {
+    val start = java.lang.System.currentTimeMillis().toDouble
+    val durationMetric =
+      Metric.histogram("gravsearch", MetricKeyType.Histogram.Boundaries.fromChunk(Chunk(0, 10, 100, 1000, 5000, 20000)))
+    val failConter        = Metric.counter("gravsearch_fail").fromConst(1)
+    val timeoutConter     = Metric.counter("gravsearch_timeout").fromConst(1)
+    val constructQuery    = GravsearchParser.parseQuery(query)
+    val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+    val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
+    val request = for {
+      targetSchema   <- targetSchemaTask
+      requestingUser <- Authenticator.getUserADM(requestContext)
+      schemaOptions  <- schemaOptionsTask
+    } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
+    val task = request
+      .flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
+      .tapError {
+        case _: TriplestoreTimeoutException => ZIO.unit @@ timeoutConter
+        case _                              => ZIO.unit @@ failConter
       }
-    }
+      .tap(_ => Clock.instant.map(_.toEpochMilli).map(_.-(start)).debug @@ durationMetric)
+    RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
 
   private def searchByLabelCount(): Route =
