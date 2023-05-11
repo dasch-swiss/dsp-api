@@ -13,6 +13,9 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.messages.util.search.gravsearch.transformers._
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import zio.ZIO
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
  * Tests [[SparqlTransformer]].
@@ -217,8 +220,14 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(typeStatement, Set.empty)
-      UnsafeZioRun.runOrThrow(expandedStatements) match {
+      val task = for {
+        cache      <- ZIO.service[OntologyCache]
+        cacheData  <- cache.getCacheData
+        ontologies  = cacheData.getOntologiesOfProject(SharedTestDataADM.anythingProjectIri.toSmartIri)
+        inferencer <- ZIO.service[OntologyInferencer]
+        statements <- inferencer.transformStatementInWhere(typeStatement, ontologies)
+      } yield statements
+      UnsafeZioRun.runOrThrow(task) match {
         case (head: UnionPattern) :: Nil =>
           head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
         case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
@@ -287,8 +296,14 @@ class SparqlTransformerSpec extends CoreSpec {
           )
         )
       )
-      val expandedStatements = getService[OntologyInferencer].transformStatementInWhere(hasValueStatement, Set.empty)
-      UnsafeZioRun.runOrThrow(expandedStatements) match {
+      val task = for {
+        cache      <- ZIO.service[OntologyCache]
+        cacheData  <- cache.getCacheData
+        ontologies  = cacheData.getOntologiesOfProject(SharedTestDataADM.anythingProjectIri.toSmartIri)
+        inferencer <- ZIO.service[OntologyInferencer]
+        statements <- inferencer.transformStatementInWhere(hasValueStatement, ontologies)
+      } yield statements
+      UnsafeZioRun.runOrThrow(task) match {
         case (head: UnionPattern) :: Nil =>
           head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
         case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
