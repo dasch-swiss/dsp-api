@@ -15,7 +15,7 @@ import SparqlTransformer._
 
 class SelectTransformer(
   simulateInference: Boolean,
-  ontologyIOnferencer: OntologyInferencer,
+  ontologyInferencer: OntologyInferencer,
   implicit val stringFormatter: StringFormatter
 ) extends WhereTransformer {
 
@@ -33,9 +33,8 @@ class SelectTransformer(
     inputOrderBy: Seq[OrderCriterion],
     limitInferenceToOntologies: Set[SmartIri]
   ): Task[Seq[QueryPattern]] =
-    ontologyIOnferencer.transformStatementInWhere(
+    ontologyInferencer.transformStatementInWhere(
       statementPattern = statementPattern,
-      // simulateInference = simulateInference, // XXX
       limitInferenceToOntologies = limitInferenceToOntologies
     )
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] = ZIO.attempt {
@@ -43,7 +42,7 @@ class SelectTransformer(
   }
 
   override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
-    ontologyIOnferencer.transformLuceneQueryPatternForFuseki(luceneQueryPattern)
+    ontologyInferencer.transformLuceneQueryPatternForFuseki(luceneQueryPattern)
 
   /**
    * Specifies a FROM clause, if needed.
