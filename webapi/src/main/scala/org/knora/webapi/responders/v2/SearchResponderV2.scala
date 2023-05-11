@@ -60,6 +60,8 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport._
 
+import FullTextMainQueryGenerator.FullTextSearchConstants
+
 trait SearchResponderV2
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
@@ -212,10 +214,7 @@ final case class SearchResponderV2Live(
     requestingUser: UserADM,
     appConfig: AppConfig
   ): Task[ReadResourcesSequenceV2] = {
-    import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
-
-    val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
-
+    val groupConcatSeparator           = StringFormatter.INFORMATION_SEPARATOR_ONE
     val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
     for {
@@ -245,9 +244,10 @@ final case class SearchResponderV2Live(
 
       // a sequence of resource IRIs that match the search criteria
       // attention: no permission checking has been done so far
-      resourceIris: Seq[IRI] = prequeryResponse.results.bindings.map { resultRow: VariableResultsRow =>
-                                 resultRow.rowMap(FullTextSearchConstants.resourceVar.variableName)
-                               }
+      resourceIris: Seq[IRI] =
+        prequeryResponse.results.bindings.map { resultRow: VariableResultsRow =>
+          resultRow.rowMap(FullTextSearchConstants.resourceVar.variableName)
+        }
 
       // If the prequery returned some results, prepare a main query.
       mainResourcesAndValueRdfData <-
@@ -282,7 +282,8 @@ final case class SearchResponderV2Live(
           )
 
           for {
-            query          <- constructTransformer.transform(mainQuery, Set.empty)
+            cache          <- ontologyCache.getCacheData
+            query          <- constructTransformer.transform(mainQuery, cache.ontologies.keySet)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
