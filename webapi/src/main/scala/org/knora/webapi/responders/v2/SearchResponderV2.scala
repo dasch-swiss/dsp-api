@@ -430,7 +430,7 @@ final case class SearchResponderV2Live(
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      gravsearchToPrequeryTransformer: GravsearchToPrequeryTransformer =
+      prequeryTransformer: GravsearchToPrequeryTransformer =
         new GravsearchToPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
@@ -443,36 +443,27 @@ final case class SearchResponderV2Live(
 
       inferredOntologies <- inferenceOptimizationService.getOntologiesFromQuery(inputQuery.whereClause)
       inference <-
-        if (gravsearchToPrequeryTransformer.useInference)
+        if (prequeryTransformer.useInference)
           inferenceOptimizationService.getInferenceLimit(inferenceLimit, inferredOntologies)
         else ZIO.succeed(Set.empty[SmartIri])
 
       // if no inference deduced from query, don't tdo inference
 
       queryWithoutAnnotations = inputQuery.copy(whereClause = whereClauseWithoutAnnotations)
-      prequery <-
-        queryTraverser.transformConstructToSelect(queryWithoutAnnotations, gravsearchToPrequeryTransformer, inference)
+      prequery               <- queryTraverser.transformConstructToSelect(queryWithoutAnnotations, prequeryTransformer, inference)
 
       // variable representing the main resources
-      mainResourceVar: QueryVariable = gravsearchToPrequeryTransformer.mainResourceVariable
+      mainResourceVar: QueryVariable = prequeryTransformer.mainResourceVariable
 
       selectTransformer: SelectTransformer =
         new SelectTransformer(
-          simulateInference = gravsearchToPrequeryTransformer.useInference,
+          simulateInference = prequeryTransformer.useInference,
           ontologyInferencer,
           stringFormatter
         )
 
-      // Convert the preprocessed query to a non-triplestore-specific query.
-
-      transformedPrequery <-
-        queryTraverser.transformSelectToSelect(
-          inputQuery = prequery,
-          transformer = selectTransformer,
-          ??? // XXX
-        )
-
-      prequerySparql = transformedPrequery.toSparql
+      transformedPrequery <- queryTraverser.transformSelectToSelect(prequery, selectTransformer, inference)
+      prequerySparql       = transformedPrequery.toSparql
 
       start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
@@ -509,7 +500,7 @@ final case class SearchResponderV2Live(
           val dependentResourceIrisPerMainResource: GravsearchMainQueryGenerator.DependentResourcesPerMainResource =
             GravsearchMainQueryGenerator.getDependentResourceIrisPerMainResource(
               prequeryResponse = prequeryResponse,
-              transformer = gravsearchToPrequeryTransformer,
+              transformer = prequeryTransformer,
               mainResourceVar = mainResourceVar
             )
 
@@ -536,7 +527,7 @@ final case class SearchResponderV2Live(
             : GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris =
             GravsearchMainQueryGenerator.getValueObjectVarsAndIrisPerMainResource(
               prequeryResponse = prequeryResponse,
-              transformer = gravsearchToPrequeryTransformer,
+              transformer = prequeryTransformer,
               mainResourceVar = mainResourceVar
             )
 
@@ -560,10 +551,7 @@ final case class SearchResponderV2Live(
           )
 
           for {
-
-            mainQuery <- constructTransformer.transform(mainQuery, ???) // XXX: what's the limit?
-
-            // Convert the result to a SPARQL string and send it to the triplestore.
+            mainQuery         <- constructTransformer.transform(mainQuery, inference)
             mainQuerySparql    = mainQuery.toSparql
             mainQueryResponse <- triplestoreService.sparqlHttpExtendedConstruct(mainQuerySparql, isGravsearch = true)
 
@@ -581,7 +569,7 @@ final case class SearchResponderV2Live(
                     valueObjectVarsAndIrisPerMainResource,
                     allResourceVariablesFromTypeInspection,
                     dependentResourceIrisFromTypeInspection,
-                    gravsearchToPrequeryTransformer,
+                    prequeryTransformer,
                     typeInspectionResult,
                     inputQuery
                   )
