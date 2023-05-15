@@ -588,10 +588,6 @@ object OntologyConstants {
     val StandoffStyleElementTag: IRI  = StandoffPrefixExpansion + "StandoffStyleTag"
   }
 
-  object Ontotext {
-    val LuceneFulltext = "http://www.ontotext.com/owlim/lucene#fullTextSearchIndex"
-  }
-
   object XPathFunctions {
     val XPathPrefixExpansion: IRI = "http://www.w3.org/2005/xpath-functions#"
 
