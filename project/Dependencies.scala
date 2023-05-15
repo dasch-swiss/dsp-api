@@ -95,7 +95,7 @@ object Dependencies {
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.4"
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.4"
-  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.1"
+  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.2"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.2"
