@@ -155,9 +155,6 @@ abstract class AbstractPrequeryGenerator(
         .optimiseQueryPatterns(patterns)
     )
 
-  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
-    ZIO.fail(GravsearchException("Unexpected LuceneQueryPattern in prequery generator"))
-
   /**
    * Transforms a [[org.knora.webapi.messages.util.search.FilterPattern]] in a WHERE clause into zero or more statement patterns.
    *
@@ -1628,17 +1625,10 @@ abstract class AbstractPrequeryGenerator(
 
     val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
-    // Replace the filter with a LuceneQueryPattern.
+    // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      Seq(
-        LuceneQueryPattern(
-          subj = textValueVar,
-          obj = textValHasString,
-          queryString = searchTerms,
-          literalStatement = valueHasStringStatement
-        )
-      )
+      lucenePattern(textValueVar, searchTerm.value)
     )
   }
 
@@ -1713,17 +1703,10 @@ abstract class AbstractPrequeryGenerator(
 
     val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
-    // Replace the filter with a LuceneQueryPattern.
+    // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
       None, // FILTER has been replaced by statements
-      Seq(
-        LuceneQueryPattern(
-          subj = textValueVar,
-          obj = textValHasString,
-          queryString = searchTerms,
-          literalStatement = valueHasStringStatement
-        )
-      )
+      lucenePattern(textValueVar, searchTerm.value)
     )
   }
 
@@ -1799,16 +1782,8 @@ abstract class AbstractPrequeryGenerator(
 
     val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
-    // Generate a LuceneQueryPattern to search the full-text search index, to assert that text value contains
-    // the search terms.
-    val luceneQueryPattern: Seq[LuceneQueryPattern] = Seq(
-      LuceneQueryPattern(
-        subj = textValueVar,
-        obj = textValHasString,
-        queryString = searchTerms,
-        literalStatement = None // We have to add this statement ourselves, so LuceneQueryPattern doesn't need to.
-      )
-    )
+    // Generate a Lucene statement, to assert that text value contains the search terms.
+    val luceneStatement = lucenePattern(textValueVar, searchTermStr.value)
 
     // Generate query patterns to assign the text in the standoff tag to a variable, if we
     // haven't done so already.
@@ -1868,7 +1843,7 @@ abstract class AbstractPrequeryGenerator(
 
     TransformedFilterPattern(
       expression = None, // The expression has been replaced by additional patterns.
-      additionalPatterns = valueHasStringStatement.toSeq ++ luceneQueryPattern ++ markedUpPatternsToAdd ++ regexFilters
+      additionalPatterns = valueHasStringStatement.toSeq ++ luceneStatement ++ markedUpPatternsToAdd ++ regexFilters
     )
   }
 
@@ -1983,19 +1958,24 @@ abstract class AbstractPrequeryGenerator(
       functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
     val luceneQueryString: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
-    // Replace the filter with a LuceneQueryPattern.
+    // Replace the filter with a Lucene search statement.
     TransformedFilterPattern(
       None, // The FILTER has been replaced by statements.
-      Seq(
-        LuceneQueryPattern(
-          subj = resourceVar,
-          obj = rdfsLabelVar,
-          queryString = luceneQueryString,
-          literalStatement = rdfsLabelStatement
+      lucenePattern(resourceVar, searchTerm.value)
+    )
+  }
+
+  private def lucenePattern(subj: QueryVariable, queryString: String): Seq[StatementPattern] =
+    Seq(
+      StatementPattern(
+        subj = subj, // In Fuseki, an index entry is associated with an entity that has a literal.
+        pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+        obj = XsdLiteral(
+          value = queryString,
+          datatype = OntologyConstants.Xsd.String.toSmartIri
         )
       )
     )
-  }
 
   /**
    * Handles the function `knora-api:StandoffLink`.

@@ -244,7 +244,6 @@ object GravsearchTypeInspectionUtil {
       case optionalPattern: OptionalPattern => Seq(OptionalPattern(optionalPattern.patterns.flatMap(transformPattern)))
       case unionPattern: UnionPattern       => Seq(UnionPattern(unionPattern.blocks.map(_.flatMap(transformPattern))))
       case filterPattern: FilterPattern     => Seq(filterPattern)
-      case _: LuceneQueryPattern            => Seq.empty[QueryPattern]
       case valuesPattern: ValuesPattern     => Seq(valuesPattern)
       case bindPattern: BindPattern         => Seq(bindPattern)
       case statementPattern: StatementPattern =>

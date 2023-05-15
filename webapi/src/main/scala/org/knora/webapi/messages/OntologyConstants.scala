@@ -1118,4 +1118,8 @@ object OntologyConstants {
   object NamedGraphs {
     val DataNamedGraphStart: IRI = "http://www.knora.org/data"
   }
+
+  object Fuseki {
+    val luceneQueryPredicate = "http://jena.apache.org/text#query"
+  }
 }

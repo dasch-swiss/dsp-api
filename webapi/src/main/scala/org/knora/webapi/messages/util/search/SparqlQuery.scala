@@ -8,14 +8,12 @@ package org.knora.webapi.messages.util.search
 import akka.http.scaladsl.model.HttpCharsets
 import akka.http.scaladsl.model.MediaType
 
-import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
  * Constants used in processing SPARQL queries.
@@ -180,26 +178,6 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity) extends Que
       case iriRef: IriRef => iriRef.toOntologySchema(targetSchema)
       case other          => other
     }
-}
-
-/**
- * A virtual query pattern representing a Lucene full-text index search. Will be replaced by triplestore-specific
- * statements during Gravsearch processing.
- *
- * @param subj        a variable representing the subject to be found.
- * @param obj         a variable representing the literal that is indexed.
- * @param queryString the Lucene query string to be matched.
- * @param literalStatement a statement that connects `subj` to `obj`. Needed with some triplestores but not others.
- *                         Will be defined only if it has not already been added to the generated SPARQL.
- */
-case class LuceneQueryPattern(
-  subj: QueryVariable,
-  obj: QueryVariable,
-  queryString: LuceneQueryString,
-  literalStatement: Option[StatementPattern]
-) extends QueryPattern {
-  override def toSparql: String =
-    throw AssertionException("LuceneQueryPattern should have been transformed into statements")
 }
 
 /**

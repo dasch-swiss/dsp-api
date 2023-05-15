@@ -42,9 +42,6 @@ class SelectTransformer(
     moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
   }
 
-  override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
-    sparqlTransformerLive.transformLuceneQueryPatternForFuseki(luceneQueryPattern)
-
   /**
    * Specifies a FROM clause, if needed.
    *

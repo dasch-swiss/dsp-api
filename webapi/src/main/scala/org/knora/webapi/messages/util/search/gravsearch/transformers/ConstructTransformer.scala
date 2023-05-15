@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio._
 
-import dsp.errors.GravsearchException
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -64,8 +63,6 @@ final case class ConstructTransformer(
       case OptionalPattern(patterns) => ZIO.foreach(patterns)(transformPattern(_, limit).map(OptionalPattern))
       case UnionPattern(blocks) =>
         ZIO.foreach(blocks)(optimizeAndTransformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
-      case _: LuceneQueryPattern =>
-        ZIO.fail(GravsearchException("Unexpected LuceneQueryPattern in construct transformer"))
       case pattern: QueryPattern => ZIO.succeed(Seq(pattern))
     }
 
