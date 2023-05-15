@@ -259,7 +259,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       response <- MessageRelay.ask[KnoraResponseV2](request).tapError {
                     case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
                     case _                              => ZIO.unit @@ gravsearchFailCounter
-                  }
+                  } @@ gravsearchDuration.trackDuration
       _ <- Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
     } yield response
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
