@@ -11,6 +11,8 @@ import akka.http.scaladsl.server.Route
 import zio._
 import zio.metrics._
 
+import java.time.temporal.ChronoUnit
+
 import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -239,9 +241,10 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   }
 
   private def gravsearch(query: String, requestContext: RequestContext) = {
-    val start = java.lang.System.currentTimeMillis().toDouble
-    val durationMetric =
-      Metric.histogram("gravsearch", MetricKeyType.Histogram.Boundaries.fromChunk(Chunk(0, 10, 100, 1000, 5000, 20000)))
+    val start          = java.lang.System.currentTimeMillis().toDouble
+    val durationMetric = Metric.timer("gravsearch", ChronoUnit.MILLIS, Chunk.iterate(1.0, 17)(_ * 2))
+    val durationSummaryMetric =
+      Metric.summary("gravsearch_summary", 1.day, 100, 0.03d, Chunk(0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.99))
     val failConter        = Metric.counter("gravsearch_fail").fromConst(1)
     val timeoutConter     = Metric.counter("gravsearch_timeout").fromConst(1)
     val constructQuery    = GravsearchParser.parseQuery(query)
@@ -258,7 +261,9 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
         case _: TriplestoreTimeoutException => ZIO.unit @@ timeoutConter
         case _                              => ZIO.unit @@ failConter
       }
-      .tap(_ => Clock.instant.map(_.toEpochMilli).map(_.-(start)).debug @@ durationMetric)
+      .tap(_ =>
+        Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ durationSummaryMetric
+      ) @@ durationMetric.trackDuration
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
 
