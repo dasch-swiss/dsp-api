@@ -247,24 +247,21 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   private val gravsearchTimeoutCounter = Metric.counter("gravsearch_timeout").fromConst(1)
 
   private def gravsearch(query: String, requestContext: RequestContext) = {
-    val start             = java.lang.System.currentTimeMillis().toDouble
     val constructQuery    = GravsearchParser.parseQuery(query)
     val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
     val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-    val request = for {
+    val task = for {
+      start          <- Clock.instant.map(_.toEpochMilli).map(_.toDouble)
       targetSchema   <- targetSchemaTask
       requestingUser <- Authenticator.getUserADM(requestContext)
       schemaOptions  <- schemaOptionsTask
-    } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-    val task = request
-      .flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
-      .tapError {
-        case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
-        case _                              => ZIO.unit @@ gravsearchFailCounter
-      }
-      .tap(_ =>
-        Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
-      ) @@ gravsearchDuration.trackDuration
+      request         = GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
+      response <- MessageRelay.ask[KnoraResponseV2](request).tapError {
+                    case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
+                    case _                              => ZIO.unit @@ gravsearchFailCounter
+                  }
+      _ <- Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
+    } yield response
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
 
