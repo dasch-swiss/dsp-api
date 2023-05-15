@@ -116,6 +116,8 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.slice.admin.domain.service.AssetService
+import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
 object LayersTest {
 
   /**
@@ -129,6 +131,7 @@ object LayersTest {
     ApiRoutes
       with AppRouter
       with Authenticator
+      with AssetService
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
@@ -195,6 +198,7 @@ object LayersTest {
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
+      AssetServiceLive.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,

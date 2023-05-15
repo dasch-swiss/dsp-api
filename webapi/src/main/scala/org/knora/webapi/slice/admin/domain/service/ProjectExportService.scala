@@ -20,15 +20,18 @@ import zio.ZLayer
 import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
-
 import java.io.OutputStream
 import scala.collection.mutable
 
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBaseOntologyIri
 import org.knora.webapi.messages.twirl
+import org.knora.webapi.messages.twirl.queries.sparql._
+import org.knora.webapi.messages.twirl.queries.sparql.admin.txt._
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZScopedJavaIoStreams
@@ -118,7 +121,8 @@ private object TriGCombiner {
 
 final case class ProjectExportServiceLive(
   private val projectService: ProjectADMService,
-  private val triplestoreService: TriplestoreService
+  private val triplestoreService: TriplestoreService,
+  private val assetService: AssetService
 ) extends ProjectExportService {
 
   override def exportProjectTriples(project: KnoraProject): Task[Path] =
@@ -162,7 +166,7 @@ final case class ProjectExportServiceLive(
     val graphIri = adminDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, targetFolder)
     for {
-      query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectAdminData(project.id.value))
+      query <- ZIO.attempt(getProjectAdminData(project.id.value))
       _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
     } yield file
   }
@@ -171,7 +175,7 @@ final case class ProjectExportServiceLive(
     val graphIri = permissionsDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, tempDir)
     for {
-      query <- ZIO.attempt(twirl.queries.sparql.admin.txt.getProjectPermissions(project.id.value))
+      query <- ZIO.attempt(getProjectPermissions(project.id.value))
       _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
     } yield file
   }
@@ -193,11 +197,45 @@ final case class ProjectExportServiceLive(
     val exportedAssetsDir = tempDir / "assets"
     for {
       _ <- Files.createDirectory(exportedAssetsDir)
+      _ <- assetService.exportProjectAssets(project, exportedAssetsDir)
     } yield exportedAssetsDir
   }
 }
 
+trait AssetService {
+  def exportProjectAssets(project: KnoraProject, tempDir: Path): Task[Path]
+}
+
+case class AssetServiceLive(triplestoreService: TriplestoreService, ontologyRepo: OntologyRepo) extends AssetService {
+  override def exportProjectAssets(project: KnoraProject, directory: Path): Task[Path] = for {
+    _      <- ZIO.logDebug(s"Exporting assets ${project.id}")
+    assets <- determineAssets(project)
+    _      <- ZIO.foreachDiscard(assets)(downloadAsset(_, directory))
+  } yield directory
+
+  case class Asset(belongsToIri: InternalIri, internalFilename: String)
+  private def determineAssets(project: KnoraProject): Task[List[Asset]] = {
+    val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
+    for {
+      ontologyGraphs <- ontologyRepo.findOntologyGraphsByProject(project)
+      query           = findAllAssets(ontologyGraphs :+ InternalIri(KnoraBaseOntologyIri), projectGraph)
+      _              <- ZIO.logDebug(s"Querying assets for project ${project.id} = $query")
+      result         <- triplestoreService.sparqlHttpSelect(query)
+      bindings        = result.results.bindings
+      _              <- ZIO.logDebug(s"Found ${bindings.size} assets for project ${project.id}")
+      assets          = bindings.flatMap(row => row.rowMap.get("internalFilename")).map(Asset(project.id, _)).toList
+    } yield assets
+  }
+
+  private def downloadAsset(asset: Asset, tempDir: Path): Task[Path] =
+    ZIO.logInfo(asset.toString) *> ZIO.succeed(tempDir)
+}
+object AssetServiceLive {
+  val layer: URLayer[OntologyRepo with TriplestoreService, AssetServiceLive] =
+    ZLayer.fromFunction(AssetServiceLive.apply _)
+}
+
 object ProjectExportServiceLive {
-  val layer: URLayer[ProjectADMService with TriplestoreService, ProjectExportService] =
+  val layer: URLayer[AssetService with ProjectADMService with TriplestoreService, ProjectExportService] =
     ZLayer.fromFunction(ProjectExportServiceLive.apply _)
 }

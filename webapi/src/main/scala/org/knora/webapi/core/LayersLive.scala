@@ -84,6 +84,8 @@ import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.service.AssetService
+import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
@@ -129,6 +131,7 @@ object LayersLive {
       with ApiRoutes
       with AppConfig
       with AppRouter
+      with AssetService
       with Authenticator
       with CacheService
       with CacheServiceRequestMessageHandler
@@ -200,6 +203,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
+      AssetServiceLive.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
