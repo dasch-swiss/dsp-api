@@ -240,13 +240,14 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     post(entity(as[String])(query => requestContext => gravsearch(query, requestContext)))
   }
 
+  private val gravsearchDuration = Metric.timer("gravsearch", ChronoUnit.MILLIS, Chunk.iterate(1.0, 17)(_ * 2))
+  private val gravsearchDurationSummary =
+    Metric.summary("gravsearch_summary", 1.day, 100, 0.03d, Chunk(0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.99))
+  private val gravsearchFailCounter    = Metric.counter("gravsearch_fail").fromConst(1)
+  private val gravsearchTimeoutCounter = Metric.counter("gravsearch_timeout").fromConst(1)
+
   private def gravsearch(query: String, requestContext: RequestContext) = {
-    val start          = java.lang.System.currentTimeMillis().toDouble
-    val durationMetric = Metric.timer("gravsearch", ChronoUnit.MILLIS, Chunk.iterate(1.0, 17)(_ * 2))
-    val durationSummaryMetric =
-      Metric.summary("gravsearch_summary", 1.day, 100, 0.03d, Chunk(0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.99))
-    val failConter        = Metric.counter("gravsearch_fail").fromConst(1)
-    val timeoutConter     = Metric.counter("gravsearch_timeout").fromConst(1)
+    val start             = java.lang.System.currentTimeMillis().toDouble
     val constructQuery    = GravsearchParser.parseQuery(query)
     val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
     val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
@@ -258,12 +259,12 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     val task = request
       .flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
       .tapError {
-        case _: TriplestoreTimeoutException => ZIO.unit @@ timeoutConter
-        case _                              => ZIO.unit @@ failConter
+        case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
+        case _                              => ZIO.unit @@ gravsearchFailCounter
       }
       .tap(_ =>
-        Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ durationSummaryMetric
-      ) @@ durationMetric.trackDuration
+        Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
+      ) @@ gravsearchDuration.trackDuration
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
 
