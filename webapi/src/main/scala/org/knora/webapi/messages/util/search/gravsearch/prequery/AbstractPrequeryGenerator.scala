@@ -156,7 +156,7 @@ abstract class AbstractPrequeryGenerator(
     )
 
   override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
-    ZIO.succeed(Seq(luceneQueryPattern))
+    ZIO.fail(GravsearchException("Unexpected LuceneQueryPattern in prequery generator"))
 
   /**
    * Transforms a [[org.knora.webapi.messages.util.search.FilterPattern]] in a WHERE clause into zero or more statement patterns.

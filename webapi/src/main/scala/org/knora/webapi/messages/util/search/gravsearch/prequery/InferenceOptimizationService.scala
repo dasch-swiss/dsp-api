@@ -20,7 +20,6 @@ import org.knora.webapi.messages.util.search.BindPattern
 import org.knora.webapi.messages.util.search.Entity
 import org.knora.webapi.messages.util.search.FilterNotExistsPattern
 import org.knora.webapi.messages.util.search.IriRef
-import org.knora.webapi.messages.util.search.LuceneQueryPattern
 import org.knora.webapi.messages.util.search.MinusPattern
 import org.knora.webapi.messages.util.search.OptionalPattern
 import org.knora.webapi.messages.util.search.QueryPattern
@@ -101,15 +100,14 @@ final case class InferenceOptimizationServiceLive(
     def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =
       patterns.flatMap { pattern =>
         pattern match {
-          case ValuesPattern(_, values)            => values.toSeq
-          case BindPattern(_, expression)          => List(expression.asInstanceOf[Entity])
-          case UnionPattern(blocks)                => blocks.flatMap(block => getEntities(block))
-          case StatementPattern(subj, pred, obj)   => List(subj, pred, obj)
-          case LuceneQueryPattern(subj, obj, _, _) => List(subj, obj)
-          case FilterNotExistsPattern(patterns)    => getEntities(patterns)
-          case MinusPattern(patterns)              => getEntities(patterns)
-          case OptionalPattern(patterns)           => getEntities(patterns)
-          case _                                   => List.empty
+          case ValuesPattern(_, values)          => values.toSeq
+          case BindPattern(_, expression)        => List(expression.asInstanceOf[Entity])
+          case UnionPattern(blocks)              => blocks.flatMap(block => getEntities(block))
+          case StatementPattern(subj, pred, obj) => List(subj, pred, obj)
+          case FilterNotExistsPattern(patterns)  => getEntities(patterns)
+          case MinusPattern(patterns)            => getEntities(patterns)
+          case OptionalPattern(patterns)         => getEntities(patterns)
+          case _                                 => List.empty
         }
       }
 

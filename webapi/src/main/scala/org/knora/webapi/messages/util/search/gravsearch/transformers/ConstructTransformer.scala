@@ -7,7 +7,7 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio._
 
-import org.knora.webapi.messages.OntologyConstants
+import dsp.errors.GravsearchException
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -64,16 +64,10 @@ final case class ConstructTransformer(
       case OptionalPattern(patterns) => ZIO.foreach(patterns)(transformPattern(_, limit).map(OptionalPattern))
       case UnionPattern(blocks) =>
         ZIO.foreach(blocks)(optimizeAndTransformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
-      case lucenePattern: LuceneQueryPattern => transformLuceneQueryPattern(lucenePattern)
-      case pattern: QueryPattern             => ZIO.succeed(Seq(pattern))
+      case _: LuceneQueryPattern =>
+        ZIO.fail(GravsearchException("Unexpected LuceneQueryPattern in construct transformer"))
+      case pattern: QueryPattern => ZIO.succeed(Seq(pattern))
     }
-
-  private def transformLuceneQueryPattern(pattern: LuceneQueryPattern): Task[Seq[QueryPattern]] =
-    for {
-      predIri  <- iriConverter.asSmartIri("http://jena.apache.org/text#query")
-      datatype <- iriConverter.asSmartIri(OntologyConstants.Xsd.String)
-      obj       = XsdLiteral(pattern.queryString.getQueryString, datatype)
-    } yield Seq(StatementPattern(pattern.subj, IriRef(predIri), obj))
 
 }
 

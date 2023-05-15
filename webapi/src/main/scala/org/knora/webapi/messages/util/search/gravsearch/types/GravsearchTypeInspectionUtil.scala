@@ -240,13 +240,13 @@ object GravsearchTypeInspectionUtil {
     pattern match {
       case filterNotExistsPattern: FilterNotExistsPattern =>
         Seq(FilterNotExistsPattern(filterNotExistsPattern.patterns.flatMap(transformPattern)))
-      case minusPattern: MinusPattern             => Seq(MinusPattern(minusPattern.patterns.flatMap(transformPattern)))
-      case optionalPattern: OptionalPattern       => Seq(OptionalPattern(optionalPattern.patterns.flatMap(transformPattern)))
-      case unionPattern: UnionPattern             => Seq(UnionPattern(unionPattern.blocks.map(_.flatMap(transformPattern))))
-      case filterPattern: FilterPattern           => Seq(filterPattern)
-      case luceneQueryPattern: LuceneQueryPattern => Seq(luceneQueryPattern)
-      case valuesPattern: ValuesPattern           => Seq(valuesPattern)
-      case bindPattern: BindPattern               => Seq(bindPattern)
+      case minusPattern: MinusPattern       => Seq(MinusPattern(minusPattern.patterns.flatMap(transformPattern)))
+      case optionalPattern: OptionalPattern => Seq(OptionalPattern(optionalPattern.patterns.flatMap(transformPattern)))
+      case unionPattern: UnionPattern       => Seq(UnionPattern(unionPattern.blocks.map(_.flatMap(transformPattern))))
+      case filterPattern: FilterPattern     => Seq(filterPattern)
+      case _: LuceneQueryPattern            => Seq.empty[QueryPattern]
+      case valuesPattern: ValuesPattern     => Seq(valuesPattern)
+      case bindPattern: BindPattern         => Seq(bindPattern)
       case statementPattern: StatementPattern =>
         if (mustBeAnnotationStatement(statementPattern)) Seq.empty[QueryPattern]
         else Seq(statementPattern)
