@@ -2,7 +2,6 @@
 -- * SPDX-License-Identifier: Apache-2.0
 
 require "send_response"
-require "get_knora_session"
 
 success, errmsg = server.setBuffer()
 
