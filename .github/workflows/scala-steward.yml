@@ -1,4 +1,4 @@
-name: Dependencies
+name: Dependencies-scala-steward
 
 # This workflow will launch at 00:00 on every 1th and 15th of the month
 on:

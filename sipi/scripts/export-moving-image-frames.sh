@@ -7,7 +7,7 @@
 # - max. 36 frames per matrix
 # - one matrix file corresponds to 6 minutes of film
 
-if [ "${DEBUG:false}" == true ]; then
+if [ "${DEBUG:-false}" == true ]; then
   set -ex
 else
   set -e
@@ -182,3 +182,7 @@ while [ ${t} -lt "${nummatrix}" ]; do
   (( t=t+1 ))
 
 done
+
+# after the matrix file is created, delete the frames, they aren't needed anymore
+rm -rf ../frames
+

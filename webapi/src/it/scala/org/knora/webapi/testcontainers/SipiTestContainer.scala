@@ -37,6 +37,8 @@ object SipiTestContainer {
     sipiContainer.withEnv("SIPI_EXTERNAL_PORT", "1024")
     sipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", localIpAddress)
     sipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
+    sipiContainer.withEnv("CLEAN_TMP_DIR_USER", "clean_tmp_dir_user")
+    sipiContainer.withEnv("CLEAN_TMP_DIR_PW", "clean_tmp_dir_pw")
 
     sipiContainer.withCommand("--config=/sipi/config/sipi.docker-config.lua")
 
@@ -47,10 +49,10 @@ object SipiTestContainer {
     )
 
     val incunabulaImageDirPath =
-      Paths.get("..", "sipi/images/0803/incunabula_0000000002.jp2")
+      Paths.get("..", "sipi/images/0803/in/cu/incunabula_0000000002.jp2")
     sipiContainer.withFileSystemBind(
       incunabulaImageDirPath.toString(),
-      "/sipi/images/0803/incunabula_0000000002.jp2",
+      "/sipi/images/0803/in/cu/incunabula_0000000002.jp2",
       BindMode.READ_ONLY
     )
 
