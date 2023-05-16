@@ -59,8 +59,6 @@ final case class IIIFServiceSipiImpl(
   private val httpClient: CloseableHttpClient
 ) extends IIIFService {
 
-  private val sipiBaseUrl: String = s"${sipiConf.internalProtocol}://${sipiConf.internalHost}:${sipiConf.internalPort}"
-
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.
    *
@@ -283,7 +281,7 @@ final case class IIIFServiceSipiImpl(
   override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = {
     def makeRequest(): UIO[HttpGet] = for {
       jwtToken <- jwt.createToken(user.id)
-      url       = s"$sipiBaseUrl/${asset.belongsToProject.shortcode}/${asset.internalFilename}/file"
+      url       = s"${sipiConf.internalBaseUrl}/${asset.belongsToProject.shortcode}/${asset.internalFilename}/file"
       request   = new HttpGet(url)
       _         = request.addHeader("Authorization", s"Bearer $jwtToken")
       _        <- ZIO.logDebug(s"Created GET $url request for ${Asset.logString(asset)}")
