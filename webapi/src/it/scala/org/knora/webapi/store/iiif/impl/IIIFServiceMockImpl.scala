@@ -60,7 +60,7 @@ case class IIIFServiceMockImpl() extends IIIFService {
 
   override def getStatus(): Task[IIIFServiceStatusResponse] = ZIO.succeed(IIIFServiceStatusOK)
 
-  override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Path] = ???
+  override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = ???
 }
 
 object IIIFServiceMockImpl {

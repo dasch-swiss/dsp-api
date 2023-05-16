@@ -765,7 +765,7 @@ trait JwtService {
    * @param content   any other content to be included in the token.
    * @return a [[String]] containing the JWT.
    */
-  def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): Task[String]
+  def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): UIO[String]
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
@@ -802,7 +802,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
    * @param userIri   the user IRI that will be encoded into the token.
    * @return a [[String]] containing the JWT.
    */
-  override def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): Task[String] =
+  override def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): UIO[String] =
     for {
       now  <- Clock.instant
       uuid <- ZIO.random.flatMap(_.nextUUID)

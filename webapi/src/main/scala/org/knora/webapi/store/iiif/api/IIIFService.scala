@@ -61,5 +61,12 @@ trait IIIFService {
    */
   def getStatus(): Task[IIIFServiceStatusResponse]
 
-  def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Path]
+  /**
+   * Downloads an asset from Sipi.
+   * @param asset The asset to download.
+   * @param targetDir The target directory in which the asset should be stored.
+   * @param user The user who is downloading the asset.
+   * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
+   */
+  def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]]
 }

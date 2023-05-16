@@ -186,11 +186,14 @@ final case class ProjectExportServiceLive(
 
   override def exportProject(project: KnoraProject, user: UserADM): Task[Path] = ZIO.scoped {
     for {
-      exportDir  <- Files.createTempDirectory(Some(s"export-${project.shortname}"), fileAttributes = Nil)
-      collectDir <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
-      _          <- exportProjectTriples(project, trigExportFile(project, collectDir))
-      _          <- exportProjectAssets(project, collectDir, user)
-      zipped     <- ZipUtility.zipFolder(collectDir, exportDir)
+      exportDir    <- Files.createTempDirectory(Some(s"export-${project.shortname}"), fileAttributes = Nil)
+      collectDir   <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
+      _            <- exportProjectTriples(project, trigExportFile(project, collectDir))
+      _            <- exportProjectAssets(project, collectDir, user)
+      zipped       <- ZipUtility.zipFolder(collectDir, exportDir)
+      fileSize     <- Files.size(zipped)
+      absolutePath <- zipped.toAbsolutePath
+      _            <- ZIO.logInfo(s"Exported project ${project.shortname} to $absolutePath ($fileSize bytes)")
     } yield zipped
   }
 
@@ -206,14 +209,22 @@ final case class ProjectExportServiceLive(
 trait AssetService {
   def exportProjectAssets(project: KnoraProject, tempDir: Path, user: UserADM): Task[Path]
 }
-case class Asset(belongsToProject: KnoraProject, internalFilename: String)
+case class Asset(belongsToProject: KnoraProject, internalFilename: String) {}
+object Asset {
+  def logString(asset: Asset) = s"asset:${asset.belongsToProject.shortcode}/${asset.internalFilename}"
+}
 
 case class AssetServiceLive(triplestoreService: TriplestoreService, sipiClient: IIIFService, ontologyRepo: OntologyRepo)
     extends AssetService {
   override def exportProjectAssets(project: KnoraProject, directory: Path, user: UserADM): Task[Path] = for {
-    _      <- ZIO.logDebug(s"Exporting assets ${project.id}")
+    _ <- ZIO.logDebug(s"Exporting assets ${project.id}")
     assets <- determineAssets(project)
-    _      <- ZIO.foreachDiscard(assets)((asset: Asset) => downloadAsset(asset, directory, user))
+                .tap(it => ZIO.logInfo(s"Found ${it.size} assets for project ${project.shortcode}"))
+    _ <-
+      ZIO
+        .foreachPar(assets)(sipiClient.downloadAsset(_, directory, user))
+        .withParallelism(10)
+        .tap(it => ZIO.logInfo(s"Successfully downloaded ${it.flatten.size} files for project ${project.shortcode}"))
   } yield directory
 
   private def determineAssets(project: KnoraProject): Task[List[Asset]] = {
@@ -224,13 +235,9 @@ case class AssetServiceLive(triplestoreService: TriplestoreService, sipiClient: 
       _              <- ZIO.logDebug(s"Querying assets for project ${project.id} = $query")
       result         <- triplestoreService.sparqlHttpSelect(query)
       bindings        = result.results.bindings
-      _              <- ZIO.logDebug(s"Found ${bindings.size} assets for project ${project.id}")
       assets          = bindings.flatMap(row => row.rowMap.get("internalFilename")).map(Asset(project, _)).toList
     } yield assets
   }
-
-  private def downloadAsset(asset: Asset, tempDir: Path, user: UserADM): Task[Path] =
-    sipiClient.downloadAsset(asset, tempDir, user)
 }
 
 object AssetServiceLive {
