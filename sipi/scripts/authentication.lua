@@ -9,29 +9,48 @@ require "util"
 --- Extracts a JSON web token from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
 -- Decodes token and validates claims exp, aud, iss.
 -- Sends an HTTP error if the token is missing or invalid.
--- @return a string, the raw jwt token.
+-- @return the raw jwt token string, or nil if the token is invalid.
 --         or sends an error in the following cases:
 --             * 400 if the token is missing
 --             * 401 if the token is invalid
-function auth_get_jwt()
-    server.log("authentication: getting jwt token", server.loglevel.LOG_DEBUG)
-    local token_str = _get_jwt_token_from_header_params_or_cookie()
+function auth_get_jwt_raw()
+   local token = _token()
+   return token.raw
+end
 
-    if token_str == nil then
-        send_error(400, "Token missing")
-        return nil
+function _token()
+    local jwt_raw = _get_jwt_string_from_header_params_or_cookie()
+    local decoded = _decode_jwt(jwt_raw)
+    if decoded == nil then
+        return { raw = nil, decoded = nil }
+    else
+        return { raw = jwt_raw, decoded = decoded }
     end
+end
 
+--- Extracts a JSON web token from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
+-- Decodes token and validates claims exp, aud, iss.
+-- Sends an HTTP error if the token is missing or invalid.
+-- @return the result of server.decode_jwt token, or nil if the token is invalid.
+--         or sends an error in the following cases:
+--             * 400 if the token is missing
+--             * 401 if the token is invalid
+function auth_get_jwt_decoded()
+    local token = _token()
+    return token.decoded
+end
+
+function _decode_jwt(token_str)
     -- decode token
     server.log("authentication: decoding jwt token", server.loglevel.LOG_DEBUG)
-    local success, token = server.decode_jwt(token_str)
+    local success, decoded_token = server.decode_jwt(token_str)
     if not success then
         send_error(401, "Invalid token, unable to decode jwt.")
         return nil
     end
 
     -- check expiration date of token
-    local expiration_date = token["exp"]
+    local expiration_date = decoded_token["exp"]
     if expiration_date == nil then
         send_error(401, "Invalid 'exp' (expiration date) in token, token has no expiry date.")
         return nil
@@ -43,7 +62,7 @@ function auth_get_jwt()
     end
 
     -- check audience of token
-    local audience = token["aud"]
+    local audience = decoded_token["aud"]
     local expected_audience = "Sipi"
     if audience == nil or not table.contains(audience, expected_audience) then
         send_error(401, "Invalid 'aud' (audience) in token, expected: " .. expected_audience .. ".")
@@ -52,16 +71,15 @@ function auth_get_jwt()
 
     -- check issuer of token
     local token_issuer = env_dsp_api_host_port()
-    if token["iss"] ~= token_issuer then
+    if decoded_token["iss"] ~= token_issuer then
         send_error(401, "Invalid 'iss' (issuer) in token, expected: " .. token_issuer .. ".")
         return nil
     end
-
-    return token_str
+    return decoded_token
 end
 
 --- Extract the JSON web token from the HTTP request header or query parameter.
-function _get_jwt_token_from_header_params_or_cookie()
+function _get_jwt_string_from_header_params_or_cookie()
     local from_header = _get_jwt_token_from_auth_header()
     if from_header ~= nil then
         server.log("authentication: token found in authorization header", server.loglevel.LOG_DEBUG)
@@ -80,7 +98,8 @@ function _get_jwt_token_from_header_params_or_cookie()
         return from_cookie
     end
 
-    server.log("authentication: no token found", server.loglevel.LOG_DEBUG)
+    server.log("authentication: no token found in request", server.loglevel.LOG_DEBUG)
+    send_error(400, "Token missing")
     return nil
 end
 
@@ -137,15 +156,11 @@ end
 -- @return jwt token or nil if the cookie is missing or invalid.
 function _get_jwt_token_from_cookie()
     server.log("authentication: checking for jwt token in cookie header", server.loglevel.LOG_DEBUG)
-    local cookie_name = env_knora_authentication_cookie_name()
     local cookie_header_value = _get_cookie_header()
     if cookie_header_value == nil then
         return nil
     end
-    if (type(cookie_header_value) ~= "string") then
-        server.log("authentication: parameter 'cookie' for function 'get_session_id' is expected to be a string", server.loglevel.LOG_ERR)
-        return nil
-    end
+    local cookie_name = env_knora_authentication_cookie_name()
     local jwt_token = str_strip_prefix(cookie_header_value, cookie_name .. "=")
     return jwt_token
 end

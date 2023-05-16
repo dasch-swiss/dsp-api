@@ -21,7 +21,7 @@ if not success then
 end
 
 -- Check for a valid JSON Web Token.
-local token = auth_get_jwt()
+local token = auth_get_jwt_decoded()
 if token == nil then
     return
 end

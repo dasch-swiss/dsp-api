@@ -20,7 +20,7 @@ end
 -- Check that this request is really from Knora and that the user has permission
 -- to delete the file.
 
-local token = auth_get_jwt()
+local token = auth_get_jwt_decoded()
 
 if token == nil then
     return
