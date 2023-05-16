@@ -214,8 +214,11 @@ object Asset {
   def logString(asset: Asset) = s"asset:${asset.belongsToProject.shortcode}/${asset.internalFilename}"
 }
 
-case class AssetServiceLive(triplestoreService: TriplestoreService, sipiClient: IIIFService, ontologyRepo: OntologyRepo)
-    extends AssetService {
+final case class AssetServiceLive(
+  private val triplestoreService: TriplestoreService,
+  private val sipiClient: IIIFService,
+  private val ontologyRepo: OntologyRepo
+) extends AssetService {
   override def exportProjectAssets(project: KnoraProject, directory: Path, user: UserADM): Task[Path] = for {
     _ <- ZIO.logDebug(s"Exporting assets ${project.id}")
     assets <- determineAssets(project)
