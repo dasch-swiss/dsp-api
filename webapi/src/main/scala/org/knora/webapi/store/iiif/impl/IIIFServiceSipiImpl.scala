@@ -274,9 +274,9 @@ case class IIIFServiceSipiImpl(
 
     sipiRequest.catchAll {
       case badRequestException: BadRequestException => ZIO.fail(badRequestException)
-      case notFoundException: NotFoundException => ZIO.fail(notFoundException)
-      case sipiException: SipiException => ZIO.fail(sipiException)
-      case e: Exception => ZIO.logError(e.getMessage) *> ZIO.fail(SipiException("Failed to connect to Sipi", e))
+      case notFoundException: NotFoundException     => ZIO.fail(notFoundException)
+      case sipiException: SipiException             => ZIO.fail(sipiException)
+      case e: Exception                             => ZIO.logError(e.getMessage) *> ZIO.fail(SipiException("Failed to connect to Sipi", e))
     }
   }
 
