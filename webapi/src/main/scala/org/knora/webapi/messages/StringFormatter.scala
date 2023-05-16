@@ -1893,21 +1893,6 @@ class StringFormatter private (
     UsernameRegex.findFirstIn(value)
 
   /**
-   * Check that the string represents a valid username and escape any special characters.
-   *
-   * @param value    the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 username.
-   * @return the same string with escaped special characters.
-   */
-  @deprecated("Use validateAndEscapeUsername(String) instead.")
-  def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    validateAndEscapeUsername(value).getOrElse(errorFun)
-
-  def validateAndEscapeUsername(value: String): Option[String] =
-    UsernameRegex.findFirstIn(value).flatMap(toSparqlEncodedString)
-
-  /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
    *
    * @param projectID      the shortcode of the project that the resource belongs to.

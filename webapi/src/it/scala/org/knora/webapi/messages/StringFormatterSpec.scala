@@ -11,10 +11,8 @@ import java.util.UUID
 import dsp.errors.AssertionException
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 
 /**
  * Tests [[StringFormatter]].
@@ -1023,48 +1021,25 @@ class StringFormatterSpec extends CoreSpec {
 
     "validate username" in {
       // 4 - 50 characters long
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("abc", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername(
-          "123456789012345678901234567890123456789012345678901",
-          throw AssertionException("not valid")
-        )
-      }
+      assert(stringFormatter.validateUsername("abc").isEmpty)
+      assert(stringFormatter.validateUsername("123456789012345678901234567890123456789012345678901").isEmpty)
 
       // only contain alphanumeric, underscore, and dot
-      stringFormatter.validateAndEscapeUsername("a_2.3", throw AssertionException("not valid")) should be("a_2.3")
-
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("a_2.3-4", throw AssertionException("not valid"))
-      }
+      stringFormatter.validateUsername("a_2.3") should be(Some("a_2.3"))
+      assert(stringFormatter.validateUsername("a_2.3-4").isEmpty)
 
       // not allow @
       assert(stringFormatter.validateUsername("donald.duck@example.com").isEmpty)
 
       // Underscore and dot can't be at the end or start of a username
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("_username", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("username_", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername(".username", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("username.", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateUsername("_username").isEmpty)
+      assert(stringFormatter.validateUsername("username_").isEmpty)
+      assert(stringFormatter.validateUsername(".username").isEmpty)
+      assert(stringFormatter.validateUsername("username.").isEmpty)
 
       // Underscore or dot can't be used multiple times in a row
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("user__name", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("user..name", throw AssertionException("not valid"))
-      }
-
+      assert(stringFormatter.validateUsername("user__name").isEmpty)
+      assert(stringFormatter.validateUsername("user..name").isEmpty)
     }
 
     "validate email" in {
