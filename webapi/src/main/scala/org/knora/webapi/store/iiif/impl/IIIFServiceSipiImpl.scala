@@ -294,8 +294,11 @@ final case class IIIFServiceSipiImpl(
       downloaded <- ZIO.scoped {
                       sendRequest(request)
                         .filterOrElseWith(code(_) == 200)(it => ZIO.fail(new Exception(s"${code(it)} code from sipi")))
-                        .flatMap(r => saveToFile(asset, r.getEntity, targetDir))
-                        .tapError(e => ZIO.logWarning(s"Failed downloading ${Asset.logString(asset)}: ${e.getMessage}"))
+                        .flatMap(response => saveToFile(asset, response.getEntity, targetDir))
+                        .tapBoth(
+                          e => ZIO.logWarning(s"Failed downloading ${Asset.logString(asset)}: ${e.getMessage}"),
+                          _.toAbsolutePath.flatMap(p => ZIO.logInfo(s"Downloaded ${Asset.logString(asset)} to $p"))
+                        )
                         .fold(_ => None, Some(_))
                     }
     } yield downloaded
@@ -312,7 +315,6 @@ final case class IIIFServiceSipiImpl(
     for {
       out <- ZScopedJavaIoStreams.fileOutputStream(targetFile)
       _   <- ZIO.attemptBlocking(entity.getContent.transferTo(out))
-      _   <- ZIO.logInfo(s"Downloaded ${Asset.logString(asset)} to ${targetFile.toFile.toPath.toAbsolutePath}")
     } yield targetFile
   }
 }
