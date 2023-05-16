@@ -46,11 +46,10 @@ local function get_permission_on_file(shortcode, file_name, jwt_token)
     local webapi_hostname = get_api_hostname()
     local webapi_port = get_api_port()
     local api_url = get_api_url(webapi_hostname, webapi_port, shortcode, file_name)
-    log("get_permission_on_file - api_url: " .. api_url .. " jwt:" .. jwt_token, server.loglevel.LOG_DEBUG)
+    log("get_permission_on_file - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
     -- request the permissions on the image from DSP-API
-    local auth_header = { Authorization = "Bearer " .. jwt_token }
-    local success, result = server.http("GET", api_url, auth_header, 5000)
+    local success, result = server.http("GET", api_url, { Authorization = "Bearer " .. jwt_token }, 5000)
     if not success then
         log("get_permission_on_file - server.http() failed: " .. result, server.loglevel.LOG_ERR)
         return 'deny'

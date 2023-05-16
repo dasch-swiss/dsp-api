@@ -28,3 +28,29 @@ function str_strip_prefix(str, prefix)
         return str
     end
 end
+
+--- Transforms a table into a string.
+-- @param tbl the table to transform.
+-- @return a string representation of the table.
+function tableToString(tbl)
+    local str = "{"
+    local isFirst = true
+
+    for key, value in pairs(tbl) do
+        if not isFirst then
+            str = str .. ", "
+        end
+
+        if type(value) == "table" then
+            str = str .. key .. "=" .. tableToString(value)
+        else
+            str = str .. key .. "=" .. tostring(value)
+        end
+
+        isFirst = false
+    end
+
+    str = str .. "}"
+
+    return str
+end
