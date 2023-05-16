@@ -173,14 +173,13 @@ final case class ProjectsRouteADM()(
   private def deleteProject(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
       delete { requestContext =>
-        val projectIri = ProjectIri.make(value).getOrElse(throw BadRequestException(s"Invalid Project IRI $value"))
-        val projectStatus =
-          ProjectStatus.make(false).getOrElse(throw BadRequestException(s"Invalid Project Status"))
-        val projectUpdatePayload = ProjectUpdatePayloadADM(status = Some(projectStatus))
         val requestTask = for {
-          requestingUser <- Authenticator.getUserADM(requestContext)
-          uuid           <- RouteUtilZ.randomUuid()
-        } yield ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
+          iri    <- ProjectIri.make(value).toZIO.orElseFail(BadRequestException(s"Invalid Project IRI $value"))
+          status <- ProjectStatus.make(false).toZIO.orElseFail(BadRequestException(s"Invalid Project Status"))
+          payload = ProjectUpdatePayloadADM(status = Some(status))
+          user   <- Authenticator.getUserADM(requestContext)
+          uuid   <- RouteUtilZ.randomUuid()
+        } yield ProjectChangeRequestADM(iri, payload, user, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
     }

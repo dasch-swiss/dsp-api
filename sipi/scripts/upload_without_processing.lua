@@ -62,7 +62,7 @@ for file_index, file_params in pairs(server.uploads) do
     local this_file_upload_data = {
         filename = filename,
         checksum = checksum,
-        checksumAlgorithm = "sha256"
+        algorithm = "sha256"
     }
     file_upload_data[file_index] = this_file_upload_data
 end

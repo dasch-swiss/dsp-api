@@ -7,7 +7,7 @@
 # - max. 36 frames per matrix
 # - one matrix file corresponds to 6 minutes of film
 
-if [ "${DEBUG:false}" == true ]; then
+if [ "${DEBUG:-false}" == true ]; then
   set -ex
 else
   set -e

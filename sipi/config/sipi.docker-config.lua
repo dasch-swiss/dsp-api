@@ -58,7 +58,7 @@ sipi = {
     --
     -- Maximal size of a post request
     --
-    max_post_size = '250M',
+    max_post_size = '2G',
 
     --
     -- indicates the path to the root of the image directory. Depending on the settings of the variable
@@ -205,5 +205,10 @@ routes = {
         method = 'GET',
         route = '/clean_temp_dir',
         script = 'clean_temp_dir.lua'
+    },
+    {
+        method = 'GET',
+        route = '/migrate_files_into_new_structure',
+        script = 'migrate_files_into_new_structure.lua'
     }
 }
