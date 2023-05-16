@@ -72,30 +72,4 @@ object ZScopedJavaIoStreams {
     def acquire = ZIO.attempt(Files.newOutputStream(path))
     ZIO.acquireRelease(acquire)(release).flatMap(os => bufferedOutputStream(os))
   }
-
-  /**
-   * Creates a [[PipedInputStream]] so that it is connected to the piped output stream `out`.
-   * @param out The piped output stream to connect to.
-   * @return The managed piped input stream.
-   */
-  def pipedInputStream(out: PipedOutputStream): ZIO[Any with Scope, Throwable, PipedInputStream] = {
-    def acquire = ZIO.attempt(new PipedInputStream(out))
-    ZIO.acquireRelease(acquire)(release)
-  }
-
-  /**
-   * Creates a piped output stream that is not yet connected to a
-   * piped input stream. It must be connected to a piped input stream,
-   * either by the receiver or the sender, before being used.
-   */
-  def pipedOutStream(): ZIO[Any with Scope, Throwable, PipedOutputStream] = {
-    def acquire = ZIO.attempt(new PipedOutputStream())
-    ZIO.acquireRelease(acquire)(release)
-  }
-
-  /**
-   * Creates a piped output stream that is connected to a piped input stream.
-   */
-  def outputStreamPipedToInputStream(): ZIO[Any with Scope, Throwable, (PipedInputStream, PipedOutputStream)] =
-    pipedOutStream().flatMap(out => pipedInputStream(out).map((_, out)))
 }
