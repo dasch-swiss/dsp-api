@@ -42,13 +42,14 @@ end
 -- This function gets the permissions defined on a file by requesting it from
 -- the DSP-API.
 -------------------------------------------------------------------------------
-local function get_permission_on_file(shortcode, file_name, jwt_raw)
+local function get_permission_on_file(shortcode, file_name)
     local webapi_hostname = get_api_hostname()
     local webapi_port = get_api_port()
     local api_url = get_api_url(webapi_hostname, webapi_port, shortcode, file_name)
     log("get_permission_on_file - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
     -- request the permissions on the image from DSP-API
+    local jwt_raw = auth_get_jwt_raw()
     local success, result = server.http("GET", api_url, { Authorization = "Bearer " .. jwt_raw}, 5000)
     if not success then
         log("get_permission_on_file - server.http() failed: " .. result, server.loglevel.LOG_ERR)
@@ -118,8 +119,7 @@ function pre_flight(prefix, identifier, cookie)
                 server.loglevel.LOG_DEBUG)
     end
 
-    local jwt_raw = auth_get_jwt_raw()
-    local permission_info = get_permission_on_file(prefix, identifier, jwt_raw)
+    local permission_info = get_permission_on_file(prefix, identifier)
     local permission_code = permission_info.permissionCode
     log("pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
@@ -235,8 +235,7 @@ function file_pre_flight(identifier, cookie)
         return "allow", filepath
     end
 
-    local jwt_raw = auth_get_jwt_raw()
-    local permission_info = get_permission_on_file(shortcode, file_name, jwt_raw)
+    local permission_info = get_permission_on_file(shortcode, file_name)
     local permission_code = permission_info.permissionCode
     log("file_pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
