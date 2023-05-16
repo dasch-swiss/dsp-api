@@ -27,6 +27,7 @@ import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
 import zio.nio.file.Path
+
 import java.util
 
 import dsp.errors.BadRequestException
@@ -51,10 +52,10 @@ import org.knora.webapi.util.ZScopedJavaIoStreams
  * @param httpClient  The HTTP Client
  */
 case class IIIFServiceSipiImpl(
-                                appConfig: AppConfig,
-                                jwt: JwtService,
-                                httpClient: CloseableHttpClient
-                              ) extends IIIFService {
+  appConfig: AppConfig,
+  jwt: JwtService,
+  httpClient: CloseableHttpClient
+) extends IIIFService {
 
   private val sipiHost: HttpHost =
     new HttpHost(appConfig.sipi.internalHost, appConfig.sipi.internalPort, appConfig.sipi.internalProtocol)
@@ -92,8 +93,8 @@ case class IIIFServiceSipiImpl(
    * @return a [[SuccessResponseV2]].
    */
   def moveTemporaryFileToPermanentStorage(
-                                           moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
-                                         ): Task[SuccessResponseV2] = {
+    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+  ): Task[SuccessResponseV2] = {
 
     // create the JWT token with the necessary permission
     val jwtToken: Task[String] = jwt.createToken(
@@ -271,14 +272,12 @@ case class IIIFServiceSipiImpl(
       case None           => ()
     }
 
-    sipiRequest.catchAll(error =>
-      error match {
-        case badRequestException: BadRequestException => ZIO.fail(badRequestException)
-        case notFoundException: NotFoundException     => ZIO.fail(notFoundException)
-        case sipiException: SipiException             => ZIO.fail(sipiException)
-        case e: Exception                             => ZIO.logError(e.getMessage) *> ZIO.fail(SipiException("Failed to connect to Sipi", e))
-      }
-    )
+    sipiRequest.catchAll {
+      case badRequestException: BadRequestException => ZIO.fail(badRequestException)
+      case notFoundException: NotFoundException => ZIO.fail(notFoundException)
+      case sipiException: SipiException => ZIO.fail(sipiException)
+      case e: Exception => ZIO.logError(e.getMessage) *> ZIO.fail(SipiException("Failed to connect to Sipi", e))
+    }
   }
 
   override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Path] =

@@ -38,8 +38,8 @@ trait IIIFService {
    * @return a [[SuccessResponseV2]].
    */
   def moveTemporaryFileToPermanentStorage(
-                                           moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
-                                         ): Task[SuccessResponseV2]
+    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+  ): Task[SuccessResponseV2]
 
   /**
    * Asks Sipi to delete a temporary file.

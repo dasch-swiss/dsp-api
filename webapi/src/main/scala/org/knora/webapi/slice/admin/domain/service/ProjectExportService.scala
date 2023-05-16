@@ -20,6 +20,7 @@ import zio.ZLayer
 import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
+
 import java.io.OutputStream
 import scala.collection.mutable
 
@@ -236,8 +237,6 @@ object AssetServiceLive {
   val layer: URLayer[OntologyRepo with IIIFService with TriplestoreService, AssetServiceLive] =
     ZLayer.fromFunction(AssetServiceLive.apply _)
 }
-
-
 
 object ProjectExportServiceLive {
   val layer: URLayer[AssetService with ProjectADMService with TriplestoreService, ProjectExportService] =
