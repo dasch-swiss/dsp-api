@@ -24,8 +24,7 @@ import java.io.OutputStream
 import scala.collection.mutable
 
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBaseOntologyIri
-import org.knora.webapi.messages.twirl
-import org.knora.webapi.messages.twirl.queries.sparql._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.twirl.queries.sparql.admin.txt._
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
@@ -33,12 +32,13 @@ import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
 @accessible
 trait ProjectExportService {
-  def exportProject(project: KnoraProject): Task[Path]
+  def exportProject(project: KnoraProject, user: UserADM): Task[Path]
 
   /**
    * Exports a project to a file.
@@ -183,37 +183,38 @@ final case class ProjectExportServiceLive(
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
 
-  override def exportProject(project: KnoraProject): Task[Path] = ZIO.scoped {
+  override def exportProject(project: KnoraProject, user: UserADM): Task[Path] = ZIO.scoped {
     for {
       exportDir  <- Files.createTempDirectory(Some(s"export-${project.shortname}"), fileAttributes = Nil)
       collectDir <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
       _          <- exportProjectTriples(project, trigExportFile(project, collectDir))
-      _          <- exportProjectAssets(project, collectDir)
+      _          <- exportProjectAssets(project, collectDir, user)
       zipped     <- ZipUtility.zipFolder(collectDir, exportDir)
     } yield zipped
   }
 
-  private def exportProjectAssets(project: KnoraProject, tempDir: Path) = {
+  private def exportProjectAssets(project: KnoraProject, tempDir: Path, user: UserADM): ZIO[Any, Throwable, Path] = {
     val exportedAssetsDir = tempDir / "assets"
     for {
       _ <- Files.createDirectory(exportedAssetsDir)
-      _ <- assetService.exportProjectAssets(project, exportedAssetsDir)
+      _ <- assetService.exportProjectAssets(project, exportedAssetsDir, user)
     } yield exportedAssetsDir
   }
 }
 
 trait AssetService {
-  def exportProjectAssets(project: KnoraProject, tempDir: Path): Task[Path]
+  def exportProjectAssets(project: KnoraProject, tempDir: Path, user: UserADM): Task[Path]
 }
+case class Asset(belongsToProject: KnoraProject, internalFilename: String)
 
-case class AssetServiceLive(triplestoreService: TriplestoreService, ontologyRepo: OntologyRepo) extends AssetService {
-  override def exportProjectAssets(project: KnoraProject, directory: Path): Task[Path] = for {
+case class AssetServiceLive(triplestoreService: TriplestoreService, sipiClient: IIIFService, ontologyRepo: OntologyRepo)
+    extends AssetService {
+  override def exportProjectAssets(project: KnoraProject, directory: Path, user: UserADM): Task[Path] = for {
     _      <- ZIO.logDebug(s"Exporting assets ${project.id}")
     assets <- determineAssets(project)
-    _      <- ZIO.foreachDiscard(assets)(downloadAsset(_, directory))
+    _      <- ZIO.foreachDiscard(assets)((asset: Asset) => downloadAsset(asset, directory, user))
   } yield directory
 
-  case class Asset(belongsToIri: InternalIri, internalFilename: String)
   private def determineAssets(project: KnoraProject): Task[List[Asset]] = {
     val projectGraph = ProjectADMService.projectDataNamedGraphV2(project)
     for {
@@ -223,17 +224,20 @@ case class AssetServiceLive(triplestoreService: TriplestoreService, ontologyRepo
       result         <- triplestoreService.sparqlHttpSelect(query)
       bindings        = result.results.bindings
       _              <- ZIO.logDebug(s"Found ${bindings.size} assets for project ${project.id}")
-      assets          = bindings.flatMap(row => row.rowMap.get("internalFilename")).map(Asset(project.id, _)).toList
+      assets          = bindings.flatMap(row => row.rowMap.get("internalFilename")).map(Asset(project, _)).toList
     } yield assets
   }
 
-  private def downloadAsset(asset: Asset, tempDir: Path): Task[Path] =
-    ZIO.logInfo(asset.toString) *> ZIO.succeed(tempDir)
+  private def downloadAsset(asset: Asset, tempDir: Path, user: UserADM): Task[Path] =
+    sipiClient.downloadAsset(asset, tempDir, user)
 }
+
 object AssetServiceLive {
-  val layer: URLayer[OntologyRepo with TriplestoreService, AssetServiceLive] =
+  val layer: URLayer[OntologyRepo with IIIFService with TriplestoreService, AssetServiceLive] =
     ZLayer.fromFunction(AssetServiceLive.apply _)
 }
+
+
 
 object ProjectExportServiceLive {
   val layer: URLayer[AssetService with ProjectADMService with TriplestoreService, ProjectExportService] =

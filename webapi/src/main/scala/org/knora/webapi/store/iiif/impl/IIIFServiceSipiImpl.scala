@@ -6,8 +6,10 @@
 package org.knora.webapi.store.iiif.impl
 
 import org.apache.http.Consts
+import org.apache.http.HttpEntity
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequest
+import org.apache.http.HttpResponse
 import org.apache.http.NameValuePair
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
@@ -24,19 +26,22 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
-
+import zio.nio.file.Path
 import java.util
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.JwtService
+import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.domain._
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
+import org.knora.webapi.util.ZScopedJavaIoStreams
 
 /**
  * Makes requests to Sipi.
@@ -46,10 +51,13 @@ import org.knora.webapi.util.SipiUtil
  * @param httpClient  The HTTP Client
  */
 case class IIIFServiceSipiImpl(
-  appConfig: AppConfig,
-  jwt: JwtService,
-  httpClient: CloseableHttpClient
-) extends IIIFService {
+                                appConfig: AppConfig,
+                                jwt: JwtService,
+                                httpClient: CloseableHttpClient
+                              ) extends IIIFService {
+
+  private val sipiHost: HttpHost =
+    new HttpHost(appConfig.sipi.internalHost, appConfig.sipi.internalPort, appConfig.sipi.internalProtocol)
 
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.
@@ -84,8 +92,8 @@ case class IIIFServiceSipiImpl(
    * @return a [[SuccessResponseV2]].
    */
   def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
-  ): Task[SuccessResponseV2] = {
+                                           moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+                                         ): Task[SuccessResponseV2] = {
 
     // create the JWT token with the necessary permission
     val jwtToken: Task[String] = jwt.createToken(
@@ -272,6 +280,39 @@ case class IIIFServiceSipiImpl(
       }
     )
   }
+
+  override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Path] =
+    ZIO.scoped {
+      for {
+        jwtToken <- jwt.createToken(user.id)
+        url       = s"/${asset.belongsToProject.shortcode}/${asset.internalFilename}/file"
+        request   = new HttpGet(url)
+        _         = request.addHeader("Authorization", s"Bearer $jwtToken")
+        _        <- ZIO.logInfo(s"Downloading asset ${asset.internalFilename} from $url")
+        response <- httpGet(request)
+        _ <-
+          ZIO
+            .fail(new Exception(s"Failed downloading ${asset.internalFilename} from $url: ${response.getStatusLine}"))
+            .when(response.getStatusLine.getStatusCode != 200)
+        downloaded <-
+          saveToFile(asset, response.getEntity, targetDir)
+      } yield downloaded
+    }
+
+  private def httpGet(request: HttpGet): ZIO[Scope, Throwable, HttpResponse] = {
+    def acquire                                  = ZIO.attemptBlocking(httpClient.execute(sipiHost, request))
+    def release(response: CloseableHttpResponse) = ZIO.attempt(response.close()).logError.ignore
+    ZIO.acquireRelease(acquire)(release)
+  }
+
+  private def saveToFile(asset: Asset, entity: HttpEntity, targetDir: Path) = {
+    val targetFile = targetDir / asset.internalFilename
+    for {
+      out <- ZScopedJavaIoStreams.fileOutputStream(targetFile)
+      _   <- ZIO.attemptBlocking(entity.getContent.transferTo(out))
+      _   <- ZIO.logInfo(s"Downloaded asset ${asset.internalFilename} to ${targetFile.toFile.toPath.toAbsolutePath}")
+    } yield targetFile
+  }
 }
 
 object IIIFServiceSipiImpl {
@@ -327,7 +368,7 @@ object IIIFServiceSipiImpl {
   private def release(httpClient: CloseableHttpClient): UIO[Unit] =
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
-  val layer: URLayer[AppConfig with JwtService, IIIFService] =
+  val layer: URLayer[AppConfig with JwtService, IIIFServiceSipiImpl] =
     ZLayer.scoped {
       for {
         config     <- ZIO.service[AppConfig]

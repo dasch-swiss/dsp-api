@@ -7,7 +7,9 @@ package org.knora.webapi.store.iiif.api
 
 import zio._
 import zio.macros.accessible
+import zio.nio.file.Path
 
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -16,6 +18,7 @@ import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanent
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.slice.admin.domain.service.Asset
 
 @accessible
 trait IIIFService {
@@ -35,8 +38,8 @@ trait IIIFService {
    * @return a [[SuccessResponseV2]].
    */
   def moveTemporaryFileToPermanentStorage(
-    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
-  ): Task[SuccessResponseV2]
+                                           moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+                                         ): Task[SuccessResponseV2]
 
   /**
    * Asks Sipi to delete a temporary file.
@@ -57,4 +60,6 @@ trait IIIFService {
    * Tries to access the IIIF Service.
    */
   def getStatus(): Task[IIIFServiceStatusResponse]
+
+  def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Path]
 }

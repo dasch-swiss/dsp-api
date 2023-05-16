@@ -238,7 +238,7 @@ final case class ProjectsADMRestServiceLive(
     projectIri <-
       IriIdentifier.fromString(projectIri).toZIO.orElseFail(BadRequestException(s"Invalid project IRI: $projectIri"))
     project <- projectRepo.findById(projectIri).someOrFail(NotFoundException(s"Project $projectIri not found."))
-    zipFile <- projectExportService.exportProject(project)
+    zipFile <- projectExportService.exportProject(project, requestingUser)
   } yield ProjectExportResponse(zipFile.toString)
 }
 

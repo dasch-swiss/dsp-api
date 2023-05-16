@@ -118,6 +118,7 @@ import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.slice.admin.domain.service.AssetService
 import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
+
 object LayersTest {
 
   /**
