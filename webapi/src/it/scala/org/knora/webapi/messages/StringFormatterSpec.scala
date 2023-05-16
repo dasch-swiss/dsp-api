@@ -1041,9 +1041,7 @@ class StringFormatterSpec extends CoreSpec {
       }
 
       // not allow @
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateUsername("donald.duck@example.com", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateUsername("donald.duck@example.com").isEmpty)
 
       // Underscore and dot can't be at the end or start of a username
       an[AssertionException] should be thrownBy {

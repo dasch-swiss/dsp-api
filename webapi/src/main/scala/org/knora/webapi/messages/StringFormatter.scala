@@ -1887,14 +1887,8 @@ class StringFormatter private (
    * Check that the string represents a valid username.
    *
    * @param value    the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 username.
    * @return the same string.
    */
-  @deprecated("Use validateUsername(String) instead.")
-  def validateUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    validateUsername(value).getOrElse(errorFun)
-
   def validateUsername(value: String): Option[String] =
     UsernameRegex.findFirstIn(value)
 

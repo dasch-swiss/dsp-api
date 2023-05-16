@@ -1998,14 +1998,8 @@ final case class UsersResponderADMLive(
   ): Task[Boolean] =
     maybeUsername match {
       case Some(username) =>
-        if (maybeCurrent.contains(username.value)) {
-          ZIO.succeed(true)
-        } else {
-          stringFormatter.validateUsername(
-            username.value,
-            throw BadRequestException(s"The username '${username.value}' contains invalid characters")
-          )
-
+        if (maybeCurrent.contains(username.value)) ZIO.succeed(true)
+        else
           for {
             askString <- ZIO.attempt(
                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -2014,7 +2008,6 @@ final case class UsersResponderADMLive(
                          )
             checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
           } yield checkUserExistsResponse.result
-        }
 
       case None => ZIO.succeed(false)
     }
