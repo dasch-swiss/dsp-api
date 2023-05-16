@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
 import scala.collection.mutable
-import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
@@ -54,7 +53,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
-import org.knora.webapi.messages.util.rdf.RdfInputStreamSource
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.RdfStringSource
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -63,6 +61,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
 import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreException
@@ -71,7 +70,7 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
 import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
-import org.knora.webapi.util.ZScopedJavaIoStreams.outputStreamPipedToInputStream
+import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
@@ -231,35 +230,17 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-    ZIO.scoped {
-      for {
-        inOut <- outputStreamPipedToInputStream()
-        ds    <- datasetRef.get
-        _ <- ZIO.attemptBlocking {
-               val readFromModel = new Thread {
-                 override def run(): Unit = {
-                   ds.begin(ReadWrite.READ)
-                   try {
-                     ds.getNamedModel(graphIri).write(inOut._2, "TURTLE")
-                   } finally {
-                     ds.end()
-                   }
-                 }
-               }
-               val writeToFile = new Thread {
-                 override def run(): Unit =
-                   rdfFormatUtil.turtleToQuadsFile(RdfInputStreamSource(inOut._1), graphIri, outputFile, outputFormat)
-               }
-               readFromModel.start()
-               writeToFile.start()
-               val timeout = 10.minutes
-               readFromModel.join(timeout.toMillis)
-               writeToFile.join(timeout.toMillis)
-             }
-      } yield FileWrittenResponse()
-    }
+  ): Task[FileWrittenResponse] = ZIO.scoped {
+    for {
+      fos <- fileOutputStream(outputFile)
+      ds  <- datasetRef.get
+      lang = JenaFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
+      _ <- ZIO.attemptBlocking {
+             ds.begin(ReadWrite.READ)
+             try { ds.getNamedModel(graphIri).write(fos, lang.getName) }
+             finally { ds.end() }
+           }
+    } yield FileWrittenResponse()
   }
 
   override def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = ZIO.scoped {
