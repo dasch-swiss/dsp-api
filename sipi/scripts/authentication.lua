@@ -6,9 +6,10 @@ require "send_response"
 require "strings"
 require "util"
 
---- Extracts a JSON web token from the HTTP request header or from the query string.
---- Decodes and validates this token. Sends an HTTP error if the token is missing or invalid.
--- @return a table representing the token.
+--- Extracts a JSON web token from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
+-- Decodes token and validates claims exp, aud, iss.
+-- Sends an HTTP error if the token is missing or invalid.
+-- @return a string, the raw jwt token.
 --         or sends an error in the following cases:
 --             * 400 if the token is missing
 --             * 401 if the token is invalid
