@@ -17,6 +17,7 @@ import scala.util.Try
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil.rdfFormatToJenaParsingLang
 
 /**
  * Wraps an [[RdfStreamProcessor]] in a [[jena.riot.system.StreamRDF]].
@@ -66,14 +67,6 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
   override def getRdfModelFactory: RdfModelFactory = modelFactory
 
   override def getRdfNodeFactory: RdfNodeFactory = nodeFactory
-
-  private def rdfFormatToJenaParsingLang(rdfFormat: NonJsonLD): jena.riot.Lang =
-    rdfFormat match {
-      case Turtle => jena.riot.RDFLanguages.TURTLE
-      case TriG   => jena.riot.RDFLanguages.TRIG
-      case RdfXml => jena.riot.RDFLanguages.RDFXML
-      case NQuads => jena.riot.RDFLanguages.NQUADS
-    }
 
   override def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
     val jenaModel: JenaModel = modelFactory.makeEmptyModel
@@ -221,4 +214,14 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
       case Failure(ex) => throw ex
     }
   }
+}
+
+object JenaFormatUtil {
+  def rdfFormatToJenaParsingLang(rdfFormat: NonJsonLD): jena.riot.Lang =
+    rdfFormat match {
+      case Turtle => jena.riot.RDFLanguages.TURTLE
+      case TriG   => jena.riot.RDFLanguages.TRIG
+      case RdfXml => jena.riot.RDFLanguages.RDFXML
+      case NQuads => jena.riot.RDFLanguages.NQUADS
+    }
 }
