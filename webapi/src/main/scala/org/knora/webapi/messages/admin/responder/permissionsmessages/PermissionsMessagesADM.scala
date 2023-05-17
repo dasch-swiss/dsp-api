@@ -44,7 +44,7 @@ case class CreateAdministrativePermissionAPIRequestADM(
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   id match {
-    case Some(iri) => sf.validatePermissionIRI(iri)
+    case Some(iri) => sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
     case None      => None
   }
 
@@ -85,7 +85,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   id match {
-    case Some(iri) => sf.validatePermissionIRI(iri)
+    case Some(iri) => sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
     case None      => None
   }
 
@@ -388,12 +388,7 @@ case class AdministrativePermissionForIriGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    administrativePermissionIri,
-    throw BadRequestException(s"Invalid permission IRI $administrativePermissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(administrativePermissionIri)
 }
 
 /**
@@ -604,12 +599,7 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    defaultObjectAccessPermissionIri,
-    throw BadRequestException(s"Invalid permission IRI $defaultObjectAccessPermissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(defaultObjectAccessPermissionIri)
 }
 
 /**
@@ -724,12 +714,7 @@ case class DefaultObjectAccessPermissionCreateRequestADM(
  */
 case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    permissionIri,
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
 }
 
 /**
@@ -742,12 +727,7 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
  */
 case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    permissionIri,
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

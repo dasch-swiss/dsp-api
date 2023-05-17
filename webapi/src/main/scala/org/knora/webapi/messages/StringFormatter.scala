@@ -1854,15 +1854,12 @@ class StringFormatter private (
    * Given the permission IRI, checks if it is in a valid format.
    *
    * @param iri the permission's IRI.
-   * @return the IRI of the list.
+   * @return either the IRI or the error message.
    */
-  @deprecated("Use validatePermissionIri(IRI) instead.")
-  def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    validatePermissionIri(iri).getOrElse(errorFun)
-
-  def validatePermissionIri(iri: IRI): Option[IRI] =
-    if (isKnoraPermissionIriStr(iri)) Some(iri)
-    else None
+  def validatePermissionIri(iri: IRI): Either[String, IRI] =
+    if (isKnoraPermissionIriStr(iri) && isUuidSupported(iri)) Right(iri)
+    else if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
+    else Left(s"Invalid permission IRI: $iri.")
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
@@ -2136,18 +2133,6 @@ class StringFormatter private (
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
     if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidSupported(iri.toString)) {
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
-    }
-
-  /**
-   * Validates permission IRI
-   *
-   * @param iri to be validated.
-   */
-  def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) {
-      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
-    } else {
-      validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI $iri is given."))
     }
 
   /**
