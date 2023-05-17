@@ -182,27 +182,25 @@ class KnoraSipiIntegrationV1ITSpec
     }
   }
 
+  private def getLoginToken() = {
+    val params =
+      s"""
+         |{
+         |    "email": "$userEmail",
+         |    "password": "$password"
+         |}
+              """.stripMargin
+    val loginResponse: HttpResponse = singleAwaitingRequest(
+      Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+    )
+    assert(loginResponse.status == StatusCodes.OK)
+    Await.result(Unmarshal(loginResponse.entity).to[LoginResponse], 1.seconds).token
+  }
+
   "Knora and Sipi" should {
-    var loginToken: String = ""
+    lazy val loginToken: String = getLoginToken()
 
     "log in as a Knora user" in {
-      /* Correct username and correct password */
-
-      val params =
-        s"""
-           |{
-           |    "email": "$userEmail",
-           |    "password": "$password"
-           |}
-                """.stripMargin
-
-      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK)
-
-      val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
-      loginToken = lr.token
-
       loginToken.nonEmpty should be(true)
     }
 
