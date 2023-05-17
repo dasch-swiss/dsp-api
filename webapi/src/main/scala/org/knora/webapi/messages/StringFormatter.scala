@@ -1803,14 +1803,8 @@ class StringFormatter private (
    * Check that the supplied IRI represents a valid project IRI.
    *
    * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 project IRI.
    * @return the same string but escaped.
    */
-  @deprecated("Use validateAndEscapeProjectIri(IRI) instead.")
-  def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    validateAndEscapeProjectIri(iri).getOrElse(errorFun)
-
   def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
     if (isKnoraProjectIriStr(iri)) toSparqlEncodedString(iri)
     else None

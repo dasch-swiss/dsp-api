@@ -971,16 +971,13 @@ class StringFormatterSpec extends CoreSpec {
   "The StringFormatter class for User and Project" should {
     "validate project IRI" in {
       stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.incunabulaProject.id,
-        throw AssertionException("not valid")
+        SharedTestDataADM.incunabulaProject.id
       ) shouldBe SharedTestDataADM.incunabulaProject.id
       stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.systemProject.id,
-        throw AssertionException("not valid")
+        SharedTestDataADM.systemProject.id
       ) shouldBe SharedTestDataADM.systemProject.id
       stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.defaultSharedOntologiesProject.id,
-        throw AssertionException("not valid")
+        SharedTestDataADM.defaultSharedOntologiesProject.id
       ) shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
     }
 

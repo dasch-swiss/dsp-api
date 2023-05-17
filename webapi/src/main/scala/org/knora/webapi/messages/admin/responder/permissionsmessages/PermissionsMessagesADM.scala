@@ -91,7 +91,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
 
   def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
 
-  sf.validateAndEscapeProjectIri(forProject, throw BadRequestException(s"Invalid project IRI $forProject"))
+  sf.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
 
   forGroup match {
     case Some(iri: IRI) =>
@@ -244,7 +244,7 @@ case class PermissionsForProjectGetRequestADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  stringFormatter.validateAndEscapeProjectIri(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -363,7 +363,7 @@ case class AdministrativePermissionsForProjectGetRequestADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  stringFormatter.validateAndEscapeProjectIri(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -403,7 +403,7 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupI
     extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  stringFormatter.validateAndEscapeProjectIri(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -511,7 +511,7 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  stringFormatter.validateAndEscapeProjectIri(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -542,7 +542,7 @@ case class DefaultObjectAccessPermissionGetRequestADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  stringFormatter.validateAndEscapeProjectIri(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -619,7 +619,7 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  stringFormatter.validateAndEscapeProjectIri(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -658,7 +658,7 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  stringFormatter.validateAndEscapeProjectIri(projectIri).getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
