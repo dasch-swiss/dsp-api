@@ -9,7 +9,6 @@ import zio._
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search.FilterPattern
-import org.knora.webapi.messages.util.search.LuceneQueryPattern
 import org.knora.webapi.messages.util.search.OrderCriterion
 import org.knora.webapi.messages.util.search.QueryPattern
 import org.knora.webapi.messages.util.search.StatementPattern
@@ -56,12 +55,4 @@ trait WhereTransformer {
    * @return the result of the transformation.
    */
   def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.succeed(Seq(filterPattern))
-
-  /**
-   * Transforms a [[LuceneQueryPattern]] into one or more query patterns.
-   *
-   * @param luceneQueryPattern the query pattern to be transformed.
-   * @return the transformed pattern.
-   */
-  def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]]
 }
