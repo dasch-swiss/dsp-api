@@ -197,16 +197,15 @@ final case class AuthenticatorLive(
     val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
     for {
-      userADM      <- getUserADMThroughCredentialsV2(credentials)
-      userProfile   = userADM.asUserProfileV1
-      cookieDomain  = Some(appConfig.cookieDomain)
-      sessionToken <- jwtService.createToken(userProfile.userData.user_id.get)
+      userADM     <- getUserADMThroughCredentialsV2(credentials)
+      cookieDomain = Some(appConfig.cookieDomain)
+      jwt         <- jwtService.createJwt(userADM)
       httpResponse = HttpResponse(
                        headers = List(
                          headers.`Set-Cookie`(
                            HttpCookie(
                              calculateCookieName(),
-                             sessionToken,
+                             jwt.jwtString,
                              domain = cookieDomain,
                              path = Some("/"),
                              httpOnly = true
@@ -219,8 +218,8 @@ final case class AuthenticatorLive(
                          JsObject(
                            "status"      -> JsNumber(0),
                            "message"     -> JsString("credentials are OK"),
-                           "sid"         -> JsString(sessionToken),
-                           "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                           "sid"         -> JsString(jwt.jwtString),
+                           "userProfile" -> userADM.asUserProfileV1.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
                          ).compactPrint
                        )
                      )
@@ -239,14 +238,14 @@ final case class AuthenticatorLive(
       _           <- authenticateCredentialsV2(credentials = Some(credentials))
       userADM     <- getUserByIdentifier(credentials.identifier)
       cookieDomain = Some(appConfig.cookieDomain)
-      token       <- jwtService.createToken(userADM.id)
+      jwtString   <- jwtService.createJwt(userADM).map(_.jwtString)
 
       httpResponse = HttpResponse(
                        headers = List(
                          headers.`Set-Cookie`(
                            HttpCookie(
                              calculateCookieName(),
-                             token,
+                             jwtString,
                              domain = cookieDomain,
                              path = Some("/"),
                              httpOnly = true
@@ -257,7 +256,7 @@ final case class AuthenticatorLive(
                        entity = HttpEntity(
                          ContentTypes.`application/json`,
                          JsObject(
-                           "token" -> JsString(token)
+                           "token" -> JsString(jwtString)
                          ).compactPrint
                        )
                      )
@@ -752,6 +751,8 @@ object AuthenticatorLive {
     ZLayer.fromFunction(AuthenticatorLive.apply _)
 }
 
+case class Jwt(jwtString: String, expiration: Long)
+
 /**
  * Provides functions for creating, decoding, and validating JWT tokens.
  */
@@ -761,11 +762,11 @@ trait JwtService {
   /**
    * Creates a JWT.
    *
-   * @param userIri   the user IRI that will be encoded into the token.
+   * @param user the user IRI that will be encoded into the token.
    * @param content   any other content to be included in the token.
    * @return a [[String]] containing the JWT.
    */
-  def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): UIO[String]
+  def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt]
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
@@ -796,13 +797,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
 
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
-  /**
-   * Creates a JWT.
-   *
-   * @param userIri   the user IRI that will be encoded into the token.
-   * @return a [[String]] containing the JWT.
-   */
-  override def createToken(userIri: IRI, content: Map[String, JsValue] = Map.empty): UIO[String] =
+  override def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt] =
     for {
       now  <- Clock.instant
       uuid <- ZIO.random.flatMap(_.nextUUID)
@@ -811,13 +806,13 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
                 issuer = Some(issuer),
-                subject = Some(userIri),
+                subject = Some(user.id),
                 audience = Some(Set("Knora", "Sipi")),
                 issuedAt = Some(now.getEpochSecond),
                 expiration = Some(exp),
                 jwtId = jwtId
               ).toJson
-    } yield JwtSprayJson.encode(header, claim, secret, algorithm)
+    } yield Jwt(JwtSprayJson.encode(header, claim, secret, algorithm), exp)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated

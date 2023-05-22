@@ -20,7 +20,7 @@ class JwtServiceSpec extends CoreSpec with ImplicitSender {
 
     "create a token" in {
       val runZio = for {
-        token   <- JwtService.createToken(SharedTestDataADM.anythingUser1.id, Map("foo" -> JsString("bar")))
+        token   <- JwtService.createJwt(SharedTestDataADM.anythingUser1, Map("foo" -> JsString("bar"))).map(_.jwtString)
         useriri <- JwtService.extractUserIriFromToken(token)
       } yield useriri
 

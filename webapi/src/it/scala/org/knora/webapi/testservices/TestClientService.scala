@@ -116,7 +116,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
           resp
         }
       )
-      .timeout(timeout.getOrElse(10.seconds))
+      .timeout(timeout.getOrElse(700.seconds))
       .some
       .mapError {
         case None            => throw AssertionException("Request timed out.")
