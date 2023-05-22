@@ -62,7 +62,7 @@
 
 
 ### Administrative Permissions on ProjectAdmin
-<http://rdfh.ch/permissions/00FF/a2>
+<http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ>
     rdf:type                  knora-admin:AdministrativePermission ;
     knora-admin:forProject    <http://rdfh.ch/projects/00FF> ;
     knora-admin:forGroup      knora-admin:ProjectAdmin ;

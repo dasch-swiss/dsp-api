@@ -416,7 +416,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
     "updating permissions" should {
       "change the group of an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
@@ -501,7 +501,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "change the set of hasPermissions of an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
@@ -709,7 +709,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
       }
       "erase an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)

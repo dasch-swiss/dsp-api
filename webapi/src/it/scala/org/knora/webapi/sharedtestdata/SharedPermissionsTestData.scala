@@ -98,9 +98,9 @@ object SharedPermissionsTestData {
 
   val perm002_a2: ap =
     ap(
-      iri = "http://rdfh.ch/permissions/00FF/a2",
+      iri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ",
       p = AdministrativePermissionADM(
-        iri = "http://rdfh.ch/permissions/00FF/a2",
+        iri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ",
         forProject = imagesProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
         hasPermissions = Set(

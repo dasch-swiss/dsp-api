@@ -886,7 +886,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "ask to update group of a permission" should {
       "update group of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -903,7 +903,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -979,7 +979,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "ask to update hasPermissions of a permission" should {
       "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 
         appActor ! PermissionChangeHasPermissionsRequestADM(
@@ -1000,7 +1000,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update hasPermissions of an administrative permission" in {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 
         appActor ! PermissionChangeHasPermissionsRequestADM(
@@ -1019,7 +1019,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "ignore irrelevant parameters given in ChangePermissionHasPermissionsApiRequestADM for an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
