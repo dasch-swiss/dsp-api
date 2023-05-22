@@ -2,61 +2,69 @@
 -- * SPDX-License-Identifier: Apache-2.0
 
 require "env"
+require "log_util"
 require "send_response"
 require "strings"
 require "util"
 
---- Extracts a JSON web token from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
--- Decodes token and validates claims exp, aud, iss.
--- Sends an HTTP error if the token is missing or invalid.
--- @return the raw jwt token string, or nil if the token is invalid.
---         or sends an error in the following cases:
---             * 400 if the token is missing
---             * 401 if the token is invalid
+--- Extracts a JSON web token (JWT) from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
+-- If present decodes token and validates claims exp, aud, iss.
+-- Sends an HTTP error if the token is invalid.
+-- @return The raw jwt string, if the token is present and valid.
+--         'nil, error' if the token is missing or invalid, 'error' representing the reason as a string.
+--         Sends a 401 server error if the token is invalid.
 function auth_get_jwt_raw()
-   local token = _token()
-   return token.raw
+    local token, error = _token()
+    return token.raw, error
 end
 
 function _token()
+    local nil_token = { raw = nil, decoded = nil }
     local jwt_raw = _get_jwt_string_from_header_params_or_cookie()
-    local decoded = _decode_jwt(jwt_raw)
-    if decoded == nil then
-        return { raw = nil, decoded = nil }
+    if jwt_raw == nil then
+        return nil_token, "No token found"
     else
-        return { raw = jwt_raw, decoded = decoded }
+        local decoded, error = _decode_jwt(jwt_raw)
+        if decoded == nil then
+            return nil_token, error
+        else
+            return { raw = jwt_raw, decoded = decoded }
+        end
     end
 end
 
---- Extracts a JSON web token from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
--- Decodes token and validates claims exp, aud, iss.
--- Sends an HTTP error if the token is missing or invalid.
--- @return the result of server.decode_jwt token, or nil if the token is invalid.
---         or sends an error in the following cases:
---             * 400 if the token is missing
---             * 401 if the token is invalid
+
+--- Extracts a JSON web token (JWT) from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
+-- If present decodes token and validates claims exp, aud, iss.
+-- Sends an HTTP error if the token is invalid.
+-- @return The decoded jwt string, if the token is present and valid.
+--         'nil, error' if the token is missing or invalid, 'error' representing the reason as a string..
+--         Sends a 401 server error if the token is invalid.
 function auth_get_jwt_decoded()
-    local token = _token()
-    return token.decoded
+    local token, error = _token()
+    return token.decoded, error
+end
+
+function _send_unauthorized_error(error_msg)
+    send_error(401, error_msg)
+    log("authentication - unauthorized: " .. error_msg, server.loglevel.LOG_DEBUG)
+    return nil, error_msg
 end
 
 function _decode_jwt(token_str)
     -- decode token
-    server.log("authentication: decoding jwt token", server.loglevel.LOG_DEBUG)
+    log("authentication: decoding jwt token", server.loglevel.LOG_DEBUG)
     local success, decoded_token = server.decode_jwt(token_str)
     if not success then
-        send_error(401, "Invalid token, unable to decode jwt.")
-        return nil
+        return _send_unauthorized_error("Invalid token, unable to decode jwt.")
     end
 
     -- check expiration date of token
     local expiration_date = decoded_token["exp"]
     if expiration_date == nil then
-        send_error(401, "Invalid 'exp' (expiration date) in token, token has no expiry date.")
-        return nil
+        return _send_unauthorized_error("Invalid 'exp' (expiration date) in token, token has no expiry date.")
     end
-    local systime = server.systime()
-    if (expiration_date <= systime) then
+    if (expiration_date <= server.systime()) then
         send_error(401, "Invalid 'exp' (expiration date) in token, token is expired.")
         return nil
     end
@@ -65,15 +73,13 @@ function _decode_jwt(token_str)
     local audience = decoded_token["aud"]
     local expected_audience = "Sipi"
     if audience == nil or not table.contains(audience, expected_audience) then
-        send_error(401, "Invalid 'aud' (audience) in token, expected: " .. expected_audience .. ".")
-        return nil
+        return _send_unauthorized_error("Invalid 'aud' (audience) in token, expected: " .. expected_audience .. ".")
     end
 
     -- check issuer of token
     local token_issuer = env_dsp_api_host_port()
     if decoded_token["iss"] ~= token_issuer then
-        send_error(401, "Invalid 'iss' (issuer) in token, expected: " .. token_issuer .. ".")
-        return nil
+        return _send_unauthorized_error(401, "Invalid 'iss' (issuer) in token, expected: " .. token_issuer .. ".")
     end
     return decoded_token
 end
@@ -82,33 +88,34 @@ end
 function _get_jwt_string_from_header_params_or_cookie()
     local from_header = _get_jwt_token_from_auth_header()
     if from_header ~= nil then
-        server.log("authentication: token found in authorization header", server.loglevel.LOG_DEBUG)
+        log("authentication: token found in authorization header", server.loglevel.LOG_DEBUG)
         return from_header
     end
 
     local from_query_param = _get_jwt_token_from_query_param()
     if from_query_param ~= nil then
-        server.log("authentication: token found in query param", server.loglevel.LOG_DEBUG)
+        log("authentication: token found in query param", server.loglevel.LOG_DEBUG)
         return from_query_param
     end
 
     local from_cookie = _get_jwt_token_from_cookie()
     if from_cookie ~= nil then
-        server.log("authentication: token found in cookie header", server.loglevel.LOG_DEBUG)
+        log("authentication: token found in cookie header", server.loglevel.LOG_DEBUG)
         return from_cookie
     end
 
-    server.log("authentication: no token found in request", server.loglevel.LOG_DEBUG)
-    send_error(400, "Token missing")
+    log("authentication: no token found in request", server.loglevel.LOG_DEBUG)
     return nil
 end
 
---- Extract the "Bearer" JSON web token from the HTTP request "Authorization" header.
--- @return the token
---         or nil if the header is missing
---         or nil if the header value is not a "Bearer" token.
+--- Extracts a JSON web token (JWT) from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
+-- If present decodes token and validates claims exp, aud, iss.
+-- Sends an HTTP error if the token is invalid.
+-- @return The decoded jwt
+--         'nil, string' if the token is missing or invalid, 'string' representing the reason.
+--         Sends a 401 error if the token is invalid.
 function _get_jwt_token_from_auth_header()
-    server.log("authentication: checking for jwt token in authorization header", server.loglevel.LOG_DEBUG)
+    log("authentication: checking for jwt token in authorization header", server.loglevel.LOG_DEBUG)
     local auth_header = _get_auth_header()
     local bearer_prefix = "Bearer "
     if str_starts_with(auth_header, bearer_prefix) then
@@ -144,7 +151,7 @@ end
 --- Extract the JSON web token from the HTTP request query parameter "token".
 -- @return the header value or nil if the header is missing.
 function _get_jwt_token_from_query_param()
-    server.log("authentication: checking for jwt token in query param token", server.loglevel.LOG_DEBUG)
+    log("authentication: checking for jwt token in query param token", server.loglevel.LOG_DEBUG)
     if server.request ~= nil then
         return server.request["token"]
     else
@@ -155,7 +162,7 @@ end
 --- Extracts the jwt token from the cookie.
 -- @return jwt token or nil if the cookie is missing or invalid.
 function _get_jwt_token_from_cookie()
-    server.log("authentication: checking for jwt token in cookie header", server.loglevel.LOG_DEBUG)
+    log("authentication: checking for jwt token in cookie header", server.loglevel.LOG_DEBUG)
     local cookie_header_value = _get_cookie_header()
     if cookie_header_value == nil then
         return nil
