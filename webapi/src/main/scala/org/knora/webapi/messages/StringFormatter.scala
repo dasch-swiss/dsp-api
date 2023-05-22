@@ -1695,14 +1695,8 @@ class StringFormatter private (
    * in the triplestore). The resulting IRI will not end in a # character.
    *
    * @param namespace the XML namespace.
-   * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
-   *                  valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology IRI.
    */
-  @deprecated("Use xmlImportNamespaceToInternalOntologyIriV1(String) instead.")
-  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri =
-    xmlImportNamespaceToInternalOntologyIriV1(namespace).getOrElse(errorFun)
-
   def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Option[SmartIri] =
     namespace match {
       case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
@@ -1733,17 +1727,8 @@ class StringFormatter private (
    *
    * @param namespace    the XML namespace.
    * @param elementLabel the XML element label.
-   * @param errorFun     a function that throws an exception. It will be called if the form of the namespace is not
-   *                     valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology entity IRI.
    */
-  @deprecated("Use xmlImportElementNameToInternalOntologyIriV1(String, String) instead.")
-  def xmlImportElementNameToInternalOntologyIriV1(
-    namespace: String,
-    elementLabel: String,
-    errorFun: => Nothing
-  ): IRI = xmlImportElementNameToInternalOntologyIriV1(namespace, elementLabel).getOrElse(errorFun)
-
   def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): Option[IRI] =
     xmlImportNamespaceToInternalOntologyIriV1(namespace).map(_.toString + "#" + elementLabel)
 
@@ -1818,14 +1803,8 @@ class StringFormatter private (
    * Check that the supplied IRI represents a valid project IRI.
    *
    * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 project IRI.
    * @return the same string but escaped.
    */
-  @deprecated("Use validateAndEscapeProjectIri(IRI) instead.")
-  def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    validateAndEscapeProjectIri(iri).getOrElse(errorFun)
-
   def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
     if (isKnoraProjectIriStr(iri)) toSparqlEncodedString(iri)
     else None
@@ -1869,28 +1848,19 @@ class StringFormatter private (
    * Given the permission IRI, checks if it is in a valid format.
    *
    * @param iri the permission's IRI.
-   * @return the IRI of the list.
+   * @return either the IRI or the error message.
    */
-  @deprecated("Use validatePermissionIri(IRI) instead.")
-  def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    validatePermissionIri(iri).getOrElse(errorFun)
-
-  def validatePermissionIri(iri: IRI): Option[IRI] =
-    if (isKnoraPermissionIriStr(iri)) Some(iri)
-    else None
+  def validatePermissionIri(iri: IRI): Either[String, IRI] =
+    if (isKnoraPermissionIriStr(iri) && isUuidSupported(iri)) Right(iri)
+    else if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
+    else Left(s"Invalid permission IRI: $iri.")
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
    *
    * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 user IRI.
    * @return the same string but escaped.
    */
-  @deprecated("Use validateAndEscapeUserIri(IRI) instead.")
-  def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
-    toSparqlEncodedString(iri).getOrElse(errorFun)
-
   def validateAndEscapeUserIri(iri: IRI): Option[String] =
     if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
     else None
@@ -1901,10 +1871,6 @@ class StringFormatter private (
    * @param email the email.
    * @return the email
    */
-  @deprecated("Use validateEmailAndThrow(String) instead.")
-  def validateEmailAndThrow(email: String, errorFun: => Nothing): String = // V2 / value objects
-    validateEmail(email).getOrElse(errorFun)
-
   def validateEmail(email: String): Option[String] =
     EmailAddressRegex.findFirstIn(email)
 
@@ -1912,31 +1878,10 @@ class StringFormatter private (
    * Check that the string represents a valid username.
    *
    * @param value    the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 username.
    * @return the same string.
    */
-  @deprecated("Use validateUsername(String) instead.")
-  def validateUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    validateUsername(value).getOrElse(errorFun)
-
   def validateUsername(value: String): Option[String] =
     UsernameRegex.findFirstIn(value)
-
-  /**
-   * Check that the string represents a valid username and escape any special characters.
-   *
-   * @param value    the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 username.
-   * @return the same string with escaped special characters.
-   */
-  @deprecated("Use validateAndEscapeUsername(String) instead.")
-  def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    validateAndEscapeUsername(value).getOrElse(errorFun)
-
-  def validateAndEscapeUsername(value: String): Option[String] =
-    UsernameRegex.findFirstIn(value).flatMap(toSparqlEncodedString)
 
   /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
@@ -2185,18 +2130,6 @@ class StringFormatter private (
     }
 
   /**
-   * Validates permission IRI
-   *
-   * @param iri to be validated.
-   */
-  def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) {
-      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
-    } else {
-      validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI $iri is given."))
-    }
-
-  /**
    * Creates a new resource IRI based on a UUID.
    *
    * @param projectShortcode the project's shortcode.
@@ -2357,16 +2290,6 @@ class StringFormatter private (
 
     customValueIri
   }
-
-  /**
-   * Throws [[BadRequestException]] if a Knora API v2 definition API has an ontology name that can only be used
-   * in the internal schema.
-   *
-   * @param iri the IRI to be checked.
-   */
-  @deprecated("Use isExternalOntologyName(SmartIri) instead")
-  def checkExternalOntologyName(iri: SmartIri): Unit =
-    if (isKnoraOntologyIri(iri)) throw BadRequestException(s"Internal ontology <$iri> cannot be served")
 
   def isKnoraOntologyIri(iri: SmartIri): Boolean =
     iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
