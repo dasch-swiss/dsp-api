@@ -146,9 +146,9 @@ object SparqlTransformer {
    * @return the result of the optimisation.
    */
   def moveLuceneToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    val (luceneQueryPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-      case _: LuceneQueryPattern => true
-      case _                     => false
+    val (luceneQueryPatterns, otherPatterns) = patterns.partition {
+      case StatementPattern(_, IriRef(pred, _), _) => pred.toIri == OntologyConstants.Fuseki.luceneQueryPredicate
+      case _                                       => false
     }
 
     luceneQueryPatterns ++ otherPatterns
