@@ -7,7 +7,7 @@
 --
 
 require "file_specific_folder_util"
-require "jwt"
+require "authentication"
 require "send_response"
 require "util"
 
@@ -21,7 +21,7 @@ if not success then
 end
 
 -- Check for a valid JSON Web Token from Knora.
-local token = get_knora_token()
+local token = auth_get_jwt_decoded()
 if token == nil then
     return
 end
