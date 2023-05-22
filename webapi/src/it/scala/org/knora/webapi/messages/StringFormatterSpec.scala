@@ -972,13 +972,13 @@ class StringFormatterSpec extends CoreSpec {
     "validate project IRI" in {
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.incunabulaProject.id
-      ) shouldBe SharedTestDataADM.incunabulaProject.id
+      ) shouldBe Some(SharedTestDataADM.incunabulaProject.id)
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.systemProject.id
-      ) shouldBe SharedTestDataADM.systemProject.id
+      ) shouldBe Some(SharedTestDataADM.systemProject.id)
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.defaultSharedOntologiesProject.id
-      ) shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
+      ) shouldBe Some(SharedTestDataADM.defaultSharedOntologiesProject.id)
     }
 
     "validate project shortname" in {
