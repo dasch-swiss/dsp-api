@@ -10,9 +10,8 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.messages.util.search.gravsearch.transformers._
+import org.knora.webapi.routing.UnsafeZioRun
 
 /**
  * Tests [[SparqlTransformer]].
@@ -139,11 +138,13 @@ class SparqlTransformerSpec extends CoreSpec {
           pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
           QueryVariable("text__valueHasString")
         )
-      val luceneQueryPattern = LuceneQueryPattern(
+      val luceneQueryPattern = StatementPattern(
         subj = QueryVariable("text"),
-        obj = QueryVariable("text__valueHasString"),
-        queryString = LuceneQueryString("Zeitglöcklein"),
-        literalStatement = Some(valueHasStringStatement)
+        pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+        obj = XsdLiteral(
+          value = "Zeitglöcklein",
+          datatype = OntologyConstants.Xsd.String.toSmartIri
+        )
       )
       val patterns: Seq[QueryPattern] = Seq(
         hasValueStatement,

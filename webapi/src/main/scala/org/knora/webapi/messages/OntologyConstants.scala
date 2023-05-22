@@ -588,10 +588,6 @@ object OntologyConstants {
     val StandoffStyleElementTag: IRI  = StandoffPrefixExpansion + "StandoffStyleTag"
   }
 
-  object Ontotext {
-    val LuceneFulltext = "http://www.ontotext.com/owlim/lucene#fullTextSearchIndex"
-  }
-
   object XPathFunctions {
     val XPathPrefixExpansion: IRI = "http://www.w3.org/2005/xpath-functions#"
 
@@ -1121,5 +1117,9 @@ object OntologyConstants {
    */
   object NamedGraphs {
     val DataNamedGraphStart: IRI = "http://www.knora.org/data"
+  }
+
+  object Fuseki {
+    val luceneQueryPredicate = "http://jena.apache.org/text#query"
   }
 }

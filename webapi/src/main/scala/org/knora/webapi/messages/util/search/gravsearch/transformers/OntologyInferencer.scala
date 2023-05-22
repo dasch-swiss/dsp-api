@@ -148,26 +148,6 @@ final case class OntologyInferencer(
         // The predicate isn't a property IRI or no inference should be done, so no expansion needed.
         ZIO.succeed(Seq(statementPattern))
     }
-
-  /**
-   * Transforms a [[LuceneQueryPattern]] for Fuseki.
-   *
-   * @param luceneQueryPattern the query pattern.
-   * @return Fuseki-specific statements implementing the query.
-   */
-  def transformLuceneQueryPatternForFuseki(luceneQueryPattern: LuceneQueryPattern): Task[Seq[StatementPattern]] =
-    ZIO.attempt(
-      Seq(
-        StatementPattern(
-          subj = luceneQueryPattern.subj, // In Fuseki, an index entry is associated with an entity that has a literal.
-          pred = IriRef("http://jena.apache.org/text#query".toSmartIri),
-          obj = XsdLiteral(
-            value = luceneQueryPattern.queryString.getQueryString,
-            datatype = OntologyConstants.Xsd.String.toSmartIri
-          )
-        )
-      )
-    )
 }
 
 object OntologyInferencer {

@@ -139,9 +139,6 @@ final case class QueryTraverser(
                                  }
                                  ZIO.collectAll(transformedBlocks).map(blocks => Seq(UnionPattern(blocks)))
 
-                               case luceneQueryPattern: LuceneQueryPattern =>
-                                 whereTransformer.transformLuceneQueryPattern(luceneQueryPattern)
-
                                case valuesPattern: ValuesPattern => ZIO.succeed(Seq(valuesPattern))
 
                                case bindPattern: BindPattern => ZIO.succeed(Seq(bindPattern))
