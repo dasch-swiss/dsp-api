@@ -7,8 +7,6 @@ package org.knora.webapi.store.iiif.impl
 
 import org.apache.http.Consts
 import org.apache.http.HttpEntity
-import org.apache.http.HttpHost
-import org.apache.http.HttpRequest
 import org.apache.http.HttpResponse
 import org.apache.http.NameValuePair
 import org.apache.http.client.config.RequestConfig
@@ -19,7 +17,6 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpRequestBase
 import org.apache.http.client.methods.HttpUriRequest
-import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.config.SocketConfig
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
@@ -29,6 +26,7 @@ import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
 import zio.nio.file.Path
+
 import java.net.URI
 import java.util
 
@@ -178,7 +176,7 @@ final case class IIIFServiceSipiImpl(
    */
   private def doSipiRequest(request: HttpUriRequest): Task[String] = ZIO.scoped {
     sendRequest(request).flatMap { response =>
-      val r= request
+      val r              = request
       val statusCode     = response.getStatusLine.getStatusCode
       val statusCategory = statusCode / 100
       val bodyString     = EntityUtils.toString(response.getEntity)
@@ -260,9 +258,7 @@ final case class IIIFServiceSipiImpl(
   private def sendRequest(request: HttpUriRequest): ZIO[Scope, Throwable, HttpResponse] = {
     def acquire = ZIO
       .attemptBlocking(httpClient.execute(request))
-      .tapErrorTrace(it =>
-        ZIO.logError(s"Failed to execute request $request: ${it._1}\n${it._2}}")
-      )
+      .tapErrorTrace(it => ZIO.logError(s"Failed to execute request $request: ${it._1}\n${it._2}}"))
     def release(response: CloseableHttpResponse) = ZIO.attempt(response.close()).logError.ignore
     ZIO.acquireRelease(acquire)(release)
   }
