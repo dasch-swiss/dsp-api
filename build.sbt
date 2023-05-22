@@ -106,7 +106,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
       "mv /sipi/scripts/entrypoint.sh /sipi/ && chmod +x /sipi/entrypoint.sh && apt-get update && apt-get install -y cron curl && rm -rf /var/lib/apt/lists/*"
     ), // install cron and curl for periodically cleaning temp dir
     dockerCommands += Cmd(
-      """HEALTHCHECK --interval=15s --timeout=5s --retries=3 --start-period=30s \
+      """HEALTHCHECK --interval=30s --timeout=30s --retries=4 --start-period=30s \
         |CMD bash /sipi/scripts/healthcheck.sh || exit 1""".stripMargin
     ),
     // use filterNot to return all items that do NOT meet the criteria
