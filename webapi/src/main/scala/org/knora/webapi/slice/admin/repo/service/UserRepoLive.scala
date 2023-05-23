@@ -70,7 +70,6 @@ final case class UserRepoLive(private val triplestore: TriplestoreService, priva
     result <- triplestore.sparqlHttpExtendedConstruct(query).map(_.statements)
     users  <- ZIO.foreach(result.toList)(toUser)
   } yield users
-
 }
 
 object UserRepoLive {
