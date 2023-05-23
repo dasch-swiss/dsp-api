@@ -29,12 +29,10 @@ final case class UserRepoLive(private val triplestore: TriplestoreService, priva
     findOneByQuery(sparql.admin.txt.getUsers(maybeUsername = Some(username)))
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[User]] =
-    for {
-      result <- triplestore
-                  .sparqlHttpExtendedConstruct(query)
-                  .map(_.statements.headOption)
-      user <- ZIO.foreach(result)(toUser)
-    } yield user
+    triplestore
+      .sparqlHttpExtendedConstruct(query)
+      .map(_.statements.headOption)
+      .flatMap(ZIO.foreach(_)(toUser))
 
   private def toUser(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[User] = {
     val id                                  = InternalIri(subjectPropsTuple._1.toString)
