@@ -14,6 +14,10 @@ sealed trait User {
   def isInGroup: List[InternalIri]
   def isInSystemAdminGroup: InternalIri
 
+  def isActive: Boolean = this match {
+    case _: ActiveUser   => true
+    case _: InactiveUser => false
+  }
 }
 
 object User {
