@@ -89,7 +89,9 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
+import org.knora.webapi.slice.admin.domain.service.UserRepo
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.admin.repo.service.UserRepoLive
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.slice.common.api.RestPermissionServiceLive
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -185,6 +187,7 @@ object LayersLive {
       with StringFormatter
       with TriplestoreRequestMessageHandler
       with TriplestoreService
+      with UserRepo
       with UsersResponderADM
       with UsersResponderV1
       with ValueUtilV1
@@ -262,6 +265,7 @@ object LayersLive {
       StringFormatter.live,
       TriplestoreRequestMessageHandlerLive.layer,
       TriplestoreServiceLive.layer,
+      UserRepoLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,

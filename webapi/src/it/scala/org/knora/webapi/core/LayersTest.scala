@@ -116,6 +116,8 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.slice.admin.domain.service.UserRepo
+import org.knora.webapi.slice.admin.repo.service.UserRepoLive
 object LayersTest {
 
   /**
@@ -182,6 +184,7 @@ object LayersTest {
       with TestClientService
       with TriplestoreRequestMessageHandler
       with TriplestoreService
+      with UserRepo
       with UsersResponderADM
       with UsersResponderV1
       with ValueUtilV1
@@ -252,6 +255,7 @@ object LayersTest {
       TestClientService.layer,
       TriplestoreRequestMessageHandlerLive.layer,
       TriplestoreServiceLive.layer,
+      UserRepoLive.layer,
       UsersResponderADMLive.layer,
       UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,
