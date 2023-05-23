@@ -981,23 +981,6 @@ class StringFormatterSpec extends CoreSpec {
       ) shouldBe Some(SharedTestDataADM.defaultSharedOntologiesProject.id)
     }
 
-    "validate project shortname" in {
-      // shortname with dash is valid
-      assert(stringFormatter.validateAndEscapeProjectShortname("valid-shortname").contains("valid-shortname"))
-      // shortname with numbers
-      assert(stringFormatter.validateAndEscapeProjectShortname("valid_1111").contains("valid_1111"))
-      // has special character colon
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid:shortname").isEmpty)
-      // begins with dash
-      assert(stringFormatter.validateAndEscapeProjectShortname("-invalidshortname").isEmpty)
-      // begins with dot
-      assert(stringFormatter.validateAndEscapeProjectShortname(".invalidshortname").isEmpty)
-      // includes slash
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid/shortname").isEmpty)
-      // includes @
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid@shortname").isEmpty)
-    }
-
     "validate project shortcode" in {
       stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
       stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")

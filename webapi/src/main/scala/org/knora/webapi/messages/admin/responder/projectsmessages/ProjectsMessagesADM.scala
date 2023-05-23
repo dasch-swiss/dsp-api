@@ -104,8 +104,7 @@ case class ChangeProjectApiRequestADM(
 
     val validatedShortname: Option[String] =
       shortname.map(v =>
-        stringFormatter
-          .validateAndEscapeProjectShortname(v)
+        validateAndEscapeProjectShortname(v)
           .getOrElse(throw BadRequestException(s"The supplied short name: '$v' is not valid."))
       )
 

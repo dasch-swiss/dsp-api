@@ -138,6 +138,7 @@ object Iri {
    *                 a carriage return (`\r`).
    * @return the same string, escaped or unescaped as requested.
    */
+  @deprecated
   def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
 // Findings about this method:
 // - there is more cases to handle according to docs (https://www.w3.org/TR/rdf-sparql-query#grammarEscapes) - we use 1.1 version right?
@@ -155,6 +156,17 @@ object Iri {
       SparqlEscapeOutput
     )
   }
+
+  /**
+   * Makes a string safe to be entered in the triplestore by escaping special chars.
+   *
+   * @param s a string.
+   * @return the same string escaped
+   *         [[None]] if the string is empty or contains a carriage return (`\r`).
+   */
+  def toSparqlEncodedString(s: String): Option[String] =
+    if (s.isEmpty || s.contains("\r")) None
+    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
 
   /**
    * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.

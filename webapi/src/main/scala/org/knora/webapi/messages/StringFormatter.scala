@@ -1753,18 +1753,6 @@ class StringFormatter private (
     else None
 
   /**
-   * Check that the string represents a valid project shortname.
-   *
-   * @param shortname string to be checked.
-   * @return the same string.
-   */
-  def validateAndEscapeProjectShortname(shortname: String): Option[String] =
-    nCNameRegex
-      .findFirstIn(shortname)
-      .flatMap(Base64UrlPatternRegex.findFirstIn)
-      .flatMap(toSparqlEncodedString)
-
-  /**
    * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
    *
    * @param shortcode the project's shortcode.
