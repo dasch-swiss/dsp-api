@@ -126,7 +126,10 @@ function pre_flight(prefix, identifier, cookie)
                 server.loglevel.LOG_DEBUG)
     end
 
-    local jwt_raw = auth_get_jwt_raw()
+    local jwt_raw, auth_error = auth_get_jwt_raw()
+    if auth_error ~= nil and auth_error ~= NO_TOKEN_FOUND_ERROR then
+        return 'deny'
+    end
     local permission_info = get_permission_on_file(prefix, identifier, jwt_raw)
     local permission_code = permission_info.permissionCode
     log("pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
@@ -242,7 +245,10 @@ function file_pre_flight(identifier, cookie)
         log("file_pre_flight - file requested for 082A: " .. identifier, server.loglevel.LOG_WARNING)
         return "allow", filepath
     end
-    local jwt_raw = auth_get_jwt_raw()
+    local jwt_raw, auth_error = auth_get_jwt_raw()
+    if auth_error ~= nil and auth_error ~= NO_TOKEN_FOUND_ERROR then
+        return 'deny'
+    end
     local permission_info = get_permission_on_file(shortcode, file_name, jwt_raw)
     local permission_code = permission_info.permissionCode
     log("file_pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)

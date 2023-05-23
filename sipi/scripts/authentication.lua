@@ -7,6 +7,8 @@ require "send_response"
 require "strings"
 require "util"
 
+local NO_TOKEN_FOUND_ERROR = "No token found"
+
 --- Extracts a JSON web token (JWT) from the HTTP request: header ('Authorization' and 'Cookie') or query param 'token'.
 -- If present decodes token and validates claims exp, aud, iss.
 -- Sends an HTTP error if the token is invalid.
@@ -22,7 +24,7 @@ function _token()
     local nil_token = { raw = nil, decoded = nil }
     local jwt_raw = _get_jwt_string_from_header_params_or_cookie()
     if jwt_raw == nil then
-        return nil_token, "No token found"
+        return nil_token, NO_TOKEN_FOUND_ERROR
     else
         local decoded, error = _decode_jwt(jwt_raw)
         if decoded == nil then
@@ -81,6 +83,8 @@ function _decode_jwt(token_str)
     if decoded_token["iss"] ~= token_issuer then
         return _send_unauthorized_error(401, "Invalid 'iss' (issuer) in token, expected: " .. token_issuer .. ".")
     end
+
+    log("authentication: decoded jwt token for 'sub' " .. decoded_token["sub"], server.loglevel.LOG_DEBUG)
     return decoded_token
 end
 
