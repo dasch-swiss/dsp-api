@@ -55,7 +55,7 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraListIriStr(iri: IRI): Boolean =
+  def isListIri(iri: IRI): Boolean =
     Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
 
   /**
@@ -63,7 +63,7 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraRoleIriStr(iri: IRI): Boolean =
+  private def isRoleIri(iri: IRI): Boolean =
     Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
 
   /**
@@ -71,7 +71,7 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraUserIriStr(iri: IRI): Boolean =
+  def isUserIri(iri: IRI): Boolean =
     Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
 
   /**
@@ -79,7 +79,7 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraGroupIriStr(iri: IRI): Boolean =
+  def isGroupIri(iri: IRI): Boolean =
     Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
 
   /**
@@ -87,8 +87,8 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraProjectIriStr(iri: IRI): Boolean =
-    (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
+  def isProjectIri(iri: IRI): Boolean =
+    (iri.startsWith("http://rdfh.ch/projects/") || isBuiltInProjectIri(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -97,15 +97,18 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraBuiltInProjectIriStr(iri: IRI): Boolean = {
-
-    val builtInProjects = Seq(
-      SystemProject,
-      DefaultSharedOntologiesProject
-    )
-
+  private def isBuiltInProjectIri(iri: IRI): Boolean = {
+    val builtInProjects = Seq(SystemProject, DefaultSharedOntologiesProject)
     Iri.isIri(iri) && builtInProjects.contains(iri)
   }
+
+  /**
+   * Returns `true` if an IRI string looks like a Knora permission IRI.
+   *
+   * @param iri the IRI to be checked.
+   */
+  def isPermissionIri(iri: IRI): Boolean =
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/permissions/")
 
   // Characters that are escaped in strings that will be used in SPARQL.
   private val SparqlEscapeInput = Array(
@@ -180,7 +183,7 @@ object Iri {
    * @return the same string but escaped.
    */
   def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI =
-    if (isKnoraProjectIriStr(iri)) {
+    if (isProjectIri(iri)) {
       toSparqlEncodedString(iri, errorFun)
     } else {
       errorFun
@@ -195,7 +198,7 @@ object Iri {
    * @return the same string but escaped.
    */
   def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String =
-    if (isKnoraUserIriStr(iri)) {
+    if (isUserIri(iri)) {
       toSparqlEncodedString(iri, errorFun)
     } else {
       errorFun
@@ -212,7 +215,7 @@ object Iri {
       } else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraGroupIriStr(value)) {
+        if (!isGroupIri(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
         } else if (isUuid && !Uuid.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
@@ -243,7 +246,7 @@ object Iri {
       } else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraListIriStr(value)) {
+        if (!isListIri(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
         } else if (isUuid && !Uuid.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
@@ -283,7 +286,7 @@ object Iri {
       } else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraProjectIriStr(value)) {
+        if (!isProjectIri(value)) {
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
         } else if (isUuid && !Uuid.isUuidSupported(value)) {
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
@@ -336,7 +339,7 @@ object Iri {
       } else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraRoleIriStr(value)) {
+        if (!isRoleIri(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
         } else if (isUuid && !Uuid.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
@@ -369,7 +372,7 @@ object Iri {
       } else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraUserIriStr(value)) {
+        if (!isUserIri(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
         } else if (isUuid && !Uuid.isUuidSupported(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))

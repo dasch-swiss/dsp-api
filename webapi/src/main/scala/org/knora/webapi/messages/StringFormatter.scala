@@ -1482,63 +1482,6 @@ class StringFormatter private (
     }
 
   /**
-   * Returns `true` if an IRI string looks like a Knora project IRI
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isKnoraProjectIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora built-in IRI:
-   *  - http://www.knora.org/ontology/knora-admin#SystemProject
-   *  - http://www.knora.org/ontology/knora-admin#SharedOntologiesProject
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isKnoraBuiltInProjectIriStr(iri: IRI): Boolean = {
-
-    val builtInProjects = Seq(
-      OntologyConstants.KnoraAdmin.SystemProject,
-      OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-    )
-
-    Iri.isIri(iri) && builtInProjects.contains(iri)
-  }
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora list IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isKnoraListIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora user IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isKnoraUserIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora group IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isKnoraGroupIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora permission IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isKnoraPermissionIriStr(iri: IRI): Boolean = // V2 / value objects
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
-
-  /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
    *
    * @param s the string to be encoded.
@@ -1806,7 +1749,7 @@ class StringFormatter private (
    * @return the same string but escaped.
    */
   def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
-    if (isKnoraProjectIriStr(iri)) toSparqlEncodedString(iri)
+    if (Iri.isProjectIri(iri)) toSparqlEncodedString(iri)
     else None
 
   /**
@@ -1841,7 +1784,7 @@ class StringFormatter private (
    * @return the IRI of the list.
    */
   def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
-    if (isKnoraGroupIriStr(iri)) Validation.succeed(iri)
+    if (Iri.isGroupIri(iri)) Validation.succeed(iri)
     else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
@@ -1851,8 +1794,8 @@ class StringFormatter private (
    * @return either the IRI or the error message.
    */
   def validatePermissionIri(iri: IRI): Either[String, IRI] =
-    if (isKnoraPermissionIriStr(iri) && isUuidSupported(iri)) Right(iri)
-    else if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
+    if (Iri.isPermissionIri(iri) && isUuidSupported(iri)) Right(iri)
+    else if (Iri.isPermissionIri(iri) && !isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
     else Left(s"Invalid permission IRI: $iri.")
 
   /**
@@ -1862,7 +1805,7 @@ class StringFormatter private (
    * @return the same string but escaped.
    */
   def validateAndEscapeUserIri(iri: IRI): Option[String] =
-    if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
+    if (Iri.isUserIri(iri)) toSparqlEncodedString(iri)
     else None
 
   /**

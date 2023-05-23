@@ -11,6 +11,7 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.errors._
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -158,13 +159,11 @@ case class ProjectResourcesWithHistoryGetRequestV2(
   projectIri: IRI,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
   StringFormatter
     .validateAndEscapeIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
-  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-    throw BadRequestException("Given IRI is not a project IRI.")
-  }
+
+  if (!Iri.isProjectIri(projectIri)) throw BadRequestException("Given IRI is not a project IRI.")
 }
 
 /**
