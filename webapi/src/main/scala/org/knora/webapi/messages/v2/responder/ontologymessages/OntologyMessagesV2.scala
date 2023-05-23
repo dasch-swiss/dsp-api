@@ -2199,7 +2199,7 @@ object EntityInfoContentV2 {
             // This is a string with a language tag.
             PredicateInfoV2(
               predicateIri = predicateIri,
-              objects = JsonLDArray(Seq(objObj)).toObjsWithLang
+              objects = JsonLDArray(Seq(objObj)).toObjsWithLang()
             )
           } else {
             throw BadRequestException(s"Unexpected object value for predicate $predicateIri: $objObj")
@@ -2245,7 +2245,7 @@ object EntityInfoContentV2 {
           ) {
             PredicateInfoV2(
               predicateIri = predicateIri,
-              objects = objArray.toObjsWithLang
+              objects = objArray.toObjsWithLang()
             )
           } else {
             throw BadRequestException(s"Invalid object for predicate $predicateIriStr: $predicateValue")
