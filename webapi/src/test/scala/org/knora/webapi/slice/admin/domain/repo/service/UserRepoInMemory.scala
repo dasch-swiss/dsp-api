@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.domain.repo.service
 
 import zio.Ref
+import zio.Task
 import zio.ULayer
 import zio.ZLayer
 
@@ -16,7 +17,10 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class UserRepoInMemory(users: Ref[List[User]])
     extends AbstractInMemoryCrudRepository[User, InternalIri](users, _.id)
-    with UserRepo {}
+    with UserRepo {
+  override def findByEmail(email: String): Task[Option[User]]       = findOneByPredicate(_.email == email)
+  override def findByUsername(username: String): Task[Option[User]] = findOneByPredicate(_.username == username)
+}
 
 object UserRepoInMemory {
   val layer: ULayer[UserRepoInMemory] =

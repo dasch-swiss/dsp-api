@@ -39,7 +39,9 @@ abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[List[Ent
    * @param id The identifier of type [[Id]].
    * @return the entity with the given id or [[None]] if none found.
    */
-  override def findById(id: Id): Task[Option[Entity]] = entities.get.map(_.find(getId(_) == id))
+  override def findById(id: Id): Task[Option[Entity]] = findOneByPredicate(getId(_) == id)
+
+  def findOneByPredicate(predicate: Entity => Boolean): Task[Option[Entity]] = entities.get.map(_.find(predicate))
 
   /**
    * Returns all instances of the type.

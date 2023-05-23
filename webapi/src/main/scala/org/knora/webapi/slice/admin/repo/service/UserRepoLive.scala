@@ -1,5 +1,6 @@
 package org.knora.webapi.slice.admin.repo.service
 
+import play.twirl.api.TxtFormat
 import zio.Task
 import zio.URLayer
 import zio.ZIO
@@ -21,8 +22,14 @@ final case class UserRepoLive(private val triplestore: TriplestoreService, priva
     extends UserRepo {
 
   override def findById(id: InternalIri): Task[Option[User]] =
+    findOneByQuery(sparql.admin.txt.getUsers(maybeIri = Some(id.value)))
+  override def findByEmail(email: String): Task[Option[User]] =
+    findOneByQuery(sparql.admin.txt.getUsers(maybeEmail = Some(email)))
+  override def findByUsername(username: String): Task[Option[User]] =
+    findOneByQuery(sparql.admin.txt.getUsers(maybeUsername = Some(username)))
+
+  private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[User]] =
     for {
-      query <- ZIO.attempt(sparql.admin.txt.getUsers(maybeIri = Some(id.value), None, None))
       result <- triplestore
                   .sparqlHttpExtendedConstruct(query)
                   .map(_.statements.headOption)
