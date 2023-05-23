@@ -52,7 +52,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
           .getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing."))
           .convertTo[String]
 
-        assert(iri == "http://rdfh.ch/permissions/00FF/a1")
+        assert(iri == "http://rdfh.ch/permissions/00FF/QYdrY7O6QD2VR30oaAt3Yg")
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -416,7 +416,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
     "updating permissions" should {
       "change the group of an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
@@ -458,7 +458,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "change the group of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
@@ -501,7 +501,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "change the set of hasPermissions of an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
@@ -546,7 +546,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "change the set of hasPermissions of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
@@ -597,7 +597,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "change the resource class of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val resourceClassIri     = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
         val updateResourceClass =
@@ -643,7 +643,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "change the property of a default object access permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val propertyClassIri     = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
         val updateResourceClass =
@@ -709,7 +709,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         )
       }
       "erase an administrative permission" in {
-        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
