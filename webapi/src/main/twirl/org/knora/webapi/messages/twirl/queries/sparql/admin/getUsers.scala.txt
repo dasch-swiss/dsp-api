@@ -13,9 +13,9 @@
  * @param maybeIri the users's IRI.
  * @param maybeEmail the users's email.
  *@
-@(maybeIri: Option[IRI],
-  maybeUsername: Option[String],
-  maybeEmail: Option[String])
+@(maybeIri: Option[IRI] = None,
+  maybeUsername: Option[String] = None,
+  maybeEmail: Option[String] = None)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

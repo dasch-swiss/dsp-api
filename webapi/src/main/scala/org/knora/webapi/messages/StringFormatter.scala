@@ -53,6 +53,7 @@ import XmlPatterns.nCNameRegex
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
+  private val base64Encoder = Base64.getUrlEncoder.withoutPadding
 
   // Characters that are escaped in strings that will be used in SPARQL.
   private val SparqlEscapeInput = Array(
@@ -346,6 +347,21 @@ object StringFormatter {
    */
   def fromSparqlEncodedString(s: String): String = StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
+  /**
+   * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
+   * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
+   *
+   * @param uuid the [[UUID]] to be encoded.
+   * @return a 22-character string representing the UUID.
+   */
+  def base64EncodeUuid(uuid: UUID): String = {
+    val bytes = Array.ofDim[Byte](16)
+    val byteBuffer = ByteBuffer.wrap(bytes)
+    byteBuffer.putLong(uuid.getMostSignificantBits)
+    byteBuffer.putLong(uuid.getLeastSignificantBits)
+    base64Encoder.encodeToString(bytes)
+  }
+
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
     StringFormatter.getGeneralInstance
@@ -355,6 +371,8 @@ object StringFormatter {
     StringFormatter.initForTest()
     StringFormatter.getGeneralInstance
   }
+
+
 }
 
 /**
@@ -640,7 +658,6 @@ class StringFormatter private (
   initForTest: Boolean = false
 ) {
 
-  private val base64Encoder = Base64.getUrlEncoder.withoutPadding
   private val base64Decoder = Base64.getUrlDecoder
 
   // The host and port number that this Knora server is running on, and that should be used
@@ -2013,21 +2030,6 @@ class StringFormatter private (
   def makeRandomBase64EncodedUuid: String = {
     val uuid = UUID.randomUUID
     base64EncodeUuid(uuid)
-  }
-
-  /**
-   * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
-   * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
-   *
-   * @param uuid the [[UUID]] to be encoded.
-   * @return a 22-character string representing the UUID.
-   */
-  def base64EncodeUuid(uuid: UUID): String = {
-    val bytes      = Array.ofDim[Byte](16)
-    val byteBuffer = ByteBuffer.wrap(bytes)
-    byteBuffer.putLong(uuid.getMostSignificantBits)
-    byteBuffer.putLong(uuid.getLeastSignificantBits)
-    base64Encoder.encodeToString(bytes)
   }
 
   /**

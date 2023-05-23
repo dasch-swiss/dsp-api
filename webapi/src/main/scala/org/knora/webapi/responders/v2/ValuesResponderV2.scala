@@ -2617,7 +2617,7 @@ final case class ValuesResponderV2Live(
           stringFormatter.base64DecodeUuid(maybeCustomIri.get.toString.split("/").last) != Success(customValueUUID)
         ) {
           throw BadRequestException(
-            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${stringFormatter
+            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${StringFormatter
                 .base64EncodeUuid(customValueUUID)}."
           )
         }

@@ -111,7 +111,7 @@ INSERT {
             knora-base:valueHasRefCount @linkUpdateForNewLink.newReferenceCount ;
             knora-base:valueHasOrder ?order ;
             knora-base:isDeleted false ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" ;
+            knora-base:valueHasUUID "@{StringFormatter.base64EncodeUuid(UUID.randomUUID)}" ;
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
 
         ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueCreator> ;

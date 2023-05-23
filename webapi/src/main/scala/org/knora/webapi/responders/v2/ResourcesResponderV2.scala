@@ -1570,7 +1570,7 @@ final case class ResourcesResponderV2Live(
             case Some(definedValueUuid) =>
               if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
                 throw NotFoundException(
-                  s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it)"
+                  s"Value with UUID ${StringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it)"
                 )
               }
 

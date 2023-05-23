@@ -678,7 +678,7 @@ case class StandoffTagV2(
 
     val contentMap: Map[IRI, JsonLDValue] = Map(
       JsonLDKeywords.TYPE                                          -> JsonLDString(standoffTagClassIri.toString),
-      OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID       -> JsonLDString(stringFormatter.base64EncodeUuid(uuid)),
+      OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID       -> JsonLDString(StringFormatter.base64EncodeUuid(uuid)),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart      -> JsonLDInt(startPosition),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd        -> JsonLDInt(endPosition),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartIndex -> JsonLDInt(startIndex)

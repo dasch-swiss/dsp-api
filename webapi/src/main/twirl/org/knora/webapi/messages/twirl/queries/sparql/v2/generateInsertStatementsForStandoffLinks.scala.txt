@@ -63,7 +63,7 @@
                 <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
                     knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{StringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
             }
 
             @* Attach the new LinkValue to its containing resource. *@

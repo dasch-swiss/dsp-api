@@ -183,7 +183,7 @@ case class CreateValueResponseV2(
         Map(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          ValueHasUUID        -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
+          ValueHasUUID        -> JsonLDString(StringFormatter.base64EncodeUuid(valueUUID)),
           ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueCreationDate.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
@@ -410,7 +410,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
         Map(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          ValueHasUUID        -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
+          ValueHasUUID        -> JsonLDString(StringFormatter.base64EncodeUuid(valueUUID))
         )
       ),
       context = JsonLDUtil.makeContext(
@@ -704,7 +704,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
               ),
               ValueHasUUID -> JsonLDString(
-                stringFormatter.base64EncodeUuid(valueHasUUID)
+                StringFormatter.base64EncodeUuid(valueHasUUID)
               ),
               ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
