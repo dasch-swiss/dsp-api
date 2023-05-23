@@ -20,14 +20,12 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
     extends AbstractInMemoryCrudRepository[KnoraProject, InternalIri](projects, _.id)
     with KnoraProjectRepo {
 
-  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = projects.get.map(
-    _.find(
-      id match {
-        case ProjectIdentifierADM.ShortcodeIdentifier(shortcode) => _.shortcode == shortcode.value
-        case ProjectIdentifierADM.ShortnameIdentifier(shortname) => _.shortname == shortname.value
-        case ProjectIdentifierADM.IriIdentifier(iri)             => _.id.value == iri.value
-      }
-    )
+  override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = findOneByPredicate(
+    id match {
+      case ProjectIdentifierADM.ShortcodeIdentifier(shortcode) => _.shortcode == shortcode.value
+      case ProjectIdentifierADM.ShortnameIdentifier(shortname) => _.shortname == shortname.value
+      case ProjectIdentifierADM.IriIdentifier(iri)             => _.id.value == iri.value
+    }
   )
 }
 
