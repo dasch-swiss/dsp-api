@@ -355,7 +355,7 @@ object StringFormatter {
    * @return a 22-character string representing the UUID.
    */
   def base64EncodeUuid(uuid: UUID): String = {
-    val bytes = Array.ofDim[Byte](16)
+    val bytes      = Array.ofDim[Byte](16)
     val byteBuffer = ByteBuffer.wrap(bytes)
     byteBuffer.putLong(uuid.getMostSignificantBits)
     byteBuffer.putLong(uuid.getLeastSignificantBits)
@@ -371,7 +371,6 @@ object StringFormatter {
     StringFormatter.initForTest()
     StringFormatter.getGeneralInstance
   }
-
 
 }
 
