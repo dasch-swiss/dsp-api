@@ -27,8 +27,9 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
+import zio.http.model.HeaderValues.filename
+import zio.http.model.HeaderValues.filename
 import zio.nio.file.Path
-
 import java.net.URI
 import java.util
 
@@ -62,10 +63,11 @@ final case class IIIFServiceSipiImpl(
 ) extends IIIFService {
 
   private object SipiRoutes {
-    def file(asset: Asset): UIO[URI] = file(asset.belongsToProject.shortcode, asset.internalFilename)
-
-    private def file(projectShortcode: String, internalFilename: String): UIO[URI] =
-      ZIO.attempt(URI.create(s"${sipiConfig.internalBaseUrl}/$projectShortcode/$internalFilename/file")).orDie
+    def file(asset: Asset): UIO[URI]           = makeUri(s"${assetBase(asset)}/file")
+    def knoraJson(asset: Asset): UIO[URI]      = makeUri(s"${assetBase(asset)}/knora.json")
+    private def makeUri(uri: String): UIO[URI] = ZIO.attempt(URI.create(uri)).logError.orDie
+    private def assetBase(asset: Asset): String =
+      s"${sipiConfig.internalBaseUrl}/${asset.belongsToProject.shortcode}/${asset.internalFilename}"
   }
 
   /**
@@ -289,7 +291,7 @@ final case class IIIFServiceSipiImpl(
   }
 
   /**
-   * Downloads an asset from Sipi.
+   * Downloads an asset and its knora.json from Sipi.
    *
    * @param asset     The asset to download.
    * @param targetDir The target directory in which the asset should be stored.
@@ -297,24 +299,27 @@ final case class IIIFServiceSipiImpl(
    * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
    */
   override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = {
+    def statusCode(response: HttpResponse): Int = response.getStatusLine.getStatusCode
+    def executeDownloadRequest(uri: URI, jwt: Jwt, filename: String) = ZIO.scoped {
+      makeGetRequestWithAuthorization(uri, jwt).flatMap {
+        sendRequest(_)
+          .filterOrElseWith(statusCode(_) == 200)(it => ZIO.fail(new Exception(s"${statusCode(it)} code from sipi")))
+          .flatMap(response => saveToFile(filename, response.getEntity, targetDir))
+          .tapError(e => ZIO.logWarning(s"Failed downloading $uri: ${e.getMessage}"))
+          .fold(_ => None, Some(_))
+      }
+    }
+    def downloadAsset(asset: Asset, jwt: Jwt): Task[Option[Path]] =
+      SipiRoutes.file(asset).flatMap(executeDownloadRequest(_, jwt, asset.internalFilename))
 
-    def code(response: HttpResponse): Int = response.getStatusLine.getStatusCode
+    def downloadKnoraJson(asset: Asset, jwt: Jwt): Task[Option[Path]] =
+      SipiRoutes.knoraJson(asset).flatMap(executeDownloadRequest(_, jwt, s"${asset.internalFilename}_knora.json"))
 
-    for {
-      jwt     <- jwtService.createJwt(user)
-      uri     <- SipiRoutes.file(asset)
-      request <- makeGetRequestWithAuthorization(uri, jwt)
-      downloaded <- ZIO.scoped {
-                      sendRequest(request)
-                        .filterOrElseWith(code(_) == 200)(it => ZIO.fail(new Exception(s"${code(it)} code from sipi")))
-                        .flatMap(response => saveToFile(asset, response.getEntity, targetDir))
-                        .tapBoth(
-                          e => ZIO.logWarning(s"Failed downloading ${Asset.logString(asset)}: ${e.getMessage}"),
-                          _.toAbsolutePath.flatMap(p => ZIO.logInfo(s"Downloaded ${Asset.logString(asset)} to $p"))
-                        )
-                        .fold(_ => None, Some(_))
-                    }
-    } yield downloaded
+    (for {
+      jwt        <- jwtService.createJwt(user)
+      downloaded <- downloadAsset(asset, jwt)
+      _          <- downloadKnoraJson(asset, jwt)
+    } yield downloaded) <* ZIO.logInfo(s"Downloaded ${Asset.logString(asset)} from sipi.")
   }
 
   private def makeGetRequestWithAuthorization(uri: URI, jwt: Jwt): UIO[HttpGet] = {
@@ -336,8 +341,8 @@ final case class IIIFServiceSipiImpl(
     ZIO.acquireRelease(acquire)(release)
   }
 
-  private def saveToFile(asset: Asset, entity: HttpEntity, targetDir: Path): ZIO[Scope, Throwable, Path] = {
-    val targetFile = targetDir / asset.internalFilename
+  private def saveToFile(filename: String, entity: HttpEntity, targetDir: Path): ZIO[Scope, Throwable, Path] = {
+    val targetFile = targetDir / filename
     ZScopedJavaIoStreams
       .fileOutputStream(targetFile)
       .flatMap(out => ZIO.attemptBlocking(entity.getContent.transferTo(out)))
