@@ -7,8 +7,7 @@ import zio.Scope
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
-import zio.http.Client
-import zio.http.Request
+import zio.http._
 import zio.http.model.Status
 import zio.test.Spec
 import zio.test.TestAspect
@@ -19,7 +18,7 @@ import zio.test.assertTrue
 import org.knora.webapi.testcontainers.SipiTestContainer
 
 object SipiIT extends ZIOSpecDefault {
-  private def getSipiUrl                                = ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl)
+  private def sipiUrl(path: String)                     = ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.setPath(path))
   private def resetAndGetWireMockServer                 = ZIO.serviceWith[WireMockServer] { it => it.resetAll(); it }
   private def noInteractionWith(server: WireMockServer) = server.getAllServeEvents.isEmpty
 
@@ -27,26 +26,23 @@ object SipiIT extends ZIOSpecDefault {
     suite("Sipi integration tests with mocked dsp-api")(
       test("health check works") {
         for {
-          server      <- resetAndGetWireMockServer
-          sipiBaseUrl <- getSipiUrl
-          response    <- Client.request(Request.get(sipiBaseUrl.setPath("/server/test.html")))
+          server     <- resetAndGetWireMockServer
+          requestUrl <- sipiUrl("/server/test.html")
+          response   <- Client.request(Request.get(requestUrl))
         } yield assertTrue(response.status.isSuccess, noInteractionWith(server))
       },
       test("given an image does not exist in SIPI, the response is 404") {
         for {
-          server      <- resetAndGetWireMockServer
-          sipiBaseUrl <- getSipiUrl
-          response <-
-            Client
-              .request(Request.get(sipiBaseUrl.setPath("/images/0001/doesnotexist.jp2/full/1920,1080/0/default.jpg")))
-              .logError
+          server     <- resetAndGetWireMockServer
+          requestUrl <- sipiUrl("/images/0001/doesnotexist.jp2/full/1920,1080/0/default.jpg")
+          response   <- Client.request(Request.get(requestUrl))
         } yield assertTrue(response.status == Status.NotFound, noInteractionWith(server))
       },
       test("given a file does not exist in SIPI, the response is 404") {
         for {
-          server      <- resetAndGetWireMockServer
-          sipiBaseUrl <- getSipiUrl
-          response    <- Client.request(Request.get(sipiBaseUrl.setPath("/images/0001/doesnotexist.jp2/file"))).logError
+          server     <- resetAndGetWireMockServer
+          requestUrl <- sipiUrl("/images/0001/doesnotexist.jp2/file")
+          response   <- Client.request(Request.get(requestUrl))
         } yield assertTrue(response.status == Status.NotFound, noInteractionWith(server))
       }
     )
