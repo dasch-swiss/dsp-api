@@ -90,14 +90,14 @@ function pre_flight(prefix, identifier, cookie)
 
     local filepath = find_file(identifier, prefix)
     if filepath == nil then
-        return 'allow', nil
+        return 'allow', ""
     end
 
+    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
     if prefix == "tmp" then
         log("pre_flight - always allow access to tmp folder", server.loglevel.LOG_DEBUG)
         return 'allow', filepath
     end
-    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     local jwt_raw = auth_get_jwt_raw()
     local permission_info = get_permission_on_file(prefix, identifier, jwt_raw)
