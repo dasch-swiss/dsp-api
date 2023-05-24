@@ -52,7 +52,8 @@ object SipiIT extends ZIOSpecDefault {
         val dspApiResponse =
           SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None).toJsValue.compactPrint
         for {
-          _        <- MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
+          _ <-
+            MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
           _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(response.status == Status.Ok)
@@ -63,7 +64,8 @@ object SipiIT extends ZIOSpecDefault {
         val dspApiResponse =
           SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None).toJsValue.compactPrint
         for {
-          _        <- MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
+          _ <-
+            MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
           _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(response.status == Status.Unauthorized)
