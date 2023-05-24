@@ -1,7 +1,10 @@
 package org.knora.webapi.testcontainers
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.utility.DockerImageName
 import zio._
 import zio.http.URL
@@ -60,6 +63,7 @@ object SipiTestContainer {
       "/sipi/images/0803/in/cu/incunabula_0000000002.jp2",
       BindMode.READ_ONLY
     )
+    sipiContainer.withLogConsumer(frame => print("SIPI:" + frame.getUtf8String))
 
     sipiContainer.start()
 

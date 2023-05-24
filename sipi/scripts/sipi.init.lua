@@ -7,19 +7,6 @@ require "log_util"
 require "util"
 
 -------------------------------------------------------------------------------
--- This function returns the filepath according to the old way the file was
--- stored in.
--------------------------------------------------------------------------------
-local function get_old_filepath(shortcode, filename)
-    if config.prefix_as_path then
-        return config.imgroot .. '/' .. shortcode .. '/' .. filename
-    else
-        return config.imgroot .. '/' .. filename
-    end
-end
-
-
--------------------------------------------------------------------------------
 -- This function returns the segments from the identifier
 -------------------------------------------------------------------------------
 local function get_segments_from_identifier(identifier)
@@ -99,32 +86,18 @@ end
 --    filepath: path on the server where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix, identifier, cookie)
-    log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
-    log("pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
+    log("pre_flight - called with prefix:" .. prefix .. ", identifier: " .. identifier, server.loglevel.LOG_DEBUG)
 
-    local root_folder = ''
-    if config.prefix_as_path then
-        root_folder = config.imgroot .. '/' .. prefix
-    else
-        root_folder = config.imgroot
+    local filepath = find_file(identifier, prefix)
+    if filepath == nil then
+        return 'allow', nil
     end
-
-    local filepath = get_file_specific_path(root_folder, identifier)
-    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     if prefix == "tmp" then
         log("pre_flight - always allow access to tmp folder", server.loglevel.LOG_DEBUG)
         return 'allow', filepath
     end
-
-    -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
-    local _, exists = server.fs.exists(filepath)
-    log("pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
-    if not exists then
-        filepath = get_old_filepath(prefix, identifier)
-        log("pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath,
-                server.loglevel.LOG_DEBUG)
-    end
+    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
 
     local jwt_raw = auth_get_jwt_raw()
     local permission_info = get_permission_on_file(prefix, identifier, jwt_raw)
@@ -216,27 +189,13 @@ function file_pre_flight(identifier, cookie)
         return "deny"
     end
 
-    local root_folder = ''
-    if config.prefix_as_path then
-        root_folder = config.imgroot .. '/' .. shortcode
-    else
-        root_folder = config.imgroot
+    local filepath = find_file(file_name, shortcode)
+    if filepath == nil then
+        return "allow", ""
     end
 
-    local filepath = get_file_specific_path(root_folder, file_name)
-    local filepath_preview = get_file_specific_path(root_folder, file_name_preview)
+    local filepath_preview = find_file(file_name_preview, shortcode)
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
-
-    -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
-    local _, exists = server.fs.exists(filepath)
-    log("file_pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
-    if not exists then
-        filepath = get_old_filepath(shortcode, file_name)
-        filepath_preview = get_old_filepath(shortcode, file_name_preview)
-        log("file_pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath,
-                server.loglevel.LOG_DEBUG)
-    end
-
     if shortcode == "082A" then
         -- SVA / 082A allows file access no matter what permissions are set!
         log("file_pre_flight - file requested for 082A: " .. identifier, server.loglevel.LOG_WARNING)
