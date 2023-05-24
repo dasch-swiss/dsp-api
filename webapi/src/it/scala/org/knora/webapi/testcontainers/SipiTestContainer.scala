@@ -1,10 +1,15 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import zio._
-
+import zio.http.URL
 import java.net.NetworkInterface
 import java.net.UnknownHostException
 import java.nio.file.Paths
@@ -12,7 +17,12 @@ import scala.jdk.CollectionConverters._
 
 import org.knora.webapi.http.version.BuildInfo
 
-final case class SipiTestContainer(container: GenericContainer[Nothing])
+final case class SipiTestContainer(container: GenericContainer[Nothing]) {
+  def host: String = container.getHost
+  def port: Int    = container.getFirstMappedPort
+  def sipiBaseUrl: URL =
+    URL.fromString(s"http://$host:$port").getOrElse(throw new IllegalStateException("Invalid URL"))
+}
 
 object SipiTestContainer {
 
@@ -55,6 +65,7 @@ object SipiTestContainer {
       "/sipi/images/0803/in/cu/incunabula_0000000002.jp2",
       BindMode.READ_ONLY
     )
+    sipiContainer.withLogConsumer(frame => print("SIPI:" + frame.getUtf8String))
 
     sipiContainer.start()
 
@@ -70,9 +81,5 @@ object SipiTestContainer {
   }.orDie.zipLeft(ZIO.logInfo(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] =
-    ZLayer.scoped {
-      for {
-        tc <- ZIO.acquireRelease(acquire)(release)
-      } yield SipiTestContainer(tc)
-    }
+    ZLayer.scoped(ZIO.acquireRelease(acquire)(release).map(SipiTestContainer(_)))
 }
