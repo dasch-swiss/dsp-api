@@ -10,11 +10,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import zio._
 import zio.http._
 import zio.http.model.Status
 import zio.test._
 
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.testcontainers.SipiTestContainer
 
@@ -49,8 +51,7 @@ object SipiIT extends ZIOSpecDefault {
       test(
         "given a file exists in SIPI, and given dsp-api returns 2='full view permissions on file', the response is 200"
       ) {
-        val dspApiResponse =
-          SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None).toJsValue.compactPrint
+        val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
         for {
           _ <-
             MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
@@ -61,14 +62,22 @@ object SipiIT extends ZIOSpecDefault {
       test(
         "given a file exists in SIPI, and given dsp-api returns 0='no view permission on file', the response is 401"
       ) {
-        val dspApiResponse =
-          SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None).toJsValue.compactPrint
+        val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
         for {
           _ <-
             MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
           _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(response.status == Status.Unauthorized)
+      },
+      test(
+        "given a file exists in SIPI, and given dsp-api does not know this file and returns a 404, the response is 404"
+      ) {
+        for {
+          _        <- MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 404)
+          _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
+          response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
+        } yield assertTrue(response.status == Status.NotFound)
       }
     )
       .provideSomeLayerShared[Scope with Client with WireMockServer](SipiTestContainer.layer)
@@ -77,16 +86,21 @@ object SipiIT extends ZIOSpecDefault {
 }
 
 object MockDspApiServer {
+  def resetAndStubGetResponse(url: String, status: Int): URIO[WireMockServer, WireMockServer] =
+    resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetResponse(server, url, status)))
+  def resetAndStubGetResponse(url: String, status: Int, body: KnoraResponseADM): URIO[WireMockServer, WireMockServer] =
+    resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetResponse(server, url, status, Some(body))))
 
-  def resetAndStubGetResponse(
+  private def stubGetResponse(
+    server: WireMockServer,
     url: String,
-    responseStatus: Int,
-    responseBody: String = null
-  ): URIO[WireMockServer, WireMockServer] =
-    resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetResponse(url, responseStatus, responseBody, server)))
-
-  private def stubGetResponse(url: String, responseStatus: Int, responseBody: String, server: WireMockServer) =
-    server.stubFor(get(urlEqualTo(url)).willReturn(aResponse().withStatus(responseStatus).withBody(responseBody)))
+    status: Int,
+    body: Option[KnoraResponseADM] = None
+  ): StubMapping = {
+    val json         = body.map(_.toJsValue.compactPrint).orNull
+    val jsonResponse = aResponse().withStatus(status).withBody(json).withHeader("Content-Type", "application/json")
+    server.stubFor(get(urlEqualTo(url)).willReturn(jsonResponse))
+  }
 
   def resetAndGetWireMockServer: URIO[WireMockServer, WireMockServer] =
     ZIO.serviceWith[WireMockServer] { it => it.resetAll(); it }

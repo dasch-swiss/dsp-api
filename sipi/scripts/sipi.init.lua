@@ -25,10 +25,12 @@ local function get_api_url(webapi_hostname, webapi_port, prefix, identifier)
     return 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 end
 
--------------------------------------------------------------------------------
--- This function gets the permissions defined on a file by requesting it from
--- the DSP-API.
--------------------------------------------------------------------------------
+--- This function gets the permissions defined on a file by requesting it from
+--- the DSP-API.
+--- @param shortcode string The shortcode of the file's project.
+--- @param file_name string The name of the file.
+--- @param jwt_raw string|nil The (optional) raw JWT token.
+--- @return table|nil The permissions on the file or nil if an error occurred.
 local function get_permission_on_file(shortcode, file_name, jwt_raw)
     local webapi_hostname = get_api_hostname()
     local webapi_port = get_api_port()
@@ -39,13 +41,13 @@ local function get_permission_on_file(shortcode, file_name, jwt_raw)
     local success, result = server.http("GET", api_url, _auth_header(jwt_raw), 5000)
     if not success then
         log("get_permission_on_file - server.http() failed: " .. result, server.loglevel.LOG_ERR)
-        return 'deny'
+        return nil
     end
 
     if result.status_code ~= 200 then
         log("get_permission_on_file - DSP-API returned HTTP status code " .. result.status_code, server.loglevel.LOG_ERR)
-        log("get_permission_on_file - result body: " .. result.body, server.loglevel.LOG_ERR)
-        return 'deny'
+        log("get_permission_on_file - result body: " .. tostring(result.body), server.loglevel.LOG_ERR)
+        return nil
     end
 
     log("get_permission_on_file - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
@@ -54,7 +56,7 @@ local function get_permission_on_file(shortcode, file_name, jwt_raw)
     success, response_json = server.json_to_table(result.body)
     if not success then
         log("get_permission_on_file - server.json_to_table() failed: " .. response_json, server.loglevel.LOG_ERR)
-        return 'deny'
+        return nil
     end
 
     return response_json
@@ -90,7 +92,7 @@ function pre_flight(prefix, identifier, cookie)
 
     local filepath = find_file(identifier, prefix)
     if filepath == nil then
-        return 'allow', ""
+        return _file_not_found_response()
     end
 
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
@@ -101,6 +103,10 @@ function pre_flight(prefix, identifier, cookie)
 
     local jwt_raw = auth_get_jwt_raw()
     local permission_info = get_permission_on_file(prefix, identifier, jwt_raw)
+    if permission_info == nil then
+        return _file_not_found_response()
+    end
+
     local permission_code = permission_info.permissionCode
     log("pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
@@ -145,6 +151,9 @@ function pre_flight(prefix, identifier, cookie)
     end
 end
 
+function _file_not_found_response()
+    return "allow", "file_does_not_exist"
+end
 -------------------------------------------------------------------------------
 -- This function is being called from Sipi before the file is served.
 -- DSP-API is called to ask for the user's permissions on the file.
@@ -191,7 +200,7 @@ function file_pre_flight(identifier, cookie)
 
     local filepath = find_file(file_name, shortcode)
     if filepath == nil then
-        return "allow", ""
+        return _file_not_found_response()
     end
 
     local filepath_preview = find_file(file_name_preview, shortcode)
@@ -203,6 +212,9 @@ function file_pre_flight(identifier, cookie)
     end
     local jwt_raw = auth_get_jwt_raw()
     local permission_info = get_permission_on_file(shortcode, file_name, jwt_raw)
+    if permission_info == nil then
+        return _file_not_found_response()
+    end
     local permission_code = permission_info.permissionCode
     log("file_pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
