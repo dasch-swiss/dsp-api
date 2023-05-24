@@ -136,6 +136,12 @@ object Iri {
   def fromSparqlEncodedString(s: String): String =
     StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
+  // TODO-mpro: Findings about fromSparqlEncodedString method:
+  // - there is more cases to handle according to docs (https://www.w3.org/TR/rdf-sparql-query#grammarEscapes) - we use 1.1 version right?
+  // - `'` doesn't appear on that list, but this method escapes it
+  // - why `\r` throws error instead of being escaped?
+  // - fun fact is that if I remove  StringUtils.replaceEach, for example `\t` passes unescaped, why?
+
   /**
    * Checks that a string represents a valid IRI.
    * Also encodes the IRI, preserving existing %-escapes.

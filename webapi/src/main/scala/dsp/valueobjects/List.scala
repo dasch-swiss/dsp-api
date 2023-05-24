@@ -16,14 +16,15 @@ object List {
    */
   sealed abstract case class ListName private (value: String)
   object ListName { self =>
-    def make(value: String): Validation[Throwable, ListName] =
+    def make(value: String): Validation[BadRequestException, ListName] =
       if (value.isEmpty) Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
       else
         Validation
-          .fromOptionWith(BadRequestException(ListErrorMessages.ListNameInvalid))(Iri.toSparqlEncodedString(value))
+          .fromOption(Iri.toSparqlEncodedString(value))
+          .mapError(_ => BadRequestException(ListErrorMessages.ListNameInvalid))
           .map(new ListName(_) {})
 
-    def make(value: Option[String]): Validation[Throwable, Option[ListName]] =
+    def make(value: Option[String]): Validation[BadRequestException, Option[ListName]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -35,14 +36,11 @@ object List {
    */
   sealed abstract case class Position private (value: Int)
   object Position { self =>
-    def make(value: Int): Validation[Throwable, Position] =
-      if (value < -1) {
-        Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
-      } else {
-        Validation.succeed(new Position(value) {})
-      }
+    def make(value: Int): Validation[BadRequestException, Position] =
+      if (value < -1) Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
+      else Validation.succeed(new Position(value) {})
 
-    def make(value: Option[Int]): Validation[Throwable, Option[Position]] =
+    def make(value: Option[Int]): Validation[BadRequestException, Option[Position]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
