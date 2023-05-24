@@ -23,7 +23,7 @@ object SipiIT extends ZIOSpecDefault {
   private def noInteractionWith(server: WireMockServer) = server.getAllServeEvents.isEmpty
   private def sendGetRequestToSipi(path: String) =
     SipiTestContainer.resolveUrl(path).map(Request.get).flatMap(Client.request(_))
-  private val identifierTestFile = "250x250.png"
+  private val identifierTestFile = "250x250.jp2"
   private val prefix             = "0001"
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
@@ -91,7 +91,7 @@ object HttpMockServer {
 
   private def acquireWireMockServer: Task[WireMockServer] = ZIO.attempt {
     val server = new WireMockServer(options().port(3333)); // No-args constructor will start on port 8080, no HTTPS
-    server.start();
+    server.start()
     server
   }
   private def releaseWireMockServer(server: WireMockServer) = ZIO.attempt(server.stop()).logError.ignore
