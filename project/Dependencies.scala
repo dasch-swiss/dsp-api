@@ -102,11 +102,12 @@ object Dependencies {
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
   // test
-  val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
-  val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
-  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.15"         // Scala 3 compatible
-  val testcontainers    = "org.testcontainers" % "testcontainers"      % "1.18.0"
+  val akkaHttpTestkit   = "com.typesafe.akka"     %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaStreamTestkit = "com.typesafe.akka"     %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
+  val akkaTestkit       = "com.typesafe.akka"     %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
+  val scalaTest         = "org.scalatest"         %% "scalatest"           % "3.2.15"         // Scala 3 compatible
+  val testcontainers    = "org.testcontainers"     % "testcontainers"      % "1.18.0"
+  val wiremock          = "com.github.tomakehurst" % "wiremock-jre8"       % "2.35.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -118,6 +119,7 @@ object Dependencies {
     rdf4jClient,
     scalaTest,
     testcontainers,
+    wiremock,
     xmlunitCore,
     zioTest,
     zioTestSbt

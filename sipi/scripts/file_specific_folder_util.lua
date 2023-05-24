@@ -6,6 +6,45 @@
 -- two folders created from the first characters of the file name
 --
 
+--- Finds a file in the file specific folder structure.
+--- Returns the path to the file or nil if the file doesn't exist.
+--- @param file_name string The name of the file.
+--- @param prefix string The IIIF prefix of the file, i.e. the project's shortcode.
+--- @return string|nil The path to the file or nil if the file doesn't exist.
+function find_file(file_name, prefix)
+    local root_folder = _root_folder(prefix)
+    local file_name_and_prefix = prefix .. ' ' .. file_name
+
+    local file_path = get_file_specific_path(root_folder, file_name)
+    if _does_file_exist(file_path) then
+        log("file " .. file_name_and_prefix .. " found in file specific folder: " .. file_path, server.loglevel.LOG_DEBUG)
+        return file_path
+    end
+
+    -- deprecated way of storing files, still supported for backwards compatibility
+    local file_path_old = root_folder .. '/' .. file_name
+    if _does_file_exist(file_path_old) then
+        log("file " .. file_name_and_prefix .. " found in deprecated folder: " .. file_path_old, server.loglevel.LOG_DEBUG)
+        return file_path_old
+    end
+
+    return nil
+end
+
+function _does_file_exist(file_path)
+    local _, exists = server.fs.exists(file_path)
+    log("does the file exist? " .. file_path .. " exists " .. tostring(exists), server.loglevel.LOG_DEBUG)
+    return exists
+end
+
+function _root_folder(prefix)
+    if config.prefix_as_path then
+        return config.imgroot .. '/' .. prefix
+    else
+        return config.imgroot
+    end
+end
+
 --------------------------------------------------------
 -- Create the file specific folder from its filename if
 -- it doesn't exist yet.
