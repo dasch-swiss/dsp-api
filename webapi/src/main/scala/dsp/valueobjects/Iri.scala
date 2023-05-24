@@ -12,6 +12,8 @@ import zio.json.JsonDecoder
 import zio.json.JsonEncoder
 import zio.prelude.Validation
 
+import scala.util.Try
+
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 
@@ -86,7 +88,7 @@ object Iri {
    * @param iri the IRI to be checked.
    */
   def isProjectIri(iri: IRI): Boolean =
-    (iri.startsWith("http://rdfh.ch/projects/") || isBuiltInProjectIri(iri))
+    iri.startsWith("http://rdfh.ch/projects/") || isBuiltInProjectIri(iri)
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -176,22 +178,16 @@ object Iri {
     StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
   /**
-   * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
+   * Checks that a string represents a valid IRI.
+   * Also encodes the IRI, preserving existing %-escapes.
    *
-   * @param s        the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 IRI.
-   * @return the same string.
+   * @param s the string to be checked.
+   * @return A validated and escaped IRI.
    */
-  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
-    val urlEncodedStr = encodeAllowEscapes(s)
-
-    if (Iri.urlValidator.isValid(urlEncodedStr)) {
-      urlEncodedStr
-    } else {
-      errorFun
-    }
-  }
+  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
+    Validation
+      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
+      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
    * Check that the supplied IRI represents a valid project IRI.
@@ -219,22 +215,18 @@ object Iri {
   sealed abstract case class GroupIri private (value: String) extends Iri
   object GroupIri { self =>
     def make(value: String): Validation[Throwable, GroupIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isGroupIri(value)) {
+        if (!isGroupIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeIri(value, throw BadRequestException(IriErrorMessages.GroupIriInvalid))
-          )
-
-          validatedValue.map(new GroupIri(_) {})
-        }
+        else
+          validateAndEscapeIri(value)
+            .mapError(_ => BadRequestException(IriErrorMessages.GroupIriInvalid))
+            .map(new GroupIri(_) {})
       }
 
     def make(value: Option[String]): Validation[Throwable, Option[GroupIri]] =
@@ -250,25 +242,18 @@ object Iri {
   sealed abstract case class ListIri private (value: String) extends Iri
   object ListIri { self =>
     def make(value: String): Validation[Throwable, ListIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isListIri(value)) {
+        if (!isListIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeIri(
-              value,
-              throw BadRequestException(IriErrorMessages.ListIriInvalid)
-            )
-          )
-
-          validatedValue.map(new ListIri(_) {})
-        }
+        else
+          validateAndEscapeIri(value)
+            .mapError(_ => BadRequestException(IriErrorMessages.ListIriInvalid))
+            .map(new ListIri(_) {})
       }
 
     def make(value: Option[String]): Validation[Throwable, Option[ListIri]] =
@@ -283,9 +268,8 @@ object Iri {
    */
   sealed abstract case class ProjectIri private (value: String) extends Iri
   object ProjectIri { self =>
-    implicit val decoder: JsonDecoder[ProjectIri] = JsonDecoder[String].mapOrFail { value =>
-      ProjectIri.make(value).toEitherWith(e => e.head.getMessage())
-    }
+    implicit val decoder: JsonDecoder[ProjectIri] =
+      JsonDecoder[String].mapOrFail(value => ProjectIri.make(value).toEitherWith(e => e.head.getMessage))
     implicit val encoder: JsonEncoder[ProjectIri] =
       JsonEncoder[String].contramap((projectIri: ProjectIri) => projectIri.value)
 
@@ -336,25 +320,18 @@ object Iri {
   sealed abstract case class RoleIri private (value: String) extends Iri
   object RoleIri {
     def make(value: String): Validation[Throwable, RoleIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isRoleIri(value)) {
+        if (!isRoleIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeIri(
-              value,
-              throw BadRequestException(IriErrorMessages.RoleIriInvalid(value))
-            )
-          )
-
-          validatedValue.map(new RoleIri(_) {})
-        }
+        else
+          validateAndEscapeIri(value)
+            .mapError(_ => BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
+            .map(new RoleIri(_) {})
       }
   }
 
@@ -363,9 +340,8 @@ object Iri {
    */
   sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
-    implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
-      UserIri.make(value).toEitherWith(e => e.head.getMessage())
-    }
+    implicit val decoder: JsonDecoder[UserIri] =
+      JsonDecoder[String].mapOrFail(value => UserIri.make(value).toEitherWith(e => e.head.getMessage))
     implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
 
     def make(value: String): Validation[Throwable, UserIri] =

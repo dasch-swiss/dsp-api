@@ -20,7 +20,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
@@ -82,7 +81,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     params
       .get(LIMIT_TO_PROJECT)
       .map { projectIriStr =>
-        StringFormatter
+        Iri
           .validateAndEscapeIri(projectIriStr)
           .toZIO
           .mapBoth(_ => BadRequestException(s"$projectIriStr is not a valid Iri"), Some(_))

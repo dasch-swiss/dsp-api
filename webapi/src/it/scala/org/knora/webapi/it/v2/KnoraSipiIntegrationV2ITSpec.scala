@@ -117,8 +117,7 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val thingDocumentIRI = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
 
-  private val validationFun: (String, => Nothing) => String = (s, e) =>
-    StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+  private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   /**
    * Represents the information that Knora returns about an image file value that was created.

@@ -3142,7 +3142,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc                               = JsonLDUtil.parseJsonLD(responseStr)
-      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
@@ -3423,7 +3423,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc                               = JsonLDUtil.parseJsonLD(responseStr)
-      val validationFun: (String, => Nothing) => String = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+      val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(resourceIri.toSmartIri.isKnoraDataIri)

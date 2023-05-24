@@ -141,7 +141,7 @@ case class ResourceHistoryEventsGetRequestV2(
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  StringFormatter
+  Iri
     .validateAndEscapeIri(resourceIri)
     .getOrElse(throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
   if (!stringFormatter.toSmartIri(resourceIri).isKnoraResourceIri) {
@@ -159,7 +159,7 @@ case class ProjectResourcesWithHistoryGetRequestV2(
   projectIri: IRI,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
-  StringFormatter
+  Iri
     .validateAndEscapeIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
 

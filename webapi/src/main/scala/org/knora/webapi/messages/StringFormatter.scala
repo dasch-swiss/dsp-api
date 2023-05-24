@@ -9,7 +9,6 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
 import spray.json._
 import zio.ZLayer
@@ -295,18 +294,6 @@ object StringFormatter {
       iriStr,
       JavaUtil.function({ _: Object => creationFun() })
     )
-
-  /**
-   * Checks that a string represents a valid IRI.
-   * Also encodes the IRI, preserving existing %-escapes.
-   *
-   * @param s the string to be checked.
-   * @return A validated and escaped IRI.
-   */
-  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
-    Validation
-      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
-      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -767,7 +754,7 @@ class StringFormatter private (
     def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) =
       this(iriStr, parsedIriInfo, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
-    private val iri: IRI = StringFormatter.validateAndEscapeIri(iriStr).getOrElse(errorFun)
+    private val iri: IRI = Iri.validateAndEscapeIri(iriStr).getOrElse(errorFun)
 
     /**
      * Determines the API v2 schema of an external IRI.
@@ -2037,9 +2024,9 @@ class StringFormatter private (
   def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
     val mappingIri = s"$projectIri/mappings/$mappingName"
     // check that the mapping IRI is valid (mappingName is user input)
-    validateAndEscapeIri(mappingIri).getOrElse(
-      throw BadRequestException(s"the created mapping IRI $mappingIri is invalid")
-    )
+    Iri
+      .validateAndEscapeIri(mappingIri)
+      .getOrElse(throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
   }
 
   /**

@@ -7,8 +7,8 @@ package org.knora.webapi.messages
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -24,14 +24,14 @@ class StringFormatterSpec extends CoreSpec {
     "recognize the url of the dhlab site as a valid IRI" in {
       val testUrl: String = "http://dhlab.unibas.ch/"
       val validIri =
-        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
+        Iri.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
     "recognize the url of the DaSCH site as a valid IRI" in {
       val testUrl = "http://dasch.swiss"
       val validIri =
-        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
+        Iri.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 

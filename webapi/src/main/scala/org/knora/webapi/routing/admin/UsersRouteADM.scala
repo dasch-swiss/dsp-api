@@ -245,7 +245,7 @@ final case class UsersRouteADM()(
   private def isNotBuildInUser(it: String) = !it.equals(SystemUser.id) && !it.equals(AnonymousUser.id)
 
   private def validateAndEscapeGroupIri(groupIri: String) =
-    StringFormatter
+    Iri
       .validateAndEscapeIri(groupIri)
       .toZIO
       .orElseFail(BadRequestException(s"Invalid group IRI $groupIri"))
