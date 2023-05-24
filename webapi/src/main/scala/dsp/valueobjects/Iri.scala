@@ -13,9 +13,9 @@ import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
+
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import org.knora.webapi.messages.StringFormatter.{SparqlEscapeInput, SparqlEscapeOutput}
 
 sealed trait Iri {
   val value: String
@@ -167,6 +167,15 @@ object Iri {
   def toSparqlEncodedString(s: String): Option[String] =
     if (s.isEmpty || s.contains("\r")) None
     else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
+
+  /**
+   * Unescapes a string that has been escaped for SPARQL.
+   *
+   * @param s the string to be unescaped.
+   * @return the unescaped string.
+   */
+  def fromSparqlEncodedString(s: String): String =
+    StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
   /**
    * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.

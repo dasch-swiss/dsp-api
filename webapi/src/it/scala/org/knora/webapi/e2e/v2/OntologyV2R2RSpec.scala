@@ -18,11 +18,9 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
-
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
-import dsp.valueobjects.LangString
-import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.{Iri, LangString, LanguageCode}
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
@@ -546,7 +544,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            StringFormatter.fromSparqlEncodedString(comment)
+            Iri.fromSparqlEncodedString(comment)
           )
         )
         barIri.set(ontologyIri)
@@ -590,7 +588,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            StringFormatter.fromSparqlEncodedString(comment)
+            Iri.fromSparqlEncodedString(comment)
           )
         )
       }
@@ -668,7 +666,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(ontologyIri == barIri.get)
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
-            StringFormatter.fromSparqlEncodedString(newComment)
+            Iri.fromSparqlEncodedString(newComment)
           )
         )
 

@@ -14,6 +14,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors._
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -509,7 +510,7 @@ final case class ResourcesResponderV2Live(
 
         _ = updateResourceMetadataRequestV2.maybeLabel match {
               case Some(newLabel) =>
-                if (!updatedResource.label.contains(StringFormatter.fromSparqlEncodedString(newLabel))) {
+                if (!updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel))) {
                   throw UpdateNotPerformedException()
                 }
 
@@ -1370,7 +1371,7 @@ final case class ResourcesResponderV2Live(
           }
 
       // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
-      unescapedLabel: String = StringFormatter.fromSparqlEncodedString(
+      unescapedLabel: String = Iri.fromSparqlEncodedString(
                                  resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel
                                )
 

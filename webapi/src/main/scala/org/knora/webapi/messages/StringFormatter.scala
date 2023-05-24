@@ -11,7 +11,6 @@ import akka.pattern._
 import akka.util.Timeout
 import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
-import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio.ZLayer
 import zio.prelude.Validation
@@ -53,24 +52,6 @@ import XmlPatterns.nCNameRegex
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
-
-  // Characters that are escaped in strings that will be used in SPARQL.
-  private val SparqlEscapeInput = Array(
-    "\\",
-    "\"",
-    "'",
-    "\t",
-    "\n"
-  )
-
-  // Escaped characters as they are used in SPARQL.
-  private val SparqlEscapeOutput = Array(
-    "\\\\",
-    "\\\"",
-    "\\'",
-    "\\t",
-    "\\n"
-  )
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
 
@@ -326,15 +307,6 @@ object StringFormatter {
     Validation
       .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
-
-  /**
-   * Unescapes a string that has been escaped for SPARQL.
-   *
-   * @param s the string to be unescaped.
-   * @return the unescaped string.
-   */
-  def fromSparqlEncodedString(s: String): String =
-    StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -2218,12 +2190,12 @@ class StringFormatter private (
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
-        StringLiteralV2(value = fromSparqlEncodedString(stringLiteral.value), language = stringLiteral.language)
+        StringLiteralV2(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language)
       )
     )
   def unescapeOptionalString(optionalString: Option[String]): Option[String] =
     optionalString match {
-      case Some(s: String) => Some(fromSparqlEncodedString(s))
+      case Some(s: String) => Some(Iri.fromSparqlEncodedString(s))
       case None            => None
     }
 }

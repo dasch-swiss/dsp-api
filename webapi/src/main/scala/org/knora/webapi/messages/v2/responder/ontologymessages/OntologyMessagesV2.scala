@@ -1859,7 +1859,7 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
   def unescape: PredicateInfoV2 =
     copy(
       objects = objects.map {
-        case StringLiteralV2(str, lang) => StringLiteralV2(StringFormatter.fromSparqlEncodedString(str), lang)
+        case StringLiteralV2(str, lang) => StringLiteralV2(Iri.fromSparqlEncodedString(str), lang)
         case other                      => other
       }
     )
@@ -3427,8 +3427,8 @@ case class OntologyMetadataV2(
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     copy(
-      label = label.map(StringFormatter.fromSparqlEncodedString),
-      comment = comment.map(StringFormatter.fromSparqlEncodedString)
+      label = label.map(Iri.fromSparqlEncodedString),
+      comment = comment.map(Iri.fromSparqlEncodedString)
     )
   }
 

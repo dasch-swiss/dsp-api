@@ -10,13 +10,12 @@ import akka.testkit._
 
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
-import dsp.valueobjects.V2
+import dsp.valueobjects.{Iri, V2}
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
@@ -210,18 +209,18 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val listInfo = received.list.listinfo
         listInfo.projectIri should be(imagesProjectIri)
 
-        listInfo.name should be(Some(StringFormatter.fromSparqlEncodedString(nameWithSpecialCharacter)))
+        listInfo.name should be(Some(Iri.fromSparqlEncodedString(nameWithSpecialCharacter)))
 
         val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
         labels.size should be(1)
         val givenLabel = labels.head
-        givenLabel.value shouldEqual StringFormatter.fromSparqlEncodedString(labelWithSpecialCharacter)
+        givenLabel.value shouldEqual Iri.fromSparqlEncodedString(labelWithSpecialCharacter)
         givenLabel.language shouldEqual Some("de")
 
         val comments     = received.list.listinfo.comments.stringLiterals
         val givenComment = comments.head
         givenComment.language shouldEqual Some("de")
-        givenComment.value shouldEqual StringFormatter.fromSparqlEncodedString(commentWithSpecialCharacter)
+        givenComment.value shouldEqual Iri.fromSparqlEncodedString(commentWithSpecialCharacter)
 
         val children = received.list.children
         children.size should be(0)

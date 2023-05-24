@@ -8,6 +8,7 @@ package org.knora.webapi.responders.v1
 import zio.Task
 import zio.ZIO
 import zio._
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri

@@ -13,6 +13,7 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
@@ -783,7 +784,7 @@ case class TextValueWithStandoffV1(
     other match {
       case otherText: TextValueV1 =>
         // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
-        StringFormatter.fromSparqlEncodedString(utf8str) == otherText.utf8str
+        Iri.fromSparqlEncodedString(utf8str) == otherText.utf8str
       case otherValue =>
         throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
     }
@@ -803,7 +804,7 @@ case class TextValueWithStandoffV1(
       case textValueWithStandoffV1: TextValueWithStandoffV1 =>
         // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
         val utf8strIdentical: Boolean =
-          StringFormatter.fromSparqlEncodedString(utf8str) == textValueWithStandoffV1.utf8str
+          Iri.fromSparqlEncodedString(utf8str) == textValueWithStandoffV1.utf8str
 
         // Compare standoff tags.
         val thisComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(standoff)

@@ -21,6 +21,7 @@ import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import org.knora.webapi._

@@ -14,6 +14,7 @@ import java.util.UUID
 import scala.collection.immutable.SortedSet
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import org.knora.webapi._

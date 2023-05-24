@@ -9,10 +9,12 @@ import zio._
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
-import dsp.valueobjects.{Iri, IriErrorMessages}
+import dsp.valueobjects.Iri
+import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -1248,7 +1250,7 @@ case class DateValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -1616,7 +1618,7 @@ case class TextValueContentV2(
       standoffTag.copy(
         attributes = standoffTag.attributes.map {
           case stringAttribute: StandoffTagStringAttributeV2 =>
-            stringAttribute.copy(value = StringFormatter.fromSparqlEncodedString(stringAttribute.value))
+            stringAttribute.copy(value = Iri.fromSparqlEncodedString(stringAttribute.value))
 
           case other => other
         }
@@ -1624,9 +1626,9 @@ case class TextValueContentV2(
     }
 
     copy(
-      maybeValueHasString = maybeValueHasString.map(str => StringFormatter.fromSparqlEncodedString(str)),
+      maybeValueHasString = maybeValueHasString.map(str => Iri.fromSparqlEncodedString(str)),
       standoff = unescapedStandoff,
-      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
     )
   }
 
@@ -1798,7 +1800,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -1877,7 +1879,7 @@ case class DecimalValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -1960,7 +1962,7 @@ case class BooleanValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     // Always returns true, because it doesn't make sense to have two instances of the same boolean property.
@@ -2034,8 +2036,8 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasGeometry = StringFormatter.fromSparqlEncodedString(valueHasGeometry),
-      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasGeometry = Iri.fromSparqlEncodedString(valueHasGeometry),
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2131,7 +2133,7 @@ case class IntervalValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2235,7 +2237,7 @@ case class TimeValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2334,8 +2336,8 @@ case class HierarchicalListValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(
-      listNodeLabel = listNodeLabel.map(labelStr => StringFormatter.fromSparqlEncodedString(labelStr)),
-      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
+      listNodeLabel = listNodeLabel.map(labelStr => Iri.fromSparqlEncodedString(labelStr)),
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2417,8 +2419,8 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasColor = StringFormatter.fromSparqlEncodedString(valueHasColor),
-      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasColor = Iri.fromSparqlEncodedString(valueHasColor),
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2499,8 +2501,8 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasUri = StringFormatter.fromSparqlEncodedString(valueHasUri),
-      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasUri = Iri.fromSparqlEncodedString(valueHasUri),
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2589,8 +2591,8 @@ case class GeonameValueContentV2(
 
   override def unescape: ValueContentV2 =
     copy(
-      valueHasGeonameCode = StringFormatter.fromSparqlEncodedString(valueHasGeonameCode),
-      comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr))
+      valueHasGeonameCode = Iri.fromSparqlEncodedString(valueHasGeonameCode),
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
     )
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
@@ -2768,7 +2770,7 @@ case class StillImageFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2859,7 +2861,7 @@ case class DocumentFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -2920,7 +2922,7 @@ case class ArchiveFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3013,7 +3015,7 @@ case class TextFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3086,7 +3088,7 @@ case class AudioFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3161,7 +3163,7 @@ case class MovingImageFileValueContentV2(
   }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3284,7 +3286,7 @@ case class LinkValueContentV2(
     }
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
@@ -3353,7 +3355,7 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
   ): JsonLDValue = JsonLDObject(Map(OntologyConstants.KnoraBase.DeletedValue -> JsonLDString("DeletedValue")))
 
   override def unescape: ValueContentV2 =
-    copy(comment = comment.map(commentStr => StringFormatter.fromSparqlEncodedString(commentStr)))
+    copy(comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr)))
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = false
 

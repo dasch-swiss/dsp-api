@@ -14,12 +14,14 @@ import spray.json.RootJsonFormat
 import zio.prelude.Validation
 
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
-import dsp.valueobjects.{Iri, V2}
+import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -456,12 +458,12 @@ case class ProjectADM(
   def unescape: ProjectADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
-      V2.StringLiteralV2(value = StringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
+      V2.StringLiteralV2(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language)
     )
-    val unescapedKeywords: Seq[String] = keywords.map(key => StringFormatter.fromSparqlEncodedString(key))
+    val unescapedKeywords: Seq[String] = keywords.map(key => Iri.fromSparqlEncodedString(key))
     copy(
-      shortcode = StringFormatter.fromSparqlEncodedString(shortcode),
-      shortname = StringFormatter.fromSparqlEncodedString(shortname),
+      shortcode = Iri.fromSparqlEncodedString(shortcode),
+      shortname = Iri.fromSparqlEncodedString(shortname),
       longname = stringFormatter.unescapeOptionalString(longname),
       logo = stringFormatter.unescapeOptionalString(logo),
       description = unescapedDescriptions,

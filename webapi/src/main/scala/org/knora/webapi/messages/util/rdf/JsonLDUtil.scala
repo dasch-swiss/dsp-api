@@ -19,6 +19,7 @@ import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import org.knora.webapi._
