@@ -152,7 +152,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / parallelExecution  := true, // run tests in parallel
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
-  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin)
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "webapi",
     resolvers ++= Seq(
@@ -163,7 +163,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .configs(IntegrationTest)
   .settings(
     inConfig(IntegrationTest) {
-      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings
+      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(IntegrationTest)
     },
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
