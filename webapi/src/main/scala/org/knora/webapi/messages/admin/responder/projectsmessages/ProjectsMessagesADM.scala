@@ -14,13 +14,12 @@ import spray.json.RootJsonFormat
 import zio.prelude.Validation
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
-import dsp.valueobjects.V2
+import dsp.valueobjects.{Iri, V2}
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -110,14 +109,14 @@ case class ChangeProjectApiRequestADM(
 
     val validatedLongName: Option[String] =
       longname.map(l =>
-        StringFormatter
+        Iri
           .toSparqlEncodedString(l)
           .getOrElse(throw BadRequestException(s"The supplied longname: '$l' is not valid."))
       )
 
     val validatedLogo: Option[String] =
       logo.map(l =>
-        StringFormatter
+        Iri
           .toSparqlEncodedString(l)
           .getOrElse(throw BadRequestException(s"The supplied logo: '$l' is not valid."))
       )
@@ -126,7 +125,7 @@ case class ChangeProjectApiRequestADM(
       case Some(descriptions: Seq[V2.StringLiteralV2]) =>
         val escapedDescriptions = descriptions.map { des =>
           val escapedValue =
-            StringFormatter
+            Iri
               .toSparqlEncodedString(des.value)
               .getOrElse(throw BadRequestException(s"The supplied description: '${des.value}' is not valid."))
           V2.StringLiteralV2(value = escapedValue, language = des.language)
@@ -138,7 +137,7 @@ case class ChangeProjectApiRequestADM(
     val validatedKeywords: Option[Seq[String]] = keywords match {
       case Some(givenKeywords: Seq[String]) =>
         val escapedKeywords = givenKeywords.map(keyword =>
-          StringFormatter
+          Iri
             .toSparqlEncodedString(keyword)
             .getOrElse(
               throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")

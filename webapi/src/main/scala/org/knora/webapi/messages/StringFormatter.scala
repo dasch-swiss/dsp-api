@@ -328,23 +328,13 @@ object StringFormatter {
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
-   * Makes a string safe to be entered in the triplestore by escaping special chars.
-   *
-   * @param s a string.
-   * @return the same string escaped
-   *         [[None]] if the string is empty or contains a carriage return (`\r`).
-   */
-  def toSparqlEncodedString(s: String): Option[String] =
-    if (s.isEmpty || s.contains("\r")) None
-    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
-
-  /**
    * Unescapes a string that has been escaped for SPARQL.
    *
    * @param s the string to be unescaped.
    * @return the unescaped string.
    */
-  def fromSparqlEncodedString(s: String): String = StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
+  def fromSparqlEncodedString(s: String): String =
+    StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -1749,7 +1739,7 @@ class StringFormatter private (
    * @return the same string but escaped.
    */
   def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
-    if (Iri.isProjectIri(iri)) toSparqlEncodedString(iri)
+    if (Iri.isProjectIri(iri)) Iri.toSparqlEncodedString(iri)
     else None
 
   /**
@@ -1793,7 +1783,7 @@ class StringFormatter private (
    * @return the same string but escaped.
    */
   def validateAndEscapeUserIri(iri: IRI): Option[String] =
-    if (Iri.isUserIri(iri)) toSparqlEncodedString(iri)
+    if (Iri.isUserIri(iri)) Iri.toSparqlEncodedString(iri)
     else None
 
   /**

@@ -9,11 +9,10 @@ import zio._
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
-import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.{Iri, IriErrorMessages}
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -132,7 +131,7 @@ object CreateValueRequestV2 {
                 maybePermissions <-
                   ZIO.attempt {
                     val validationFun: (String, => Nothing) => String =
-                      (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                      (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                     jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
                   }
               } yield CreateValueV2(
@@ -246,7 +245,7 @@ object UpdateValueRequestV2 {
           maybePermissions <-
             ZIO.attempt {
               val validationFun: (String, => Nothing) => String =
-                (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
         } yield UpdateValueContentV2(
@@ -280,7 +279,7 @@ object UpdateValueRequestV2 {
                        )
           permissions <- ZIO.attempt {
                            val validationFun: (String, => Nothing) => String =
-                             (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                             (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                            jsonLDObject.requireStringWithValidation(HasPermissions, validationFun)
                          }
         } yield UpdateValuePermissionsV2(
@@ -483,7 +482,7 @@ object DeleteValueRequestV2 {
             valueTypeIri <- ZIO.attempt(jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri)
             deleteComment <- ZIO.attempt {
                                val validationFun: (String, => Nothing) => String =
-                                 (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                                jsonLDObject.maybeStringWithValidation(
                                  OntologyConstants.KnoraApiV2Complex.DeleteComment,
                                  validationFun
@@ -2454,7 +2453,7 @@ object ColorValueContentV2 {
       for {
         colorValueAsColor <- ZIO.attempt {
                                val validationFun: (String, => Nothing) => String =
-                                 (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                                jsonLDObject.requireStringWithValidation(ColorValueAsColor, validationFun)
                              }
         comment <- JsonLDUtil.getComment(jsonLDObject)
@@ -2536,7 +2535,7 @@ object UriValueContentV2 {
       for {
         uriValueAsUri <- ZIO.attempt {
                            val validationFun: (String, => Nothing) => String =
-                             (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                             (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                            jsonLDObject.requireDatatypeValueInObject(
                              UriValueAsUri,
                              OntologyConstants.Xsd.Uri.toSmartIri,
@@ -2626,7 +2625,7 @@ object GeonameValueContentV2 {
       for {
         geonameValueAsGeonameCode <- ZIO.attempt {
                                        val validationFun: (String, => Nothing) => String =
-                                         (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                                         (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                                        jsonLDObject.requireStringWithValidation(
                                          GeonameValueAsGeonameCode,
                                          validationFun
@@ -2668,7 +2667,7 @@ object FileValueWithSipiMetadata {
         // The submitted value provides only Sipi's internal filename for the file.
         internalFilename <- ZIO.attempt {
                               val validationFun: (String, => Nothing) => String =
-                                (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+                                (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                               jsonLDObject.requireStringWithValidation(FileValueHasFilename, validationFun)
                             }
 

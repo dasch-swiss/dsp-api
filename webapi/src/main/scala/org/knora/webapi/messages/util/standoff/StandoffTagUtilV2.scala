@@ -11,8 +11,8 @@ import zio.ZLayer
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors._
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -380,7 +380,7 @@ object StandoffTagUtilV2 {
               case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
                 StandoffTagStringAttributeV2(
                   standoffPropertyIri = standoffTagPropIri,
-                  value = StringFormatter
+                  value = Iri
                     .toSparqlEncodedString(attr.value)
                     .getOrElse(throw BadRequestException(s"Invalid string attribute: '${attr.value}'"))
                 )
@@ -674,7 +674,7 @@ object StandoffTagUtilV2 {
             originalXMLID = hierarchicalStandoffTag.originalID match {
               case Some(id: String) =>
                 Some(
-                  StringFormatter
+                  Iri
                     .toSparqlEncodedString(id)
                     .getOrElse(throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string"))
                 )
@@ -695,7 +695,7 @@ object StandoffTagUtilV2 {
             originalXMLID = freeStandoffTag.originalID match {
               case Some(id: String) =>
                 Some(
-                  StringFormatter
+                  Iri
                     .toSparqlEncodedString(id)
                     .getOrElse(throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string"))
                 )

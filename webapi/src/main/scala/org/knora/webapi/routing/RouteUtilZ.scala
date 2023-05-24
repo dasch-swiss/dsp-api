@@ -9,8 +9,8 @@ import zio._
 
 import java.net.URLDecoder
 import java.util.UUID
-
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
@@ -94,5 +94,5 @@ object RouteUtilZ {
   def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
 
   def toSparqlEncodedString(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, String] =
-    ZIO.fromOption(StringFormatter.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
+    ZIO.fromOption(Iri.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
 }

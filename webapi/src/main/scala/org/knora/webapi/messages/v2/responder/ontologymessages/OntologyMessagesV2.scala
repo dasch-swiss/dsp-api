@@ -102,7 +102,7 @@ object CreateOntologyRequestV2 {
       (s: String, errorFun) => ValuesValidator.validateProjectSpecificOntologyName(s).getOrElse(errorFun)
     )
     val validationFun: (String, => Nothing) => String = (s: String, errorFun) =>
-      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+      Iri.toSparqlEncodedString(s).getOrElse(errorFun)
     val label: String =
       jsonLDDocument.body.requireStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
     val comment: Option[String] =
@@ -1654,7 +1654,7 @@ object InputOntologyV2 {
     )
 
     val validationFun: (String, => Nothing) => String =
-      (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+      (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
 
     val ontologyLabel: Option[String] =
       ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
@@ -2147,7 +2147,7 @@ sealed trait EntityInfoContentV2 {
 object EntityInfoContentV2 {
   private def stringToLiteral(str: String): StringLiteralV2 = {
     val value =
-      StringFormatter.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
+      Iri.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
     StringLiteralV2(value)
   }
 

@@ -8,9 +8,9 @@ package org.knora.webapi.responders.v1
 import zio.Task
 import zio.ZIO
 import zio._
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -476,7 +476,7 @@ final case class SearchResponderV1Live(
                 case OntologyConstants.KnoraBase.TextValue =>
                   // http://www.morelab.deusto.es/code_injection/
                   // http://stackoverflow.com/questions/29601839/prevent-sparql-injection-generic-solution-triplestore-independent
-                  val searchString = StringFormatter
+                  val searchString = Iri
                     .toSparqlEncodedString(searchval)
                     .getOrElse(throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -547,7 +547,7 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.GeonameValue =>
                   // sanitize Geoname search string
-                  val searchString = StringFormatter
+                  val searchString = Iri
                     .toSparqlEncodedString(searchval)
                     .getOrElse(
                       throw BadRequestException(s"Invalid Geoname search string: '$searchval'")
