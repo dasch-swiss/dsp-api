@@ -69,7 +69,11 @@ addCommandAlias(
   "headerCreateAll",
   "; all webapi/headerCreate webapi/Test/headerCreate webapi/IntegrationTest/headerCreate"
 )
-addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
+addCommandAlias(
+  "headerCheckAll",
+  "; all webapi/headerCheck webapi/Test/headerCheck webapi/IntegrationTest/headerCheck"
+)
+addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("it", "IntegrationTest/test")
 
 lazy val customScalacOptions = Seq(
