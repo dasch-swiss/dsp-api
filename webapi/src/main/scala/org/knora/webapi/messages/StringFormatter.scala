@@ -1739,16 +1739,6 @@ class StringFormatter private (
     else Left(s"Invalid permission IRI: $iri.")
 
   /**
-   * Check that the supplied IRI represents a valid user IRI.
-   *
-   * @param iri      the string to be checked.
-   * @return the same string but escaped.
-   */
-  def validateAndEscapeUserIri(iri: IRI): Option[String] =
-    if (Iri.isUserIri(iri)) Iri.toSparqlEncodedString(iri)
-    else None
-
-  /**
    * Given an email address, checks if it is in a valid format.
    *
    * @param email the email.

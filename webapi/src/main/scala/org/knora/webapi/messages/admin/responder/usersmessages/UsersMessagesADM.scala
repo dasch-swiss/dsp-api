@@ -14,6 +14,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
@@ -772,7 +773,7 @@ object UserIdentifierADM {
     if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
 
     val userIri = maybeIri.map(iri =>
-      sf.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
+      Iri.validateAndEscapeUserIri(iri).getOrElse(throw BadRequestException(s"Invalid user IRI $iri"))
     )
 
     val userEmail = maybeEmail.map(e => sf.validateEmail(e).getOrElse(throw BadRequestException(s"Invalid email $e")))

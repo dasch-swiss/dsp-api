@@ -206,17 +206,12 @@ object Iri {
   /**
    * Check that the supplied IRI represents a valid user IRI.
    *
-   * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 user IRI.
+   * @param iri the string to be checked.
    * @return the same string but escaped.
    */
-  def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String =
-    if (isUserIri(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+  def validateAndEscapeUserIri(iri: IRI): Option[String] =
+    if (Iri.isUserIri(iri)) Iri.toSparqlEncodedString(iri)
+    else None
 
   /**
    * GroupIri value object.
@@ -374,25 +369,19 @@ object Iri {
     implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
 
     def make(value: String): Validation[Throwable, UserIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isUserIri(value)) {
+        if (!isUserIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeUserIri(
-              value,
-              throw BadRequestException(IriErrorMessages.UserIriInvalid(value))
-            )
-          )
-
-          validatedValue.map(new UserIri(_) {})
-        }
+        else
+          Validation
+            .fromOption(Iri.validateAndEscapeUserIri(value))
+            .mapError(_ => BadRequestException(IriErrorMessages.UserIriInvalid(value)))
+            .map(new UserIri(_) {})
       }
   }
 

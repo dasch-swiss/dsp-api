@@ -12,6 +12,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.User._
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -235,12 +236,10 @@ final case class UsersRouteADM()(
     for {
       nonEmptyIri <- ZIO.succeed(userIri).filterOrFail(_.nonEmpty)(BadRequestException("User IRI cannot be empty"))
       checkedUserIri <-
-        ZIO.serviceWithZIO[StringFormatter] { sf =>
-          ZIO
-            .fromOption(sf.validateAndEscapeUserIri(nonEmptyIri))
-            .orElseFail(BadRequestException(s"Invalid user IRI $userIri"))
-            .filterOrFail(isNotBuildInUser)(BadRequestException("Changes to built-in users are not allowed."))
-        }
+        ZIO
+          .fromOption(Iri.validateAndEscapeUserIri(nonEmptyIri))
+          .orElseFail(BadRequestException(s"Invalid user IRI $userIri"))
+          .filterOrFail(isNotBuildInUser)(BadRequestException("Changes to built-in users are not allowed."))
     } yield checkedUserIri
 
   private def isNotBuildInUser(it: String) = !it.equals(SystemUser.id) && !it.equals(AnonymousUser.id)
