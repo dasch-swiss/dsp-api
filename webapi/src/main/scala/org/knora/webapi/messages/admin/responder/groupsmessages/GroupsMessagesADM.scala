@@ -258,28 +258,7 @@ case class GroupADM(
    * Allows to sort collections of GroupADM. Sorting is done by the id.
    */
   def compare(that: GroupADM): Int = this.id.compareTo(that.id)
-
-  def asGroupShortADM: GroupShortADM =
-    GroupShortADM(
-      id = id,
-      name = name,
-      descriptions = descriptions,
-      status = status,
-      selfjoin = selfjoin
-    )
 }
-
-/**
- * The information describing a group (without project).
- *
- * @param id            the IRI if the group.
- * @param name          the name of the group.
- * @param descriptions  the descriptions of the group.
- * @param status        the group's status.
- * @param selfjoin      the group's self-join status.
- */
-case class GroupShortADM(id: IRI, name: String, descriptions: Seq[StringLiteralV2], status: Boolean, selfjoin: Boolean)
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
 
@@ -290,8 +269,7 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-  implicit val groupADMFormat: JsonFormat[GroupADM]           = jsonFormat6(GroupADM)
-  implicit val groupShortADMFormat: JsonFormat[GroupShortADM] = jsonFormat5(GroupShortADM)
+  implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
   implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
     jsonFormat(GroupsGetResponseADM, "groups")
   implicit val groupResponseADMFormat: RootJsonFormat[GroupGetResponseADM] = jsonFormat(GroupGetResponseADM, "group")
