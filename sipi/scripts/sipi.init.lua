@@ -110,7 +110,7 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     local filepath = get_file_specific_path(root_folder, identifier)
-    log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
+    log("pre_flight - filepath: " .. filepath .. " from file:" .. root_folder .. "/" .. identifier, server.loglevel.LOG_DEBUG)
 
     if prefix == "tmp" then
         log("pre_flight - always allow access to tmp folder", server.loglevel.LOG_DEBUG)
