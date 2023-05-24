@@ -4,7 +4,8 @@ import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import zio._
-
+import zio.http.Path
+import zio.http.URL
 import java.net.NetworkInterface
 import java.net.UnknownHostException
 import java.nio.file.Paths
@@ -12,7 +13,12 @@ import scala.jdk.CollectionConverters._
 
 import org.knora.webapi.http.version.BuildInfo
 
-final case class SipiTestContainer(container: GenericContainer[Nothing])
+final case class SipiTestContainer(container: GenericContainer[Nothing]) {
+  def host: String = container.getHost
+  def port: Int    = container.getFirstMappedPort
+  def sipiBaseUrl: URL =
+    URL.fromString(s"http://$host:$port").getOrElse(throw new IllegalStateException("Invalid URL"))
+}
 
 object SipiTestContainer {
 
@@ -70,9 +76,5 @@ object SipiTestContainer {
   }.orDie.zipLeft(ZIO.logInfo(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] =
-    ZLayer.scoped {
-      for {
-        tc <- ZIO.acquireRelease(acquire)(release)
-      } yield SipiTestContainer(tc)
-    }
+    ZLayer.scoped(ZIO.acquireRelease(acquire)(release).map(SipiTestContainer(_)))
 }
