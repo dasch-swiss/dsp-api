@@ -30,19 +30,19 @@ object SipiIT extends ZIOSpecDefault {
     suite("Sipi integration tests with mocked dsp-api")(
       test("health check works") {
         for {
-          server   <- HttpMockServer.resetAndGetWireMockServer
+          server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi("/server/test.html")
         } yield assertTrue(response.status.isSuccess, noInteractionWith(server))
       },
       test("given an image does not exist in SIPI, the response is 404") {
         for {
-          server   <- HttpMockServer.resetAndGetWireMockServer
+          server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/full/1920,1080/0/default.jpg")
         } yield assertTrue(response.status == Status.NotFound, noInteractionWith(server))
       },
       test("given a file does not exist in SIPI, the response is 404") {
         for {
-          server   <- HttpMockServer.resetAndGetWireMockServer
+          server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/file")
         } yield assertTrue(response.status == Status.NotFound, noInteractionWith(server))
       },
@@ -52,7 +52,7 @@ object SipiIT extends ZIOSpecDefault {
         val dspApiResponse =
           SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None).toJsValue.compactPrint
         for {
-          _        <- HttpMockServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
+          _        <- MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
           _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(response.status == Status.Ok)
@@ -63,18 +63,18 @@ object SipiIT extends ZIOSpecDefault {
         val dspApiResponse =
           SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None).toJsValue.compactPrint
         for {
-          _        <- HttpMockServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
+          _        <- MockDspApiServer.resetAndStubGetResponse(s"/admin/files/$prefix/$identifierTestFile", 200, dspApiResponse)
           _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(response.status == Status.Unauthorized)
       }
     )
       .provideSomeLayerShared[Scope with Client with WireMockServer](SipiTestContainer.layer)
-      .provideSomeLayerShared[Scope with Client](HttpMockServer.layer)
+      .provideSomeLayerShared[Scope with Client](MockDspApiServer.layer)
       .provideSomeLayer[Scope](Client.default) @@ TestAspect.sequential
 }
 
-object HttpMockServer {
+object MockDspApiServer {
 
   def resetAndStubGetResponse(
     url: String,
