@@ -15,7 +15,6 @@ object SipiIT extends ZIOSpecDefault {
   private def getSipiUrl = ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl)
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("Sipi integration tests with mocked dsp-api")(
-      test("fails on purpose")(assertTrue(false)),
       test("health check works") {
         for {
           sipiBaseUrl <- getSipiUrl

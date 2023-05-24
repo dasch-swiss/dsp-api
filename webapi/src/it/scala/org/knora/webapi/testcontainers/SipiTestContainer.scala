@@ -4,7 +4,6 @@ import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import zio._
-import zio.http.Path
 import zio.http.URL
 import java.net.NetworkInterface
 import java.net.UnknownHostException
