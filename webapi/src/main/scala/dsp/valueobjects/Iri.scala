@@ -41,6 +41,12 @@ object Iri {
   val SystemProject: IRI                  = KnoraAdminPrefixExpansion + "SystemProject"
   val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
 
+  // Characters that are escaped in strings that will be used in SPARQL.
+  private val SparqlEscapeInput = Array("\\", "\"", "'", "\t", "\n")
+
+  // Escaped characters as they are used in SPARQL.
+  private val SparqlEscapeOutput = Array("\\\\", "\\\"", "\\'", "\\t", "\\n")
+
   /**
    * Returns `true` if a string is an IRI.
    *
@@ -56,7 +62,7 @@ object Iri {
    * @param iri the IRI to be checked.
    */
   def isListIri(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
+    isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora role IRI.
@@ -64,7 +70,7 @@ object Iri {
    * @param iri the IRI to be checked.
    */
   private def isRoleIri(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
+    isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora user IRI.
@@ -72,7 +78,7 @@ object Iri {
    * @param iri the IRI to be checked.
    */
   def isUserIri(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
+    isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora group IRI.
@@ -80,7 +86,7 @@ object Iri {
    * @param iri the IRI to be checked.
    */
   def isGroupIri(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
+    isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
@@ -99,7 +105,7 @@ object Iri {
    */
   private def isBuiltInProjectIri(iri: IRI): Boolean = {
     val builtInProjects = Seq(SystemProject, DefaultSharedOntologiesProject)
-    Iri.isIri(iri) && builtInProjects.contains(iri)
+    isIri(iri) && builtInProjects.contains(iri)
   }
 
   /**
@@ -108,54 +114,7 @@ object Iri {
    * @param iri the IRI to be checked.
    */
   def isPermissionIri(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/permissions/")
-
-  // Characters that are escaped in strings that will be used in SPARQL.
-  private val SparqlEscapeInput = Array(
-    "\\",
-    "\"",
-    "'",
-    "\t",
-    "\n"
-  )
-
-  // Escaped characters as they are used in SPARQL.
-  private val SparqlEscapeOutput = Array(
-    "\\\\",
-    "\\\"",
-    "\\'",
-    "\\t",
-    "\\n"
-  )
-
-  /**
-   * Makes a string safe to be entered in the triplestore by escaping special chars.
-   *
-   * If the param `revert` is set to `true`, the string is unescaped.
-   *
-   * @param s        a string.
-   * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
-   *                 a carriage return (`\r`).
-   * @return the same string, escaped or unescaped as requested.
-   */
-  @deprecated
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
-// Findings about this method:
-// - there is more cases to handle according to docs (https://www.w3.org/TR/rdf-sparql-query#grammarEscapes) - we use 1.1 version right?
-// - `'` doesn't appear on that list, but this method escapes it
-// - why `\r` throws error instead of being escaped?
-// - fun fact is that if I remove  StringUtils.replaceEach, for example `\t` passes unescaped, why?
-
-    if (s.isEmpty || s.contains("\r")) errorFun
-
-    // http://www.morelab.deusto.es/code_injection/
-
-    StringUtils.replaceEach(
-      s,
-      SparqlEscapeInput,
-      SparqlEscapeOutput
-    )
-  }
+    isIri(iri) && iri.startsWith("http://rdfh.ch/permissions/")
 
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
@@ -186,7 +145,7 @@ object Iri {
    */
   def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
     Validation
-      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
+      .fromTry(Try(encodeAllowEscapes(s)).filter(urlValidator.isValid))
       .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
@@ -206,7 +165,7 @@ object Iri {
    * @return the same string but escaped.
    */
   def validateAndEscapeUserIri(iri: IRI): Option[String] =
-    if (Iri.isUserIri(iri)) Iri.toSparqlEncodedString(iri)
+    if (isUserIri(iri)) toSparqlEncodedString(iri)
     else None
 
   /**
@@ -355,7 +314,7 @@ object Iri {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         else
           Validation
-            .fromOption(Iri.validateAndEscapeUserIri(value))
+            .fromOption(validateAndEscapeUserIri(value))
             .mapError(_ => BadRequestException(IriErrorMessages.UserIriInvalid(value)))
             .map(new UserIri(_) {})
       }
