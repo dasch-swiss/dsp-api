@@ -12,8 +12,6 @@ import zio.json.JsonDecoder
 import zio.json.JsonEncoder
 import zio.prelude.Validation
 
-import scala.util.Try
-
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 
@@ -198,17 +196,12 @@ object Iri {
   /**
    * Check that the supplied IRI represents a valid project IRI.
    *
-   * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 project IRI.
+   * @param iri the string to be checked.
    * @return the same string but escaped.
    */
-  def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI =
-    if (isProjectIri(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+  def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
+    if (isProjectIri(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
@@ -295,33 +288,26 @@ object Iri {
    */
   sealed abstract case class ProjectIri private (value: String) extends Iri
   object ProjectIri { self =>
-    implicit val decoder: JsonDecoder[ProjectIri] = JsonDecoder[String].mapOrFail { case value =>
+    implicit val decoder: JsonDecoder[ProjectIri] = JsonDecoder[String].mapOrFail { value =>
       ProjectIri.make(value).toEitherWith(e => e.head.getMessage())
     }
     implicit val encoder: JsonEncoder[ProjectIri] =
       JsonEncoder[String].contramap((projectIri: ProjectIri) => projectIri.value)
 
     def make(value: String): Validation[ValidationException, ProjectIri] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isProjectIri(value)) {
+        if (!isProjectIri(value))
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val eitherValue = Try(
-            validateAndEscapeProjectIri(
-              value,
-              throw ValidationException(IriErrorMessages.ProjectIriInvalid)
-            )
-          ).toEither.left.map(_.asInstanceOf[ValidationException])
-          val validatedValue = Validation.fromEither(eitherValue)
-
-          validatedValue.map(new ProjectIri(_) {})
-        }
+        else
+          Validation
+            .fromOption(validateAndEscapeProjectIri(value))
+            .mapError(_ => ValidationException(IriErrorMessages.ProjectIriInvalid))
+            .map(new ProjectIri(_) {})
       }
 
     def make(value: Option[String]): Validation[ValidationException, Option[ProjectIri]] =

@@ -51,7 +51,7 @@ case class CreateAdministrativePermissionAPIRequestADM(
 
   def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
 
-  sf.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
+  Iri.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
 
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
@@ -92,7 +92,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
 
   def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
 
-  sf.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
+  Iri.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
 
   forGroup match {
     case Some(iri: IRI) =>
@@ -243,9 +243,7 @@ case class PermissionsForProjectGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter
+  Iri
     .validateAndEscapeProjectIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
@@ -350,9 +348,7 @@ case class AdministrativePermissionsForProjectGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter
+  Iri
     .validateAndEscapeProjectIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
@@ -392,9 +388,7 @@ case class AdministrativePermissionForIriGetRequestADM(
  */
 case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter
+  Iri
     .validateAndEscapeProjectIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
@@ -502,9 +496,7 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter
+  Iri
     .validateAndEscapeProjectIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
@@ -537,7 +529,7 @@ case class DefaultObjectAccessPermissionGetRequestADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter
+  Iri
     .validateAndEscapeProjectIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
@@ -616,7 +608,7 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter
+  Iri
     .validateAndEscapeProjectIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
@@ -657,7 +649,7 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter
+  Iri
     .validateAndEscapeProjectIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 

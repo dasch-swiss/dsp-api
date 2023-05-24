@@ -1705,16 +1705,6 @@ class StringFormatter private (
     OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
 
   /**
-   * Check that the supplied IRI represents a valid project IRI.
-   *
-   * @param iri      the string to be checked.
-   * @return the same string but escaped.
-   */
-  def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
-    if (Iri.isProjectIri(iri)) Iri.toSparqlEncodedString(iri)
-    else None
-
-  /**
    * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
    *
    * @param shortcode the project's shortcode.
