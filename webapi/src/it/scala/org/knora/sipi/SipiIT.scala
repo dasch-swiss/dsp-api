@@ -124,7 +124,6 @@ object MockDspApiServer {
     server.stubFor(stubBuilder)
   }
 
-
   def verifySingleGetRequest(server: WireMockServer, path: String): Boolean =
     verify(server, 1, getRequestedFor(urlEqualTo(path)))
 
