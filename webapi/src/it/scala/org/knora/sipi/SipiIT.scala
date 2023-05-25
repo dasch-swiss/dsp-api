@@ -179,12 +179,14 @@ object SipiIT extends ZIOSpecDefault {
 object MockDspApiServer {
   object verify {
     def verifySingleGetRequest(server: WireMockServer, path: String): Boolean =
-      verify(server, 1, getRequestedFor(urlEqualTo(path))) && server.getAllServeEvents.size() == 1
-
-    def verify(server: WireMockServer, amount: Int, requestPattern: RequestPatternBuilder): Boolean =
-      verify(server, exactly(amount), requestPattern)
-
-    def verify(server: WireMockServer, amount: CountMatchingStrategy, requestPattern: RequestPatternBuilder): Boolean =
+      verifyRequest(server, 1, getRequestedFor(urlEqualTo(path))) && server.getAllServeEvents.size() == 1
+    def verifyRequest(server: WireMockServer, amount: Int, requestPattern: RequestPatternBuilder): Boolean =
+      verifyRequest(server, exactly(amount), requestPattern)
+    def verifyRequest(
+      server: WireMockServer,
+      amount: CountMatchingStrategy,
+      requestPattern: RequestPatternBuilder
+    ): Boolean =
       Try(server.verify(amount, requestPattern)) match {
         case Failure(e: Throwable) => println(s"\nMockDspApiServer: ${e.getMessage}"); false
         case Success(_)            => true
