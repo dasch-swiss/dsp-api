@@ -129,7 +129,7 @@ object MockDspApiServer {
 
   def verify(server: WireMockServer, amount: CountMatchingStrategy, requestPattern: RequestPatternBuilder): Boolean =
     Try(server.verify(amount, requestPattern)) match {
-      case Failure(e: Throwable) => println(e.getMessage); false
+      case Failure(e: Throwable) => println(s"\nMockDspApiServer: ${e.getMessage}"); false
       case Success(_)            => true
     }
 
