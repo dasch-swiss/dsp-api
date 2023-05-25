@@ -125,6 +125,37 @@ object SipiIT extends ZIOSpecDefault {
             response.status == Status.Ok,
             verifySingleGetRequest(server, dspApiPermissionPath)
           )
+        },
+        test(
+          "And given dsp-api returns 0='full view permissions on file', " +
+            "when getting the file, " +
+            "Sipi responds with Unauthorized"
+        ) {
+          val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
+          val dspApiPermissionPath = s"/admin/files/$prefix/$identifierTestFile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+            _        <- copyTestImageToSipi
+            response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/full/max/0/default.jp2")
+          } yield assertTrue(
+            response.status == Status.Unauthorized,
+            verifySingleGetRequest(server, dspApiPermissionPath)
+          )
+        },
+        test(
+          "And given dsp-api does not know this file and returns Not Found, " +
+            "when getting the file, " +
+            "Sipi responds with Not Found"
+        ) {
+          val dspApiPermissionPath = s"/admin/files/$prefix/$identifierTestFile"
+          for {
+            server <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
+            _ <- copyTestImageToSipi
+            response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/full/max/0/default.jp2")
+          } yield assertTrue(
+            response.status == Status.NotFound,
+            verifySingleGetRequest(server, dspApiPermissionPath)
+          )
         }
       )
     )
