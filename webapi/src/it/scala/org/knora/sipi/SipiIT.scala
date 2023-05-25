@@ -129,7 +129,7 @@ object SipiIT extends ZIOSpecDefault {
 object MockDspApiServer {
   object verify {
     def verifySingleGetRequest(server: WireMockServer, path: String): Boolean =
-      verify(server, 1, getRequestedFor(urlEqualTo(path)))
+      verify(server, 1, getRequestedFor(urlEqualTo(path))) && server.getAllServeEvents.size() == 1
 
     def verify(server: WireMockServer, amount: Int, requestPattern: RequestPatternBuilder): Boolean =
       verify(server, exactly(amount), requestPattern)
