@@ -103,6 +103,10 @@ object SipiIT extends ZIOSpecDefault {
 }
 
 object MockDspApiServer {
+
+  def resetAndGetWireMockServer: URIO[WireMockServer, WireMockServer] =
+    ZIO.serviceWith[WireMockServer] { it => it.resetAll(); it }
+
   def resetAndStubGetResponse(url: String, status: Int): URIO[WireMockServer, WireMockServer] =
     resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetResponse(server, url, status)))
   def resetAndStubGetResponse(url: String, status: Int, body: KnoraResponseADM): URIO[WireMockServer, WireMockServer] =
@@ -135,8 +139,6 @@ object MockDspApiServer {
 
   def verifyNoInteractionWith(server: WireMockServer): Boolean = server.getAllServeEvents.isEmpty
 
-  def resetAndGetWireMockServer: URIO[WireMockServer, WireMockServer] =
-    ZIO.serviceWith[WireMockServer] { it => it.resetAll(); it }
 
   private def acquireWireMockServer: Task[WireMockServer] = ZIO.attempt {
     val server = new WireMockServer(options().port(3333)); // No-args constructor will start on port 8080, no HTTPS
