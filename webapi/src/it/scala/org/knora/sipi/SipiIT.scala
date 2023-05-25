@@ -95,20 +95,30 @@ object SipiIT extends ZIOSpecDefault {
       )
     )
 
+  private val iiifEndpoint =
+    suite("Endpoint /{server}/{prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}")(
+      suite("Given an image does not exist in Sipi")(
+        test(
+          "When getting the file" +
+            "then Sipi responds with Not Found"
+        ) {
+          for {
+            server   <- MockDspApiServer.resetAndGetWireMockServer
+            response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/full/1920,1080/0/default.jpg")
+          } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
+        }
+      )
+    )
+
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("Sipi integration tests with mocked dsp-api")(
       fileEndpointSuite,
+      iiifEndpoint,
       test("health check works") {
         for {
           server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi("/server/test.html")
         } yield assertTrue(response.status.isSuccess, verifyNoInteractionWith(server))
-      },
-      test("given an image does not exist in SIPI, the response is 404") {
-        for {
-          server   <- MockDspApiServer.resetAndGetWireMockServer
-          response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/full/1920,1080/0/default.jpg")
-        } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
       }
     )
       .provideSomeLayerShared[Scope with Client with WireMockServer](SipiTestContainer.layer)
