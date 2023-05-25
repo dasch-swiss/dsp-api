@@ -22,8 +22,7 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import org.knora.sipi.MockDspApiServer.verifyNoInteractionWith
-import org.knora.sipi.MockDspApiServer.verifySingleGetRequest
+import org.knora.sipi.MockDspApiServer.verify._
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -35,8 +34,70 @@ object SipiIT extends ZIOSpecDefault {
   private val identifierTestFile = "250x250.jp2"
   private val prefix             = "0001"
 
+  private val fileEndpointSuite =
+    suite("Endpoint /{prefix}/{identifier}/file")(
+      suite("Given a file does not exist in Sipi")(
+        test("When getting the file, then Sipi responds with Not Found") {
+          for {
+            server   <- MockDspApiServer.resetAndGetWireMockServer
+            response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/file")
+          } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
+        }
+      ),
+      suite("Given a file exists in Sipi")(
+        test(
+          "And given dsp-api returns 2='full view permissions on file', " +
+            "when getting the file, " +
+            "then Sipi responds with Ok"
+        ) {
+          val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
+          val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 200, dspApiResponse)
+            _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
+            response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
+          } yield assertTrue(
+            response.status == Status.Ok,
+            verifySingleGetRequest(server, sipiServerPath)
+          )
+        },
+        test(
+          "And given dsp-api returns 0='no view permission on file', " +
+            "when getting the file, " +
+            "then Sipi responds with Unauthorized"
+        ) {
+          val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
+          val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 200, dspApiResponse)
+            _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
+            response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
+          } yield assertTrue(
+            response.status == Status.Unauthorized,
+            verifySingleGetRequest(server, sipiServerPath)
+          )
+        },
+        test(
+          "And given dsp-api does not know this file and returns Not Found, " +
+            "when getting the file, " +
+            "then Sipi responds with Not Found"
+        ) {
+          val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 404)
+            _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
+            response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
+          } yield assertTrue(
+            response.status == Status.NotFound,
+            verifySingleGetRequest(server, sipiServerPath)
+          )
+        }
+      )
+    )
+
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("Sipi integration tests with mocked dsp-api")(
+      fileEndpointSuite,
       test("health check works") {
         for {
           server   <- MockDspApiServer.resetAndGetWireMockServer
@@ -48,53 +109,6 @@ object SipiIT extends ZIOSpecDefault {
           server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/full/1920,1080/0/default.jpg")
         } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
-      },
-      test("given a file does not exist in SIPI, the response is 404") {
-        for {
-          server   <- MockDspApiServer.resetAndGetWireMockServer
-          response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/file")
-        } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
-      },
-      test(
-        "given a file exists in SIPI, and given dsp-api returns 2='full view permissions on file', the response is 200"
-      ) {
-        val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
-        val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
-        for {
-          server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 200, dspApiResponse)
-          _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
-          response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
-        } yield assertTrue(
-          response.status == Status.Ok,
-          verifySingleGetRequest(server, sipiServerPath)
-        )
-      },
-      test(
-        "given a file exists in SIPI, and given dsp-api returns 0='no view permission on file', the response is 401"
-      ) {
-        val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
-        val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
-        for {
-          server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 200, dspApiResponse)
-          _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
-          response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
-        } yield assertTrue(
-          response.status == Status.Unauthorized,
-          verifySingleGetRequest(server, sipiServerPath)
-        )
-      },
-      test(
-        "given a file exists in SIPI, and given dsp-api does not know this file and returns a 404, the response is 404"
-      ) {
-        val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
-        for {
-          server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 404)
-          _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
-          response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
-        } yield assertTrue(
-          response.status == Status.NotFound,
-          verifySingleGetRequest(server, sipiServerPath)
-        )
       }
     )
       .provideSomeLayerShared[Scope with Client with WireMockServer](SipiTestContainer.layer)
@@ -103,6 +117,21 @@ object SipiIT extends ZIOSpecDefault {
 }
 
 object MockDspApiServer {
+  object verify {
+    def verifySingleGetRequest(server: WireMockServer, path: String): Boolean =
+      verify(server, 1, getRequestedFor(urlEqualTo(path)))
+
+    def verify(server: WireMockServer, amount: Int, requestPattern: RequestPatternBuilder): Boolean =
+      verify(server, exactly(amount), requestPattern)
+
+    def verify(server: WireMockServer, amount: CountMatchingStrategy, requestPattern: RequestPatternBuilder): Boolean =
+      Try(server.verify(amount, requestPattern)) match {
+        case Failure(e: Throwable) => println(s"\nMockDspApiServer: ${e.getMessage}"); false
+        case Success(_)            => true
+      }
+
+    def verifyNoInteractionWith(server: WireMockServer): Boolean = server.getAllServeEvents.isEmpty
+  }
 
   def resetAndGetWireMockServer: URIO[WireMockServer, WireMockServer] =
     ZIO.serviceWith[WireMockServer] { it => it.resetAll(); it }
@@ -123,20 +152,6 @@ object MockDspApiServer {
     val stubBuilder  = get(urlEqualTo(url)).willReturn(jsonResponse)
     server.stubFor(stubBuilder)
   }
-
-  def verifySingleGetRequest(server: WireMockServer, path: String): Boolean =
-    verify(server, 1, getRequestedFor(urlEqualTo(path)))
-
-  def verify(server: WireMockServer, amount: Int, requestPattern: RequestPatternBuilder): Boolean =
-    verify(server, exactly(amount), requestPattern)
-
-  def verify(server: WireMockServer, amount: CountMatchingStrategy, requestPattern: RequestPatternBuilder): Boolean =
-    Try(server.verify(amount, requestPattern)) match {
-      case Failure(e: Throwable) => println(s"\nMockDspApiServer: ${e.getMessage}"); false
-      case Success(_)            => true
-    }
-
-  def verifyNoInteractionWith(server: WireMockServer): Boolean = server.getAllServeEvents.isEmpty
 
   private def acquireWireMockServer: Task[WireMockServer] = ZIO.attempt {
     val server = new WireMockServer(options().port(3333)); // No-args constructor will start on port 8080, no HTTPS
