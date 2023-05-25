@@ -108,11 +108,11 @@ object MockDspApiServer {
     ZIO.serviceWith[WireMockServer] { it => it.resetAll(); it }
 
   def resetAndStubGetResponse(url: String, status: Int): URIO[WireMockServer, WireMockServer] =
-    resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetResponse(server, url, status)))
+    resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetJsonResponse(server, url, status)))
   def resetAndStubGetResponse(url: String, status: Int, body: KnoraResponseADM): URIO[WireMockServer, WireMockServer] =
-    resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetResponse(server, url, status, Some(body))))
+    resetAndGetWireMockServer.tap(server => ZIO.succeed(stubGetJsonResponse(server, url, status, Some(body))))
 
-  private def stubGetResponse(
+  private def stubGetJsonResponse(
     server: WireMockServer,
     url: String,
     status: Int,
