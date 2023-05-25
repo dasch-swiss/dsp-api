@@ -117,13 +117,13 @@ object MockDspApiServer {
     url: String,
     status: Int,
     body: Option[KnoraResponseADM] = None
-  ): MappingBuilder = {
+  ): Unit = {
     val json         = body.map(_.toJsValue.compactPrint).orNull
     val jsonResponse = aResponse().withStatus(status).withBody(json).withHeader("Content-Type", "application/json")
     val stubBuilder  = get(urlEqualTo(url)).willReturn(jsonResponse)
     server.stubFor(stubBuilder)
-    stubBuilder
   }
+
 
   def verifySingleGetRequest(server: WireMockServer, path: String): Boolean =
     verify(server, 1, getRequestedFor(urlEqualTo(path)))
@@ -138,7 +138,6 @@ object MockDspApiServer {
     }
 
   def verifyNoInteractionWith(server: WireMockServer): Boolean = server.getAllServeEvents.isEmpty
-
 
   private def acquireWireMockServer: Task[WireMockServer] = ZIO.attempt {
     val server = new WireMockServer(options().port(3333)); // No-args constructor will start on port 8080, no HTTPS
