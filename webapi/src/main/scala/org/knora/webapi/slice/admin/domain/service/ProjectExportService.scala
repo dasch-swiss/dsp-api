@@ -209,7 +209,7 @@ final case class ProjectExportServiceLive(
 trait AssetService {
   def exportProjectAssets(project: KnoraProject, tempDir: Path, user: UserADM): Task[Path]
 }
-case class Asset(belongsToProject: KnoraProject, internalFilename: String) {}
+case class Asset(belongsToProject: KnoraProject, internalFilename: String)
 object Asset {
   def logString(asset: Asset) = s"asset:${asset.belongsToProject.shortcode}/${asset.internalFilename}"
 }
