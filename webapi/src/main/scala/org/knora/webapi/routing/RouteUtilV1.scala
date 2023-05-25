@@ -19,6 +19,7 @@ import java.time.Instant
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.status.ApiStatusCodesV1
@@ -305,7 +306,7 @@ object RouteUtilV1 {
     ZIO.fail(BadRequestException(errorMessage)).when(params.length != length)
 
   def toSparqlEncodedString(str: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, IRI] =
-    ZIO.fromOption(StringFormatter.toSparqlEncodedString(str)).orElseFail(BadRequestException(errorMsg))
+    ZIO.fromOption(Iri.toSparqlEncodedString(str)).orElseFail(BadRequestException(errorMsg))
 
   def getResourceIrisFromStandoffTags(tags: Seq[StandoffTagV2]): Task[Set[IRI]] =
     ZIO.attempt(StandoffStringUtil.getResourceIrisFromStandoffTags(tags))

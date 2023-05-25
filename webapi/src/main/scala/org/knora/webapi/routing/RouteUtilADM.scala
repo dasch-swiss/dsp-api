@@ -19,6 +19,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
@@ -172,7 +173,7 @@ object RouteUtilADM {
     } yield IriUser(validatedIri, user)
 
   def validateAndEscape(iri: String): IO[BadRequestException, IRI] =
-    StringFormatter.validateAndEscapeIri(iri).toZIO.orElseFail(BadRequestException(s"Invalid IRI: $iri"))
+    Iri.validateAndEscapeIri(iri).toZIO.orElseFail(BadRequestException(s"Invalid IRI: $iri"))
 
   def getUserUuid(ctx: RequestContext): ZIO[Authenticator, Throwable, UserUuid] =
     for {

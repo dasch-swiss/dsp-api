@@ -23,6 +23,7 @@ import scala.xml.NodeSeq
 import scala.xml.XML
 
 import dsp.errors._
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -337,7 +338,7 @@ final case class StandoffResponderV2Live(
           mappingXML \ "defaultXSLTransformation" match {
             case defaultTrans: NodeSeq if defaultTrans.length == 1 =>
               // check if the IRI is valid
-              val transIri = StringFormatter
+              val transIri = Iri
                 .validateAndEscapeIri(
                   defaultTrans.headOption
                     .getOrElse(throw BadRequestException("could not access <defaultXSLTransformation>"))
@@ -418,17 +419,17 @@ final case class StandoffResponderV2Live(
                 .text
 
               MappingXMLAttribute(
-                attributeName = StringFormatter
+                attributeName = Iri
                   .toSparqlEncodedString(attrName)
                   .getOrElse(
                     throw BadRequestException(s"tagname $attrName contains invalid characters")
                   ),
-                namespace = StringFormatter
+                namespace = Iri
                   .toSparqlEncodedString(attributeNamespace)
                   .getOrElse(
                     throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")
                   ),
-                standoffProperty = StringFormatter
+                standoffProperty = Iri
                   .validateAndEscapeIri(propIri)
                   .getOrElse(
                     throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")
@@ -464,7 +465,7 @@ final case class StandoffResponderV2Live(
                 Some(
                   MappingStandoffDatatypeClass(
                     datatype = dataType.toString, // safe because it is an enumeration
-                    attributeName = StringFormatter
+                    attributeName = Iri
                       .toSparqlEncodedString(dataTypeAttribute)
                       .getOrElse(
                         throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")
@@ -477,28 +478,28 @@ final case class StandoffResponderV2Live(
               }
 
             MappingElement(
-              tagName = StringFormatter
+              tagName = Iri
                 .toSparqlEncodedString(tagName)
                 .getOrElse(
                   throw BadRequestException(
                     s"tagname $tagName contains invalid characters"
                   )
                 ),
-              namespace = StringFormatter
+              namespace = Iri
                 .toSparqlEncodedString(tagNamespace)
                 .getOrElse(
                   throw BadRequestException(
                     s"namespace $tagNamespace contains invalid characters"
                   )
                 ),
-              className = StringFormatter
+              className = Iri
                 .toSparqlEncodedString(className)
                 .getOrElse(
                   throw BadRequestException(
                     s"classname $className contains invalid characters"
                   )
                 ),
-              standoffClass = StringFormatter
+              standoffClass = Iri
                 .validateAndEscapeIri(standoffClassIri)
                 .getOrElse(
                   throw BadRequestException(

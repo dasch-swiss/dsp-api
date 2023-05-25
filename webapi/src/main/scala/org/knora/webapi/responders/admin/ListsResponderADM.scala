@@ -15,6 +15,7 @@ import java.util.UUID
 import scala.annotation.tailrec
 
 import dsp.errors._
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List.ListName
 import dsp.valueobjects.ListErrorMessages
@@ -927,7 +928,7 @@ final case class ListsResponderADMLive(
                                )
       _ = if (!projectUniqueNodeName) {
             val escapedName   = name.get.value
-            val unescapedName = StringFormatter.fromSparqlEncodedString(escapedName)
+            val unescapedName = Iri.fromSparqlEncodedString(escapedName)
             throw BadRequestException(
               s"The node name ${unescapedName} is already used by a list inside the project ${projectIri.value}."
             )

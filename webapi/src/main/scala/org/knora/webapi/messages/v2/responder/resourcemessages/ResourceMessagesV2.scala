@@ -11,6 +11,7 @@ import java.time.Instant
 import java.util.UUID
 
 import dsp.errors._
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -140,7 +141,7 @@ case class ResourceHistoryEventsGetRequestV2(
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  StringFormatter
+  Iri
     .validateAndEscapeIri(resourceIri)
     .getOrElse(throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
   if (!stringFormatter.toSmartIri(resourceIri).isKnoraResourceIri) {
@@ -158,13 +159,11 @@ case class ProjectResourcesWithHistoryGetRequestV2(
   projectIri: IRI,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  StringFormatter
+  Iri
     .validateAndEscapeIri(projectIri)
     .getOrElse(throw BadRequestException(s"Invalid project IRI: $projectIri"))
-  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-    throw BadRequestException("Given IRI is not a project IRI.")
-  }
+
+  if (!Iri.isProjectIri(projectIri)) throw BadRequestException("Given IRI is not a project IRI.")
 }
 
 /**
@@ -676,7 +675,7 @@ object CreateResourceRequestV2 {
   ): ZIO[StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
     implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
-        (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+        (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
       for {
         // Get the resource class.
         resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
@@ -918,7 +917,7 @@ object UpdateResourceMetadataRequestV2 {
       labelStr <- obj.getString(Rdfs.Label)
       label <- ZIO.foreach(labelStr)(it =>
                  ZIO
-                   .fromOption(StringFormatter.toSparqlEncodedString(it))
+                   .fromOption(Iri.toSparqlEncodedString(it))
                    .orElseFail(s"Invalid label: $it")
                )
     } yield label
@@ -931,7 +930,7 @@ object UpdateResourceMetadataRequestV2 {
       permsMaybe <- obj.getString(KnoraApiV2Complex.HasPermissions)
       perms <- ZIO.foreach(permsMaybe)(it =>
                  ZIO
-                   .fromOption(StringFormatter.toSparqlEncodedString(it))
+                   .fromOption(Iri.toSparqlEncodedString(it))
                    .orElseFail(s"Invalid $key: $it")
                )
     } yield perms
@@ -1094,7 +1093,7 @@ object DeleteOrEraseResourceRequestV2 {
         )
 
         val validationFun: (String, => Nothing) => String =
-          (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+          (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
 
         val maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
           KnoraApiV2Complex.DeleteComment,

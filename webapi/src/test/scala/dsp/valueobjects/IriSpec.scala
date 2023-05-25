@@ -29,7 +29,9 @@ object IriSpec extends ZIOSpecDefault {
   val validProjectIri            = "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg"
   val beolProjectIri             = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
   val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
-  val builtInProjectIri          = "http://www.knora.org/ontology/knora-admin#SystemProject"
+  // built in projects
+  val systemProject                  = "http://www.knora.org/ontology/knora-admin#SystemProject"
+  val defaultSharedOntologiesProject = "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
 
   val validRoleIri            = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
   val roleIriWithUUIDVersion3 = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
@@ -141,30 +143,22 @@ object IriSpec extends ZIOSpecDefault {
 
   private val projectIriTest = suite("IriSpec - ProjectIri")(
     test("pass an empty value and return an error") {
-      assertTrue(ProjectIri.make("") == Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))) &&
       assertTrue(
+        ProjectIri.make("") == Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing)),
         ProjectIri.make(Some("")) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        ProjectIri.make(invalidIri) == Validation.fail(
-          ValidationException(IriErrorMessages.ProjectIriInvalid)
-        )
-      ) &&
-      assertTrue(
-        ProjectIri.make(Some(invalidIri)) == Validation.fail(
-          ValidationException(IriErrorMessages.ProjectIriInvalid)
-        )
+        ProjectIri.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid)),
+        ProjectIri.make(Some(invalidIri)) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
       )
     },
     test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
         ProjectIri.make(projectIriWithUUIDVersion3) == Validation.fail(
           ValidationException(IriErrorMessages.UuidVersionInvalid)
-        )
-      ) &&
-      assertTrue(
+        ),
         ProjectIri.make(Some(projectIriWithUUIDVersion3)) == Validation.fail(
           ValidationException(IriErrorMessages.UuidVersionInvalid)
         )
@@ -172,24 +166,26 @@ object IriSpec extends ZIOSpecDefault {
     },
     test("pass an invalid IRI containing the shortcode and return an error") {
       assertTrue(
-        ProjectIri.make(invalidIri) == Validation.fail(
-          ValidationException(IriErrorMessages.ProjectIriInvalid)
-        )
+        ProjectIri.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
       )
     },
-    test("pass a valid value and successfully create value object") {
+    test("pass a valid project IRI and successfully create value object") {
       def makeProjectIri(iri: String) = ProjectIri.make(iri)
       val maybeProjectIri             = ProjectIri.make(Some(validProjectIri))
 
       (for {
         iri      <- makeProjectIri(validProjectIri)
-        iri2     <- makeProjectIri(builtInProjectIri)
+        iri2     <- makeProjectIri(systemProject)
+        iri3     <- makeProjectIri(defaultSharedOntologiesProject)
         beolIri  <- makeProjectIri(beolProjectIri)
         maybeIri <- maybeProjectIri
-      } yield assertTrue(iri.value == validProjectIri) &&
-        assertTrue(iri2.value == builtInProjectIri) &&
-        assertTrue(beolIri.value == beolProjectIri) &&
-        assert(maybeIri)(isSome(equalTo(iri)))).toZIO
+      } yield assertTrue(
+        iri.value == validProjectIri,
+        iri2.value == systemProject,
+        iri3.value == defaultSharedOntologiesProject,
+        beolIri.value == beolProjectIri,
+        maybeIri.get == iri
+      )).toZIO
     },
     test("successfully validate passing None") {
       assertTrue(
