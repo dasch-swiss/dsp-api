@@ -30,7 +30,7 @@ FROM <@{graph.value}>
 # project graphs
 FROM <@{projectGraph.value}>
 WHERE {
-  ?fileValueType rdfs:subClassOf* <http://www.knora.org/ontology/knora-base#FileValue> .
+  ?fileValueType rdfs:subClassOf* :FileValue .
   ?s a ?fileValueType .
   ?s <http://www.knora.org/ontology/knora-base#internalFilename> ?internalFilename
 }
