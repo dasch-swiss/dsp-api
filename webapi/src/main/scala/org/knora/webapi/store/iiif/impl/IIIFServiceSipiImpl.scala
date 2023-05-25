@@ -27,9 +27,8 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
-import zio.http.model.HeaderValues.filename
-import zio.http.model.HeaderValues.filename
 import zio.nio.file.Path
+
 import java.net.URI
 import java.util
 
