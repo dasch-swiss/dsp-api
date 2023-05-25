@@ -14,6 +14,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
+import dsp.valueobjects.Iri
 import dsp.valueobjects.User._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -1394,7 +1395,7 @@ final case class UsersResponderADMLive(
       maybeChangedGivenName = userUpdatePayload.givenName match {
                                 case Some(givenName) =>
                                   Some(
-                                    StringFormatter
+                                    Iri
                                       .toSparqlEncodedString(givenName.value)
                                       .getOrElse(
                                         throw BadRequestException(
@@ -1407,7 +1408,7 @@ final case class UsersResponderADMLive(
       maybeChangedFamilyName = userUpdatePayload.familyName match {
                                  case Some(familyName) =>
                                    Some(
-                                     StringFormatter
+                                     Iri
                                        .toSparqlEncodedString(familyName.value)
                                        .getOrElse(
                                          throw BadRequestException(
@@ -1684,14 +1685,14 @@ final case class UsersResponderADMLive(
                                         AdminConstants.adminDataNamedGraph.value,
                                         userIri = userIri,
                                         userClassIri = OntologyConstants.KnoraAdmin.User,
-                                        username = StringFormatter
+                                        username = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.username.value)
                                           .getOrElse(
                                             throw BadRequestException(
                                               s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
                                             )
                                           ),
-                                        email = StringFormatter
+                                        email = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.email.value)
                                           .getOrElse(
                                             throw BadRequestException(
@@ -1699,14 +1700,14 @@ final case class UsersResponderADMLive(
                                             )
                                           ),
                                         password = hashedPassword,
-                                        givenName = StringFormatter
+                                        givenName = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
                                           .getOrElse(
                                             throw BadRequestException(
                                               s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
                                             )
                                           ),
-                                        familyName = StringFormatter
+                                        familyName = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
                                           .getOrElse(
                                             throw BadRequestException(
@@ -1714,7 +1715,7 @@ final case class UsersResponderADMLive(
                                             )
                                           ),
                                         status = userCreatePayloadADM.status.value,
-                                        preferredLanguage = StringFormatter
+                                        preferredLanguage = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.lang.value)
                                           .getOrElse(
                                             throw BadRequestException(

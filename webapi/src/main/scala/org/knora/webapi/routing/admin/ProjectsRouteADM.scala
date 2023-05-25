@@ -24,6 +24,7 @@ import scala.concurrent.Future
 import scala.util.Try
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import org.knora.webapi.IRI
@@ -148,13 +149,11 @@ final case class ProjectsRouteADM()(
     path(projectsBasePath / "iri" / Segment) { value =>
       put {
         entity(as[ChangeProjectApiRequestADM]) { apiRequest => requestContext =>
-          val getProjectIri = ZIO
-            .serviceWithZIO[StringFormatter](sf =>
-              ZIO
-                .fromOption(sf.validateAndEscapeProjectIri(value))
-                .orElseFail(BadRequestException(s"Invalid project IRI $value"))
-            )
-            .flatMap(ProjectIri.make(_).toZIO)
+          val getProjectIri =
+            ZIO
+              .fromOption(Iri.validateAndEscapeProjectIri(value))
+              .orElseFail(BadRequestException(s"Invalid project IRI $value"))
+              .flatMap(ProjectIri.make(_).toZIO)
 
           val requestTask = for {
             projectIri           <- getProjectIri

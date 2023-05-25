@@ -7,11 +7,10 @@ package org.knora.webapi.messages
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 /**
@@ -24,14 +23,14 @@ class StringFormatterSpec extends CoreSpec {
     "recognize the url of the dhlab site as a valid IRI" in {
       val testUrl: String = "http://dhlab.unibas.ch/"
       val validIri =
-        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
+        Iri.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
     "recognize the url of the DaSCH site as a valid IRI" in {
       val testUrl = "http://dasch.swiss"
       val validIri =
-        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
+        Iri.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
@@ -969,35 +968,6 @@ class StringFormatterSpec extends CoreSpec {
   }
 
   "The StringFormatter class for User and Project" should {
-    "validate project IRI" in {
-      stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.incunabulaProject.id
-      ) shouldBe Some(SharedTestDataADM.incunabulaProject.id)
-      stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.systemProject.id
-      ) shouldBe Some(SharedTestDataADM.systemProject.id)
-      stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.defaultSharedOntologiesProject.id
-      ) shouldBe Some(SharedTestDataADM.defaultSharedOntologiesProject.id)
-    }
-
-    "validate project shortname" in {
-      // shortname with dash is valid
-      assert(stringFormatter.validateAndEscapeProjectShortname("valid-shortname").contains("valid-shortname"))
-      // shortname with numbers
-      assert(stringFormatter.validateAndEscapeProjectShortname("valid_1111").contains("valid_1111"))
-      // has special character colon
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid:shortname").isEmpty)
-      // begins with dash
-      assert(stringFormatter.validateAndEscapeProjectShortname("-invalidshortname").isEmpty)
-      // begins with dot
-      assert(stringFormatter.validateAndEscapeProjectShortname(".invalidshortname").isEmpty)
-      // includes slash
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid/shortname").isEmpty)
-      // includes @
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid@shortname").isEmpty)
-    }
-
     "validate project shortcode" in {
       stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
       stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")

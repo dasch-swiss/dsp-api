@@ -23,6 +23,7 @@ import zio.json._
 import java.time.Instant
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.GraphRoute
@@ -92,7 +93,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     path(resourcesBasePath / "iiifmanifest" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
         val requestTask = for {
-          resourceIri <- StringFormatter
+          resourceIri <- Iri
                            .validateAndEscapeIri(resourceIriStr)
                            .toZIO
                            .orElseFail(BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
@@ -202,7 +203,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
   private def getResourceHistory(): Route =
     path(resourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
-        val getResourceIri = StringFormatter
+        val getResourceIri = Iri
           .validateAndEscapeIri(resourceIriStr)
           .toZIO
           .orElseFail(BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
@@ -332,7 +333,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       .fail(BadRequestException(s"List of provided resource Iris exceeds limit of $resultsPerPage"))
       .when(resIris.size > resultsPerPage) *>
       ZIO.foreach(resIris) { resIri: IRI =>
-        StringFormatter
+        Iri
           .validateAndEscapeIri(resIri)
           .toZIO
           .orElseFail(BadRequestException(s"Invalid resource IRI: <$resIri>"))
@@ -355,7 +356,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     get { requestContext =>
       val params: Map[String, String] = requestContext.request.uri.query().toMap
       val getResourceIri =
-        StringFormatter
+        Iri
           .validateAndEscapeIri(resIri)
           .toZIO
           .orElseFail(BadRequestException(s"Invalid resource IRI: <$resIri>"))
@@ -374,7 +375,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
   private def getResourcesGraph(): Route = path("v2" / "graph" / Segment) { resIriStr: String =>
     get { requestContext =>
       val getResourceIri =
-        StringFormatter
+        Iri
           .validateAndEscapeIri(resIriStr)
           .toZIO
           .orElseFail(BadRequestException(s"Invalid resource IRI: <$resIriStr>"))
@@ -478,7 +479,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     params
       .get(Mapping_Iri)
       .map { mapping =>
-        StringFormatter
+        Iri
           .validateAndEscapeIri(mapping)
           .toZIO
           .mapBoth(_ => BadRequestException(s"Invalid mapping IRI: <$mapping>"), Some(_))
@@ -495,7 +496,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     params
       .get(GravsearchTemplate_Iri)
       .map { gravsearch =>
-        StringFormatter
+        Iri
           .validateAndEscapeIri(gravsearch)
           .toZIO
           .mapBoth(_ => BadRequestException(s"Invalid template IRI: <$gravsearch>"), Some(_))
@@ -512,7 +513,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     params
       .get(TEIHeader_XSLT_IRI)
       .map { xslt =>
-        StringFormatter
+        Iri
           .validateAndEscapeIri(xslt)
           .toZIO
           .mapBoth(_ => BadRequestException(s"Invalid XSLT IRI: <$xslt>"), Some(_))

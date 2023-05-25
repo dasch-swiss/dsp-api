@@ -11,6 +11,7 @@ import java.net.URLDecoder
 import java.util.UUID
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
@@ -81,7 +82,7 @@ object RouteUtilZ {
       .filterOrFail(_.getOntologySchema.contains(ApiV2Complex))(BadRequestException(s"Invalid schema for <$iri>"))
 
   def validateAndEscapeIri(s: String, errorMsg: String): IO[BadRequestException, IRI] =
-    StringFormatter.validateAndEscapeIri(s).toZIO.orElseFail(BadRequestException(errorMsg))
+    Iri.validateAndEscapeIri(s).toZIO.orElseFail(BadRequestException(errorMsg))
 
   def toSmartIri(s: String): ZIO[IriConverter, Throwable, SmartIri] =
     ZIO.serviceWithZIO[IriConverter](_.asSmartIri(s))
@@ -94,5 +95,5 @@ object RouteUtilZ {
   def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
 
   def toSparqlEncodedString(s: String, errorMsg: String): ZIO[StringFormatter, BadRequestException, String] =
-    ZIO.fromOption(StringFormatter.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
+    ZIO.fromOption(Iri.toSparqlEncodedString(s)).orElseFail(BadRequestException(errorMsg))
 }

@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
@@ -172,7 +173,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
-      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+      Iri.toSparqlEncodedString(s).getOrElse(errorFun)
 
     val label: String =
       jsonLDDocument.body.requireStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
