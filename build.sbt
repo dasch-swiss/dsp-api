@@ -69,7 +69,11 @@ addCommandAlias(
   "headerCreateAll",
   "; all webapi/headerCreate webapi/Test/headerCreate webapi/IntegrationTest/headerCreate"
 )
-addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
+addCommandAlias(
+  "headerCheckAll",
+  "; all webapi/headerCheck webapi/Test/headerCheck webapi/IntegrationTest/headerCheck"
+)
+addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("it", "IntegrationTest/test")
 
 lazy val customScalacOptions = Seq(
@@ -152,7 +156,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / parallelExecution  := true, // run tests in parallel
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
-  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin)
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "webapi",
     resolvers ++= Seq(
@@ -163,7 +167,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .configs(IntegrationTest)
   .settings(
     inConfig(IntegrationTest) {
-      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings
+      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(IntegrationTest)
     },
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )
