@@ -29,10 +29,11 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 
 object SipiIT extends ZIOSpecDefault {
 
+  private val identifierTestFile  = "250x250.jp2"
+  private val prefix              = "0001"
+  private def copyTestImageToSipi = SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
   private def sendGetRequestToSipi(path: String) =
     SipiTestContainer.resolveUrl(path).map(Request.get).flatMap(Client.request(_))
-  private val identifierTestFile = "250x250.jp2"
-  private val prefix             = "0001"
 
   private val fileEndpointSuite =
     suite("Endpoint /{prefix}/{identifier}/file")(
@@ -50,15 +51,15 @@ object SipiIT extends ZIOSpecDefault {
             "when getting the file, " +
             "then Sipi responds with Ok"
         ) {
-          val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
-          val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
+          val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
+          val dspApiPermissionPath = s"/admin/files/$prefix/$identifierTestFile"
           for {
-            server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 200, dspApiResponse)
-            _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+            _        <- copyTestImageToSipi
             response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
           } yield assertTrue(
             response.status == Status.Ok,
-            verifySingleGetRequest(server, sipiServerPath)
+            verifySingleGetRequest(server, dspApiPermissionPath)
           )
         },
         test(
@@ -66,46 +67,64 @@ object SipiIT extends ZIOSpecDefault {
             "when getting the file, " +
             "then Sipi responds with Unauthorized"
         ) {
-          val dspApiResponse = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
-          val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
+          val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 0, restrictedViewSettings = None)
+          val dspApiPermissionPath = s"/admin/files/$prefix/$identifierTestFile"
           for {
-            server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 200, dspApiResponse)
-            _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+            _        <- copyTestImageToSipi
             response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
           } yield assertTrue(
             response.status == Status.Unauthorized,
-            verifySingleGetRequest(server, sipiServerPath)
+            verifySingleGetRequest(server, dspApiPermissionPath)
           )
         },
         test(
           "And given dsp-api does not know this file and returns Not Found, " +
-            "when getting the file, " +
+            "when getting the file, returns 2='full view permissions on file'" +
             "then Sipi responds with Not Found"
         ) {
-          val sipiServerPath = s"/admin/files/$prefix/$identifierTestFile"
+          val dspApiPermissionPath = s"/admin/files/$prefix/$identifierTestFile"
           for {
-            server   <- MockDspApiServer.resetAndStubGetResponse(sipiServerPath, 404)
-            _        <- SipiTestContainer.copyImageToContainer(prefix, identifierTestFile)
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
+            _        <- copyTestImageToSipi
             response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
           } yield assertTrue(
             response.status == Status.NotFound,
-            verifySingleGetRequest(server, sipiServerPath)
+            verifySingleGetRequest(server, dspApiPermissionPath)
           )
         }
       )
     )
 
   private val iiifEndpoint =
-    suite("Endpoint /{server}/{prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}")(
+    suite("Endpoint {server}/{prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}")(
       suite("Given an image does not exist in Sipi")(
         test(
-          "When getting the file" +
+          "When getting the file, " +
             "then Sipi responds with Not Found"
         ) {
           for {
             server   <- MockDspApiServer.resetAndGetWireMockServer
-            response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/full/1920,1080/0/default.jpg")
+            response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/full/max/0/default.jp2")
           } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
+        }
+      ),
+      suite("Given an image exists in Sipi")(
+        test(
+          "And given dsp-api returns 2='full view permissions on file', " +
+            "when getting the file, " +
+            "Sipi responds with Ok"
+        ) {
+          val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
+          val dspApiPermissionPath = s"/admin/files/$prefix/$identifierTestFile"
+          for {
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+            _        <- copyTestImageToSipi
+            response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/full/max/0/default.jp2")
+          } yield assertTrue(
+            response.status == Status.Ok,
+            verifySingleGetRequest(server, dspApiPermissionPath)
+          )
         }
       )
     )
