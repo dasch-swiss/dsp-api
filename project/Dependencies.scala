@@ -109,7 +109,7 @@ object Dependencies {
   // The scoverage plugin actually adds its dependencies automatically.
   // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
   // Fixes error message when running IT in IntelliJ
-  //  A needed class was not found .This could be due to an error in your runpath.Missing class: scoverage / Invoker$
+  //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.7"
   val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.0"
