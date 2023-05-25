@@ -227,7 +227,11 @@ final case class AssetServiceLive(
       ZIO
         .foreachPar(assets)(sipiClient.downloadAsset(_, directory, user))
         .withParallelism(10)
-        .tap(it => ZIO.logInfo(s"Successfully downloaded ${it.flatten.size} files for project ${project.shortcode}"))
+        .tap { downloadedAssets =>
+          val nrPresent    = assets.size
+          val nrDownloaded = downloadedAssets.flatten.size
+          ZIO.logInfo(s"Successfully downloaded $nrDownloaded/$nrPresent files for project ${project.shortcode}")
+        }
   } yield directory
 
   private def determineAssets(project: KnoraProject): Task[List[Asset]] = {
