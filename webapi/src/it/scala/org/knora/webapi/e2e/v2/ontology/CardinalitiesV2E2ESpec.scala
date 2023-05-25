@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.e2e.v2.ontology
 
 import org.knora.webapi.E2ESpec

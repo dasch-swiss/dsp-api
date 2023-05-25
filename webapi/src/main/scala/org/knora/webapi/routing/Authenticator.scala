@@ -28,6 +28,7 @@ import scala.util.Success
 
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -860,7 +861,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
         ).contains(false)
 
         if (!missingRequiredContent) {
-          claim.subject.flatMap(iri => StringFormatter.validateAndEscapeIri(iri).toOption.map(_ => (header, claim)))
+          claim.subject.flatMap(iri => Iri.validateAndEscapeIri(iri).toOption.map(_ => (header, claim)))
         } else {
           logger.debug("Missing required content in JWT")
           None

@@ -21,6 +21,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
 
 import dsp.errors._
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -1154,7 +1155,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     value.map {
       case obj: JsonLDObject =>
         val validationFun: (String, => Nothing) => String =
-          (s, errFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errFun)
+          (s, errFun) => Iri.toSparqlEncodedString(s).getOrElse(errFun)
         val lang = obj.requireStringWithValidation(JsonLDKeywords.LANGUAGE, validationFun)
 
         if (!LanguageCodes.SupportedLanguageCodes(lang)) {

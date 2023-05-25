@@ -41,6 +41,12 @@ object Iri {
   val SystemProject: IRI                  = KnoraAdminPrefixExpansion + "SystemProject"
   val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
 
+  // Characters that are escaped in strings that will be used in SPARQL.
+  private val SparqlEscapeInput = Array("\\", "\"", "'", "\t", "\n")
+
+  // Escaped characters as they are used in SPARQL.
+  private val SparqlEscapeOutput = Array("\\\\", "\\\"", "\\'", "\\t", "\\n")
+
   /**
    * Returns `true` if a string is an IRI.
    *
@@ -55,40 +61,40 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraListIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
+  def isListIri(iri: IRI): Boolean =
+    isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora role IRI.
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraRoleIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
+  private def isRoleIri(iri: IRI): Boolean =
+    isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora user IRI.
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraUserIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
+  def isUserIri(iri: IRI): Boolean =
+    isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora group IRI.
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraGroupIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
+  def isGroupIri(iri: IRI): Boolean =
+    isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraProjectIriStr(iri: IRI): Boolean =
-    (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
+  def isProjectIri(iri: IRI): Boolean =
+    iri.startsWith("http://rdfh.ch/projects/") || isBuiltInProjectIri(iri)
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -97,109 +103,76 @@ object Iri {
    *
    * @param iri the IRI to be checked.
    */
-  def isKnoraBuiltInProjectIriStr(iri: IRI): Boolean = {
-
-    val builtInProjects = Seq(
-      SystemProject,
-      DefaultSharedOntologiesProject
-    )
-
-    Iri.isIri(iri) && builtInProjects.contains(iri)
+  private def isBuiltInProjectIri(iri: IRI): Boolean = {
+    val builtInProjects = Seq(SystemProject, DefaultSharedOntologiesProject)
+    isIri(iri) && builtInProjects.contains(iri)
   }
 
-  // Characters that are escaped in strings that will be used in SPARQL.
-  private val SparqlEscapeInput = Array(
-    "\\",
-    "\"",
-    "'",
-    "\t",
-    "\n"
-  )
-
-  // Escaped characters as they are used in SPARQL.
-  private val SparqlEscapeOutput = Array(
-    "\\\\",
-    "\\\"",
-    "\\'",
-    "\\t",
-    "\\n"
-  )
+  /**
+   * Returns `true` if an IRI string looks like a Knora permission IRI.
+   *
+   * @param iri the IRI to be checked.
+   */
+  def isPermissionIri(iri: IRI): Boolean =
+    isIri(iri) && iri.startsWith("http://rdfh.ch/permissions/")
 
   /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
    *
-   * If the param `revert` is set to `true`, the string is unescaped.
-   *
-   * @param s        a string.
-   * @param errorFun a function that throws an exception. It will be called if the string is empty or contains
-   *                 a carriage return (`\r`).
-   * @return the same string, escaped or unescaped as requested.
+   * @param s a string.
+   * @return the same string escaped
+   *         [[None]] if the string is empty or contains a carriage return (`\r`).
    */
-  def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
-// Findings about this method:
-// - there is more cases to handle according to docs (https://www.w3.org/TR/rdf-sparql-query#grammarEscapes) - we use 1.1 version right?
-// - `'` doesn't appear on that list, but this method escapes it
-// - why `\r` throws error instead of being escaped?
-// - fun fact is that if I remove  StringUtils.replaceEach, for example `\t` passes unescaped, why?
-
-    if (s.isEmpty || s.contains("\r")) errorFun
-
-    // http://www.morelab.deusto.es/code_injection/
-
-    StringUtils.replaceEach(
-      s,
-      SparqlEscapeInput,
-      SparqlEscapeOutput
-    )
-  }
+  def toSparqlEncodedString(s: String): Option[String] =
+    if (s.isEmpty || s.contains("\r")) None
+    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
 
   /**
-   * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
+   * Unescapes a string that has been escaped for SPARQL.
    *
-   * @param s        the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 IRI.
-   * @return the same string.
+   * @param s the string to be unescaped.
+   * @return the unescaped string.
    */
-  def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
-    val urlEncodedStr = encodeAllowEscapes(s)
+  def fromSparqlEncodedString(s: String): String =
+    StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
-    if (Iri.urlValidator.isValid(urlEncodedStr)) {
-      urlEncodedStr
-    } else {
-      errorFun
-    }
-  }
+  // TODO-mpro: Findings about fromSparqlEncodedString method:
+  // - there is more cases to handle according to docs (https://www.w3.org/TR/rdf-sparql-query#grammarEscapes) - we use 1.1 version right?
+  // - `'` doesn't appear on that list, but this method escapes it
+  // - why `\r` throws error instead of being escaped?
+  // - fun fact is that if I remove  StringUtils.replaceEach, for example `\t` passes unescaped, why?
+
+  /**
+   * Checks that a string represents a valid IRI.
+   * Also encodes the IRI, preserving existing %-escapes.
+   *
+   * @param s the string to be checked.
+   * @return A validated and escaped IRI.
+   */
+  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
+    Validation
+      .fromTry(Try(encodeAllowEscapes(s)).filter(urlValidator.isValid))
+      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
 
   /**
    * Check that the supplied IRI represents a valid project IRI.
    *
-   * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 project IRI.
+   * @param iri the string to be checked.
    * @return the same string but escaped.
    */
-  def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI =
-    if (isKnoraProjectIriStr(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+  def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
+    if (isProjectIri(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * Check that the supplied IRI represents a valid user IRI.
    *
-   * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 user IRI.
+   * @param iri the string to be checked.
    * @return the same string but escaped.
    */
-  def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String =
-    if (isKnoraUserIriStr(iri)) {
-      toSparqlEncodedString(iri, errorFun)
-    } else {
-      errorFun
-    }
+  def validateAndEscapeUserIri(iri: IRI): Option[String] =
+    if (isUserIri(iri)) toSparqlEncodedString(iri)
+    else None
 
   /**
    * GroupIri value object.
@@ -207,22 +180,18 @@ object Iri {
   sealed abstract case class GroupIri private (value: String) extends Iri
   object GroupIri { self =>
     def make(value: String): Validation[Throwable, GroupIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraGroupIriStr(value)) {
+        if (!isGroupIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeIri(value, throw BadRequestException(IriErrorMessages.GroupIriInvalid))
-          )
-
-          validatedValue.map(new GroupIri(_) {})
-        }
+        else
+          validateAndEscapeIri(value)
+            .mapError(_ => BadRequestException(IriErrorMessages.GroupIriInvalid))
+            .map(new GroupIri(_) {})
       }
 
     def make(value: Option[String]): Validation[Throwable, Option[GroupIri]] =
@@ -238,25 +207,18 @@ object Iri {
   sealed abstract case class ListIri private (value: String) extends Iri
   object ListIri { self =>
     def make(value: String): Validation[Throwable, ListIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraListIriStr(value)) {
+        if (!isListIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeIri(
-              value,
-              throw BadRequestException(IriErrorMessages.ListIriInvalid)
-            )
-          )
-
-          validatedValue.map(new ListIri(_) {})
-        }
+        else
+          validateAndEscapeIri(value)
+            .mapError(_ => BadRequestException(IriErrorMessages.ListIriInvalid))
+            .map(new ListIri(_) {})
       }
 
     def make(value: Option[String]): Validation[Throwable, Option[ListIri]] =
@@ -271,33 +233,25 @@ object Iri {
    */
   sealed abstract case class ProjectIri private (value: String) extends Iri
   object ProjectIri { self =>
-    implicit val decoder: JsonDecoder[ProjectIri] = JsonDecoder[String].mapOrFail { case value =>
-      ProjectIri.make(value).toEitherWith(e => e.head.getMessage())
-    }
+    implicit val decoder: JsonDecoder[ProjectIri] =
+      JsonDecoder[String].mapOrFail(value => ProjectIri.make(value).toEitherWith(e => e.head.getMessage))
     implicit val encoder: JsonEncoder[ProjectIri] =
       JsonEncoder[String].contramap((projectIri: ProjectIri) => projectIri.value)
 
     def make(value: String): Validation[ValidationException, ProjectIri] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraProjectIriStr(value)) {
+        if (!isProjectIri(value))
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val eitherValue = Try(
-            validateAndEscapeProjectIri(
-              value,
-              throw ValidationException(IriErrorMessages.ProjectIriInvalid)
-            )
-          ).toEither.left.map(_.asInstanceOf[ValidationException])
-          val validatedValue = Validation.fromEither(eitherValue)
-
-          validatedValue.map(new ProjectIri(_) {})
-        }
+        else
+          Validation
+            .fromOption(validateAndEscapeProjectIri(value))
+            .mapError(_ => ValidationException(IriErrorMessages.ProjectIriInvalid))
+            .map(new ProjectIri(_) {})
       }
 
     def make(value: Option[String]): Validation[ValidationException, Option[ProjectIri]] =
@@ -331,25 +285,18 @@ object Iri {
   sealed abstract case class RoleIri private (value: String) extends Iri
   object RoleIri {
     def make(value: String): Validation[Throwable, RoleIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraRoleIriStr(value)) {
+        if (!isRoleIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeIri(
-              value,
-              throw BadRequestException(IriErrorMessages.RoleIriInvalid(value))
-            )
-          )
-
-          validatedValue.map(new RoleIri(_) {})
-        }
+        else
+          validateAndEscapeIri(value)
+            .mapError(_ => BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
+            .map(new RoleIri(_) {})
       }
   }
 
@@ -358,31 +305,24 @@ object Iri {
    */
   sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
-    implicit val decoder: JsonDecoder[UserIri] = JsonDecoder[String].mapOrFail { case value =>
-      UserIri.make(value).toEitherWith(e => e.head.getMessage())
-    }
+    implicit val decoder: JsonDecoder[UserIri] =
+      JsonDecoder[String].mapOrFail(value => UserIri.make(value).toEitherWith(e => e.head.getMessage))
     implicit val encoder: JsonEncoder[UserIri] = JsonEncoder[String].contramap((userIri: UserIri) => userIri.value)
 
     def make(value: String): Validation[Throwable, UserIri] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
+      else {
         val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
 
-        if (!isKnoraUserIriStr(value)) {
+        if (!isUserIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
-        } else if (isUuid && !Uuid.isUuidSupported(value)) {
+        else if (isUuid && !Uuid.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        } else {
-          val validatedValue = Validation(
-            validateAndEscapeUserIri(
-              value,
-              throw BadRequestException(IriErrorMessages.UserIriInvalid(value))
-            )
-          )
-
-          validatedValue.map(new UserIri(_) {})
-        }
+        else
+          Validation
+            .fromOption(validateAndEscapeUserIri(value))
+            .mapError(_ => BadRequestException(IriErrorMessages.UserIriInvalid(value)))
+            .map(new UserIri(_) {})
       }
   }
 

@@ -11,6 +11,7 @@ import spray.json._
 import java.util.UUID
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
 import org.knora.webapi._
@@ -134,14 +135,10 @@ case class ChangeNodeCommentsApiRequestADM(comments: Seq[V2.StringLiteralV2]) ex
  * @param parentIri the parent node Iri.
  */
 case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extends ListADMJsonProtocol {
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-
   if (parentIri.isEmpty) {
     throw BadRequestException(s"IRI of parent node is missing.")
   }
-  if (!stringFormatter.isKnoraListIriStr(parentIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $parentIri.")
-  }
+  if (!Iri.isListIri(parentIri)) throw BadRequestException(s"Invalid IRI is given: $parentIri.")
 
   if (position < -1) {
     throw BadRequestException(ListErrorMessages.InvalidPosition)
@@ -569,7 +566,7 @@ case class ListRootNodeInfoADM(
 
     val unescapedName: Option[String] = name match {
       case None        => None
-      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
     }
 
     copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
@@ -633,7 +630,7 @@ case class ListChildNodeInfoADM(
 
     val unescapedName: Option[String] = name match {
       case None        => None
-      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
     }
 
     copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
@@ -758,7 +755,7 @@ case class ListRootNodeADM(
 
     val unescapedName: Option[String] = name match {
       case None        => None
-      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
     }
 
     copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
@@ -844,7 +841,7 @@ case class ListChildNodeADM(
     }
 
     val unescapedName: Option[String] = name match {
-      case Some(value) => Some(StringFormatter.fromSparqlEncodedString(value))
+      case Some(value) => Some(Iri.fromSparqlEncodedString(value))
       case None        => None
     }
 

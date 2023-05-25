@@ -13,6 +13,7 @@ import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Group._
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri._
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -110,7 +111,7 @@ final case class GroupsRouteADM(
           status           = GroupStatus.make(apiRequest.status)
           selfjoin         = GroupSelfJoin.make(apiRequest.selfjoin)
           validatedPayload = Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
-          iri <- StringFormatter
+          iri <- Iri
                    .validateAndEscapeIri(value)
                    .toZIO
                    .orElseFail(BadRequestException(s"Invalid group IRI $value"))
@@ -141,7 +142,7 @@ final case class GroupsRouteADM(
             _ <- ZIO
                    .fail(BadRequestException("The status property is not allowed to be empty."))
                    .when(apiRequest.status.isEmpty)
-            iri <- StringFormatter
+            iri <- Iri
                      .validateAndEscapeIri(value)
                      .toZIO
                      .orElseFail(BadRequestException(s"Invalid group IRI $value"))

@@ -11,6 +11,7 @@ import zio.prelude.Validation
 import scala.util.matching.Regex
 
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri
 
 object Project {
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
@@ -50,23 +51,14 @@ object Project {
   /**
    * Check that the string represents a valid project shortname.
    *
-   * @param value    the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 project shortname.
+   * @param shortname string to be checked.
    * @return the same string.
    */
-  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = {
-    // Check that shortname matches NCName pattern
-    val ncNameMatch = NCNameRegex.findFirstIn(shortname) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
-    // Check that shortname is URL safe
-    Base64UrlPatternRegex.findFirstIn(ncNameMatch) match {
-      case Some(shortname) => Iri.toSparqlEncodedString(shortname, errorFun)
-      case None            => errorFun
-    }
-  }
+  def validateAndEscapeProjectShortname(shortname: String): Option[String] =
+    NCNameRegex
+      .findFirstIn(shortname)
+      .flatMap(Base64UrlPatternRegex.findFirstIn)
+      .flatMap(Iri.toSparqlEncodedString)
 
   // TODO-mpro: longname, description, keywords, logo are missing enhanced validation
 
@@ -110,17 +102,12 @@ object Project {
       JsonEncoder[String].contramap((shortName: ShortName) => shortName.value)
 
     def make(value: String): Validation[ValidationException, ShortName] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
-      } else {
-        val validatedValue = Validation(
-          validateAndEscapeProjectShortname(
-            value,
-            throw ValidationException(ProjectErrorMessages.ShortNameInvalid(value))
-          )
-        ).mapError(e => new ValidationException(e.getMessage()))
-        validatedValue.map(new ShortName(_) {})
-      }
+      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
+      else
+        Validation
+          .fromOption(validateAndEscapeProjectShortname(value))
+          .mapError(_ => ValidationException(ProjectErrorMessages.ShortNameInvalid(value)))
+          .map(new ShortName(_) {})
 
     def make(value: Option[String]): Validation[ValidationException, Option[ShortName]] =
       value match {

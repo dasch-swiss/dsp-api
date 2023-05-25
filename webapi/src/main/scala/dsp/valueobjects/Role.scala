@@ -20,32 +20,21 @@ object Role {
    */
   sealed abstract case class LangString private (value: String, isoCode: String)
   object LangString {
-    def isIsoCodeSupported(isoCode: String): Boolean =
+    private def isIsoCodeSupported(isoCode: String): Boolean =
       LanguageCode.SupportedLanguageCodes.contains(isoCode.toLowerCase) // should only lower case be supported?
 
     def make(value: String, isoCode: String): Validation[Throwable, LangString] =
-      if (value.isEmpty) {
-        Validation.fail(
-          BadRequestException(RoleErrorMessages.LangStringValueMissing)
-        )
-      } else if (isoCode.isEmpty) {
-        Validation.fail(
-          BadRequestException(RoleErrorMessages.LangStringIsoCodeMissing)
-        )
-      } else if (!isIsoCodeSupported(isoCode)) {
-        Validation.fail(
-          BadRequestException(RoleErrorMessages.LangStringIsoCodeInvalid(isoCode))
-        )
-      } else {
-        val validatedValue = Validation(
-          Iri.toSparqlEncodedString(
-            value,
-            throw BadRequestException(RoleErrorMessages.LangStringValueInvalid(value))
-          )
-        )
-
-        validatedValue.map(new LangString(_, isoCode) {})
-      }
+      if (value.isEmpty)
+        Validation.fail(BadRequestException(RoleErrorMessages.LangStringValueMissing))
+      else if (isoCode.isEmpty)
+        Validation.fail(BadRequestException(RoleErrorMessages.LangStringIsoCodeMissing))
+      else if (!isIsoCodeSupported(isoCode))
+        Validation.fail(BadRequestException(RoleErrorMessages.LangStringIsoCodeInvalid(isoCode)))
+      else
+        Validation
+          .fromOption(Iri.toSparqlEncodedString(value))
+          .mapError(_ => BadRequestException(RoleErrorMessages.LangStringValueInvalid(value)))
+          .map(new LangString(_, isoCode) {})
   }
 }
 

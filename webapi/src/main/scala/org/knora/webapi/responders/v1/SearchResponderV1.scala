@@ -11,6 +11,7 @@ import zio._
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -476,7 +477,7 @@ final case class SearchResponderV1Live(
                 case OntologyConstants.KnoraBase.TextValue =>
                   // http://www.morelab.deusto.es/code_injection/
                   // http://stackoverflow.com/questions/29601839/prevent-sparql-injection-generic-solution-triplestore-independent
-                  val searchString = StringFormatter
+                  val searchString = Iri
                     .toSparqlEncodedString(searchval)
                     .getOrElse(throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -526,7 +527,7 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.Resource =>
                   // check if string is a valid IRI
-                  val searchString = StringFormatter
+                  val searchString = Iri
                     .validateAndEscapeIri(searchval)
                     .getOrElse(
                       throw BadRequestException(s"Given searchval is not a valid IRI: $searchval")
@@ -547,7 +548,7 @@ final case class SearchResponderV1Live(
 
                 case OntologyConstants.KnoraBase.GeonameValue =>
                   // sanitize Geoname search string
-                  val searchString = StringFormatter
+                  val searchString = Iri
                     .toSparqlEncodedString(searchval)
                     .getOrElse(
                       throw BadRequestException(s"Invalid Geoname search string: '$searchval'")
@@ -558,14 +559,14 @@ final case class SearchResponderV1Live(
                 case OntologyConstants.KnoraBase.UriValue =>
                   // validate URI
                   val searchString =
-                    StringFormatter
+                    Iri
                       .validateAndEscapeIri(searchval)
                       .getOrElse(throw BadRequestException(s"Invalid URI: $searchval"))
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                 case OntologyConstants.KnoraBase.ListValue =>
                   // check if string represents a node in a list
-                  val searchString = StringFormatter
+                  val searchString = Iri
                     .validateAndEscapeIri(searchval)
                     .getOrElse(
                       throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval")

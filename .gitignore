@@ -40,7 +40,7 @@ sipi/test
 
 dependencies.txt
 /client-test-data.zip
-sipi/images/*
+/sipi/images/*
 
 .idea/
 .metals/
