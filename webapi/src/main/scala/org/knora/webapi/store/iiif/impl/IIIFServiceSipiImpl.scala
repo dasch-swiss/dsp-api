@@ -299,26 +299,30 @@ final case class IIIFServiceSipiImpl(
    */
   override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = {
     def statusCode(response: HttpResponse): Int = response.getStatusLine.getStatusCode
-    def executeDownloadRequest(uri: URI, jwt: Jwt, filename: String) = ZIO.scoped {
+    def executeDownloadRequest(uri: URI, jwt: Jwt, targetFilename: String) = ZIO.scoped {
       makeGetRequestWithAuthorization(uri, jwt).flatMap {
         sendRequest(_)
           .filterOrElseWith(statusCode(_) == 200)(it => ZIO.fail(new Exception(s"${statusCode(it)} code from sipi")))
-          .flatMap(response => saveToFile(filename, response.getEntity, targetDir))
-          .tapError(e => ZIO.logWarning(s"Failed downloading $uri: ${e.getMessage}"))
+          .flatMap(response => saveToFile(response.getEntity, targetDir / targetFilename))
+          .tapBoth(
+            e => ZIO.logWarning(s"Failed downloading $uri: ${e.getMessage}"),
+            _ => ZIO.logDebug(s"Downloaded $uri")
+          )
           .fold(_ => None, Some(_))
       }
     }
     def downloadAsset(asset: Asset, jwt: Jwt): Task[Option[Path]] =
-      SipiRoutes.file(asset).flatMap(executeDownloadRequest(_, jwt, asset.internalFilename))
-
+      ZIO.logDebug(s"Downloading ${Asset.logString(asset)}") *>
+        SipiRoutes.file(asset).flatMap(executeDownloadRequest(_, jwt, asset.internalFilename))
     def downloadKnoraJson(asset: Asset, jwt: Jwt): Task[Option[Path]] =
-      SipiRoutes.knoraJson(asset).flatMap(executeDownloadRequest(_, jwt, s"${asset.internalFilename}_knora.json"))
+      ZIO.logDebug(s"Downloading knora.json for  ${Asset.logString(asset)}") *>
+        SipiRoutes.knoraJson(asset).flatMap(executeDownloadRequest(_, jwt, s"${asset.internalFilename}_knora.json"))
 
-    (for {
-      jwt        <- jwtService.createJwt(user)
-      downloaded <- downloadAsset(asset, jwt)
-      _          <- downloadKnoraJson(asset, jwt)
-    } yield downloaded) <* ZIO.logInfo(s"Downloaded ${Asset.logString(asset)} from sipi.")
+    for {
+      jwt             <- jwtService.createJwt(user)
+      assetDownloaded <- downloadAsset(asset, jwt)
+      _               <- downloadKnoraJson(asset, jwt).when(assetDownloaded.isDefined)
+    } yield assetDownloaded
   }
 
   private def makeGetRequestWithAuthorization(uri: URI, jwt: Jwt): UIO[HttpGet] = {
@@ -340,13 +344,11 @@ final case class IIIFServiceSipiImpl(
     ZIO.acquireRelease(acquire)(release)
   }
 
-  private def saveToFile(filename: String, entity: HttpEntity, targetDir: Path): ZIO[Scope, Throwable, Path] = {
-    val targetFile = targetDir / filename
+  private def saveToFile(entity: HttpEntity, targetFile: Path) =
     ZScopedJavaIoStreams
       .fileOutputStream(targetFile)
       .flatMap(out => ZIO.attemptBlocking(entity.getContent.transferTo(out)))
       .as(targetFile)
-  }
 }
 
 object IIIFServiceSipiImpl {
