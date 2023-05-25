@@ -7,7 +7,6 @@ package org.knora.sipi
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -15,7 +14,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import zio._
 import zio.http._
 import zio.http.model.Status
@@ -24,6 +22,8 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import org.knora.sipi.MockDspApiServer.verifyNoInteractionWith
+import org.knora.sipi.MockDspApiServer.verifySingleGetRequest
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -41,19 +41,19 @@ object SipiIT extends ZIOSpecDefault {
         for {
           server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi("/server/test.html")
-        } yield assertTrue(response.status.isSuccess, MockDspApiServer.verifyNoInteractionWith(server))
+        } yield assertTrue(response.status.isSuccess, verifyNoInteractionWith(server))
       },
       test("given an image does not exist in SIPI, the response is 404") {
         for {
           server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/full/1920,1080/0/default.jpg")
-        } yield assertTrue(response.status == Status.NotFound, MockDspApiServer.verifyNoInteractionWith(server))
+        } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
       },
       test("given a file does not exist in SIPI, the response is 404") {
         for {
           server   <- MockDspApiServer.resetAndGetWireMockServer
           response <- sendGetRequestToSipi(s"/$prefix/doesnotexist.jp2/file")
-        } yield assertTrue(response.status == Status.NotFound, MockDspApiServer.verifyNoInteractionWith(server))
+        } yield assertTrue(response.status == Status.NotFound, verifyNoInteractionWith(server))
       },
       test(
         "given a file exists in SIPI, and given dsp-api returns 2='full view permissions on file', the response is 200"
@@ -66,7 +66,7 @@ object SipiIT extends ZIOSpecDefault {
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(
           response.status == Status.Ok,
-          MockDspApiServer.verifySingleGetRequest(server, sipiServerPath)
+          verifySingleGetRequest(server, sipiServerPath)
         )
       },
       test(
@@ -80,7 +80,7 @@ object SipiIT extends ZIOSpecDefault {
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(
           response.status == Status.Unauthorized,
-          MockDspApiServer.verifySingleGetRequest(server, sipiServerPath)
+          verifySingleGetRequest(server, sipiServerPath)
         )
       },
       test(
@@ -93,7 +93,7 @@ object SipiIT extends ZIOSpecDefault {
           response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/file")
         } yield assertTrue(
           response.status == Status.NotFound,
-          MockDspApiServer.verifySingleGetRequest(server, sipiServerPath)
+          verifySingleGetRequest(server, sipiServerPath)
         )
       }
     )
