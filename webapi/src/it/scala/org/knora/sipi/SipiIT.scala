@@ -149,8 +149,8 @@ object SipiIT extends ZIOSpecDefault {
         ) {
           val dspApiPermissionPath = s"/admin/files/$prefix/$identifierTestFile"
           for {
-            server <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
-            _ <- copyTestImageToSipi
+            server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
+            _        <- copyTestImageToSipi
             response <- sendGetRequestToSipi(s"/$prefix/$identifierTestFile/full/max/0/default.jp2")
           } yield assertTrue(
             response.status == Status.NotFound,
