@@ -8,11 +8,12 @@ package org.knora.webapi.routing
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import org.scalatest.PrivateMethodTester
+
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
-
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
@@ -31,6 +32,8 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
   implicit val timeout: Timeout = appConfig.defaultTimeoutAsDuration
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+  private def testUserAdmFromIri(iri: String) = UserADM(iri, "", "", "", "", false, "")
 
   "During Authentication" when {
     "called, the 'getUserADMByEmail' method " should {
@@ -89,7 +92,8 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
       "succeed with correct token" in {
         val resF = UnsafeZioRun.runToFuture(
           for {
-            token     <- JwtService.createToken("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")
+            token <-
+              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
             tokenCreds = KnoraJWTTokenCredentialsV2(token)
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
           } yield result
@@ -101,7 +105,8 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
         assertThrows[BadCredentialsException] {
           throw UnsafeZioRun
             .run(for {
-              token     <- JwtService.createToken("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")
+              token <-
+                JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
               tokenCreds = KnoraJWTTokenCredentialsV2(token)
               _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
               result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))

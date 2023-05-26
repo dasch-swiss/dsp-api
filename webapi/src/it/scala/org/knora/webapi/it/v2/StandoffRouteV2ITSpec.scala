@@ -44,8 +44,7 @@ import org.knora.webapi.util.MutableTestIri
  */
 class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonProtocol {
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  val validationFun: (String, => Nothing) => String     = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
+  val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   private val anythingUser      = SharedTestDataADM.anythingUser1
   private val anythingUserEmail = anythingUser.email

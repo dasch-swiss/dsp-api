@@ -102,12 +102,18 @@ object Dependencies {
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
   // test
-  val akkaHttpTestkit   = "com.typesafe.akka"     %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaStreamTestkit = "com.typesafe.akka"     %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
-  val akkaTestkit       = "com.typesafe.akka"     %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
-  val scalaTest         = "org.scalatest"         %% "scalatest"           % "3.2.15"         // Scala 3 compatible
-  val testcontainers    = "org.testcontainers"     % "testcontainers"      % "1.18.0"
-  val wiremock          = "com.github.tomakehurst" % "wiremock-jre8"       % "2.35.0"
+  val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
+  val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
+  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.15"         // Scala 3 compatible
+  // The scoverage plugin actually adds its dependencies automatically.
+  // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
+  // Fixes error message when running IT in IntelliJ
+  //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
+  //  java.lang.NoClassDefFoundError: scoverage / Invoker$
+  val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.7"
+  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.0"
+  val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -118,6 +124,7 @@ object Dependencies {
     akkaTestkit,
     rdf4jClient,
     scalaTest,
+    scoverage,
     testcontainers,
     wiremock,
     xmlunitCore,
