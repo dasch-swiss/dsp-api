@@ -10,6 +10,7 @@ import zio._
 import java.io._
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 object ZScopedJavaIoStreams {
@@ -56,6 +57,12 @@ object ZScopedJavaIoStreams {
   def zipOutputStream(file: File): ZIO[Scope, Throwable, ZipOutputStream] = {
     def acquire(fos: FileOutputStream) = ZIO.attempt(new ZipOutputStream(fos))
     fileOutputStream(file).flatMap(fos => ZIO.acquireRelease(acquire(fos))(release))
+  }
+
+  def zipInputStream(path: nio.file.Path): ZIO[Scope, Throwable, ZipInputStream] = zipInputStream(path.toFile)
+  def zipInputStream(file: File): ZIO[Scope, Throwable, ZipInputStream] = {
+    def acquire(fis: InputStream) = ZIO.attempt(new ZipInputStream(fis))
+    fileInputStream(file).flatMap(fis => ZIO.acquireRelease(acquire(fis))(release))
   }
 
   /**

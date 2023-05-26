@@ -9,6 +9,7 @@ import zio._
 import zio.nio.file._
 
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 import org.knora.webapi.util.ZScopedJavaIoStreams
@@ -70,4 +71,36 @@ object ZipUtility {
 
   private def getZipEntry(entry: Path, srcFolder: Path) = new ZipEntry(srcFolder.relativize(entry).toString())
 
+  /**
+   * Unzips a zip file to the specified destination folder.
+   *
+   * @param zipFile The path to the zip file to be unzipped.
+   * @param destinationFolder The path to the folder where the content of the zip file is written to.
+   */
+  def unzipFile(zipFile: Path, destinationFolder: Path): Task[Path] = ZIO.scoped {
+    ZScopedJavaIoStreams.zipInputStream(zipFile).flatMap(unzip(_, destinationFolder)).as(destinationFolder)
+  }
+  private def unzip(zipInput: ZipInputStream, destinationFolder: Path): Task[Path] =
+    unzipNextEntry(zipInput, destinationFolder)
+      // recursively unpack the rest of the stream
+      .flatMap(entry => unzip(zipInput, destinationFolder).when(entry.isDefined))
+      .as(destinationFolder)
+  private def unzipNextEntry(zipInput: ZipInputStream, destinationFolder: Path) = {
+    val acquire  = ZIO.attemptBlocking(Option(zipInput.getNextEntry))
+    val release  = ZIO.attemptBlocking(zipInput.closeEntry()).logError.ignore
+    val getEntry = ZIO.acquireRelease(acquire)(_ => release)
+    val createParentIfNotExists = (path: Path) =>
+      path.parent.map(d => Files.createDirectories(d).whenZIO(Files.notExists(d)).unit).getOrElse(ZIO.unit)
+    val unzipToFile = (path: Path) =>
+      ZScopedJavaIoStreams.fileOutputStream(path).flatMap(fos => ZIO.attemptBlocking(zipInput.transferTo(fos)))
+    ZIO.scoped {
+      getEntry.tapSome { case Some(entry) =>
+        val targetPath = destinationFolder / entry.getName
+        entry match {
+          case _ if entry.isDirectory => Files.createDirectories(targetPath)
+          case _                      => createParentIfNotExists(targetPath) *> unzipToFile(targetPath)
+        }
+      }
+    }
+  }
 }
