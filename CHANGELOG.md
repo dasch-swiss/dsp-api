@@ -1,5 +1,32 @@
 # Changelog
 
+## [28.3.0](https://github.com/dasch-swiss/dsp-api/compare/v28.2.0...v28.3.0) (2023-05-25)
+
+
+### Bug Fixes
+
+* add integration Test for Sipi and fix broken responses (NO-TICKET) ([#2675](https://github.com/dasch-swiss/dsp-api/issues/2675)) ([f8c3aa0](https://github.com/dasch-swiss/dsp-api/commit/f8c3aa0ddd8bf258196e053a9f34f59f882cb01f))
+* Fix Sipi get file response if dsp-api responds with Not Found during permission check (NO-TICKET) ([#2677](https://github.com/dasch-swiss/dsp-api/issues/2677)) ([4e1c6c2](https://github.com/dasch-swiss/dsp-api/commit/4e1c6c2dbf9064cd20f1ac8ded43a7d8048b99d8))
+
+
+### Enhancements
+
+* Align authorization for all endpoints of knora-sipi (DEV-2175) ([#2669](https://github.com/dasch-swiss/dsp-api/issues/2669)) ([ff59664](https://github.com/dasch-swiss/dsp-api/commit/ff596644e42b1b28fc78ba57acabae26f2e2d4e2))
+* **sipi:** add clean temp dir cronjob (DEV-2090) ([#2656](https://github.com/dasch-swiss/dsp-api/issues/2656)) ([7af1c27](https://github.com/dasch-swiss/dsp-api/commit/7af1c2734b1a5d5c28ce0bfd45dddcedb4e3661c))
+
+
+### Maintenance
+
+* add more gravsearch metrics ([#2666](https://github.com/dasch-swiss/dsp-api/issues/2666)) ([873eb46](https://github.com/dasch-swiss/dsp-api/commit/873eb46a5cea66b626618495efd8aea15ad99efb))
+* add more tests for Sipi responses (NO-TICKET) ([#2679](https://github.com/dasch-swiss/dsp-api/issues/2679)) ([74f49ca](https://github.com/dasch-swiss/dsp-api/commit/74f49caa1d6da23e9ab83283c648c1822e5a03cd))
+* Create license headers for all it files (NO-TICKET) ([#2676](https://github.com/dasch-swiss/dsp-api/issues/2676)) ([a97ec6b](https://github.com/dasch-swiss/dsp-api/commit/a97ec6b07636850c57923cd710b4c8ba20e8cd27))
+* improve lucene handling in gravsearch (DEV-2148) ([#2667](https://github.com/dasch-swiss/dsp-api/issues/2667)) ([bf5d4be](https://github.com/dasch-swiss/dsp-api/commit/bf5d4be4578eb156ad44abd2d2d2962c98f9b1ba))
+* merge duplicated StringFormatter and value objects methods part 1 (DEV-2046) ([#2672](https://github.com/dasch-swiss/dsp-api/issues/2672)) ([655590a](https://github.com/dasch-swiss/dsp-api/commit/655590ad2483633f69524311e5eb1b548bcc152b))
+* remove deprecated StringFormatter methods ([#2658](https://github.com/dasch-swiss/dsp-api/issues/2658)) ([62eb63c](https://github.com/dasch-swiss/dsp-api/commit/62eb63cb48013aafece982a815aeaaa678ac8668))
+* Remove GroupShortADM (NO-TICKET) ([#2674](https://github.com/dasch-swiss/dsp-api/issues/2674)) ([3676fbf](https://github.com/dasch-swiss/dsp-api/commit/3676fbf89614800191d9ad60107fc5f13d4416ca))
+* Resolve compiler warning toObjsWithLang (NO-TICKET) ([#2671](https://github.com/dasch-swiss/dsp-api/issues/2671)) ([dc7e2c2](https://github.com/dasch-swiss/dsp-api/commit/dc7e2c21464d7157c7f239f2b8ec3edef5b0782f))
+* **sipi:** increase healthcheck timeout and retries ([#2670](https://github.com/dasch-swiss/dsp-api/issues/2670)) ([5dd994d](https://github.com/dasch-swiss/dsp-api/commit/5dd994dcc4dd50468d0f2d045d0ce2d909bafacc))
+
 ## [28.2.0](https://github.com/dasch-swiss/dsp-api/compare/v28.1.2...v28.2.0) (2023-05-15)
 
 
