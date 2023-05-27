@@ -54,7 +54,8 @@ final case class AppConfig(
   clientTestDataService: ClientTestDataService,
   instrumentationServerConfig: InstrumentationServerConfig
 ) {
-  val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
+  val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
+  val jwtLongevityAsDuration            = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
     scala.concurrent.duration.Duration.apply(defaultTimeout).asInstanceOf[duration.FiniteDuration]
   val cacheConfigs: Seq[org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig] = caches.map { c =>

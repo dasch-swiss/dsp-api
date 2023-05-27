@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.Chunk
 import zio.Task
 import zio.ULayer
 import zio.ZLayer
@@ -45,5 +46,9 @@ object ProjectExportServiceStub {
     override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ???
 
     override def exportProject(project: KnoraProject, user: UserADM): Task[file.Path] = ???
+
+    override def importProject(project: KnoraProject, user: UserADM): Task[Option[Path]] = ???
+
+    override def listExports(): Task[Chunk[ProjectExportInfo]] = ???
   })
 }

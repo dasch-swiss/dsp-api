@@ -13,8 +13,10 @@ import dsp.valueobjects.Iri._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
+import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
+import org.knora.webapi.slice.admin.api.model.ProjectExportResponse
+import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.ProjectExportResponse
 
 object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
@@ -92,6 +94,10 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
           proxy(GetRestrictedViewSettings, identifier)
 
         override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse] = ???
+
+        override def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse] = ???
+
+        override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = ???
       }
     }
 }

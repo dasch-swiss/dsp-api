@@ -19,6 +19,8 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 trait ProjectADMService {
   def findAll: Task[List[ProjectADM]]
   def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]]
+  def findByShortname(shortname: String): Task[Option[ProjectADM]] =
+    ProjectIdentifierADM.ShortnameIdentifier.fromString(shortname).fold(_ => ZIO.none, findByProjectIdentifier)
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]]

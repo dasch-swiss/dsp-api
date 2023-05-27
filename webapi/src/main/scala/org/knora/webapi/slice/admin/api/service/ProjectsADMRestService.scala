@@ -18,6 +18,10 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
+import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
+import org.knora.webapi.slice.admin.api.model.ProjectExportResponse
+import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.common.api.RestPermissionService
@@ -42,6 +46,8 @@ trait ProjectADMRestService {
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
   def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse]
+  def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse]
+  def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]]
   def getProjectMembers(
     projectIdentifier: ProjectIdentifierADM,
     requestingUser: UserADM
@@ -233,19 +239,43 @@ final case class ProjectsADMRestServiceLive(
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
-  override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse] = for {
-    _ <- permissionService.ensureSystemAdmin(requestingUser)
-    projectIri <-
-      IriIdentifier.fromString(projectIri).toZIO.orElseFail(BadRequestException(s"Invalid project IRI: $projectIri"))
-    project <- projectRepo.findById(projectIri).someOrFail(NotFoundException(s"Project $projectIri not found."))
+  override def exportProject(projectIri: String, requestingUser: UserADM): Task[ProjectExportResponse] = for {
+    _       <- permissionService.ensureSystemAdmin(requestingUser)
+    project <- findProject(projectIri)
     zipFile <- projectExportService.exportProject(project, requestingUser)
   } yield ProjectExportResponse(zipFile.toString)
+
+  private def findProject(iri: String): Task[KnoraProject] =
+    IriIdentifier
+      .fromString(iri)
+      .toZIO
+      .orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
+      .flatMap(projectIri => projectRepo.findById(projectIri).someOrFail(NotFoundException(s"Project $iri not found.")))
+
+  override def importProject(
+    projectIri: String,
+    requestingUser: UserADM
+  ): Task[ProjectImportResponse] = for {
+    _       <- permissionService.ensureSystemAdmin(requestingUser)
+    project <- findProject(projectIri)
+    path <-
+      projectExportService
+        .importProject(project, requestingUser)
+        .flatMap {
+          case Some(export) => export.toAbsolutePath.map(_.toString)
+          case None         => ZIO.fail(NotFoundException(s"Project export for $projectIri not found."))
+        }
+  } yield ProjectImportResponse(path)
+
+  override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = for {
+    _       <- permissionService.ensureSystemAdmin(requestingUser)
+    exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
+  } yield exports
 }
 
 object ProjectsADMRestServiceLive {
-  val layer: ZLayer[
+  val layer: URLayer[
     ProjectsResponderADM with KnoraProjectRepo with ProjectExportService with RestPermissionService,
-    Nothing,
     ProjectsADMRestServiceLive
   ] =
     ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)

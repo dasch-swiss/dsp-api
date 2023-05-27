@@ -8,10 +8,23 @@ package org.knora.webapi.testcontainers
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import zio._
+import zio.http.URL
 
 import org.knora.webapi.http.version.BuildInfo
 
-final case class FusekiTestContainer(container: GenericContainer[Nothing])
+final case class FusekiTestContainer(container: GenericContainer[Nothing]) {
+
+  def host: String = container.getHost
+
+  def port: Int = container.getFirstMappedPort
+
+  def baseUrl: URL = {
+    val urlString = s"http://$host:$port"
+    URL.fromString(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+  }
+
+  def credentials: (String, String) = ("admin", "test")
+}
 
 object FusekiTestContainer {
 

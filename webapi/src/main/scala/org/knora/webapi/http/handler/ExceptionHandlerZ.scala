@@ -5,6 +5,7 @@
 
 package org.knora.webapi.http.handler
 
+import org.slf4j.LoggerFactory
 import spray.json._
 import zio.http._
 
@@ -19,10 +20,15 @@ object ExceptionHandlerZ {
   private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE =
     "The request could not be completed because of an internal server error."
 
+  private val logger = LoggerFactory.getLogger(ExceptionHandlerZ.getClass)
+
   def exceptionToJsonHttpResponseZ(ex: Throwable, appConfig: AppConfig): Http[Any, Nothing, Any, Response] = {
 
     // Get the HTTP status code that corresponds to the exception.
     val httpStatus = ApiStatusCodesZ.fromExceptionZ(ex)
+    if (httpStatus.code == 500) {
+      logger.error(ex.getMessage, ex)
+    }
 
     // Generate an HTTP response containing the error message ...
     val responseFields: Map[String, JsValue] = Map(
@@ -33,25 +39,20 @@ object ExceptionHandlerZ {
 
     // ... and the HTTP status code.
     Http.response(Response.json(json).setStatus(httpStatus))
-
   }
 
   /**
    * Given an exception, returns an error message suitable for clients.
    *
-   * @param ex        the exception.
+   * @param throwable        the exception.
    * @param appConfig the application's configuration.
    * @return an error message suitable for clients.
    */
-  private def makeClientErrorMessage(ex: Throwable, appConfig: AppConfig): String =
-    ex match {
-      case rre: RequestRejectedException => rre.toString
-
+  private def makeClientErrorMessage(throwable: Throwable, appConfig: AppConfig): String =
+    throwable match {
+      case knownError: RequestRejectedException => knownError.toString
       case other =>
-        if (appConfig.showInternalErrors) {
-          other.toString
-        } else {
-          GENERIC_INTERNAL_SERVER_ERROR_MESSAGE
-        }
+        if (appConfig.showInternalErrors) { other.toString }
+        else { GENERIC_INTERNAL_SERVER_ERROR_MESSAGE }
     }
 }
