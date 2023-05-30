@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
@@ -41,7 +42,7 @@ final case class FilesRouteADM(
                          .fromOption(stringFormatter.validateProjectShortcode(projectIDAndFile.head))
                          .orElseFail(BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'"))
           filename <- ZIO
-                        .fromOption(StringFormatter.toSparqlEncodedString(projectIDAndFile(1)))
+                        .fromOption(Iri.toSparqlEncodedString(projectIDAndFile(1)))
                         .orElseFail(BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'"))
           _ = log.info(s"/admin/files route called for filename $filename by user: ${requestingUser.id}")
         } yield SipiFileInfoGetRequestADM(projectID, filename, requestingUser)

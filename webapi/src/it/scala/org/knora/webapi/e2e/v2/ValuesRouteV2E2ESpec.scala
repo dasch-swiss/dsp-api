@@ -18,8 +18,8 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
@@ -75,9 +75,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "values")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
-  private val validationFun: (String, => Nothing) => String = (s, e) =>
-    StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+  private val clientTestDataCollector                       = new ClientTestDataCollector(appConfig)
+  private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   object AThing {
     val iri: IRI           = "http://rdfh.ch/0001/a-thing"

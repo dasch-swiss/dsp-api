@@ -2,22 +2,9 @@
 -- * SPDX-License-Identifier: Apache-2.0
 
 require "file_specific_folder_util"
-require "get_knora_session"
+require "authentication"
 require "log_util"
 require "util"
-
--------------------------------------------------------------------------------
--- This function returns the filepath according to the old way the file was
--- stored in.
--------------------------------------------------------------------------------
-local function get_old_filepath(shortcode, filename)
-    if config.prefix_as_path then
-        return config.imgroot .. '/' .. shortcode .. '/' .. filename
-    else
-        return config.imgroot .. '/' .. filename
-    end
-end
-
 
 -------------------------------------------------------------------------------
 -- This function returns the segments from the identifier
@@ -30,30 +17,6 @@ local function get_segments_from_identifier(identifier)
     return segments
 end
 
--------------------------------------------------------------------------------
--- This function checks the cookie and returns the cookie header
--------------------------------------------------------------------------------
-local function check_and_get_cookie_header(cookie)
-    -- tries to extract the DSP session name and id from the cookie:
-    -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
-    -- returns nil if it cannot find it
-    local session = get_session_id(cookie)
-    local cookie_header
-
-    if session == nil or session["name"] == nil or session["id"] == nil then
-        -- no session could be extracted
-        log("check_and_get_cookie_header - cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
-    else
-        cookie_header = {
-            Cookie = session["name"] .. "=" .. session["id"]
-        }
-        log("check_and_get_cookie_header - dsp_cookie_header: " .. cookie_header["Cookie"],
-            server.loglevel.LOG_DEBUG)
-    end
-
-    return cookie_header
-end
-
 
 -------------------------------------------------------------------------------
 -- This function returns the API URL from the given parameters
@@ -62,27 +25,29 @@ local function get_api_url(webapi_hostname, webapi_port, prefix, identifier)
     return 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 end
 
--------------------------------------------------------------------------------
--- This function gets the permissions defined on a file by requesting it from
--- the DSP-API.
--------------------------------------------------------------------------------
-local function get_permission_on_file(shortcode, file_name, cookie_header)
+--- This function gets the permissions defined on a file by requesting it from
+--- the DSP-API.
+--- @param shortcode string The shortcode of the file's project.
+--- @param file_name string The name of the file.
+--- @param jwt_raw string|nil The (optional) raw JWT token.
+--- @return table|nil The permissions on the file or nil if an error occurred.
+local function get_permission_on_file(shortcode, file_name, jwt_raw)
     local webapi_hostname = get_api_hostname()
     local webapi_port = get_api_port()
     local api_url = get_api_url(webapi_hostname, webapi_port, shortcode, file_name)
     log("get_permission_on_file - api_url: " .. api_url, server.loglevel.LOG_DEBUG)
 
     -- request the permissions on the image from DSP-API
-    local success, result = server.http("GET", api_url, cookie_header, 5000)
+    local success, result = server.http("GET", api_url, _auth_header(jwt_raw), 5000)
     if not success then
         log("get_permission_on_file - server.http() failed: " .. result, server.loglevel.LOG_ERR)
-        return 'deny'
+        return nil
     end
 
     if result.status_code ~= 200 then
         log("get_permission_on_file - DSP-API returned HTTP status code " .. result.status_code, server.loglevel.LOG_ERR)
-        log("get_permission_on_file - result body: " .. result.body, server.loglevel.LOG_ERR)
-        return 'deny'
+        log("get_permission_on_file - result body: " .. tostring(result.body), server.loglevel.LOG_ERR)
+        return nil
     end
 
     log("get_permission_on_file - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
@@ -91,10 +56,18 @@ local function get_permission_on_file(shortcode, file_name, cookie_header)
     success, response_json = server.json_to_table(result.body)
     if not success then
         log("get_permission_on_file - server.json_to_table() failed: " .. response_json, server.loglevel.LOG_ERR)
-        return 'deny'
+        return nil
     end
 
     return response_json
+end
+
+function _auth_header(jwt_raw)
+    if jwt_raw == nil then
+        return nil
+    else
+        return { Authorization = "Bearer " .. jwt_raw }
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -115,39 +88,25 @@ end
 --    filepath: path on the server where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix, identifier, cookie)
-    log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
-    log("pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
+    log("pre_flight - called with prefix:" .. prefix .. ", identifier: " .. identifier, server.loglevel.LOG_DEBUG)
 
-    local root_folder = ''
-    if config.prefix_as_path then
-        root_folder = config.imgroot .. '/' .. prefix
-    else
-        root_folder = config.imgroot
+    local filepath = find_file(identifier, prefix)
+    if filepath == nil then
+        return _file_not_found_response()
     end
 
-    local filepath = get_file_specific_path(root_folder, identifier)
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
-
     if prefix == "tmp" then
         log("pre_flight - always allow access to tmp folder", server.loglevel.LOG_DEBUG)
         return 'allow', filepath
     end
 
-    -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
-    local _, exists = server.fs.exists(filepath)
-    log("pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
-    if not exists then
-        filepath = get_old_filepath(prefix, identifier)
-        log("pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath,
-            server.loglevel.LOG_DEBUG)
+    local jwt_raw = auth_get_jwt_raw()
+    local permission_info = get_permission_on_file(prefix, identifier, jwt_raw)
+    if permission_info == nil then
+        return _file_not_found_response()
     end
 
-    local dsp_cookie_header = nil
-    if cookie ~= '' then
-        dsp_cookie_header = check_and_get_cookie_header(cookie)
-    end
-
-    local permission_info = get_permission_on_file(prefix, identifier, dsp_cookie_header)
     local permission_code = permission_info.permissionCode
     log("pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 
@@ -164,12 +123,12 @@ function pre_flight(prefix, identifier, cookie)
 
         if permission_info.restrictedViewSettings ~= nil then
             log("pre_flight - restricted view settings - watermark: " ..
-                tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+                    tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
             if permission_info.restrictedViewSettings.size ~= nil then
                 restrictedViewSize = permission_info.restrictedViewSettings.size
                 log("pre_flight - restricted view settings - size: " .. tostring(restrictedViewSize),
-                    server.loglevel.LOG_DEBUG)
+                        server.loglevel.LOG_DEBUG)
             else
                 log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
                 restrictedViewSize = config.thumb_size
@@ -192,6 +151,9 @@ function pre_flight(prefix, identifier, cookie)
     end
 end
 
+function _file_not_found_response()
+    return "allow", "file_does_not_exist"
+end
 -------------------------------------------------------------------------------
 -- This function is being called from Sipi before the file is served.
 -- DSP-API is called to ask for the user's permissions on the file.
@@ -225,49 +187,34 @@ function file_pre_flight(identifier, cookie)
     elseif #segments == 5 then
         -- in case of a preview file of a video, get the file path of the video file to check permissions on the video
         log("file_pre_flight - found 5 segments, it's assumed to be the preview file for a video",
-            server.loglevel.LOG_ERR)
+                server.loglevel.LOG_ERR)
         file_name = segments[4] .. '.mp4'
         file_name_preview = segments[4] .. '/' .. segments[5]
         log("file_pre_flight - file name: " .. file_name, server.loglevel.LOG_DEBUG)
         log("file_pre_flight - file name preview: " .. file_name_preview, server.loglevel.LOG_DEBUG)
     else
         log("file_pre_flight - wrong number of segments. Got: [" .. table.concat(segments, ",") .. "]",
-            server.loglevel.LOG_ERR)
+                server.loglevel.LOG_ERR)
         return "deny"
     end
 
-    local root_folder = ''
-    if config.prefix_as_path then
-        root_folder = config.imgroot .. '/' .. shortcode
-    else
-        root_folder = config.imgroot
+    local filepath = find_file(file_name, shortcode)
+    if filepath == nil then
+        return _file_not_found_response()
     end
 
-    local filepath = get_file_specific_path(root_folder, file_name)
-    local filepath_preview = get_file_specific_path(root_folder, file_name_preview)
+    local filepath_preview = find_file(file_name_preview, shortcode)
     log("file_pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
-
-    -- handle old way of file path - TODO: remove this block of code as soon as migration is done!
-    local _, exists = server.fs.exists(filepath)
-    log("file_pre_flight - does the file exist? " .. tostring(exists), server.loglevel.LOG_DEBUG)
-    if not exists then
-        filepath = get_old_filepath(shortcode, file_name)
-        filepath_preview = get_old_filepath(shortcode, file_name_preview)
-        log("file_pre_flight - couldn't find file at the given filepath, take old filepath instead: " .. filepath,
-            server.loglevel.LOG_DEBUG)
-    end
-
-    if shortcode == "082A" then -- SVA / 082A allows file access no matter what permissions are set!
+    if shortcode == "082A" then
+        -- SVA / 082A allows file access no matter what permissions are set!
         log("file_pre_flight - file requested for 082A: " .. identifier, server.loglevel.LOG_WARNING)
         return "allow", filepath
     end
-
-    local dsp_cookie_header = nil
-    if cookie ~= '' then
-        dsp_cookie_header = check_and_get_cookie_header(cookie)
+    local jwt_raw = auth_get_jwt_raw()
+    local permission_info = get_permission_on_file(shortcode, file_name, jwt_raw)
+    if permission_info == nil then
+        return _file_not_found_response()
     end
-
-    local permission_info = get_permission_on_file(shortcode, file_name, dsp_cookie_header)
     local permission_code = permission_info.permissionCode
     log("file_pre_flight - permission code: " .. permission_code, server.loglevel.LOG_DEBUG)
 

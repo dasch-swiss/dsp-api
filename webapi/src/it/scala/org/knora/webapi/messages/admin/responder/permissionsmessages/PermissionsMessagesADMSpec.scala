@@ -68,7 +68,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
@@ -142,7 +142,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "throw 'BadRequest' for AdministrativePermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
@@ -363,7 +363,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForResourceClassGetADM is not valid" in {
@@ -532,7 +532,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "throw 'BadRequest' for DefaultObjectAccessPermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
@@ -916,7 +916,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           requestingUser = SharedTestDataADM.imagesUser02
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "not update permission group if invalid permission IRI given" in {
@@ -1040,7 +1040,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
   }
 }

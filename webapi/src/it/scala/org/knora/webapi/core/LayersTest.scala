@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.core
 
 import zio._
@@ -116,6 +121,9 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.slice.admin.domain.service.AssetService
+import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
+
 object LayersTest {
 
   /**
@@ -129,6 +137,7 @@ object LayersTest {
     ApiRoutes
       with AppRouter
       with Authenticator
+      with AssetService
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
@@ -195,6 +204,7 @@ object LayersTest {
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
+      AssetServiceLive.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,

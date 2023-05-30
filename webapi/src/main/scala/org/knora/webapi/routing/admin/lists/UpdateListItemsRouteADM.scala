@@ -15,6 +15,7 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
@@ -54,7 +55,7 @@ final case class UpdateListItemsRouteADM(
       put {
         entity(as[ChangeNodeNameApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
-            nodeIri <- StringFormatter
+            nodeIri <- Iri
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
@@ -75,7 +76,7 @@ final case class UpdateListItemsRouteADM(
       put {
         entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
-            nodeIri <- StringFormatter
+            nodeIri <- Iri
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
@@ -96,7 +97,7 @@ final case class UpdateListItemsRouteADM(
       put {
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
           val task = for {
-            nodeIri <- StringFormatter
+            nodeIri <- Iri
                          .validateAndEscapeIri(iri)
                          .toZIO
                          .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))

@@ -1,10 +1,16 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
+import org.testcontainers.utility.MountableFile
 import zio._
-
+import zio.http.URL
 import java.net.NetworkInterface
 import java.net.UnknownHostException
 import java.nio.file.Paths
@@ -12,9 +18,31 @@ import scala.jdk.CollectionConverters._
 
 import org.knora.webapi.http.version.BuildInfo
 
-final case class SipiTestContainer(container: GenericContainer[Nothing])
+final case class SipiTestContainer(container: GenericContainer[Nothing]) {
+  def copyImageToContainer(prefix: String, filename: String): Task[Unit] = {
+    val seg01  = filename.substring(0, 2)
+    val seg02  = filename.substring(2, 4)
+    val target = s"/sipi/images/$prefix/$seg01/$seg02/$filename"
+    val file   = MountableFile.forClasspathResource("sipi/testfiles/" + filename, 777)
+    ZIO.attemptBlocking(container.copyFileToContainer(file, target)) <* ZIO.logInfo(
+      s"copied $prefix/$filename to $target"
+    )
+  }
+
+  def host: String = container.getHost
+  def port: Int    = container.getFirstMappedPort
+  def sipiBaseUrl: URL = {
+    val urlString = s"http://$host:$port"
+    URL.fromString(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+  }
+}
 
 object SipiTestContainer {
+  def resolveUrl(path: String): URIO[SipiTestContainer, URL] =
+    ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.setPath(path))
+
+  def copyImageToContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
+    ZIO.serviceWithZIO[SipiTestContainer](_.copyImageToContainer(prefix, filename))
 
   /**
    * A functional effect that initiates a Sipi Testcontainer
@@ -55,6 +83,7 @@ object SipiTestContainer {
       "/sipi/images/0803/in/cu/incunabula_0000000002.jp2",
       BindMode.READ_ONLY
     )
+    sipiContainer.withLogConsumer(frame => print("SIPI:" + frame.getUtf8String))
 
     sipiContainer.start()
 
@@ -70,9 +99,5 @@ object SipiTestContainer {
   }.orDie.zipLeft(ZIO.logInfo(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] =
-    ZLayer.scoped {
-      for {
-        tc <- ZIO.acquireRelease(acquire)(release)
-      } yield SipiTestContainer(tc)
-    }
+    ZLayer.scoped(ZIO.acquireRelease(acquire)(release).map(SipiTestContainer(_)))
 }

@@ -14,12 +14,12 @@ import zio.metrics._
 import java.time.temporal.ChronoUnit
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
@@ -81,7 +81,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     params
       .get(LIMIT_TO_PROJECT)
       .map { projectIriStr =>
-        StringFormatter
+        Iri
           .validateAndEscapeIri(projectIriStr)
           .toZIO
           .mapBoth(_ => BadRequestException(s"$projectIriStr is not a valid Iri"), Some(_))
@@ -157,7 +157,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
 
   private def validateSearchString(searchStr: String) =
     ZIO
-      .fromOption(StringFormatter.toSparqlEncodedString(searchStr))
+      .fromOption(Iri.toSparqlEncodedString(searchStr))
       .orElseFail(throw BadRequestException(s"Invalid search string: '$searchStr'"))
       .filterOrElseWith(_.length >= searchValueMinLength) { it =>
         val errorMsg =

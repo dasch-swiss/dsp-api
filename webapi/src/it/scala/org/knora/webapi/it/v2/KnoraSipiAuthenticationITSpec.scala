@@ -41,26 +41,21 @@ class KnoraSipiAuthenticationITSpec
   )
 
   "The Knora/Sipi authentication" should {
-    var loginToken: String = ""
-
-    "log in as a Knora user" in {
-      /* Correct username and correct password */
-
+    lazy val loginToken: String = {
       val params =
         s"""
            |{
            |    "email": "$anythingUserEmail",
            |    "password": "$password"
            |}
-                """.stripMargin
-
+              """.stripMargin
       val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
+      Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds).token
+    }
 
-      val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
-      loginToken = lr.token
-
+    "log in as a Knora user" in {
       loginToken.nonEmpty should be(true)
     }
 
@@ -72,12 +67,7 @@ class KnoraSipiAuthenticationITSpec
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =
-        Get(
-          "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/max/0/default.jpg".replace(
-            "http://0.0.0.0:1024",
-            baseInternalSipiUrl
-          )
-        ) ~> addHeader(cookieHeader)
+        Get(s"$baseInternalSipiUrl/0803/incunabula_0000000002.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
 
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)

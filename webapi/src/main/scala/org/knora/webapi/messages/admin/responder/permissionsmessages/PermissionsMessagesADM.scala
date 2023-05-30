@@ -12,6 +12,7 @@ import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
@@ -44,13 +45,13 @@ case class CreateAdministrativePermissionAPIRequestADM(
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   id match {
-    case Some(iri) => sf.validatePermissionIRI(iri)
+    case Some(iri) => sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
     case None      => None
   }
 
   def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
 
-  sf.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
+  Iri.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
 
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
@@ -85,13 +86,13 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   id match {
-    case Some(iri) => sf.validatePermissionIRI(iri)
+    case Some(iri) => sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
     case None      => None
   }
 
   def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
 
-  sf.validateAndEscapeProjectIri(forProject, throw BadRequestException(s"Invalid project IRI $forProject"))
+  Iri.validateAndEscapeProjectIri(forProject).getOrElse(throw BadRequestException(s"Invalid project IRI $forProject"))
 
   forGroup match {
     case Some(iri: IRI) =>
@@ -148,7 +149,7 @@ case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends Permissions
   if (forGroup.isEmpty) {
     throw BadRequestException(s"IRI of new group cannot be empty.")
   }
-  StringFormatter
+  Iri
     .validateAndEscapeIri(forGroup)
     .getOrElse(throw BadRequestException(s"Invalid IRI $forGroup is given."))
 
@@ -180,7 +181,7 @@ case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) ext
     throw BadRequestException(s"Resource class IRI cannot be empty.")
   }
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  StringFormatter
+  Iri
     .validateAndEscapeIri(forResourceClass)
     .getOrElse(
       throw BadRequestException(s"Invalid resource class IRI $forResourceClass is given.")
@@ -198,7 +199,7 @@ case class ChangePermissionPropertyApiRequestADM(forProperty: IRI) extends Permi
   if (forProperty.isEmpty) {
     throw BadRequestException(s"Property IRI cannot be empty.")
   }
-  StringFormatter
+  Iri
     .validateAndEscapeIri(forProperty)
     .getOrElse(throw BadRequestException(s"Invalid property IRI $forProperty is given."))
 
@@ -242,9 +243,9 @@ case class PermissionsForProjectGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  Iri
+    .validateAndEscapeProjectIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -271,12 +272,8 @@ case class PermissionChangeGroupRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+  if (!Iri.isPermissionIri(permissionIri))
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  }
-
 }
 
 /**
@@ -294,12 +291,8 @@ case class PermissionChangeHasPermissionsRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+  if (!Iri.isPermissionIri(permissionIri))
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  }
-
 }
 
 /**
@@ -317,11 +310,8 @@ case class PermissionChangeResourceClassRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+  if (!Iri.isPermissionIri(permissionIri))
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  }
 }
 
 /**
@@ -339,11 +329,8 @@ case class PermissionChangePropertyRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+  if (!Iri.isPermissionIri(permissionIri))
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  }
 }
 
 // Administrative Permissions
@@ -361,9 +348,9 @@ case class AdministrativePermissionsForProjectGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  Iri
+    .validateAndEscapeProjectIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -388,12 +375,7 @@ case class AdministrativePermissionForIriGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    administrativePermissionIri,
-    throw BadRequestException(s"Invalid permission IRI $administrativePermissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(administrativePermissionIri)
 }
 
 /**
@@ -406,9 +388,9 @@ case class AdministrativePermissionForIriGetRequestADM(
  */
 case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  Iri
+    .validateAndEscapeProjectIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -514,9 +496,9 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  Iri
+    .validateAndEscapeProjectIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -547,7 +529,9 @@ case class DefaultObjectAccessPermissionGetRequestADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  Iri
+    .validateAndEscapeProjectIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -604,12 +588,7 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    defaultObjectAccessPermissionIri,
-    throw BadRequestException(s"Invalid permission IRI $defaultObjectAccessPermissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(defaultObjectAccessPermissionIri)
 }
 
 /**
@@ -629,7 +608,9 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  Iri
+    .validateAndEscapeProjectIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -668,7 +649,9 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
 ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  Iri
+    .validateAndEscapeProjectIri(projectIri)
+    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
 
   // Check user's permission for the operation
   if (
@@ -724,12 +707,7 @@ case class DefaultObjectAccessPermissionCreateRequestADM(
  */
 case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    permissionIri,
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
 }
 
 /**
@@ -742,12 +720,7 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
  */
 case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(
-    permissionIri,
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
-  )
+  PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

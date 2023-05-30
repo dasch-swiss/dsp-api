@@ -1,8 +1,6 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
-require "get_knora_session"
-
 -------------------------------------------------------------------------------
 -- This function is being called from sipi before the file is served
 -- Knora is called to ask for the user's permissions on the file

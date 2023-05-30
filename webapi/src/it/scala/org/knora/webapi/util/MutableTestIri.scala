@@ -5,6 +5,7 @@
 
 package org.knora.webapi.util
 
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 
@@ -21,7 +22,7 @@ class MutableTestIri {
    */
   def set(iri: IRI): Unit =
     maybeIri = Some(
-      StringFormatter.validateAndEscapeIri(iri).getOrElse(throw TestIriException(s"Got an invalid IRI: <$iri>"))
+      Iri.validateAndEscapeIri(iri).getOrElse(throw TestIriException(s"Got an invalid IRI: <$iri>"))
     )
 
   /**

@@ -91,11 +91,14 @@ Sipi, obtaining the binary representation in the desired quality.
 
 ## Authentication of Users with Sipi
 
-Whenever a file is requested, Sipi asks the DSP-API about the current user's permissions on the given file.
-This is achieved by sharing the session cookie with Sipi. When the user logs in to DSP using his
-browser (using either `V1` or `V2` authentication route), a session cookie containing a JWT token representing
-the user is stored in the user's client. This session cookie is then read by Sipi and used to ask DSP-API for
-the user's image permissions.
+File access is restricted to users who have the permission to view the resource that the file is attached to.
+In order to check whether a user has the permission to view a resource, Sipi needs to know the user's identity.
+The identity is provided by DSP-API in the form of a JWT token.
+This jwt token can be provided to Sipi in the following ways:
 
-For the session cookie to be sent to Sipi, both the DSP-API and Sipi endpoints need to
-be under the same domain, e.g., `api.example.com` and `iiif.example.com`.
+1. _recommended_ - The `Authorization` header of the request as a `Bearer` type token.
+2. _deprecated_ - The value for a `token` query parameter of the request. This is unsafe a the token is visible in the
+   URL.
+3. _deprecated_ - As a session cookie as set by the dsp-api. For the session cookie to be sent to Sipi, both the DSP-API
+   and Sipi endpoints need to
+   be under the same domain, e.g., `api.example.com` and `iiif.example.com`.

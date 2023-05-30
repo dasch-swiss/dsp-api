@@ -1,6 +1,7 @@
 -- * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
+require "log_util"
 -------------------------------------------------------------------------------
 -- String constants to be used in error messages
 -------------------------------------------------------------------------------
@@ -37,7 +38,7 @@ function send_error(status, msg)
 
     -- If this is an internal server error, log the message.
     if http_status // 100 == 5 then
-        server.log(msg_str, server.loglevel.LOG_ERR)
+        log(msg_str, server.loglevel.LOG_ERR)
     end
 
     local result
@@ -47,7 +48,7 @@ function send_error(status, msg)
     
     success, error_msg = server.sendHeader("Content-Type", "application/json")
     if not success then
-        server.log(error_msg, server.loglevel.LOG_ERR)
+        log(error_msg, server.loglevel.LOG_ERR)
         return
     end
 
@@ -55,13 +56,13 @@ function send_error(status, msg)
 
     success, jsonstr = server.table_to_json(result)
     if not success then
-        server.log(error_msg, server.loglevel.LOG_ERR)
+        log(error_msg, server.loglevel.LOG_ERR)
         return
     end
 
     success, error_msg = server.print(jsonstr)
     if not success then
-        server.log(error_msg, server.loglevel.LOG_ERR)
+        log(error_msg, server.loglevel.LOG_ERR)
         return
     end
 end

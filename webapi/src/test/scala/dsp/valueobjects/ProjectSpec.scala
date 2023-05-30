@@ -19,8 +19,8 @@ import dsp.valueobjects.Project._
 object ProjectSpec extends ZIOSpecDefault {
   private val validShortCode   = "1234"
   private val invalidShortCode = "12345"
-  private val validShortName   = "validShortname"
-  private val invalidShortname = "~!@#$%^&*()_+"
+  private val validShortName1  = "valid-shortname"
+  private val validShortName2  = "valid_1111"
   private val validName        = "That is the project longname"
   private val validDescription = Seq(
     V2.StringLiteralV2(value = "Valid project description", language = Some("en"))
@@ -79,32 +79,48 @@ object ProjectSpec extends ZIOSpecDefault {
   private val shortNameTest = suite("ProjectSpec - ShortName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        ShortName.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
-      ) &&
-      assertTrue(
+        ShortName.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing)),
         ShortName.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        ShortName.make(invalidShortname) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortNameInvalid(invalidShortname))
-        )
-      ) &&
-      assertTrue(
-        ShortName.make(Some(invalidShortname)) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortNameInvalid(invalidShortname))
+        ShortName.make("invalid:shortname") == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortNameInvalid("invalid:shortname"))
+        ),
+        ShortName.make("-invalidshortname") == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortNameInvalid("-invalidshortname"))
+        ),
+        ShortName.make(".invalidshortname") == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortNameInvalid(".invalidshortname"))
+        ),
+        ShortName.make("invalid/shortname") == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortNameInvalid("invalid/shortname"))
+        ),
+        ShortName.make("invalid@shortname") == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortNameInvalid("invalid@shortname"))
+        ),
+        ShortName.make(Some("invalid:shortname")) == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortNameInvalid("invalid:shortname"))
         )
       )
     },
     test("pass a valid value and successfully create value object") {
       for {
-        shortName           <- ShortName.make(validShortName).toZIO
-        optionalShortName   <- ShortName.make(Option(validShortName)).toZIO
-        shortNameFromOption <- ZIO.fromOption(optionalShortName)
-      } yield assertTrue(shortName.value == validShortName) &&
-        assert(optionalShortName)(isSome(isSubtype[ShortName](Assertion.anything))) &&
-        assertTrue(shortNameFromOption.value == validShortName)
+        shortName1           <- ShortName.make(validShortName1).toZIO
+        optionalShortName1   <- ShortName.make(Option(validShortName1)).toZIO
+        shortNameFromOption1 <- ZIO.fromOption(optionalShortName1)
+        shortName2           <- ShortName.make(validShortName2).toZIO
+        optionalShortName2   <- ShortName.make(Option(validShortName2)).toZIO
+        shortNameFromOption2 <- ZIO.fromOption(optionalShortName2)
+      } yield assertTrue(
+        shortName1.value == validShortName1,
+        shortNameFromOption1.value == validShortName1,
+        shortName2.value == validShortName2,
+        shortNameFromOption2.value == validShortName2
+      ) &&
+        assert(optionalShortName1)(isSome(isSubtype[ShortName](Assertion.anything))) &&
+        assert(optionalShortName2)(isSome(isSubtype[ShortName](Assertion.anything)))
     },
     test("successfully validate passing None") {
       assertTrue(

@@ -23,6 +23,8 @@ trait OntologyRepo extends Repository[ReadOntologyV2, InternalIri] {
 
   def findByProject(project: KnoraProject): Task[List[ReadOntologyV2]] = findByProject(project.id)
   def findByProject(projectId: InternalIri): Task[List[ReadOntologyV2]]
+  def findOntologyGraphsByProject(project: KnoraProject): Task[List[InternalIri]] =
+    findByProject(project).map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
 
   def findClassBy(classIri: InternalIri): Task[Option[ReadClassInfoV2]]
 

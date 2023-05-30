@@ -7,7 +7,9 @@ package org.knora.webapi.store.iiif.api
 
 import zio._
 import zio.macros.accessible
+import zio.nio.file.Path
 
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -16,6 +18,7 @@ import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanent
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.slice.admin.domain.service.Asset
 
 @accessible
 trait IIIFService {
@@ -57,4 +60,13 @@ trait IIIFService {
    * Tries to access the IIIF Service.
    */
   def getStatus(): Task[IIIFServiceStatusResponse]
+
+  /**
+   * Downloads an asset from Sipi.
+   * @param asset The asset to download.
+   * @param targetDir The target directory in which the asset should be stored.
+   * @param user The user who is downloading the asset.
+   * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
+   */
+  def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]]
 }

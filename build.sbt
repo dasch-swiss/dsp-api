@@ -69,7 +69,11 @@ addCommandAlias(
   "headerCreateAll",
   "; all webapi/headerCreate webapi/Test/headerCreate webapi/IntegrationTest/headerCreate"
 )
-addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
+addCommandAlias(
+  "headerCheckAll",
+  "; all webapi/headerCheck webapi/Test/headerCheck webapi/IntegrationTest/headerCheck"
+)
+addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("it", "IntegrationTest/test")
 
 lazy val customScalacOptions = Seq(
@@ -106,7 +110,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
       "mv /sipi/scripts/entrypoint.sh /sipi/ && chmod +x /sipi/entrypoint.sh && apt-get update && apt-get install -y cron curl && rm -rf /var/lib/apt/lists/*"
     ), // install cron and curl for periodically cleaning temp dir
     dockerCommands += Cmd(
-      """HEALTHCHECK --interval=15s --timeout=5s --retries=3 --start-period=30s \
+      """HEALTHCHECK --interval=30s --timeout=30s --retries=4 --start-period=30s \
         |CMD bash /sipi/scripts/healthcheck.sh || exit 1""".stripMargin
     ),
     // use filterNot to return all items that do NOT meet the criteria
@@ -152,7 +156,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / parallelExecution  := true, // run tests in parallel
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
-  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin)
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
     name := "webapi",
     resolvers ++= Seq(
@@ -163,7 +167,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .configs(IntegrationTest)
   .settings(
     inConfig(IntegrationTest) {
-      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings
+      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(IntegrationTest)
     },
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
   )

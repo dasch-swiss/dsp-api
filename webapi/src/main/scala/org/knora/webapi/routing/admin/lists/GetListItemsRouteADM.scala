@@ -11,6 +11,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -48,7 +49,7 @@ final case class GetListItemsRouteADM(
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
         val task = for {
           iri <- ZIO.foreach(maybeProjectIri)(iri =>
-                   StringFormatter
+                   Iri
                      .validateAndEscapeIri(iri)
                      .toZIO
                      .orElseFail(BadRequestException(s"Invalid param project IRI: $iri"))

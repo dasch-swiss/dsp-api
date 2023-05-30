@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import dsp.valueobjects.Iri
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -19,7 +20,6 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
@@ -44,8 +44,7 @@ import org.knora.webapi.util.MutableTestIri
  */
 class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonProtocol {
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  val validationFun: (String, => Nothing) => String     = (s, e) => StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+  val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   private val anythingUser      = SharedTestDataADM.anythingUser1
   private val anythingUserEmail = anythingUser.email
