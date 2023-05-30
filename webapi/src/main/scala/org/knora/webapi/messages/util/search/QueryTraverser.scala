@@ -243,7 +243,14 @@ final case class QueryTraverser(
       case MinusPattern(_) +: Nil =>
         ZIO
           .fromOption(findMainResourceType(inputQuery))
-          .map(patterns.appended(_))
+          .map { statement =>
+            val notDeletedPattern = StatementPattern(
+              subj = statement.subj,
+              pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
+              obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+            )
+            patterns.appendedAll(Seq(statement, notDeletedPattern))
+          }
           .orElseFail(
             GravsearchOptimizationException(
               s"Query consisted only of a MINUS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
@@ -252,7 +259,14 @@ final case class QueryTraverser(
       case FilterNotExistsPattern(_) +: Nil =>
         ZIO
           .fromOption(findMainResourceType(inputQuery))
-          .map(patterns.appended(_))
+          .map { statement =>
+            val notDeletedPattern = StatementPattern(
+              subj = statement.subj,
+              pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
+              obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+            )
+            patterns.appendedAll(Seq(statement, notDeletedPattern))
+          }
           .orElseFail(
             GravsearchOptimizationException(
               s"Query consisted only of a FILTER NOT EXISTS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"

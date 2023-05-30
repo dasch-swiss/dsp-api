@@ -10255,7 +10255,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.OK, response.toString)
 
-        checkSearchResponseNumberOfResults(responseAs[String], 22)
+        checkSearchResponseNumberOfResults(responseAs[String], 24)
       }
 
     }
@@ -10285,7 +10285,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.OK, response.toString)
 
-        checkSearchResponseNumberOfResults(responseAs[String], 22)
+        checkSearchResponseNumberOfResults(responseAs[String], 24)
       }
 
     }
