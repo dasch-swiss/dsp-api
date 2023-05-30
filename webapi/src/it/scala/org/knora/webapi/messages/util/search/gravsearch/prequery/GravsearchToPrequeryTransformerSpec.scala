@@ -2201,6 +2201,17 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
             iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
             propertyPathOperator = None
           )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          )
         )
       ),
       positiveEntities = Set(),
