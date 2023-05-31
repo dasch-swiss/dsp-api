@@ -41,19 +41,6 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  def sessionLogin(email: String, password: String): String = {
-
-    val request                = Get(baseApiUrl + s"/v1/session?login&email=$email&password=$password")
-    val response: HttpResponse = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK)
-
-    val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
-    sr.sid
-  }
-
-  def sessionLogout(sessionId: String): Unit =
-    Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KnoraAuthenticationCookieName, sessionId)
-
   "The Files Route ('admin/files') using token credentials" should {
 
     "return CR (8) permission code" in {
@@ -94,8 +81,6 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
         Get(baseApiUrl + s"/admin/files/0001/9hxmmrWh0a7-CnRCq0650ro.jpx?email=$normalUserEmailEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      // println(response.toString)
-
       assert(response.status == StatusCodes.NotFound)
     }
 
@@ -103,55 +88,6 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
       val request =
         Get(baseApiUrl + s"/admin/files/0001/QxFMm5wlRlatStw9ft3iZA.jp2?email=$normalUserEmailEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
-
-      assert(response.status == StatusCodes.OK)
-
-      val fr: SipiFileInfoGetResponseADM =
-        Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
-
-      (fr.permissionCode === 1) should be(true)
-
-    }
-  }
-
-  "The Files Route ('admin/files') using session credentials" should {
-
-    "return CR (8) permission code" in {
-      /* login */
-      val sessionId = sessionLogin(anythingAdminEmailEnc, testPass)
-
-      /* anything image */
-      val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KnoraAuthenticationCookieName,
-        sessionId
-      )
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      // println(response.toString)
-
-      assert(response.status == StatusCodes.OK)
-
-      val fr: SipiFileInfoGetResponseADM =
-        Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
-
-      (fr.permissionCode === 8) should be(true)
-
-      /* logout */
-      sessionLogout(sessionId)
-    }
-
-    "return RV (1) permission code" in {
-      /* login */
-      val sessionId = sessionLogin(normalUserEmailEnc, testPass)
-
-      /* anything image */
-      val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KnoraAuthenticationCookieName,
-        sessionId
-      )
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      // println(response.toString)
 
       assert(response.status == StatusCodes.OK)
 
