@@ -205,10 +205,5 @@ routes = {
         method = 'GET',
         route = '/clean_temp_dir',
         script = 'clean_temp_dir.lua'
-    },
-    {
-        method = 'GET',
-        route = '/migrate_files_into_new_structure',
-        script = 'migrate_files_into_new_structure.lua'
     }
 }
