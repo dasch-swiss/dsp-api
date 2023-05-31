@@ -123,12 +123,12 @@ function pre_flight(prefix, identifier, cookie)
 
         if permission_info.restrictedViewSettings ~= nil then
             log("pre_flight - restricted view settings - watermark: " ..
-                    tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+                tostring(permission_info.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
             if permission_info.restrictedViewSettings.size ~= nil then
                 restrictedViewSize = permission_info.restrictedViewSettings.size
                 log("pre_flight - restricted view settings - size: " .. tostring(restrictedViewSize),
-                        server.loglevel.LOG_DEBUG)
+                    server.loglevel.LOG_DEBUG)
             else
                 log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
                 restrictedViewSize = config.thumb_size
@@ -154,6 +154,7 @@ end
 function _file_not_found_response()
     return "allow", "file_does_not_exist"
 end
+
 -------------------------------------------------------------------------------
 -- This function is being called from Sipi before the file is served.
 -- DSP-API is called to ask for the user's permissions on the file.
@@ -169,7 +170,6 @@ end
 --    filepath: path on the server where the master file is located
 -------------------------------------------------------------------------------
 function file_pre_flight(identifier, cookie)
-    log("file_pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
     log("file_pre_flight - param identifier: " .. identifier, server.loglevel.LOG_DEBUG)
 
     local segments = get_segments_from_identifier(identifier)
@@ -187,14 +187,14 @@ function file_pre_flight(identifier, cookie)
     elseif #segments == 5 then
         -- in case of a preview file of a video, get the file path of the video file to check permissions on the video
         log("file_pre_flight - found 5 segments, it's assumed to be the preview file for a video",
-                server.loglevel.LOG_ERR)
+            server.loglevel.LOG_ERR)
         file_name = segments[4] .. '.mp4'
         file_name_preview = segments[4] .. '/' .. segments[5]
         log("file_pre_flight - file name: " .. file_name, server.loglevel.LOG_DEBUG)
         log("file_pre_flight - file name preview: " .. file_name_preview, server.loglevel.LOG_DEBUG)
     else
         log("file_pre_flight - wrong number of segments. Got: [" .. table.concat(segments, ",") .. "]",
-                server.loglevel.LOG_ERR)
+            server.loglevel.LOG_ERR)
         return "deny"
     end
 
