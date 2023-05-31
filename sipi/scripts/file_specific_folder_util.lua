@@ -21,13 +21,6 @@ function find_file(file_name, prefix)
         return file_path
     end
 
-    -- deprecated way of storing files, still supported for backwards compatibility
-    local file_path_old = root_folder .. '/' .. file_name
-    if _does_file_exist(file_path_old) then
-        log("file " .. file_name_and_prefix .. " found in deprecated folder: " .. file_path_old, server.loglevel.LOG_DEBUG)
-        return file_path_old
-    end
-
     return nil
 end
 
