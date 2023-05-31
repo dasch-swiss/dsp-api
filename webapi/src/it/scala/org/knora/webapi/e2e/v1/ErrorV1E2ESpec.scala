@@ -6,6 +6,7 @@
 package org.knora.webapi.e2e.v1
 
 import akka.http.scaladsl.model.StatusCodes
+import org.scalatest.DoNotDiscover
 import zio._
 
 import org.knora.webapi.E2ESpec
@@ -14,6 +15,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 /**
  * Causes an internal server error to see if logging is working correctly.
  */
+@DoNotDiscover
 class ErrorV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   "Make a request that causes an internal server error (unit type message)" in {

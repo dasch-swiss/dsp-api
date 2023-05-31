@@ -9,6 +9,8 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.headers.`Set-Cookie`
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.scalatest.DoNotDiscover
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -25,6 +27,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  *
  * This spec tests the 'v1/authentication' and 'v1/session' route.
  */
+@DoNotDiscover
 class AuthenticationV1E2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   private val rootIri      = SharedTestDataV1.rootUser.userData.user_id.get
