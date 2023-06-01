@@ -23,12 +23,12 @@ object Dependencies {
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.5.0"
-  val ZioLoggingVersion           = "2.1.12"
+  val ZioLoggingVersion           = "2.1.13"
   val ZioNioVersion               = "2.0.1"
   val ZioMetricsConnectorsVersion = "2.0.8"
   val ZioPreludeVersion           = "1.0.0-RC19"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.13"
+  val ZioVersion                  = "2.0.14"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio" %% "zio"                       % ZioVersion
@@ -67,8 +67,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.0" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.0" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.1" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.1" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -78,7 +78,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.0.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.1.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.73"
 
   // caching
@@ -93,8 +93,8 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.4"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.4"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.1"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.1"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.2"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
@@ -105,14 +105,14 @@ object Dependencies {
   val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
   val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
   val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
-  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.15"         // Scala 3 compatible
+  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.16"         // Scala 3 compatible
   // The scoverage plugin actually adds its dependencies automatically.
   // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
   // Fixes error message when running IT in IntelliJ
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
-  val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.7"
-  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.0"
+  val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.8"
+  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.3"
   val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
 
   // found/added by the plugin but deleted anyway
