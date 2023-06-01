@@ -105,7 +105,7 @@ object Dependencies {
   val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
   val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
   val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
-  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.15"         // Scala 3 compatible
+  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.16"         // Scala 3 compatible
   // The scoverage plugin actually adds its dependencies automatically.
   // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
   // Fixes error message when running IT in IntelliJ
