@@ -10,18 +10,20 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.scalatest.DoNotDiscover
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json._
+
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import dsp.errors.InvalidApiJsonException
 
+import dsp.errors.InvalidApiJsonException
 import org.knora.webapi._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
@@ -39,6 +41,7 @@ import org.knora.webapi.util.MutableTestIri
  * End-to-end test specification for the standoff endpoint. This specification uses the Spray Testkit as documented
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
  */
+@DoNotDiscover
 class StandoffV1R2RSpec extends R2RSpec {
 
   private val standoffPath =

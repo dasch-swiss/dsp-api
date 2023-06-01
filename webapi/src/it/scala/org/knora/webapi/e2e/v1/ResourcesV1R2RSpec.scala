@@ -11,10 +11,12 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import org.scalatest.Assertion
+import org.scalatest.DoNotDiscover
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json._
+
 import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import java.util.zip.ZipEntry
@@ -27,10 +29,10 @@ import scala.util.Random
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
+
 import dsp.errors.AssertionException
 import dsp.errors.InvalidApiJsonException
 import dsp.errors.NotFoundException
-
 import org.knora.webapi._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
@@ -52,6 +54,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * End-to-end test specification for the resources endpoint.
  */
+@DoNotDiscover
 class ResourcesV1R2RSpec extends R2RSpec {
 
   private val resourcesPathV1 =

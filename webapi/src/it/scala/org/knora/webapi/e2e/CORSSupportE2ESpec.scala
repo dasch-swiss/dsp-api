@@ -46,7 +46,7 @@ class CORSSupportE2ESpec extends E2ESpec {
 
     "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
       val request = Get(
-        baseApiUrl + "/v1/resources/" + java.net.URLEncoder
+        baseApiUrl + "/v2/resources/" + java.net.URLEncoder
           .encode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg", "utf-8")
       ) ~> Origin(exampleOrigin)
       val response = singleAwaitingRequest(request)
@@ -58,7 +58,7 @@ class CORSSupportE2ESpec extends E2ESpec {
 
     "send `Access-Control-Allow-Origin` header when the Knora resource is NOT found " in {
       val request = Get(
-        baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0803/nonexistent", "utf-8")
+        baseApiUrl + "/v2/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0803/nonexistent", "utf-8")
       ) ~> Origin(exampleOrigin)
       val response = singleAwaitingRequest(request)
       response.status should equal(StatusCodes.NotFound)

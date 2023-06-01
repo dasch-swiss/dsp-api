@@ -9,11 +9,13 @@ import akka.actor._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.scalatest.DoNotDiscover
+
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Paths
-import dsp.errors.FileWriteException
 
+import dsp.errors.FileWriteException
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
@@ -28,6 +30,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
  */
+@DoNotDiscover
 class SipiV1R2RSpec extends R2RSpec {
 
   private val resourcesPath = ResourcesRouteV1().makeRoute

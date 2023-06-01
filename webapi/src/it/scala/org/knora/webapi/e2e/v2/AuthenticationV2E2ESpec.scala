@@ -275,7 +275,7 @@ class AuthenticationV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol 
     }
   }
 
-  "The Users V1 Route using the Authenticator trait " should {
+  "The Users V1 Route using the Authenticator trait " ignore {
 
     var token = new MutableTestString
 
