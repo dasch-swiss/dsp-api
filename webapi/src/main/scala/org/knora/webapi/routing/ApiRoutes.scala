@@ -114,7 +114,7 @@ private final case class ApiRoutesImpl(
             DSPApiDirectives.handleErrors(routeData.system, appConfig) {
               HealthRoute().makeRoute ~
                 VersionRoute().makeRoute ~
-                RejectingRoute(routeData, runtime).makeRoute ~
+                RejectingRoute(appConfig, runtime).makeRoute ~
                 ResourcesRouteV1().makeRoute ~
                 ValuesRouteV1().makeRoute ~
                 StandoffRouteV1().makeRoute ~

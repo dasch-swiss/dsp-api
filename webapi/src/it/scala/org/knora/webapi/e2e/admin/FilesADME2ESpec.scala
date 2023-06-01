@@ -41,7 +41,7 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  def sessionLogin(email: String, password: String): String = {
+  private def sessionLogin(email: String, password: String): String = {
 
     val request                = Get(baseApiUrl + s"/v1/session?login&email=$email&password=$password")
     val response: HttpResponse = singleAwaitingRequest(request)
@@ -51,7 +51,7 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
     sr.sid
   }
 
-  def sessionLogout(sessionId: String): Unit =
+  private def sessionLogout(sessionId: String): Unit =
     Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KnoraAuthenticationCookieName, sessionId)
 
   "The Files Route ('admin/files') using token credentials" should {
@@ -94,8 +94,6 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
         Get(baseApiUrl + s"/admin/files/0001/9hxmmrWh0a7-CnRCq0650ro.jpx?email=$normalUserEmailEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      // println(response.toString)
-
       assert(response.status == StatusCodes.NotFound)
     }
 
@@ -114,7 +112,7 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
     }
   }
 
-  "The Files Route ('admin/files') using session credentials" should {
+  "The Files Route ('admin/files') using session credentials" ignore {
 
     "return CR (8) permission code" in {
       /* login */

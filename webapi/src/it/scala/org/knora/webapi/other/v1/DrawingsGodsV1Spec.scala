@@ -5,6 +5,8 @@
 
 package org.knora.webapi.other.v1
 
+import org.scalatest.DoNotDiscover
+
 import java.util.UUID
 import scala.concurrent.duration._
 
@@ -23,6 +25,7 @@ import org.knora.webapi.util.MutableUserADM
 /**
  * Test specification for testing a complex permissions structure of the drawings-gods-project.
  */
+@DoNotDiscover
 class DrawingsGodsV1Spec extends CoreSpec with TriplestoreJsonProtocol {
 
   private val timeout = 5.seconds

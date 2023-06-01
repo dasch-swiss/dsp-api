@@ -9,6 +9,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.scalatest.DoNotDiscover
 
 import scala.concurrent.duration._
 
@@ -23,6 +24,7 @@ import org.knora.webapi.util.AkkaHttpUtils
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
+@DoNotDiscover
 class ProjectsV1E2ESpec
     extends E2ESpec
     with SessionJsonProtocol

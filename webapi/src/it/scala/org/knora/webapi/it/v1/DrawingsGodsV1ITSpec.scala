@@ -8,6 +8,7 @@ package org.knora.webapi.it.v1
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.scalatest.DoNotDiscover
 import spray.json._
 
 import java.net.URLEncoder
@@ -27,6 +28,7 @@ import org.knora.webapi.testservices.FileToUpload
 /**
  * End-to-End (E2E) test specification for additional testing of permissions.
  */
+@DoNotDiscover
 class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(

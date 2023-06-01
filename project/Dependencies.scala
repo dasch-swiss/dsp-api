@@ -78,7 +78,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.0.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.1.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.73"
 
   // caching
@@ -112,7 +112,7 @@ object Dependencies {
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.8"
-  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.0"
+  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.3"
   val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
 
   // found/added by the plugin but deleted anyway

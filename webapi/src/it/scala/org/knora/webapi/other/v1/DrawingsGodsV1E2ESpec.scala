@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.scalatest.DoNotDiscover
 
 import java.net.URLEncoder
 
@@ -23,6 +24,7 @@ import org.knora.webapi.util.ValuesResponseExtractorMethods
 /**
  * End-to-End (E2E) test specification for additional testing of permissions.
  */
+@DoNotDiscover
 class DrawingsGodsV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(

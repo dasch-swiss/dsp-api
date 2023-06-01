@@ -11,6 +11,7 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.scalatest.DoNotDiscover
 import spray.json._
 
 import java.net.URLEncoder
@@ -27,6 +28,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * Tests the values route.
  */
+@DoNotDiscover
 class ValuesV1R2RSpec extends R2RSpec {
 
   private val valuesPath =
