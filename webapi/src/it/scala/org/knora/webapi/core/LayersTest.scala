@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.core
 
 import zio._
@@ -14,7 +19,7 @@ import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
@@ -80,8 +85,12 @@ import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectExportService
+import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.service.PredicateObjectMapper
+import org.knora.webapi.slice.common.api.RestPermissionService
+import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -111,6 +120,10 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.slice.admin.domain.service.AssetService
+import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
+
 object LayersTest {
 
   /**
@@ -124,12 +137,14 @@ object LayersTest {
     ApiRoutes
       with AppRouter
       with Authenticator
+      with AssetService
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with ConstructTransformer
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with HttpServer
@@ -152,6 +167,7 @@ object LayersTest {
       with PredicateObjectMapper
       with ProjectADMRestService
       with ProjectADMService
+      with ProjectExportService
       with ProjectsResponderADM
       with ProjectsResponderV1
       with QueryTraverser
@@ -161,11 +177,12 @@ object LayersTest {
       with ResourcesResponderV1
       with ResourcesResponderV2
       with RestCardinalityService
+      with RestPermissionService
       with RestResourceInfoService
       with SearchResponderV1
       with SearchResponderV2
       with SipiResponderADM
-      with SparqlTransformerLive
+      with OntologyInferencer
       with StandoffResponderV1
       with StandoffResponderV2
       with StandoffTagUtilV2
@@ -187,12 +204,14 @@ object LayersTest {
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
+      AssetServiceLive.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      ConstructTransformer.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
@@ -216,6 +235,7 @@ object LayersTest {
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
+      ProjectExportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
@@ -228,11 +248,12 @@ object LayersTest {
       ResourcesResponderV1Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
+      RestPermissionServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
-      SparqlTransformerLive.layer,
+      OntologyInferencer.layer,
       StandoffResponderV1Live.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,

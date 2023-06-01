@@ -13,6 +13,7 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -942,7 +943,7 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
       validatedProjectSpecificGroupIris <-
         ZIO.attempt(
           projectSpecificGroupIris.map(iri =>
-            StringFormatter.validateAndEscapeIri(iri).getOrElse(throw BadRequestException(s"Invalid group IRI: $iri"))
+            Iri.validateAndEscapeIri(iri).getOrElse(throw BadRequestException(s"Invalid group IRI: $iri"))
           )
         )
 

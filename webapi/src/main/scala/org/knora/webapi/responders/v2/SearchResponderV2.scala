@@ -41,9 +41,9 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -56,6 +56,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport._
 
@@ -68,10 +69,12 @@ final case class SearchResponderV2Live(
   private val ontologyCache: OntologyCache,
   private val standoffTagUtilV2: StandoffTagUtilV2,
   private val queryTraverser: QueryTraverser,
-  private val sparqlTransformerLive: SparqlTransformerLive,
+  private val sparqlTransformerLive: OntologyInferencer,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
-  implicit private val stringFormatter: StringFormatter
+  implicit private val stringFormatter: StringFormatter,
+  private val iriConverter: IriConverter,
+  private val constructTransformer: ConstructTransformer
 ) extends SearchResponderV2
     with MessageHandler
     with LazyLogging {
@@ -309,10 +312,8 @@ final case class SearchResponderV2Live(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct =
-            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
           for {
-            query          <- queryTraverser.transformConstructToConstruct(mainQuery, queryPatternTransformerConstruct)
+            query          <- constructTransformer.transform(mainQuery)
             searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
@@ -401,8 +402,8 @@ final case class SearchResponderV2Live(
           transformer = gravsearchToCountTransformer
         )
 
-      selectTransformer: SelectToSelectTransformer =
-        new SelectToSelectTransformer(
+      selectTransformer: SelectTransformer =
+        new SelectTransformer(
           simulateInference = gravsearchToCountTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
@@ -483,8 +484,8 @@ final case class SearchResponderV2Live(
       // variable representing the main resources
       mainResourceVar: QueryVariable = gravsearchToPrequeryTransformer.mainResourceVariable
 
-      selectTransformer: SelectToSelectTransformer =
-        new SelectToSelectTransformer(
+      selectTransformer: SelectTransformer =
+        new SelectTransformer(
           simulateInference = gravsearchToPrequeryTransformer.useInference,
           sparqlTransformerLive,
           stringFormatter
@@ -586,16 +587,9 @@ final case class SearchResponderV2Live(
             appConfig = appConfig
           )
 
-          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
-            new ConstructToConstructTransformer(sparqlTransformerLive, stringFormatter)
-
           for {
 
-            mainQuery <- queryTraverser.transformConstructToConstruct(
-                           inputQuery = mainQuery,
-                           transformer = queryPatternTransformerConstruct,
-                           limitInferenceToOntologies = ontologiesForInferenceMaybe
-                         )
+            mainQuery <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe)
 
             // Convert the result to a SPARQL string and send it to the triplestore.
             mainQuerySparql    = mainQuery.toSparql
@@ -1072,9 +1066,11 @@ object SearchResponderV2Live {
       with OntologyCache
       with StandoffTagUtilV2
       with QueryTraverser
-      with SparqlTransformerLive
+      with OntologyInferencer
       with GravsearchTypeInspectionRunner
       with InferenceOptimizationService
+      with IriConverter
+      with ConstructTransformer
       with StringFormatter,
     Nothing,
     SearchResponderV2Live
@@ -1088,11 +1084,13 @@ object SearchResponderV2Live {
         ontologyCache                <- ZIO.service[OntologyCache]
         standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
         queryTraverser               <- ZIO.service[QueryTraverser]
-        sparqlTransformerLive        <- ZIO.service[SparqlTransformerLive]
+        sparqlTransformerLive        <- ZIO.service[OntologyInferencer]
         stringFormatter              <- ZIO.service[StringFormatter]
         mr                           <- ZIO.service[MessageRelay]
         typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
         inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
+        iriConverter                 <- ZIO.service[IriConverter]
+        constructTransformer         <- ZIO.service[ConstructTransformer]
         handler <- mr.subscribe(
                      new SearchResponderV2Live(
                        appConfig,
@@ -1105,7 +1103,9 @@ object SearchResponderV2Live {
                        sparqlTransformerLive,
                        typeInspectionRunner,
                        inferenceOptimizationService,
-                       stringFormatter
+                       stringFormatter,
+                       iriConverter,
+                       constructTransformer
                      )
                    )
       } yield handler

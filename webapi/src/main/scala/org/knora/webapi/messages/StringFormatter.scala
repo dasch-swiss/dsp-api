@@ -9,9 +9,7 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
-import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio.ZLayer
 import zio.prelude.Validation
@@ -36,7 +34,6 @@ import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
@@ -54,24 +51,6 @@ import XmlPatterns.nCNameRegex
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
-
-  // Characters that are escaped in strings that will be used in SPARQL.
-  private val SparqlEscapeInput = Array(
-    "\\",
-    "\"",
-    "'",
-    "\t",
-    "\n"
-  )
-
-  // Escaped characters as they are used in SPARQL.
-  private val SparqlEscapeOutput = Array(
-    "\\\\",
-    "\\\"",
-    "\\'",
-    "\\t",
-    "\\n"
-  )
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
 
@@ -315,37 +294,6 @@ object StringFormatter {
       iriStr,
       JavaUtil.function({ _: Object => creationFun() })
     )
-
-  /**
-   * Checks that a string represents a valid IRI.
-   * Also encodes the IRI, preserving existing %-escapes.
-   *
-   * @param s the string to be checked.
-   * @return A validated and escaped IRI.
-   */
-  def validateAndEscapeIri(s: String): Validation[ValidationException, String] =
-    Validation
-      .fromTry(Try(encodeAllowEscapes(s)).filter(Iri.urlValidator.isValid))
-      .mapError(_ => ValidationException(s"Invalid IRI: $s"))
-
-  /**
-   * Makes a string safe to be entered in the triplestore by escaping special chars.
-   *
-   * @param s a string.
-   * @return the same string escaped
-   *         [[None]] if the string is empty or contains a carriage return (`\r`).
-   */
-  def toSparqlEncodedString(s: String): Option[String] =
-    if (s.isEmpty || s.contains("\r")) None
-    else Some(StringUtils.replaceEach(s, SparqlEscapeInput, SparqlEscapeOutput))
-
-  /**
-   * Unescapes a string that has been escaped for SPARQL.
-   *
-   * @param s the string to be unescaped.
-   * @return the unescaped string.
-   */
-  def fromSparqlEncodedString(s: String): String = StringUtils.replaceEach(s, SparqlEscapeOutput, SparqlEscapeInput)
 
   val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
     StringFormatter.init(appConfig)
@@ -806,7 +754,7 @@ class StringFormatter private (
     def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) =
       this(iriStr, parsedIriInfo, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
-    private val iri: IRI = StringFormatter.validateAndEscapeIri(iriStr).getOrElse(errorFun)
+    private val iri: IRI = Iri.validateAndEscapeIri(iriStr).getOrElse(errorFun)
 
     /**
      * Determines the API v2 schema of an external IRI.
@@ -1483,63 +1431,6 @@ class StringFormatter private (
     }
 
   /**
-   * Returns `true` if an IRI string looks like a Knora project IRI
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isKnoraProjectIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora built-in IRI:
-   *  - http://www.knora.org/ontology/knora-admin#SystemProject
-   *  - http://www.knora.org/ontology/knora-admin#SharedOntologiesProject
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isKnoraBuiltInProjectIriStr(iri: IRI): Boolean = {
-
-    val builtInProjects = Seq(
-      OntologyConstants.KnoraAdmin.SystemProject,
-      OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-    )
-
-    Iri.isIri(iri) && builtInProjects.contains(iri)
-  }
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora list IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isKnoraListIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora user IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isKnoraUserIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora group IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  private def isKnoraGroupIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
-
-  /**
-   * Returns `true` if an IRI string looks like a Knora permission IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isKnoraPermissionIriStr(iri: IRI): Boolean = // V2 / value objects
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
-
-  /**
    * Encodes a string for use in JSON, and encloses it in quotation marks.
    *
    * @param s the string to be encoded.
@@ -1696,14 +1587,8 @@ class StringFormatter private (
    * in the triplestore). The resulting IRI will not end in a # character.
    *
    * @param namespace the XML namespace.
-   * @param errorFun  a function that throws an exception. It will be called if the form of the string is not
-   *                  valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology IRI.
    */
-  @deprecated("Use xmlImportNamespaceToInternalOntologyIriV1(String) instead.")
-  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri =
-    xmlImportNamespaceToInternalOntologyIriV1(namespace).getOrElse(errorFun)
-
   def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Option[SmartIri] =
     namespace match {
       case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
@@ -1734,17 +1619,8 @@ class StringFormatter private (
    *
    * @param namespace    the XML namespace.
    * @param elementLabel the XML element label.
-   * @param errorFun     a function that throws an exception. It will be called if the form of the namespace is not
-   *                     valid for a Knora XML import namespace.
    * @return the corresponding project-specific internal ontology entity IRI.
    */
-  @deprecated("Use xmlImportElementNameToInternalOntologyIriV1(String, String) instead.")
-  def xmlImportElementNameToInternalOntologyIriV1(
-    namespace: String,
-    elementLabel: String,
-    errorFun: => Nothing
-  ): IRI = xmlImportElementNameToInternalOntologyIriV1(namespace, elementLabel).getOrElse(errorFun)
-
   def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): Option[IRI] =
     xmlImportNamespaceToInternalOntologyIriV1(namespace).map(_.toString + "#" + elementLabel)
 
@@ -1816,43 +1692,6 @@ class StringFormatter private (
     OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
 
   /**
-   * Given the [[ProjectADM]] calculates the project's data named graph.
-   *
-   * @param project the project's [[ProjectADM]].
-   * @return the IRI of the project's data named graph.
-   */
-  def projectDataNamedGraphV2(project: ProjectADM): IRI =
-    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname
-
-  /**
-   * Check that the supplied IRI represents a valid project IRI.
-   *
-   * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 project IRI.
-   * @return the same string but escaped.
-   */
-  @deprecated("Use validateAndEscapeProjectIri(IRI) instead.")
-  def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    validateAndEscapeProjectIri(iri).getOrElse(errorFun)
-
-  def validateAndEscapeProjectIri(iri: IRI): Option[IRI] =
-    if (isKnoraProjectIriStr(iri)) toSparqlEncodedString(iri)
-    else None
-
-  /**
-   * Check that the string represents a valid project shortname.
-   *
-   * @param shortname string to be checked.
-   * @return the same string.
-   */
-  def validateAndEscapeProjectShortname(shortname: String): Option[String] =
-    nCNameRegex
-      .findFirstIn(shortname)
-      .flatMap(Base64UrlPatternRegex.findFirstIn)
-      .flatMap(toSparqlEncodedString)
-
-  /**
    * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
    *
    * @param shortcode the project's shortcode.
@@ -1872,38 +1711,19 @@ class StringFormatter private (
    * @return the IRI of the list.
    */
   def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
-    if (isKnoraGroupIriStr(iri)) Validation.succeed(iri)
+    if (Iri.isGroupIri(iri)) Validation.succeed(iri)
     else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
    * Given the permission IRI, checks if it is in a valid format.
    *
    * @param iri the permission's IRI.
-   * @return the IRI of the list.
+   * @return either the IRI or the error message.
    */
-  @deprecated("Use validatePermissionIri(IRI) instead.")
-  def validatePermissionIri(iri: IRI, errorFun: => Nothing): IRI = // V2 / value objects
-    validatePermissionIri(iri).getOrElse(errorFun)
-
-  def validatePermissionIri(iri: IRI): Option[IRI] =
-    if (isKnoraPermissionIriStr(iri)) Some(iri)
-    else None
-
-  /**
-   * Check that the supplied IRI represents a valid user IRI.
-   *
-   * @param iri      the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 user IRI.
-   * @return the same string but escaped.
-   */
-  @deprecated("Use validateAndEscapeUserIri(IRI) instead.")
-  def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = // V2 / value objects
-    toSparqlEncodedString(iri).getOrElse(errorFun)
-
-  def validateAndEscapeUserIri(iri: IRI): Option[String] =
-    if (isKnoraUserIriStr(iri)) toSparqlEncodedString(iri)
-    else None
+  def validatePermissionIri(iri: IRI): Either[String, IRI] =
+    if (Iri.isPermissionIri(iri) && isUuidSupported(iri)) Right(iri)
+    else if (Iri.isPermissionIri(iri) && !isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
+    else Left(s"Invalid permission IRI: $iri.")
 
   /**
    * Given an email address, checks if it is in a valid format.
@@ -1911,10 +1731,6 @@ class StringFormatter private (
    * @param email the email.
    * @return the email
    */
-  @deprecated("Use validateEmailAndThrow(String) instead.")
-  def validateEmailAndThrow(email: String, errorFun: => Nothing): String = // V2 / value objects
-    validateEmail(email).getOrElse(errorFun)
-
   def validateEmail(email: String): Option[String] =
     EmailAddressRegex.findFirstIn(email)
 
@@ -1922,31 +1738,10 @@ class StringFormatter private (
    * Check that the string represents a valid username.
    *
    * @param value    the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 username.
    * @return the same string.
    */
-  @deprecated("Use validateUsername(String) instead.")
-  def validateUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    validateUsername(value).getOrElse(errorFun)
-
   def validateUsername(value: String): Option[String] =
     UsernameRegex.findFirstIn(value)
-
-  /**
-   * Check that the string represents a valid username and escape any special characters.
-   *
-   * @param value    the string to be checked.
-   * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
-   *                 username.
-   * @return the same string with escaped special characters.
-   */
-  @deprecated("Use validateAndEscapeUsername(String) instead.")
-  def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = // V2 / value objects
-    validateAndEscapeUsername(value).getOrElse(errorFun)
-
-  def validateAndEscapeUsername(value: String): Option[String] =
-    UsernameRegex.findFirstIn(value).flatMap(toSparqlEncodedString)
 
   /**
    * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
@@ -2195,18 +1990,6 @@ class StringFormatter private (
     }
 
   /**
-   * Validates permission IRI
-   *
-   * @param iri to be validated.
-   */
-  def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUuidSupported(iri)) {
-      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
-    } else {
-      validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI $iri is given."))
-    }
-
-  /**
    * Creates a new resource IRI based on a UUID.
    *
    * @param projectShortcode the project's shortcode.
@@ -2241,9 +2024,9 @@ class StringFormatter private (
   def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
     val mappingIri = s"$projectIri/mappings/$mappingName"
     // check that the mapping IRI is valid (mappingName is user input)
-    validateAndEscapeIri(mappingIri).getOrElse(
-      throw BadRequestException(s"the created mapping IRI $mappingIri is invalid")
-    )
+    Iri
+      .validateAndEscapeIri(mappingIri)
+      .getOrElse(throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
   }
 
   /**
@@ -2368,28 +2151,18 @@ class StringFormatter private (
     customValueIri
   }
 
-  /**
-   * Throws [[BadRequestException]] if a Knora API v2 definition API has an ontology name that can only be used
-   * in the internal schema.
-   *
-   * @param iri the IRI to be checked.
-   */
-  @deprecated("Use isExternalOntologyName(SmartIri) instead")
-  def checkExternalOntologyName(iri: SmartIri): Unit =
-    if (isKnoraOntologyIri(iri)) throw BadRequestException(s"Internal ontology <$iri> cannot be served")
-
   def isKnoraOntologyIri(iri: SmartIri): Boolean =
     iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)
 
   def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 =
     StringLiteralSequenceV2(
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
-        StringLiteralV2(value = fromSparqlEncodedString(stringLiteral.value), language = stringLiteral.language)
+        StringLiteralV2(Iri.fromSparqlEncodedString(stringLiteral.value), stringLiteral.language)
       )
     )
   def unescapeOptionalString(optionalString: Option[String]): Option[String] =
     optionalString match {
-      case Some(s: String) => Some(fromSparqlEncodedString(s))
+      case Some(s: String) => Some(Iri.fromSparqlEncodedString(s))
       case None            => None
     }
 }

@@ -1,12 +1,19 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scala.collection.mutable.ArrayBuffer
-import dsp.errors.AssertionException
 import zio.ZIO
 
+import scala.collection.mutable.ArrayBuffer
+
+import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
@@ -15,7 +22,6 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
-import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 class GravsearchToPrequeryTransformerSpec extends CoreSpec {
 
@@ -1366,19 +1372,12 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
               ),
               obj = QueryVariable(variableName = "recipient")
             ),
-            LuceneQueryPattern(
+            StatementPattern(
               subj = QueryVariable(variableName = "familyName"),
-              obj = QueryVariable(variableName = "familyName__valueHasString"),
-              queryString = LuceneQueryString(queryString = "Bernoulli"),
-              literalStatement = Some(
-                StatementPattern(
-                  subj = QueryVariable(variableName = "familyName"),
-                  pred = IriRef(
-                    iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
-                    propertyPathOperator = None
-                  ),
-                  obj = QueryVariable(variableName = "familyName__valueHasString")
-                )
+              pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+              obj = XsdLiteral(
+                value = "Bernoulli",
+                datatype = OntologyConstants.Xsd.String.toSmartIri
               )
             )
           )
@@ -2202,6 +2201,17 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
             iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
             propertyPathOperator = None
           )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          )
         )
       ),
       positiveEntities = Set(),
@@ -2377,19 +2387,12 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
                   datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
                 )
               ),
-              LuceneQueryPattern(
+              StatementPattern(
                 subj = QueryVariable(variableName = "richtext"),
-                obj = QueryVariable(variableName = "richtext__valueHasString"),
-                queryString = LuceneQueryString(queryString = "test"),
-                literalStatement = Some(
-                  StatementPattern(
-                    subj = QueryVariable(variableName = "richtext"),
-                    pred = IriRef(
-                      iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
-                      propertyPathOperator = None
-                    ),
-                    obj = QueryVariable(variableName = "richtext__valueHasString")
-                  )
+                pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+                obj = XsdLiteral(
+                  value = "test",
+                  datatype = OntologyConstants.Xsd.String.toSmartIri
                 )
               )
             ),
@@ -2451,19 +2454,12 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
                   datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
                 )
               ),
-              LuceneQueryPattern(
+              StatementPattern(
                 subj = QueryVariable(variableName = "text"),
-                obj = QueryVariable(variableName = "text__valueHasString"),
-                queryString = LuceneQueryString(queryString = "test"),
-                literalStatement = Some(
-                  StatementPattern(
-                    subj = QueryVariable(variableName = "text"),
-                    pred = IriRef(
-                      iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
-                      propertyPathOperator = None
-                    ),
-                    obj = QueryVariable(variableName = "text__valueHasString")
-                  )
+                pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
+                obj = XsdLiteral(
+                  value = "test",
+                  datatype = OntologyConstants.Xsd.String.toSmartIri
                 )
               )
             )

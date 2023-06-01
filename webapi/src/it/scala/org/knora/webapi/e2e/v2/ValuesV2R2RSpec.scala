@@ -10,9 +10,10 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+
 import scala.concurrent.ExecutionContextExecutor
 import dsp.errors.AssertionException
-
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
@@ -62,8 +63,7 @@ class ValuesV2R2RSpec extends R2RSpec {
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
-  private val validationFun: (String, => Nothing) => String = (s, e) =>
-    StringFormatter.validateAndEscapeIri(s).getOrElse(e)
+  private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

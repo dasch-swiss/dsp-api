@@ -5,20 +5,26 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.Task
 import zio._
 import zio.macros.accessible
 
 import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
+import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.ProjectExportService
+import org.knora.webapi.slice.common.api.RestPermissionService
 
 @accessible
 trait ProjectADMRestService {
+
   def getProjectsADMRequest(): Task[ProjectsGetResponseADM]
   def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM]
   def createProjectADMRequest(
@@ -35,6 +41,7 @@ trait ProjectADMRestService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
+  def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse]
   def getProjectMembers(
     projectIdentifier: ProjectIdentifierADM,
     requestingUser: UserADM
@@ -52,7 +59,12 @@ trait ProjectADMRestService {
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 }
 
-final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) extends ProjectADMRestService {
+final case class ProjectsADMRestServiceLive(
+  responder: ProjectsResponderADM,
+  projectRepo: KnoraProjectRepo,
+  projectExportService: ProjectExportService,
+  permissionService: RestPermissionService
+) extends ProjectADMRestService {
 
   /**
    * Returns all projects as a [[ProjectsGetResponseADM]].
@@ -153,7 +165,11 @@ final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) ext
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def getAllProjectData(id: IriIdentifier, user: UserADM): Task[ProjectDataGetResponseADM] =
-    responder.projectDataGetRequestADM(id, user)
+    for {
+      project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
+      _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
+      result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
+    } yield ProjectDataGetResponseADM(result)
 
   /**
    * Returns all project members of a specific project, identified by its [[ProjectIdentifierADM]].
@@ -217,9 +233,20 @@ final case class ProjectsADMRestServiceLive(responder: ProjectsResponderADM) ext
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
+  override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse] = for {
+    _ <- permissionService.ensureSystemAdmin(requestingUser)
+    projectIri <-
+      IriIdentifier.fromString(projectIri).toZIO.orElseFail(BadRequestException(s"Invalid project IRI: $projectIri"))
+    project <- projectRepo.findById(projectIri).someOrFail(NotFoundException(s"Project $projectIri not found."))
+    zipFile <- projectExportService.exportProject(project, requestingUser)
+  } yield ProjectExportResponse(zipFile.toString)
 }
 
 object ProjectsADMRestServiceLive {
-  val layer: URLayer[ProjectsResponderADM, ProjectADMRestService] =
+  val layer: ZLayer[
+    ProjectsResponderADM with KnoraProjectRepo with ProjectExportService with RestPermissionService,
+    Nothing,
+    ProjectsADMRestServiceLive
+  ] =
     ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

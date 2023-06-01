@@ -14,8 +14,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructToConstructTransformer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectToSelectTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
@@ -42,61 +42,6 @@ trait WhereVisitor[Acc] {
    * @return the accumulator.
    */
   def visitFilter(filterPattern: FilterPattern, acc: Acc): Acc
-}
-
-/**
- * A trait for classes that transform statements and filters in WHERE clauses.
- */
-trait WhereTransformer {
-
-  /**
-   * Optimises query patterns. Does not recurse. Must be called before `transformStatementInWhere`,
-   * because optimisation might remove statements that would otherwise be expanded by `transformStatementInWhere`.
-   *
-   * @param patterns the query patterns to be optimised.
-   * @return the optimised query patterns.
-   */
-  def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]]
-
-  /**
-   * Called before entering a UNION block.
-   */
-  def enteringUnionBlock(): Task[Unit] = ZIO.unit
-
-  /**
-   * Called before leaving a UNION block.
-   */
-  def leavingUnionBlock(): Task[Unit] = ZIO.unit
-
-  /**
-   * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
-   *
-   * @param statementPattern           the statement to be transformed.
-   * @param inputOrderBy               the ORDER BY clause in the input query.
-   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
-   * @return the result of the transformation.
-   */
-  def transformStatementInWhere(
-    statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Task[Seq[QueryPattern]]
-
-  /**
-   * Transforms a [[FilterPattern]] in a WHERE clause into zero or more query patterns.
-   *
-   * @param filterPattern the filter to be transformed.
-   * @return the result of the transformation.
-   */
-  def transformFilter(filterPattern: FilterPattern): Task[Seq[QueryPattern]] = ZIO.succeed(Seq(filterPattern))
-
-  /**
-   * Transforms a [[LuceneQueryPattern]] into one or more query patterns.
-   *
-   * @param luceneQueryPattern the query pattern to be transformed.
-   * @return the transformed pattern.
-   */
-  def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Task[Seq[QueryPattern]]
 }
 
 /**
@@ -193,9 +138,6 @@ final case class QueryTraverser(
                                        )
                                  }
                                  ZIO.collectAll(transformedBlocks).map(blocks => Seq(UnionPattern(blocks)))
-
-                               case luceneQueryPattern: LuceneQueryPattern =>
-                                 whereTransformer.transformLuceneQueryPattern(luceneQueryPattern)
 
                                case valuesPattern: ValuesPattern => ZIO.succeed(Seq(valuesPattern))
 
@@ -301,7 +243,14 @@ final case class QueryTraverser(
       case MinusPattern(_) +: Nil =>
         ZIO
           .fromOption(findMainResourceType(inputQuery))
-          .map(patterns.appended(_))
+          .map { statement =>
+            val notDeletedPattern = StatementPattern(
+              subj = statement.subj,
+              pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
+              obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+            )
+            patterns.appendedAll(Seq(statement, notDeletedPattern))
+          }
           .orElseFail(
             GravsearchOptimizationException(
               s"Query consisted only of a MINUS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
@@ -310,7 +259,14 @@ final case class QueryTraverser(
       case FilterNotExistsPattern(_) +: Nil =>
         ZIO
           .fromOption(findMainResourceType(inputQuery))
-          .map(patterns.appended(_))
+          .map { statement =>
+            val notDeletedPattern = StatementPattern(
+              subj = statement.subj,
+              pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
+              obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+            )
+            patterns.appendedAll(Seq(statement, notDeletedPattern))
+          }
           .orElseFail(
             GravsearchOptimizationException(
               s"Query consisted only of a FILTER NOT EXISTS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
@@ -356,7 +312,7 @@ final case class QueryTraverser(
 
   def transformSelectToSelect(
     inputQuery: SelectQuery,
-    transformer: SelectToSelectTransformer,
+    transformer: SelectTransformer,
     limitInferenceToOntologies: Option[Set[SmartIri]]
   ): Task[SelectQuery] =
     for {
@@ -369,33 +325,6 @@ final case class QueryTraverser(
                   )
       whereClause = WhereClause(patterns)
     } yield inputQuery.copy(fromClause = fromClause, whereClause = whereClause)
-
-  /**
-   * Traverses a CONSTRUCT query, delegating transformation tasks to a [[ConstructToConstructTransformer]], and returns the transformed query.
-   *
-   * @param inputQuery                 the query to be transformed.
-   * @param transformer                the [[ConstructToConstructTransformer]] to be used.
-   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
-   * @return the transformed query.
-   */
-  def transformConstructToConstruct(
-    inputQuery: ConstructQuery,
-    transformer: ConstructToConstructTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Task[ConstructQuery] =
-    for {
-      wherePatterns <- transformWherePatterns(
-                         patterns = inputQuery.whereClause.patterns,
-                         inputOrderBy = inputQuery.orderBy,
-                         whereTransformer = transformer,
-                         limitInferenceToOntologies = limitInferenceToOntologies
-                       )
-      constructStatements <-
-        ZIO.foreach(inputQuery.constructClause.statements)(transformer.transformStatementInConstruct).map(_.flatten)
-    } yield ConstructQuery(
-      constructClause = ConstructClause(constructStatements),
-      whereClause = WhereClause(wherePatterns)
-    )
 }
 
 object QueryTraverser {

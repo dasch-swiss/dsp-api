@@ -14,6 +14,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors._
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -64,6 +65,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -279,7 +281,8 @@ final case class ResourcesResponderV2Live(
                                  )
 
         // Get the IRI of the named graph in which the resource will be created.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
+        dataNamedGraph: IRI =
+          ProjectADMService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
         // Generate SPARQL for creating the resource.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -450,7 +453,7 @@ final case class ResourcesResponderV2Live(
              )
 
         // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
                                          case Some(submittedNewModificationDate) =>
@@ -507,7 +510,7 @@ final case class ResourcesResponderV2Live(
 
         _ = updateResourceMetadataRequestV2.maybeLabel match {
               case Some(newLabel) =>
-                if (!updatedResource.label.contains(StringFormatter.fromSparqlEncodedString(newLabel))) {
+                if (!updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel))) {
                   throw UpdateNotPerformedException()
                 }
 
@@ -607,7 +610,7 @@ final case class ResourcesResponderV2Live(
         _ <- resourceUtilV2.checkResourcePermission(resource, DeletePermission, deleteResourceV2.requestingUser)
 
         // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for marking the resource as deleted.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -718,7 +721,7 @@ final case class ResourcesResponderV2Live(
             .whenZIO(iriService.isEntityUsed(resourceSmartIri, ignoreRdfSubjectAndObject = true))
 
         // Get the IRI of the named graph from which the resource will be erased.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for erasing the resource.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -1368,7 +1371,7 @@ final case class ResourcesResponderV2Live(
           }
 
       // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
-      unescapedLabel: String = StringFormatter.fromSparqlEncodedString(
+      unescapedLabel: String = Iri.fromSparqlEncodedString(
                                  resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel
                                )
 

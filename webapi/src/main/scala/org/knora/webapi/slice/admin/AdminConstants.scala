@@ -5,7 +5,10 @@
 
 package org.knora.webapi.slice.admin
 
+import org.knora.webapi.messages.OntologyConstants.NamedGraphs.DataNamedGraphStart
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+
 object AdminConstants {
-  val adminDataGraph: String       = "http://www.knora.org/data/admin"
-  val permissionsDataGraph: String = "http://www.knora.org/data/permissions"
+  val adminDataNamedGraph: InternalIri       = InternalIri(s"$DataNamedGraphStart/admin")
+  val permissionsDataNamedGraph: InternalIri = InternalIri(s"$DataNamedGraphStart/permissions")
 }

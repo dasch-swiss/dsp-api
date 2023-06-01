@@ -11,14 +11,14 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
+
 import java.util.UUID
 import scala.concurrent.duration._
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Project._
-import dsp.valueobjects.V2
-
+import dsp.valueobjects.{Iri, V2}
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -310,16 +310,16 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
-        received.project.longname should contain(StringFormatter.fromSparqlEncodedString(longnameWithSpecialCharacter))
+        received.project.longname should contain(Iri.fromSparqlEncodedString(longnameWithSpecialCharacter))
         received.project.description should be(
           Seq(
             V2.StringLiteralV2(
-              value = StringFormatter.fromSparqlEncodedString(descriptionWithSpecialCharacter),
+              value = Iri.fromSparqlEncodedString(descriptionWithSpecialCharacter),
               language = Some("en")
             )
           )
         )
-        received.project.keywords should contain(StringFormatter.fromSparqlEncodedString(keywordWithSpecialCharacter))
+        received.project.keywords should contain(Iri.fromSparqlEncodedString(keywordWithSpecialCharacter))
 
       }
 

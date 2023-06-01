@@ -588,10 +588,6 @@ object OntologyConstants {
     val StandoffStyleElementTag: IRI  = StandoffPrefixExpansion + "StandoffStyleTag"
   }
 
-  object Ontotext {
-    val LuceneFulltext = "http://www.ontotext.com/owlim/lucene#fullTextSearchIndex"
-  }
-
   object XPathFunctions {
     val XPathPrefixExpansion: IRI = "http://www.w3.org/2005/xpath-functions#"
 
@@ -1115,10 +1111,15 @@ object OntologyConstants {
     )
   )
 
+  /**
+   * For the named graphs in the admin slice refer to
+   * [[org.knora.webapi.slice.admin.AdminConstants]].
+   */
   object NamedGraphs {
-    val DataNamedGraphStart: IRI     = "http://www.knora.org/data"
-    val AdminNamedGraph: IRI         = "http://www.knora.org/data/admin"
-    val PermissionNamedGraph: IRI    = "http://www.knora.org/data/permissions"
-    val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
+    val DataNamedGraphStart: IRI = "http://www.knora.org/data"
+  }
+
+  object Fuseki {
+    val luceneQueryPredicate = "http://jena.apache.org/text#query"
   }
 }

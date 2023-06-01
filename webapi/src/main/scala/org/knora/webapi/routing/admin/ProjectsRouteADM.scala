@@ -24,6 +24,7 @@ import scala.concurrent.Future
 import scala.util.Try
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import org.knora.webapi.IRI
@@ -34,9 +35,12 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 final case class ProjectsRouteADM()(
-  private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay],
+  private implicit val runtime: Runtime[
+    Authenticator with StringFormatter with MessageRelay with ProjectADMRestService
+  ],
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {
 
@@ -61,7 +65,8 @@ final case class ProjectsRouteADM()(
       getProjectRestrictedViewSettingsByIri() ~
       getProjectRestrictedViewSettingsByShortname() ~
       getProjectRestrictedViewSettingsByShortcode() ~
-      getProjectData()
+      getProjectData() ~
+      postExportProject
 
   /**
    * Returns all projects.
@@ -144,13 +149,11 @@ final case class ProjectsRouteADM()(
     path(projectsBasePath / "iri" / Segment) { value =>
       put {
         entity(as[ChangeProjectApiRequestADM]) { apiRequest => requestContext =>
-          val getProjectIri = ZIO
-            .serviceWithZIO[StringFormatter](sf =>
-              ZIO
-                .fromOption(sf.validateAndEscapeProjectIri(value))
-                .orElseFail(BadRequestException(s"Invalid project IRI $value"))
-            )
-            .flatMap(ProjectIri.make(_).toZIO)
+          val getProjectIri =
+            ZIO
+              .fromOption(Iri.validateAndEscapeProjectIri(value))
+              .orElseFail(BadRequestException(s"Invalid project IRI $value"))
+              .flatMap(ProjectIri.make(_).toZIO)
 
           val requestTask = for {
             projectIri           <- getProjectIri
@@ -169,14 +172,13 @@ final case class ProjectsRouteADM()(
   private def deleteProject(): Route =
     path(projectsBasePath / "iri" / Segment) { value =>
       delete { requestContext =>
-        val projectIri = ProjectIri.make(value).getOrElse(throw BadRequestException(s"Invalid Project IRI $value"))
-        val projectStatus =
-          ProjectStatus.make(false).getOrElse(throw BadRequestException(s"Invalid Project Status"))
-        val projectUpdatePayload = ProjectUpdatePayloadADM(status = Some(projectStatus))
         val requestTask = for {
-          requestingUser <- Authenticator.getUserADM(requestContext)
-          uuid           <- RouteUtilZ.randomUuid()
-        } yield ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
+          iri    <- ProjectIri.make(value).toZIO.orElseFail(BadRequestException(s"Invalid Project IRI $value"))
+          status <- ProjectStatus.make(false).toZIO.orElseFail(BadRequestException(s"Invalid Project Status"))
+          payload = ProjectUpdatePayloadADM(status = Some(status))
+          user   <- Authenticator.getUserADM(requestContext)
+          uuid   <- RouteUtilZ.randomUuid()
+        } yield ProjectChangeRequestADM(iri, payload, user, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
     }
@@ -293,7 +295,7 @@ final case class ProjectsRouteADM()(
       val requestTask = for {
         id             <- IriIdentifier.fromString(projectIri).toZIO
         requestingUser <- Authenticator.getUserADM(requestContext)
-        projectData    <- MessageRelay.ask[ProjectDataGetResponseADM](ProjectDataGetRequestADM(id, requestingUser))
+        projectData    <- ProjectADMRestService.getAllProjectData(id, requestingUser)
         response <- ZIO.attemptBlocking(
                       HttpEntity(
                         ContentTypes.`application/octet-stream`,
@@ -307,4 +309,14 @@ final case class ProjectsRouteADM()(
       requestTask.flatMap(response => ZIO.fromFuture(_ => requestContext.complete(response)))
     }
   }
+  private def postExportProject: Route =
+    path(projectsBasePath / "iri" / Segment / "export") { projectIri =>
+      post { ctx =>
+        val requestTask = for {
+          requestingUser <- Authenticator.getUserADM(ctx)
+          response       <- ProjectADMRestService.exportProject(projectIri, requestingUser)
+        } yield RouteUtilADM.okResponse(response)
+        RouteUtilADM.completeContext(ctx, requestTask)
+      }
+    }
 }

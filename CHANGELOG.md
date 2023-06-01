@@ -1,5 +1,67 @@
 # Changelog
 
+## [28.3.0](https://github.com/dasch-swiss/dsp-api/compare/v28.2.0...v28.3.0) (2023-05-25)
+
+
+### Bug Fixes
+
+* add integration Test for Sipi and fix broken responses (NO-TICKET) ([#2675](https://github.com/dasch-swiss/dsp-api/issues/2675)) ([f8c3aa0](https://github.com/dasch-swiss/dsp-api/commit/f8c3aa0ddd8bf258196e053a9f34f59f882cb01f))
+* Fix Sipi get file response if dsp-api responds with Not Found during permission check (NO-TICKET) ([#2677](https://github.com/dasch-swiss/dsp-api/issues/2677)) ([4e1c6c2](https://github.com/dasch-swiss/dsp-api/commit/4e1c6c2dbf9064cd20f1ac8ded43a7d8048b99d8))
+
+
+### Enhancements
+
+* Align authorization for all endpoints of knora-sipi (DEV-2175) ([#2669](https://github.com/dasch-swiss/dsp-api/issues/2669)) ([ff59664](https://github.com/dasch-swiss/dsp-api/commit/ff596644e42b1b28fc78ba57acabae26f2e2d4e2))
+* **sipi:** add clean temp dir cronjob (DEV-2090) ([#2656](https://github.com/dasch-swiss/dsp-api/issues/2656)) ([7af1c27](https://github.com/dasch-swiss/dsp-api/commit/7af1c2734b1a5d5c28ce0bfd45dddcedb4e3661c))
+
+
+### Maintenance
+
+* add more gravsearch metrics ([#2666](https://github.com/dasch-swiss/dsp-api/issues/2666)) ([873eb46](https://github.com/dasch-swiss/dsp-api/commit/873eb46a5cea66b626618495efd8aea15ad99efb))
+* add more tests for Sipi responses (NO-TICKET) ([#2679](https://github.com/dasch-swiss/dsp-api/issues/2679)) ([74f49ca](https://github.com/dasch-swiss/dsp-api/commit/74f49caa1d6da23e9ab83283c648c1822e5a03cd))
+* Create license headers for all it files (NO-TICKET) ([#2676](https://github.com/dasch-swiss/dsp-api/issues/2676)) ([a97ec6b](https://github.com/dasch-swiss/dsp-api/commit/a97ec6b07636850c57923cd710b4c8ba20e8cd27))
+* improve lucene handling in gravsearch (DEV-2148) ([#2667](https://github.com/dasch-swiss/dsp-api/issues/2667)) ([bf5d4be](https://github.com/dasch-swiss/dsp-api/commit/bf5d4be4578eb156ad44abd2d2d2962c98f9b1ba))
+* merge duplicated StringFormatter and value objects methods part 1 (DEV-2046) ([#2672](https://github.com/dasch-swiss/dsp-api/issues/2672)) ([655590a](https://github.com/dasch-swiss/dsp-api/commit/655590ad2483633f69524311e5eb1b548bcc152b))
+* remove deprecated StringFormatter methods ([#2658](https://github.com/dasch-swiss/dsp-api/issues/2658)) ([62eb63c](https://github.com/dasch-swiss/dsp-api/commit/62eb63cb48013aafece982a815aeaaa678ac8668))
+* Remove GroupShortADM (NO-TICKET) ([#2674](https://github.com/dasch-swiss/dsp-api/issues/2674)) ([3676fbf](https://github.com/dasch-swiss/dsp-api/commit/3676fbf89614800191d9ad60107fc5f13d4416ca))
+* Resolve compiler warning toObjsWithLang (NO-TICKET) ([#2671](https://github.com/dasch-swiss/dsp-api/issues/2671)) ([dc7e2c2](https://github.com/dasch-swiss/dsp-api/commit/dc7e2c21464d7157c7f239f2b8ec3edef5b0782f))
+* **sipi:** increase healthcheck timeout and retries ([#2670](https://github.com/dasch-swiss/dsp-api/issues/2670)) ([5dd994d](https://github.com/dasch-swiss/dsp-api/commit/5dd994dcc4dd50468d0f2d045d0ce2d909bafacc))
+
+## [28.2.0](https://github.com/dasch-swiss/dsp-api/compare/v28.1.2...v28.2.0) (2023-05-15)
+
+
+### Bug Fixes
+
+* Fix bad substitution in export-moving-image-frames.sh ([#2659](https://github.com/dasch-swiss/dsp-api/issues/2659)) ([9ee412c](https://github.com/dasch-swiss/dsp-api/commit/9ee412c1ec5a9ef7bfd5a013d0670d25621530b2))
+* Use copy instead of move for Sipi file migration ([#2655](https://github.com/dasch-swiss/dsp-api/issues/2655)) ([1b8ffff](https://github.com/dasch-swiss/dsp-api/commit/1b8ffffbff0c55d54788a8b836d2cf0b710f6264))
+* Use move for Sipi's file migration ([#2657](https://github.com/dasch-swiss/dsp-api/issues/2657)) ([da0a9b8](https://github.com/dasch-swiss/dsp-api/commit/da0a9b80b579611d4c3d77c66f94c46b0eef0e5d))
+
+
+### Enhancements
+
+* add dedicated export route and zip trig file DEV-2129 ([#2650](https://github.com/dasch-swiss/dsp-api/issues/2650)) ([12379aa](https://github.com/dasch-swiss/dsp-api/commit/12379aadcc161abfcd4e9ff862005b7a6214d5ce))
+* Add new route to migrate files (DEV-1721) ([#2647](https://github.com/dasch-swiss/dsp-api/issues/2647)) ([971136f](https://github.com/dasch-swiss/dsp-api/commit/971136fdf1a9ee23315909dae22533e412baf420))
+* Add support for new file structure within Sipi folders and move Sipi tmp directory cleanup to separate route (DEV-1715) ([#2621](https://github.com/dasch-swiss/dsp-api/issues/2621)) ([13e2a6f](https://github.com/dasch-swiss/dsp-api/commit/13e2a6f8581aa01ca2a50b452abd11767ad1202d))
+
+
+### Maintenance
+
+* add basic metrics to gravsearch routes (DEV-2150) ([#2661](https://github.com/dasch-swiss/dsp-api/issues/2661)) ([0a3cc8b](https://github.com/dasch-swiss/dsp-api/commit/0a3cc8bd78239506e89ed739201358c723977c6c))
+* Add integration test for upload_without_processing route ([#2651](https://github.com/dasch-swiss/dsp-api/issues/2651)) ([24910a4](https://github.com/dasch-swiss/dsp-api/commit/24910a4b417f4a22f81cda70044370d44d3b900f))
+* **ci:** add actuated ([#2652](https://github.com/dasch-swiss/dsp-api/issues/2652)) ([ab023bb](https://github.com/dasch-swiss/dsp-api/commit/ab023bb57be3ea939df1a9228b6c2c948d3569e2))
+* decouple ConstructToConstructTransformer from WhereTransformer ([#2632](https://github.com/dasch-swiss/dsp-api/issues/2632)) ([e351592](https://github.com/dasch-swiss/dsp-api/commit/e3515925da45e2c10cf357ce25d1bcdd03fb39b7))
+* extract rest and permission code from ProjectsResponderADM DEV-2106 ([#2644](https://github.com/dasch-swiss/dsp-api/issues/2644)) ([1ba0007](https://github.com/dasch-swiss/dsp-api/commit/1ba00070e088ca3c4e222e65ddea427942ae1b0a))
+* Improve KnoraProject model  NO-TICKET ([#2648](https://github.com/dasch-swiss/dsp-api/issues/2648)) ([8d08abd](https://github.com/dasch-swiss/dsp-api/commit/8d08abd7a084a81e84f09a69141d9043a650411f))
+* Increase max post size (DEV-2125) ([#2649](https://github.com/dasch-swiss/dsp-api/issues/2649)) ([bc6ffea](https://github.com/dasch-swiss/dsp-api/commit/bc6ffea79fa379fa526b8f30b947fa9bb04967d5))
+* make construct transformer a service and move transformers to right package ([#2645](https://github.com/dasch-swiss/dsp-api/issues/2645)) ([4129856](https://github.com/dasch-swiss/dsp-api/commit/41298560ec20ba2fc7d4e7b2a7a37d9e39d71160))
+* organize packages, cleanup and minor code improvements  DEV-2124 ([#2646](https://github.com/dasch-swiss/dsp-api/issues/2646)) ([a5b030f](https://github.com/dasch-swiss/dsp-api/commit/a5b030fec4c5c46cfe24a3f8f3895f8d21fef017))
+* remove throws from ADM routes (DEV-2137) ([#2654](https://github.com/dasch-swiss/dsp-api/issues/2654)) ([7e24663](https://github.com/dasch-swiss/dsp-api/commit/7e2466358b28429690a2fa1a6c6164aec516f85f))
+* remove throws from ListsResponderV1 & OntologyResponderV1 & ProjectsResponderV1 (DEV-1908) ([#2627](https://github.com/dasch-swiss/dsp-api/issues/2627)) ([5eaf212](https://github.com/dasch-swiss/dsp-api/commit/5eaf212095c51029646e4de1efbc3d8807a3f021))
+* remove throws from ResourcesResponderV1 (DEV-2101) ([#2635](https://github.com/dasch-swiss/dsp-api/issues/2635)) ([5e72661](https://github.com/dasch-swiss/dsp-api/commit/5e726619d975a333591cbf9b30f857a333d17619))
+* streamline db initialization make commands ([#2660](https://github.com/dasch-swiss/dsp-api/issues/2660)) ([82e53ee](https://github.com/dasch-swiss/dsp-api/commit/82e53ee532effc995835ae61aa6249c782f38e44))
+* update dependencies ([#2642](https://github.com/dasch-swiss/dsp-api/issues/2642)) ([f4a1809](https://github.com/dasch-swiss/dsp-api/commit/f4a18095826224ae4682ed4d1229b37d2d262b74))
+* ziofy UsersRouteADM DEV-2105 ([#2633](https://github.com/dasch-swiss/dsp-api/issues/2633)) ([4bb1770](https://github.com/dasch-swiss/dsp-api/commit/4bb1770e674916d0a8161f96f2deb6bfc5c2ee98))
+
 ## [28.1.2](https://github.com/dasch-swiss/dsp-api/compare/v28.1.1...v28.1.2) (2023-04-28)
 
 

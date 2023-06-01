@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.messages.util.standoff
 
 import zio.prelude.Validation
@@ -6,9 +11,9 @@ import scala.util.matching.Regex
 
 import dsp.errors.NotFoundException
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.XmlPatterns
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAttributeV2
@@ -47,7 +52,7 @@ object StandoffStringUtil {
 
   def validateStandoffLinkResourceReference(s: String, acceptClientIDs: Boolean): Validation[ValidationException, IRI] =
     if (acceptClientIDs && StandoffStringUtil.isStandoffLinkReferenceToClientIDForResource(s)) Validation.succeed(s)
-    else StringFormatter.validateAndEscapeIri(s)
+    else Iri.validateAndEscapeIri(s)
 
   /**
    * Accepts a reference from a standoff link to a resource. The reference may be either a real resource IRI

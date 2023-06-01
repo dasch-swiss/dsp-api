@@ -11,6 +11,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -34,30 +35,28 @@ final case class GetListItemsRouteADM(
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute: Route =
-    getLists() ~
-      getListNode() ~
+    getLists ~
+      getListNode ~
       getListOrNodeInfo("infos") ~
       getListOrNodeInfo("nodes") ~
-      getListInfo()
+      getListInfo
 
   /**
    * Returns all lists optionally filtered by project.
    */
-  private def getLists(): Route = path(listsBasePath) {
+  private def getLists: Route = path(listsBasePath) {
     get {
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
-        val projectIri =
-          maybeProjectIri match {
-            case None => None
-            case Some(value) =>
-              StringFormatter
-                .validateAndEscapeIri(value)
-                .toOption
-                .orElse(throw BadRequestException(s"Invalid param project IRI: $value"))
-          }
-
-        val requestTask = Authenticator.getUserADM(requestContext).map(ListsGetRequestADM(projectIri, _))
-        runJsonRouteZ(requestTask, requestContext)
+        val task = for {
+          iri <- ZIO.foreach(maybeProjectIri)(iri =>
+                   Iri
+                     .validateAndEscapeIri(iri)
+                     .toZIO
+                     .orElseFail(BadRequestException(s"Invalid param project IRI: $iri"))
+                 )
+          user <- Authenticator.getUserADM(requestContext)
+        } yield ListsGetRequestADM(iri, user)
+        runJsonRouteZ(task, requestContext)
       }
     }
   }
@@ -65,7 +64,7 @@ final case class GetListItemsRouteADM(
   /**
    * Returns a list node, root or child, with children (if exist).
    */
-  private def getListNode(): Route = path(listsBasePath / Segment) { iri =>
+  private def getListNode: Route = path(listsBasePath / Segment) { iri =>
     get { ctx =>
       val task = getIriUser(iri, ctx).map(r => ListGetRequestADM(r.iri, r.user))
       runJsonRouteZ(task, ctx)
@@ -86,7 +85,7 @@ final case class GetListItemsRouteADM(
   /**
    * Returns basic information about a node, root or child, w/o children.
    */
-  private def getListInfo(): Route =
+  private def getListInfo: Route =
     //  Brought from new lists route implementation, has the e functionality as getListOrNodeInfo
     path(listsBasePath / Segment / "info") { iri =>
       get { ctx =>

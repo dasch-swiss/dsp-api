@@ -19,6 +19,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -40,30 +41,25 @@ class KnoraSipiAuthenticationITSpec
   )
 
   "The Knora/Sipi authentication" should {
-    var loginToken: String = ""
-
-    "log in as a Knora user" in {
-      /* Correct username and correct password */
-
+    lazy val loginToken: String = {
       val params =
         s"""
            |{
            |    "email": "$anythingUserEmail",
            |    "password": "$password"
            |}
-                """.stripMargin
-
+              """.stripMargin
       val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
+      Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds).token
+    }
 
-      val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
-      loginToken = lr.token
-
+    "log in as a Knora user" in {
       loginToken.nonEmpty should be(true)
     }
 
-    "successfuly get an image with provided credentials inside cookie" in {
+    "successfully get an image with provided credentials inside cookie" in {
 
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
       val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
@@ -71,12 +67,7 @@ class KnoraSipiAuthenticationITSpec
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =
-        Get(
-          "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/max/0/default.jpg".replace(
-            "http://0.0.0.0:1024",
-            baseInternalSipiUrl
-          )
-        ) ~> addHeader(cookieHeader)
+        Get(s"$baseInternalSipiUrl/0803/incunabula_0000000002.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
 
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)
@@ -121,6 +112,29 @@ class KnoraSipiAuthenticationITSpec
       val sipiRequest  = Post(s"$baseInternalSipiUrl/upload?token=$invalidToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
       assert(sipiResponse.status == StatusCodes.Unauthorized)
+    }
+
+    "accept a request with valid credentials to clean_temp_dir route which requires basic auth" in {
+      // set the environment variables
+      val username = "clean_tmp_dir_user"
+      val password = "clean_tmp_dir_pw"
+
+      val request =
+        Get(s"$baseInternalSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
+
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK)
+    }
+
+    "not accept a request with invalid credentials to clean_temp_dir route which requires basic auth" in {
+      val username = "username"
+      val password = "password"
+
+      val request =
+        Get(s"$baseInternalSipiUrl/clean_temp_dir") ~> addCredentials(BasicHttpCredentials(username, password))
+
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.Unauthorized)
     }
   }
 }

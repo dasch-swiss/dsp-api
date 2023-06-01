@@ -16,19 +16,13 @@ object Group {
    */
   sealed abstract case class GroupName private (value: String)
   object GroupName { self =>
-    def make(value: String): Validation[Throwable, GroupName] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
-      } else {
-        val validatedValue = Validation(
-          Iri.toSparqlEncodedString(
-            value,
-            throw BadRequestException(GroupErrorMessages.GroupNameInvalid)
-          )
-        )
-
-        validatedValue.map(new GroupName(_) {})
-      }
+    def make(value: String): Validation[BadRequestException, GroupName] =
+      if (value.isEmpty) Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
+      else
+        Validation
+          .fromOption(Iri.toSparqlEncodedString(value))
+          .mapError(_ => BadRequestException(GroupErrorMessages.GroupNameInvalid))
+          .map(new GroupName(_) {})
 
     def make(value: Option[String]): Validation[Throwable, Option[GroupName]] =
       value match {
@@ -42,22 +36,19 @@ object Group {
    */
   sealed abstract case class GroupDescriptions private (value: Seq[V2.StringLiteralV2])
   object GroupDescriptions { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionsMissing))
-      } else {
-        val validatedDescriptions = Validation(value.map { description =>
-          val validatedDescription =
-            Iri.toSparqlEncodedString(
-              description.value,
-              throw BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
-            )
-          V2.StringLiteralV2(value = validatedDescription, language = description.language)
-        })
-        validatedDescriptions.map(new GroupDescriptions(_) {})
+    def make(value: Seq[V2.StringLiteralV2]): Validation[BadRequestException, GroupDescriptions] =
+      if (value.isEmpty) Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionsMissing))
+      else {
+        val validatedDescriptions = value.map(d =>
+          Validation
+            .fromOption(Iri.toSparqlEncodedString(d.value))
+            .mapError(_ => BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid))
+            .map(s => V2.StringLiteralV2(s, d.language))
+        )
+        Validation.validateAll(validatedDescriptions).map(new GroupDescriptions(_) {})
       }
 
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[GroupDescriptions]] =
+    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[BadRequestException, Option[GroupDescriptions]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)

@@ -1,6 +1,12 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -30,6 +36,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -37,6 +44,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
+import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
 
 /**
  * Represents a file to be uploaded to the IIF Service.
@@ -80,21 +88,40 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
 
     for {
       _ <- ZIO.logInfo("Loading test data started ...")
-      _ <- singleAwaitingRequest(loadRequest, 101.seconds)
+      _ <- singleAwaitingRequest(loadRequest)
       _ <- ZIO.logInfo("... loading test data done.")
     } yield ()
   }
 
   /**
    * Performs a http request.
+   *
+   * @param request the request to be performed.
+   * @param timeout the timeout for the request. Default timeout is 5 seconds.
+   * @param printFailure If true, the response body will be printed if the request fails.
+   *                     This flag is intended to be used for debugging purposes only.
+   *                     Since this is unsafe, it is false by default.
+   *                     It is unsafe because the the response body can only be unmarshalled (i.e. printed) to a string once.
+   *                     It will fail if the test code is also unmarshalling the response.
+   * @return the response.
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
-    duration: zio.Duration = 666.seconds
+    timeout: Option[zio.Duration] = None,
+    printFailure: Boolean = false
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
-      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ => akka.http.scaladsl.Http().singleRequest(request))
-      .timeout(duration)
+      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
+        akka.http.scaladsl.Http().singleRequest(request).map { resp =>
+          if (printFailure && resp.status.isFailure()) {
+            Unmarshal(resp.entity).to[String].map { body =>
+              println(s"Request failed with status ${resp.status} and body $body")
+            }
+          }
+          resp
+        }
+      )
+      .timeout(timeout.getOrElse(10.seconds))
       .some
       .mapError {
         case None            => throw AssertionException("Request timed out.")
@@ -149,7 +176,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     } yield json
 
   /**
-   * Uploads a file to the IIF Service and returns the information in Sipi's response.
+   * Uploads a file to the IIIF Service's "upload" route and returns the information in Sipi's response.
    * The upload creates a multipart/form-data request which can contain multiple files.
    *
    * @param loginToken    the login token to be included in the request to Sipi.
@@ -192,6 +219,56 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
       // _            <- ZIO.debug(req)
       response     <- doSipiRequest(req)
       sipiResponse <- ZIO.succeed(response.parseJson.asJsObject.convertTo[SipiUploadResponse])
+    } yield sipiResponse
+  }
+
+  /**
+   * Uploads a file to the IIIF Service's "upload_without_processing" route and returns the information in Sipi's response.
+   * The upload creates a multipart/form-data request which can contain multiple files.
+   *
+   * @param loginToken    the login token to be included in the request to Sipi.
+   * @param filesToUpload the files to be uploaded.
+   * @return a [[SipiUploadWithoutProcessingResponse]] representing Sipi's response.
+   */
+  def uploadWithoutProcessingToSipi(
+    loginToken: String,
+    filesToUpload: Seq[FileToUpload]
+  ): Task[SipiUploadWithoutProcessingResponse] = {
+
+    // builds the url for the operation
+    def uploadWithoutProcessingUrl(token: String) =
+      ZIO.succeed(s"${config.sipi.internalBaseUrl}/upload_without_processing?token=$token")
+
+    // create the entity builder
+    val builder: MultipartEntityBuilder = MultipartEntityBuilder.create()
+    builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+
+    // add each file to the entity builder
+    filesToUpload.foreach { fileToUpload =>
+      builder.addBinaryBody(
+        "file",
+        fileToUpload.path.toFile(),
+        fileToUpload.mimeType,
+        fileToUpload.path.getFileName.toString
+      )
+    }
+
+    // build our entity
+    val requestEntity: http.HttpEntity = builder.build()
+
+    // build the request
+    def request(url: String, requestEntity: http.HttpEntity) = {
+      val req = new http.client.methods.HttpPost(url)
+      req.setEntity(requestEntity)
+      req
+    }
+
+    for {
+      url          <- uploadWithoutProcessingUrl(loginToken)
+      entity       <- ZIO.succeed(requestEntity)
+      req          <- ZIO.succeed(request(url, entity))
+      response     <- doSipiRequest(req)
+      sipiResponse <- ZIO.succeed(response.parseJson.asJsObject.convertTo[SipiUploadWithoutProcessingResponse])
     } yield sipiResponse
   }
 

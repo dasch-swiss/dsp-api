@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.Route
 import zio._
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
@@ -36,24 +37,16 @@ final case class FilesRouteADM(
     path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(requestContext)
-          projectID = stringFormatter.validateProjectShortcode(
-                        projectIDAndFile.head,
-                        throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'")
-                      )
-          filename = StringFormatter
-                       .toSparqlEncodedString(projectIDAndFile(1))
-                       .getOrElse(
-                         throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'")
-                       )
+          requestingUser <- Authenticator.getUserADM(requestContext)
+          projectID <- ZIO
+                         .fromOption(stringFormatter.validateProjectShortcode(projectIDAndFile.head))
+                         .orElseFail(BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'"))
+          filename <- ZIO
+                        .fromOption(Iri.toSparqlEncodedString(projectIDAndFile(1)))
+                        .orElseFail(BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'"))
           _ = log.info(s"/admin/files route called for filename $filename by user: ${requestingUser.id}")
-        } yield SipiFileInfoGetRequestADM(
-          projectID = projectID,
-          filename = filename,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilADM.runJsonRouteF(requestMessage, requestContext)
+        } yield SipiFileInfoGetRequestADM(projectID, filename, requestingUser)
+        RouteUtilADM.runJsonRouteZ(requestMessage, requestContext)
       }
     }
 }

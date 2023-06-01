@@ -13,6 +13,7 @@ import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Group._
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri._
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
@@ -97,33 +98,27 @@ final case class GroupsRouteADM(
   private def updateGroup(): Route = path(groupsBasePath / Segment) { value =>
     put {
       entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
-        val checkedGroupIri =
-          StringFormatter.validateAndEscapeIri(value).getOrElse(throw BadRequestException(s"Invalid group IRI $value"))
-
-        /**
-         * The api request is already checked at time of creation.
-         * See case class.
-         */
-        if (apiRequest.status.nonEmpty) {
-          throw BadRequestException(
-            "The status property is not allowed to be set for this route. Please use the change status route."
-          )
-        }
-
-        val name: Validation[Throwable, Option[GroupName]] = GroupName.make(apiRequest.name)
-        val descriptions: Validation[Throwable, Option[GroupDescriptions]] =
-          GroupDescriptions.make(apiRequest.descriptions)
-        val status: Validation[Throwable, Option[GroupStatus]]     = GroupStatus.make(apiRequest.status)
-        val selfjoin: Validation[Throwable, Option[GroupSelfJoin]] = GroupSelfJoin.make(apiRequest.selfjoin)
-
-        val validatedGroupUpdatePayload: Validation[Throwable, GroupUpdatePayloadADM] =
-          Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
-
         val requestTask = for {
-          payload        <- validatedGroupUpdatePayload.toZIO
+          _ <- ZIO
+                 .fail(
+                   BadRequestException(
+                     "The status property is not allowed to be set for this route. Please use the change status route."
+                   )
+                 )
+                 .when(apiRequest.status.nonEmpty)
+          name             = GroupName.make(apiRequest.name)
+          descriptions     = GroupDescriptions.make(apiRequest.descriptions)
+          status           = GroupStatus.make(apiRequest.status)
+          selfjoin         = GroupSelfJoin.make(apiRequest.selfjoin)
+          validatedPayload = Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
+          iri <- Iri
+                   .validateAndEscapeIri(value)
+                   .toZIO
+                   .orElseFail(BadRequestException(s"Invalid group IRI $value"))
+          payload        <- validatedPayload.toZIO
           requestingUser <- Authenticator.getUserADM(requestContext)
           uuid           <- RouteUtilZ.randomUuid()
-        } yield GroupChangeRequestADM(checkedGroupIri, payload, requestingUser, uuid)
+        } yield GroupChangeRequestADM(iri, payload, requestingUser, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
     }
@@ -136,26 +131,24 @@ final case class GroupsRouteADM(
     path(groupsBasePath / Segment / "status") { value =>
       put {
         entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
-          val checkedGroupIri =
-            StringFormatter
-              .validateAndEscapeIri(value)
-              .getOrElse(throw BadRequestException(s"Invalid group IRI $value"))
-
-          /**
-           * The api request is already checked at time of creation.
-           * See case class. Depending on the data sent, we are either
-           * doing a general update or status change. Since we are in
-           * the status change route, we are only interested in the
-           * value of the status property
-           */
-          if (apiRequest.status.isEmpty) {
-            throw BadRequestException("The status property is not allowed to be empty.")
-          }
-
           val requestTask = for {
+            /**
+             * The api request is already checked at time of creation.
+             * See case class. Depending on the data sent, we are either
+             * doing a general update or status change. Since we are in
+             * the status change route, we are only interested in the
+             * value of the status property
+             */
+            _ <- ZIO
+                   .fail(BadRequestException("The status property is not allowed to be empty."))
+                   .when(apiRequest.status.isEmpty)
+            iri <- Iri
+                     .validateAndEscapeIri(value)
+                     .toZIO
+                     .orElseFail(BadRequestException(s"Invalid group IRI $value"))
             requestingUser <- Authenticator.getUserADM(requestContext)
             uuid           <- RouteUtilZ.randomUuid()
-          } yield GroupChangeStatusRequestADM(checkedGroupIri, apiRequest, requestingUser, uuid)
+          } yield GroupChangeStatusRequestADM(iri, apiRequest, requestingUser, uuid)
           runJsonRouteZ(requestTask, requestContext)
         }
       }

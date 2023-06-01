@@ -102,7 +102,7 @@ object CreateOntologyRequestV2 {
       (s: String, errorFun) => ValuesValidator.validateProjectSpecificOntologyName(s).getOrElse(errorFun)
     )
     val validationFun: (String, => Nothing) => String = (s: String, errorFun) =>
-      StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+      Iri.toSparqlEncodedString(s).getOrElse(errorFun)
     val label: String =
       jsonLDDocument.body.requireStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
     val comment: Option[String] =
@@ -1654,7 +1654,7 @@ object InputOntologyV2 {
     )
 
     val validationFun: (String, => Nothing) => String =
-      (s, errorFun) => StringFormatter.toSparqlEncodedString(s).getOrElse(errorFun)
+      (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
 
     val ontologyLabel: Option[String] =
       ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, validationFun)
@@ -1859,7 +1859,7 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
   def unescape: PredicateInfoV2 =
     copy(
       objects = objects.map {
-        case StringLiteralV2(str, lang) => StringLiteralV2(StringFormatter.fromSparqlEncodedString(str), lang)
+        case StringLiteralV2(str, lang) => StringLiteralV2(Iri.fromSparqlEncodedString(str), lang)
         case other                      => other
       }
     )
@@ -2147,7 +2147,7 @@ sealed trait EntityInfoContentV2 {
 object EntityInfoContentV2 {
   private def stringToLiteral(str: String): StringLiteralV2 = {
     val value =
-      StringFormatter.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
+      Iri.toSparqlEncodedString(str).getOrElse(throw BadRequestException(s"Invalid predicate object: $str"))
     StringLiteralV2(value)
   }
 
@@ -2199,7 +2199,7 @@ object EntityInfoContentV2 {
             // This is a string with a language tag.
             PredicateInfoV2(
               predicateIri = predicateIri,
-              objects = JsonLDArray(Seq(objObj)).toObjsWithLang
+              objects = JsonLDArray(Seq(objObj)).toObjsWithLang()
             )
           } else {
             throw BadRequestException(s"Unexpected object value for predicate $predicateIri: $objObj")
@@ -2245,7 +2245,7 @@ object EntityInfoContentV2 {
           ) {
             PredicateInfoV2(
               predicateIri = predicateIri,
-              objects = objArray.toObjsWithLang
+              objects = objArray.toObjsWithLang()
             )
           } else {
             throw BadRequestException(s"Invalid object for predicate $predicateIriStr: $predicateValue")
@@ -3427,8 +3427,8 @@ case class OntologyMetadataV2(
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     copy(
-      label = label.map(StringFormatter.fromSparqlEncodedString),
-      comment = comment.map(StringFormatter.fromSparqlEncodedString)
+      label = label.map(Iri.fromSparqlEncodedString),
+      comment = comment.map(Iri.fromSparqlEncodedString)
     )
   }
 

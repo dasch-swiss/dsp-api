@@ -12,10 +12,10 @@ import zio._
 import zio.prelude.Validation
 
 import java.util.UUID
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
@@ -54,14 +54,15 @@ final case class UpdateListItemsRouteADM(
     path(listsBasePath / Segment / "name") { iri =>
       put {
         entity(as[ChangeNodeNameApiRequestADM]) { apiRequest => requestContext =>
-          val nodeIri =
-            StringFormatter
-              .validateAndEscapeIri(iri)
-              .getOrElse(throw BadRequestException(s"Invalid param node IRI: $iri"))
-          val namePayload: NodeNameChangePayloadADM =
-            NodeNameChangePayloadADM(ListName.make(apiRequest.name).fold(e => throw e.head, v => v))
-          val task = getUserUuid(requestContext)
-            .map(r => NodeNameChangeRequestADM(nodeIri, namePayload, r.user, r.uuid))
+          val task = for {
+            nodeIri <- Iri
+                         .validateAndEscapeIri(iri)
+                         .toZIO
+                         .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
+            listName <- ListName.make(apiRequest.name).toZIO.mapError(e => BadRequestException(e.getMessage))
+            payload   = NodeNameChangePayloadADM(listName)
+            uuid     <- getUserUuid(requestContext)
+          } yield NodeNameChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
           runJsonRouteZ(task, requestContext)
         }
       }
@@ -74,14 +75,15 @@ final case class UpdateListItemsRouteADM(
     path(listsBasePath / Segment / "labels") { iri =>
       put {
         entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest => requestContext =>
-          val nodeIri =
-            StringFormatter
-              .validateAndEscapeIri(iri)
-              .getOrElse(throw BadRequestException(s"Invalid param node IRI: $iri"))
-          val labelsPayload: NodeLabelsChangePayloadADM =
-            NodeLabelsChangePayloadADM(Labels.make(apiRequest.labels).fold(e => throw e.head, v => v))
-          val task = getUserUuid(requestContext)
-            .map(r => NodeLabelsChangeRequestADM(nodeIri, labelsPayload, r.user, r.uuid))
+          val task = for {
+            nodeIri <- Iri
+                         .validateAndEscapeIri(iri)
+                         .toZIO
+                         .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
+            labels <- Labels.make(apiRequest.labels).toZIO.mapError(e => BadRequestException(e.getMessage))
+            payload = NodeLabelsChangePayloadADM(labels)
+            uuid   <- getUserUuid(requestContext)
+          } yield NodeLabelsChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
           runJsonRouteZ(task, requestContext)
         }
       }
@@ -94,14 +96,15 @@ final case class UpdateListItemsRouteADM(
     path(listsBasePath / Segment / "comments") { iri =>
       put {
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
-          val nodeIri =
-            StringFormatter
-              .validateAndEscapeIri(iri)
-              .getOrElse(throw BadRequestException(s"Invalid param node IRI: $iri"))
-          val commentsPayload: NodeCommentsChangePayloadADM =
-            NodeCommentsChangePayloadADM(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
-          val task = getUserUuid(requestContext)
-            .map(r => NodeCommentsChangeRequestADM(nodeIri, commentsPayload, r.user, r.uuid))
+          val task = for {
+            nodeIri <- Iri
+                         .validateAndEscapeIri(iri)
+                         .toZIO
+                         .orElseFail(BadRequestException(s"Invalid param node IRI: $iri"))
+            comments <- Comments.make(apiRequest.comments).toZIO.mapError(e => BadRequestException(e.getMessage))
+            payload   = NodeCommentsChangePayloadADM(comments)
+            uuid     <- getUserUuid(requestContext)
+          } yield NodeCommentsChangeRequestADM(nodeIri, payload, uuid.user, uuid.uuid)
           runJsonRouteZ(task, requestContext)
         }
       }
@@ -127,46 +130,27 @@ final case class UpdateListItemsRouteADM(
   private def updateList(): Route = path(listsBasePath / Segment) { iri =>
     put {
       entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
-        // check if requested Iri matches the route Iri
-        val listIri: Validation[Throwable, ListIri] = if (iri == apiRequest.listIri) {
-          ListIri.make(apiRequest.listIri)
-        } else {
-          Validation.fail(throw BadRequestException("Route and payload listIri mismatch."))
-        }
-        val validatedListIri: ListIri = listIri.fold(e => throw e.head, v => v)
-
-        val projectIri: Validation[Throwable, ProjectIri]       = ProjectIri.make(apiRequest.projectIri)
-        val validatedProjectIri: ProjectIri                     = projectIri.fold(e => throw e.head, v => v)
-        val hasRootNode: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.hasRootNode)
-        val position: Validation[Throwable, Option[Position]]   = Position.make(apiRequest.position)
-        val name: Validation[Throwable, Option[ListName]]       = ListName.make(apiRequest.name)
-        val labels: Validation[Throwable, Option[Labels]]       = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Option[Comments]]   = Comments.make(apiRequest.comments)
-
-        val validatedChangeNodeInfoPayload: Validation[Throwable, ListNodeChangePayloadADM] =
-          Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
-            ListNodeChangePayloadADM
-          )
-
-        val requestMessage: Future[NodeInfoChangeRequestADM] = for {
-          payload        <- toFuture(validatedChangeNodeInfoPayload)
-          requestingUser <- getUserADM(requestContext)
-          // check if the requesting user is allowed to perform operation
-          _ = if (
-                !requestingUser.permissions.isProjectAdmin(
-                  validatedProjectIri.value
-                ) && !requestingUser.permissions.isSystemAdmin
-              ) {
-                // not project or a system admin
-                throw ForbiddenException(ListErrorMessages.ListNodeCreatePermission)
-              }
-        } yield NodeInfoChangeRequestADM(
-          listIri = validatedListIri.value,
-          changeNodeRequest = payload,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+        val validatedPayload = for {
+          _          <- ZIO.fail(BadRequestException("Route and payload listIri mismatch.")).when(iri != apiRequest.listIri)
+          listIri     = ListIri.make(apiRequest.listIri)
+          projectIri  = ProjectIri.make(apiRequest.projectIri)
+          hasRootNode = ListIri.make(apiRequest.hasRootNode)
+          position    = Position.make(apiRequest.position)
+          name        = ListName.make(apiRequest.name)
+          labels      = Labels.make(apiRequest.labels)
+          comments    = Comments.make(apiRequest.comments)
+        } yield Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
+          ListNodeChangePayloadADM
         )
-        runJsonRouteF(requestMessage, requestContext)
+
+        val requestMessage = for {
+          payload <- validatedPayload.flatMap(_.toZIO)
+          user    <- Authenticator.getUserADM(requestContext)
+          _ <- ZIO
+                 .fail(ForbiddenException(ListErrorMessages.ListNodeCreatePermission))
+                 .when(!user.permissions.isProjectAdmin(payload.projectIri.value) && !user.permissions.isSystemAdmin)
+        } yield NodeInfoChangeRequestADM(payload.listIri.value, payload, user, UUID.randomUUID())
+        runJsonRouteZ(requestMessage, requestContext)
       }
     }
   }

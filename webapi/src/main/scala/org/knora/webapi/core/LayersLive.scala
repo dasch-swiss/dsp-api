@@ -19,7 +19,8 @@ import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.ValueUtilV1Live
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformerLive
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
@@ -83,11 +84,17 @@ import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.service.AssetService
+import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectExportService
+import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.service.PredicateObjectMapper
+import org.knora.webapi.slice.common.api.RestPermissionService
+import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -124,6 +131,7 @@ object LayersLive {
       with ApiRoutes
       with AppConfig
       with AppRouter
+      with AssetService
       with Authenticator
       with CacheService
       with CacheServiceRequestMessageHandler
@@ -131,6 +139,7 @@ object LayersLive {
       with CardinalityService
       with CkanResponderV1
       with ConstructResponseUtilV2
+      with ConstructTransformer
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with HttpServer
@@ -155,6 +164,7 @@ object LayersLive {
       with PredicateObjectMapper
       with ProjectADMRestService
       with ProjectADMService
+      with ProjectExportService
       with ProjectsResponderADM
       with ProjectsResponderV1
       with QueryTraverser
@@ -164,11 +174,12 @@ object LayersLive {
       with ResourcesResponderV1
       with ResourcesResponderV2
       with RestCardinalityService
+      with RestPermissionService
       with RestResourceInfoService
       with SearchResponderV1
       with SearchResponderV2
       with SipiResponderADM
-      with SparqlTransformerLive
+      with OntologyInferencer
       with StandoffResponderV1
       with StandoffResponderV2
       with StandoffTagUtilV2
@@ -192,6 +203,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
+      AssetServiceLive.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
@@ -201,6 +213,7 @@ object LayersLive {
       CardinalityService.layer,
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
+      ConstructTransformer.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
@@ -226,6 +239,7 @@ object LayersLive {
       PredicateObjectMapper.layer,
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
+      ProjectExportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,
@@ -238,11 +252,12 @@ object LayersLive {
       ResourcesResponderV1Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
+      RestPermissionServiceLive.layer,
       RestResourceInfoService.layer,
       SearchResponderV1Live.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
-      SparqlTransformerLive.layer,
+      OntologyInferencer.layer,
       StandoffResponderV1Live.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,

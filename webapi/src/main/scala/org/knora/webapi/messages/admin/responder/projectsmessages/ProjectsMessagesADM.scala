@@ -13,12 +13,12 @@ import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 import zio.prelude.Validation
 
-import java.nio.file.Path
 import java.util.UUID
 
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
@@ -105,21 +105,20 @@ case class ChangeProjectApiRequestADM(
 
     val validatedShortname: Option[String] =
       shortname.map(v =>
-        stringFormatter
-          .validateAndEscapeProjectShortname(v)
+        validateAndEscapeProjectShortname(v)
           .getOrElse(throw BadRequestException(s"The supplied short name: '$v' is not valid."))
       )
 
     val validatedLongName: Option[String] =
       longname.map(l =>
-        StringFormatter
+        Iri
           .toSparqlEncodedString(l)
           .getOrElse(throw BadRequestException(s"The supplied longname: '$l' is not valid."))
       )
 
     val validatedLogo: Option[String] =
       logo.map(l =>
-        StringFormatter
+        Iri
           .toSparqlEncodedString(l)
           .getOrElse(throw BadRequestException(s"The supplied logo: '$l' is not valid."))
       )
@@ -128,7 +127,7 @@ case class ChangeProjectApiRequestADM(
       case Some(descriptions: Seq[V2.StringLiteralV2]) =>
         val escapedDescriptions = descriptions.map { des =>
           val escapedValue =
-            StringFormatter
+            Iri
               .toSparqlEncodedString(des.value)
               .getOrElse(throw BadRequestException(s"The supplied description: '${des.value}' is not valid."))
           V2.StringLiteralV2(value = escapedValue, language = des.language)
@@ -140,7 +139,7 @@ case class ChangeProjectApiRequestADM(
     val validatedKeywords: Option[Seq[String]] = keywords match {
       case Some(givenKeywords: Seq[String]) =>
         val escapedKeywords = givenKeywords.map(keyword =>
-          StringFormatter
+          Iri
             .toSparqlEncodedString(keyword)
             .getOrElse(
               throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")
@@ -245,17 +244,6 @@ case class ProjectRestrictedViewSettingsGetADM(
  */
 case class ProjectRestrictedViewSettingsGetRequestADM(
   identifier: ProjectIdentifierADM
-) extends ProjectsResponderRequestADM
-
-/**
- * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
- *
- * @param projectIdentifier    the identifier of the project.
- * @param requestingUser       the user making the request.
- */
-case class ProjectDataGetRequestADM(
-  projectIdentifier: ProjectIdentifierADM,
-  requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
 /**
@@ -366,13 +354,6 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 
-/**
- * Represents a project's data in TriG format.
- *
- * @param projectDataFile a file containing the project's data in TriG format.
- */
-case class ProjectDataGetResponseADM(projectDataFile: Path)
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -412,7 +393,6 @@ case class ProjectADM(
    */
   def compare(that: ProjectADM): Int = this.id.compareTo(that.id)
 
-  // ToDo: Refactor by using implicit conversions (when I manage to understand them)
   def asProjectInfoV1: ProjectInfoV1 = {
 
     val descriptionV1 = if (description.nonEmpty) {
@@ -478,12 +458,12 @@ case class ProjectADM(
   def unescape: ProjectADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val unescapedDescriptions: Seq[V2.StringLiteralV2] = description.map(desc =>
-      V2.StringLiteralV2(value = StringFormatter.fromSparqlEncodedString(desc.value), language = desc.language)
+      V2.StringLiteralV2(value = Iri.fromSparqlEncodedString(desc.value), language = desc.language)
     )
-    val unescapedKeywords: Seq[String] = keywords.map(key => StringFormatter.fromSparqlEncodedString(key))
+    val unescapedKeywords: Seq[String] = keywords.map(key => Iri.fromSparqlEncodedString(key))
     copy(
-      shortcode = StringFormatter.fromSparqlEncodedString(shortcode),
-      shortname = StringFormatter.fromSparqlEncodedString(shortname),
+      shortcode = Iri.fromSparqlEncodedString(shortcode),
+      shortname = Iri.fromSparqlEncodedString(shortname),
       longname = stringFormatter.unescapeOptionalString(longname),
       logo = stringFormatter.unescapeOptionalString(logo),
       description = unescapedDescriptions,

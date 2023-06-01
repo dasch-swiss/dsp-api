@@ -60,8 +60,6 @@ class GravsearchParserSpec extends CoreSpec {
       |}
         """.stripMargin
 
-  // val ParsedQuery = ???
-
   val QueryWithBind: String =
     """
       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -528,8 +526,6 @@ class GravsearchParserSpec extends CoreSpec {
       |    FILTER(lang(?text) = "en")
       |}
         """.stripMargin
-
-  // val ParsedQueryWithLangFunction = ???
 
   val QueryWithFilterInOptional: String =
     """

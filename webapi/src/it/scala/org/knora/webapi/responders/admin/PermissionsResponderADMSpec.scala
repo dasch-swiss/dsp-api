@@ -166,7 +166,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         expectMsg(
           AdministrativePermissionsForProjectGetResponseADM(
-            Seq(perm002_a2.p, perm002_a3.p, perm002_a1.p)
+            Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p)
           )
         )
       }
@@ -333,7 +333,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         expectMsg(
           DefaultObjectAccessPermissionsForProjectGetResponseADM(
-            defaultObjectAccessPermissions = Seq(perm002_d2.p, perm002_d1.p, perm0003_a4.p)
+            defaultObjectAccessPermissions = Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p)
           )
         )
       }
@@ -886,7 +886,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "ask to update group of a permission" should {
       "update group of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -903,7 +903,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -923,7 +923,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update group of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
         val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -941,7 +941,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update group of a default object access permission, resource class must be deleted" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
@@ -959,7 +959,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update group of a default object access permission, property must be deleted" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
         appActor ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
@@ -979,7 +979,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "ask to update hasPermissions of a permission" should {
       "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 
         appActor ! PermissionChangeHasPermissionsRequestADM(
@@ -1000,7 +1000,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update hasPermissions of an administrative permission" in {
-        val permissionIri  = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 
         appActor ! PermissionChangeHasPermissionsRequestADM(
@@ -1019,7 +1019,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "ignore irrelevant parameters given in ChangePermissionHasPermissionsApiRequestADM for an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
         val hasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
@@ -1044,7 +1044,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update hasPermissions of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = Set(
           PermissionADM.changeRightsPermission(creator),
           PermissionADM.modifyPermission(projectMember)
@@ -1067,7 +1067,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "add missing name of the permission, if permissionCode of permission was given in hasPermissions of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = Set(
           PermissionADM(
             name = "",
@@ -1100,7 +1100,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "add missing permissionCode of the permission, if name of permission was given in hasPermissions of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
@@ -1133,7 +1133,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "not update hasPermissions of a default object access permission, if both name and project code of a permission were missing" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val code          = 1
         val name          = OntologyConstants.KnoraBase.DeletePermission
         val hasPermissions = Set(
@@ -1159,7 +1159,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "not update hasPermissions of a default object access permission, if an invalid name was given for a permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val name          = "invalidName"
         val hasPermissions = Set(
           PermissionADM(
@@ -1189,7 +1189,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "not update hasPermissions of a default object access permission, if an invalid code was given for a permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val code          = 10
         val hasPermissions = Set(
           PermissionADM(
@@ -1219,7 +1219,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "not update hasPermissions of a default object access permission, if given name and project code are not consistent" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val hasPermissions = Set(
           PermissionADM(
             name = "",
@@ -1248,7 +1248,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     }
     "ask to update resource class of a permission" should {
       "throw ForbiddenException for PermissionChangeResourceClassRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri    = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri    = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         appActor ! PermissionChangeResourceClassRequestADM(
@@ -1268,7 +1268,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
       }
       "update resource class of a default object access permission" in {
-        val permissionIri    = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri    = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         appActor ! PermissionChangeResourceClassRequestADM(
@@ -1287,7 +1287,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update resource class of a default object access permission, and delete group" in {
-        val permissionIri    = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri    = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
         appActor ! PermissionChangeResourceClassRequestADM(
@@ -1307,7 +1307,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "not update resource class of an administrative permission" in {
-        val permissionIri    = "http://rdfh.ch/permissions/0803/003-a2"
+        val permissionIri    = "http://rdfh.ch/permissions/00FF/OySsjGn8QSqIpXUiSYnSSQ"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
         appActor ! PermissionChangeResourceClassRequestADM(
@@ -1330,7 +1330,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     }
     "ask to update property of a permission" should {
       "not update property of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/OySsjGn8QSqIpXUiSYnSSQ"
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         appActor ! PermissionChangePropertyRequestADM(
@@ -1351,7 +1351,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
       }
       "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         appActor ! PermissionChangePropertyRequestADM(
@@ -1371,7 +1371,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
       }
       "update property of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         appActor ! PermissionChangePropertyRequestADM(
@@ -1390,7 +1390,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "update property of a default object access permission, delete group" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         appActor ! PermissionChangePropertyRequestADM(
@@ -1412,7 +1412,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "ask to delete a permission" should {
       "throw BadRequestException if given IRI is not a permission IRI" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1kjhfkj"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/RkVssk8XRVO9hZ3VR5IpLA"
         appActor ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = rootUser,
@@ -1422,7 +1422,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
         appActor ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser02,
@@ -1438,7 +1438,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "erase a permission with given IRI" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
         appActor ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = rootUser,

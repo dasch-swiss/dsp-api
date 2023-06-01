@@ -10,6 +10,7 @@ import zio._
 import java.io._
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.zip.ZipOutputStream
 
 object ZScopedJavaIoStreams {
 
@@ -20,6 +21,7 @@ object ZScopedJavaIoStreams {
     def acquire = ZIO.attempt(new BufferedInputStream(in))
     ZIO.acquireRelease(acquire)(release)
   }
+
   def bufferedOutputStream(in: OutputStream): ZIO[Any with Scope, Throwable, OutputStream] = {
     def acquire = ZIO.attempt(new BufferedOutputStream(in))
     ZIO.acquireRelease(acquire)(release)
@@ -31,6 +33,10 @@ object ZScopedJavaIoStreams {
     ZIO.acquireRelease(acquire)(release)
   }
 
+  def fileInputStream(path: zio.nio.file.Path): ZIO[Any with Scope, Throwable, InputStream] =
+    fileInputStream(path.toFile)
+  def fileInputStream(file: File): ZIO[Any with Scope, Throwable, InputStream] =
+    fileInputStream(file.toPath)
   def fileInputStream(path: Path): ZIO[Any with Scope, Throwable, InputStream] = {
     def acquire = ZIO.attempt(Files.newInputStream(path))
     if (!Files.exists(path)) {
@@ -40,28 +46,30 @@ object ZScopedJavaIoStreams {
     }
   }
 
-  /**
-   * Creates a [[PipedInputStream]] so that it is connected to the piped output stream `out`.
-   * @param out
-   */
-  def pipedInputStream(out: PipedOutputStream): ZIO[Any with Scope, Throwable, PipedInputStream] = {
-    def acquire = ZIO.attempt(new PipedInputStream(out))
+  def fileOutputStream(path: zio.nio.file.Path): ZIO[Scope, Throwable, FileOutputStream] = fileOutputStream(path.toFile)
+  def fileOutputStream(path: Path): ZIO[Scope, Throwable, FileOutputStream]              = fileOutputStream(path.toFile)
+  def fileOutputStream(file: File): ZIO[Scope, Throwable, FileOutputStream] = {
+    def acquire = ZIO.attempt(new FileOutputStream(file))
     ZIO.acquireRelease(acquire)(release)
   }
 
-  /**
-   * Creates a piped output stream that is not yet connected to a
-   * piped input stream. It must be connected to a piped input stream,
-   * either by the receiver or the sender, before being used.
-   */
-  def pipedOutStream(): ZIO[Any with Scope, Throwable, PipedOutputStream] = {
-    def acquire = ZIO.attempt(new PipedOutputStream())
-    ZIO.acquireRelease(acquire)(release)
+  def zipOutputStream(file: File): ZIO[Scope, Throwable, ZipOutputStream] = {
+    def acquire(fos: FileOutputStream) = ZIO.attempt(new ZipOutputStream(fos))
+    fileOutputStream(file).flatMap(fos => ZIO.acquireRelease(acquire(fos))(release))
   }
 
   /**
-   * Creates a piped output stream that is connected to a piped input stream.
+   * Opens or creates a file, returning an output stream that may be used to write bytes to the file.
+   * Truncates and overwrites an existing file, or create the file if it doesn't initially exist.
+   * The resulting stream will be buffered.
+   *
+   * @param path The path to the file.
+   * @return The managed output stream.
    */
-  def outputStreamPipedToInputStream(): ZIO[Any with Scope, Throwable, (PipedInputStream, PipedOutputStream)] =
-    pipedOutStream().flatMap(out => pipedInputStream(out).map((_, out)))
+  def fileBufferedOutputStream(path: zio.nio.file.Path): ZIO[Any with Scope, Throwable, OutputStream] =
+    fileBufferedOutputStream(path.toFile.toPath)
+  def fileBufferedOutputStream(path: Path): ZIO[Any with Scope, Throwable, OutputStream] = {
+    def acquire = ZIO.attempt(Files.newOutputStream(path))
+    ZIO.acquireRelease(acquire)(release).flatMap(os => bufferedOutputStream(os))
+  }
 }

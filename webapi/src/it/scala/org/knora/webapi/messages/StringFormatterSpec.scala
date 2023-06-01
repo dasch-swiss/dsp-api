@@ -7,12 +7,10 @@ package org.knora.webapi.messages
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 /**
@@ -25,14 +23,14 @@ class StringFormatterSpec extends CoreSpec {
     "recognize the url of the dhlab site as a valid IRI" in {
       val testUrl: String = "http://dhlab.unibas.ch/"
       val validIri =
-        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
+        Iri.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
     "recognize the url of the DaSCH site as a valid IRI" in {
       val testUrl = "http://dasch.swiss"
       val validIri =
-        StringFormatter.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
+        Iri.validateAndEscapeIri(testUrl).getOrElse(throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
@@ -938,23 +936,6 @@ class StringFormatterSpec extends CoreSpec {
       val expected  = s"http://www.knora.org/data/$shortcode/$shortname"
       val result    = stringFormatter.projectDataNamedGraphV1(SharedTestDataV1.imagesProjectInfo)
       result should be(expected)
-
-      // check consistency of our test data
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.anythingProject) should be(
-        SharedOntologyTestDataADM.ANYTHING_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.imagesProject) should be(
-        SharedOntologyTestDataADM.IMAGES_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.beolProject) should be(
-        SharedOntologyTestDataADM.BEOL_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.incunabulaProject) should be(
-        SharedOntologyTestDataADM.INCUNABULA_DATA_IRI
-      )
-      stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject) should be(
-        SharedOntologyTestDataADM.DOKUBIB_DATA_IRI
-      )
     }
 
     "generate an ARK URL for a resource IRI without a timestamp" in {
@@ -987,38 +968,6 @@ class StringFormatterSpec extends CoreSpec {
   }
 
   "The StringFormatter class for User and Project" should {
-    "validate project IRI" in {
-      stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.incunabulaProject.id,
-        throw AssertionException("not valid")
-      ) shouldBe SharedTestDataADM.incunabulaProject.id
-      stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.systemProject.id,
-        throw AssertionException("not valid")
-      ) shouldBe SharedTestDataADM.systemProject.id
-      stringFormatter.validateAndEscapeProjectIri(
-        SharedTestDataADM.defaultSharedOntologiesProject.id,
-        throw AssertionException("not valid")
-      ) shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
-    }
-
-    "validate project shortname" in {
-      // shortname with dash is valid
-      assert(stringFormatter.validateAndEscapeProjectShortname("valid-shortname").contains("valid-shortname"))
-      // shortname with numbers
-      assert(stringFormatter.validateAndEscapeProjectShortname("valid_1111").contains("valid_1111"))
-      // has special character colon
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid:shortname").isEmpty)
-      // begins with dash
-      assert(stringFormatter.validateAndEscapeProjectShortname("-invalidshortname").isEmpty)
-      // begins with dot
-      assert(stringFormatter.validateAndEscapeProjectShortname(".invalidshortname").isEmpty)
-      // includes slash
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid/shortname").isEmpty)
-      // includes @
-      assert(stringFormatter.validateAndEscapeProjectShortname("invalid@shortname").isEmpty)
-    }
-
     "validate project shortcode" in {
       stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
       stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
@@ -1039,60 +988,30 @@ class StringFormatterSpec extends CoreSpec {
 
     "validate username" in {
       // 4 - 50 characters long
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("abc", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername(
-          "123456789012345678901234567890123456789012345678901",
-          throw AssertionException("not valid")
-        )
-      }
+      assert(stringFormatter.validateUsername("abc").isEmpty)
+      assert(stringFormatter.validateUsername("123456789012345678901234567890123456789012345678901").isEmpty)
 
       // only contain alphanumeric, underscore, and dot
-      stringFormatter.validateAndEscapeUsername("a_2.3", throw AssertionException("not valid")) should be("a_2.3")
-
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("a_2.3-4", throw AssertionException("not valid"))
-      }
+      stringFormatter.validateUsername("a_2.3") should be(Some("a_2.3"))
+      assert(stringFormatter.validateUsername("a_2.3-4").isEmpty)
 
       // not allow @
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateUsername("donald.duck@example.com", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateUsername("donald.duck@example.com").isEmpty)
 
       // Underscore and dot can't be at the end or start of a username
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("_username", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("username_", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername(".username", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("username.", throw AssertionException("not valid"))
-      }
+      assert(stringFormatter.validateUsername("_username").isEmpty)
+      assert(stringFormatter.validateUsername("username_").isEmpty)
+      assert(stringFormatter.validateUsername(".username").isEmpty)
+      assert(stringFormatter.validateUsername("username.").isEmpty)
 
       // Underscore or dot can't be used multiple times in a row
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("user__name", throw AssertionException("not valid"))
-      }
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeUsername("user..name", throw AssertionException("not valid"))
-      }
-
+      assert(stringFormatter.validateUsername("user__name").isEmpty)
+      assert(stringFormatter.validateUsername("user..name").isEmpty)
     }
 
     "validate email" in {
-      stringFormatter.validateEmailAndThrow("donald.duck@example.com", throw AssertionException("not valid")) should be(
-        "donald.duck@example.com"
-      )
-
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateEmailAndThrow("donald.duck", throw AssertionException("not valid"))
-      }
+      stringFormatter.validateEmail("donald.duck@example.com") should be(Some("donald.duck@example.com"))
+      assert(stringFormatter.validateEmail("donald.duck").isEmpty)
     }
 
     "convert a UUID to Base-64 encoding and back again" in {

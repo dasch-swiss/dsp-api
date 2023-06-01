@@ -42,6 +42,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -327,7 +328,7 @@ final case class ValuesResponderV2Live(
               ZIO.succeed(defaultValuePermissions)
           }
 
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Create the new value.
         unverifiedValue <-
@@ -1059,7 +1060,7 @@ final case class ValuesResponderV2Live(
              )
 
         // Do the update.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
         newValueIri <-
           iriService.checkOrCreateEntityIri(
             updateValuePermissionsV2.newValueVersionIri,
@@ -1256,7 +1257,7 @@ final case class ValuesResponderV2Live(
                case _ => ZIO.unit
              }
 
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Create the new value version.
         unverifiedValue <-
@@ -1736,7 +1737,7 @@ final case class ValuesResponderV2Live(
             }
 
         // Get information about the project that the resource is in, so we know which named graph to do the update in.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Do the update.
         deletedValueIri <-

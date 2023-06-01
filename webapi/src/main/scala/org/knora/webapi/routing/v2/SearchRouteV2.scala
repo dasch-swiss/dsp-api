@@ -6,22 +6,28 @@
 package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import zio._
+import zio.metrics._
+
+import java.time.temporal.ChronoUnit
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 /**
  * Provides a function for API routes that deal with search.
@@ -75,7 +81,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     params
       .get(LIMIT_TO_PROJECT)
       .map { projectIriStr =>
-        StringFormatter
+        Iri
           .validateAndEscapeIri(projectIriStr)
           .toZIO
           .mapBoth(_ => BadRequestException(s"$projectIriStr is not a valid Iri"), Some(_))
@@ -151,7 +157,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
 
   private def validateSearchString(searchStr: String) =
     ZIO
-      .fromOption(StringFormatter.toSparqlEncodedString(searchStr))
+      .fromOption(Iri.toSparqlEncodedString(searchStr))
       .orElseFail(throw BadRequestException(s"Invalid search string: '$searchStr'"))
       .filterOrElseWith(_.length >= searchValueMinLength) { it =>
         val errorMsg =
@@ -226,36 +232,37 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
 
   private def gravsearchGet(): Route = path(
     "v2" / "searchextended" / Segment
-  ) { sparql => // Segment is a URL encoded string representing a Gravsearch query
-    get { requestContext =>
-      val constructQuery    = GravsearchParser.parseQuery(sparql)
-      val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
-      val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-      val requestMessage = for {
-        targetSchema   <- targetSchemaTask
-        requestingUser <- Authenticator.getUserADM(requestContext)
-        schemaOptions  <- schemaOptionsTask
-      } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
-    }
+  ) { query => // Segment is a URL encoded string representing a Gravsearch query
+    get(requestContext => gravsearch(query, requestContext))
   }
 
   private def gravsearchPost(): Route = path("v2" / "searchextended") {
-    post {
-      entity(as[String]) { gravsearchQuery => requestContext =>
-        {
-          val constructQuery    = GravsearchParser.parseQuery(gravsearchQuery)
-          val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
-          val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-          val requestTask = for {
-            targetSchema   <- targetSchemaTask
-            schemaOptions  <- schemaOptionsTask
-            requestingUser <- Authenticator.getUserADM(requestContext)
-          } yield GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
-        }
-      }
-    }
+    post(entity(as[String])(query => requestContext => gravsearch(query, requestContext)))
+  }
+
+  private val gravsearchDuration = Metric.timer("gravsearch", ChronoUnit.MILLIS, Chunk.iterate(1.0, 17)(_ * 2))
+  private val gravsearchDurationSummary =
+    Metric.summary("gravsearch_summary", 1.day, 100, 0.03d, Chunk(0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.99))
+  private val gravsearchFailCounter    = Metric.counter("gravsearch_fail").fromConst(1)
+  private val gravsearchTimeoutCounter = Metric.counter("gravsearch_timeout").fromConst(1)
+
+  private def gravsearch(query: String, requestContext: RequestContext) = {
+    val constructQuery    = GravsearchParser.parseQuery(query)
+    val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
+    val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
+    val task = for {
+      start          <- Clock.instant.map(_.toEpochMilli).map(_.toDouble)
+      targetSchema   <- targetSchemaTask
+      requestingUser <- Authenticator.getUserADM(requestContext)
+      schemaOptions  <- schemaOptionsTask
+      request         = GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
+      response <- MessageRelay.ask[KnoraResponseV2](request).tapError {
+                    case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
+                    case _                              => ZIO.unit @@ gravsearchFailCounter
+                  } @@ gravsearchDuration.trackDuration
+      _ <- Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
+    } yield response
+    RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
 
   private def searchByLabelCount(): Route =

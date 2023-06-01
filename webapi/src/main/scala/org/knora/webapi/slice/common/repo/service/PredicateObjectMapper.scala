@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.common.service
+package org.knora.webapi.slice.common.repo.service
 
 import zio._
 
@@ -61,9 +61,32 @@ final case class PredicateObjectMapper(private val iriConverter: IriConverter) {
    * @return a list of values, fails with an [[InconsistentRepositoryDataException]] if key was not present.
    */
   def getListOrFail[A <: LiteralV2](key: IRI, propertiesMap: ConstructPredicateObjects): Task[List[A]] =
-    getListOption[A](key, propertiesMap)
-      .flatMap(ZIO.fromOption(_))
+    getListOption[A](key, propertiesMap).some
       .orElseFail(InconsistentRepositoryDataException(s"PropertiesMap has no $key defined."))
+
+  /**
+   * Returns a [[NonEmptyChunk]] of values for the given key.
+   * Fails during runtime if the value could not be cast to the given type.
+   *
+   * @param key           the key to look for.
+   * @param propertiesMap the map to look in.
+   * @tparam A the type of the values.
+   * @return A [[NonEmptyChunk]] of values,
+   *         Fails with an [[InconsistentRepositoryDataException]] if key was not present.
+   *         Fails with an [[InconsistentRepositoryDataException]] if the list of values was empty.
+   */
+  def getNonEmptyChunkOrFail[A <: LiteralV2](
+    key: IRI,
+    propertiesMap: ConstructPredicateObjects
+  ): Task[NonEmptyChunk[A]] =
+    getListOption[A](key, propertiesMap).some
+      .orElseFail(InconsistentRepositoryDataException(s"PropertiesMap has no $key defined."))
+      .flatMap(list =>
+        ZIO
+          .fail(InconsistentRepositoryDataException(s"PropertiesMap has $key defined but list of values is empty."))
+          .when(list.isEmpty)
+          .as(NonEmptyChunk.fromIterable(list.head, list.tail))
+      )
 
   /**
    * Returns an optional single value for the given key.

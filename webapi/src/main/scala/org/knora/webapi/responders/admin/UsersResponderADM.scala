@@ -14,6 +14,7 @@ import java.util.UUID
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
+import dsp.valueobjects.Iri
 import dsp.valueobjects.User._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -41,6 +42,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
@@ -1393,7 +1395,7 @@ final case class UsersResponderADMLive(
       maybeChangedGivenName = userUpdatePayload.givenName match {
                                 case Some(givenName) =>
                                   Some(
-                                    StringFormatter
+                                    Iri
                                       .toSparqlEncodedString(givenName.value)
                                       .getOrElse(
                                         throw BadRequestException(
@@ -1406,7 +1408,7 @@ final case class UsersResponderADMLive(
       maybeChangedFamilyName = userUpdatePayload.familyName match {
                                  case Some(familyName) =>
                                    Some(
-                                     StringFormatter
+                                     Iri
                                        .toSparqlEncodedString(familyName.value)
                                        .getOrElse(
                                          throw BadRequestException(
@@ -1443,7 +1445,7 @@ final case class UsersResponderADMLive(
       updateUserSparqlString <- ZIO.attempt(
                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                     .updateUser(
-                                      adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                      AdminConstants.adminDataNamedGraph.value,
                                       userIri = userIri,
                                       maybeUsername = maybeChangedUsername,
                                       maybeEmail = maybeChangedEmail,
@@ -1599,7 +1601,7 @@ final case class UsersResponderADMLive(
       updateUserSparqlString <- ZIO.attempt(
                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                     .updateUserPassword(
-                                      adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                      AdminConstants.adminDataNamedGraph.value,
                                       userIri = userIri,
                                       newPassword = password.value
                                     )
@@ -1680,17 +1682,17 @@ final case class UsersResponderADMLive(
         // Create the new user.
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                       .createNewUser(
-                                        adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                        AdminConstants.adminDataNamedGraph.value,
                                         userIri = userIri,
                                         userClassIri = OntologyConstants.KnoraAdmin.User,
-                                        username = StringFormatter
+                                        username = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.username.value)
                                           .getOrElse(
                                             throw BadRequestException(
                                               s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
                                             )
                                           ),
-                                        email = StringFormatter
+                                        email = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.email.value)
                                           .getOrElse(
                                             throw BadRequestException(
@@ -1698,14 +1700,14 @@ final case class UsersResponderADMLive(
                                             )
                                           ),
                                         password = hashedPassword,
-                                        givenName = StringFormatter
+                                        givenName = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
                                           .getOrElse(
                                             throw BadRequestException(
                                               s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
                                             )
                                           ),
-                                        familyName = StringFormatter
+                                        familyName = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
                                           .getOrElse(
                                             throw BadRequestException(
@@ -1713,7 +1715,7 @@ final case class UsersResponderADMLive(
                                             )
                                           ),
                                         status = userCreatePayloadADM.status.value,
-                                        preferredLanguage = StringFormatter
+                                        preferredLanguage = Iri
                                           .toSparqlEncodedString(userCreatePayloadADM.lang.value)
                                           .getOrElse(
                                             throw BadRequestException(
@@ -1997,14 +1999,8 @@ final case class UsersResponderADMLive(
   ): Task[Boolean] =
     maybeUsername match {
       case Some(username) =>
-        if (maybeCurrent.contains(username.value)) {
-          ZIO.succeed(true)
-        } else {
-          stringFormatter.validateUsername(
-            username.value,
-            throw BadRequestException(s"The username '${username.value}' contains invalid characters")
-          )
-
+        if (maybeCurrent.contains(username.value)) ZIO.succeed(true)
+        else
           for {
             askString <- ZIO.attempt(
                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -2013,7 +2009,6 @@ final case class UsersResponderADMLive(
                          )
             checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
           } yield checkUserExistsResponse.result
-        }
 
       case None => ZIO.succeed(false)
     }
@@ -2031,12 +2026,11 @@ final case class UsersResponderADMLive(
         if (maybeCurrent.contains(email.value)) {
           ZIO.succeed(true)
         } else {
-          stringFormatter.validateEmailAndThrow(
-            email.value,
-            throw BadRequestException(s"The email address '${email.value}' is invalid")
-          )
-
           for {
+            _ <- ZIO
+                   .fromOption(stringFormatter.validateEmail(email.value))
+                   .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
+
             askString <- ZIO.attempt(
                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                              .checkUserExistsByEmail(email = email.value)

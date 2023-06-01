@@ -17,17 +17,18 @@ object Dependencies {
 
   val AkkaActorVersion = "2.6.20"
   val AkkaHttpVersion  = "10.2.10"
-  val JenaVersion      = "4.7.0"
+  val JenaVersion      = "4.8.0"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.5.0"
   val ZioLoggingVersion           = "2.1.12"
+  val ZioNioVersion               = "2.0.1"
   val ZioMetricsConnectorsVersion = "2.0.8"
-  val ZioPreludeVersion           = "1.0.0-RC18"
+  val ZioPreludeVersion           = "1.0.0-RC19"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.12"
+  val ZioVersion                  = "2.0.13"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio" %% "zio"                       % ZioVersion
@@ -39,6 +40,7 @@ object Dependencies {
   val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
   val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
+  val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio" %% "zio-macros"                % ZioVersion
   val zioMetricsConnectors  = "dev.zio" %% "zio-metrics-connectors"    % ZioMetricsConnectorsVersion
   val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
@@ -76,7 +78,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.0.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.0.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.73"
 
   // caching
@@ -91,9 +93,9 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.3"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.3"
-  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.1"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.2.4"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.2.4"
+  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.2"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.2"
@@ -104,7 +106,14 @@ object Dependencies {
   val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
   val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
   val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.15"         // Scala 3 compatible
-  val testcontainers    = "org.testcontainers" % "testcontainers"      % "1.18.0"
+  // The scoverage plugin actually adds its dependencies automatically.
+  // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
+  // Fixes error message when running IT in IntelliJ
+  //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
+  //  java.lang.NoClassDefFoundError: scoverage / Invoker$
+  val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.7"
+  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.0"
+  val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -115,7 +124,9 @@ object Dependencies {
     akkaTestkit,
     rdf4jClient,
     scalaTest,
+    scoverage,
     testcontainers,
+    wiremock,
     xmlunitCore,
     zioTest,
     zioTestSbt
@@ -159,6 +170,7 @@ object Dependencies {
     zioJson,
     zioLogging,
     zioLoggingSlf4jBridge,
+    zioNio,
     zioMacros,
     zioMetricsConnectors,
     zioPrelude
