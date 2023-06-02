@@ -516,8 +516,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
     val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .getStandoffTagByUUID(
-        uuid = uuid,
-        stringFormatter = stringFormatter
+        uuid = uuid
       )
       .toString()
 

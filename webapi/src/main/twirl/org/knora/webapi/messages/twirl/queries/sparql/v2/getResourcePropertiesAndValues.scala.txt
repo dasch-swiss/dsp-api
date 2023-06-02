@@ -5,9 +5,10 @@
 
 @import java.time.Instant
 @import java.util.UUID
+@import dsp.valueobjects.UuidUtil
 @import org.knora.webapi.IRI
 @import dsp.errors.SparqlGenerationException
-@import org.knora.webapi.messages.{SmartIri, StringFormatter}
+@import org.knora.webapi.messages.SmartIri
 
 @*
  * Gets the values of all the Knora properties of one or more resources, using SPARQL w/o inference.
@@ -28,7 +29,6 @@
  * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
  *                                   Requires maybeStandoffMinStartIndex. If undefined, standoff will
  *                                   not be returned.
- * @param stringFormatter            a StringFormatter.
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
@@ -39,8 +39,7 @@
   maybeVersionDate: Option[Instant] = None,
   maybeValueIri: Option[IRI] = None,
   maybeStandoffMinStartIndex: Option[Int] = None,
-  maybeStandoffMaxStartIndex: Option[Int] = None,
-  stringFormatter: StringFormatter)
+  maybeStandoffMaxStartIndex: Option[Int] = None)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -167,7 +166,7 @@ CONSTRUCT {
                     @* Filter by value UUID if requested. *@
                     @maybeValueUuid match {
                         case Some(valueUuid) => {
-                            FILTER(?currentValueUUID = "@{stringFormatter.base64EncodeUuid(valueUuid)}")
+                            FILTER(?currentValueUUID = "@{UuidUtil.base64EncodeUuid(valueUuid)}")
                         }
 
                         case None => {}
@@ -216,7 +215,7 @@ CONSTRUCT {
                     @* Filter by value UUID if requested. *@
                     @maybeValueUuid match {
                         case Some(valueUuid) => {
-                            ?valueObject knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(valueUuid)}" .
+                            ?valueObject knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(valueUuid)}" .
                         }
 
                         case None => {}

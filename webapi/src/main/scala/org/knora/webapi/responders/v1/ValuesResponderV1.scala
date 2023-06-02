@@ -486,8 +486,7 @@ final case class ValuesResponderV1Live(
                                              .generateInsertStatementsForStandoffLinks(
                                                resourceIri = createMultipleValuesRequest.resourceIri,
                                                linkUpdates = standoffLinkUpdates,
-                                               creationDate = createMultipleValuesRequest.creationDate,
-                                               stringFormatter = stringFormatter
+                                               creationDate = createMultipleValuesRequest.creationDate
                                              )
                                              .toString()
 
@@ -582,8 +581,7 @@ final case class ValuesResponderV1Live(
                             linkUpdate = sparqlTemplateLinkUpdate,
                             creationDate = createMultipleValuesRequest.creationDate,
                             maybeComment = valueToCreate.createValueV1WithComment.comment,
-                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
-                            stringFormatter = stringFormatter
+                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                           )
                           .toString()
 
@@ -635,8 +633,7 @@ final case class ValuesResponderV1Live(
                             valueCreator = userIri,
                             valuePermissions = defaultPropertyAccessPermissions,
                             creationDate = createMultipleValuesRequest.creationDate,
-                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
-                            stringFormatter = stringFormatter
+                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                           )
                           .toString()
                     }
@@ -1426,8 +1423,7 @@ final case class ValuesResponderV1Live(
                                       maybeDeleteComment = deleteValueRequest.deleteComment,
                                       linkUpdates = linkUpdates,
                                       currentTime = currentTime,
-                                      requestingUser = userIri,
-                                      stringFormatter = stringFormatter
+                                      requestingUser = userIri
                                     )
                                     .toString()
                  } yield (sparqlUpdate, deleteValueRequest.valueIri)
@@ -2590,8 +2586,7 @@ final case class ValuesResponderV1Live(
                          linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                          maybeComment = comment,
                          currentTime = currentTime,
-                         requestingUser = userProfile.id,
-                         stringFormatter = stringFormatter
+                         requestingUser = userProfile.id
                        )
                        .toString()
 
@@ -2743,8 +2738,7 @@ final case class ValuesResponderV1Live(
                          maybeComment = comment,
                          linkUpdates = standoffLinkUpdates,
                          currentTime = currentTime,
-                         requestingUser = userProfile.id,
-                         stringFormatter = stringFormatter
+                         requestingUser = userProfile.id
                        )
                        .toString()
 

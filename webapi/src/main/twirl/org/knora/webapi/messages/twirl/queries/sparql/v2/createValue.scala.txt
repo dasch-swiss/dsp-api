@@ -87,8 +87,7 @@ DELETE {
                                                                          valueCreator = valueCreator,
                                                                          valuePermissions = valuePermissions,
                                                                          creationDate = creationDate,
-                                                                         maybeValueHasOrder = None,
-                                                                         stringFormatter = stringFormatter)
+                                                                         maybeValueHasOrder = None)
         }
     }
 }

@@ -30,6 +30,7 @@ import scala.util.matching.Regex
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -589,7 +590,6 @@ class StringFormatter private (
   initForTest: Boolean = false
 ) {
 
-  private val base64Encoder = Base64.getUrlEncoder.withoutPadding
   private val base64Decoder = Base64.getUrlDecoder
 
   // The host and port number that this Knora server is running on, and that should be used
@@ -1793,7 +1793,7 @@ class StringFormatter private (
 
     // If a value UUID was provided, Base64-encode it, add a check digit, and append the result to the URL.
     val arkUrlWithoutTimestamp = maybeValueUUID match {
-      case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(base64EncodeUuid(valueUUID))}"
+      case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(UuidUtil.base64EncodeUuid(valueUUID))}"
       case None                  => resourceArkUrl
     }
 
@@ -1864,33 +1864,6 @@ class StringFormatter private (
   }
 
   /**
-   * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
-   * Base64 encoder from [[java.util.Base64]], without padding. This results in a 22-character string that
-   * can be used as a unique identifier in IRIs.
-   *
-   * @return a random, Base64-encoded UUID.
-   */
-  def makeRandomBase64EncodedUuid: String = {
-    val uuid = UUID.randomUUID
-    base64EncodeUuid(uuid)
-  }
-
-  /**
-   * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
-   * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
-   *
-   * @param uuid the [[UUID]] to be encoded.
-   * @return a 22-character string representing the UUID.
-   */
-  def base64EncodeUuid(uuid: UUID): String = {
-    val bytes      = Array.ofDim[Byte](16)
-    val byteBuffer = ByteBuffer.wrap(bytes)
-    byteBuffer.putLong(uuid.getMostSignificantBits)
-    byteBuffer.putLong(uuid.getLeastSignificantBits)
-    base64Encoder.encodeToString(bytes)
-  }
-
-  /**
    * Decodes a Base64-encoded UUID.
    *
    * @param base64Uuid the Base64-encoded UUID to be decoded.
@@ -1929,7 +1902,7 @@ class StringFormatter private (
    */
   def encodeUuid(uuid: UUID, useBase64: Boolean): String =
     if (useBase64) {
-      base64EncodeUuid(uuid)
+      UuidUtil.base64EncodeUuid(uuid)
     } else {
       uuid.toString
     }
@@ -1996,7 +1969,7 @@ class StringFormatter private (
    * @return a new resource IRI.
    */
   def makeRandomResourceIri(projectShortcode: String): IRI = {
-    val knoraResourceID = makeRandomBase64EncodedUuid
+    val knoraResourceID = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/$projectShortcode/$knoraResourceID"
   }
 
@@ -2009,8 +1982,8 @@ class StringFormatter private (
    */
   def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI = {
     val valueUUID = givenUUID match {
-      case Some(uuid: UUID) => base64EncodeUuid(uuid)
-      case _                => makeRandomBase64EncodedUuid
+      case Some(uuid: UUID) => UuidUtil.base64EncodeUuid(uuid)
+      case _                => UuidUtil.makeRandomBase64EncodedUuid
     }
     s"$resourceIri/values/$valueUUID"
   }
@@ -2036,7 +2009,7 @@ class StringFormatter private (
    * @return a new mapping element IRI.
    */
   def makeRandomMappingElementIri(mappingIri: IRI): IRI = {
-    val knoraMappingElementUuid = makeRandomBase64EncodedUuid
+    val knoraMappingElementUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"$mappingIri/elements/$knoraMappingElementUuid"
   }
 
@@ -2056,7 +2029,7 @@ class StringFormatter private (
    * @return a new project IRI.
    */
   def makeRandomProjectIri: IRI = {
-    val uuid = makeRandomBase64EncodedUuid
+    val uuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/projects/$uuid"
   }
 
@@ -2067,7 +2040,7 @@ class StringFormatter private (
    * @return a new group IRI.
    */
   def makeRandomGroupIri(shortcode: String): String = {
-    val knoraGroupUuid = makeRandomBase64EncodedUuid
+    val knoraGroupUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
   }
 
@@ -2077,7 +2050,7 @@ class StringFormatter private (
    * @return a new person IRI.
    */
   def makeRandomPersonIri: IRI = {
-    val knoraPersonUuid = makeRandomBase64EncodedUuid
+    val knoraPersonUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/users/$knoraPersonUuid"
   }
 
@@ -2088,7 +2061,7 @@ class StringFormatter private (
    * @return a new list IRI.
    */
   def makeRandomListIri(shortcode: String): String = {
-    val knoraListUuid = makeRandomBase64EncodedUuid
+    val knoraListUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
   }
 
@@ -2123,7 +2096,7 @@ class StringFormatter private (
    * @return the IRI of the permission object.
    */
   def makeRandomPermissionIri(shortcode: String): IRI = {
-    val knoraPermissionUuid = makeRandomBase64EncodedUuid
+    val knoraPermissionUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
   }
 

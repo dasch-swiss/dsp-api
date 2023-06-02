@@ -8,7 +8,7 @@ package org.knora.webapi.messages
 import java.time.Instant
 import java.util.UUID
 import dsp.errors.AssertionException
-import dsp.valueobjects.Iri
+import dsp.valueobjects.{Iri, UuidUtil}
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
@@ -1016,7 +1016,7 @@ class StringFormatterSpec extends CoreSpec {
 
     "convert a UUID to Base-64 encoding and back again" in {
       val uuid              = UUID.randomUUID
-      val base64EncodedUuid = stringFormatter.base64EncodeUuid(uuid)
+      val base64EncodedUuid = UuidUtil.base64EncodeUuid(uuid)
       val base64DecodedUuid = stringFormatter.base64DecodeUuid(base64EncodedUuid)
       assert(base64DecodedUuid.toOption.contains(uuid))
     }

@@ -15,6 +15,7 @@ import scala.concurrent.Future
 
 import dsp.errors._
 import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -1479,8 +1480,7 @@ final case class ResourcesResponderV2Live(
                                      maybeVersionDate = versionDate,
                                      queryAllNonStandoff = true,
                                      maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                                     maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
-                                     stringFormatter = stringFormatter
+                                     maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
                                    )
                                    .toString()
                                )
@@ -1571,7 +1571,7 @@ final case class ResourcesResponderV2Live(
             case Some(definedValueUuid) =>
               if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
                 throw NotFoundException(
-                  s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it)"
+                  s"Value with UUID ${UuidUtil.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it)"
                 )
               }
 

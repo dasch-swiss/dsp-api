@@ -4,9 +4,9 @@
  *@
 
 @import java.util.UUID
+@import dsp.valueobjects.UuidUtil
 @import org.knora.webapi._
 @import dsp.errors.SparqlGenerationException
-@import org.knora.webapi.messages.StringFormatter
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 
 @**
@@ -21,7 +21,6 @@
  *        updated for resource references in standoff markup.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  * @param requestingUser the IRI of the user making the request.
- * @param stringFormatter a [[StringFormatter]].
  *@
 @(dataNamedGraph: IRI,
   resourceIri: IRI,
@@ -30,8 +29,7 @@
   maybeDeleteComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   currentTime: String,
-  requestingUser: IRI,
-  stringFormatter: StringFormatter)
+  requestingUser: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -120,7 +118,7 @@ DELETE {
                 <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
                     knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(UUID.randomUUID)}" .
             }
 
             @* Attach the new LinkValue to its containing resource. *@

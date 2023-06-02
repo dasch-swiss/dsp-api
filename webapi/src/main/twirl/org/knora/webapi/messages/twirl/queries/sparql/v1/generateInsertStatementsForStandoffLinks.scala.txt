@@ -5,8 +5,8 @@
 
 @import java.time.Instant
 @import java.util.UUID
+@import dsp.valueobjects.UuidUtil
 @import org.knora.webapi._
-@import org.knora.webapi.messages.StringFormatter
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
@@ -20,12 +20,10 @@
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
  * @param creationDate an xsd:dateTimeStamp to be attached to the link values.
- * @param stringFormatter a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  creationDate: Instant,
-  stringFormatter: StringFormatter)
+  creationDate: Instant)
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Insert a direct link for the resource reference if necessary. *@
@@ -63,7 +61,7 @@
                 <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
                     knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(UUID.randomUUID)}" .
             }
 
             @* Attach the new LinkValue to its containing resource. *@

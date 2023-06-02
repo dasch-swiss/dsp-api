@@ -15,6 +15,34 @@ import dsp.errors.BadRequestException
 // implementations in webapi project which needed to be added temporary in order
 // to avoid circular dependencies after moving value objects to separate project.
 object UuidUtil {
+  private val base64Encoder = Base64.getUrlEncoder.withoutPadding
+
+  /**
+   * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
+   * Base64 encoder from [[java.util.Base64]], without padding. This results in a 22-character string that
+   * can be used as a unique identifier in IRIs.
+   *
+   * @return a random, Base64-encoded UUID.
+   */
+  def makeRandomBase64EncodedUuid: String = {
+    val uuid = UUID.randomUUID
+    base64EncodeUuid(uuid)
+  }
+
+  /**
+   * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
+   * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
+   *
+   * @param uuid the [[UUID]] to be encoded.
+   * @return a 22-character string representing the UUID.
+   */
+  def base64EncodeUuid(uuid: UUID): String = {
+    val bytes      = Array.ofDim[Byte](16)
+    val byteBuffer = ByteBuffer.wrap(bytes)
+    byteBuffer.putLong(uuid.getMostSignificantBits)
+    byteBuffer.putLong(uuid.getLeastSignificantBits)
+    base64Encoder.encodeToString(bytes)
+  }
 
   /**
    * The length of the canonical representation of a UUID.

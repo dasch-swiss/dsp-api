@@ -15,6 +15,7 @@ import java.util.UUID
 import scala.util.Success
 
 import dsp.errors._
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -757,8 +758,7 @@ final case class ValuesResponderV2Live(
                 creationDate = valueCreationDate,
                 newValueUUID = newValueUUID,
                 maybeComment = valueToCreate.valueContent.comment,
-                maybeValueHasOrder = Some(valueHasOrder),
-                stringFormatter = stringFormatter
+                maybeValueHasOrder = Some(valueHasOrder)
               )
               .toString()
 
@@ -777,8 +777,7 @@ final case class ValuesResponderV2Live(
                 valueCreator = requestingUser.id,
                 valuePermissions = valueToCreate.permissions,
                 creationDate = valueCreationDate,
-                maybeValueHasOrder = Some(valueHasOrder),
-                stringFormatter = stringFormatter
+                maybeValueHasOrder = Some(valueHasOrder)
               )
               .toString()
         }
@@ -865,8 +864,7 @@ final case class ValuesResponderV2Live(
             .generateInsertStatementsForStandoffLinks(
               resourceIri = createMultipleValuesRequest.resourceIri,
               linkUpdates = standoffLinkUpdates,
-              creationDate = createMultipleValuesRequest.creationDate,
-              stringFormatter = stringFormatter
+              creationDate = createMultipleValuesRequest.creationDate
             )
             .toString()
       } yield Some(sparqlInsert)
@@ -1453,8 +1451,7 @@ final case class ValuesResponderV2Live(
             maybeComment = newValueVersion.comment,
             linkUpdates = standoffLinkUpdates,
             currentTime = currentTime,
-            requestingUser = requestingUser.id,
-            stringFormatter = stringFormatter
+            requestingUser = requestingUser.id
           )
           .toString()
 
@@ -1541,8 +1538,7 @@ final case class ValuesResponderV2Live(
                 newLinkValueUUID = newLinkValueUUID,
                 maybeComment = newLinkValue.comment,
                 currentTime = currentTime,
-                requestingUser = requestingUser.id,
-                stringFormatter = stringFormatter
+                requestingUser = requestingUser.id
               )
               .toString()
           )
@@ -1960,8 +1956,7 @@ final case class ValuesResponderV2Live(
             maybeDeleteComment = deleteComment,
             linkUpdates = linkUpdates,
             currentTime = currentTime,
-            requestingUser = requestingUser.id,
-            stringFormatter = stringFormatter
+            requestingUser = requestingUser.id
           )
           .toString()
 
@@ -2617,7 +2612,7 @@ final case class ValuesResponderV2Live(
           stringFormatter.base64DecodeUuid(maybeCustomIri.get.toString.split("/").last) != Success(customValueUUID)
         ) {
           throw BadRequestException(
-            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${stringFormatter
+            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${UuidUtil
                 .base64EncodeUuid(customValueUUID)}."
           )
         }

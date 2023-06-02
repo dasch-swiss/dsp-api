@@ -5,9 +5,9 @@
 
 @import java.time.Instant
 @import java.util.UUID
+@import dsp.valueobjects.UuidUtil
 @import org.knora.webapi._
 @import dsp.errors.SparqlGenerationException
-@import org.knora.webapi.messages.StringFormatter
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
@@ -26,7 +26,6 @@
  * @param valuePermissions the permissions that should be attached to the value.
  * @param creationDate an xsd:dateTimeStamp to be attached to the value.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
- * @param stringFormatter a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   propertyIri: IRI,
@@ -37,8 +36,7 @@
   valueCreator: IRI,
   valuePermissions: String,
   creationDate: Instant,
-  maybeValueHasOrder: Option[Int],
-  stringFormatter: StringFormatter)
+  maybeValueHasOrder: Option[Int])
 
         # Value: @newValueIri
         # Property: @propertyIri
@@ -46,7 +44,7 @@
         @* Construct the value. *@
         <@newValueIri> rdf:type <@value.valueTypeIri> ;
             knora-base:isDeleted false  ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" ;
+            knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(UUID.randomUUID)}" ;
             knora-base:valueHasString """@value.toString""" .
 
         @value match {
@@ -109,7 +107,7 @@
                             }
 
                             knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                            knora-base:standoffTagHasUUID "@{stringFormatter.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
+                            knora-base:standoffTagHasUUID "@{UuidUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
                             knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                             knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                             rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
@@ -399,8 +397,7 @@
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(resourceIri = resourceIri,
                                                                            linkUpdates = linkUpdates,
-                                                                           creationDate = creationDate,
-                                                                           stringFormatter = stringFormatter)
+                                                                           creationDate = creationDate)
         }
 
         @* Attach the value to the resource. *@

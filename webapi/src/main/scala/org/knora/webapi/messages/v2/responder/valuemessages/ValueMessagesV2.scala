@@ -15,6 +15,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -184,7 +185,7 @@ case class CreateValueResponseV2(
         Map(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          ValueHasUUID        -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
+          ValueHasUUID        -> JsonLDString(UuidUtil.base64EncodeUuid(valueUUID)),
           ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueCreationDate.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
@@ -400,8 +401,6 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
     appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     if (targetSchema != ApiV2Complex) {
       throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
     }
@@ -411,7 +410,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
         Map(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          ValueHasUUID        -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
+          ValueHasUUID        -> JsonLDString(UuidUtil.base64EncodeUuid(valueUUID))
         )
       ),
       context = JsonLDUtil.makeContext(
@@ -704,9 +703,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
                 value = valueCreationDate.toString,
                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
               ),
-              ValueHasUUID -> JsonLDString(
-                stringFormatter.base64EncodeUuid(valueHasUUID)
-              ),
+              ValueHasUUID -> JsonLDString(UuidUtil.base64EncodeUuid(valueHasUUID)),
               ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri

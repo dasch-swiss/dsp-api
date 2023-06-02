@@ -5,8 +5,9 @@
 
 @import java.time.Instant
 @import java.util.UUID
+@import dsp.valueobjects.UuidUtil
 @import org.knora.webapi._
-@import org.knora.webapi.messages.{StringFormatter, SmartIri}
+@import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
 
@@ -27,7 +28,6 @@
  * @param valuePermissions the permissions that should be attached to the value.
  * @param creationDate an xsd:dateTimeStamp that will be attached to the value.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
- * @param stringFormatter a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   propertyIri: SmartIri,
@@ -38,8 +38,7 @@
   valueCreator: IRI,
   valuePermissions: String,
   creationDate: Instant,
-  maybeValueHasOrder: Option[Int],
-  stringFormatter: StringFormatter)
+  maybeValueHasOrder: Option[Int])
 
         # Value: @newValueIri
         # Property: @propertyIri
@@ -48,12 +47,11 @@
         <@newValueIri> rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.valueHasString""" ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" .
+            knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(newValueUUID)}" .
 
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
-                                                                          newValueIri = newValueIri,
-                                                                          stringFormatter = stringFormatter)
+                                                                          newValueIri = newValueIri)
         }
 
         @* Insert the value's comment, if given. *@
@@ -82,8 +80,7 @@
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(resourceIri = resourceIri,
                                                                            linkUpdates = linkUpdates,
-                                                                           creationDate = creationDate,
-                                                                           stringFormatter = stringFormatter)
+                                                                           creationDate = creationDate)
         }
 
         @* Attach the value to the resource. *@
