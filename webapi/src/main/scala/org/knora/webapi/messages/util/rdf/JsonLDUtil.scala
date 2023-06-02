@@ -10,7 +10,8 @@ import com.apicatalog.jsonld.document._
 import jakarta.json._
 import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import zio.{IO, Task, ZIO}
+import zio.IO
+import zio.ZIO
 
 import java.io.StringReader
 import java.io.StringWriter
@@ -18,8 +19,10 @@ import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
+
 import dsp.errors._
-import dsp.valueobjects.{Iri, UuidUtil}
+import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

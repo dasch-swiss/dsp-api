@@ -16,6 +16,7 @@ import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import scala.util.control.NonFatal
 import scala.xml._
+
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._

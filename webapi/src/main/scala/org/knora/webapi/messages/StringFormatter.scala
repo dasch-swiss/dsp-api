@@ -1720,8 +1720,8 @@ class StringFormatter private (
    * @return either the IRI or the error message.
    */
   def validatePermissionIri(iri: IRI): Either[String, IRI] =
-    if (Iri.isPermissionIri(iri) && isUuidSupported(iri)) Right(iri)
-    else if (Iri.isPermissionIri(iri) && !isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
+    if (Iri.isPermissionIri(iri) && UuidUtil.isUuidSupported(iri)) Right(iri)
+    else if (Iri.isPermissionIri(iri) && !UuidUtil.isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
     else Left(s"Invalid permission IRI: $iri.")
 
   /**
@@ -1888,18 +1888,6 @@ class StringFormatter private (
   }
 
   /**
-   * Checks if UUID used to create IRI has supported version (4 and 5 are allowed).
-   * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
-   *
-   * @param s the string (IRI) to be checked.
-   * @return TRUE for supported versions, FALSE for not supported.
-   */
-  def isUuidSupported(s: String): Boolean =
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
-      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
-    } else true
-
-  /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
    *
    * @param s the string to check.
@@ -1914,9 +1902,11 @@ class StringFormatter private (
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidSupported(iri.toString)) {
+    if (
+      iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) &&
+      !UuidUtil.isUuidSupported(iri.toString)
+    )
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
-    }
 
   /**
    * Creates a new resource IRI based on a UUID.

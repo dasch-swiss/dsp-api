@@ -8,9 +8,9 @@ package dsp.valueobjects
 import java.nio.ByteBuffer
 import java.util.Base64
 import java.util.UUID
-import dsp.errors.InconsistentRepositoryDataException
-
 import scala.util.Try
+
+import dsp.errors.InconsistentRepositoryDataException
 
 // TODO-mpro: don't forget to remove all occurances and additional "helper"
 // implementations in webapi project which needed to be added temporary in order
@@ -85,9 +85,8 @@ object UuidUtil {
    * @return TRUE for supported versions, FALSE for not supported.
    */
   def isUuidSupported(s: String): Boolean =
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
-      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
-    } else true
+    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+    else true
 
   /**
    * Decodes Base64 encoded UUID and gets its version.

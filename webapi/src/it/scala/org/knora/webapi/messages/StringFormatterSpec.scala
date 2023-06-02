@@ -1027,10 +1027,10 @@ class StringFormatterSpec extends CoreSpec {
       val iri5    = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
       val beolIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
-      val testIRIFromVersion3UUID = stringFormatter.isUuidSupported(iri3)
-      val testIRIFromVersion4UUID = stringFormatter.isUuidSupported(iri4)
-      val testIRIFromVersion5UUID = stringFormatter.isUuidSupported(iri5)
-      val testBeolIri             = stringFormatter.isUuidSupported(beolIri)
+      val testIRIFromVersion3UUID = UuidUtil.isUuidSupported(iri3)
+      val testIRIFromVersion4UUID = UuidUtil.isUuidSupported(iri4)
+      val testIRIFromVersion5UUID = UuidUtil.isUuidSupported(iri5)
+      val testBeolIri             = UuidUtil.isUuidSupported(beolIri)
 
       testIRIFromVersion3UUID should be(false)
       testIRIFromVersion4UUID should be(true)
