@@ -1877,22 +1877,13 @@ class StringFormatter private (
     UuidUtil.base64DecodeUuid(base64Uuid).toOption
 
   /**
-   * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
-   *
-   * @param s the string to check.
-   * @return TRUE if the string is the right length to be a canonical or Base64-encoded UUID.
-   */
-  def hasUuidLength(s: String): Boolean =
-    s.length == CanonicalUuidLength || s.length == Base64UuidLength
-
-  /**
    * Validates resource IRI
    *
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
     if (
-      iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) &&
+      iri.isKnoraResourceIri && UuidUtil.hasUuidLength(UuidUtil.getUuidFromIri(iri.toString)) &&
       !UuidUtil.isUuidSupported(iri.toString)
     )
       throw BadRequestException(IriErrorMessages.UuidVersionInvalid)

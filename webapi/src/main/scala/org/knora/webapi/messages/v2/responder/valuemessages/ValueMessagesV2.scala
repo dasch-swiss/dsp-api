@@ -477,8 +477,8 @@ object DeleteValueRequestV2 {
             _ <- ZIO
                    .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
                    .when(
-                     stringFormatter.hasUuidLength(valueIri.toString.split("/").last)
-                       && !UuidUtil.isUuidSupported(valueIri.toString)
+                     UuidUtil.hasUuidLength(UuidUtil.getUuidFromIri(valueIri.toString)) &&
+                       !UuidUtil.isUuidSupported(valueIri.toString)
                    )
             valueTypeIri <- ZIO.attempt(jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri)
             deleteComment <- ZIO.attempt {
