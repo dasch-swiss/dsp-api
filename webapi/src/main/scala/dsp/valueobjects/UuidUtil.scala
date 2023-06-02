@@ -94,7 +94,7 @@ object UuidUtil {
    * @param uuid the Base64 encoded UUID as [[String]] to be checked.
    * @return UUID version.
    */
-  def getUUIDVersion(uuid: String): Int = {
+  private def getUUIDVersion(uuid: String): Int = {
     val encodedUUID = getUuidFromIri(uuid)
     decodeUuid(encodedUUID).version()
   }

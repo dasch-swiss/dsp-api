@@ -1877,17 +1877,6 @@ class StringFormatter private (
     UuidUtil.base64DecodeUuid(base64Uuid).toOption
 
   /**
-   * Gets the last segment of IRI, decodes UUID and gets the version.
-   *
-   * @param s the string (IRI) to be checked.
-   * @return UUID version.
-   */
-  private def getUUIDVersion(s: IRI): Int = {
-    val encodedUUID = s.split("/").last
-    UuidUtil.decodeUuid(encodedUUID).version()
-  }
-
-  /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
    *
    * @param s the string to check.
