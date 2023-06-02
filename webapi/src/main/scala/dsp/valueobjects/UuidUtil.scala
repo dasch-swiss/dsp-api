@@ -14,7 +14,7 @@ import dsp.errors.BadRequestException
 // TODO-mpro: don't forget to remove all occurances and additional "helper"
 // implementations in webapi project which needed to be added temporary in order
 // to avoid circular dependencies after moving value objects to separate project.
-object Uuid {
+object UuidUtil {
 
   /**
    * The length of the canonical representation of a UUID.

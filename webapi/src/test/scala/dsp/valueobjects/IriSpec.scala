@@ -12,7 +12,7 @@ import zio.test._
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri._
-import dsp.valueobjects.Uuid._
+import dsp.valueobjects.UuidUtil._
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.

@@ -182,11 +182,11 @@ object Iri {
     def make(value: String): Validation[Throwable, GroupIri] =
       if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
       else {
-        val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
+        val isUuid: Boolean = UuidUtil.hasUuidLength(value.split("/").last)
 
         if (!isGroupIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-        else if (isUuid && !Uuid.isUuidSupported(value))
+        else if (isUuid && !UuidUtil.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         else
           validateAndEscapeIri(value)
@@ -209,11 +209,11 @@ object Iri {
     def make(value: String): Validation[Throwable, ListIri] =
       if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
       else {
-        val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
+        val isUuid: Boolean = UuidUtil.hasUuidLength(value.split("/").last)
 
         if (!isListIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
-        else if (isUuid && !Uuid.isUuidSupported(value))
+        else if (isUuid && !UuidUtil.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         else
           validateAndEscapeIri(value)
@@ -241,11 +241,11 @@ object Iri {
     def make(value: String): Validation[ValidationException, ProjectIri] =
       if (value.isEmpty) Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
       else {
-        val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
+        val isUuid: Boolean = UuidUtil.hasUuidLength(value.split("/").last)
 
         if (!isProjectIri(value))
           Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        else if (isUuid && !Uuid.isUuidSupported(value))
+        else if (isUuid && !UuidUtil.isUuidSupported(value))
           Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
         else
           Validation
@@ -272,9 +272,9 @@ object Iri {
     def make(value: String): Validation[ValidationException, Base64Uuid] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(IriErrorMessages.UuidMissing))
-      } else if (!Uuid.hasUuidLength(value)) {
+      } else if (!UuidUtil.hasUuidLength(value)) {
         Validation.fail(ValidationException(IriErrorMessages.UuidInvalid(value)))
-      } else if (!Uuid.isUuidSupported(value)) {
+      } else if (!UuidUtil.isUuidSupported(value)) {
         Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
       } else Validation.succeed(new Base64Uuid(value) {})
   }
@@ -287,11 +287,11 @@ object Iri {
     def make(value: String): Validation[Throwable, RoleIri] =
       if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
       else {
-        val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
+        val isUuid: Boolean = UuidUtil.hasUuidLength(value.split("/").last)
 
         if (!isRoleIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
-        else if (isUuid && !Uuid.isUuidSupported(value))
+        else if (isUuid && !UuidUtil.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         else
           validateAndEscapeIri(value)
@@ -312,11 +312,11 @@ object Iri {
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
       else {
-        val isUuid: Boolean = Uuid.hasUuidLength(value.split("/").last)
+        val isUuid: Boolean = UuidUtil.hasUuidLength(value.split("/").last)
 
         if (!isUserIri(value))
           Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
-        else if (isUuid && !Uuid.isUuidSupported(value))
+        else if (isUuid && !UuidUtil.isUuidSupported(value))
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         else
           Validation
