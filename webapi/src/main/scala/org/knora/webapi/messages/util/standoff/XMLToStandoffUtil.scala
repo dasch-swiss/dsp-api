@@ -306,9 +306,6 @@ class XMLToStandoffUtil(
 ) {
 
   import XMLToStandoffUtil._
-
-  private val stringFormatter = StringFormatter.getGeneralInstance
-
   // Parse XML with an XML parser configured to prevent certain security risks.
   // See <https://github.com/scala/scala-xml/issues/17>.
   private val saxParserFactory = SAXParserFactory.newInstance()
@@ -746,7 +743,7 @@ class XMLToStandoffUtil(
         case Some(existingUuid) => existingUuid
         case None               =>
           // Otherwise, try to parse the ID as a UUID.
-          if (stringFormatter.hasUuidLength(id)) {
+          if (UuidUtil.hasUuidLength(id)) {
             UuidUtil.decodeUuid(id)
           } else {
             // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.
@@ -959,7 +956,7 @@ class XMLToStandoffUtil(
 
       val id = uuidsToDocumentSpecificIds.get(tag.uuid) match {
         case Some(documentSpecificId) => documentSpecificId
-        case None                     => stringFormatter.encodeUuid(tag.uuid, writeBase64IDs)
+        case None                     => UuidUtil.encodeUuid(tag.uuid, writeBase64IDs)
       }
 
       val maybeIdAttr: Option[(String, String)] = if (writeUuidsToXml) {

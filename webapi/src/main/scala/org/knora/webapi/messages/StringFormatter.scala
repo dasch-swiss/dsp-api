@@ -1862,19 +1862,6 @@ class StringFormatter private (
     makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
   }
 
-//  /**
-//   * Decodes a Base64-encoded UUID.
-//   *
-//   * @param base64Uuid the Base64-encoded UUID to be decoded.
-//   * @return the equivalent [[UUID]].
-//   */
-//  def base64DecodeUuid(base64Uuid: String): Try[UUID] =
-//    Try {
-//      val bytes      = base64Decoder.decode(base64Uuid)
-//      val byteBuffer = ByteBuffer.wrap(bytes)
-//      new UUID(byteBuffer.getLong, byteBuffer.getLong)
-//    }
-
   /**
    * Validates and decodes a Base64-encoded UUID.
    *
@@ -1888,23 +1875,6 @@ class StringFormatter private (
 
   def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
     UuidUtil.base64DecodeUuid(base64Uuid).toOption
-
-  /**
-   * Encodes a [[UUID]] as a string in one of two formats:
-   *
-   * - The canonical 36-character format.
-   * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
-   *
-   * @param uuid      the UUID to be encoded.
-   * @param useBase64 if `true`, uses Base64 encoding.
-   * @return the encoded UUID.
-   */
-  def encodeUuid(uuid: UUID, useBase64: Boolean): String =
-    if (useBase64) {
-      UuidUtil.base64EncodeUuid(uuid)
-    } else {
-      uuid.toString
-    }
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.
