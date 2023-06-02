@@ -1863,32 +1863,6 @@ class StringFormatter private (
   }
 
   /**
-   * Validates and decodes a Base64-encoded UUID.
-   *
-   * @param base64Uuid the UUID to be validated.
-   * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return the decoded UUID.
-   */
-  @deprecated("Use validateBase64EncodedUuid(String) instead.")
-  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = // V2 / value objects
-    validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
-
-  def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
-    UuidUtil.base64DecodeUuid(base64Uuid).toOption
-
-  /**
-   * Validates resource IRI
-   *
-   * @param iri to be validated
-   */
-  def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (
-      iri.isKnoraResourceIri && UuidUtil.hasUuidLength(UuidUtil.getUuidFromIri(iri.toString)) &&
-      !UuidUtil.isUuidSupported(iri.toString)
-    )
-      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
-
-  /**
    * Creates a new resource IRI based on a UUID.
    *
    * @param projectShortcode the project's shortcode.

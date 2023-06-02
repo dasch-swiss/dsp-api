@@ -961,10 +961,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   @deprecated("use getUuid(String) instead")
   @throws[BadRequestException]
-  def maybeUUID(key: String): Option[UUID] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    maybeStringWithValidation(key, stringFormatter.validateBase64EncodedUuid)
-  }
+  def maybeUUID(key: String): Option[UUID] =
+    maybeStringWithValidation(key, UuidUtil.validateBase64EncodedUuid)
 
   def getUuid(key: String): IO[String, Option[UUID]] =
     getString(key).flatMap {

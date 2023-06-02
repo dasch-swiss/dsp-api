@@ -16,8 +16,10 @@ import dsp.errors.InconsistentRepositoryDataException
 // implementations in webapi project which needed to be added temporary in order
 // to avoid circular dependencies after moving value objects to separate project.
 object UuidUtil {
-  private val base64Encoder = Base64.getUrlEncoder.withoutPadding
-  private val base64Decoder = Base64.getUrlDecoder
+  private val base64Encoder       = Base64.getUrlEncoder.withoutPadding
+  private val base64Decoder       = Base64.getUrlDecoder
+  private val CanonicalUuidLength = 36 // The length of the canonical representation of a UUID.
+  private val Base64UuidLength    = 22 // The length of a Base64-encoded UUID.
 
   /**
    * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
@@ -59,16 +61,6 @@ object UuidUtil {
   }
 
   /**
-   * The length of the canonical representation of a UUID.
-   */
-  val CanonicalUuidLength = 36
-
-  /**
-   * The length of a Base64-encoded UUID.
-   */
-  val Base64UuidLength = 22
-
-  /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
    *
    * @param s the string to check.
@@ -85,7 +77,7 @@ object UuidUtil {
    * @return TRUE for supported versions, FALSE for not supported.
    */
   def isUuidSupported(s: String): Boolean =
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
+    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") getUuidVersion(s) == 4 || getUuidVersion(s) == 5
     else true
 
   /**
@@ -94,9 +86,9 @@ object UuidUtil {
    * @param uuid the Base64 encoded UUID as [[String]] to be checked.
    * @return UUID version.
    */
-  private def getUUIDVersion(uuid: String): Int = {
-    val encodedUUID = getUuidFromIri(uuid)
-    decodeUuid(encodedUUID).version()
+  private def getUuidVersion(uuid: String): Int = {
+    val encodedUuid = getUuidFromIri(uuid)
+    decodeUuid(encodedUuid).version()
   }
 
   /**
@@ -134,4 +126,17 @@ object UuidUtil {
     if (useBase64) base64EncodeUuid(uuid)
     else uuid.toString
 
+  /**
+   * Validates and decodes a Base64-encoded UUID.
+   *
+   * @param base64Uuid the UUID to be validated.
+   * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
+   * @return the decoded UUID.
+   */
+  @deprecated("Use validateBase64EncodedUuid(String) instead.")
+  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = // V2 / value objects
+    validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
+
+  def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
+    UuidUtil.base64DecodeUuid(base64Uuid).toOption
 }
