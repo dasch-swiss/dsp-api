@@ -9,9 +9,8 @@ import zio._
 
 import java.net.URLDecoder
 import java.util.UUID
-
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
+import dsp.valueobjects.{Iri, UuidUtil}
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
@@ -41,10 +40,8 @@ object RouteUtilZ {
         )
       )
 
-  def decodeUuid(uuidStr: String): ZIO[StringFormatter, BadRequestException, UUID] =
-    ZIO.serviceWithZIO[StringFormatter] { sf =>
-      ZIO.attempt(sf.decodeUuid(uuidStr)).orElseFail(BadRequestException(s"Invalid value UUID: $uuidStr"))
-    }
+  def decodeUuid(uuidStr: String): IO[BadRequestException, UUID] =
+    ZIO.attempt(UuidUtil.decodeUuid(uuidStr)).orElseFail(BadRequestException(s"Invalid value UUID: $uuidStr"))
 
   def ensureExternalOntologyName(iri: SmartIri): ZIO[StringFormatter, BadRequestException, SmartIri] =
     ZIO.serviceWithZIO[StringFormatter] { sf =>

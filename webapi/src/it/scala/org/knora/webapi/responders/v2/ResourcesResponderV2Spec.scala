@@ -774,7 +774,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "get the latest version of a value, given its UUID" in {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+        valueUuid = Some(UuidUtil.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         targetSchema = ApiV2Complex,
         requestingUser = anythingUserProfile
       )
@@ -790,7 +790,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "get a past version of a value, given its UUID and a timestamp" in {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+        valueUuid = Some(UuidUtil.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
         targetSchema = ApiV2Complex,
         requestingUser = anythingUserProfile

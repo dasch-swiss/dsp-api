@@ -16,8 +16,8 @@ import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import scala.util.control.NonFatal
 import scala.xml._
-
 import dsp.errors._
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ErrorHandlingMap
@@ -747,7 +747,7 @@ class XMLToStandoffUtil(
         case None               =>
           // Otherwise, try to parse the ID as a UUID.
           if (stringFormatter.hasUuidLength(id)) {
-            stringFormatter.decodeUuid(id)
+            UuidUtil.decodeUuid(id)
           } else {
             // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.
             UUID.randomUUID

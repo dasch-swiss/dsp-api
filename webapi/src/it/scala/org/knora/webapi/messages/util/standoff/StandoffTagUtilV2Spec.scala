@@ -6,10 +6,11 @@
 package org.knora.webapi.util.standoff
 
 import akka.util.Timeout
+import dsp.valueobjects.UuidUtil
 import zio.ZIO
+
 import java.util.UUID
 import scala.concurrent.duration._
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
@@ -184,7 +185,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = None,
-      uuid = stringFormatter.decodeUuid("PQ2Xgu4mTSywsqHM8um1Tg"),
+      uuid = UuidUtil.decodeUuid("PQ2Xgu4mTSywsqHM8um1Tg"),
       endPosition = 297,
       startParentIndex = None,
       attributes = Vector(
@@ -202,7 +203,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = Some("first"),
-      uuid = stringFormatter.decodeUuid("98NJtln8QtaS5u7ahxeUfg"),
+      uuid = UuidUtil.decodeUuid("98NJtln8QtaS5u7ahxeUfg"),
       endPosition = 69,
       startParentIndex = Some(0),
       attributes = Nil,
@@ -215,7 +216,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = None,
-      uuid = stringFormatter.decodeUuid("ysmmZTLdQEGP6dWtGOmZlg"),
+      uuid = UuidUtil.decodeUuid("ysmmZTLdQEGP6dWtGOmZlg"),
       endPosition = 295,
       startParentIndex = Some(0),
       attributes = Nil,
@@ -228,7 +229,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = None,
-      uuid = stringFormatter.decodeUuid("JPyErhf2RVmq0QYTIAKwYw"),
+      uuid = UuidUtil.decodeUuid("JPyErhf2RVmq0QYTIAKwYw"),
       endPosition = 247,
       startParentIndex = Some(2),
       attributes = Vector(
@@ -249,7 +250,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = None,
-      uuid = stringFormatter.decodeUuid("PQ2Xgu4mTSywsqHM8um1Tg"),
+      uuid = UuidUtil.decodeUuid("PQ2Xgu4mTSywsqHM8um1Tg"),
       endPosition = 297,
       startParentIndex = None,
       attributes = Vector(
@@ -267,7 +268,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = Some("first"),
-      uuid = stringFormatter.decodeUuid("98NJtln8QtaS5u7ahxeUfg"),
+      uuid = UuidUtil.decodeUuid("98NJtln8QtaS5u7ahxeUfg"),
       endPosition = 69,
       startParentIndex = Some(0),
       attributes = Nil,
@@ -280,7 +281,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = None,
-      uuid = stringFormatter.decodeUuid("ysmmZTLdQEGP6dWtGOmZlg"),
+      uuid = UuidUtil.decodeUuid("ysmmZTLdQEGP6dWtGOmZlg"),
       endPosition = 295,
       startParentIndex = Some(0),
       attributes = Nil,
@@ -293,7 +294,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
     StandoffTagV2(
       endParentIndex = None,
       originalXMLID = None,
-      uuid = stringFormatter.decodeUuid("JPyErhf2RVmq0QYTIAKwYw"),
+      uuid = UuidUtil.decodeUuid("JPyErhf2RVmq0QYTIAKwYw"),
       endPosition = 247,
       startParentIndex = Some(2),
       attributes = Vector(

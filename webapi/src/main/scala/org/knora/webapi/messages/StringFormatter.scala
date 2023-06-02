@@ -1907,19 +1907,6 @@ class StringFormatter private (
     }
 
   /**
-   * Calls `base64DecodeUuid`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
-   */
-  @deprecated("It is still throwing!")
-  def decodeUuid(uuidStr: String): UUID =
-    if (uuidStr.length == CanonicalUuidLength) UUID.fromString(uuidStr)
-    else if (uuidStr.length == Base64UuidLength)
-      UuidUtil.base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
-    else if (uuidStr.length < Base64UuidLength)
-      UuidUtil.base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
-        .getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
-    else throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr")
-
-  /**
    * Gets the last segment of IRI, decodes UUID and gets the version.
    *
    * @param s the string (IRI) to be checked.
@@ -1927,7 +1914,7 @@ class StringFormatter private (
    */
   private def getUUIDVersion(s: IRI): Int = {
     val encodedUUID = s.split("/").last
-    decodeUuid(encodedUUID).version()
+    UuidUtil.decodeUuid(encodedUUID).version()
   }
 
   /**

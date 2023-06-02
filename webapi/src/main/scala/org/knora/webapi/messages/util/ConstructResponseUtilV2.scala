@@ -9,12 +9,12 @@ import zio._
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import dsp.errors.NotImplementedException
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -1541,7 +1541,7 @@ final case class ConstructResponseUtilV2Live(
                                              OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri
                                            )
               valueDeletionInfo = getDeletionInfo(valObj)
-              valueHasUUID: UUID = stringFormatter.decodeUuid(
+              valueHasUUID: UUID = UuidUtil.decodeUuid(
                                      valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri)
                                    )
               previousValueIri: Option[IRI] = valObj.maybeIriObject(
