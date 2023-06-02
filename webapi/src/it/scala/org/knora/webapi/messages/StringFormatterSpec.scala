@@ -1017,7 +1017,7 @@ class StringFormatterSpec extends CoreSpec {
     "convert a UUID to Base-64 encoding and back again" in {
       val uuid              = UUID.randomUUID
       val base64EncodedUuid = UuidUtil.base64EncodeUuid(uuid)
-      val base64DecodedUuid = stringFormatter.base64DecodeUuid(base64EncodedUuid)
+      val base64DecodedUuid = UuidUtil.base64DecodeUuid(base64EncodedUuid)
       assert(base64DecodedUuid.toOption.contains(uuid))
     }
 

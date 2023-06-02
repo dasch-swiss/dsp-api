@@ -10,8 +10,7 @@ import com.apicatalog.jsonld.document._
 import jakarta.json._
 import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import zio.IO
-import zio.ZIO
+import zio.{IO, Task, ZIO}
 
 import java.io.StringReader
 import java.io.StringWriter
@@ -19,9 +18,8 @@ import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
-
 import dsp.errors._
-import dsp.valueobjects.Iri
+import dsp.valueobjects.{Iri, UuidUtil}
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -965,13 +963,10 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     maybeStringWithValidation(key, stringFormatter.validateBase64EncodedUuid)
   }
 
-  def getUuid(key: String): ZIO[StringFormatter, String, Option[UUID]] =
+  def getUuid(key: String): IO[String, Option[UUID]] =
     getString(key).flatMap {
-      case Some(str) =>
-        ZIO.serviceWithZIO[StringFormatter] { sf =>
-          ZIO.fromTry(sf.base64DecodeUuid(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
-        }
-      case None => ZIO.none
+      case Some(str) => ZIO.fromTry(UuidUtil.base64DecodeUuid(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
+      case None      => ZIO.none
     }
 
   /**

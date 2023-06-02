@@ -8,14 +8,16 @@ package dsp.valueobjects
 import java.nio.ByteBuffer
 import java.util.Base64
 import java.util.UUID
-
 import dsp.errors.BadRequestException
+
+import scala.util.Try
 
 // TODO-mpro: don't forget to remove all occurances and additional "helper"
 // implementations in webapi project which needed to be added temporary in order
 // to avoid circular dependencies after moving value objects to separate project.
 object UuidUtil {
   private val base64Encoder = Base64.getUrlEncoder.withoutPadding
+  private val base64Decoder = Base64.getUrlDecoder
 
   /**
    * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
@@ -42,6 +44,30 @@ object UuidUtil {
     byteBuffer.putLong(uuid.getMostSignificantBits)
     byteBuffer.putLong(uuid.getLeastSignificantBits)
     base64Encoder.encodeToString(bytes)
+  }
+
+  /**
+   * Decodes a Base64-encoded UUID.
+   *
+   * @param base64Uuid the Base64-encoded UUID to be decoded.
+   * @return the equivalent [[UUID]].
+   */
+  def base64DecodeUuid(base64Uuid: String): Try[UUID] = Try {
+    val bytes      = base64Decoder.decode(base64Uuid)
+    val byteBuffer = ByteBuffer.wrap(bytes)
+    new UUID(byteBuffer.getLong, byteBuffer.getLong)
+  }
+
+  /**
+   * Decodes a Base64-encoded UUID.
+   *
+   * @param base64Uuid the Base64-encoded UUID to be decoded.
+   * @return the equivalent [[UUID]].
+   */
+  def base64DecodeUuidOld(base64Uuid: String): UUID =  {
+    val bytes = base64Decoder.decode(base64Uuid)
+    val byteBuffer = ByteBuffer.wrap(bytes)
+    new UUID(byteBuffer.getLong, byteBuffer.getLong)
   }
 
   /**
@@ -117,24 +143,10 @@ object UuidUtil {
     if (uuidStr.length == CanonicalUuidLength) {
       UUID.fromString(uuidStr)
     } else if (uuidStr.length == Base64UuidLength) {
-      base64DecodeUuid(uuidStr)
+      base64DecodeUuidOld(uuidStr)
     } else if (uuidStr.length < Base64UuidLength) {
-      base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
+      base64DecodeUuidOld(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
     } else {
       errorFun
     }
-
-  private val base64Decoder = Base64.getUrlDecoder
-
-  /**
-   * Decodes a Base64-encoded UUID.
-   *
-   * @param base64Uuid the Base64-encoded UUID to be decoded.
-   * @return the equivalent [[UUID]].
-   */
-  def base64DecodeUuid(base64Uuid: String): UUID = {
-    val bytes      = base64Decoder.decode(base64Uuid)
-    val byteBuffer = ByteBuffer.wrap(bytes)
-    new UUID(byteBuffer.getLong, byteBuffer.getLong)
-  }
 }

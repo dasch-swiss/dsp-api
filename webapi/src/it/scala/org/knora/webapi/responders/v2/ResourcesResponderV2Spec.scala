@@ -14,8 +14,8 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors._
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -2399,7 +2399,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               comment = Some("this is the number five")
             ),
             permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
-            customValueUUID = Some(stringFormatter.base64DecodeUuid("IN4R19yYR0ygi3K2VEHpUQ").get)
+            customValueUUID = Some(UuidUtil.base64DecodeUuid("IN4R19yYR0ygi3K2VEHpUQ").get)
           )
         )
       )

@@ -14,7 +14,6 @@ import spray.json._
 import zio.ZLayer
 import zio.prelude.Validation
 
-import java.nio.ByteBuffer
 import java.time._
 import java.time.temporal.ChronoField
 import java.util.Base64
@@ -1863,18 +1862,18 @@ class StringFormatter private (
     makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
   }
 
-  /**
-   * Decodes a Base64-encoded UUID.
-   *
-   * @param base64Uuid the Base64-encoded UUID to be decoded.
-   * @return the equivalent [[UUID]].
-   */
-  def base64DecodeUuid(base64Uuid: String): Try[UUID] =
-    Try {
-      val bytes      = base64Decoder.decode(base64Uuid)
-      val byteBuffer = ByteBuffer.wrap(bytes)
-      new UUID(byteBuffer.getLong, byteBuffer.getLong)
-    }
+//  /**
+//   * Decodes a Base64-encoded UUID.
+//   *
+//   * @param base64Uuid the Base64-encoded UUID to be decoded.
+//   * @return the equivalent [[UUID]].
+//   */
+//  def base64DecodeUuid(base64Uuid: String): Try[UUID] =
+//    Try {
+//      val bytes      = base64Decoder.decode(base64Uuid)
+//      val byteBuffer = ByteBuffer.wrap(bytes)
+//      new UUID(byteBuffer.getLong, byteBuffer.getLong)
+//    }
 
   /**
    * Validates and decodes a Base64-encoded UUID.
@@ -1888,7 +1887,7 @@ class StringFormatter private (
     validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
 
   def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
-    base64DecodeUuid(base64Uuid).toOption
+    UuidUtil.base64DecodeUuid(base64Uuid).toOption
 
   /**
    * Encodes a [[UUID]] as a string in one of two formats:
@@ -1914,9 +1913,9 @@ class StringFormatter private (
   def decodeUuid(uuidStr: String): UUID =
     if (uuidStr.length == CanonicalUuidLength) UUID.fromString(uuidStr)
     else if (uuidStr.length == Base64UuidLength)
-      base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
+      UuidUtil.base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
     else if (uuidStr.length < Base64UuidLength)
-      base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
+      UuidUtil.base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
         .getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
     else throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr")
 
