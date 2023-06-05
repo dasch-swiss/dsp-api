@@ -12,9 +12,6 @@ import scala.util.Try
 
 import dsp.errors.InconsistentRepositoryDataException
 
-// TODO-mpro: don't forget to remove all occurances and additional "helper"
-// implementations in webapi project which needed to be added temporary in order
-// to avoid circular dependencies after moving value objects to separate project.
 object UuidUtil {
   private val base64Encoder       = Base64.getUrlEncoder.withoutPadding
   private val base64Decoder       = Base64.getUrlDecoder
@@ -76,9 +73,11 @@ object UuidUtil {
    * @param s the string (IRI) to be checked.
    * @return TRUE for supported versions, FALSE for not supported.
    */
-  def isUuidSupported(s: String): Boolean =
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") getUuidVersion(s) == 4 || getUuidVersion(s) == 5
+  def isUuidSupported(s: String): Boolean = {
+    val beolIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+    if (s != beolIri) getUuidVersion(s) == 4 || getUuidVersion(s) == 5
     else true
+  }
 
   /**
    * Decodes Base64 encoded UUID and gets its version.
