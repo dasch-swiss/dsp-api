@@ -11,22 +11,23 @@ import org.apache.jena.rdfconnection.RDFConnection
 import org.apache.jena.rdfconnection.RDFConnectionFuseki
 import zio._
 import zio.http.URL
+import zio.nio.file.Files
 import zio.nio.file.Path
-
 import java.net.Authenticator
 import java.net.PasswordAuthentication
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
+import java.net.http.HttpRequest.BodyPublisher
+import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Triplestore
 
 trait ImportService {
-  def createDataset(dbName: String): Task[Unit]
-
+  def createDataset(): Task[Unit]
+  def configureFuseki(): Task[Unit]
   def importTrigFile(file: Path): Task[Unit]
-
   def query(queryString: String)(exec: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet]
   def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
 }
@@ -45,14 +46,16 @@ final case class ImportServiceLive(config: Triplestore) extends ImportService {
     HttpClient.newBuilder().authenticator(basicAuth).build()
   }
 
-  private def makePostRequest(url: URL): HttpRequest = HttpRequest
+  private def makePostRequest(url: URL): HttpRequest = makePostRequestWithBody(url, HttpRequest.BodyPublishers.noBody())
+
+  private def makePostRequestWithBody(url: URL, body: BodyPublisher): HttpRequest = HttpRequest
     .newBuilder()
     .uri(url.toJavaURI)
-    .POST(HttpRequest.BodyPublishers.noBody())
+    .POST(body)
     .build()
 
-  override def createDataset(dbName: String): Task[Unit] = {
-    val url = fusekiBaseUrl.setPath("/$/datasets?dbType=" + config.dbtype + "&dbName=" + dbName)
+  override def createDataset(): Task[Unit] = {
+    val url = fusekiBaseUrl.setPath("/$/datasets?dbType=" + config.dbtype + "&dbName=" + config.fuseki.repositoryName)
     ZIO.attempt(httpClient.send(makePostRequest(url), HttpResponse.BodyHandlers.ofString()))
   }
 
@@ -76,6 +79,22 @@ final case class ImportServiceLive(config: Triplestore) extends ImportService {
     val acquire                            = connect().map(_.query(query))
     def release(queryExec: QueryExecution) = ZIO.attempt(queryExec.close()).unit.logError.ignore
     ZIO.acquireRelease(acquire)(release).map(executor)
+  }
+
+  override def configureFuseki(): Task[Unit] = {
+    val configFile = "/Users/christian/git/dasch/dsp-api/webapi/scripts/fuseki-repository-config.ttl.template"
+    for {
+      content <- Files
+                   .readAllLines(Path(configFile))
+                   .map(_.map(line => line.replace("@REPOSITORY@", config.fuseki.repositoryName)).mkString("\n"))
+      post = HttpRequest
+               .newBuilder()
+               .uri(fusekiBaseUrl.setPath("/$/datasets").toJavaURI)
+               .POST(BodyPublishers.ofByteArray(content.getBytes()))
+               .header("Content-Type", "text/turtle; charset=utf-8")
+               .build()
+      response <- ZIO.attempt(httpClient.send(post, HttpResponse.BodyHandlers.ofString()))
+    } yield response
   }
 }
 
