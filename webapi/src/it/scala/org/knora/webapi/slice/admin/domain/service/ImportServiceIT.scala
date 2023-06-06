@@ -57,42 +57,43 @@ object ImportServiceIT extends ZIOSpecDefault {
       |}
       |""".stripMargin
 
-  def spec: Spec[Any, Throwable] = suite("Fuseki")(test("test rdf connection") {
-    ZIO.scoped {
-      for {
-        _ <- FusekiTestContainer.initializeWithDataset(repositoryName)
+  def spec: Spec[Any, Throwable] =
+    suite("ImportService")(test("should import a trig file into a named graph and the default graph") {
+      ZIO.scoped {
+        for {
+          _ <- FusekiTestContainer.initializeWithDataset(repositoryName)
 
-        filePath <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
-        _        <- ImportService.importTrigFile(filePath)
-        nrResultsInNamedGraph <- ImportService
-                                   .querySelect(
-                                     """
-                                       |SELECT ?subject ?predicate ?object
-                                       |FROM NAMED <http://example.org/graph>
-                                       |WHERE {
-                                       |  GRAPH <http://example.org/graph> {
-                                       |    ?subject ?predicate ?object.
-                                       |  }
-                                       |}
-                                       |""".stripMargin
-                                   )
-                                   .map(_.rewindable.size())
-        nrResultsInDefaultGraph <- ImportService
+          filePath <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
+          _        <- ImportService.importTrigFile(filePath)
+          nrResultsInNamedGraph <- ImportService
                                      .querySelect(
                                        """
                                          |SELECT ?subject ?predicate ?object
+                                         |FROM NAMED <http://example.org/graph>
                                          |WHERE {
-                                         |  ?subject ?predicate ?object.
+                                         |  GRAPH <http://example.org/graph> {
+                                         |    ?subject ?predicate ?object.
+                                         |  }
                                          |}
                                          |""".stripMargin
                                      )
                                      .map(_.rewindable.size())
-        _ <- ZIO.logDebug("loaded")
-      } yield assertTrue(nrResultsInNamedGraph == 1, nrResultsInDefaultGraph == 1)
-    }
-  })
-    .provideSomeLayer[FusekiTestContainer](importServiceTestLayer)
-    .provideSomeLayerShared(FusekiTestContainer.layer)
+          nrResultsInDefaultGraph <- ImportService
+                                       .querySelect(
+                                         """
+                                           |SELECT ?subject ?predicate ?object
+                                           |WHERE {
+                                           |  ?subject ?predicate ?object.
+                                           |}
+                                           |""".stripMargin
+                                       )
+                                       .map(_.rewindable.size())
+          _ <- ZIO.logDebug("loaded")
+        } yield assertTrue(nrResultsInNamedGraph == 1, nrResultsInDefaultGraph == 1)
+      }
+    })
+      .provideSomeLayer[FusekiTestContainer](importServiceTestLayer)
+      .provideSomeLayerShared(FusekiTestContainer.layer)
 }
 
 object FileTestUtil {
