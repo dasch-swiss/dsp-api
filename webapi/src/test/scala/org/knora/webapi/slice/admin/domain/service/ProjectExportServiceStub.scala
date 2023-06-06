@@ -47,8 +47,6 @@ object ProjectExportServiceStub {
 
     override def exportProject(project: KnoraProject, user: UserADM): Task[file.Path] = ???
 
-    override def importProject(project: KnoraProject, user: UserADM): Task[Option[Path]] = ???
-
     override def listExports(): Task[Chunk[ProjectExportInfo]] = ???
   })
 }

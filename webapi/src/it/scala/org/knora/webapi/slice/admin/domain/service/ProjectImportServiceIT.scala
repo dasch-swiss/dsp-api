@@ -10,6 +10,7 @@ import zio.nio.file._
 import zio.test._
 import java.io.IOException
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Fuseki
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.testcontainers.FusekiTestContainer
@@ -18,9 +19,18 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
 
   private val repositoryName = "knora-test"
 
-  private val importServiceTestLayer: URLayer[FusekiTestContainer, ProjectImportServiceLive] = ZLayer.fromZIO {
+  private val storageServiceLayer: Layer[IOException, ProjectExportStorageServiceLive] = ZLayer.fromZIO {
     for {
-      container <- ZIO.service[FusekiTestContainer]
+      exportDirectory <- Files.createTempDirectory(Path("export"), None, List.empty)
+      _               <- Files.createDirectories(exportDirectory).orDie
+    } yield ProjectExportStorageServiceLive(exportDirectory)
+  }
+
+  private val importServiceTestLayer
+    : URLayer[FusekiTestContainer with ProjectExportStorageService, ProjectImportServiceLive] = ZLayer.fromZIO {
+    for {
+      exportStorageService <- ZIO.service[ProjectExportStorageService]
+      container            <- ZIO.service[FusekiTestContainer]
       config =
         Triplestore(
           dbtype = "tdb2",
@@ -37,7 +47,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           ),
           profileQueries = false
         )
-    } yield ProjectImportServiceLive(config)
+    } yield ProjectImportServiceLive(config, exportStorageService)
   }
 
   private val trigContent =
@@ -85,7 +95,8 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
         } yield assertTrue(nrResultsInNamedGraph == 1, nrResultsInDefaultGraph == 1)
       }
     })
-      .provideSomeLayer[FusekiTestContainer](importServiceTestLayer)
+      .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](importServiceTestLayer)
+      .provideSomeLayer[FusekiTestContainer](storageServiceLayer)
       .provideSomeLayerShared(FusekiTestContainer.layer)
 }
 

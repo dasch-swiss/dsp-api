@@ -12,6 +12,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
+import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -24,6 +25,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
+import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.common.api.RestPermissionService
 
 @accessible
@@ -69,6 +71,7 @@ final case class ProjectsADMRestServiceLive(
   responder: ProjectsResponderADM,
   projectRepo: KnoraProjectRepo,
   projectExportService: ProjectExportService,
+  projectImportService: ProjectImportService,
   permissionService: RestPermissionService
 ) extends ProjectADMRestService {
 
@@ -253,17 +256,17 @@ final case class ProjectsADMRestServiceLive(
       .flatMap(projectIri => projectRepo.findById(projectIri).someOrFail(NotFoundException(s"Project $iri not found.")))
 
   override def importProject(
-    projectIri: String,
+    projectShortcode: String,
     requestingUser: UserADM
   ): Task[ProjectImportResponse] = for {
-    _       <- permissionService.ensureSystemAdmin(requestingUser)
-    project <- findProject(projectIri)
+    _         <- permissionService.ensureSystemAdmin(requestingUser)
+    shortcode <- ShortCode.make(projectShortcode).toZIO
     path <-
-      projectExportService
-        .importProject(project, requestingUser)
+      projectImportService
+        .importProject(shortcode, requestingUser)
         .flatMap {
           case Some(export) => export.toAbsolutePath.map(_.toString)
-          case None         => ZIO.fail(NotFoundException(s"Project export for $projectIri not found."))
+          case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))
         }
   } yield ProjectImportResponse(path)
 
@@ -275,8 +278,11 @@ final case class ProjectsADMRestServiceLive(
 
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
-    ProjectsResponderADM with KnoraProjectRepo with ProjectExportService with RestPermissionService,
+    ProjectsResponderADM
+      with KnoraProjectRepo
+      with ProjectExportService
+      with ProjectImportService
+      with RestPermissionService,
     ProjectsADMRestServiceLive
-  ] =
-    ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
+  ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

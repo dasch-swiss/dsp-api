@@ -25,7 +25,7 @@ import zio.nio.file.Path
 import java.io.OutputStream
 import scala.collection.mutable
 
-import org.knora.webapi.config.AppConfig
+import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.KnoraBaseOntologyIri
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.twirl.queries.sparql.admin.txt._
@@ -39,14 +39,9 @@ import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
-case class ProjectExportInfo(projectShortname: String, path: Path)
 @accessible
 trait ProjectExportService {
   def exportProject(project: KnoraProject, user: UserADM): Task[Path]
-
-  def importProject(project: KnoraProject, user: UserADM): Task[Option[Path]]
-
-  def listExports(): Task[Chunk[ProjectExportInfo]]
 
   /**
    * Exports a project to a file.
@@ -75,6 +70,7 @@ trait ProjectExportService {
    */
   def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path]
 
+  def listExports(): Task[Chunk[ProjectExportInfo]]
 }
 
 /**
@@ -132,16 +128,11 @@ final case class ProjectExportServiceLive(
   private val projectService: ProjectADMService,
   private val triplestoreService: TriplestoreService,
   private val assetService: AssetService,
-  private val exportDirectory: Path
+  private val exportStorage: ProjectExportStorageService
 ) extends ProjectExportService {
 
-  private val assetsDirectoryInExport                       = "assets"
-  private def projectExportDirectory(project: KnoraProject) = exportDirectory / s"${project.shortname}"
-  private def projectExportFilename(project: KnoraProject)  = s"${project.shortname}-export.zip"
-  private def projectExportPath(project: KnoraProject) =
-    projectExportDirectory(project) / projectExportFilename(project)
-  private def trigExportFilePath(project: KnoraProject, tempDir: Path) = tempDir / trigFilename(project)
-  private def trigFilename(project: KnoraProject)                      = s"${project.shortname}.trig"
+  override def listExports(): Task[Chunk[ProjectExportInfo]]           = exportStorage.listExports()
+  private def trigExportFilePath(project: KnoraProject, tempDir: Path) = tempDir / exportStorage.trigFilename(project)
 
   override def exportProjectTriples(project: KnoraProject): Task[Path] =
     Files
@@ -200,13 +191,14 @@ final case class ProjectExportServiceLive(
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
 
   override def exportProject(project: KnoraProject, user: UserADM): Task[Path] = ZIO.scoped {
-    val projectExportDir = projectExportDirectory(project)
+    val projectExportDir      = exportStorage.projectExportDirectory(project)
+    val projectExportFilename = exportStorage.projectExportFilename(project)
     for {
       _            <- Files.createDirectories(projectExportDir)
       collectDir   <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
       _            <- exportProjectTriples(project, trigExportFilePath(project, collectDir))
       _            <- exportProjectAssets(project, collectDir, user)
-      zipped       <- ZipUtility.zipFolder(collectDir, projectExportDir, Some(projectExportFilename(project)))
+      zipped       <- ZipUtility.zipFolder(collectDir, projectExportDir, Some(projectExportFilename))
       fileSize     <- Files.size(zipped)
       absolutePath <- zipped.toAbsolutePath
       _            <- ZIO.logInfo(s"Exported project ${project.shortname} to $absolutePath ($fileSize bytes)")
@@ -214,83 +206,20 @@ final case class ProjectExportServiceLive(
   }
 
   private def exportProjectAssets(project: KnoraProject, tempDir: Path, user: UserADM): ZIO[Any, Throwable, Path] = {
-    val exportedAssetsDir = tempDir / assetsDirectoryInExport
+    val exportedAssetsDir = tempDir / ProjectExportStorageService.assetsDirectoryInExport
     for {
       _ <- Files.createDirectory(exportedAssetsDir)
       _ <- assetService.exportProjectAssets(project, exportedAssetsDir, user)
     } yield exportedAssetsDir
-  }
-
-  override def importProject(project: KnoraProject, user: UserADM): Task[Option[Path]] = {
-    val projectImport = projectExportPath(project)
-    ZIO.whenZIO(Files.exists(projectImport))(importProject(projectImport, project))
-  }
-
-  private def importProject(projectImport: Path, project: KnoraProject): Task[Path] = ZIO.scoped {
-    for {
-      projectImportAbsolutePath <- projectImport.toAbsolutePath
-      _                         <- ZIO.logInfo(s"Importing project $projectImportAbsolutePath")
-      tmpUnzipped               <- Files.createTempDirectoryScoped(Some("project-import"), fileAttributes = Nil)
-      unzipped                  <- ZipUtility.unzipFile(projectImport, tmpUnzipped)
-      _                         <- importTriples(unzipped, project)
-      _                         <- importAssets(unzipped, project)
-      _                         <- ZIO.logInfo(s"Imported project $projectImportAbsolutePath")
-    } yield projectImport
-  }
-  private def importTriples(path: Path, project: KnoraProject) = {
-    val trigFile = path / trigFilename(project)
-    for {
-      trigFileAbsolutePath <- trigFile.toAbsolutePath
-      _                    <- ZIO.logInfo(s"Importing triples from $trigFileAbsolutePath")
-      _ <- ZIO
-             .fail(new IllegalStateException(s"trig file does not exist in export ${path.toAbsolutePath}"))
-             .whenZIO(Files.notExists(trigFile))
-      _ <- ZIO.logInfo(s"Imported triples from $trigFileAbsolutePath")
-    } yield ()
-  }
-
-  private def importAssets(unzipped: Path, project: KnoraProject) = {
-    val assetsDir = unzipped / assetsDirectoryInExport
-    (for {
-      assetDirAbsolutePath <- assetsDir.toAbsolutePath
-      _                    <- ZIO.logInfo(s"Importing assets from $assetDirAbsolutePath")
-      assets <- Files
-                  .find(assetsDir, 1)((path, attr) => attr.isRegularFile && !path.filename.endsWith(Path(".json")))
-                  .map(filepath => Asset(project, filepath.filename.toString))
-                  .runCollect
-      _ <- ZIO.logInfo(s"Found ${assets.size} from $assetDirAbsolutePath")
-      _ <- ZIO.foreachParDiscard(assets)(asset => ZIO.logInfo(s"Importing asset ${Asset.logString(asset)}"))
-      _ <- ZIO.logInfo(s"Imported assets from $assetDirAbsolutePath")
-    } yield ()).whenZIO(
-      Files
-        .isDirectory(assetsDir)
-        .tap(isDirectory => ZIO.logInfo(s"No assets found in $assetsDir").when(!isDirectory))
-    )
-  }
-
-  override def listExports(): Task[Chunk[ProjectExportInfo]] =
-    Files
-      .list(exportDirectory)
-      .filterZIO(Files.isDirectory(_))
-      .flatMap(projectDirectory =>
-        Files.list(projectDirectory).filterZIO(Files.isRegularFile(_)).map(file => (projectDirectory, file))
-      )
-      .map(toProjectExportInfo)
-      .runCollect
-
-  private def toProjectExportInfo(projectDirAndFile: (Path, Path)) = {
-    val (projectDirectory, exportFile) = projectDirAndFile
-    val projectShortName               = projectDirectory.filename.toString()
-    ProjectExportInfo(projectShortName, exportFile)
   }
 }
 
 trait AssetService {
   def exportProjectAssets(project: KnoraProject, tempDir: Path, user: UserADM): Task[Path]
 }
-case class Asset(belongsToProject: KnoraProject, internalFilename: String)
+case class Asset(belongsToProject: ShortCode, internalFilename: String)
 object Asset {
-  def logString(asset: Asset) = s"asset:${asset.belongsToProject.shortcode}/${asset.internalFilename}"
+  def logString(asset: Asset) = s"asset:${asset.belongsToProject.value}/${asset.internalFilename}"
 }
 
 final case class AssetServiceLive(
@@ -321,8 +250,9 @@ final case class AssetServiceLive(
       query           = findAllAssets(ontologyGraphs :+ InternalIri(KnoraBaseOntologyIri), projectGraph)
       _              <- ZIO.logDebug(s"Querying assets for project ${project.id} = $query")
       result         <- triplestoreService.sparqlHttpSelect(query)
+      shortcode      <- ShortCode.make(project.shortcode).toZIO
       bindings        = result.results.bindings
-      assets          = bindings.flatMap(row => row.rowMap.get("internalFilename")).map(Asset(project, _)).toList
+      assets          = bindings.flatMap(row => row.rowMap.get("internalFilename")).map(Asset(shortcode, _)).toList
     } yield assets
   }
 }
@@ -333,16 +263,9 @@ object AssetServiceLive {
 }
 
 object ProjectExportServiceLive {
-  val layer: URLayer[AppConfig with AssetService with ProjectADMService with TriplestoreService, ProjectExportService] =
-    ZLayer.fromZIO(
-      for {
-        exportDirectory    <- ZIO.serviceWith[AppConfig](_.tmpDataDirPath / "project-export")
-        _                  <- Files.createDirectories(exportDirectory).orDie
-        assetService       <- ZIO.service[AssetService]
-        projectService     <- ZIO.service[ProjectADMService]
-        triplestoreService <- ZIO.service[TriplestoreService]
-      } yield {
-        ProjectExportServiceLive(projectService, triplestoreService, assetService, exportDirectory)
-      }
-    )
+  val layer: URLayer[
+    ProjectADMService with TriplestoreService with AssetService with ProjectExportStorageService,
+    ProjectExportServiceLive
+  ] =
+    ZLayer.fromFunction(ProjectExportServiceLive.apply _)
 }
