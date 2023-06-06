@@ -7,6 +7,7 @@ package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
+import zio.ZIO
 import zio._
 import zio.http.QueryParams
 import zio.http.URL
@@ -59,22 +60,21 @@ trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {
 }
 
 object FusekiTestContainer {
-  def apply(dockerImageName: DockerImageName) =
+  def apply(dockerImageName: DockerImageName): FusekiTestContainer =
     new GenericContainer[FusekiTestContainer](dockerImageName) with FusekiTestContainer
+
+  def apply(): FusekiTestContainer =
+    new GenericContainer[FusekiTestContainer](DockerImageName.parse(BuildInfo.fuseki)) with FusekiTestContainer
 
   val adminPassword = "test"
 
   private val acquire: Task[FusekiTestContainer] = {
-    ZIO.attemptBlocking {
-      val fusekiImageName: DockerImageName = DockerImageName.parse(BuildInfo.fuseki)
-      val container: FusekiTestContainer = FusekiTestContainer(fusekiImageName)
-        .withExposedPorts(3030)
-        .withEnv("ADMIN_PASSWORD", adminPassword)
-        .withEnv("JVM_ARGS", "-Xmx3G")
-      container.start()
-      container
-    }.orDie
-  } <* ZIO.logInfo(">>> Acquire Fuseki TestContainer <<<")
+    val container = FusekiTestContainer()
+      .withExposedPorts(3030)
+      .withEnv("ADMIN_PASSWORD", adminPassword)
+      .withEnv("JVM_ARGS", "-Xmx3G")
+    ZIO.attemptBlocking(container.start()).as(container).orDie <* ZIO.logInfo(">>> Acquire Fuseki TestContainer <<<")
+  }
 
   private def release(container: FusekiTestContainer): UIO[Unit] =
     ZIO.attemptBlocking(container.stop()).logError.ignore <* ZIO.logInfo(">>> Release Fuseki TestContainer <<<")
