@@ -21,8 +21,7 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
 
   private val storageServiceLayer: Layer[IOException, ProjectExportStorageServiceLive] = ZLayer.fromZIO {
     for {
-      exportDirectory <- Files.createTempDirectory(Path("export"), None, List.empty)
-      _               <- Files.createDirectories(exportDirectory).orDie
+      exportDirectory <- Files.createTempDirectory(Path(""), None, List.empty)
     } yield ProjectExportStorageServiceLive(exportDirectory)
   }
 
