@@ -15,6 +15,7 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 
@@ -27,7 +28,7 @@ import org.knora.webapi.core.domain.AppState
  *
  * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-final case class RejectingRoute(private val routeData: KnoraRouteData, private val runtime: Runtime[State]) { self =>
+final case class RejectingRoute(private val appConfig: AppConfig, private val runtime: Runtime[State]) { self =>
 
   val log: Logger = Logger(this.getClass)
 
@@ -51,26 +52,18 @@ final case class RejectingRoute(private val routeData: KnoraRouteData, private v
   def makeRoute: Route =
     path(Remaining) { wholePath =>
       // check to see if route is on the rejection list
-      val rejectSeq: Seq[Option[Boolean]] = routeData.appConfig.routesToReject.map { pathToReject: String =>
-        if (wholePath.contains(pathToReject.toCharArray)) {
-          Some(true)
-        } else {
-          None
-        }
-      }
+      val rejectRequest = appConfig.routesToReject.exists(wholePath.startsWith)
 
       onComplete(getAppState) {
 
         case Success(appState) =>
           appState match {
-            case AppState.Running if rejectSeq.flatten.isEmpty =>
-              // route is allowed. by rejecting, I'm letting it through so that some other route can match
-              reject()
-            case AppState.Running if rejectSeq.flatten.nonEmpty =>
-              // route not allowed. will complete request.
-              val msg = s"Request to $wholePath not allowed as per configuration for routes to reject."
-              log.info(msg)
+            case AppState.Running if rejectRequest =>
+              log.info(s"Request to $wholePath not allowed as per configuration for routes to reject.")
               complete(StatusCodes.NotFound, "The requested path is deactivated.")
+            case AppState.Running =>
+              // route is allowed. by rejecting, the request is passed through so that some other route can match
+              reject()
             case other =>
               // if any state other then 'Running', then return ServiceUnavailable
               val msg =

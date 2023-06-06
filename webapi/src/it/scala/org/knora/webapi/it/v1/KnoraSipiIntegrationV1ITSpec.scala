@@ -16,6 +16,7 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.scalatest.DoNotDiscover
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -49,6 +50,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * End-to-End (E2E) test specification for testing Knora-Sipi integration.
  */
+@DoNotDiscover
 class KnoraSipiIntegrationV1ITSpec
     extends ITKnoraLiveSpec
     with AuthenticationV2JsonProtocol

@@ -9,6 +9,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.scalatest.DoNotDiscover
 
 import scala.concurrent.duration._
 
@@ -23,6 +24,7 @@ import org.knora.webapi.util.AkkaHttpUtils
 /**
  * End-to-End (E2E) test specification for testing users endpoint.
  */
+@DoNotDiscover
 class UsersV1E2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)

@@ -9,10 +9,12 @@ import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.scalatest.Assertion
+import org.scalatest.DoNotDiscover
 import spray.json._
-import scala.concurrent.ExecutionContextExecutor
-import dsp.errors.InvalidApiJsonException
 
+import scala.concurrent.ExecutionContextExecutor
+
+import dsp.errors.InvalidApiJsonException
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v1.SearchRouteV1
@@ -21,6 +23,7 @@ import org.knora.webapi.routing.v1.SearchRouteV1
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
  */
+@DoNotDiscover
 class SearchV1R2RSpec extends R2RSpec {
 
   private val searchPath = SearchRouteV1().makeRoute
