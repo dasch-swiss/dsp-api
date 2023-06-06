@@ -71,7 +71,7 @@ final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends 
 
 object ProjectExportStorageServiceLive {
 
-  val layer = ZLayer.fromZIO(
+  val layer: URLayer[AppConfig, ProjectExportStorageServiceLive] = ZLayer.fromZIO(
     for {
       exportDirectory <- ZIO.serviceWith[AppConfig](_.tmpDataDirPath / "project-export")
       _               <- Files.createDirectories(exportDirectory).orDie
