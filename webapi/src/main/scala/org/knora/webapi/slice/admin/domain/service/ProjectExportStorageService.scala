@@ -18,7 +18,7 @@ case class ProjectExportInfo(projectShortname: String, path: Path)
 trait ProjectExportStorageService {
 
   def projectExportDirectory(project: KnoraProject): Path
-  def projectExportDirectory(projectShortcode: ShortCode): Path
+  def projectExportDirectory(shortCode: ShortCode): Path
 
   def projectExportFilename(project: KnoraProject): String =
     s"${project.shortcode}-export${ProjectExportStorageService.exportFileEnding}"
@@ -29,13 +29,14 @@ trait ProjectExportStorageService {
   def projectExportFullPath(project: KnoraProject): Path =
     projectExportDirectory(project) / projectExportFilename(project)
 
-  def projectExportFullPath(project: ShortCode): Path =
-    projectExportDirectory(project) / projectExportFilename(project)
+  def projectExportFullPath(shortCode: ShortCode): Path =
+    projectExportDirectory(shortCode) / projectExportFilename(shortCode)
 
   def listExports(): Task[Chunk[ProjectExportInfo]]
 
-  def trigFilename(project: KnoraProject)       = s"${project.shortcode}.trig"
-  def trigFilename(projectShortCode: ShortCode) = s"${projectShortCode.value}.trig"
+  def trigFilename(project: KnoraProject): String    = trigFilename(project.shortcode)
+  def trigFilename(shortCode: ShortCode): String     = trigFilename(shortCode.value)
+  def trigFilename(projectShortcode: String): String = s"$projectShortcode.trig"
 
 }
 
@@ -46,7 +47,7 @@ object ProjectExportStorageService {
 
 final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends ProjectExportStorageService {
   override def projectExportDirectory(project: KnoraProject): Path       = exportDirectory / s"${project.shortcode}"
-  override def projectExportDirectory(projectShortcode: ShortCode): Path = exportDirectory / projectShortcode.value
+  override def projectExportDirectory(shortCode: ShortCode): Path = exportDirectory / shortCode.value
   override def listExports(): Task[Chunk[ProjectExportInfo]] =
     Files
       .list(exportDirectory)
