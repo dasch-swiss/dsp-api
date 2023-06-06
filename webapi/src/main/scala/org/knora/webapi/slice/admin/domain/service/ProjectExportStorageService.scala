@@ -46,8 +46,8 @@ object ProjectExportStorageService {
 }
 
 final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends ProjectExportStorageService {
-  override def projectExportDirectory(project: KnoraProject): Path       = exportDirectory / s"${project.shortcode}"
-  override def projectExportDirectory(shortCode: ShortCode): Path = exportDirectory / shortCode.value
+  override def projectExportDirectory(project: KnoraProject): Path = exportDirectory / s"${project.shortcode}"
+  override def projectExportDirectory(shortCode: ShortCode): Path  = exportDirectory / shortCode.value
   override def listExports(): Task[Chunk[ProjectExportInfo]] =
     Files
       .list(exportDirectory)
