@@ -62,7 +62,7 @@ object ImportServiceIT extends ZIOSpecDefault {
       for {
         _ <- FusekiTestContainer.initializeWithDataset(repositoryName)
 
-        filePath <- FileTestUtil.createTextFile(trigContent, ".trig")
+        filePath <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
         _        <- ImportService.importTrigFile(filePath)
         nrResultsInNamedGraph <- ImportService
                                    .querySelect(
@@ -74,7 +74,6 @@ object ImportServiceIT extends ZIOSpecDefault {
                                        |    ?subject ?predicate ?object.
                                        |  }
                                        |}
-                                       |LIMIT 1
                                        |""".stripMargin
                                    )
                                    .map(_.rewindable.size())
@@ -85,7 +84,6 @@ object ImportServiceIT extends ZIOSpecDefault {
                                          |WHERE {
                                          |  ?subject ?predicate ?object.
                                          |}
-                                         |LIMIT 1
                                          |""".stripMargin
                                      )
                                      .map(_.rewindable.size())
@@ -98,7 +96,7 @@ object ImportServiceIT extends ZIOSpecDefault {
 }
 
 object FileTestUtil {
-  def createTextFile(content: String, suffix: String): ZIO[Scope, IOException, Path] = for {
+  def createTempTextFileScoped(content: String, suffix: String): ZIO[Scope, IOException, Path] = for {
     filePath <- Files.createTempFileScoped(suffix)
     _        <- Files.writeBytes(filePath, Chunk.fromIterable(content.getBytes))
   } yield filePath

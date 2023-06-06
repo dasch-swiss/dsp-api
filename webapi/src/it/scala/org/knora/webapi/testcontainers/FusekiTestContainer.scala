@@ -41,24 +41,21 @@ trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {
     HttpClient.newBuilder().authenticator(basicAuth).build()
   }
 
-  def initializeWithDataset(repositoryName: String): Task[Unit] =
-    ZIO.logInfo(s"Initializing and creating dataset $repositoryName") *> initialize(repositoryName)
-
-  private def initialize(repositoryName: String) =
-    for {
-      fusekiConfig <- Files
-                        .readAllLines(Path(getClass.getResource("/fuseki-repository-config.ttl.template").getPath))
-                        .map(_.map(line => line.replace("@REPOSITORY@", repositoryName)).mkString("\n"))
-      request = HttpRequest
-                  .newBuilder()
-                  .uri(baseUrl.setPath("/$/datasets").toJavaURI)
-                  .POST(BodyPublishers.ofString(fusekiConfig))
-                  .header("Content-Type", "text/turtle; charset=utf-8")
-                  .build()
-      _ <- ZIO
-             .attempt(httpClient.send(request, BodyHandlers.ofString()))
-             .filterOrFail(_.statusCode() == 200)(new IllegalStateException("Could not configure Fuseki"))
-    } yield ()
+  def initializeWithDataset(repositoryName: String): Task[Unit] = for {
+    _ <- ZIO.logInfo(s"Initializing and creating dataset $repositoryName")
+    fusekiConfig <- Files
+                      .readAllLines(Path(getClass.getResource("/fuseki-repository-config.ttl.template").getPath))
+                      .map(_.map(line => line.replace("@REPOSITORY@", repositoryName)).mkString("\n"))
+    request = HttpRequest
+                .newBuilder()
+                .uri(baseUrl.setPath("/$/datasets").toJavaURI)
+                .POST(BodyPublishers.ofString(fusekiConfig))
+                .header("Content-Type", "text/turtle; charset=utf-8")
+                .build()
+    _ <- ZIO
+           .attempt(httpClient.send(request, BodyHandlers.ofString()))
+           .filterOrFail(_.statusCode() == 200)(new IllegalStateException("Could not configure Fuseki"))
+  } yield ()
 }
 
 object FusekiTestContainer {

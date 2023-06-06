@@ -13,6 +13,7 @@ import zio._
 import zio.http.URL
 import zio.macros.accessible
 import zio.nio.file.Path
+
 import java.net.Authenticator
 import java.net.PasswordAuthentication
 import java.net.http.HttpClient
