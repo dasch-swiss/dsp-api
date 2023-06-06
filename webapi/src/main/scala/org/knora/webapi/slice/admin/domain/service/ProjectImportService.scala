@@ -22,12 +22,12 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Triplestore
 
 @accessible
-trait ImportService {
+trait ProjectImportService {
   def importTrigFile(file: Path): Task[Unit]
   def query(queryString: String)(exec: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet]
   def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
 }
-final case class ImportServiceLive(config: Triplestore) extends ImportService {
+final case class ProjectImportServiceLive(config: Triplestore) extends ProjectImportService {
 
   private val fusekiBaseUrl: URL = {
     val str      = config.host + ":" + config.fuseki.port
@@ -70,7 +70,7 @@ final case class ImportServiceLive(config: Triplestore) extends ImportService {
   }
 }
 
-object ImportServiceLive {
-  val layer: URLayer[AppConfig, ImportService] =
-    ZLayer.fromZIO(ZIO.serviceWith[AppConfig](config => ImportServiceLive(config.triplestore)))
+object ProjectImportServiceLive {
+  val layer: URLayer[AppConfig, ProjectImportService] =
+    ZLayer.fromZIO(ZIO.serviceWith[AppConfig](config => ProjectImportServiceLive(config.triplestore)))
 }

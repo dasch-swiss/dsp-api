@@ -5,27 +5,20 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio.Chunk
-import zio.Scope
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-import zio.nio.file.Files
-import zio.nio.file.Path
-import zio.test.Spec
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
+import zio._
+import zio.nio.file._
+import zio.test._
 import java.io.IOException
 
 import org.knora.webapi.config.Fuseki
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
-object ImportServiceIT extends ZIOSpecDefault {
+object ProjectImportServiceIT extends ZIOSpecDefault {
 
   private val repositoryName = "knora-test"
 
-  private val importServiceTestLayer: URLayer[FusekiTestContainer, ImportServiceLive] = ZLayer.fromZIO {
+  private val importServiceTestLayer: URLayer[FusekiTestContainer, ProjectImportServiceLive] = ZLayer.fromZIO {
     for {
       container <- ZIO.service[FusekiTestContainer]
       config =
@@ -44,7 +37,7 @@ object ImportServiceIT extends ZIOSpecDefault {
           ),
           profileQueries = false
         )
-    } yield ImportServiceLive(config)
+    } yield ProjectImportServiceLive(config)
   }
 
   private val trigContent =
@@ -64,8 +57,8 @@ object ImportServiceIT extends ZIOSpecDefault {
           _ <- FusekiTestContainer.initializeWithDataset(repositoryName)
 
           filePath <- FileTestUtil.createTempTextFileScoped(trigContent, ".trig")
-          _        <- ImportService.importTrigFile(filePath)
-          nrResultsInNamedGraph <- ImportService
+          _        <- ProjectImportService.importTrigFile(filePath)
+          nrResultsInNamedGraph <- ProjectImportService
                                      .querySelect(
                                        """
                                          |SELECT ?subject ?predicate ?object
@@ -78,7 +71,7 @@ object ImportServiceIT extends ZIOSpecDefault {
                                          |""".stripMargin
                                      )
                                      .map(_.rewindable.size())
-          nrResultsInDefaultGraph <- ImportService
+          nrResultsInDefaultGraph <- ProjectImportService
                                        .querySelect(
                                          """
                                            |SELECT ?subject ?predicate ?object
