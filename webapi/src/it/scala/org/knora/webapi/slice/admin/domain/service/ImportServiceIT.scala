@@ -32,12 +32,16 @@ object ImportServiceIT extends ZIOSpecDefault {
         Triplestore(
           dbtype = "tdb2",
           useHttps = false,
-          host = container.host,
+          host = container.getHost,
           queryTimeout = "Duration.Undefined",
           gravsearchTimeout = "Duration.Undefined",
           autoInit = false,
-          fuseki =
-            Fuseki(port = container.port, repositoryName = repositoryName, username = "admin", password = "test"),
+          fuseki = Fuseki(
+            port = container.getFirstMappedPort,
+            repositoryName = repositoryName,
+            username = "admin",
+            password = "test"
+          ),
           profileQueries = false
         )
     } yield ImportServiceLive(config)
@@ -56,39 +60,37 @@ object ImportServiceIT extends ZIOSpecDefault {
   def spec: Spec[Any, Throwable] = suite("Fuseki")(test("test rdf connection") {
     ZIO.scoped {
       for {
-        service  <- ZIO.service[ImportService]
-        _        <- service.configureFuseki()
-        _        <- service.createDataset()
+        _ <- FusekiTestContainer.initializeWithDataset(repositoryName)
 
         filePath <- FileTestUtil.createTextFile(trigContent, ".trig")
-        _        <- service.importTrigFile(filePath)
-        hasAtLeastOneResultInNamedGraph <- service
-                                             .querySelect(
-                                               """
-                                                 |SELECT ?subject ?predicate ?object
-                                                 |FROM NAMED <http://example.org/graph>
-                                                 |WHERE {
-                                                 |  GRAPH <http://example.org/graph> {
-                                                 |    ?subject ?predicate ?object.
-                                                 |  }
-                                                 |}
-                                                 |LIMIT 1
-                                                 |""".stripMargin
-                                             )
-                                             .map(_.hasNext)
-        hasAtLeastOneResultInDefaultGraph <- service
-                                               .querySelect(
-                                                 """
-                                                   |SELECT ?subject ?predicate ?object
-                                                   |WHERE {
-                                                   |  ?subject ?predicate ?object.
-                                                   |}
-                                                   |LIMIT 1
-                                                   |""".stripMargin
-                                               )
-                                               .map(_.hasNext)
+        _        <- ImportService.importTrigFile(filePath)
+        nrResultsInNamedGraph <- ImportService
+                                   .querySelect(
+                                     """
+                                       |SELECT ?subject ?predicate ?object
+                                       |FROM NAMED <http://example.org/graph>
+                                       |WHERE {
+                                       |  GRAPH <http://example.org/graph> {
+                                       |    ?subject ?predicate ?object.
+                                       |  }
+                                       |}
+                                       |LIMIT 1
+                                       |""".stripMargin
+                                   )
+                                   .map(_.rewindable.size())
+        nrResultsInDefaultGraph <- ImportService
+                                     .querySelect(
+                                       """
+                                         |SELECT ?subject ?predicate ?object
+                                         |WHERE {
+                                         |  ?subject ?predicate ?object.
+                                         |}
+                                         |LIMIT 1
+                                         |""".stripMargin
+                                     )
+                                     .map(_.rewindable.size())
         _ <- ZIO.logDebug("loaded")
-      } yield assertTrue(hasAtLeastOneResultInNamedGraph, hasAtLeastOneResultInDefaultGraph)
+      } yield assertTrue(nrResultsInNamedGraph == 1, nrResultsInDefaultGraph == 1)
     }
   })
     .provideSomeLayer[FusekiTestContainer](importServiceTestLayer)

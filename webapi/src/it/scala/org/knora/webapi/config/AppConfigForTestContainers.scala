@@ -25,7 +25,7 @@ object AppConfigForTestContainers {
     sipiContainer: SipiTestContainer
   ): UIO[AppConfig] = {
 
-    val newFusekiPort = fusekiContainer.container.getFirstMappedPort()
+    val newFusekiPort = fusekiContainer.getFirstMappedPort
     val newSipiPort   = sipiContainer.container.getFirstMappedPort()
 
     val alteredFuseki = oldConfig.triplestore.fuseki.copy(port = newFusekiPort)
@@ -44,7 +44,7 @@ object AppConfigForTestContainers {
     fusekiContainer: FusekiTestContainer
   ): UIO[AppConfig] = {
 
-    val newFusekiPort = fusekiContainer.container.getFirstMappedPort()
+    val newFusekiPort = fusekiContainer.getFirstMappedPort
 
     val alteredFuseki = oldConfig.triplestore.fuseki.copy(port = newFusekiPort)
 
