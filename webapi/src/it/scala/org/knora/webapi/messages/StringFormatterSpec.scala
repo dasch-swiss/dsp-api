@@ -6,9 +6,8 @@
 package org.knora.webapi.messages
 
 import java.time.Instant
-import java.util.UUID
 import dsp.errors.AssertionException
-import dsp.valueobjects.{Iri, UuidUtil}
+import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
@@ -1012,30 +1011,6 @@ class StringFormatterSpec extends CoreSpec {
     "validate email" in {
       stringFormatter.validateEmail("donald.duck@example.com") should be(Some("donald.duck@example.com"))
       assert(stringFormatter.validateEmail("donald.duck").isEmpty)
-    }
-
-    "convert a UUID to Base-64 encoding and back again" in {
-      val uuid              = UUID.randomUUID
-      val base64EncodedUuid = UuidUtil.base64Encode(uuid)
-      val base64DecodedUuid = UuidUtil.base64Decode(base64EncodedUuid)
-      assert(base64DecodedUuid.toOption.contains(uuid))
-    }
-
-    "return TRUE for IRIs BEOL project IRI and other which contain UUID version 4 or 5, otherwise return FALSE" in {
-      val iri3    = "http://rdfh.ch/0000/rKAU0FNjPUKWqOT8MEW_UQ"
-      val iri4    = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-      val iri5    = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
-      val beolIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
-
-      val testIRIFromVersion3UUID = UuidUtil.hasSupportedVersion(iri3)
-      val testIRIFromVersion4UUID = UuidUtil.hasSupportedVersion(iri4)
-      val testIRIFromVersion5UUID = UuidUtil.hasSupportedVersion(iri5)
-      val testBeolIri             = UuidUtil.hasSupportedVersion(beolIri)
-
-      testIRIFromVersion3UUID should be(false)
-      testIRIFromVersion4UUID should be(true)
-      testIRIFromVersion5UUID should be(true)
-      testBeolIri should be(true)
     }
   }
 }
