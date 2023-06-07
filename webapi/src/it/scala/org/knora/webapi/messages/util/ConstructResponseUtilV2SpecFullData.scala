@@ -47,7 +47,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("F2xCr0S2QfWRQxJDWY9L0g"),
+              valueHasUUID = UuidUtil.decode("F2xCr0S2QfWRQxJDWY9L0g"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             ),
@@ -62,7 +62,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("yVTqO37cRkCSvXbFc3vTyw"),
+              valueHasUUID = UuidUtil.decode("yVTqO37cRkCSvXbFc3vTyw"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -141,7 +141,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("UgSp5mXTTSKdI02ZU1KIAA"),
+              valueHasUUID = UuidUtil.decode("UgSp5mXTTSKdI02ZU1KIAA"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -158,7 +158,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("U1PwfNaVRQebbOSFWNdMqQ"),
+              valueHasUUID = UuidUtil.decode("U1PwfNaVRQebbOSFWNdMqQ"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -197,7 +197,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("U1PwfNaVRQebbOSFWNdMqQ"),
+              valueHasUUID = UuidUtil.decode("U1PwfNaVRQebbOSFWNdMqQ"),
               userPermission = ViewPermission,
               deletionInfo = None
             )
@@ -231,7 +231,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                   StandoffTagV2(
                     endParentIndex = None,
                     originalXMLID = None,
-                    uuid = UuidUtil.decodeUuid("2e136103-2a4b-4e59-ac8f-79a53f54b496"),
+                    uuid = UuidUtil.decode("2e136103-2a4b-4e59-ac8f-79a53f54b496"),
                     endPosition = 45,
                     startParentIndex = None,
                     attributes = Nil,
@@ -244,7 +244,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                   StandoffTagV2(
                     endParentIndex = None,
                     originalXMLID = None,
-                    uuid = UuidUtil.decodeUuid("80133696-26a1-4941-967b-6bf210d7d5e1"),
+                    uuid = UuidUtil.decode("80133696-26a1-4941-967b-6bf210d7d5e1"),
                     endPosition = 19,
                     startParentIndex = Some(0),
                     attributes = Vector(
@@ -275,7 +275,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasMaxStandoffStartIndex = Some(1),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("1"),
+              valueHasUUID = UuidUtil.decode("1"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             ),
@@ -285,7 +285,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                   StandoffTagV2(
                     endParentIndex = None,
                     originalXMLID = None,
-                    uuid = UuidUtil.decodeUuid("fd583868-2a3c-4941-a330-990f5a972f71"),
+                    uuid = UuidUtil.decode("fd583868-2a3c-4941-a330-990f5a972f71"),
                     endPosition = 25,
                     startParentIndex = None,
                     attributes = Nil,
@@ -298,7 +298,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                   StandoffTagV2(
                     endParentIndex = None,
                     originalXMLID = None,
-                    uuid = UuidUtil.decodeUuid("59a36237-95a9-4acc-8361-7c8fac311063"),
+                    uuid = UuidUtil.decode("59a36237-95a9-4acc-8361-7c8fac311063"),
                     endPosition = 16,
                     startParentIndex = Some(0),
                     attributes = Vector(
@@ -329,7 +329,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasMaxStandoffStartIndex = Some(1),
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("2"),
+              valueHasUUID = UuidUtil.decode("2"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -365,7 +365,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
               attachedToUser = "http://www.knora.org/ontology/knora-admin#SystemUser",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("0"),
+              valueHasUUID = UuidUtil.decode("0"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -428,7 +428,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           valueHasMaxStandoffStartIndex = None,
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
-                          valueHasUUID = UuidUtil.decodeUuid("d9a522845006"),
+                          valueHasUUID = UuidUtil.decode("d9a522845006"),
                           userPermission = ChangeRightsPermission,
                           deletionInfo = None
                         )
@@ -447,7 +447,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
+              valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -465,7 +465,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("fae17f4f6106"),
+              valueHasUUID = UuidUtil.decode("fae17f4f6106"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -521,7 +521,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           valueHasMaxStandoffStartIndex = None,
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
-                          valueHasUUID = UuidUtil.decodeUuid("c3295339"),
+                          valueHasUUID = UuidUtil.decode("c3295339"),
                           userPermission = ChangeRightsPermission,
                           deletionInfo = None
                         )
@@ -540,7 +540,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
+              valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -558,7 +558,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("53feeaf80a"),
+              valueHasUUID = UuidUtil.decode("53feeaf80a"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -601,7 +601,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasMaxStandoffStartIndex = None,
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("c3295339"),
+              valueHasUUID = UuidUtil.decode("c3295339"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -643,7 +643,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
-                          valueHasUUID = UuidUtil.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
+                          valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
                           userPermission = ChangeRightsPermission,
                           deletionInfo = None
                         )
@@ -661,7 +661,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
-                          valueHasUUID = UuidUtil.decodeUuid("53feeaf80a"),
+                          valueHasUUID = UuidUtil.decode("53feeaf80a"),
                           userPermission = ChangeRightsPermission,
                           deletionInfo = None
                         )
@@ -680,7 +680,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
+              valueHasUUID = UuidUtil.decode("25c5e9fd-2cb2-4350-88bb-882be3373745"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -716,7 +716,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasMaxStandoffStartIndex = None,
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("d9a522845006"),
+              valueHasUUID = UuidUtil.decode("d9a522845006"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )
@@ -758,7 +758,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
-                          valueHasUUID = UuidUtil.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
+                          valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
                           userPermission = ChangeRightsPermission,
                           deletionInfo = None
                         )
@@ -776,7 +776,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                           valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
-                          valueHasUUID = UuidUtil.decodeUuid("fae17f4f6106"),
+                          valueHasUUID = UuidUtil.decode("fae17f4f6106"),
                           userPermission = ChangeRightsPermission,
                           deletionInfo = None
                         )
@@ -795,7 +795,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
-              valueHasUUID = UuidUtil.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
+              valueHasUUID = UuidUtil.decode("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             )

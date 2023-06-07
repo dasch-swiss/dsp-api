@@ -250,7 +250,7 @@ final case class StandoffTagUtilV2Live(
                          startIndex = startIndexFromAssertions,
                          endIndex =
                            standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex).map(_.toInt),
-                         uuid = UuidUtil.decodeUuid(
+                         uuid = UuidUtil.decode(
                            standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)
                          ),
                          originalXMLID =

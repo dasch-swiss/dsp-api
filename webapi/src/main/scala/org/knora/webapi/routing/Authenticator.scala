@@ -804,7 +804,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
       now  <- Clock.instant
       uuid <- ZIO.random.flatMap(_.nextUUID)
       exp   = now.plusSeconds(longevity.toSeconds).getEpochSecond
-      jwtId = Some(UuidUtil.base64EncodeUuid(uuid))
+      jwtId = Some(UuidUtil.base64Encode(uuid))
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
                 issuer = Some(issuer),

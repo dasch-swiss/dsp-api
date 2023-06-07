@@ -966,7 +966,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
   def getUuid(key: String): IO[String, Option[UUID]] =
     getString(key).flatMap {
-      case Some(str) => ZIO.fromTry(UuidUtil.base64DecodeUuid(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
+      case Some(str) => ZIO.fromTry(UuidUtil.base64Decode(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
       case None      => ZIO.none
     }
 

@@ -1016,8 +1016,8 @@ class StringFormatterSpec extends CoreSpec {
 
     "convert a UUID to Base-64 encoding and back again" in {
       val uuid              = UUID.randomUUID
-      val base64EncodedUuid = UuidUtil.base64EncodeUuid(uuid)
-      val base64DecodedUuid = UuidUtil.base64DecodeUuid(base64EncodedUuid)
+      val base64EncodedUuid = UuidUtil.base64Encode(uuid)
+      val base64DecodedUuid = UuidUtil.base64Decode(base64EncodedUuid)
       assert(base64DecodedUuid.toOption.contains(uuid))
     }
 
@@ -1027,10 +1027,10 @@ class StringFormatterSpec extends CoreSpec {
       val iri5    = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
       val beolIri = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
-      val testIRIFromVersion3UUID = UuidUtil.isUuidSupported(iri3)
-      val testIRIFromVersion4UUID = UuidUtil.isUuidSupported(iri4)
-      val testIRIFromVersion5UUID = UuidUtil.isUuidSupported(iri5)
-      val testBeolIri             = UuidUtil.isUuidSupported(beolIri)
+      val testIRIFromVersion3UUID = UuidUtil.hasSupportedVersion(iri3)
+      val testIRIFromVersion4UUID = UuidUtil.hasSupportedVersion(iri4)
+      val testIRIFromVersion5UUID = UuidUtil.hasSupportedVersion(iri5)
+      val testBeolIri             = UuidUtil.hasSupportedVersion(beolIri)
 
       testIRIFromVersion3UUID should be(false)
       testIRIFromVersion4UUID should be(true)

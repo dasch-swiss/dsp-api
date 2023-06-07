@@ -2609,11 +2609,11 @@ final case class ValuesResponderV2Live(
         // Yes. Check that if a custom IRI is given, it ends with the same UUID
         if (
           maybeCustomIri.nonEmpty &&
-          UuidUtil.base64DecodeUuid(maybeCustomIri.get.toString.split("/").last) != Success(customValueUUID)
+          UuidUtil.base64Decode(maybeCustomIri.get.toString.split("/").last) != Success(customValueUUID)
         ) {
           throw BadRequestException(
             s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${UuidUtil
-                .base64EncodeUuid(customValueUUID)}."
+                .base64Encode(customValueUUID)}."
           )
         }
         customValueUUID
@@ -2623,7 +2623,7 @@ final case class ValuesResponderV2Live(
           case Some(customIri: SmartIri) =>
             // Yes. Get the UUID from the given value IRI
             val endingUUID: UUID = UuidUtil
-              .base64DecodeUuid(customIri.toString.split("/").last)
+              .base64Decode(customIri.toString.split("/").last)
               .toOption
               .getOrElse(throw BadRequestException(s"Invalid UUID in IRI: $customIri"))
             endingUUID

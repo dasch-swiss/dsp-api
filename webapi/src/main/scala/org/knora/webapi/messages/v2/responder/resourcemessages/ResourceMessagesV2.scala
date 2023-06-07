@@ -1638,7 +1638,7 @@ case class ValueEventBody(
     }
 
     val valueUUIDAsJsonLD: Option[(IRI, JsonLDValue)] = valueUUID.map { valueHasUUID =>
-      KnoraApiV2Complex.ValueHasUUID -> JsonLDString(UuidUtil.base64EncodeUuid(valueHasUUID))
+      KnoraApiV2Complex.ValueHasUUID -> JsonLDString(UuidUtil.base64Encode(valueHasUUID))
     }
 
     val valueCreationDateAsJsonLD: Option[(IRI, JsonLDValue)] = valueCreationDate.map { valueHasCreationDate =>

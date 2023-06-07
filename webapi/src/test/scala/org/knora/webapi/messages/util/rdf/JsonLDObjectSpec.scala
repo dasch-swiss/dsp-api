@@ -612,7 +612,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   private def uuidValueSuiteGivenValidValue = {
     val someUuid     = UUID.randomUUID()
-    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDString(UuidUtil.base64EncodeUuid(someUuid))))
+    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDString(UuidUtil.base64Encode(someUuid))))
     suite("when given a valid value")(
       // uuid value
       test("maybeUUID should return None") {

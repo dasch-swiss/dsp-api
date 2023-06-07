@@ -774,7 +774,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "get the latest version of a value, given its UUID" in {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(UuidUtil.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+        valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
         targetSchema = ApiV2Complex,
         requestingUser = anythingUserProfile
       )
@@ -790,7 +790,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "get a past version of a value, given its UUID and a timestamp" in {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(UuidUtil.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+        valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
         versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
         targetSchema = ApiV2Complex,
         requestingUser = anythingUserProfile
@@ -2399,7 +2399,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
               comment = Some("this is the number five")
             ),
             permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
-            customValueUUID = Some(UuidUtil.base64DecodeUuid("IN4R19yYR0ygi3K2VEHpUQ").get)
+            customValueUUID = Some(UuidUtil.base64Decode("IN4R19yYR0ygi3K2VEHpUQ").get)
           )
         )
       )

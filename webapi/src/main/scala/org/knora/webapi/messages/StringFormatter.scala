@@ -1720,8 +1720,8 @@ class StringFormatter private (
    * @return either the IRI or the error message.
    */
   def validatePermissionIri(iri: IRI): Either[String, IRI] =
-    if (Iri.isPermissionIri(iri) && UuidUtil.isUuidSupported(iri)) Right(iri)
-    else if (Iri.isPermissionIri(iri) && !UuidUtil.isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
+    if (Iri.isPermissionIri(iri) && UuidUtil.hasSupportedVersion(iri)) Right(iri)
+    else if (Iri.isPermissionIri(iri) && !UuidUtil.hasSupportedVersion(iri)) Left(IriErrorMessages.UuidVersionInvalid)
     else Left(s"Invalid permission IRI: $iri.")
 
   /**
@@ -1792,7 +1792,7 @@ class StringFormatter private (
 
     // If a value UUID was provided, Base64-encode it, add a check digit, and append the result to the URL.
     val arkUrlWithoutTimestamp = maybeValueUUID match {
-      case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(UuidUtil.base64EncodeUuid(valueUUID))}"
+      case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(UuidUtil.base64Encode(valueUUID))}"
       case None                  => resourceArkUrl
     }
 
@@ -1882,7 +1882,7 @@ class StringFormatter private (
    */
   def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI = {
     val valueUUID = givenUUID match {
-      case Some(uuid: UUID) => UuidUtil.base64EncodeUuid(uuid)
+      case Some(uuid: UUID) => UuidUtil.base64Encode(uuid)
       case _                => UuidUtil.makeRandomBase64EncodedUuid
     }
     s"$resourceIri/values/$valueUUID"

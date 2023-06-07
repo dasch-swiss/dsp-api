@@ -40,8 +40,8 @@ object IriSpec extends ZIOSpecDefault {
   val userIriWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
   val invalidUuid   = "MAgdcpn2MO211YYOplR32v"
-  val uuidVersion3  = getUuidFromIri(userIriWithUUIDVersion3)
-  val supportedUuid = getUuidFromIri(validUserIri)
+  val uuidVersion3  = fromIri(userIriWithUUIDVersion3)
+  val supportedUuid = fromIri(validUserIri)
 
   def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + roleIriTest + userIriTest)
 

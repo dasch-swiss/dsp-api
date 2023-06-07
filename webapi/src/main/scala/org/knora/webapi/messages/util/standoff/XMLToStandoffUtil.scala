@@ -744,8 +744,8 @@ class XMLToStandoffUtil(
         case Some(existingUuid) => existingUuid
         case None               =>
           // Otherwise, try to parse the ID as a UUID.
-          if (UuidUtil.hasUuidLength(id)) {
-            UuidUtil.decodeUuid(id)
+          if (UuidUtil.hasValidLength(id)) {
+            UuidUtil.decode(id)
           } else {
             // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.
             UUID.randomUUID
@@ -957,7 +957,7 @@ class XMLToStandoffUtil(
 
       val id = uuidsToDocumentSpecificIds.get(tag.uuid) match {
         case Some(documentSpecificId) => documentSpecificId
-        case None                     => UuidUtil.encodeUuid(tag.uuid, writeBase64IDs)
+        case None                     => UuidUtil.encode(tag.uuid, writeBase64IDs)
       }
 
       val maybeIdAttr: Option[(String, String)] = if (writeUuidsToXml) {

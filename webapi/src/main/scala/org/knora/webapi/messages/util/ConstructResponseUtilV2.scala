@@ -1542,7 +1542,7 @@ final case class ConstructResponseUtilV2Live(
                                              OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri
                                            )
               valueDeletionInfo = getDeletionInfo(valObj)
-              valueHasUUID: UUID = UuidUtil.decodeUuid(
+              valueHasUUID: UUID = UuidUtil.decode(
                                      valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri)
                                    )
               previousValueIri: Option[IRI] = valObj.maybeIriObject(

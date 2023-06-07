@@ -185,7 +185,7 @@ case class CreateValueResponseV2(
         Map(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          ValueHasUUID        -> JsonLDString(UuidUtil.base64EncodeUuid(valueUUID)),
+          ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID)),
           ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueCreationDate.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
@@ -410,7 +410,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
         Map(
           JsonLDKeywords.ID   -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          ValueHasUUID        -> JsonLDString(UuidUtil.base64EncodeUuid(valueUUID))
+          ValueHasUUID        -> JsonLDString(UuidUtil.base64Encode(valueUUID))
         )
       ),
       context = JsonLDUtil.makeContext(
@@ -477,8 +477,8 @@ object DeleteValueRequestV2 {
             _ <- ZIO
                    .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
                    .when(
-                     UuidUtil.hasUuidLength(UuidUtil.getUuidFromIri(valueIri.toString)) &&
-                       !UuidUtil.isUuidSupported(valueIri.toString)
+                     UuidUtil.hasValidLength(UuidUtil.fromIri(valueIri.toString)) &&
+                       !UuidUtil.hasSupportedVersion(valueIri.toString)
                    )
             valueTypeIri <- ZIO.attempt(jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri)
             deleteComment <- ZIO.attempt {
@@ -703,7 +703,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
                 value = valueCreationDate.toString,
                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
               ),
-              ValueHasUUID -> JsonLDString(UuidUtil.base64EncodeUuid(valueHasUUID)),
+              ValueHasUUID -> JsonLDString(UuidUtil.base64Encode(valueHasUUID)),
               ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
