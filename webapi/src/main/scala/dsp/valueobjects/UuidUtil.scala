@@ -99,7 +99,7 @@ object UuidUtil {
   def fromIri(iri: String): String = iri.split("/").last
 
   /**
-   * Calls `base64DecodeUuid`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
+   * Calls `base64Decode`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
    */
   @deprecated("It is still throwing!")
   def decode(uuidStr: String): UUID =

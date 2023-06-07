@@ -47,7 +47,7 @@
         <@newValueIri> rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.valueHasString""" ;
-            knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(newValueUUID)}" .
+            knora-base:valueHasUUID "@{UuidUtil.base64Encode(newValueUUID)}" .
 
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,

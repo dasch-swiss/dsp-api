@@ -22,5 +22,5 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT DISTINCT ?standoffTag
 
 WHERE {
-    ?standoffTag knora-base:standoffTagHasUUID "@{UuidUtil.base64EncodeUuid(uuid)}" .
+    ?standoffTag knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(uuid)}" .
 }

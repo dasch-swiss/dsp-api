@@ -64,7 +64,7 @@
                 }
             }
             knora-base:isDeleted false ;
-            knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(newValueUUID)}" ;
+            knora-base:valueHasUUID "@{UuidUtil.base64Encode(newValueUUID)}" ;
             knora-base:valueCreationDate "@creationDate"^^xsd:dateTime ;
             knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
             knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions"^^xsd:string .

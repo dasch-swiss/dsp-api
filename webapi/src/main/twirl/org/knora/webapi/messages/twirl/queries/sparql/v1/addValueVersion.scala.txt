@@ -149,7 +149,7 @@ DELETE {
                         }
 
                         knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                        knora-base:standoffTagHasUUID "@{UuidUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
+                        knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(createStandoff.standoffNode.uuid)}" ;
                         knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                         knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                         rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
@@ -469,7 +469,7 @@ DELETE {
                 <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
                     knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(UUID.randomUUID)}" .
+                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{UuidUtil.base64Encode(UUID.randomUUID)}" .
             }
 
             @* Attach the new LinkValue to its containing resource. *@

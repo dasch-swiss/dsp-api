@@ -81,7 +81,7 @@
                                 }
 
                                 knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                                knora-base:standoffTagHasUUID "@{UuidUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
+                                knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(createStandoff.standoffNode.uuid)}" ;
                                 knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                                 knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                                 rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .

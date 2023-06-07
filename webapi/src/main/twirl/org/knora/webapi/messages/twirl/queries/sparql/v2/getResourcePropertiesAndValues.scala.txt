@@ -166,7 +166,7 @@ CONSTRUCT {
                     @* Filter by value UUID if requested. *@
                     @maybeValueUuid match {
                         case Some(valueUuid) => {
-                            FILTER(?currentValueUUID = "@{UuidUtil.base64EncodeUuid(valueUuid)}")
+                            FILTER(?currentValueUUID = "@{UuidUtil.base64Encode(valueUuid)}")
                         }
 
                         case None => {}
@@ -215,7 +215,7 @@ CONSTRUCT {
                     @* Filter by value UUID if requested. *@
                     @maybeValueUuid match {
                         case Some(valueUuid) => {
-                            ?valueObject knora-base:valueHasUUID "@{UuidUtil.base64EncodeUuid(valueUuid)}" .
+                            ?valueObject knora-base:valueHasUUID "@{UuidUtil.base64Encode(valueUuid)}" .
                         }
 
                         case None => {}

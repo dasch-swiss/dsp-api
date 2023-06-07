@@ -8,9 +8,8 @@ package org.knora.webapi.messages.util.rdf
 import zio._
 import zio.test._
 
-import java.nio.ByteBuffer
-import java.util.Base64
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
