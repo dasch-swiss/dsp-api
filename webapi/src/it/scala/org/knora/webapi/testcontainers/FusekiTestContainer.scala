@@ -9,7 +9,6 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import zio.ZIO
 import zio._
-import zio.http.QueryParams
 import zio.http.URL
 import zio.macros.accessible
 import zio.nio.file.Files
@@ -19,7 +18,6 @@ import java.net.PasswordAuthentication
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse
 import java.net.http.HttpResponse.BodyHandlers
 
 import org.knora.webapi.http.version.BuildInfo

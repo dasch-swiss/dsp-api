@@ -10,7 +10,6 @@ import zio.nio.file._
 import zio.test._
 import java.io.IOException
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Fuseki
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.testcontainers.FusekiTestContainer
