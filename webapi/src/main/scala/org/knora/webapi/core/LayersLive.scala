@@ -91,6 +91,10 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
+import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectImportService
+import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.slice.common.api.RestPermissionServiceLive
@@ -165,6 +169,8 @@ object LayersLive {
       with ProjectADMRestService
       with ProjectADMService
       with ProjectExportService
+      with ProjectExportStorageService
+      with ProjectImportService
       with ProjectsResponderADM
       with ProjectsResponderV1
       with QueryTraverser
@@ -240,6 +246,8 @@ object LayersLive {
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
       ProjectExportServiceLive.layer,
+      ProjectExportStorageServiceLive.layer,
+      ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,

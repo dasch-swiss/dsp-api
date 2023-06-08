@@ -14,8 +14,6 @@ import zio.stream.ZStream
 import java.nio.file.Files
 
 import dsp.errors.BadRequestException
-import dsp.errors.InternalServerException
-import dsp.errors.RequestRejectedException
 import dsp.valueobjects.Iri._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
@@ -52,6 +50,10 @@ final case class ProjectsRouteZ(
           getAllProjectData(iriUrlEncoded, requestingUser)
         case (Method.POST -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "export", requestingUser) =>
           postExportProject(iriUrlEncoded, requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "import", requestingUser) =>
+          postImportProject(iriUrlEncoded, requestingUser)
+        case (Method.GET -> !! / "admin" / "projects" / "exports", requestingUser) =>
+          getProjectExports(requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
           getProjectMembersByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "members", requestingUser) =>
@@ -74,10 +76,7 @@ final case class ProjectsRouteZ(
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "RestrictedViewSettings", _) =>
           getRestrictedViewSettingsByShortcode(shortcode)
       }
-      .catchAll {
-        case RequestRejectedException(e) => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
-        case InternalServerException(e)  => ExceptionHandlerZ.exceptionToJsonHttpResponseZ(e, appConfig)
-      }
+      .catchAll(ExceptionHandlerZ.exceptionToJsonHttpResponseZ(_, appConfig))
 
   private def getProjects(): Task[Response] =
     for {
@@ -150,6 +149,14 @@ final case class ProjectsRouteZ(
     projectIri <- RouteUtilZ.urlDecode(iriUrlEncoded)
     result     <- projectsService.exportProject(projectIri, requestingUser)
   } yield Response.json(result.toJson)
+
+  private def postImportProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] = for {
+    projectIri <- RouteUtilZ.urlDecode(iriUrlEncoded)
+    result     <- projectsService.importProject(projectIri, requestingUser)
+  } yield Response.json(result.toJson)
+
+  private def getProjectExports(requestingUser: UserADM): Task[Response] =
+    projectsService.listExports(requestingUser).map(chunk => Response.json(chunk.toJson)).logError
 
   private def getProjectMembersByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {

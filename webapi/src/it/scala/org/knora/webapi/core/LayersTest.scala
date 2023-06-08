@@ -123,6 +123,10 @@ import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.slice.admin.domain.service.AssetService
 import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
+import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
+import org.knora.webapi.slice.admin.domain.service.ProjectImportService
+import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
 
 object LayersTest {
 
@@ -168,6 +172,8 @@ object LayersTest {
       with ProjectADMRestService
       with ProjectADMService
       with ProjectExportService
+      with ProjectExportStorageService
+      with ProjectImportService
       with ProjectsResponderADM
       with ProjectsResponderV1
       with QueryTraverser
@@ -236,6 +242,8 @@ object LayersTest {
       PredicateRepositoryLive.layer,
       ProjectADMServiceLive.layer,
       ProjectExportServiceLive.layer,
+      ProjectExportStorageServiceLive.layer,
+      ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
       ProjectsResponderV1Live.layer,

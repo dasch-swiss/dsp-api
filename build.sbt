@@ -182,14 +182,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for production
-    Compile / exportJars := true,
-    // add needed files to test jar
-    IntegrationTest / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
-      (rootBaseDir.value / "sipi" / "config" / "sipi.docker-config.lua")                   -> "sipi/config/sipi.docker-config.lua"
-    ),
-    // use packaged jars (through packageBin) on classpaths instead of class directories for test
-    IntegrationTest / exportJars := true
+    Compile / exportJars := true
   )
   .settings(
     scalacOptions ++= Seq(
@@ -204,6 +197,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
+    IntegrationTest / exportJars         := false,
     IntegrationTest / fork               := true,  // run tests in a forked JVM
     IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
     IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel

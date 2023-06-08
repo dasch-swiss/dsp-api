@@ -66,7 +66,7 @@ final case class IIIFServiceSipiImpl(
     def knoraJson(asset: Asset): UIO[URI]      = makeUri(s"${assetBase(asset)}/knora.json")
     private def makeUri(uri: String): UIO[URI] = ZIO.attempt(URI.create(uri)).logError.orDie
     private def assetBase(asset: Asset): String =
-      s"${sipiConfig.internalBaseUrl}/${asset.belongsToProject.shortcode}/${asset.internalFilename}"
+      s"${sipiConfig.internalBaseUrl}/${asset.belongsToProject.value}/${asset.internalFilename}"
   }
 
   /**
