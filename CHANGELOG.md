@@ -1,5 +1,30 @@
 # Changelog
 
+## [29.0.0](https://github.com/dasch-swiss/dsp-api/compare/v28.3.0...v29.0.0) (2023-06-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* deactivate API V1 routes (DEV-2223) ([#2685](https://github.com/dasch-swiss/dsp-api/issues/2685))
+
+### Bug Fixes
+
+* gravsearch and count queries include deleted resources for some queries with negation patterns (DEV-2189) ([#2682](https://github.com/dasch-swiss/dsp-api/issues/2682)) ([668a734](https://github.com/dasch-swiss/dsp-api/commit/668a734cd563f1bbe34fe2fa9dd4b4acabcf2332))
+
+
+### Maintenance
+
+* bump fuseki version to 4.8.0 ([#2696](https://github.com/dasch-swiss/dsp-api/issues/2696)) ([135da99](https://github.com/dasch-swiss/dsp-api/commit/135da99291161724142c1aedabee1887382ca238))
+* merge or move UUID related methods (DEV-2192) ([#2697](https://github.com/dasch-swiss/dsp-api/issues/2697)) ([93f7088](https://github.com/dasch-swiss/dsp-api/commit/93f7088f29a9831c51e7d310601cc2b9ca895981))
+* remove remove SIPI file migration route (DEV-2180) ([#2683](https://github.com/dasch-swiss/dsp-api/issues/2683)) ([b2f0dff](https://github.com/dasch-swiss/dsp-api/commit/b2f0dff82d1aa5befe5e60193dd43b77b95825a5))
+
+
+### Enhancements
+
+* add export of assets (DEV-2106) ([#2668](https://github.com/dasch-swiss/dsp-api/issues/2668)) ([0be6991](https://github.com/dasch-swiss/dsp-api/commit/0be6991648699e2513aa8e107382b786ba632472))
+* add import of trig file of export (DEV-2249) ([#2680](https://github.com/dasch-swiss/dsp-api/issues/2680)) ([6fb0e8c](https://github.com/dasch-swiss/dsp-api/commit/6fb0e8c9584dde9a914a19b6c6f2284b15fd64d8))
+* deactivate API V1 routes (DEV-2223) ([#2685](https://github.com/dasch-swiss/dsp-api/issues/2685)) ([ee3cddc](https://github.com/dasch-swiss/dsp-api/commit/ee3cddc394eaaecf7dfe7c928b22dc22a7371d65))
+
 ## [28.3.0](https://github.com/dasch-swiss/dsp-api/compare/v28.2.0...v28.3.0) (2023-05-25)
 
 
