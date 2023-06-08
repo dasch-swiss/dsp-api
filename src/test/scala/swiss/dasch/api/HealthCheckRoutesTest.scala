@@ -1,9 +1,9 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.healthcheck.HealthCheckServiceTest
-import zio.http._
-import zio.test._
-import zio.test.Assertion._
+import zio.http.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object HealthCheckRoutesTest extends ZIOSpecDefault {
 

@@ -80,6 +80,7 @@
         <JAVADOC />
         <SOURCES>
           <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/io/netty/incubator/netty-incubator-transport-native-io_uring/0.0.19.Final/netty-incubator-transport-native-io_uring-0.0.19.Final-sources.jar!/" />
+          <root url="jar://$USER_HOME$/Library/Caches/Coursier/v1/https/repo1.maven.org/maven2/io/netty/incubator/netty-incubator-transport-native-io_uring/0.0.20.Final/netty-incubator-transport-native-io_uring-0.0.20.Final-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

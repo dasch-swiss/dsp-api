@@ -15,7 +15,7 @@ lazy val root = (project in file("."))
   .settings(
     inThisBuild(
       List(
-        organization := "swiss.dasch",
+        organization := "daschswiss",
         scalaVersion := "3.3.0",
       )
     ),
@@ -46,5 +46,9 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-test-magnolia" % zioVersion     % Test,
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+
+    jibBaseImage := "gcr.io/distroless/java17-debian11",
+    jibName := "dsp-ingest",
+    jibUseCurrentTimestamp := true
   )
   .enablePlugins(JavaAppPackaging)
