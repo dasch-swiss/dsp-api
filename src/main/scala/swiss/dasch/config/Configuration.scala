@@ -1,10 +1,11 @@
 package swiss.dasch.config
 
 import com.typesafe.config.ConfigFactory
-import zio._
-import zio.config._
-import zio.config.ConfigDescriptor._
+import zio.*
+import zio.config.*
+import zio.config.ConfigDescriptor.*
 import zio.config.typesafe.TypesafeConfigSource
+import zio.nio.file.Path
 
 object Configuration {
 
@@ -29,8 +30,11 @@ object Configuration {
     )
   }
 
-  final case class StorageConfig(assetDir: String, tempDir: String)
-  object StorageConfig {
+  final case class StorageConfig(assetDir: String, tempDir: String) {
+    val assetPath: Path = Path(assetDir)
+    val tempPath: Path  = Path(tempDir)
+  }
+  object StorageConfig                                              {
     private val storageConfigDescription: ConfigDescriptor[StorageConfig] =
       nested("storage") {
         string("asset-dir") <*>

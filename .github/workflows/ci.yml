@@ -3,6 +3,8 @@ name: Continuous Integration
 on:
   pull_request:
   push:
+    branches:
+      - 'main'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,3 +42,10 @@ jobs:
 
       - name: Run the unit tests
         run: sbt test
+      - name: Unit Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Unit Test Results
+          path: ./target/test-reports/TEST-*.xml
+          reporter: java-junit
