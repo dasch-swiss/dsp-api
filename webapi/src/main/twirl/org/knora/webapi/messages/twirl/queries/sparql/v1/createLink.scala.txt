@@ -50,8 +50,7 @@ DELETE {
                                                                         linkUpdate = linkUpdate,
                                                                         creationDate = creationDate,
                                                                         maybeComment = maybeComment,
-                                                                        maybeValueHasOrder = None,
-                                                                        stringFormatter = stringFormatter)
+                                                                        maybeValueHasOrder = None)
         }
 
     }

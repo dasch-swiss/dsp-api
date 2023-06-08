@@ -3,17 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  *@
 
-@import org.knora.webapi.messages.StringFormatter
 @import java.util.UUID
+@import dsp.valueobjects.UuidUtil
 
 @*
  * Gets the IRIs of a standoff tag identified by UUID.
  *
  * @param uuid the standoff tag's UUID.
- * @param stringFormatter a [[StringFormatter]].
  *@
-@(uuid: UUID,
-  stringFormatter: StringFormatter)
+@(uuid: UUID)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -24,5 +22,5 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT DISTINCT ?standoffTag
 
 WHERE {
-    ?standoffTag knora-base:standoffTagHasUUID "@{stringFormatter.base64EncodeUuid(uuid)}" .
+    ?standoffTag knora-base:standoffTagHasUUID "@{UuidUtil.base64Encode(uuid)}" .
 }

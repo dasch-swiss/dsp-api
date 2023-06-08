@@ -22,6 +22,7 @@ import scala.util.control.Exception._
 
 import dsp.errors._
 import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -960,18 +961,13 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   @deprecated("use getUuid(String) instead")
   @throws[BadRequestException]
-  def maybeUUID(key: String): Option[UUID] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    maybeStringWithValidation(key, stringFormatter.validateBase64EncodedUuid)
-  }
+  def maybeUUID(key: String): Option[UUID] =
+    maybeStringWithValidation(key, UuidUtil.validateBase64EncodedUuid)
 
-  def getUuid(key: String): ZIO[StringFormatter, String, Option[UUID]] =
+  def getUuid(key: String): IO[String, Option[UUID]] =
     getString(key).flatMap {
-      case Some(str) =>
-        ZIO.serviceWithZIO[StringFormatter] { sf =>
-          ZIO.fromTry(sf.base64DecodeUuid(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
-        }
-      case None => ZIO.none
+      case Some(str) => ZIO.fromTry(UuidUtil.base64Decode(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
+      case None      => ZIO.none
     }
 
   /**

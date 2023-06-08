@@ -7,7 +7,6 @@ package org.knora.webapi.util
 
 import dsp.valueobjects.Iri
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.StringFormatter
 
 /**
  * Holds an optional, mutable IRI for use in tests.

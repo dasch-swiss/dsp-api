@@ -125,8 +125,7 @@ final case class StandoffResponderV2Live(
               queryAllNonStandoff = false,
               maybeValueIri = Some(getStandoffRequestV2.valueIri),
               maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
-              maybeStandoffMaxStartIndex = Some(requestMaxStartIndex),
-              stringFormatter = stringFormatter
+              maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
             )
             .toString()
         )

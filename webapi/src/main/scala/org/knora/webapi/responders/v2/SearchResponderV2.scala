@@ -792,8 +792,7 @@ final case class SearchResponderV2Live(
                     maybePropertyIri = None,
                     maybeVersionDate = None,
                     maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
-                    stringFormatter = stringFormatter
+                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
                   )
                   .toString()
               )

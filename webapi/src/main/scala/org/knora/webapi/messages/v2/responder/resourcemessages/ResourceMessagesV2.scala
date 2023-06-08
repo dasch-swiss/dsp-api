@@ -12,6 +12,7 @@ import java.util.UUID
 
 import dsp.errors._
 import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -703,8 +704,6 @@ object CreateResourceRequestV2 {
                  throw BadRequestException(s"<$iri> is not a Knora resource IRI")
                }
 
-               stringFormatter.validateUUIDOfResourceIRI(iri)
-
                if (!iri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
                  throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
                }
@@ -906,7 +905,6 @@ object UpdateResourceMetadataRequestV2 {
       resourceIri <- obj.getRequiredIdValueAsKnoraDataIri
                        .filterOrElseWith(_.isKnoraResourceIri)(it => ZIO.fail(s"Invalid resource IRI: <$it>"))
                        .mapError(BadRequestException(_))
-      _ <- ZIO.serviceWithZIO[StringFormatter](sf => ZIO.attempt(sf.validateUUIDOfResourceIRI(resourceIri)))
     } yield resourceIri
 
   private def getResourceClassIri(body: JsonLDObject) =
@@ -1640,7 +1638,7 @@ case class ValueEventBody(
     }
 
     val valueUUIDAsJsonLD: Option[(IRI, JsonLDValue)] = valueUUID.map { valueHasUUID =>
-      KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
+      KnoraApiV2Complex.ValueHasUUID -> JsonLDString(UuidUtil.base64Encode(valueHasUUID))
     }
 
     val valueCreationDateAsJsonLD: Option[(IRI, JsonLDValue)] = valueCreationDate.map { valueHasCreationDate =>

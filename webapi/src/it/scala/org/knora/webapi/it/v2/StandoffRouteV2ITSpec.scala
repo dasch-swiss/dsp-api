@@ -23,7 +23,6 @@ import scala.concurrent.duration._
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject

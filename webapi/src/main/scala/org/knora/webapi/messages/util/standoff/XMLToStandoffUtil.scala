@@ -18,6 +18,7 @@ import scala.util.control.NonFatal
 import scala.xml._
 
 import dsp.errors._
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ErrorHandlingMap
@@ -306,9 +307,6 @@ class XMLToStandoffUtil(
 ) {
 
   import XMLToStandoffUtil._
-
-  private val stringFormatter = StringFormatter.getGeneralInstance
-
   // Parse XML with an XML parser configured to prevent certain security risks.
   // See <https://github.com/scala/scala-xml/issues/17>.
   private val saxParserFactory = SAXParserFactory.newInstance()
@@ -746,8 +744,8 @@ class XMLToStandoffUtil(
         case Some(existingUuid) => existingUuid
         case None               =>
           // Otherwise, try to parse the ID as a UUID.
-          if (stringFormatter.hasUuidLength(id)) {
-            stringFormatter.decodeUuid(id)
+          if (UuidUtil.hasValidLength(id)) {
+            UuidUtil.decode(id)
           } else {
             // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.
             UUID.randomUUID
@@ -959,7 +957,7 @@ class XMLToStandoffUtil(
 
       val id = uuidsToDocumentSpecificIds.get(tag.uuid) match {
         case Some(documentSpecificId) => documentSpecificId
-        case None                     => stringFormatter.encodeUuid(tag.uuid, writeBase64IDs)
+        case None                     => UuidUtil.encode(tag.uuid, writeBase64IDs)
       }
 
       val maybeIdAttr: Option[(String, String)] = if (writeUuidsToXml) {

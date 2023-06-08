@@ -10,8 +10,8 @@ import akka.testkit.ImplicitSender
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors._
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -371,7 +371,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       } else if (rows.size > 1) {
         throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
       } else {
-        Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valueUUID")).get)
+        Some(UuidUtil.base64Decode(rows.head.rowMap("valueUUID")).get)
       }
     }
   }
@@ -396,7 +396,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       } else if (rows.size > 1) {
         throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
       } else {
-        Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valuePermissions")).get)
+        Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
       }
     }
   }
