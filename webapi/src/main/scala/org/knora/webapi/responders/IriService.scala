@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import zio._
 
 import dsp.errors._
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -78,14 +79,10 @@ final case class IriService(
                  .whenZIO(checkIriExists(entityIriAsString))
 
           // Check that given entityIRI ends with a UUID
-          ending: String = entityIriAsString.split('/').last
-          _ <- ZIO.attempt(
-                 stringFormatter.validateBase64EncodedUuid(
-                   ending,
-                   throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID.")
-                 )
-               )
-
+          ending: String = UuidUtil.fromIri(entityIriAsString)
+          _ <- ZIO
+                 .fromOption(UuidUtil.validateBase64EncodedUuid(ending))
+                 .orElseFail(BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID."))
         } yield entityIriAsString
 
       case None => makeUnusedIri(iriFormatter)

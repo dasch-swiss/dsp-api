@@ -17,6 +17,7 @@ import scala.concurrent.Future
 
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
@@ -657,8 +658,6 @@ case class StandoffTagV2(
   endParentIndex: Option[Int] = None,
   attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2]
 ) extends KnoraContentV2[StandoffTagV2] {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
   override def toOntologySchema(targetSchema: OntologySchema): StandoffTagV2 = {
     if (targetSchema != ApiV2Complex) {
       throw AssertionException(s"Standoff is available only in the complex schema")
@@ -679,7 +678,7 @@ case class StandoffTagV2(
 
     val contentMap: Map[IRI, JsonLDValue] = Map(
       JsonLDKeywords.TYPE                                          -> JsonLDString(standoffTagClassIri.toString),
-      OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID       -> JsonLDString(stringFormatter.base64EncodeUuid(uuid)),
+      OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID       -> JsonLDString(UuidUtil.base64Encode(uuid)),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart      -> JsonLDInt(startPosition),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd        -> JsonLDInt(endPosition),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartIndex -> JsonLDInt(startIndex)

@@ -53,8 +53,7 @@ DELETE {
                                                                         creationDate = creationDate,
                                                                         newValueUUID = newValueUUID,
                                                                         maybeComment = maybeComment,
-                                                                        maybeValueHasOrder = None,
-                                                                        stringFormatter = stringFormatter)
+                                                                        maybeValueHasOrder = None)
         }
 
     }

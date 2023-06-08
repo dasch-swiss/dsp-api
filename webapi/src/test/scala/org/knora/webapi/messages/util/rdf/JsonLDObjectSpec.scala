@@ -8,11 +8,10 @@ package org.knora.webapi.messages.util.rdf
 import zio._
 import zio.test._
 
-import java.nio.ByteBuffer
-import java.util.Base64
 import java.util.UUID
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
@@ -611,16 +610,8 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     )
 
   private def uuidValueSuiteGivenValidValue = {
-    def base64EncodeUuid(uuid: UUID): String = {
-      val encoder    = Base64.getUrlEncoder.withoutPadding
-      val bytes      = Array.ofDim[Byte](16)
-      val byteBuffer = ByteBuffer.wrap(bytes)
-      byteBuffer.putLong(uuid.getMostSignificantBits)
-      byteBuffer.putLong(uuid.getLeastSignificantBits)
-      encoder.encodeToString(bytes)
-    }
     val someUuid     = UUID.randomUUID()
-    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDString(base64EncodeUuid(someUuid))))
+    val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDString(UuidUtil.base64Encode(someUuid))))
     suite("when given a valid value")(
       // uuid value
       test("maybeUUID should return None") {

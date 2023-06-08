@@ -29,6 +29,7 @@ import scala.util.Success
 import dsp.errors.AuthenticationException
 import dsp.errors.BadCredentialsException
 import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -803,7 +804,7 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
       now  <- Clock.instant
       uuid <- ZIO.random.flatMap(_.nextUUID)
       exp   = now.plusSeconds(longevity.toSeconds).getEpochSecond
-      jwtId = Some(stringFormatter.base64EncodeUuid(uuid))
+      jwtId = Some(UuidUtil.base64Encode(uuid))
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
                 issuer = Some(issuer),

@@ -14,7 +14,6 @@ import spray.json._
 import zio.ZLayer
 import zio.prelude.Validation
 
-import java.nio.ByteBuffer
 import java.time._
 import java.time.temporal.ChronoField
 import java.util.Base64
@@ -30,6 +29,7 @@ import scala.util.matching.Regex
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
@@ -589,7 +589,6 @@ class StringFormatter private (
   initForTest: Boolean = false
 ) {
 
-  private val base64Encoder = Base64.getUrlEncoder.withoutPadding
   private val base64Decoder = Base64.getUrlDecoder
 
   // The host and port number that this Knora server is running on, and that should be used
@@ -1721,8 +1720,8 @@ class StringFormatter private (
    * @return either the IRI or the error message.
    */
   def validatePermissionIri(iri: IRI): Either[String, IRI] =
-    if (Iri.isPermissionIri(iri) && isUuidSupported(iri)) Right(iri)
-    else if (Iri.isPermissionIri(iri) && !isUuidSupported(iri)) Left(IriErrorMessages.UuidVersionInvalid)
+    if (Iri.isPermissionIri(iri) && UuidUtil.hasSupportedVersion(iri)) Right(iri)
+    else if (Iri.isPermissionIri(iri) && !UuidUtil.hasSupportedVersion(iri)) Left(IriErrorMessages.UuidVersionInvalid)
     else Left(s"Invalid permission IRI: $iri.")
 
   /**
@@ -1793,7 +1792,7 @@ class StringFormatter private (
 
     // If a value UUID was provided, Base64-encode it, add a check digit, and append the result to the URL.
     val arkUrlWithoutTimestamp = maybeValueUUID match {
-      case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(base64EncodeUuid(valueUUID))}"
+      case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(UuidUtil.base64Encode(valueUUID))}"
       case None                  => resourceArkUrl
     }
 
@@ -1864,139 +1863,13 @@ class StringFormatter private (
   }
 
   /**
-   * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
-   * Base64 encoder from [[java.util.Base64]], without padding. This results in a 22-character string that
-   * can be used as a unique identifier in IRIs.
-   *
-   * @return a random, Base64-encoded UUID.
-   */
-  def makeRandomBase64EncodedUuid: String = {
-    val uuid = UUID.randomUUID
-    base64EncodeUuid(uuid)
-  }
-
-  /**
-   * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
-   * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
-   *
-   * @param uuid the [[UUID]] to be encoded.
-   * @return a 22-character string representing the UUID.
-   */
-  def base64EncodeUuid(uuid: UUID): String = {
-    val bytes      = Array.ofDim[Byte](16)
-    val byteBuffer = ByteBuffer.wrap(bytes)
-    byteBuffer.putLong(uuid.getMostSignificantBits)
-    byteBuffer.putLong(uuid.getLeastSignificantBits)
-    base64Encoder.encodeToString(bytes)
-  }
-
-  /**
-   * Decodes a Base64-encoded UUID.
-   *
-   * @param base64Uuid the Base64-encoded UUID to be decoded.
-   * @return the equivalent [[UUID]].
-   */
-  def base64DecodeUuid(base64Uuid: String): Try[UUID] =
-    Try {
-      val bytes      = base64Decoder.decode(base64Uuid)
-      val byteBuffer = ByteBuffer.wrap(bytes)
-      new UUID(byteBuffer.getLong, byteBuffer.getLong)
-    }
-
-  /**
-   * Validates and decodes a Base64-encoded UUID.
-   *
-   * @param base64Uuid the UUID to be validated.
-   * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return the decoded UUID.
-   */
-  @deprecated("Use validateBase64EncodedUuid(String) instead.")
-  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = // V2 / value objects
-    validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
-
-  def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
-    base64DecodeUuid(base64Uuid).toOption
-
-  /**
-   * Encodes a [[UUID]] as a string in one of two formats:
-   *
-   * - The canonical 36-character format.
-   * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
-   *
-   * @param uuid      the UUID to be encoded.
-   * @param useBase64 if `true`, uses Base64 encoding.
-   * @return the encoded UUID.
-   */
-  def encodeUuid(uuid: UUID, useBase64: Boolean): String =
-    if (useBase64) {
-      base64EncodeUuid(uuid)
-    } else {
-      uuid.toString
-    }
-
-  /**
-   * Calls `base64DecodeUuid`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
-   */
-  @deprecated("It is still throwing!")
-  def decodeUuid(uuidStr: String): UUID =
-    if (uuidStr.length == CanonicalUuidLength) UUID.fromString(uuidStr)
-    else if (uuidStr.length == Base64UuidLength)
-      base64DecodeUuid(uuidStr).getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
-    else if (uuidStr.length < Base64UuidLength)
-      base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
-        .getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
-    else throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr")
-
-  /**
-   * Gets the last segment of IRI, decodes UUID and gets the version.
-   *
-   * @param s the string (IRI) to be checked.
-   * @return UUID version.
-   */
-  private def getUUIDVersion(s: IRI): Int = {
-    val encodedUUID = s.split("/").last
-    decodeUuid(encodedUUID).version()
-  }
-
-  /**
-   * Checks if UUID used to create IRI has supported version (4 and 5 are allowed).
-   * With an exception of BEOL project IRI `http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF`.
-   *
-   * @param s the string (IRI) to be checked.
-   * @return TRUE for supported versions, FALSE for not supported.
-   */
-  def isUuidSupported(s: String): Boolean =
-    if (s != "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF") {
-      getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
-    } else true
-
-  /**
-   * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
-   *
-   * @param s the string to check.
-   * @return TRUE if the string is the right length to be a canonical or Base64-encoded UUID.
-   */
-  def hasUuidLength(s: String): Boolean =
-    s.length == CanonicalUuidLength || s.length == Base64UuidLength
-
-  /**
-   * Validates resource IRI
-   *
-   * @param iri to be validated
-   */
-  def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidSupported(iri.toString)) {
-      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
-    }
-
-  /**
    * Creates a new resource IRI based on a UUID.
    *
    * @param projectShortcode the project's shortcode.
    * @return a new resource IRI.
    */
   def makeRandomResourceIri(projectShortcode: String): IRI = {
-    val knoraResourceID = makeRandomBase64EncodedUuid
+    val knoraResourceID = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/$projectShortcode/$knoraResourceID"
   }
 
@@ -2009,8 +1882,8 @@ class StringFormatter private (
    */
   def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI = {
     val valueUUID = givenUUID match {
-      case Some(uuid: UUID) => base64EncodeUuid(uuid)
-      case _                => makeRandomBase64EncodedUuid
+      case Some(uuid: UUID) => UuidUtil.base64Encode(uuid)
+      case _                => UuidUtil.makeRandomBase64EncodedUuid
     }
     s"$resourceIri/values/$valueUUID"
   }
@@ -2036,7 +1909,7 @@ class StringFormatter private (
    * @return a new mapping element IRI.
    */
   def makeRandomMappingElementIri(mappingIri: IRI): IRI = {
-    val knoraMappingElementUuid = makeRandomBase64EncodedUuid
+    val knoraMappingElementUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"$mappingIri/elements/$knoraMappingElementUuid"
   }
 
@@ -2056,7 +1929,7 @@ class StringFormatter private (
    * @return a new project IRI.
    */
   def makeRandomProjectIri: IRI = {
-    val uuid = makeRandomBase64EncodedUuid
+    val uuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/projects/$uuid"
   }
 
@@ -2067,7 +1940,7 @@ class StringFormatter private (
    * @return a new group IRI.
    */
   def makeRandomGroupIri(shortcode: String): String = {
-    val knoraGroupUuid = makeRandomBase64EncodedUuid
+    val knoraGroupUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
   }
 
@@ -2077,7 +1950,7 @@ class StringFormatter private (
    * @return a new person IRI.
    */
   def makeRandomPersonIri: IRI = {
-    val knoraPersonUuid = makeRandomBase64EncodedUuid
+    val knoraPersonUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/users/$knoraPersonUuid"
   }
 
@@ -2088,7 +1961,7 @@ class StringFormatter private (
    * @return a new list IRI.
    */
   def makeRandomListIri(shortcode: String): String = {
-    val knoraListUuid = makeRandomBase64EncodedUuid
+    val knoraListUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
   }
 
@@ -2123,7 +1996,7 @@ class StringFormatter private (
    * @return the IRI of the permission object.
    */
   def makeRandomPermissionIri(shortcode: String): IRI = {
-    val knoraPermissionUuid = makeRandomBase64EncodedUuid
+    val knoraPermissionUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
   }
 

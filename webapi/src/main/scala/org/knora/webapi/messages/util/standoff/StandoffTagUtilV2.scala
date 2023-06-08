@@ -14,6 +14,7 @@ import java.util.UUID
 
 import dsp.errors._
 import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -249,7 +250,7 @@ final case class StandoffTagUtilV2Live(
                          startIndex = startIndexFromAssertions,
                          endIndex =
                            standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex).map(_.toInt),
-                         uuid = stringFormatter.decodeUuid(
+                         uuid = UuidUtil.decode(
                            standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)
                          ),
                          originalXMLID =
