@@ -22,7 +22,7 @@ object Main extends ZIOAppDefault {
       }
       .orDie
 
-  val routes = HealthCheckRoutes.app
+  val routes = HealthCheckRoutes.app ++ ExportEndpoint.app
 
   private val program = Server.serve(routes)
 
@@ -31,5 +31,6 @@ object Main extends ZIOAppDefault {
       HealthCheckServiceLive.layer,
       Configuration.layer,
       serverLayer,
+      AssetServiceLive.layer,
     )
 }

@@ -19,7 +19,7 @@ lazy val root = (project in file("."))
         scalaVersion := "3.3.0",
       )
     ),
-    name           := "dsp-ingest",
+    name                   := "dsp-ingest",
     libraryDependencies ++= Seq(
       "dev.zio"       %% "zio"                      % zioVersion,
       "dev.zio"       %% "zio-streams"              % zioVersion,
@@ -45,10 +45,9 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-mock"          % zioMockVersion % Test,
       "dev.zio" %% "zio-test-magnolia" % zioVersion     % Test,
     ),
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-
-    jibBaseImage := "gcr.io/distroless/java17-debian11",
-    jibName := "dsp-ingest",
-    jibUseCurrentTimestamp := true
+    testFrameworks         := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    jibBaseImage           := "gcr.io/distroless/java17-debian11",
+    jibName                := "dsp-ingest",
+    jibUseCurrentTimestamp := true,
   )
   .enablePlugins(JavaAppPackaging)

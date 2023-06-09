@@ -1,6 +1,8 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.refineV
+import eu.timepit.refined.string.MatchesRegex
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
@@ -9,12 +11,11 @@ import zio.nio.file.{ Files, Path }
 
 import java.io.IOException
 
-opaque type ProjectShortcode = NonEmptyString
+opaque type ProjectShortcode = String Refined MatchesRegex["""^\d{4}$"""]
 type IiifPrefix              = ProjectShortcode
 
 object ProjectShortcode {
-  def make(shortcode: String): Either[String, ProjectShortcode] = NonEmptyString.from(shortcode)
-  def unsafeFrom(shortCode: String): ProjectShortcode           = NonEmptyString.unsafeFrom(shortCode)
+  def make(shortcode: String): Either[String, ProjectShortcode] = refineV(shortcode)
 }
 
 final case class DotInfoFileContent(

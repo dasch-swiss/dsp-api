@@ -5,7 +5,7 @@ import zio.*
 import zio.config.*
 import zio.config.ConfigDescriptor.*
 import zio.config.typesafe.TypesafeConfigSource
-import zio.nio.file.Path
+import zio.nio.file.{ Files, Path }
 
 object Configuration {
 

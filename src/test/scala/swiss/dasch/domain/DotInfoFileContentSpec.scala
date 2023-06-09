@@ -1,6 +1,6 @@
 package swiss.dasch.domain
 
-import swiss.dasch.domain.SpecFileUtil.pathFromResource
+import swiss.dasch.test.SpecFileUtil.pathFromResource
 import zio.Scope
 import zio.nio.charset.Charset
 import zio.nio.file.{ Files, Path }

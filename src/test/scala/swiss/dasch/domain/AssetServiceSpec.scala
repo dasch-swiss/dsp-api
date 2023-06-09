@@ -2,7 +2,8 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.domain.SpecFileUtil.pathFromResource
+import swiss.dasch.test.SpecConstants.*
+import swiss.dasch.test.SpecFileUtil.pathFromResource
 import zio.nio.file.{ Files, Path }
 import zio.{ Chunk, Scope, ZIO, ZLayer }
 import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertCompletes, assertTrue }
@@ -18,10 +19,6 @@ object AssetServiceSpec extends ZIOSpecDefault {
     )
   }
 
-  private val nonExistentProject = ProjectShortcode.unsafeFrom("0042")
-  private val existingProject    = ProjectShortcode.unsafeFrom("0001")
-  private val emptyProject       = ProjectShortcode.unsafeFrom("0002")
-
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("AssetServiceSpec")(
       test("should list all projects which contain assets in the asset directory") {
@@ -30,12 +27,12 @@ object AssetServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(projects == Chunk(existingProject))
       },
       suite("findProject path")(
-        test("should find existing project") {
+        test("should find existing projects which contain at least one non hidden regular file") {
           for {
             project <- AssetService.findProject(existingProject)
           } yield assertTrue(project.isDefined)
         },
-        test("should not find not existing projects which contain non hidden regular files") {
+        test("should not find not existing projects") {
           for {
             project <- AssetService.findProject(nonExistentProject)
           } yield assertTrue(project.isEmpty)
@@ -55,8 +52,4 @@ object AssetServiceSpec extends ZIOSpecDefault {
         },
       ),
     ).provide(AssetServiceLive.layer, configLayer)
-}
-
-object SpecFileUtil {
-  def pathFromResource(resource: String): Path = Path(getClass.getResource(resource).getPath)
 }

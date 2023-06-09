@@ -5,7 +5,7 @@ import zio.http.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object HealthCheckRoutesTest extends ZIOSpecDefault {
+object HealthCheckRoutesSpec extends ZIOSpecDefault {
 
   override def spec: Spec[Any, Option[Nothing]] =
     suite("http")(
