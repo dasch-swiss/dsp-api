@@ -24,7 +24,7 @@ object ProjectShortcodeSpec extends ZIOSpecDefault {
         assertTrue(ProjectShortcode.make(shortcode).isLeft)
       }
     },
-    test("ProjectShortcode should b equal") {
+    test("ProjectShortcodes should be equal") {
       assertTrue(ProjectShortcode.make("AAAA") == ProjectShortcode.make("aaaa"))
     },
   )
