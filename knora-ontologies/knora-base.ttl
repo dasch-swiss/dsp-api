@@ -1,4 +1,4 @@
-    ###
+###
 # * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 # * SPDX-License-Identifier: Apache-2.0
 ###
@@ -159,11 +159,10 @@
                             "Comment"@en,
                             "Commentaire"@fr,
                             "Commento"@it ;
-    rdfs:comment            """Represents a comment on a resource as a knora-base:TextValue"""@de ;
+    rdfs:comment            """Represents a comment on a resource as a knora-base:FormattedTextValue"""@de ;
     :subjectClassConstraint :Resource ;
-    :objectClassConstraint  :TextValue ;
+    :objectClassConstraint  :FormattedTextValue ;
     :isEditable             true ;
-    salsah-gui:guiElement   salsah-gui:Richtext ;
     rdfs:subPropertyOf      :hasValue .
 
 
@@ -692,7 +691,7 @@
     rdf:type                owl:ObjectProperty ;
     rdfs:subPropertyOf      :valueHas ;
     :objectClassConstraint  :StandoffTag ;
-    :subjectClassConstraint :TextValue .
+    :subjectClassConstraint :StandoffTextValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasLanguage
@@ -700,7 +699,7 @@
 :valueHasLanguage
     rdf:type                  owl:DatatypeProperty ;
     :objectDatatypeConstraint xsd:string ;
-    :subjectClassConstraint   :TextValue .
+    :subjectClassConstraint   :StandoffTextValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasMapping
@@ -709,7 +708,7 @@
     rdf:type                owl:ObjectProperty ;
     rdfs:subPropertyOf      :valueHas ;
     :objectClassConstraint  :XMLToStandoffMapping ;
-    :subjectClassConstraint :TextValue .
+    :subjectClassConstraint :StandoffTextValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasMappingElement
@@ -1893,7 +1892,7 @@
 :StandoffDataTypeTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffTag ;
-    rdfs:comment    "Represents a knora-base value type in a TextValue"@en .
+    rdfs:comment    "Represents a knora-base value type in a StandoffTextValue"@en .
 
 
 #################################################################
@@ -1911,7 +1910,7 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :standoffTagHasLink ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:comment    "Represents a reference to a Knora resource in a TextValue"@en .
+    rdfs:comment    "Represents a reference to a Knora resource in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffUriTag
@@ -1920,7 +1919,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :UriBase ;
-    rdfs:comment    "Represents an arbitrary URI in a TextValue"@en .
+    rdfs:comment    "Represents an arbitrary URI in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffDateTag
@@ -1929,7 +1928,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :DateBase ;
-    rdfs:comment    "Represents a date in a TextValue"@en .
+    rdfs:comment    "Represents a date in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffColorTag
@@ -1938,7 +1937,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :ColorBase ;
-    rdfs:comment    "Represents a color in a TextValue"@en .
+    rdfs:comment    "Represents a color in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffIntegerTag
@@ -1947,7 +1946,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :IntBase ;
-    rdfs:comment    "Represents an integer value in a TextValue"@en .
+    rdfs:comment    "Represents an integer value in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffDecimalTag
@@ -1956,7 +1955,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :DecimalBase ;
-    rdfs:comment    "Represents a decimal (floating point) value in a TextValue"@en .
+    rdfs:comment    "Represents a decimal (floating point) value in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffIntervalTag
@@ -1965,7 +1964,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :IntervalBase ;
-    rdfs:comment    "Represents an interval in a TextValue"@en .
+    rdfs:comment    "Represents an interval in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffTimeTag
@@ -1974,7 +1973,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :TimeBase ;
-    rdfs:comment    "Represents a timestamp in a TextValue"@en .
+    rdfs:comment    "Represents a timestamp in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffBooleanTag
@@ -1983,7 +1982,7 @@
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffDataTypeTag,
                     :BooleanBase ;
-    rdfs:comment    "Represents a boolean in a TextValue"@en .
+    rdfs:comment    "Represents a boolean in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag
@@ -1995,7 +1994,7 @@
                     [ rdf:type        owl:Restriction ;
                       owl:onProperty  :standoffTagHasInternalReference ;
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:comment    "Represents an internal reference in a TextValue"@en .
+    rdfs:comment    "Represents an internal reference in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#StillImageFileValue
@@ -2145,11 +2144,33 @@
     rdfs:label      "Mapping from XML to standoff entities"@en ;
     rdfs:comment    "Mapping from XML to standoff entities" .
 
+
 ###  http://www.knora.org/ontology/knora-base#TextValue
 
 :TextValue
     rdf:type        owl:Class ;
+    rdfs:label      "An abstract TextValue. Should not be instantiated, only its subclasses"@en ;
     rdfs:subClassOf :Value,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :valueHasLanguage ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+
+
+###  http://www.knora.org/ontology/knora-base#TextValue
+
+:UnformattedTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "A TextValue without any formatting"@en ;
+    rdfs:subClassOf :TextValue ;
+    :canBeInstantiated true .
+
+
+###  http://www.knora.org/ontology/knora-base#TextValue
+
+:StandoffTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "An abstract TextValue with standoff markup. Should not be instantiated, only its subclasses"@en ;
+    rdfs:subClassOf :TextValue,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasStandoff ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ],
@@ -2157,11 +2178,27 @@
                       owl:onProperty     :valueHasMaxStandoffStartIndex ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
-                      owl:onProperty     :valueHasLanguage ;
-                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
-                    [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasMapping ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+
+
+###  http://www.knora.org/ontology/knora-base#TextValue
+
+:FormattedTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "A TextValue with rich text formatting according to the <http://rdfh.ch/standoff/mappings/StandardMapping>"@en ;
+    rdfs:subClassOf :StandoffTextValue ;
+    :canBeInstantiated true .
+
+
+###  http://www.knora.org/ontology/knora-base#TextValue
+
+
+:CustomTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "A TextValue with markup defined by a custom XML to standoff mapping"@en ;
+    rdfs:subClassOf :StandoffTextValue ;
+    :canBeInstantiated true .
 
 
 ###  http://www.knora.org/ontology/knora-base#ValueBase
