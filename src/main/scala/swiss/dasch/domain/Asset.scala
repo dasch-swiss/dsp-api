@@ -11,11 +11,11 @@ import zio.nio.file.{ Files, Path }
 
 import java.io.IOException
 
-opaque type ProjectShortcode = String Refined MatchesRegex["""^\d{4}$"""]
+opaque type ProjectShortcode = String Refined MatchesRegex["""^\p{XDigit}{4,4}$"""]
 type IiifPrefix              = ProjectShortcode
 
 object ProjectShortcode {
-  def make(shortcode: String): Either[String, ProjectShortcode] = refineV(shortcode)
+  def make(shortcode: String): Either[String, ProjectShortcode] = refineV(shortcode.toUpperCase)
 }
 
 final case class DotInfoFileContent(
