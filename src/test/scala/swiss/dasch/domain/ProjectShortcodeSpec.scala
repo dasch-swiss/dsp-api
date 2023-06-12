@@ -24,8 +24,10 @@ object ProjectShortcodeSpec extends ZIOSpecDefault {
         assertTrue(ProjectShortcode.make(shortcode).isLeft)
       }
     },
-    test("ProjectShortcodes should be equal") {
-      assertTrue(ProjectShortcode.make("AAAA") == ProjectShortcode.make("aaaa"))
+    test("ProjectShortcodes with different cases should be equal") {
+      check(Gen.fromZIO(randomFourDigitHexString)) { shortcode =>
+        assertTrue(ProjectShortcode.make(shortcode.toUpperCase) == ProjectShortcode.make(shortcode.toLowerCase()))
+      }
     },
   )
 }
