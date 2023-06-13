@@ -699,7 +699,7 @@
 :valueHasLanguage
     rdf:type                  owl:DatatypeProperty ;
     :objectDatatypeConstraint xsd:string ;
-    :subjectClassConstraint   :StandoffTextValue .
+    :subjectClassConstraint   :TextValue .
 
 
 ###  http://www.knora.org/ontology/knora-base#valueHasMapping
