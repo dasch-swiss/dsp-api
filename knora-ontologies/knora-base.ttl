@@ -2194,7 +2194,7 @@
 ###  http://www.knora.org/ontology/knora-base#TextValue
 
 
-:CustomTextValue
+:CustomFormattedTextValue
     rdf:type        owl:Class ;
     rdfs:label      "A TextValue with markup defined by a custom XML to standoff mapping"@en ;
     rdfs:subClassOf :StandoffTextValue ;
