@@ -12,7 +12,7 @@ addSbtPlugin("com.typesafe.play" % "sbt-twirl"           % "1.5.2")
 addSbtPlugin("com.eed3si9n"      % "sbt-assembly"        % "2.1.1")
 addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent"       % "0.1.6")
 // also update the scalac-scoverage-runtime version in build.sbt
-addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "2.0.7")
+addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "2.0.8")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo" % "0.11.0")
 addSbtPlugin("org.scalameta"     % "sbt-scalafmt"  % "2.5.0")
 addSbtPlugin("ch.epfl.scala"     % "sbt-scalafix"  % "0.10.4")
