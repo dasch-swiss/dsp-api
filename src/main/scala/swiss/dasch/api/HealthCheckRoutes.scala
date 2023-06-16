@@ -12,11 +12,11 @@ import zio.http._
 object HealthCheckRoutes {
 
   val app: HttpApp[HealthCheckService, Nothing] = Http.collectZIO {
-    case Method.HEAD -> !! / "health" =>
+    case Method.HEAD -> Root / "health" =>
       ZIO.succeed {
         Response.status(Status.NoContent)
       }
-    case Method.GET -> !! / "health"  =>
+    case Method.GET -> Root / "health"  =>
       HealthCheckService.check.map { result =>
         if (result.isHealthy) Response.ok
         else Response.status(Status.InternalServerError)

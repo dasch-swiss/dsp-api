@@ -9,10 +9,10 @@ import swiss.dasch.api.*
 import swiss.dasch.api.healthcheck.*
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.ApiConfig
-import swiss.dasch.domain.AssetServiceLive
+import swiss.dasch.domain.{ AssetService, AssetServiceLive }
 import zio.*
 import zio.config.*
-import zio.http.Server
+import zio.http.{ Http, Request, Response, Server }
 import zio.logging.backend.SLF4J
 
 object Main extends ZIOAppDefault {
@@ -27,11 +27,12 @@ object Main extends ZIOAppDefault {
       }
       .orDie
 
-  val routes = HealthCheckRoutes.app ++ ExportEndpoint.app
+  private val routes: Http[AssetService with HealthCheckService, Response, Request, Response] =
+    HealthCheckRoutes.app ++ ExportEndpoint.app
 
   private val program = Server.serve(routes)
 
-  override val run =
+  override val run: ZIO[Any with Scope, ReadError[String], Nothing] =
     program.provide(
       HealthCheckServiceLive.layer,
       Configuration.layer,

@@ -15,7 +15,7 @@ val testContainersVersion = "0.40.15"
 val zioMockVersion        = "1.0.0-RC11"
 val zioNioVersion         = "2.0.1"
 val zioPreludeVersion     = "1.0.0-RC19"
-val zioHttpVersion        = "3.0.0-RC1"
+val zioHttpVersion        = "3.0.0-RC2"
 
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging, DockerPlugin)

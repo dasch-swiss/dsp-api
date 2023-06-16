@@ -13,6 +13,7 @@ import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
 import zio.json.{ DeriveJsonCodec, DeriveJsonDecoder, DeriveJsonEncoder, JsonCodec, JsonDecoder, JsonEncoder }
 import zio.nio.file.{ Files, Path }
+import zio.stream.ZStream
 
 import java.io.IOException
 
@@ -35,11 +36,12 @@ object DotInfoFileContent {
   implicit val codec: JsonCodec[DotInfoFileContent] = DeriveJsonCodec.gen[DotInfoFileContent]
 }
 
-trait AssetService  {
+trait AssetService {
   def listAllProjects(): IO[IOException, Chunk[ProjectShortcode]]
   def findProject(shortcode: ProjectShortcode): IO[IOException, Option[Path]]
   def zipProject(shortcode: ProjectShortcode): Task[Option[Path]]
 }
+
 object AssetService {
   def listAllProjects(): ZIO[AssetService, IOException, Chunk[ProjectShortcode]] =
     ZIO.serviceWithZIO[AssetService](_.listAllProjects())

@@ -21,22 +21,29 @@ object ExportEndpointSpec extends ZIOSpecDefault {
     suite("ExportEndpoint")(
       suite("POST on /export/{project} should")(
         test("given the project does not exist, return 404") {
-          val url = URL.empty.withPath(!! / "export" / nonExistentProject.toString)
+          val url = URL.empty.withPath(Root / "export" / nonExistentProject.toString)
           for {
             response <- ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
           } yield assertTrue(response.status == Status.NotFound)
         },
         test("given the project shortcode is invalid, return 400") {
-          val url = URL.empty.withPath(!! / "export" / "invalid-short-code")
+          val url = URL.empty.withPath(Root / "export" / "invalid-short-code")
           for {
             response <- ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
           } yield assertTrue(response.status == Status.BadRequest)
         },
-        test("given the project is valid, return 200") {
-          val url = URL.empty.withPath(!! / "export" / existingProject.toString)
+        test("given the project is valid, return 200 with correct headers") {
+          val url = URL.empty.withPath(Root / "export" / existingProject.toString)
           for {
             response <- ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
-          } yield assertTrue(response.status == Status.Ok)
+          } yield assertTrue(
+            response.status == Status.Ok,
+            response
+              .headers
+              .get("Content-Disposition")
+              .contains(s"attachment; filename=export-${existingProject.toString}.zip"),
+            response.headers.get("Content-Type").contains("application/zip"),
+          )
         },
       )
     ).provide(AssetServiceLive.layer, SpecConfigurations.storageConfigLayer)
