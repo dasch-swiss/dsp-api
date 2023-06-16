@@ -36,8 +36,8 @@ object Configuration {
   }
 
   final case class StorageConfig(assetDir: String, tempDir: String) {
-    val assetPath: Path = Path(assetDir)
-    val tempPath: Path  = Path(tempDir)
+    val assetPath: Path  = Path(assetDir)
+    val tempPath: Path   = Path(tempDir)
   }
   object StorageConfig                                              {
     private val storageConfigDescription: ConfigDescriptor[StorageConfig] =
@@ -46,15 +46,20 @@ object Configuration {
           string("temp-dir")
       }.to[StorageConfig]
 
-    private[Configuration] val layer: ZLayer[Any, ReadError[String], StorageConfig] = ZLayer(
+    private[Configuration] val layer: Layer[ReadError[String], StorageConfig] = ZLayer(
       read(
         storageConfigDescription.from(
           TypesafeConfigSource.fromTypesafeConfig(
             ZIO.attempt(ConfigFactory.defaultApplication())
           )
         )
-      )
+      ).tap(verifyFoldersExist)
     )
+
+    private def verifyFoldersExist(config: Configuration.StorageConfig) =
+      ZIO
+        .die(new IllegalStateException(s"Asset (${config.assetPath}) and temp (${config.tempPath}) folders must exist"))
+        .unlessZIO(Files.isDirectory(config.assetPath) && Files.isDirectory(config.tempPath))
   }
 
   val layer: Layer[ReadError[String], ApiConfig with StorageConfig] = ApiConfig.layer ++ StorageConfig.layer

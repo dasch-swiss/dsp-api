@@ -17,25 +17,24 @@ import java.net.URI
 
 object ExportEndpointSpec extends ZIOSpecDefault {
 
+  private def postEmptyBody(url: URL) = ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
+
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("ExportEndpoint")(
       suite("POST on /export/{project} should")(
         test("given the project does not exist, return 404") {
-          val url = URL.empty.withPath(Root / "export" / nonExistentProject.toString)
           for {
-            response <- ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
+            response <- postEmptyBody(URL(Root / "export" / nonExistentProject.toString))
           } yield assertTrue(response.status == Status.NotFound)
         },
         test("given the project shortcode is invalid, return 400") {
-          val url = URL.empty.withPath(Root / "export" / "invalid-short-code")
           for {
-            response <- ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
+            response <- postEmptyBody(URL(Root / "export" / "invalid-short-code"))
           } yield assertTrue(response.status == Status.BadRequest)
         },
         test("given the project is valid, return 200 with correct headers") {
-          val url = URL.empty.withPath(Root / "export" / existingProject.toString)
           for {
-            response <- ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
+            response <- postEmptyBody(URL(Root / "export" / existingProject.toString))
           } yield assertTrue(
             response.status == Status.Ok,
             response
