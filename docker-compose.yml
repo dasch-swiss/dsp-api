@@ -1,0 +1,6 @@
+services:
+
+  ingest:
+    image: daschswiss/dsp-ingest:latest
+    ports:
+      - 3340:3340

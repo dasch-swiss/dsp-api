@@ -169,13 +169,16 @@ project/plugins/project/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 
+## Removes all VisualStudioCode files
+.vscode/
+
 ### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+# .vscode/*
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+# !.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
 .history/

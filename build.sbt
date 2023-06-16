@@ -1,3 +1,7 @@
+import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{ Docker, dockerRepository }
+import com.typesafe.sbt.packager.docker.Cmd
+
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
@@ -14,15 +18,16 @@ val zioPreludeVersion     = "1.0.0-RC19"
 val zioHttpVersion        = "3.0.0-RC1"
 
 lazy val root = (project in file("."))
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
   .settings(
     inThisBuild(
       List(
         organization := "daschswiss",
-        scalaVersion := "3.3.0",
+        scalaVersion := "3.2.2",
       )
     ),
-    name                   := "dsp-ingest",
-    headerLicense          := Some(
+    name                                 := "dsp-ingest",
+    headerLicense                        := Some(
       HeaderLicense.Custom(
         """|Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
            |SPDX-License-Identifier: Apache-2.0
@@ -54,9 +59,20 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-mock"          % zioMockVersion % Test,
       "dev.zio" %% "zio-test-magnolia" % zioVersion     % Test,
     ),
-    testFrameworks         := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    jibBaseImage           := "gcr.io/distroless/java17-debian11",
-    jibName                := "dsp-ingest",
-    jibUseCurrentTimestamp := true,
+    testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Docker / dockerRepository            := Some("daschswiss"),
+    Docker / packageName                 := "dsp-ingest",
+    dockerExposedPorts ++= Seq(9999),
+    Docker / defaultLinuxInstallLocation := "/sipi",
+    dockerUpdateLatest                   := true,
+    dockerBaseImage                      := "daschswiss/knora-sipi:latest",
+    dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
+    dockerCommands += Cmd(
+      "RUN",
+      "apt-get update && apt-get install -y openjdk-17-jre-headless && apt-get clean",
+    ),
+    dockerCommands                       := dockerCommands.value.filterNot {
+      case Cmd("USER", args @ _*) => true
+      case cmd                    => false
+    },
   )
-  .enablePlugins(JavaAppPackaging)
