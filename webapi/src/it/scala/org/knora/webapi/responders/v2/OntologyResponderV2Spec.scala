@@ -116,6 +116,57 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   val anythingHasStandoffLinkTo: IRI       = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
   val anythingHasStandoffLinkToValue: IRI  = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
 
+  private def propertyPredicates(
+    subjectType: SmartIri = OntologyConstants.KnoraBase.Resource.toSmartIri,
+    objectType: SmartIri = OntologyConstants.KnoraBase.Resource.toSmartIri,
+    label: String = "default label",
+    guiElement: Option[SmartIri] = None
+  ): Map[SmartIri, PredicateInfoV2] = {
+    val guiElementPredicate = guiElement.map(iri =>
+      SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+        predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
+        objects = Seq(SmartIriLiteralV2(iri))
+      )
+    )
+    Map(
+      OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+        objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+      ),
+      OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
+        objects = Seq(SmartIriLiteralV2(subjectType))
+      ),
+      OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+        objects = Seq(SmartIriLiteralV2(objectType))
+      ),
+      OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+        objects = Seq(StringLiteralV2(label, Some("en")))
+      )
+    ) ++ guiElementPredicate
+  }
+
+  private def propertyObjectType(ontology: ReadOntologyV2, propertyIri: SmartIri): SmartIri =
+    ontology
+      .properties(propertyIri)
+      .entityInfoContent
+      .predicates(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri)
+      .objects
+      .head
+      .asInstanceOf[SmartIriLiteralV2]
+      .value
+
+  private def updateAnythingLmd(ontology: ReadOntologyV2): Unit = {
+    val metadata = ontology.ontologyMetadata
+    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+      throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+    )
+    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+    anythingLastModDate = newAnythingLastModDate
+  }
+
   "The ontology responder v2" should {
     "not allow a user to create an ontology if they are not a sysadmin or an admin in the ontology's project" in {
       appActor ! CreateOntologyRequestV2(
@@ -6659,5 +6710,92 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
     }
 
+    "create a property pointing to a kb:UnformattedTextValue" in {
+      val unformattedTextValuePropertyIri = AnythingOntologyIri.makeEntityIri("hasUnformattedText")
+      val unformattedTextValuePropertyInfoContent = PropertyInfoContentV2(
+        propertyIri = unformattedTextValuePropertyIri,
+        predicates = propertyPredicates(objectType = OntologyConstants.KnoraBase.UnformattedTextValue.toSmartIri),
+        subPropertyOf = Set(OntologyConstants.KnoraBase.HasValue.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      appActor ! CreatePropertyRequestV2(
+        propertyInfoContent = unformattedTextValuePropertyInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val objectType       = propertyObjectType(externalOntology, unformattedTextValuePropertyIri)
+        assert(objectType == OntologyConstants.KnoraBase.UnformattedTextValue.toSmartIri)
+        updateAnythingLmd(externalOntology)
+      }
+    }
+
+    "create a property pointing to a kb:FormattedTextValue" in {
+      val formattedTextValuePropertyIri = AnythingOntologyIri.makeEntityIri("hasFormattedText")
+      val formattedTextValuePropertyInfoContent = PropertyInfoContentV2(
+        propertyIri = formattedTextValuePropertyIri,
+        predicates = propertyPredicates(objectType = OntologyConstants.KnoraBase.FormattedTextValue.toSmartIri),
+        subPropertyOf = Set(OntologyConstants.KnoraBase.HasValue.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      appActor ! CreatePropertyRequestV2(
+        propertyInfoContent = formattedTextValuePropertyInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val objectType       = propertyObjectType(externalOntology, formattedTextValuePropertyIri)
+        assert(objectType == OntologyConstants.KnoraBase.FormattedTextValue.toSmartIri)
+        updateAnythingLmd(externalOntology)
+      }
+    }
+
+    // create a property pointing to a CustomFormattedTextValue
+    "create a property pointing to a CustomFormattedTextValue" in {
+      val customFormattedTextValuePropertyIri = AnythingOntologyIri.makeEntityIri("hasCustomFormattedText")
+      val customFormattedTextValuePropertyInfoContent = PropertyInfoContentV2(
+        propertyIri = customFormattedTextValuePropertyIri,
+        predicates = propertyPredicates(objectType = OntologyConstants.KnoraBase.CustomFormattedTextValue.toSmartIri),
+        subPropertyOf = Set(OntologyConstants.KnoraBase.HasValue.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      appActor ! CreatePropertyRequestV2(
+        propertyInfoContent = customFormattedTextValuePropertyInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val objectType       = propertyObjectType(externalOntology, customFormattedTextValuePropertyIri)
+        assert(objectType == OntologyConstants.KnoraBase.CustomFormattedTextValue.toSmartIri)
+        updateAnythingLmd(externalOntology)
+      }
+    }
+
+    // create a subclass of UnformattedTextValue
+    // create a property pointing to the subclass of UnformattedTextValue
+
+    // create a subclass of FormattedTextValue
+    // create a property pointing to the subclass of FormattedTextValue
+
+    // create a subclass of CustomFormattedTextValue
+    // create a property pointing to the subclass of CustomFormattedTextValue
+
+    // not create a property pointing to a TextValue (ignored for now)
+    // not create a property pointing to a StandoffTextValue (ignored for now)
+
+    // not create a subclass of TextValue (ignored for now)
+    // not create a subclass of StandoffTextValue (ignored for now)
   }
 }
