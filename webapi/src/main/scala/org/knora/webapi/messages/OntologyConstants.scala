@@ -281,27 +281,31 @@ object OntologyConstants {
     val TimeBase: IRI     = KnoraBasePrefixExpansion + "TimeBase"
     val ColorBase: IRI    = KnoraBasePrefixExpansion + "ColorBase"
 
-    val TextValue: IRI            = KnoraBasePrefixExpansion + "TextValue"
-    val IntValue: IRI             = KnoraBasePrefixExpansion + "IntValue"
-    val BooleanValue: IRI         = KnoraBasePrefixExpansion + "BooleanValue"
-    val UriValue: IRI             = KnoraBasePrefixExpansion + "UriValue"
-    val DecimalValue: IRI         = KnoraBasePrefixExpansion + "DecimalValue"
-    val DateValue: IRI            = KnoraBasePrefixExpansion + "DateValue"
-    val ColorValue: IRI           = KnoraBasePrefixExpansion + "ColorValue"
-    val GeomValue: IRI            = KnoraBasePrefixExpansion + "GeomValue"
-    val ListValue: IRI            = KnoraBasePrefixExpansion + "ListValue"
-    val IntervalValue: IRI        = KnoraBasePrefixExpansion + "IntervalValue"
-    val TimeValue: IRI            = KnoraBasePrefixExpansion + "TimeValue"
-    val LinkValue: IRI            = KnoraBasePrefixExpansion + "LinkValue"
-    val GeonameValue: IRI         = KnoraBasePrefixExpansion + "GeonameValue"
-    val FileValue: IRI            = KnoraBasePrefixExpansion + "FileValue"
-    val AudioFileValue: IRI       = KnoraBasePrefixExpansion + "AudioFileValue"
-    val DDDFileValue: IRI         = KnoraBasePrefixExpansion + "DDDFileValue"
-    val DocumentFileValue: IRI    = KnoraBasePrefixExpansion + "DocumentFileValue"
-    val ArchiveFileValue: IRI     = KnoraBasePrefixExpansion + "ArchiveFileValue"
-    val StillImageFileValue: IRI  = KnoraBasePrefixExpansion + "StillImageFileValue"
-    val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
-    val TextFileValue: IRI        = KnoraBasePrefixExpansion + "TextFileValue"
+    val TextValue: IRI                = KnoraBasePrefixExpansion + "TextValue"
+    val UnformattedTextValue: IRI     = KnoraBasePrefixExpansion + "UnformattedTextValue"
+    val StandoffTextValue: IRI        = KnoraBasePrefixExpansion + "StandoffTextValue"
+    val FormattedTextValue: IRI       = KnoraBasePrefixExpansion + "FormattedTextValue"
+    val CustomFormattedTextValue: IRI = KnoraBasePrefixExpansion + "CustomFormattedTextValue"
+    val IntValue: IRI                 = KnoraBasePrefixExpansion + "IntValue"
+    val BooleanValue: IRI             = KnoraBasePrefixExpansion + "BooleanValue"
+    val UriValue: IRI                 = KnoraBasePrefixExpansion + "UriValue"
+    val DecimalValue: IRI             = KnoraBasePrefixExpansion + "DecimalValue"
+    val DateValue: IRI                = KnoraBasePrefixExpansion + "DateValue"
+    val ColorValue: IRI               = KnoraBasePrefixExpansion + "ColorValue"
+    val GeomValue: IRI                = KnoraBasePrefixExpansion + "GeomValue"
+    val ListValue: IRI                = KnoraBasePrefixExpansion + "ListValue"
+    val IntervalValue: IRI            = KnoraBasePrefixExpansion + "IntervalValue"
+    val TimeValue: IRI                = KnoraBasePrefixExpansion + "TimeValue"
+    val LinkValue: IRI                = KnoraBasePrefixExpansion + "LinkValue"
+    val GeonameValue: IRI             = KnoraBasePrefixExpansion + "GeonameValue"
+    val FileValue: IRI                = KnoraBasePrefixExpansion + "FileValue"
+    val AudioFileValue: IRI           = KnoraBasePrefixExpansion + "AudioFileValue"
+    val DDDFileValue: IRI             = KnoraBasePrefixExpansion + "DDDFileValue"
+    val DocumentFileValue: IRI        = KnoraBasePrefixExpansion + "DocumentFileValue"
+    val ArchiveFileValue: IRI         = KnoraBasePrefixExpansion + "ArchiveFileValue"
+    val StillImageFileValue: IRI      = KnoraBasePrefixExpansion + "StillImageFileValue"
+    val MovingImageFileValue: IRI     = KnoraBasePrefixExpansion + "MovingImageFileValue"
+    val TextFileValue: IRI            = KnoraBasePrefixExpansion + "TextFileValue"
 
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
@@ -316,6 +320,10 @@ object OntologyConstants {
 
     val ValueClasses: Set[IRI] = Set(
       TextValue,
+      UnformattedTextValue,
+      StandoffTextValue,
+      FormattedTextValue,
+      CustomFormattedTextValue,
       IntValue,
       BooleanValue,
       UriValue,
@@ -757,21 +765,25 @@ object OntologyConstants {
       DecimalBase
     )
 
-    val Value: IRI         = KnoraApiV2PrefixExpansion + "Value"
-    val TextValue: IRI     = KnoraApiV2PrefixExpansion + "TextValue"
-    val IntValue: IRI      = KnoraApiV2PrefixExpansion + "IntValue"
-    val DecimalValue: IRI  = KnoraApiV2PrefixExpansion + "DecimalValue"
-    val BooleanValue: IRI  = KnoraApiV2PrefixExpansion + "BooleanValue"
-    val DateValue: IRI     = KnoraApiV2PrefixExpansion + "DateValue"
-    val GeomValue: IRI     = KnoraApiV2PrefixExpansion + "GeomValue"
-    val IntervalValue: IRI = KnoraApiV2PrefixExpansion + "IntervalValue"
-    val TimeValue: IRI     = KnoraApiV2PrefixExpansion + "TimeValue"
-    val LinkValue: IRI     = KnoraApiV2PrefixExpansion + "LinkValue"
-    val ListValue: IRI     = KnoraApiV2PrefixExpansion + "ListValue"
-    val UriValue: IRI      = KnoraApiV2PrefixExpansion + "UriValue"
-    val GeonameValue: IRI  = KnoraApiV2PrefixExpansion + "GeonameValue"
-    val FileValue: IRI     = KnoraApiV2PrefixExpansion + "FileValue"
-    val ColorValue: IRI    = KnoraApiV2PrefixExpansion + "ColorValue"
+    val Value: IRI                    = KnoraApiV2PrefixExpansion + "Value"
+    val TextValue: IRI                = KnoraApiV2PrefixExpansion + "TextValue"
+    val UnformattedTextValue: IRI     = KnoraApiV2PrefixExpansion + "UnformattedTextValue"
+    val StandoffTextValue: IRI        = KnoraApiV2PrefixExpansion + "StandoffTextValue"
+    val FormattedTextValue: IRI       = KnoraApiV2PrefixExpansion + "FormattedTextValue"
+    val CustomFormattedTextValue: IRI = KnoraApiV2PrefixExpansion + "CustomFormattedTextValue"
+    val IntValue: IRI                 = KnoraApiV2PrefixExpansion + "IntValue"
+    val DecimalValue: IRI             = KnoraApiV2PrefixExpansion + "DecimalValue"
+    val BooleanValue: IRI             = KnoraApiV2PrefixExpansion + "BooleanValue"
+    val DateValue: IRI                = KnoraApiV2PrefixExpansion + "DateValue"
+    val GeomValue: IRI                = KnoraApiV2PrefixExpansion + "GeomValue"
+    val IntervalValue: IRI            = KnoraApiV2PrefixExpansion + "IntervalValue"
+    val TimeValue: IRI                = KnoraApiV2PrefixExpansion + "TimeValue"
+    val LinkValue: IRI                = KnoraApiV2PrefixExpansion + "LinkValue"
+    val ListValue: IRI                = KnoraApiV2PrefixExpansion + "ListValue"
+    val UriValue: IRI                 = KnoraApiV2PrefixExpansion + "UriValue"
+    val GeonameValue: IRI             = KnoraApiV2PrefixExpansion + "GeonameValue"
+    val FileValue: IRI                = KnoraApiV2PrefixExpansion + "FileValue"
+    val ColorValue: IRI               = KnoraApiV2PrefixExpansion + "ColorValue"
 
     val StillImageFileValue: IRI  = KnoraApiV2PrefixExpansion + "StillImageFileValue"
     val MovingImageFileValue: IRI = KnoraApiV2PrefixExpansion + "MovingImageFileValue"
@@ -796,6 +808,10 @@ object OntologyConstants {
 
     val ValueClasses: Set[IRI] = Set(
       TextValue,
+      UnformattedTextValue,
+      StandoffTextValue,
+      FormattedTextValue,
+      CustomFormattedTextValue,
       IntValue,
       DecimalValue,
       BooleanValue,
@@ -1022,6 +1038,10 @@ object OntologyConstants {
       KnoraBase.ObjectClassConstraint    -> KnoraApiV2Simple.ObjectType,
       KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2Simple.ObjectType,
       KnoraBase.TextValue                -> Xsd.String,
+      KnoraBase.UnformattedTextValue     -> Xsd.String,
+      KnoraBase.StandoffTextValue        -> Xsd.String,
+      KnoraBase.FormattedTextValue       -> Xsd.String,
+      KnoraBase.CustomFormattedTextValue -> Xsd.String,
       KnoraBase.IntValue                 -> Xsd.Integer,
       KnoraBase.BooleanValue             -> Xsd.Boolean,
       KnoraBase.UriValue                 -> Xsd.Uri,
