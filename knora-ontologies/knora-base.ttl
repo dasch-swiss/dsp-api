@@ -2132,6 +2132,7 @@
     rdfs:label      "Mapping from XML to standoff entities"@en ;
     rdfs:comment    "Mapping from XML to standoff entities" .
 
+
 ###  http://www.knora.org/ontology/knora-base#XMLToStandoffMapping
 
 :XMLToStandoffMapping
@@ -2144,6 +2145,7 @@
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
     rdfs:label      "Mapping from XML to standoff entities"@en ;
     rdfs:comment    "Mapping from XML to standoff entities" .
+
 
 ###  http://www.knora.org/ontology/knora-base#TextValue
 
@@ -2162,6 +2164,51 @@
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasMapping ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+
+
+###  http://www.knora.org/ontology/knora-base#UnformattedTextValue
+
+:UnformattedTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "A TextValue without any formatting"@en ;
+    rdfs:subClassOf :TextValue ;
+    :canBeInstantiated true .
+
+
+###  http://www.knora.org/ontology/knora-base#StandoffTextValue
+
+:StandoffTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "An abstract TextValue with standoff markup. Should not be instantiated, only its subclasses"@en ;
+    :canBeInstantiated false ;
+    rdfs:subClassOf :TextValue,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :valueHasStandoff ;
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ], # TODO: check correct cardinalities for standoff properties
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :valueHasMaxStandoffStartIndex ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :valueHasMapping ;
+                      owl:cardinality "1"^^xsd:nonNegativeInteger ] .
+
+
+###  http://www.knora.org/ontology/knora-base#FormattedTextValue
+
+:FormattedTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "A TextValue with rich text formatting according to the <http://rdfh.ch/standoff/mappings/StandardMapping>"@en ;
+    rdfs:subClassOf :StandoffTextValue ;
+    :canBeInstantiated true .
+
+
+###  http://www.knora.org/ontology/knora-base#CustomFormattedTextValue
+
+:CustomFormattedTextValue
+    rdf:type        owl:Class ;
+    rdfs:label      "A TextValue with markup defined by a custom XML to standoff mapping"@en ;
+    rdfs:subClassOf :StandoffTextValue ;
+    :canBeInstantiated true .
 
 
 ###  http://www.knora.org/ontology/knora-base#ValueBase
