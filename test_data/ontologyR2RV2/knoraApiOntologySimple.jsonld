@@ -1257,6 +1257,14 @@
         {
             "@id": "rdfs:label",
             "@type": "owl:DatatypeProperty"
+        },
+        {
+            "@id": "xsd:string",
+            "@type": "owl:Class",
+            "rdfs:subClassOf": {
+                "@id": "xsd:string"
+            },
+            "rdfs:label": "A TextValue with rich text formatting according to the <http://rdfh.ch/standoff/mappings/StandardMapping>"
         }
     ],
     "@context": {
