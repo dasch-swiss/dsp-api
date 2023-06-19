@@ -177,7 +177,7 @@ case class CreateValueResponseV2(
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     if (targetSchema != ApiV2Complex) {
-      throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
+      throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex Schema")
     }
 
     JsonLDDocument(
@@ -402,7 +402,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
-      throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
+      throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex Schema")
     }
 
     JsonLDDocument(
@@ -1135,6 +1135,8 @@ object ValueContentV2 {
         valueContent <-
           valueType.toString match {
             case TextValue            => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case UnformattedTextValue => UnformattedTextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case FormattedTextValue   => FormattedTextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
             case IntValue             => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
             case DecimalValue         => DecimalValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
             case BooleanValue         => BooleanValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
@@ -1762,6 +1764,459 @@ object TextValueContentV2 {
 
       } yield textValue
   }
+}
+
+/**
+ * Represents an unformatted text value.
+ *
+ * @param valueHasString the string representation of this text value.
+ * @param comment        a comment on this [[UnformattedTextValueContentV2]], if any.
+ */
+case class UnformattedTextValueContentV2(
+  ontologySchema: OntologySchema,
+  valueHasString: String,
+  valueHasLanguage: Option[String] = None,
+  comment: Option[String] = None
+) extends ValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.UnformattedTextValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def toOntologySchema(targetSchema: OntologySchema): UnformattedTextValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: ProjectADM,
+    appConfig: AppConfig,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDValue =
+    targetSchema match {
+      case ApiV2Simple =>
+        valueHasLanguage match {
+          case Some(lang) =>
+            // In the simple schema, if this text value specifies a language, return it using a JSON-LD
+            // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
+            JsonLDUtil.objectWithLangToJsonLDObject(
+              obj = valueHasString,
+              lang = lang
+            )
+          case None => JsonLDString(valueHasString)
+        }
+
+      case ApiV2Complex =>
+        // In the complex schema, if this text value specifies a language, return it using the predicate
+        // knora-api:textValueHasLanguage.
+        val objectMapWithLanguage: Map[IRI, JsonLDValue] = valueHasLanguage match {
+          case Some(lang) =>
+            Map(ValueAsString -> JsonLDString(valueHasString), TextValueHasLanguage -> JsonLDString(lang))
+          case None => Map(ValueAsString -> JsonLDString(valueHasString))
+        }
+        JsonLDObject(objectMapWithLanguage)
+    }
+
+  override def unescape: ValueContentV2 =
+    copy(
+      valueHasString = Iri.fromSparqlEncodedString(valueHasString),
+      comment = comment.map(Iri.fromSparqlEncodedString)
+    )
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
+    // It doesn't make sense for a resource to have two different text values associated with the same property,
+    // containing the same text but different markup.
+    that match {
+      case thatTextValue: UnformattedTextValueContentV2 => valueHasString == thatTextValue.valueHasString
+      case _                                            => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
+    // It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup
+    // or the comment.
+    currentVersion match {
+      case thatTextValue: UnformattedTextValueContentV2 =>
+        valueHasString == thatTextValue.valueHasString && comment == thatTextValue.comment
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+}
+
+/**
+ * Constructs [[UnformattedTextValueContentV2]] objects based on JSON-LD input.
+ */
+object UnformattedTextValueContentV2 {
+  private def getSparqlEncodedString(
+    obj: JsonLDObject,
+    key: String
+  ): ZIO[StringFormatter, BadRequestException, Option[String]] =
+    obj
+      .getString(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.toSparqlEncodedString(it, s"Invalid key: $key: $it")))
+
+  private def getIriFromObject(obj: JsonLDObject, key: String): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
+    obj
+      .getIriInObject(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.validateAndEscapeIri(it, s"Invalid key: $key: $it")))
+
+  /**
+   * Converts a JSON-LD object to a [[UnformattedTextValueContentV2]].
+   *
+   * @param jsonLdObject         the JSON-LD object.
+   * @param requestingUser       the user making the request.
+   * @return a [[UnformattedTextValueContentV2]].
+   */
+  def fromJsonLdObject(
+    jsonLdObject: JsonLDObject,
+    requestingUser: UserADM
+  ): ZIO[StringFormatter with MessageRelay, Throwable, UnformattedTextValueContentV2] =
+    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      for {
+        valueAsString <-
+          getSparqlEncodedString(jsonLdObject, ValueAsString).someOrFail(
+            BadRequestException("Missing valueAsString for UnformattedTextValue")
+          )
+        maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
+        comment               <- JsonLDUtil.getComment(jsonLdObject)
+      } yield UnformattedTextValueContentV2(ApiV2Complex, valueAsString, maybeValueHasLanguage, comment)
+    }
+}
+
+/**
+ * Represents a Knora text value, or a page of standoff markup that will be included in a text value.
+ *
+ * @param valueHasString the string representation of this text value.
+ * @param standoff       the standoff markup attached to the text value, if any.
+ * @param mappingIri     the IRI of the [[MappingXMLtoStandoff]] used with the text value.
+ * @param mapping        the [[MappingXMLtoStandoff]] used with the text value.
+ * @param comment        a comment on this [[FormattedTextValueContentV2]], if any.
+ */
+case class FormattedTextValueContentV2(
+  ontologySchema: OntologySchema,
+  valueHasString: String,
+  valueHasLanguage: Option[String] = None,
+  standoff: Seq[StandoffTagV2] = Vector.empty,
+  mappingIri: IRI,
+  mapping: MappingXMLtoStandoff,
+  xslt: Option[String] = None,
+  comment: Option[String] = None
+) extends ValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.FormattedTextValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  /**
+   * Returns the IRIs of any resources that are target of standoff link tags in this text value.
+   */
+  lazy val standoffLinkTagTargetResourceIris: Set[IRI] =
+    standoffLinkTagIriAttributes.map(_.value)
+
+  /**
+   * Returns the IRI attributes representing the target IRIs of any standoff links in this text value.
+   */
+  lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] =
+    standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) { case (acc, standoffTag: StandoffTagV2) =>
+      if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+        val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
+          case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
+        }.toSet
+
+        acc ++ iriAttributes
+      } else {
+        acc
+      }
+    }
+
+  /**
+   * The content of the text value without standoff, suitable for returning in API responses. This removes
+   * INFORMATION SEPARATOR TWO, which is used only internally.
+   */
+  private lazy val valueHasStringWithoutStandoff: String =
+    valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
+
+  /**
+   * The maximum start index in the standoff attached to this [[FormattedTextValueContentV2]]. This is used
+   * only when writing a text value to the triplestore.
+   */
+  lazy val computedMaxStandoffStartIndex: Option[Int] = if (standoff.nonEmpty) {
+    Some(standoff.map(_.startIndex).max)
+  } else {
+    None
+  }
+
+  override def toOntologySchema(targetSchema: OntologySchema): FormattedTextValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: ProjectADM,
+    appConfig: AppConfig,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDValue =
+    targetSchema match {
+      case ApiV2Simple =>
+        valueHasLanguage match {
+          case Some(lang) =>
+            // In the simple schema, if this text value specifies a language, return it using a JSON-LD
+            // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
+            JsonLDUtil.objectWithLangToJsonLDObject(
+              obj = valueHasStringWithoutStandoff,
+              lang = lang
+            )
+          case None => JsonLDString(valueHasStringWithoutStandoff)
+        }
+
+      case ApiV2Complex =>
+        val renderStandoffAsXml: Boolean = standoff.nonEmpty && SchemaOptions.renderMarkupAsXml(
+          targetSchema = targetSchema,
+          schemaOptions = schemaOptions
+        )
+        val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
+          val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
+            utf8str = valueHasString,
+            standoff = standoff,
+            mappingXMLtoStandoff = mapping
+          )
+
+          // check if there is an XSL transformation
+          xslt match {
+            case Some(definedXslt) =>
+              val xmlTransformed: String = XMLUtil.applyXSLTransformation(
+                xml = xmlFromStandoff,
+                xslt = definedXslt
+              )
+
+              // the xml was converted to HTML
+              Map(
+                TextValueAsHtml     -> JsonLDString(xmlTransformed),
+                TextValueAsXml      -> JsonLDString(xmlFromStandoff),
+                TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(mappingIri)
+              )
+
+            case None =>
+              Map(
+                TextValueAsXml      -> JsonLDString(xmlFromStandoff),
+                TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(mappingIri)
+              )
+          }
+        } else {
+          // We're not rendering standoff as XML. Return the text without markup.
+          Map(ValueAsString -> JsonLDString(valueHasStringWithoutStandoff))
+        }
+
+        // In the complex schema, if this text value specifies a language, return it using the predicate
+        // knora-api:textValueHasLanguage.
+        val objectMapWithLanguage: Map[IRI, JsonLDValue] = valueHasLanguage match {
+          case Some(lang) =>
+            objectMap + (TextValueHasLanguage -> JsonLDString(lang))
+          case None =>
+            objectMap
+        }
+
+        JsonLDObject(objectMapWithLanguage)
+    }
+
+  /**
+   * A convenience method that creates an IRI for each [[StandoffTagV2]] and resolves internal references to standoff node Iris.
+   *
+   * @return a list of [[CreateStandoffTagV2InTriplestore]] each representing a [[StandoffTagV2]] object
+   *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
+   */
+  def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV2InTriplestore] =
+    if (standoff.nonEmpty) {
+      // create an IRI for each standoff tag
+      // internal references to XML ids are not resolved yet
+      val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = standoff.map {
+        standoffNode: StandoffTagV2 =>
+          CreateStandoffTagV2InTriplestore(
+            standoffNode = standoffNode,
+            standoffTagInstanceIri = StandoffStringUtil.makeRandomStandoffTagIri(
+              valueIri = valueIri,
+              startIndex = standoffNode.startIndex
+            ) // generate IRI for new standoff node
+          )
+      }
+
+      // collect all the standoff tags that contain XML ids and
+      // map the XML ids to standoff node Iris
+      val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
+        standoffTag: CreateStandoffTagV2InTriplestore =>
+          // filter those tags out that have an XML id
+          standoffTag.standoffNode.originalXMLID.isDefined
+      }.map { standoffTagWithID: CreateStandoffTagV2InTriplestore =>
+        // return the XML id as a key and the standoff IRI as the value
+        standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
+      }.toMap
+
+      // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
+      // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
+      // hierarchical tags don't have end indexes.
+      val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map { tagWithIndex =>
+        tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
+      }.toMap
+
+      // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
+      val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
+        standoffTag: CreateStandoffTagV2InTriplestore =>
+          // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
+          val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] =
+            standoffTag.standoffNode.attributes.map {
+              case refAttr: StandoffTagInternalReferenceAttributeV2 =>
+                // resolve the XML id to the corresponding standoff node IRI
+                refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
+              case attr => attr
+            }
+
+          val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
+          val endParentIndex: Option[Int]   = standoffTag.standoffNode.endParentIndex
+
+          // return standoff tag with updated attributes
+          standoffTag.copy(
+            standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
+            startParentIri = startParentIndex.map(parentIndex =>
+              startIndexesToStandoffNodeIris(parentIndex)
+            ), // If there's a start parent index, get its IRI, otherwise None
+            endParentIri = endParentIndex.map(parentIndex =>
+              startIndexesToStandoffNodeIris(parentIndex)
+            ) // If there's an end parent index, get its IRI, otherwise None
+          )
+      }
+
+      standoffTagsWithNodeReferences
+    } else {
+      Seq.empty[CreateStandoffTagV2InTriplestore]
+    }
+
+  override def unescape: ValueContentV2 = {
+    // Unescape the text in standoff string attributes.
+    val unescapedStandoff = standoff.map { standoffTag =>
+      standoffTag.copy(
+        attributes = standoffTag.attributes.map {
+          case stringAttribute: StandoffTagStringAttributeV2 =>
+            stringAttribute.copy(value = Iri.fromSparqlEncodedString(stringAttribute.value))
+
+          case other => other
+        }
+      )
+    }
+
+    copy(
+      valueHasString = Iri.fromSparqlEncodedString(valueHasString),
+      standoff = unescapedStandoff,
+      comment = comment.map(commentStr => Iri.fromSparqlEncodedString(commentStr))
+    )
+  }
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
+    // It doesn't make sense for a resource to have two different text values associated with the same property,
+    // containing the same text but different markup.
+    that match {
+      case thatTextValue: FormattedTextValueContentV2 => valueHasString == thatTextValue.valueHasString
+      case _                                          => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
+    // It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup
+    // or the comment.
+    currentVersion match {
+      case thatTextValue: FormattedTextValueContentV2 =>
+        val valueHasStringIdentical: Boolean = valueHasString == thatTextValue.valueHasString
+        val mappingIdentitcal                = mappingIri == thatTextValue.mappingIri
+        // compare standoff nodes (sort them first by index) and the XML-to-standoff mapping IRI
+        val standoffIdentical = StandoffTagUtilV2.makeComparableStandoffCollection(standoff) == StandoffTagUtilV2
+          .makeComparableStandoffCollection(thatTextValue.standoff)
+        valueHasStringIdentical && standoffIdentical && mappingIdentitcal && comment == thatTextValue.comment
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+}
+
+/**
+ * Constructs [[FormattedTextValueContentV2]] objects based on JSON-LD input.
+ */
+object FormattedTextValueContentV2 {
+  private def getSparqlEncodedString(
+    obj: JsonLDObject,
+    key: String
+  ): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
+    obj
+      .getString(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.toSparqlEncodedString(it, s"Invalid key: $key: $it")))
+
+  private def getIriFromObject(obj: JsonLDObject, key: String): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
+    obj
+      .getIriInObject(key)
+      .mapError(BadRequestException(_))
+      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.validateAndEscapeIri(it, s"Invalid key: $key: $it")))
+
+  private def getTextValue(
+    textValueAsXml: String,
+    maybeValueHasLanguage: Option[IRI],
+    mappingResponse: GetMappingResponseV2,
+    jsonLdObject: JsonLDObject
+  ) =
+    // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
+    for {
+      textWithStandoffTags <- ZIO.attempt(
+                                StandoffTagUtilV2.convertXMLtoStandoffTagV2(
+                                  textValueAsXml,
+                                  mappingResponse,
+                                  acceptStandoffLinksToClientIDs = false
+                                )
+                              )
+      text    <- RouteUtilZ.toSparqlEncodedString(textWithStandoffTags.text, "Text value contains invalid characters")
+      comment <- JsonLDUtil.getComment(jsonLdObject)
+    } yield FormattedTextValueContentV2(
+      ontologySchema = ApiV2Complex,
+      valueHasString = text,
+      valueHasLanguage = maybeValueHasLanguage,
+      standoff = textWithStandoffTags.standoffTagV2,
+      mappingIri = mappingResponse.mappingIri,
+      mapping = mappingResponse.mapping,
+      comment = comment
+    )
+
+  /**
+   * Converts a JSON-LD object to a [[FormattedTextValueContentV2]].
+   *
+   * @param jsonLdObject         the JSON-LD object.
+   * @param requestingUser       the user making the request.
+   * @return a [[FormattedTextValueContentV2]].
+   */
+  def fromJsonLdObject(
+    jsonLdObject: JsonLDObject,
+    requestingUser: UserADM
+  ): ZIO[StringFormatter with MessageRelay, Throwable, FormattedTextValueContentV2] =
+    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
+      for {
+        maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
+        textValueAsXml <- jsonLdObject
+                            .getString(TextValueAsXml)
+                            .some
+                            .orElseFail(BadRequestException("Missing textValueAsXml on FormattedTextValue"))
+
+        // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
+        mappingResponse <-
+          getIriFromObject(jsonLdObject, TextValueHasMapping)
+            .flatMap(mappingIriOption =>
+              ZIO.foreach(mappingIriOption) { mappingIri =>
+                MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
+              }
+            )
+            .someOrFail(BadRequestException("Missing mapping IRI on FormattedTextValue"))
+
+        comment <- JsonLDUtil.getComment(jsonLdObject)
+        // Did the client submit text with or without standoff markup?
+        textValue <- getTextValue(
+                       textValueAsXml,
+                       maybeValueHasLanguage,
+                       mappingResponse,
+                       jsonLdObject
+                     )
+
+      } yield textValue
+    }
 }
 
 /**
