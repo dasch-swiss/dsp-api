@@ -8,7 +8,7 @@ package swiss.dasch
 import swiss.dasch.api.*
 import swiss.dasch.api.healthcheck.*
 import swiss.dasch.config.Configuration
-import swiss.dasch.config.Configuration.ApiConfig
+import swiss.dasch.config.Configuration.DspApiConfig
 import swiss.dasch.domain.{ AssetService, AssetServiceLive }
 import zio.*
 import zio.config.*
@@ -21,7 +21,7 @@ object Main extends ZIOAppDefault {
 
   private val serverLayer =
     ZLayer
-      .service[ApiConfig]
+      .service[DspApiConfig]
       .flatMap { cfg =>
         Server.defaultWith(_.binding(cfg.get.host, cfg.get.port))
       }

@@ -14,21 +14,21 @@ import zio.nio.file.{ Files, Path }
 
 object Configuration {
 
-  final case class ApiConfig(host: String, port: Int)
+  final case class DspApiConfig(host: String, port: Int)
 
-  object ApiConfig {
+  object DspApiConfig {
 
     private val serverConfigDescription =
-      nested("api") {
+      nested("dsp-api") {
         string("host") <*>
           int("port")
-      }.to[ApiConfig]
+      }.to[DspApiConfig]
 
     private[Configuration] val layer = ZLayer(
       read(
         serverConfigDescription.from(
           TypesafeConfigSource.fromTypesafeConfig(
-            ZIO.attempt(ConfigFactory.defaultApplication())
+            ZIO.attempt(ConfigFactory.defaultApplication().resolve())
           )
         )
       )
@@ -36,8 +36,8 @@ object Configuration {
   }
 
   final case class StorageConfig(assetDir: String, tempDir: String) {
-    val assetPath: Path  = Path(assetDir)
-    val tempPath: Path   = Path(tempDir)
+    val assetPath: Path = Path(assetDir)
+    val tempPath: Path  = Path(tempDir)
   }
   object StorageConfig                                              {
     private val storageConfigDescription: ConfigDescriptor[StorageConfig] =
@@ -50,7 +50,7 @@ object Configuration {
       read(
         storageConfigDescription.from(
           TypesafeConfigSource.fromTypesafeConfig(
-            ZIO.attempt(ConfigFactory.defaultApplication())
+            ZIO.attempt(ConfigFactory.defaultApplication().resolve())
           )
         )
       ).tap(verifyFoldersExist)
@@ -62,5 +62,5 @@ object Configuration {
         .unlessZIO(Files.isDirectory(config.assetPath) && Files.isDirectory(config.tempPath))
   }
 
-  val layer: Layer[ReadError[String], ApiConfig with StorageConfig] = ApiConfig.layer ++ StorageConfig.layer
+  val layer: Layer[ReadError[String], DspApiConfig with StorageConfig] = DspApiConfig.layer ++ StorageConfig.layer
 }
