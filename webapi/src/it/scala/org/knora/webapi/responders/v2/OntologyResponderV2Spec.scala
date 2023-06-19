@@ -6800,6 +6800,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
     }
 
+    // TODO-BL: test that the old model doesn't work anymore
     // not create a property pointing to a TextValue (ignored for now)
     // not create a property pointing to a StandoffTextValue (ignored for now)
   }

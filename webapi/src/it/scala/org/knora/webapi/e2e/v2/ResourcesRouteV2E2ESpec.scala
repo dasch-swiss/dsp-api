@@ -2404,6 +2404,47 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val sequenceBoundsResponse = singleAwaitingRequest(sequenceBoundsRequest)
       assert(sequenceBoundsResponse.status == StatusCodes.OK)
     }
+
+    "create and request a resource that uses UnformattedTextValue and FormattedTextValue" in {
+      val cred   = BasicHttpCredentials(anythingUserEmail, password)
+      val valUrl = s"$baseApiUrl/v2/values"
+      val resUrl = s"$baseApiUrl/v2/resources"
+
+      // create an instance of FreetestWithNewTextValues
+      val createInstanceJson: String =
+        """{
+          |  "@type" : "freetest:FreetestWithNewTextValues",
+          |  "freetest:hasProperlyUnformattedText" : {
+          |    "@type" : "knora-api:UnformattedTextValue",
+          |    "knora-api:valueAsString" : "This is a properly unformatted text value."
+          |  },
+          |  "freetest:hasProperlyFormattedText" : {
+          |    "@type" : "knora-api:FormattedTextValue",
+          |    "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p><strong>this is</strong> text</p> with standoff</text>",
+          |    "knora-api:textValueHasMapping" : {
+          |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+          |    }
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "rdfs:label" : "freetest with new text values",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "freetest" :  "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+          |  }
+          |}""".stripMargin
+      val createRequest =
+        Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createInstanceJson)) ~> addCredentials(cred)
+      val createResponse   = singleAwaitingRequest(createRequest)
+      val responseAsString = responseToString(createResponse)
+      assert(createResponse.status == StatusCodes.OK, responseAsString)
+    }
+
+    // TODO-BL: not create a resource that uses TextValue or StandoffTextValue directly
   }
 }
 
