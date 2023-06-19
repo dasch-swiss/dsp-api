@@ -843,6 +843,140 @@ case class ReadTextValueV2(
 }
 
 /**
+ * An unformatted text value, as read from the triplestore.
+ *
+ * @param valueIri                      the IRI of the value.
+ * @param attachedToUser                the user that created the value.
+ * @param permissions                   the permissions that the value grants to user groups.
+ * @param userPermission                the permission that the requesting user has on the value.
+ * @param valueHasUUID                  the UUID shared by all the versions of this value.
+ * @param valueContent                  the content of the value.
+ * @param previousValueIri              the IRI of the previous version of this value. Not returned in API responses, but needed
+ *                                      here for testing.
+ * @param deletionInfo                  if this value has been marked as deleted, provides the date when it was
+ *                                      deleted and the reason why it was deleted.
+ */
+case class ReadUnformattedTextValueV2(
+  valueIri: IRI,
+  attachedToUser: IRI,
+  permissions: String,
+  userPermission: EntityPermission,
+  valueCreationDate: Instant,
+  valueHasUUID: UUID,
+  valueContent: TextValueContentV2,
+  previousValueIri: Option[IRI],
+  deletionInfo: Option[DeletionInfo]
+) extends ReadValueV2
+    with KnoraReadV2[ReadUnformattedTextValueV2] {
+
+  /**
+   * Converts this value to the specified ontology schema.
+   *
+   * @param targetSchema the target schema.
+   */
+  override def toOntologySchema(targetSchema: ApiV2Schema): ReadUnformattedTextValueV2 =
+    copy(valueContent = valueContent.toOntologySchema(targetSchema))
+
+  override def toJsonLD(
+    targetSchema: ApiV2Schema,
+    projectADM: ProjectADM,
+    appConfig: AppConfig,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDValue =
+    super.toJsonLD(
+      targetSchema = targetSchema,
+      projectADM = projectADM,
+      appConfig = appConfig,
+      schemaOptions = schemaOptions
+    )
+}
+
+/**
+ * An formatted text value, as read from the triplestore.
+ *
+ * @param valueIri                      the IRI of the value.
+ * @param attachedToUser                the user that created the value.
+ * @param permissions                   the permissions that the value grants to user groups.
+ * @param userPermission                the permission that the requesting user has on the value.
+ * @param valueHasUUID                  the UUID shared by all the versions of this value.
+ * @param valueContent                  the content of the value.
+ * @param valueHasMaxStandoffStartIndex if this text value has standoff markup, the highest
+ *                                      `knora-base:standoffTagHasEndIndex`
+ *                                      used in its standoff tags.
+ * @param previousValueIri              the IRI of the previous version of this value. Not returned in API responses, but needed
+ *                                      here for testing.
+ * @param deletionInfo                  if this value has been marked as deleted, provides the date when it was
+ *                                      deleted and the reason why it was deleted.
+ */
+case class ReadFormattedTextValueV2(
+  valueIri: IRI,
+  attachedToUser: IRI,
+  permissions: String,
+  userPermission: EntityPermission,
+  valueCreationDate: Instant,
+  valueHasUUID: UUID,
+  valueContent: TextValueContentV2,
+  valueHasMaxStandoffStartIndex: Option[Int],
+  previousValueIri: Option[IRI],
+  deletionInfo: Option[DeletionInfo]
+) extends ReadValueV2
+    with KnoraReadV2[ReadFormattedTextValueV2] {
+
+  /**
+   * Converts this value to the specified ontology schema.
+   *
+   * @param targetSchema the target schema.
+   */
+  override def toOntologySchema(targetSchema: ApiV2Schema): ReadFormattedTextValueV2 =
+    copy(valueContent = valueContent.toOntologySchema(targetSchema))
+
+  override def toJsonLD(
+    targetSchema: ApiV2Schema,
+    projectADM: ProjectADM,
+    appConfig: AppConfig,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDValue = {
+    val valueAsJsonLDValue: JsonLDValue = super.toJsonLD(
+      targetSchema = targetSchema,
+      projectADM = projectADM,
+      appConfig = appConfig,
+      schemaOptions = schemaOptions
+    )
+
+    // If this is the complex schema and separate standoff has been requested, and the text value has
+    // valueHasMaxStandoffStartIndex, add it along with textValueHasMarkup to the metadata returned with the value.
+    targetSchema match {
+      case ApiV2Complex =>
+        if (SchemaOptions.renderMarkupAsStandoff(targetSchema = ApiV2Complex, schemaOptions = schemaOptions)) {
+          valueHasMaxStandoffStartIndex match {
+            case Some(maxStartIndex) =>
+              val valueAsJsonLDObject: JsonLDObject = valueAsJsonLDValue match {
+                case jsonLDObject: JsonLDObject => jsonLDObject
+                case other =>
+                  throw AssertionException(
+                    s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other"
+                  )
+              }
+
+              JsonLDObject(
+                valueAsJsonLDObject.value ++ Map(
+                  TextValueHasMarkup                -> JsonLDBoolean(true),
+                  TextValueHasMaxStandoffStartIndex -> JsonLDInt(maxStartIndex)
+                )
+              )
+
+            case None => valueAsJsonLDValue
+          }
+        } else {
+          valueAsJsonLDValue
+        }
+
+      case ApiV2Simple => valueAsJsonLDValue
+    }
+  }
+}
+
+/**
  * A link value as read from the triplestore.
  *
  * @param valueIri         the IRI of the value.
