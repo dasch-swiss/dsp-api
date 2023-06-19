@@ -11,6 +11,7 @@ import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
 import zio._
 import zio.http.URL
+import zio.nio.file.Path
 import java.net.NetworkInterface
 import java.net.UnknownHostException
 import java.nio.file.Paths
@@ -19,13 +20,18 @@ import scala.jdk.CollectionConverters._
 import org.knora.webapi.http.version.BuildInfo
 
 final case class SipiTestContainer(container: GenericContainer[Nothing]) {
-  def copyImageToContainer(prefix: String, filename: String): Task[Unit] = {
-    val seg01  = filename.substring(0, 2)
-    val seg02  = filename.substring(2, 4)
-    val target = s"/sipi/images/$prefix/$seg01/$seg02/$filename"
-    val file   = MountableFile.forClasspathResource("sipi/testfiles/" + filename, 777)
-    ZIO.attemptBlocking(container.copyFileToContainer(file, target)) <* ZIO.logInfo(
-      s"copied $prefix/$filename to $target"
+  def copyFileToImageFolderInContainer(prefix: String, filename: String): Task[Unit] = {
+    val seg01  = filename.substring(0, 2).toLowerCase()
+    val seg02  = filename.substring(2, 4).toLowerCase()
+    val target = Path(s"/sipi/images/$prefix/$seg01/$seg02/$filename")
+    copyTestFileToContainer(filename, target)
+  }
+
+  def copyTestFileToContainer(file: String, target: Path): Task[Unit] = {
+    val resourceName  = s"sipi/testfiles/$file"
+    val mountableFile = MountableFile.forClasspathResource(resourceName, 777)
+    ZIO.attemptBlocking(container.copyFileToContainer(mountableFile, target.toFile.toString)) <* ZIO.logInfo(
+      s"copied $resourceName to $target"
     )
   }
 
@@ -41,8 +47,11 @@ object SipiTestContainer {
   def resolveUrl(path: String): URIO[SipiTestContainer, URL] =
     ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.setPath(path))
 
-  def copyImageToContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
-    ZIO.serviceWithZIO[SipiTestContainer](_.copyImageToContainer(prefix, filename))
+  def copyTestImageToContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
+    ZIO.serviceWithZIO[SipiTestContainer](_.copyFileToImageFolderInContainer(prefix, filename))
+
+  def copyTestFileToContainer(file: String, target: Path): ZIO[SipiTestContainer, Throwable, Unit] =
+    ZIO.serviceWithZIO[SipiTestContainer](_.copyTestFileToContainer(file, target))
 
   /**
    * A functional effect that initiates a Sipi Testcontainer
