@@ -977,9 +977,10 @@ final case class ConstructResponseUtilV2Live(
     valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
         val mappings: Seq[String] = valObjs.filter { valObj: ValueRdfData =>
-          valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri && valObj.assertions.contains(
-            OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri
-          )
+          (valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri ||
+            valObj.valueObjectClass == OntologyConstants.KnoraBase.FormattedTextValue.toSmartIri ||
+            valObj.valueObjectClass == OntologyConstants.KnoraBase.CustomFormattedTextValue.toSmartIri) &&
+          valObj.assertions.contains(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
         }.map { textValObj: ValueRdfData =>
           textValObj.requireIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
         }
@@ -1088,6 +1089,119 @@ final case class ConstructResponseUtilV2Live(
         )
       )
     }
+  }
+
+  /**
+   * Given a [[ValueRdfData]], constructs a [[UnformattedTextValueContentV2]]. This method is used to process a text value
+   * as returned in an API response, as well as to process a page of standoff markup that is being queried
+   * separately from its text value.
+   *
+   * @param valueObject               the given [[ValueRdfData]].
+   * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+   * @param valueCommentOption        the value's comment, if any.
+   * @param requestingUser            the user making the request.
+   * @return a [[UnformattedTextValueContentV2]].
+   */
+  private def makeUnformattedTextValueContentV2(
+    resourceIri: IRI,
+    valueObject: ValueRdfData,
+    valueObjectValueHasString: Option[String],
+    valueCommentOption: Option[String],
+    requestingUser: UserADM
+  ): Task[UnformattedTextValueContentV2] =
+    ZIO
+      .fromOption(valueObjectValueHasString)
+      .orElseFail(BadRequestException(s"Text value $resourceIri has no knora-base:valueHasString"))
+      .map { valAsString =>
+        UnformattedTextValueContentV2(
+          ontologySchema = InternalSchema,
+          valueHasString = valAsString,
+          valueHasLanguage = None,
+          comment = valueCommentOption
+        )
+      }
+
+  /**
+   * Given a [[ValueRdfData]], constructs a [[FormattedTextValueContentV2]]. This method is used to process a text value
+   * as returned in an API response, as well as to process a page of standoff markup that is being queried
+   * separately from its text value.
+   *
+   * @param valueObject               the given [[ValueRdfData]].
+   * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+   * @param valueCommentOption        the value's comment, if any.
+   * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+   * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
+   * @param requestingUser            the user making the request.
+   * @return a [[FormattedTextValueContentV2]].
+   */
+  private def makeFormattedTextValueContentV2(
+    resourceIri: IRI,
+    valueObject: ValueRdfData,
+    valueObjectValueHasString: Option[String],
+    valueCommentOption: Option[String],
+    mappings: Map[IRI, MappingAndXSLTransformation],
+    queryStandoff: Boolean,
+    requestingUser: UserADM
+  ): Task[FormattedTextValueContentV2] = {
+    val valueLanguageOption: Option[String] =
+      valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
+    for {
+      valueHasString <-
+        ZIO
+          .fromOption(valueObjectValueHasString)
+          .orElseFail(BadRequestException(s"FormattedTextValue $resourceIri has no knora-base:valueHasString"))
+      _ <-
+        ZIO
+          .fail(BadRequestException(s"FormattedTextValue $resourceIri has no mapping defined."))
+          .when(valueObject.standoff.isEmpty)
+      mappingIri <-
+        ZIO
+          .fromOption(valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri))
+          .orElseFail(BadRequestException(s"FormattedTextValue $resourceIri has no mapping defined."))
+      mappingAndXsltTransformation <-
+        ZIO.fromOption(mappings.get(mappingIri)).orElseFail(BadRequestException(s"Mapping $mappingIri not found"))
+      standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
+                    standoffAssertions = valueObject.standoff,
+                    requestingUser = requestingUser
+                  )
+
+      valueHasMaxStandoffStartIndex: Int =
+        valueObject.requireIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
+      lastStartIndexQueried = standoff.last.startIndex
+
+      // Should we get more the rest of the standoff for the same text value?
+      standoffToReturn <-
+        if (queryStandoff && lastStartIndexQueried < valueHasMaxStandoffStartIndex) {
+          // We're supposed to get all the standoff for the text value. Ask the standoff responder for the rest of it.
+          // Each page of markup will be also be processed by this method. The resulting pages will be
+          // concatenated together and returned in a GetStandoffResponseV2.
+
+          for {
+            standoffResponse <-
+              messageRelay
+                .ask[GetStandoffResponseV2](
+                  GetRemainingStandoffFromTextValueRequestV2(
+                    resourceIri = resourceIri,
+                    valueIri = valueObject.subjectIri,
+                    requestingUser = requestingUser
+                  )
+                )
+          } yield standoff ++ standoffResponse.standoff
+        } else {
+          // We're not supposed to get any more standoff here, either because we have all of it already,
+          // or because we're just supposed to return one page.
+          ZIO.succeed(standoff)
+        }
+    } yield FormattedTextValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasString = valueHasString,
+      valueHasLanguage = valueLanguageOption,
+      standoff = standoffToReturn,
+      mappingIri = mappingIri,
+      mapping = mappingAndXsltTransformation.mapping,
+      xslt = mappingAndXsltTransformation.XSLTransformation,
+      comment = valueCommentOption
+    )
   }
 
   /**
@@ -1274,6 +1388,24 @@ final case class ConstructResponseUtilV2Live(
     valueTypeStr match {
       case OntologyConstants.KnoraBase.TextValue =>
         makeTextValueContentV2(
+          resourceIri = resourceIri,
+          valueObject = valueObject,
+          valueObjectValueHasString = valueObjectValueHasString,
+          valueCommentOption = valueCommentOption,
+          mappings = mappings,
+          queryStandoff = queryStandoff,
+          requestingUser = requestingUser
+        )
+      case OntologyConstants.KnoraBase.UnformattedTextValue =>
+        makeUnformattedTextValueContentV2(
+          resourceIri = resourceIri,
+          valueObject = valueObject,
+          valueObjectValueHasString = valueObjectValueHasString,
+          valueCommentOption = valueCommentOption,
+          requestingUser = requestingUser
+        )
+      case OntologyConstants.KnoraBase.FormattedTextValue =>
+        makeFormattedTextValueContentV2(
           resourceIri = resourceIri,
           valueObject = valueObject,
           valueObjectValueHasString = valueObjectValueHasString,
