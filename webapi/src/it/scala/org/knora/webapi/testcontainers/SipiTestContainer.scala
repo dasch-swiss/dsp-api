@@ -30,7 +30,7 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
   def copyTestFileToContainer(file: String, target: Path): Task[Unit] = {
     val resourceName  = s"sipi/testfiles/$file"
     val mountableFile = MountableFile.forClasspathResource(resourceName, 777)
-    ZIO.attemptBlocking(container.copyFileToContainer(mountableFile, target.toFile.toString)) <* ZIO.logInfo(
+    ZIO.attemptBlockingIO(container.copyFileToContainer(mountableFile, target.toFile.toString)) <* ZIO.logInfo(
       s"copied $resourceName to $target"
     )
   }
@@ -44,10 +44,12 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
 }
 
 object SipiTestContainer {
+  def port: ZIO[SipiTestContainer, Nothing, Int] = ZIO.serviceWith[SipiTestContainer](_.port)
+
   def resolveUrl(path: String): URIO[SipiTestContainer, URL] =
     ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.setPath(path))
 
-  def copyTestImageToContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
+  def copyFileToImageFolderInContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
     ZIO.serviceWithZIO[SipiTestContainer](_.copyFileToImageFolderInContainer(prefix, filename))
 
   def copyTestFileToContainer(file: String, target: Path): ZIO[SipiTestContainer, Throwable, Unit] =
@@ -88,7 +90,7 @@ object SipiTestContainer {
     val incunabulaImageDirPath =
       Paths.get("..", "sipi/images/0803/in/cu/incunabula_0000000002.jp2")
     sipiContainer.withFileSystemBind(
-      incunabulaImageDirPath.toString(),
+      incunabulaImageDirPath.toString,
       "/sipi/images/0803/in/cu/incunabula_0000000002.jp2",
       BindMode.READ_ONLY
     )
