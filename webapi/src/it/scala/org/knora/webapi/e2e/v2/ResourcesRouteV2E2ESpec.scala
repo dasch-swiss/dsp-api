@@ -2406,44 +2406,76 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "create and request a resource that uses UnformattedTextValue and FormattedTextValue" in {
-      val cred   = BasicHttpCredentials(anythingUserEmail, password)
-      val valUrl = s"$baseApiUrl/v2/values"
-      val resUrl = s"$baseApiUrl/v2/resources"
+      val cred           = BasicHttpCredentials(anythingUserEmail, password)
+      val valUrl         = s"$baseApiUrl/v2/values"
+      val resUrl         = s"$baseApiUrl/v2/resources"
+      val freetestPrefix = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
 
-      // create an instance of FreetestWithNewTextValues
+      val stringValue = "This is a properly unformatted text value."
+      val xmlValue =
+        """|<?xml version="1.0" encoding="UTF-8"?>
+           |<text>
+           |  <p><strong>this is</strong> text</p>
+           |  with standoff
+           |</text>""".stripMargin
       val createInstanceJson: String =
-        """{
-          |  "@type" : "freetest:FreetestWithNewTextValues",
-          |  "freetest:hasProperlyUnformattedText" : {
-          |    "@type" : "knora-api:UnformattedTextValue",
-          |    "knora-api:valueAsString" : "This is a properly unformatted text value."
-          |  },
-          |  "freetest:hasProperlyFormattedText" : {
-          |    "@type" : "knora-api:FormattedTextValue",
-          |    "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p><strong>this is</strong> text</p> with standoff</text>",
-          |    "knora-api:textValueHasMapping" : {
-          |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
-          |    }
-          |  },
-          |  "knora-api:attachedToProject" : {
-          |    "@id" : "http://rdfh.ch/projects/0001"
-          |  },
-          |  "rdfs:label" : "freetest with new text values",
-          |  "@context" : {
-          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-          |    "freetest" :  "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
-          |  }
-          |}""".stripMargin
+        s"""{
+           |  "@type" : "freetest:FreetestWithNewTextValues",
+           |  "freetest:hasProperlyUnformattedText" : {
+           |    "@type" : "knora-api:UnformattedTextValue",
+           |    "knora-api:valueAsString" : "$stringValue"
+           |  },
+           |  "freetest:hasProperlyFormattedText" : {
+           |    "@type" : "knora-api:FormattedTextValue",
+           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(xmlValue)},
+           |    "knora-api:textValueHasMapping" : {
+           |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+           |    }
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "freetest with new text values",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "freetest" :  "$freetestPrefix"
+           |  }
+           |}""".stripMargin
       val createRequest =
         Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createInstanceJson)) ~> addCredentials(cred)
       val createResponse   = singleAwaitingRequest(createRequest)
       val responseAsString = responseToString(createResponse)
       assert(createResponse.status == StatusCodes.OK, responseAsString)
 
-      // TODO-BL: request and check the resource
+      // request and check the resource
+      val resourceIri =
+        URLEncoder.encode(responseToJsonLDDocument(createResponse).body.requireString(JsonLDKeywords.ID), "UTF-8")
+      val getRequest          = Get(s"$resUrl/$resourceIri") ~> addCredentials(cred)
+      val getResponse         = singleAwaitingRequest(getRequest)
+      val getResponseAsString = responseToString(getResponse)
+      assert(getResponse.status == StatusCodes.OK, getResponseAsString)
+      val getResponseBody = responseToJsonLDDocument(getResponse).body
+
+      val unformattedProperty = getResponseBody.requireObject(freetestPrefix + "hasProperlyUnformattedText")
+      assert(unformattedProperty.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) == stringValue)
+      assert(unformattedProperty.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml).isEmpty)
+      assert(unformattedProperty.maybeObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping).isEmpty)
+
+      val formattedProperty = getResponseBody.requireObject(freetestPrefix + "hasProperlyFormattedText")
+      assert(formattedProperty.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString).isEmpty)
+      assert(
+        stringFormatter.toJsonEncodedString(
+          formattedProperty.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        ) == stringFormatter.toJsonEncodedString(xmlValue)
+      )
+      assert(
+        formattedProperty
+          .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
+          .requireString(JsonLDKeywords.ID) == "http://rdfh.ch/standoff/mappings/StandardMapping"
+      )
     }
 
     // TODO-BL: not create a resource that uses TextValue or StandoffTextValue directly

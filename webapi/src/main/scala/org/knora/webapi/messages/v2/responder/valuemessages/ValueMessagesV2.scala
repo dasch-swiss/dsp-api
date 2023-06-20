@@ -177,7 +177,7 @@ case class CreateValueResponseV2(
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     if (targetSchema != ApiV2Complex) {
-      throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex Schema")
+      throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
     }
 
     JsonLDDocument(
@@ -402,7 +402,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
-      throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex Schema")
+      throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
     }
 
     JsonLDDocument(
