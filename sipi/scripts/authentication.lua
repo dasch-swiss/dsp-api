@@ -167,11 +167,22 @@ end
 -- @return jwt token or nil if the cookie is missing or invalid.
 function _get_jwt_token_from_cookie()
     log("authentication: checking for jwt token in cookie header", server.loglevel.LOG_DEBUG)
-    local cookie_header_value = _get_cookie_header()
-    if cookie_header_value == nil then
+    local cookie_name = env_knora_authentication_cookie_name()
+    local cookies = _get_cookie_header()
+    if cookies == nil then
+        log("authentication: no cookie header found", server.loglevel.LOG_DEBUG)
         return nil
     end
-    local cookie_name = env_knora_authentication_cookie_name()
-    local jwt_token = str_strip_prefix(cookie_header_value, cookie_name .. "=")
-    return jwt_token
+
+    cookie_name = cookie_name:lower()
+    for entry in cookies:gmatch("([^,]+)") do
+        local key, value = entry:match("([^=]+)=(.+)")
+        if key and value then
+            if key:lower() == cookie_name then
+                return value
+            end
+        end
+    end
+    log("authentication: cookie header does not contain " .. cookie_name, server.loglevel.LOG_DEBUG)
+    return nil
 end

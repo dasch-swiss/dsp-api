@@ -3,6 +3,26 @@
 
 --- Utility functions for working with strings.
 
+-- Break a string up at occurrences of the first single character.
+-- In Lua, there is no built-in function for splitting a string at a specific character.
+-- http://lua-users.org/wiki/SplitJoin
+-- @param str the string to split.
+-- @param separator the separator character.
+-- @return a table containing:
+--- * the split string or
+--- * the original string if the separator was not found.
+function str_splitString(str, separator)
+    local result = {}
+    local pattern = string.format("([^%s]+)", separator)
+
+    for match in str:gmatch(pattern) do
+        table.insert(result, match)
+    end
+
+    return result
+end
+
+
 --- Checks if a string starts with a specific prefix.
 -- In Lua, there is no built-in function for checking if a string starts with a specific prefix.
 -- This function implements this functionality.
@@ -33,18 +53,18 @@ end
 -- @param tbl the table to transform.
 -- @return a string representation of the table.
 function tableToString(tbl)
-    local str = "{"
+    local str = "{\n"
     local isFirst = true
 
     for key, value in pairs(tbl) do
         if not isFirst then
-            str = str .. ", "
+            str = str .. "\n"
         end
 
         if type(value) == "table" then
-            str = str .. key .. "=" .. tableToString(value)
+            str = str .. key .. " = " .. tableToString(value) .. "\n"
         else
-            str = str .. key .. "=" .. tostring(value)
+            str = str .. key .. " = " .. tostring(value) .. "\n"
         end
 
         isFirst = false
