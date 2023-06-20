@@ -1104,7 +1104,9 @@ final case class ResourcesResponderV2Live(
             // class constraint.
             if (otherValueContentV2.valueType != objectClassConstraint) {
               throw OntologyConstraintException(
-                s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
+                s"${resourceIDForErrorMsg}Property <${propertyIri
+                    .toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
+                    .toOntologySchema(ApiV2Complex)}>, found <${otherValueContentV2.valueType
                     .toOntologySchema(ApiV2Complex)}>"
               )
             }

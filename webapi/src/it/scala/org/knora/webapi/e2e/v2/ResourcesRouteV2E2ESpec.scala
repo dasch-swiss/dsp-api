@@ -51,6 +51,10 @@ import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+import akka.http.scaladsl.model.Multipart
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.MediaTypes
+import akka.http.scaladsl.model.HttpCharsets
 
 /**
  * Tests the API v2 resources route.
@@ -2405,19 +2409,57 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(sequenceBoundsResponse.status == StatusCodes.OK)
     }
 
-    "create and request a resource that uses UnformattedTextValue and FormattedTextValue" in {
+    "create and request a resource that uses UnformattedTextValue, FormattedTextValue and CustomFormattedTextValue" in {
       val cred           = BasicHttpCredentials(anythingUserEmail, password)
       val valUrl         = s"$baseApiUrl/v2/values"
       val resUrl         = s"$baseApiUrl/v2/resources"
       val freetestPrefix = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
 
+      // Create the mapping.
+      val xmlFileToSend = Paths.get("..", "test_data/test_route/texts/mappingSimple.xml")
+      val mappingParams =
+        s"""{
+           |    "knora-api:mappingHasName": "simple",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "${SharedTestDataADM.anythingProjectIri}"
+           |    },
+           |    "rdfs:label": "simple mapping",
+           |    "@context": {
+           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |    }
+           |}""".stripMargin
+
+      val formDataMapping = Multipart.FormData(
+        Multipart.FormData.BodyPart(
+          "json",
+          HttpEntity(ContentTypes.`application/json`, mappingParams)
+        ),
+        Multipart.FormData.BodyPart(
+          "xml",
+          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend),
+          Map("filename" -> "mappingSimple.xml")
+        )
+      )
+
+      // create standoff from XML
+      val mappingRequest                = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(cred)
+      val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest)
+      val mappingResponseString         = responseToString(mappingResponse)
+      assert(mappingResponse.status == StatusCodes.OK, mappingResponseString)
+
       val stringValue = "This is a properly unformatted text value."
-      val xmlValue =
+      val xmlValueStandard =
         """|<?xml version="1.0" encoding="UTF-8"?>
            |<text>
            |  <p><strong>this is</strong> text</p>
            |  with standoff
            |</text>""".stripMargin
+      val xmlValueCustom =
+        """|<?xml version="1.0" encoding="UTF-8"?>
+           |<x>
+           |  this is text
+           |</x>""".stripMargin
       val createInstanceJson: String =
         s"""{
            |  "@type" : "freetest:FreetestWithNewTextValues",
@@ -2427,9 +2469,16 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  },
            |  "freetest:hasProperlyFormattedText" : {
            |    "@type" : "knora-api:FormattedTextValue",
-           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(xmlValue)},
+           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(xmlValueStandard)},
            |    "knora-api:textValueHasMapping" : {
            |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+           |    }
+           |  },
+           |  "freetest:hasProperlyCustomFormattedText" : {
+           |    "@type" : "knora-api:CustomFormattedTextValue",
+           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(xmlValueCustom)},
+           |    "knora-api:textValueHasMapping" : {
+           |      "@id" : "http://rdfh.ch/projects/0001/mappings/simple"
            |    }
            |  },
            |  "knora-api:attachedToProject" : {
@@ -2469,7 +2518,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(
         stringFormatter.toJsonEncodedString(
           formattedProperty.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
-        ) == stringFormatter.toJsonEncodedString(xmlValue)
+        ) == stringFormatter.toJsonEncodedString(xmlValueStandard)
       )
       assert(
         formattedProperty
