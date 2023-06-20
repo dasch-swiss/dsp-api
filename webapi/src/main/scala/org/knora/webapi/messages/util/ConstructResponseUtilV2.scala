@@ -1204,6 +1204,8 @@ final case class ConstructResponseUtilV2Live(
     )
   }
 
+  // TODO-BL: implement similar with custom formatted text value
+
   /**
    * Given a [[ValueRdfData]], constructs a [[FileValueContentV2]].
    *

@@ -2442,6 +2442,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val createResponse   = singleAwaitingRequest(createRequest)
       val responseAsString = responseToString(createResponse)
       assert(createResponse.status == StatusCodes.OK, responseAsString)
+
+      // TODO-BL: request and check the resource
     }
 
     // TODO-BL: not create a resource that uses TextValue or StandoffTextValue directly
