@@ -8,7 +8,8 @@ package swiss.dasch.domain
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConstants.*
-import swiss.dasch.test.SpecFileUtil.pathFromResource
+import swiss.dasch.test.SpecPaths
+import swiss.dasch.test.SpecPaths.pathFromResource
 import zio.nio.file.{ Files, Path }
 import zio.{ Chunk, Scope, ZIO, ZLayer }
 import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertCompletes, assertTrue }
@@ -19,7 +20,7 @@ object AssetServiceSpec extends ZIOSpecDefault {
     for {
       tmpDir <- Files.createTempDirectoryScoped(None, List.empty)
     } yield StorageConfig(
-      assetDir = pathFromResource("/test-folder-structure").toFile.getAbsolutePath,
+      assetDir = SpecPaths.testFolder.toFile.getAbsolutePath,
       tempDir = tmpDir.toFile.toString,
     )
   }

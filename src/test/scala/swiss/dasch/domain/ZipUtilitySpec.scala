@@ -31,7 +31,7 @@ object ZipUtilitySpec extends ZIOSpecDefault {
     _                    <- ZIO.logError(s"File content $expectedFile is not correct").when(!fileContentIsCorrect)
   } yield folderExists && fileContentIsCorrect
 
-  override val spec: Spec[Scope, Throwable] = suite("ZipUtility")(
+  override val spec = suite("ZipUtility")(
     test("creating the test directory should work") {
       for {
         tmp              <- createTestDirectory

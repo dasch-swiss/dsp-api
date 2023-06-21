@@ -12,8 +12,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
 import zio.json.{ DeriveJsonCodec, DeriveJsonDecoder, DeriveJsonEncoder, JsonCodec, JsonDecoder, JsonEncoder }
+import zio.nio.file.Files.{ delete, deleteIfExists, isDirectory, newDirectoryStream }
 import zio.nio.file.{ Files, Path }
-import zio.stream.ZStream
+import zio.stream.{ ZSink, ZStream }
 
 import java.io.IOException
 
@@ -40,6 +41,7 @@ trait AssetService {
   def listAllProjects(): IO[IOException, Chunk[ProjectShortcode]]
   def findProject(shortcode: ProjectShortcode): IO[IOException, Option[Path]]
   def zipProject(shortcode: ProjectShortcode): Task[Option[Path]]
+  def importProject(shortcode: ProjectShortcode, zipFile: Path): IO[Throwable, Unit]
 }
 
 object AssetService {
@@ -51,12 +53,16 @@ object AssetService {
 
   def zipProject(shortcode: ProjectShortcode): ZIO[AssetService, Throwable, Option[Path]] =
     ZIO.serviceWithZIO[AssetService](_.zipProject(shortcode))
+
+  def importProject(shortcode: ProjectShortcode, zipFile: Path): ZIO[AssetService, Throwable, Unit] =
+    ZIO.serviceWithZIO[AssetService](_.importProject(shortcode, zipFile))
 }
 
 final case class AssetServiceLive(config: StorageConfig) extends AssetService {
 
-  private val existingProjectDirectories = Files.list(config.assetPath).filterZIO(Files.isDirectory(_))
-  private val existingTempFiles          = Files.list(config.tempPath).filterZIO(Files.isRegularFile(_))
+  private val existingProjectDirectories               = Files.list(config.assetPath).filterZIO(Files.isDirectory(_))
+  private val existingTempFiles                        = Files.list(config.tempPath).filterZIO(Files.isRegularFile(_))
+  private def projectPath(shortcode: ProjectShortcode) = config.assetPath / shortcode.toString
 
   override def listAllProjects(): IO[IOException, Chunk[ProjectShortcode]] =
     existingProjectDirectories
@@ -78,6 +84,31 @@ final case class AssetServiceLive(config: StorageConfig) extends AssetService {
     val targetFolder = config.tempPath / "zipped"
     ZipUtility.zipFolder(projectPath, targetFolder).map(Some(_))
   }
+
+  override def importProject(shortcode: ProjectShortcode, zipFile: Path): IO[Throwable, Unit] = {
+    val targetFolder = config.assetPath / shortcode.toString
+    deleteExistingProjectFiles(shortcode) *>
+      ZipUtility.unzipFile(zipFile, targetFolder) *>
+      Files.createDirectories(targetFolder)
+  }
+
+  private def deleteExistingProjectFiles(shortcode: ProjectShortcode): IO[IOException, Unit] =
+    deleteRecursive(projectPath(shortcode))
+      .whenZIO(Files.exists(projectPath(shortcode)))
+      .unit
+
+  // The zio.nio.file.Files.deleteRecursive function has a bug in 2.0.1
+  // https://github.com/zio/zio-nio/pull/588/files <- this PR fixes it
+  // This is a workaround until the bug is fixed:
+  private def deleteRecursive(path: Path)(implicit trace: Trace): ZIO[Any, IOException, Long] =
+    newDirectoryStream(path)
+      .mapZIO { p =>
+        for {
+          deletedInSubDirectory <- deleteRecursive(p).whenZIO(isDirectory(p)).map(_.getOrElse(0L))
+          deletedFile           <- deleteIfExists(p).map(if (_) 1 else 0)
+        } yield deletedInSubDirectory + deletedFile
+      }
+      .run(ZSink.sum) <* delete(path)
 }
 
 object AssetServiceLive {

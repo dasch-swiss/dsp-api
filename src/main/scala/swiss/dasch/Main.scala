@@ -8,7 +8,7 @@ package swiss.dasch
 import swiss.dasch.api.*
 import swiss.dasch.api.healthcheck.*
 import swiss.dasch.config.Configuration
-import swiss.dasch.config.Configuration.DspApiConfig
+import swiss.dasch.config.Configuration.{ DspApiConfig, StorageConfig }
 import swiss.dasch.domain.{ AssetService, AssetServiceLive }
 import zio.*
 import zio.config.*
@@ -27,8 +27,8 @@ object Main extends ZIOAppDefault {
       }
       .orDie
 
-  private val routes: Http[AssetService with HealthCheckService, Response, Request, Response] =
-    HealthCheckRoutes.app ++ ExportEndpoint.app
+  private val routes: Http[AssetService with HealthCheckService with StorageConfig, Response, Request, Response] =
+    HealthCheckRoutes.app ++ ExportEndpoint.app ++ ImportEndpoint.app
 
   private val program = Server.serve(routes)
 

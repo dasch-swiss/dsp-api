@@ -5,7 +5,7 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.test.SpecFileUtil.pathFromResource
+import swiss.dasch.test.SpecPaths.pathFromResource
 import zio.Scope
 import zio.nio.charset.Charset
 import zio.nio.file.{ Files, Path }
@@ -16,7 +16,7 @@ object DotInfoFileContentSpec extends ZIOSpecDefault {
     suite("DotInfoFileContent")(test("parsing a file works") {
       for {
         actual <- Files
-                    .readAllLines(pathFromResource("/test-folder-structure/0001/fg/il/FGiLaT4zzuV-CqwbEDFAFeS.info"))
+                    .readAllLines(pathFromResource("test-folder-structure/0001/fg/il/FGiLaT4zzuV-CqwbEDFAFeS.info"))
                     .map(lines => lines.mkString.fromJson[DotInfoFileContent])
       } yield assertTrue(
         actual.contains(

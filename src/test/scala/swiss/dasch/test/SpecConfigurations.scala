@@ -4,11 +4,12 @@
  */
 
 package swiss.dasch.test
-
 import swiss.dasch.config.Configuration.StorageConfig
-import swiss.dasch.test.SpecFileUtil.pathFromResource
-import zio.{ Layer, ZLayer }
-import zio.nio.file.Files
+import swiss.dasch.test.SpecPaths.pathFromResource
+import zio.nio.file.Files.newDirectoryStream
+import zio.{ Layer, ZIO, ZLayer }
+import zio.nio.file.{ Files, Path }
+import zio.stream.ZStream
 
 import java.io.IOException
 
@@ -16,10 +17,27 @@ object SpecConfigurations {
 
   val storageConfigLayer: Layer[IOException, StorageConfig] = ZLayer.scoped {
     for {
-      tmpDir <- Files.createTempDirectoryScoped(None, List.empty)
-    } yield StorageConfig(
-      assetDir = pathFromResource("/test-folder-structure").toFile.getAbsolutePath,
-      tempDir = tmpDir.toFile.toString,
-    )
+      tmpDir       <- Files.createTempDirectoryScoped(None, List.empty)
+      assetDir      = tmpDir / "images"
+      tempDir       = tmpDir / "tmp"
+      _            <- Files.createDirectories(assetDir)
+      _            <- Files.createDirectories(tempDir)
+      storageConfig = StorageConfig(assetDir.toFile.toString, tempDir.toFile.toString)
+      _            <- Files.createDirectories(storageConfig.exportPath)
+      _            <- Files.createDirectories(storageConfig.importPath)
+      _            <- copyDirectory(SpecPaths.testFolder, storageConfig.assetPath)
+    } yield storageConfig
   }
+
+  private def copyDirectory(source: Path, dest: Path): ZIO[Any, IOException, Long] =
+    Files.createDirectories(dest) *> Files
+      .list(source)
+      .mapZIO { file =>
+        copyDirectory(file, dest / file.filename)
+          .whenZIO(Files.isDirectory(file))
+          *> Files
+            .copy(file, dest / file.filename)
+            .whenZIO(Files.isRegularFile(file))
+      }
+      .runCount
 }

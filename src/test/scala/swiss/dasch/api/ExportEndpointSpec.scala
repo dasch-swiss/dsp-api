@@ -5,10 +5,10 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.domain.AssetServiceLive
+import swiss.dasch.domain.{ AssetService, AssetServiceLive, ProjectShortcode }
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.{ existingProject, nonExistentProject }
-import zio.Scope
+import zio.{ Scope, ZIO }
 import zio.http.{ URL, * }
 import zio.test.Assertion.equalTo
 import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertCompletes, assertTrue, assertZIO }
@@ -17,24 +17,27 @@ import java.net.URI
 
 object ExportEndpointSpec extends ZIOSpecDefault {
 
-  private def postEmptyBody(url: URL) = ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
+  private def postExport(shortcode: String | ProjectShortcode): ZIO[AssetService, Option[Response], Response] = {
+    val url = URL(Root / "project" / shortcode.toString / "export")
+    ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
+  }
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("ExportEndpoint")(
-      suite("POST on /export/{project} should")(
+      suite("POST on /project/{shortcode}/export should")(
         test("given the project does not exist, return 404") {
           for {
-            response <- postEmptyBody(URL(Root / "export" / nonExistentProject.toString))
+            response <- postExport(nonExistentProject)
           } yield assertTrue(response.status == Status.NotFound)
         },
         test("given the project shortcode is invalid, return 400") {
           for {
-            response <- postEmptyBody(URL(Root / "export" / "invalid-short-code"))
+            response <- postExport("invalid-short-code")
           } yield assertTrue(response.status == Status.BadRequest)
         },
         test("given the project is valid, return 200 with correct headers") {
           for {
-            response <- postEmptyBody(URL(Root / "export" / existingProject.toString))
+            response <- postExport(existingProject)
           } yield assertTrue(
             response.status == Status.Ok,
             response

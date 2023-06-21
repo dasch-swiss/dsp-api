@@ -31,7 +31,7 @@ object ExportEndpoint {
     )
 
   private val exportEndpoint: Endpoint[String, ApiProblem, ContentDispositionStream, None] = Endpoint
-    .post("export" / string(shortcodePathVarName))
+    .post("project" / string(shortcodePathVarName) / "export")
     .outCodec(downloadCodec)
     .outErrors(
       HttpCodec.error[ProjectNotFound](Status.NotFound),
@@ -41,9 +41,8 @@ object ExportEndpoint {
 
   private val postExportShortCodeHandler: String => ZIO[AssetService, ApiProblem, ContentDispositionStream] =
     (shortcode: String) =>
-      ZIO
-        .fromEither(ProjectShortcode.make(shortcode))
-        .mapError(ApiProblem.invalidPathVariable(shortcodePathVarName, shortcode, _))
+      ApiStringConverters
+        .fromPathVarToProjectShortcode(shortcode)
         .flatMap { code =>
           AssetService
             .zipProject(code)
