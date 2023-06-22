@@ -48,9 +48,10 @@ object SipiIT extends ZIOSpecDefault {
     "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwLjAuMC4wOjMzMzMiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy9yb290IiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjE2ODk3NTY1MzksImlhdCI6MTY4NzE2NDUzOSwianRpIjoiSG9SSFg5V1lSZHV6VnVmTXZFT1c4USJ9.tlTqr1NGjsOqnMRxjDW1TokDjGAPO5nvG-pcbn09Hrw"
 
   private val cookiesSuite =
-    suite("Given a Request contains multiple auth cookies")(
+    suite("Given a request is authorized using cookies")(
       test(
-        "When getting an existing file, " +
+        "And Given the request contains multiple cookies " +
+          "When getting an existing file, " +
           "then Sipi should extract the correct cookie, send it to dsp-api " +
           "and responds with Ok"
       ) {
@@ -67,8 +68,41 @@ object SipiIT extends ZIOSpecDefault {
               .map { url =>
                 Request
                   .get(url)
-                  .withCookie(s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie=anotherValueShouldBeIgnored; KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt")
+                  .withCookie(
+                    s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie=anotherValueShouldBeIgnored; KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt"
+                  )
               }
+              .flatMap(Client.request(_))
+          requestToDspApiContainsJwt <- ZIO
+                                          .attempt(
+                                            mockServer.verify(
+                                              // Number of times the request should be received (in this case, only once)
+                                              1,
+                                              // The expected request with header and value
+                                              newRequestPattern().withHeader("Authorization", equalTo(s"Bearer $jwt"))
+                                            )
+                                          )
+                                          .logError
+                                          .fold(err => false, succ => true)
+        } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)
+      },
+      test(
+        "And Given the request contains a single cookie " +
+          "When getting an existing file, " +
+          "then Sipi should send it to dsp-api " +
+          "and responds with Ok"
+      ) {
+        for {
+          _ <- copyTestFilesToSipi
+          mockServer <- MockDspApiServer.resetAndStubGetResponse(
+                          s"/admin/files/$prefix/$imageTestfile",
+                          200,
+                          SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
+                        )
+          response <-
+            SipiTestContainer
+              .resolveUrl(s"/$prefix/$imageTestfile/file")
+              .map(url => Request.get(url).withCookie(s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt"))
               .flatMap(Client.request(_))
           requestToDspApiContainsJwt <- ZIO
                                           .attempt(
