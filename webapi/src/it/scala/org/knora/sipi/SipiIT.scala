@@ -14,13 +14,10 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import org.apache.commons.codec.binary.Base32
-import spray.json.JsString
 import zio._
 import zio.http._
 import zio.http.model.Status
 import zio.json.DecoderOps
-import zio.json.EncoderOps
 import zio.json.ast.Json
 import zio.test._
 import scala.util.Failure
@@ -28,17 +25,11 @@ import scala.util.Success
 import scala.util.Try
 
 import org.knora.sipi.MockDspApiServer.verify._
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.testcontainers.SipiTestContainer
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
-
-import org.knora.sipi.SipiIT.fileEndpointSuite
 
 object SipiIT extends ZIOSpecDefault {
 
@@ -76,8 +67,7 @@ object SipiIT extends ZIOSpecDefault {
               .map { url =>
                 Request
                   .get(url)
-                  .withCookie(s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie=anotherValueShouldBeIgnored")
-                  .withCookie(s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt")
+                  .withCookie(s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie=anotherValueShouldBeIgnored; KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt")
               }
               .flatMap(Client.request(_))
           requestToDspApiContainsJwt <- ZIO

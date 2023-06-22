@@ -49,6 +49,17 @@ function str_strip_prefix(str, prefix)
     end
 end
 
+function str_trim(str)
+    local _, i = string.find(str, "^%s*") -- Find the starting whitespace
+    local j, _ = string.find(str, "%s*$") -- Find the trailing whitespace
+
+    if i == nil or j == nil then
+        return str -- No whitespace found at either end, return the original string
+    else
+        return string.sub(str, i + 1, j - 1) -- Return the trimmed string
+    end
+end
+
 --- Transforms a table into a string.
 -- @param tbl the table to transform.
 -- @return a string representation of the table.
