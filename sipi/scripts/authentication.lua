@@ -173,12 +173,14 @@ function _get_jwt_token_from_cookie()
         log("authentication: no cookie header found", server.loglevel.LOG_DEBUG)
         return nil
     end
+    log("authentication: cookie header found: " .. cookies, server.loglevel.LOG_DEBUG)
 
     cookie_name = cookie_name:lower()
     for entry in cookies:gmatch("([^,]+)") do
         local key, value = entry:match("([^=]+)=(.+)")
         if key and value then
             if key:lower() == cookie_name then
+                log("authentication: found cookie name '" .. cookie_name .. "', value: '" .. value .. "'", server.loglevel.LOG_DEBUG)
                 return value
             end
         end
