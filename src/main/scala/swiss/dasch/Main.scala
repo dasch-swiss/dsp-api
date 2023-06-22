@@ -7,6 +7,7 @@ package swiss.dasch
 
 import swiss.dasch.api.*
 import swiss.dasch.api.healthcheck.*
+import swiss.dasch.api.info.InfoEndpoint
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.{ DspIngestApiConfig, JwtConfig, StorageConfig }
 import swiss.dasch.domain.{ AssetService, AssetServiceLive }
@@ -28,7 +29,7 @@ object Main extends ZIOAppDefault {
       .orDie
 
   private val serviceRoutes    = (ExportEndpoint.app ++ ImportEndpoint.app) @@ Authenticator.middleware
-  private val managementRoutes = HealthCheckRoutes.app
+  private val managementRoutes = HealthCheckRoutes.app ++ InfoEndpoint.app
   private val routes           = managementRoutes ++ serviceRoutes
   private val program          = Server.serve(routes)
 

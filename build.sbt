@@ -1,6 +1,7 @@
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{ Docker, dockerRepository }
 import com.typesafe.sbt.packager.docker.Cmd
+import sys.process._
 
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
@@ -18,7 +19,20 @@ val zioPreludeVersion     = "1.0.0-RC19"
 val zioHttpVersion        = "3.0.0-RC2"
 
 lazy val root = (project in file("."))
-  .enablePlugins(JavaAppPackaging, DockerPlugin)
+  .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
+  .settings(
+    buildInfoKeys    := Seq[BuildInfoKey](
+      name,
+      version,
+      scalaVersion,
+      sbtVersion,
+      BuildInfoKey.action("gitCommit") {
+        "git rev-parse HEAD" !!
+      },
+    ),
+    buildInfoOptions += BuildInfoOption.BuildTime,
+    buildInfoPackage := "swiss.dasch.version",
+  )
   .settings(
     inThisBuild(
       List(
