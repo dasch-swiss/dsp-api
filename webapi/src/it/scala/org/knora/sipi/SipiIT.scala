@@ -57,11 +57,7 @@ object SipiIT extends ZIOSpecDefault {
       ) {
         for {
           _ <- copyTestFilesToSipi
-          mockServer <- MockDspApiServer.resetAndStubGetResponse(
-                          s"/admin/files/$prefix/$imageTestfile",
-                          200,
-                          SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
-                        )
+          _ <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           response <-
             SipiTestContainer
               .resolveUrl(s"/$prefix/$imageTestfile/file")
@@ -73,17 +69,7 @@ object SipiIT extends ZIOSpecDefault {
                   )
               }
               .flatMap(Client.request(_))
-          requestToDspApiContainsJwt <- ZIO
-                                          .attempt(
-                                            mockServer.verify(
-                                              // Number of times the request should be received (in this case, only once)
-                                              1,
-                                              // The expected request with header and value
-                                              newRequestPattern().withHeader("Authorization", equalTo(s"Bearer $jwt"))
-                                            )
-                                          )
-                                          .logError
-                                          .fold(err => false, succ => true)
+          requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
         } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)
       },
       test(
@@ -94,27 +80,13 @@ object SipiIT extends ZIOSpecDefault {
       ) {
         for {
           _ <- copyTestFilesToSipi
-          mockServer <- MockDspApiServer.resetAndStubGetResponse(
-                          s"/admin/files/$prefix/$imageTestfile",
-                          200,
-                          SipiFileInfoGetResponseADM(permissionCode = 2, restrictedViewSettings = None)
-                        )
+          _ <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           response <-
             SipiTestContainer
               .resolveUrl(s"/$prefix/$imageTestfile/file")
               .map(url => Request.get(url).withCookie(s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt"))
               .flatMap(Client.request(_))
-          requestToDspApiContainsJwt <- ZIO
-                                          .attempt(
-                                            mockServer.verify(
-                                              // Number of times the request should be received (in this case, only once)
-                                              1,
-                                              // The expected request with header and value
-                                              newRequestPattern().withHeader("Authorization", equalTo(s"Bearer $jwt"))
-                                            )
-                                          )
-                                          .logError
-                                          .fold(err => false, succ => true)
+          requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
         } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)
       }
     )
@@ -335,6 +307,21 @@ object MockDspApiServer {
     val dspApiResponse       = SipiFileInfoGetResponseADM(permissionCode, restrictedViewSettings = None)
     val dspApiPermissionPath = s"/admin/files/$prefix/$identifier"
     MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
+  }
+
+  def verifyAuthBearerTokenReceived(jwt: String): URIO[WireMockServer, Boolean] = ZIO.serviceWithZIO[WireMockServer] {
+    mockServer =>
+      ZIO
+        .attempt(
+          mockServer.verify(
+            // Number of times the request should be received (in this case, only once)
+            1,
+            // The expected request with header and value
+            newRequestPattern().withHeader("Authorization", equalTo(s"Bearer $jwt"))
+          )
+        )
+        .logError
+        .fold(err => false, succ => true)
   }
 
   private def stubGetJsonResponse(
