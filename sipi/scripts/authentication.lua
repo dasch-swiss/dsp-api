@@ -180,7 +180,7 @@ function _get_jwt_token_from_cookie()
         local key, value = entry:match("([^=]+)=(.+)")
         if key and value then
             if key:lower() == cookie_name then
-                log("authentication: found cookie name'" .. cookie_name .. "', value: '" .. value .. "'", server.loglevel.LOG_DEBUG)
+                log("authentication: found cookie name '" .. cookie_name .. "', value: '" .. value .. "'", server.loglevel.LOG_DEBUG)
                 return value
             end
         end
