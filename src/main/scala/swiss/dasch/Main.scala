@@ -8,11 +8,11 @@ package swiss.dasch
 import swiss.dasch.api.*
 import swiss.dasch.api.healthcheck.*
 import swiss.dasch.config.Configuration
-import swiss.dasch.config.Configuration.{ DspApiConfig, StorageConfig }
+import swiss.dasch.config.Configuration.{ DspIngestApiConfig, JwtConfig, StorageConfig }
 import swiss.dasch.domain.{ AssetService, AssetServiceLive }
 import zio.*
 import zio.config.*
-import zio.http.{ Http, Request, Response, Server }
+import zio.http.{ Http, HttpApp, Request, Response, Server }
 import zio.logging.backend.SLF4J
 
 object Main extends ZIOAppDefault {
@@ -21,16 +21,16 @@ object Main extends ZIOAppDefault {
 
   private val serverLayer =
     ZLayer
-      .service[DspApiConfig]
+      .service[DspIngestApiConfig]
       .flatMap { cfg =>
         Server.defaultWith(_.binding(cfg.get.host, cfg.get.port))
       }
       .orDie
 
-  private val routes: Http[AssetService with HealthCheckService with StorageConfig, Response, Request, Response] =
-    HealthCheckRoutes.app ++ ExportEndpoint.app ++ ImportEndpoint.app
-
-  private val program = Server.serve(routes)
+  private val serviceRoutes    = (ExportEndpoint.app ++ ImportEndpoint.app) @@ Authenticator.middleware
+  private val managementRoutes = HealthCheckRoutes.app
+  private val routes           = managementRoutes ++ serviceRoutes
+  private val program          = Server.serve(routes)
 
   override val run: ZIO[Any with Scope, ReadError[String], Nothing] =
     program.provide(
@@ -38,5 +38,6 @@ object Main extends ZIOAppDefault {
       Configuration.layer,
       serverLayer,
       AssetServiceLive.layer,
+      AuthenticatorLive.layer,
     )
 }

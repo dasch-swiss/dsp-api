@@ -29,7 +29,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           cache: sbt
       - name: Build and Test
-        run: sbt -v +test
+        run: sbt -v +test +headerCheckAll
       - name: Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
