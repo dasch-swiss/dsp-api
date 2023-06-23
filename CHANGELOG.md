@@ -1,5 +1,20 @@
 # Changelog
 
+## [29.0.1](https://github.com/dasch-swiss/dsp-api/compare/v29.0.0...v29.0.1) (2023-06-22)
+
+
+### Bug Fixes
+
+* Make Sipi handle multiple `KnoraAuthentication*` cookies correctly (DEV-2271) ([#2713](https://github.com/dasch-swiss/dsp-api/issues/2713)) ([1330d2b](https://github.com/dasch-swiss/dsp-api/commit/1330d2ba96b654e08314b42b5a9dbc668aba3d45))
+* Multiple cookies are separated by `; ` not by `,` ([#2715](https://github.com/dasch-swiss/dsp-api/issues/2715)) ([c317efc](https://github.com/dasch-swiss/dsp-api/commit/c317efce23f97df384ab7999037c517cc270592c))
+
+
+### Maintenance
+
+* Add dsp-ingest to docker-compose.yml  ([#2712](https://github.com/dasch-swiss/dsp-api/issues/2712)) ([64e72be](https://github.com/dasch-swiss/dsp-api/commit/64e72be3a11d13500b86e39afb559f8b6150122b))
+* Add sipi auth tests for knora.json (NO-Ticket) ([#2711](https://github.com/dasch-swiss/dsp-api/issues/2711)) ([85a30a5](https://github.com/dasch-swiss/dsp-api/commit/85a30a55a1d442fe64a9063bbf8171ebd4f8d98c))
+* fix invalid links in CHANGELOG (DEV-2251) ([#2699](https://github.com/dasch-swiss/dsp-api/issues/2699)) ([2419f58](https://github.com/dasch-swiss/dsp-api/commit/2419f58458e3edef32424597e9aa1b4a92f06d96))
+
 ## [29.0.0](https://github.com/dasch-swiss/dsp-api/compare/v28.3.0...v29.0.0) (2023-06-08)
 
 
