@@ -138,15 +138,15 @@ object ZipUtility {
 
 object ScopedIoStreams {
 
-  /** Creates a [[java.io.FileInputStream]] by opening a connection to an actual file, the file named by the File object file in
-    * the file system.
+  /** Creates a [[java.io.FileInputStream]] by opening a connection to an actual file, the file named by the File object
+    * file in the file system.
     *
     * @param path
     *   the actual file to read from, must exist
     *
     * @return
-    *   The [[java.io.FileInputStream]]. If the named file does not exist, is a directory rather than a regular file, or for
-    *   some other reason cannot be opened for reading then a [[java.io.FileNotFoundException]] is returned.
+    *   The [[java.io.FileInputStream]]. If the named file does not exist, is a directory rather than a regular file, or
+    *   for some other reason cannot be opened for reading then a [[java.io.FileNotFoundException]] is returned.
     */
   def fileInputStream(path: Path): ZIO[Scope, FileNotFoundException, FileInputStream] =
     ZIO.fromAutoCloseable(
@@ -155,20 +155,22 @@ object ScopedIoStreams {
         .refineOrDie { case e: FileNotFoundException => e }
     )
 
-  /** Creates a new managed [[java.util.zip.ZipOutputStream]] which writes into a file using an underlying [[java.io.FileOutputStream]]. The
-    * UTF-8 charset is used to encode the entry names and comments.
+  /** Creates a new managed [[java.util.zip.ZipOutputStream]] which writes into a file using an underlying
+    * [[java.io.FileOutputStream]]. The UTF-8 charset is used to encode the entry names and comments.
     *
     * @param path
     *   the actual File to write to, must exist
     *
     * @return
-    *   The [[java.util.zip.ZipOutputStream]]. If the file exists but is a directory rather than a regular file, does not exist but
-    *   cannot be created, or cannot be opened for any other reason then a [[java.io.FileNotFoundException]] is returned.
+    *   The [[java.util.zip.ZipOutputStream]]. If the file exists but is a directory rather than a regular file, does
+    *   not exist but cannot be created, or cannot be opened for any other reason then a
+    *   [[java.io.FileNotFoundException]] is returned.
     */
   def zipFileOutputStream(path: Path): ZIO[Scope, FileNotFoundException, ZipOutputStream] =
     fileOutputStream(path).flatMap(zipOutputStream)
 
-  /** Creates a new managed [[java.util.zip.ZipOutputStream]]. The UTF-8 charset is used to encode the entry names and comments.
+  /** Creates a new managed [[java.util.zip.ZipOutputStream]]. The UTF-8 charset is used to encode the entry names and
+    * comments.
     *
     * @param out
     *   the actual output stream
@@ -186,14 +188,14 @@ object ScopedIoStreams {
   def byteArrayInputStream(bufferSize: Int = defaultBufferSize): URIO[Scope, ByteArrayInputStream] =
     ZIO.fromAutoCloseable(ZIO.succeed(new ByteArrayInputStream(new Array[Byte](bufferSize))))
 
-  /** Creates a new managed [[java.io.FileOutputStream]] by opening a connection to an actual file, the file named by the File
-    * object file in the file system.
+  /** Creates a new managed [[java.io.FileOutputStream]] by opening a connection to an actual file, the file named by
+    * the File object file in the file system.
     *
     * @param path
     *   the actual file to write to, must exist
     * @return
-    *   The [[java.io.FileOutputStream]]. If the named file does not exist, is a directory rather than a regular file, or for
-    *   some other reason cannot be opened for reading then a [[java.io.FileNotFoundException]] is returned.
+    *   The [[java.io.FileOutputStream]]. If the named file does not exist, is a directory rather than a regular file,
+    *   or for some other reason cannot be opened for reading then a [[java.io.FileNotFoundException]] is returned.
     */
   def fileOutputStream(path: Path): ZIO[Scope, FileNotFoundException, FileOutputStream] =
     ZIO.fromAutoCloseable(
@@ -202,15 +204,16 @@ object ScopedIoStreams {
         .refineOrDie { case e: FileNotFoundException => e }
     )
 
-  /** Creates a new managed [[java.util.zip.ZipInputStream]] which reads from a file using an underlying [[java.io.FileInputStream]]. The
-    * UTF-8 charset is used to encode the entry names and comments.
+  /** Creates a new managed [[java.util.zip.ZipInputStream]] which reads from a file using an underlying
+    * [[java.io.FileInputStream]]. The UTF-8 charset is used to encode the entry names and comments.
     *
     * @param path
     *   the actual File to read from, must exist
     *
     * @return
-    *   The [[java.util.zip.ZipInputStream]]. If the file exists but is a directory rather than a regular file, does not exist but
-    *   cannot be created, or cannot be opened for any other reason then a [[java.io.FileNotFoundException]] is returned.
+    *   The [[java.util.zip.ZipInputStream]]. If the file exists but is a directory rather than a regular file, does not
+    *   exist but cannot be created, or cannot be opened for any other reason then a [[java.io.FileNotFoundException]]
+    *   is returned.
     */
   def zipFileInputStream(path: Path): ZIO[Scope, FileNotFoundException, ZipInputStream] =
     fileInputStream(path).flatMap(zipInputStream)

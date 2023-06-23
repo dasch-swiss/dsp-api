@@ -11,7 +11,6 @@ val zioVersion            = "2.0.13"
 val zioJsonVersion        = "0.5.0"
 val zioConfigVersion      = "3.0.7"
 val zioLoggingVersion     = "2.1.12"
-val logbackClassicVersion = "1.4.7"
 val testContainersVersion = "0.40.15"
 val zioMockVersion        = "1.0.0-RC11"
 val zioNioVersion         = "2.0.1"
@@ -54,7 +53,6 @@ lazy val root = (project in file("."))
       "dev.zio"              %% "zio-http"                 % zioHttpVersion,
       "dev.zio"              %% "zio-config"               % zioConfigVersion,
       "dev.zio"              %% "zio-config-typesafe"      % zioConfigVersion,
-      "ch.qos.logback"        % "logback-classic"          % logbackClassicVersion,
       "dev.zio"              %% "zio-json"                 % zioJsonVersion,
       "dev.zio"              %% "zio-nio"                  % zioNioVersion,
       "dev.zio"              %% "zio-prelude"              % zioPreludeVersion,
@@ -68,9 +66,8 @@ lazy val root = (project in file("."))
       "com.github.ghik"       % "silencer-lib_2.13.11"     % "1.7.13",
 
       // logging
-      "dev.zio"       %% "zio-logging"       % zioLoggingVersion,
-      "dev.zio"       %% "zio-logging-slf4j" % zioLoggingVersion,
-      "ch.qos.logback" % "logback-classic"   % logbackClassicVersion,
+      "dev.zio" %% "zio-logging"               % zioLoggingVersion,
+      "dev.zio" %% "zio-logging-slf4j2-bridge" % zioLoggingVersion,
 
       // test
       "dev.zio" %% "zio-test"          % zioVersion     % Test,

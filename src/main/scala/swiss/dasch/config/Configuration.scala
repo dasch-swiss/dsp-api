@@ -86,7 +86,6 @@ object Configuration {
       )
     )
 
-
   }
 
   val layer: Layer[ReadError[String], DspIngestApiConfig with JwtConfig with StorageConfig] =
