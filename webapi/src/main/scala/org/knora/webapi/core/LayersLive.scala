@@ -9,6 +9,7 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
@@ -133,7 +134,7 @@ object LayersLive {
   type DspEnvironmentLive =
     ActorSystem
       with ApiRoutes
-      with AppConfig
+      with AppConfigurations
       with AppRouter
       with AssetService
       with Authenticator

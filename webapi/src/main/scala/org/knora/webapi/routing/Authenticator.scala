@@ -32,6 +32,7 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -789,10 +790,10 @@ trait JwtService {
   def extractUserIriFromToken(token: String): Task[Option[IRI]]
 }
 
-final case class JwtServiceLive(private val config: AppConfig, stringFormatter: StringFormatter) extends JwtService {
-  private val secret                  = config.jwtSecretKey
-  private val longevity               = config.jwtLongevityAsDuration
-  private val issuer                  = config.knoraApi.externalKnoraApiHostPort
+final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatter: StringFormatter) extends JwtService {
+  private val secret                  = jwtConfig.secret
+  private val longevity               = jwtConfig.expiration
+  private val issuer                  = jwtConfig.issuer
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
 
   private val header: String = """{"typ":"JWT","alg":"HS256"}"""
@@ -874,5 +875,5 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
     }
 }
 object JwtServiceLive {
-  val layer: URLayer[AppConfig with StringFormatter, JwtServiceLive] = ZLayer.fromFunction(JwtServiceLive.apply _)
+  val layer: URLayer[JwtConfig with StringFormatter, JwtServiceLive] = ZLayer.fromFunction(JwtServiceLive.apply _)
 }
