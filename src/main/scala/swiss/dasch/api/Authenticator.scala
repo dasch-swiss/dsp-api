@@ -67,5 +67,11 @@ final case class AuthenticatorLive(jwtConfig: JwtConfig) extends Authenticator {
 }
 
 object AuthenticatorLive {
-  val layer = ZLayer.fromFunction(AuthenticatorLive.apply _)
+  val layer =
+    ZLayer.fromZIO(ZIO.serviceWithZIO[JwtConfig] { config =>
+      ZIO
+        .logWarning("Authentication is disabled => Development flag JWT_DISABLE_AUTH set to true ")
+        .when(config.disableAuth) *>
+        ZIO.succeed(AuthenticatorLive(config))
+    })
 }

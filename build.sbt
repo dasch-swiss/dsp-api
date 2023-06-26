@@ -83,11 +83,15 @@ lazy val root = (project in file("."))
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
     Docker / packageName                 := "dsp-ingest",
-    dockerExposedPorts ++= Seq(9999),
+    dockerExposedPorts                   := Seq(3340),
     Docker / defaultLinuxInstallLocation := "/sipi",
     dockerUpdateLatest                   := true,
     dockerBaseImage                      := "daschswiss/knora-sipi:latest",
     dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
+    dockerCommands += Cmd(
+      """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+        |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin
+    ),
     dockerCommands += Cmd(
       "RUN",
       "apt-get update && apt-get install -y openjdk-17-jre-headless && apt-get clean",
