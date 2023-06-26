@@ -42,7 +42,7 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     outputs:
-      docker_image_tag: ${{ steps.docker_image_tag.outputs.tag }}
+      tag: ${{ steps.docker_image_tag.outputs.tag }}
     strategy:
       matrix:
         java-version: [ 17 ]
@@ -70,7 +70,7 @@ jobs:
         run: export DOCKER_BUILDKIT=1; sbt Docker/publish
       - name: Output docker image tag
         id: docker_image_tag
-        run: echo "tag=$(git describe --tag --dirty --abbrev=7 --always)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=$(git describe --tag --dirty --abbrev=7 --always | tr -d '\n')" >> "$GITHUB_OUTPUT"
         shell: bash # Explicit for fail-fast behaviour
 
   trigger-dev-deployment:
