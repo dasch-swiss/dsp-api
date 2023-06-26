@@ -28,7 +28,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.0.8"
   val ZioPreludeVersion           = "1.0.0-RC19"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.14"
+  val ZioVersion                  = "2.0.15"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio" %% "zio"                       % ZioVersion
@@ -90,11 +90,11 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.1"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.1"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.1"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.2"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.2"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.2"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
@@ -111,7 +111,7 @@ object Dependencies {
   // Fixes error message when running IT in IntelliJ
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
-  val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.8"
+  val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.10"
   val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.3"
   val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
 
