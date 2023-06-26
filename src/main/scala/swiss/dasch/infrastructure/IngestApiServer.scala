@@ -5,28 +5,32 @@
 
 package swiss.dasch.infrastructure
 
-import swiss.dasch.api.info.InfoEndpoint
-import swiss.dasch.api.{ Authenticator, ExportEndpoint, HealthCheckRoutes, ImportEndpoint }
-import swiss.dasch.config.Configuration.DspIngestApiConfig
-import zio.{ BuildInfo, ZIO, ZLayer }
-import zio.http.{ App, Server }
+import swiss.dasch.api.monitoring.{ HealthEndpoint, InfoEndpoint, MetricsEndpoint }
+import swiss.dasch.api.{ Authenticator, ExportEndpoint, ImportEndpoint }
+import swiss.dasch.config.Configuration.{ JwtConfig, ServiceConfig }
+import zio.{ BuildInfo, URLayer, ZIO, ZLayer }
+import zio.http.*
+import zio.http.internal.middlewares.Cors.CorsConfig
 
 object IngestApiServer {
 
   private val serviceApps    = (ExportEndpoint.app ++ ImportEndpoint.app) @@ Authenticator.middleware
-  private val managementApps = HealthCheckRoutes.app ++ InfoEndpoint.app
-  private val app            = managementApps ++ serviceApps
-  def startup()              =
+  private val managementApps = HealthEndpoint.app ++ InfoEndpoint.app ++ MetricsEndpoint.app
+  private val app            = ((managementApps ++ serviceApps)
+    @@ HttpRoutesMiddlewares.dropTrailingSlash)
+    @@ HttpRoutesMiddlewares.cors(CorsConfig())
+
+  def startup() =
     ZIO.logInfo(s"Starting ${BuildInfo.name}") *>
       Server.install(app) *>
-      ZIO.serviceWithZIO[DspIngestApiConfig](c =>
+      ZIO.serviceWithZIO[ServiceConfig](c =>
         ZIO.logInfo(s"Started ${BuildInfo.name} on http://${c.host}:${c.port}/info")
       )
       *>
       ZIO.never
 
-  val layer = ZLayer
-    .service[DspIngestApiConfig]
+  val layer: URLayer[ServiceConfig, Server] = ZLayer
+    .service[ServiceConfig]
     .flatMap { cfg =>
       Server.defaultWith(_.binding(cfg.get.host, cfg.get.port))
     }

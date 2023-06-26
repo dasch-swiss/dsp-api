@@ -33,8 +33,6 @@ object ImportEndpoint {
     implicit val encoder: JsonEncoder[UploadResponse] = DeriveJsonEncoder.gen[UploadResponse]
   }
 
-  private val uploadCodec = HeaderCodec.contentType ++ ContentCodec.contentStream[Byte] ++ StatusCodec.status(Status.Ok)
-
   private val importEndpoint
       : Endpoint[(String, ZStream[Any, Nothing, Byte], ContentType), ApiProblem, UploadResponse, None] =
     Endpoint
@@ -82,6 +80,6 @@ object ImportEndpoint {
           def release(zipFile: ZipFile) = ZIO.succeed(zipFile.close())
           ZIO.acquireRelease(acquire)(release).orElseFail(IllegalArguments(Map("body" -> "body is not a zip file")))
         }
-    } yield ()).tapError(e => Files.deleteIfExists(tempFile).mapError(ApiProblem.internalError))
+    } yield ()).tapError(_ => Files.deleteIfExists(tempFile).mapError(ApiProblem.internalError))
 
 }

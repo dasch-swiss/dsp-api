@@ -4,6 +4,7 @@
  */
 
 package swiss.dasch.infrastructure
+import swiss.dasch.config.Configuration.ServiceConfig
 import zio.*
 import zio.logging.LogFormat.*
 import zio.logging.*
@@ -41,12 +42,12 @@ object Logger {
     ConsoleLoggerConfig(logFormatJson, logFilter)
   )
 
-  private val useJsonLogger = sys.env.getOrElse("LOG_FORMAT", "TEXT") == "JSON"
-
-  private val logger: ZLayer[Any, Nothing, Unit] =
-    if (useJsonLogger) jsonLogger
+  private val logger: ZLayer[ServiceConfig, Nothing, Unit] = ZLayer.service[ServiceConfig].flatMap { config =>
+    val value: ServiceConfig = config.get
+    if (value.logFormat.toLowerCase() == "json") jsonLogger
     else textLogger
+  }
 
-  def fromEnv(): ZLayer[Any, Nothing, Unit with Unit] =
+  val layer: ZLayer[ServiceConfig, Nothing, Unit with Unit] =
     Runtime.removeDefaultLoggers >>> logger >+> Slf4jBridge.initialize
 }

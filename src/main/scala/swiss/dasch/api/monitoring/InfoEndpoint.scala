@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package swiss.dasch.api.info
+package swiss.dasch.api.monitoring
 
 import swiss.dasch.api.ImportEndpoint.UploadResponse
+import swiss.dasch.version.BuildInfo
 import zio.*
 import zio.http.*
 import zio.http.endpoint.*
 import zio.json.{ DeriveJsonEncoder, JsonEncoder }
 import zio.schema.{ DeriveSchema, Schema }
-import swiss.dasch.version.BuildInfo
 
 object InfoEndpoint {
   case class InfoEndpointResponse(
@@ -32,7 +32,7 @@ object InfoEndpoint {
       scalaVersion = BuildInfo.scalaVersion,
       sbtVersion = BuildInfo.sbtVersion,
       buildTime = BuildInfo.builtAtString,
-      gitCommit = BuildInfo.gitCommit.trim,
+      gitCommit = BuildInfo.gitCommit,
     )
   }
 
