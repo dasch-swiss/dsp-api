@@ -1,5 +1,20 @@
 # Changelog
 
+## [29.0.1](https://github.com/dasch-swiss/dsp-api/compare/v29.0.0...v29.0.1) (2023-06-22)
+
+
+### Bug Fixes
+
+* Make Sipi handle multiple `KnoraAuthentication*` cookies correctly (DEV-2271) ([#2713](https://github.com/dasch-swiss/dsp-api/issues/2713)) ([1330d2b](https://github.com/dasch-swiss/dsp-api/commit/1330d2ba96b654e08314b42b5a9dbc668aba3d45))
+* Multiple cookies are separated by `; ` not by `,` ([#2715](https://github.com/dasch-swiss/dsp-api/issues/2715)) ([c317efc](https://github.com/dasch-swiss/dsp-api/commit/c317efce23f97df384ab7999037c517cc270592c))
+
+
+### Maintenance
+
+* Add dsp-ingest to docker-compose.yml  ([#2712](https://github.com/dasch-swiss/dsp-api/issues/2712)) ([64e72be](https://github.com/dasch-swiss/dsp-api/commit/64e72be3a11d13500b86e39afb559f8b6150122b))
+* Add sipi auth tests for knora.json (NO-Ticket) ([#2711](https://github.com/dasch-swiss/dsp-api/issues/2711)) ([85a30a5](https://github.com/dasch-swiss/dsp-api/commit/85a30a55a1d442fe64a9063bbf8171ebd4f8d98c))
+* fix invalid links in CHANGELOG (DEV-2251) ([#2699](https://github.com/dasch-swiss/dsp-api/issues/2699)) ([2419f58](https://github.com/dasch-swiss/dsp-api/commit/2419f58458e3edef32424597e9aa1b4a92f06d96))
+
 ## [29.0.0](https://github.com/dasch-swiss/dsp-api/compare/v28.3.0...v29.0.0) (2023-06-08)
 
 
@@ -2091,26 +2106,26 @@ Please see the [Release Versioning Convention](https://github.com/dhlab-basel/Kn
 
 ### Required changes to existing data
 
-* a `knora-base:ListNode` must have at least one `rdfs:label`. (@github[#991](#990))
+* a `knora-base:ListNode` must have at least one `rdfs:label`. ([#991](https://github.com/dasch-swiss/dsp-api/issues/990))
 
 ### New features
 
-* add developer-centric docker-compose.yml for starting the Knora / GraphDB / Sipi / Salsah1 (@github[#979](#979))
-* configure `webapi` and `salsah1` thorough environment variables (@github[#979](#979))
-* update for Java 10 (@github[#979](#979))
-* comment out the generation of fat jars from `KnoraBuild.sbt` (for now) (@github[#979](#979))
-* update ehcache (@github[#979](#979))
-* update sbt to 1.2.1 (@github[#979](#979))
-* remove Kamon monitoring (for now) since we don't see anything meaningful there. We probably will have to instrument Knora by hand and then use Kamon for access. (@github[#979](#979))
-* update Dockerfiles for `webapi` and `salsah1` (@github[#979](#979))
-* follow subClassOf when including ontologies in XML import schemas (@github[#991](#991))
-* add support for adding list child nodes (@github[#991](#990))
-* add support for shared ontologies (@github[#987](#987))
+* add developer-centric docker-compose.yml for starting the Knora / GraphDB / Sipi / Salsah1 ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* configure `webapi` and `salsah1` thorough environment variables ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* update for Java 10 ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* comment out the generation of fat jars from `KnoraBuild.sbt` (for now) ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* update ehcache ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* update sbt to 1.2.1 ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* remove Kamon monitoring (for now) since we don't see anything meaningful there. We probably will have to instrument Knora by hand and then use Kamon for access. ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* update Dockerfiles for `webapi` and `salsah1` ([#979](https://github.com/dasch-swiss/dsp-api/issues/979))
+* follow subClassOf when including ontologies in XML import schemas ([#991](https://github.com/dasch-swiss/dsp-api/issues/991))
+* add support for adding list child nodes ([#991](https://github.com/dasch-swiss/dsp-api/issues/990))
+* add support for shared ontologies ([#987](https://github.com/dasch-swiss/dsp-api/issues/987))
 
 ### Bugfixes
 
-* trouble with xml-checker and/or consistency-checker during bulk import (@github[#978](#978))
-* ontology API error with link values (@github[#988](#988))
+* trouble with xml-checker and/or consistency-checker during bulk import ([#978](https://github.com/dasch-swiss/dsp-api/issues/978))
+* ontology API error with link values ([#988](https://github.com/dasch-swiss/dsp-api/issues/988))
 
 ---
 
@@ -2187,17 +2202,17 @@ General:
 
 Gravsearch enhancements:
 
-* Accept queries in POST requests (@github[#650](#650)).
-* Allow a Gravsearch query to specify the IRI of the main resource (@github[#871](#871)) (by allowing `BIND`).
+* Accept queries in POST requests ([#650](https://github.com/dasch-swiss/dsp-api/issues/650)).
+* Allow a Gravsearch query to specify the IRI of the main resource ([#871](https://github.com/dasch-swiss/dsp-api/issues/871)) (by allowing `BIND`).
 * Allow `lang` to be used with `!=`.
-* A `UNION` or `OPTIONAL` can now be nested in an `OPTIONAL` (@github[#882](#882)).
-* Gravsearch now does type inference (@github[#884](#884)).
+* A `UNION` or `OPTIONAL` can now be nested in an `OPTIONAL` ([#882](https://github.com/dasch-swiss/dsp-api/issues/882)).
+* Gravsearch now does type inference ([#884](https://github.com/dasch-swiss/dsp-api/issues/884)).
 * The Knora API v2 complex schema can now be used in Gravsearch, making it possible to search
-  for list nodes (@github[#899](#899)).
+  for list nodes ([#899](https://github.com/dasch-swiss/dsp-api/issues/899)).
 
 Admin API:
 
-* Make project description required (@github[#875](#875)).
+* Make project description required ([#875](https://github.com/dasch-swiss/dsp-api/issues/875)).
 
 Conversion to TEI:
 
@@ -2206,20 +2221,20 @@ Conversion to TEI:
 
 Sipi integration:
 
-* The Knora specific Sipi configuration and scripts can now be found under the `sipi/` directory (@github[#404](#404)).
-* Documentation on how Sipi can be started changed (@github[#404](#404)).
+* The Knora specific Sipi configuration and scripts can now be found under the `sipi/` directory ([#404](https://github.com/dasch-swiss/dsp-api/issues/404)).
+* Documentation on how Sipi can be started changed ([#404](https://github.com/dasch-swiss/dsp-api/issues/404)).
 
 Bugfixes
 ---------
 
-* Allow a class or property definition to have more than one object for `rdf:type` (@github[#885](#885)).
-* Exclude list values from v2 fulltext search (@github[#906](#906)).
+* Allow a class or property definition to have more than one object for `rdf:type` ([#885](https://github.com/dasch-swiss/dsp-api/issues/885)).
+* Exclude list values from v2 fulltext search ([#906](https://github.com/dasch-swiss/dsp-api/issues/906)).
 
 Gravsearch fixes:
 
-* Allow the `lang` function to be used in a comparison inside AND/OR (@github[#846](#846)).
-* Fix the processing of resources with multiple incoming links that use the same property (@github[#878](#878)).
-* Fix the parsing of a FILTER inside an OPTIONAL (@github[#879](#879)).
+* Allow the `lang` function to be used in a comparison inside AND/OR ([#846](https://github.com/dasch-swiss/dsp-api/issues/846)).
+* Fix the processing of resources with multiple incoming links that use the same property ([#878](https://github.com/dasch-swiss/dsp-api/issues/878)).
+* Fix the parsing of a FILTER inside an OPTIONAL ([#879](https://github.com/dasch-swiss/dsp-api/issues/879)).
 * Require the `match` function to be the top-level expression in a `FILTER`.
 
 ---
