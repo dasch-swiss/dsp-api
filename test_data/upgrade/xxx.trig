@@ -1,0 +1,109 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms:    <http://purl.org/dc/terms/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
+@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
+@prefix biblio: <http://www.knora.org/ontology/0801/biblio#> .
+
+<http://www.knora.org/ontology/knora-base> {
+
+  <http://www.knora.org/ontology/knora-base>
+    rdf:type                     owl:Ontology ;
+    rdfs:label                   "The Knora base ontology"@en ;
+    knora-base:attachedToProject knora-admin:SystemProject ;
+    knora-base:ontologyVersion   "knora-base v25" .
+
+  knora-base:attachedToUser
+      rdf:type                         owl:ObjectProperty ;
+      rdfs:subPropertyOf               knora-base:objectCannotBeMarkedAsDeleted ;
+      rdfs:label                       "attached to user"@en ;
+      rdfs:comment                     "Connects something to a user"@en ;
+      knora-base:objectClassConstraint knora-admin:User .
+
+  knora-base:ontologyVersion
+    rdf:type                            owl:DatatypeProperty ;
+    rdfs:subPropertyOf                  knora-base:objectCannotBeMarkedAsDeleted ;
+    rdfs:comment                        "Indicates the version of the Knora built-in ontologies in a repository."@en ;
+    knora-base:subjectClassConstraint   owl:Ontology ;
+    knora-base:objectDatatypeConstraint xsd:string .
+
+  knora-base:subjectClassConstraint
+    rdf:type     owl:ObjectProperty ;
+    rdfs:comment "Specifies the OWL class that the subject of a property must belong to"@en .
+
+  knora-base:objectClassConstraint
+    rdf:type     owl:ObjectProperty ;
+    rdfs:comment "Specifies the OWL class that the object of a property must belong to"@en .
+
+  knora-base:hasComment
+      rdf:type                owl:ObjectProperty ;
+      rdfs:label              "Kommentar"@de,
+                              "Comment"@en,
+                              "Commentaire"@fr,
+                              "Commento"@it ;
+      rdfs:comment            """Represents a comment on a resource as a knora-base:TextValue"""@de ;
+      knora-base:subjectClassConstraint knora-base:Resource ;
+      knora-base:objectClassConstraint  knora-base:TextValue ;
+      knora-base:isEditable             true ;
+      salsah-gui:guiElement   salsah-gui:Richtext ;
+      rdfs:subPropertyOf      knora-base:hasValue .
+}
+
+<http://www.knora.org/ontology/0801/beol> {
+
+  <http://www.knora.org/ontology/0801/beol>
+      rdf:type                        owl:Ontology ;
+      rdfs:label                      "The BEOL ontology" ;
+      knora-base:attachedToProject    <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+      knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
+
+  beol:title
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasValue,
+                                     dcterms:title ;
+    rdfs:label                       "Title"@en ;
+    rdfs:comment                     """Title"""@en ;
+    knora-base:objectClassConstraint knora-base:TextValue ;
+    salsah-gui:guiElement            salsah-gui:SimpleText ;
+    salsah-gui:guiAttribute          "size=80",
+                                     "maxlength=255" .
+
+
+  beol:hasText
+      rdf:type                         owl:ObjectProperty ;
+      rdfs:subPropertyOf               knora-base:hasValue ;
+      rdfs:label                       "Text"@en ;
+      rdfs:comment                     """Text"""@en ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
+      salsah-gui:guiElement            salsah-gui:Richtext .
+}
+
+<http://www.knora.org/ontology/0801/biblio> {
+
+  <http://www.knora.org/ontology/0801/biblio>
+    rdf:type                        owl:Ontology ;
+    rdfs:label                      "The Biblio ontology" ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
+
+  biblio:hasTitle
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasValue,
+                                      dcterms:title ;
+    rdfs:label                       "Title"@en ;
+    knora-base:objectClassConstraint knora-base:TextValue ;
+    salsah-gui:guiElement            salsah-gui:SimpleText ;
+    rdfs:comment                     """Represents a title."""@en .
+}
+
+
+<http://www.knora.org/data/0001/anything> {
+  
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g> a anything:Thing .
+}
