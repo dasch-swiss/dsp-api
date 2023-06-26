@@ -10,7 +10,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  run:
+  build-and-test:
     name: Build and Run Tests
     strategy:
       matrix:
