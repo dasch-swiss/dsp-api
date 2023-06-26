@@ -17,11 +17,10 @@ jobs:
         java-version: [ 17 ]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout current branch (full)
-        uses: actions/checkout@v2
+      - name: Checkout current branch
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -45,8 +44,16 @@ jobs:
     outputs:
       tag: ${{ steps.output_docker_image_tag.outputs.tag }}
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v3
+      - name: Checkout current branch
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+          cache: sbt
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -57,7 +64,7 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Build and push image
-        run: sbt Docker/publish
+        run: export DOCKER_BUILDKIT=1; sbt Docker/publish
       - name: Output docker image tag
         id: output_docker_image_tag
         run: echo "tag=$(git describe --tag --dirty --abbrev=7 --always)" >> "$GITHUB_OUTPUT"
@@ -75,6 +82,7 @@ jobs:
           JENKINS_BASIC_AUTH_PASS: ${{ secrets.JENKINS_BASIC_AUTH_PASS }}
           JENKINS_DEV_WEBHOOK: ${{ secrets.JENKINS_DEV_WEBHOOK }}
         run: |
+          echo "Trigger deployment for tag=${IMAGE_TAG}"; \
           curl -f -u "${JENKINS_BASIC_AUTH_USER}:${JENKINS_BASIC_AUTH_PASS}" \
                -X POST "${JENKINS_DEV_WEBHOOK}" \
                -d "Service=ingest&Version=${IMAGE_TAG}"
