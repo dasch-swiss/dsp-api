@@ -41,6 +41,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: build-and-test
     runs-on: ubuntu-latest
+    outputs:
+      docker_image_tag: ${{ steps.docker_image_tag.outputs.tag }}
     strategy:
       matrix:
         java-version: [ 17 ]
@@ -78,7 +80,7 @@ jobs:
     steps:
       - name: Trigger deployment to DEV
         env:
-          IMAGE_TAG: ${{ publish-docker-image.docker_image_tag.outputs.tag }}
+          IMAGE_TAG: ${{ needs.publish-docker-image.docker_image_tag }}
           JENKINS_BASIC_AUTH_USER: ${{ secrets.JENKINS_BASIC_AUTH_USER }}
           JENKINS_BASIC_AUTH_PASS: ${{ secrets.JENKINS_BASIC_AUTH_PASS }}
           JENKINS_DEV_WEBHOOK: ${{ secrets.JENKINS_DEV_WEBHOOK }}
