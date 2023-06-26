@@ -80,7 +80,7 @@ jobs:
     steps:
       - name: Trigger deployment to DEV
         env:
-          IMAGE_TAG: ${{ needs.publish-docker-image.docker_image_tag }}
+          IMAGE_TAG: ${{ needs.publish-docker-image.tag}}
           JENKINS_BASIC_AUTH_USER: ${{ secrets.JENKINS_BASIC_AUTH_USER }}
           JENKINS_BASIC_AUTH_PASS: ${{ secrets.JENKINS_BASIC_AUTH_PASS }}
           JENKINS_DEV_WEBHOOK: ${{ secrets.JENKINS_DEV_WEBHOOK }}
