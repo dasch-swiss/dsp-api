@@ -14,6 +14,8 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import zio.config.magnolia._
 
+import org.knora.webapi.config.AppConfig.AppConfigurations
+
 /**
  * Alters the AppConfig with the TestContainer ports for Fuseki and Sipi.
  */
@@ -70,25 +72,33 @@ object AppConfigForTestContainers {
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
    */
-  val testcontainers: ZLayer[FusekiTestContainer & SipiTestContainer, Nothing, AppConfig] =
-    ZLayer {
+  val testcontainers: ZLayer[FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
+    var appConfigLayer = ZLayer {
       for {
         appConfig       <- config
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         sipiContainer   <- ZIO.service[SipiTestContainer]
         alteredConfig   <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer)
       } yield alteredConfig
-    }.tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<"))
+    }
+    (appConfigLayer ++ appConfigLayer.project(_.jwt)).tap(_ =>
+      ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<")
+    )
+  }
 
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki.
    */
-  val fusekiOnlyTestcontainer: ZLayer[FusekiTestContainer, Nothing, AppConfig] =
-    ZLayer {
+  val fusekiOnlyTestcontainer: ZLayer[FusekiTestContainer, Nothing, AppConfigurations] = {
+    val appConfigLayer = ZLayer {
       for {
         appConfig       <- config
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
       } yield alteredConfig
-    }.tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki only Testcontainers Initialized <<<"))
+    }
+    (appConfigLayer ++ appConfigLayer.project(_.jwt)).tap(_ =>
+      ZIO.logInfo(">>> AppConfig for Fuseki only Testcontainers Initialized <<<")
+    )
+  }
 }
