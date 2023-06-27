@@ -809,7 +809,7 @@ final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatte
                 expiration = Some(exp.getEpochSecond),
                 jwtId = Some(UuidUtil.base64Encode(uuid))
               ).toJson
-    } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp)
+    } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp.getEpochSecond)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
