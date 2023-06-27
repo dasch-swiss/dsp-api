@@ -87,7 +87,7 @@ lazy val root = (project in file("."))
     Docker / defaultLinuxInstallLocation := "/sipi",
     dockerUpdateLatest                   := true,
     dockerBaseImage                      := "daschswiss/knora-sipi:latest",
-    dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
+//    dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
         |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin
