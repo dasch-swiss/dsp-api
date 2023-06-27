@@ -791,31 +791,26 @@ trait JwtService {
 }
 
 final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatter: StringFormatter) extends JwtService {
-  private val secret                  = jwtConfig.secret
-  private val longevity               = jwtConfig.expiration
-  private val issuer                  = jwtConfig.issuer
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
-
   private val header: String = """{"typ":"JWT","alg":"HS256"}"""
-
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   override def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt] =
     for {
       now  <- Clock.instant
       uuid <- ZIO.random.flatMap(_.nextUUID)
-      exp   = now.plusSeconds(longevity.toSeconds).getEpochSecond
+      exp   = now.plus(jwtConfig.expiration).getEpochSecond
       jwtId = Some(UuidUtil.base64Encode(uuid))
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
-                issuer = Some(issuer),
+                issuer = Some(jwtConfig.issuer),
                 subject = Some(user.id),
                 audience = Some(Set("Knora", "Sipi")),
                 issuedAt = Some(now.getEpochSecond),
                 expiration = Some(exp),
                 jwtId = jwtId
               ).toJson
-    } yield Jwt(JwtSprayJson.encode(header, claim, secret, algorithm), exp)
+    } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
@@ -850,11 +845,11 @@ final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatte
    * @return the token's header and claim, or `None` if the token is invalid.
    */
   private def decodeToken(token: String): Option[(JwtHeader, JwtClaim)] =
-    JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
+    JwtSprayJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256)) match {
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
           header.typ.isDefined,
-          claim.issuer.isDefined && claim.issuer.contains(issuer),
+          claim.issuer.isDefined && claim.issuer.contains(jwtConfig.issuer),
           claim.subject.isDefined,
           claim.jwtId.isDefined,
           claim.issuedAt.isDefined,
