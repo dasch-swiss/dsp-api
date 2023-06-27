@@ -309,3 +309,12 @@
     knora-base:valueHasString    "1" ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/zNI_RQzqRSOKQkgPUNhjDw>
+    a                            freetest:FreetestWithNewTextValues ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    rdfs:label                   "Resource without text values" ;
+    knora-base:isDeleted         false .

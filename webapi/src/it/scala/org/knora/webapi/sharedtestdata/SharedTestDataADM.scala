@@ -745,4 +745,7 @@ object SharedTestDataADM {
     status = false,
     selfjoin = false
   )
+
+  // freetest
+  val freetestOntologyIri: String = "http://0.0.0.0:3333/ontology/0001/freetest/v2"
 }
