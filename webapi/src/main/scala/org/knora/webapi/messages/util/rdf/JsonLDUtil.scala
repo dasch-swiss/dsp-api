@@ -32,6 +32,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.apache.jena.sparql.algebra.Op
 
 /*
 
@@ -491,7 +492,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *
    * @return The IRI of the JSON-LD object, or None.
    */
-  def getIriOption(): Option[String] =
+  def getIriOption: Option[String] =
     value.get(JsonLDKeywords.ID).flatMap {
       case JsonLDString(value) => Some(value)
       case _                   => None
@@ -610,6 +611,12 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     getString(key).flatMap {
       case Some(str) => ZIO.succeed(str)
       case None      => ZIO.fail(s"No $key provided")
+    }
+
+  def getStringOption(key: String): Option[String] =
+    value.get(key) match {
+      case Some(JsonLDString(str)) => Some(str)
+      case _                       => None
     }
 
   /**

@@ -64,6 +64,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private var integerValueUUID = UUID.randomUUID
   private var linkValueUUID    = UUID.randomUUID
 
+  private val freetestOntologyIri: SmartIri = SharedTestDataADM.freetestOntologyIri.toSmartIri
+
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
@@ -5422,12 +5424,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "handling text values" should {
 
       "create, update and delete an UnformattedTextValue" in {
-        val cred                          = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password)
-        val valUrl                        = s"$baseApiUrl/v2/values"
-        val freetestOntologyIri: SmartIri = SharedTestDataADM.freetestOntologyIri.toSmartIri
-        val resourceIri: IRI              = TextValuesTestData.resourceIri
-        val propertyIri: SmartIri         = freetestOntologyIri.makeEntityIri("hasProperlyUnformattedText")
-        val textValue: String             = "This is a text value."
+        val cred                  = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password)
+        val valUrl                = s"$baseApiUrl/v2/values"
+        val resourceIri: IRI      = TextValuesTestData.resourceIri
+        val propertyIri: SmartIri = freetestOntologyIri.makeEntityIri("hasProperlyUnformattedText")
+        val textValue: String     = "This is a text value."
 
         // create a value
         val requestString =
@@ -5450,7 +5451,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         assert(response.status == StatusCodes.OK, responseString)
         val body: JsonLDObject = JsonLDUtil.parseJsonLD(responseString).body
         assert(body.getType().contains(OntologyConstants.KnoraApiV2Complex.UnformattedTextValue))
-        val valueIri = body.getIriOption().get
+        val valueIri = body.getIriOption.get
 
         val resource = getResource(resourceIri)
         assert(resource.body.getObjectOption(propertyIri.toString).flatMap(_.getValueAsString()).contains(textValue))
@@ -5479,10 +5480,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         val updatedResource = getResource(resourceIri)
         val updatedValue    = updatedResource.body.getObjectOption(propertyIri.toString).get
         assert(updatedValue.getValueAsString().contains(updatedTextValue))
-        val updatedValueIri = updatedValue.getIriOption().get
+        val updatedValueIri = updatedValue.getIriOption.get
 
         // delete the value
-        val lastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
         val deleteRequestString =
           s"""{
              |  "@id" : "$resourceIri",
@@ -5490,6 +5490,114 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
              |  "freetest:hasProperlyUnformattedText" : {
              |    "@id" : "$updatedValueIri",
              |    "@type" : "knora-api:UnformattedTextValue"
+             |  },
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+             |  }
+             |}""".stripMargin
+        val deleteRequest = Post(
+          s"$valUrl/delete",
+          HttpEntity(RdfMediaTypes.`application/ld+json`, deleteRequestString)
+        ) ~> addCredentials(cred)
+        val deleteResponse       = singleAwaitingRequest(deleteRequest)
+        val deleteResponseString = responseToString(deleteResponse)
+        assert(deleteResponse.status == StatusCodes.OK, deleteResponseString)
+
+        val deletedResource = getResource(resourceIri)
+        assert(deletedResource.body.getObjectOption(propertyIri.toString).isEmpty)
+      }
+
+      "create, update and delete a FormattedTextValue" in {
+        val cred                  = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password)
+        val valUrl                = s"$baseApiUrl/v2/values"
+        val resourceIri: IRI      = TextValuesTestData.resourceIri
+        val propertyIri: SmartIri = freetestOntologyIri.makeEntityIri("hasProperlyFormattedText")
+        val textValueAsXml: String =
+          """|<?xml version="1.0" encoding="UTF-8"?>
+             |<text>
+             |  <p><strong>this is <em>updated</em></strong> text</p>
+             |  with standoff
+             |</text>""".stripMargin
+
+        // create a value
+        val requestString =
+          s"""{
+             |  "@id" : "$resourceIri",
+             |  "@type" : "freetest:FreetestWithNewTextValues",
+             |  "freetest:hasProperlyFormattedText" : {
+             |    "@type" : "knora-api:FormattedTextValue",
+             |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
+             |    "knora-api:textValueHasMapping" : {
+             |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+             |    }
+             |  },
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+             |  }
+             |}""".stripMargin
+        val request =
+          Post(valUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, requestString)) ~> addCredentials(cred)
+        val response       = singleAwaitingRequest(request)
+        val responseString = responseToString(response)
+        assert(response.status == StatusCodes.OK, responseString)
+        val body: JsonLDObject = JsonLDUtil.parseJsonLD(responseString).body
+        assert(body.getType().contains(OntologyConstants.KnoraApiV2Complex.FormattedTextValue))
+        val valueIri = body.getIriOption.get
+
+        val resource    = getResource(resourceIri)
+        val valueObject = resource.body.getObjectOption(propertyIri.toString).get
+        assert(
+          valueObject.getObjectOption(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping).get.getIriOption.get ==
+            OntologyConstants.KnoraBase.StandardMapping
+        )
+        assert(valueObject.getStringOption(OntologyConstants.KnoraApiV2Complex.TextValueAsXml).get == textValueAsXml)
+
+        // update the value
+        val updatedTextValueAsXml: String =
+          """|<?xml version="1.0" encoding="UTF-8"?>
+             |<text>
+             |  <p><strong>this is</strong> text</p>
+             |  with standoff
+             |</text>""".stripMargin
+        val updateRequestString =
+          s"""{
+             |  "@id" : "$resourceIri",
+             |  "@type" : "freetest:FreetestWithNewTextValues",
+             |  "freetest:hasProperlyFormattedText" : {
+             |    "@id" : "$valueIri",
+             |    "@type" : "knora-api:FormattedTextValue",
+             |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(updatedTextValueAsXml)},
+             |    "knora-api:textValueHasMapping" : {
+             |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+             |    }
+             |  },
+             |  "@context" : {
+             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+             |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+             |  }
+             |}""".stripMargin
+        val updateRequest =
+          Put(valUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, updateRequestString)) ~> addCredentials(cred)
+        val updateResponse       = singleAwaitingRequest(updateRequest)
+        val updateResponseString = responseToString(updateResponse)
+        assert(updateResponse.status == StatusCodes.OK, updateResponseString)
+        val updatedResource = getResource(resourceIri)
+        val updatedValue    = updatedResource.body.getObjectOption(propertyIri.toString).get
+        assert(
+          updatedValue.getStringOption(OntologyConstants.KnoraApiV2Complex.TextValueAsXml).get == updatedTextValueAsXml
+        )
+        val updatedValueIri = updatedValue.getIriOption.get
+
+        // delete the value
+        val deleteRequestString =
+          s"""{
+             |  "@id" : "$resourceIri",
+             |  "@type" : "freetest:FreetestWithNewTextValues",
+             |  "freetest:hasProperlyFormattedText" : {
+             |    "@id" : "$updatedValueIri",
+             |    "@type" : "knora-api:FormattedTextValue"
              |  },
              |  "@context" : {
              |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
