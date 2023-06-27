@@ -802,7 +802,7 @@ final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatte
       exp   = now.plus(jwtConfig.expiration)
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
-                issuer = Some(jwtConfig.issuer),
+                issuer = jwtConfig.issuer,
                 subject = Some(user.id),
                 audience = Some(Set("Knora", "Sipi")),
                 issuedAt = Some(now.getEpochSecond),
@@ -848,7 +848,7 @@ final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatte
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
           header.typ.isDefined,
-          claim.issuer.isDefined && claim.issuer.contains(jwtConfig.issuer),
+          claim.issuer == jwtConfig.issuer,
           claim.subject.isDefined,
           claim.jwtId.isDefined,
           claim.issuedAt.isDefined,

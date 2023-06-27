@@ -60,7 +60,7 @@ final case class AppConfig(
     )
   }
 }
-final case class JwtConfig(secret: String, expiration: Duration, issuer: String, dspIngestAudience: String)
+final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String], dspIngestAudience: String)
 
 final case class KnoraApi(
   internalHost: String,
@@ -210,6 +210,15 @@ object AppConfig {
       val source = TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
       read(descriptor[AppConfig].mapKey(toKebabCase) from source).orDie
     }
-    (appConfigLayer ++ appConfigLayer.project(_.jwt)).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
+    projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
   }
+
+  def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
+    appConfigLayer ++
+      appConfigLayer.project { appConfig =>
+        val jwtConfig = appConfig.jwt
+        val issuerFromConfigOrDefault: Option[String] =
+          jwtConfig.issuer.orElse(Some(appConfig.knoraApi.externalKnoraApiHostPort))
+        jwtConfig.copy(issuer = issuerFromConfigOrDefault)
+      }
 }

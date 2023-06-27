@@ -81,9 +81,9 @@ object AppConfigForTestContainers {
         alteredConfig   <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer)
       } yield alteredConfig
     }
-    (appConfigLayer ++ appConfigLayer.project(_.jwt)).tap(_ =>
-      ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<")
-    )
+    AppConfig
+      .projectAppConfigurations(appConfigLayer)
+      .tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki and Sipi Testcontainers Initialized <<<"))
   }
 
   /**
@@ -97,8 +97,8 @@ object AppConfigForTestContainers {
         alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
       } yield alteredConfig
     }
-    (appConfigLayer ++ appConfigLayer.project(_.jwt)).tap(_ =>
-      ZIO.logInfo(">>> AppConfig for Fuseki only Testcontainers Initialized <<<")
-    )
+    AppConfig
+      .projectAppConfigurations(appConfigLayer)
+      .tap(_ => ZIO.logInfo(">>> AppConfig for Fuseki only Testcontainers Initialized <<<"))
   }
 }

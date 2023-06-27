@@ -25,6 +25,7 @@ object AppConfigSpec extends ZIOSpecDefault {
         assertTrue(
           !appConfig.printExtendedConfig,
           jwtConfig.expiration == java.time.Duration.ofDays(30),
+          jwtConfig.issuer.contains("0.0.0.0:3333"),
           jwtConfig.dspIngestAudience == "http://localhost:3340",
           appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS),
           appConfig.bcryptPasswordStrength == User.PasswordStrength(12),
