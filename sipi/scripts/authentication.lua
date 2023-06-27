@@ -175,11 +175,11 @@ function _get_jwt_token_from_cookie()
     end
 
     cookie_name = cookie_name:lower()
-    for entry in cookies:gmatch("([^,]+)") do
+    for entry in cookies:gmatch("([^; ]+)") do
         local key, value = entry:match("([^=]+)=(.+)")
         if key and value then
             if key:lower() == cookie_name then
-                return value
+                return str_trim(value)
             end
         end
     end
