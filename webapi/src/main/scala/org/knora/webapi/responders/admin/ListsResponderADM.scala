@@ -1020,8 +1020,6 @@ final case class ListsResponderADMLive(
     apiRequestID: UUID
   ): Task[ListGetResponseADM] = {
 
-//    println("XXXXX-listCreateRequestADM")
-
     /**
      * The actual task run with an IRI lock.
      */

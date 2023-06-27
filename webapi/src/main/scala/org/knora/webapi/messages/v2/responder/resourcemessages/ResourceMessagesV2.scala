@@ -572,7 +572,6 @@ case class ReadResourceV2(
                 .map(value =>
                   value.deletionInfo match {
                     case Some(_) =>
-                      println()
                       (delIri, value.asDeletedValue())
                     case None => (iri, value)
                   }

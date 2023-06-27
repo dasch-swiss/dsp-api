@@ -698,7 +698,6 @@ class FileModelsSpec extends CoreSpec {
           newValueVersionIri = customValueVersionIRI,
           resourceClassIRI = Some(resourceClassIRI)
         )
-        println(msg)
         msg.updateValue should equal(
           UpdateValueContentV2(
             resourceIri = resourceIRI,

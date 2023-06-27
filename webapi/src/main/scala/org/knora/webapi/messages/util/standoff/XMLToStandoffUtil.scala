@@ -774,7 +774,6 @@ class XMLToStandoffUtil(
     nodes.foldLeft(startState) {
       case (acc: Xml2StandoffState, elem: Elem) =>
         // We got an XML element. Generate a standoff tag for it.
-        // println(s"got Elem <${elem.label}>")
 
         val newTagIndex    = acc.nextIndex
         val attrMap        = elem.attributes.asAttrMap

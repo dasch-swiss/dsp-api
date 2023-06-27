@@ -1417,7 +1417,6 @@ final case class ResourcesResponderV2Live(
                     savedValue.permissions == expectedValue.permissions &&
                     savedValue.attachedToUser == requestingUser.id)
                 ) {
-                  // println(s"========== Expected ==========\n${MessageUtil.toSource(expectedValue.valueContent)}\n========== Saved ==========\n${MessageUtil.toSource(savedValue.valueContent)}")
                   throw AssertionException(
                     s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
                   )
@@ -2177,8 +2176,6 @@ final case class ResourcesResponderV2Live(
 
               // Filter out edges we've already traversed.
               val isRedundant: Boolean = traversedEdges.contains(edge)
-              // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
-
               hasPermission && !isRedundant
             }.toSet
 

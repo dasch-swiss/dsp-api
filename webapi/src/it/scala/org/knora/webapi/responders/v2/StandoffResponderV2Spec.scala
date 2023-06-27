@@ -110,7 +110,6 @@ class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
       val expectedMappingIRI = f"${mapping.projectIRI}/mappings/$mappingName"
       response.mappingIri should equal(expectedMappingIRI)
       val mappingFromDB: SparqlConstructResponse = getMapping(response.mappingIri)
-      println(mappingFromDB)
       mappingFromDB.statements should not be Map.empty
       mappingFromDB.statements.get(expectedMappingIRI) should not be Map.empty
     }
