@@ -792,15 +792,14 @@ trait JwtService {
 
 final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatter: StringFormatter) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
-  private val header: String = """{"typ":"JWT","alg":"HS256"}"""
-  private val logger = Logger(LoggerFactory.getLogger(this.getClass))
+  private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
+  private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
 
   override def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt] =
     for {
       now  <- Clock.instant
-      uuid <- ZIO.random.flatMap(_.nextUUID)
+      uuid <- Random.nextUUID
       exp   = now.plus(jwtConfig.expiration)
-      jwtId = Some(UuidUtil.base64Encode(uuid))
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
                 issuer = Some(jwtConfig.issuer),
@@ -808,7 +807,7 @@ final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatte
                 audience = Some(Set("Knora", "Sipi")),
                 issuedAt = Some(now.getEpochSecond),
                 expiration = Some(exp.getEpochSecond),
-                jwtId = jwtId
+                jwtId = Some(UuidUtil.base64Encode(uuid))
               ).toJson
     } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp)
 
