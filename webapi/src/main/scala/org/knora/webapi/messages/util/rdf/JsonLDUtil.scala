@@ -487,6 +487,37 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
   /**
+   * Get the IRI from the JSON-LD object, if available.
+   *
+   * @return The IRI of the JSON-LD object, or None.
+   */
+  def getIriOption(): Option[String] =
+    value.get(JsonLDKeywords.ID).flatMap {
+      case JsonLDString(value) => Some(value)
+      case _                   => None
+    }
+
+  /**
+   * Get the rdf:type from the JSON-LD object, if available.
+   *
+   * @return The rdf:type of the JSON-LD object, or None.
+   */
+  def getType(): Option[String] =
+    value.get(JsonLDKeywords.TYPE).flatMap {
+      case JsonLDString(value) => Some(value)
+      case _                   => None
+    }
+
+  /**
+   * Get the knora-base:valueAsString from the JSON-LD object, if available; None otherwise.
+   */
+  def getValueAsString(): Option[String] =
+    value.get(OntologyConstants.KnoraApiV2Complex.ValueAsString).flatMap {
+      case JsonLDString(value) => Some(value)
+      case _                   => None
+    }
+
+  /**
    * Converts a datatype value from its JSON-LD object value representation, validating it using the specified validation
    * function.
    *
@@ -756,6 +787,12 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(obj: JsonLDObject) => ZIO.some(obj)
       case None                    => ZIO.none
       case Some(other)             => ZIO.fail(s"Invalid $key: $other (object expected)")
+    }
+
+  def getObjectOption(key: String): Option[JsonLDObject] =
+    value.get(key) match {
+      case Some(obj: JsonLDObject) => Some(obj)
+      case _                       => None
     }
 
   def getRequiredObject(key: String): IO[String, JsonLDObject] =
