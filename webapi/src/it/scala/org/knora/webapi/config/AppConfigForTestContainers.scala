@@ -73,7 +73,7 @@ object AppConfigForTestContainers {
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
    */
   val testcontainers: ZLayer[FusekiTestContainer & SipiTestContainer, Nothing, AppConfigurations] = {
-    var appConfigLayer = ZLayer {
+    val appConfigLayer = ZLayer {
       for {
         appConfig       <- config
         fusekiContainer <- ZIO.service[FusekiTestContainer]
