@@ -799,7 +799,7 @@ final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatte
     for {
       now  <- Clock.instant
       uuid <- ZIO.random.flatMap(_.nextUUID)
-      exp   = now.plus(jwtConfig.expiration).getEpochSecond
+      exp   = now.plus(jwtConfig.expiration)
       jwtId = Some(UuidUtil.base64Encode(uuid))
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
@@ -807,7 +807,7 @@ final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatte
                 subject = Some(user.id),
                 audience = Some(Set("Knora", "Sipi")),
                 issuedAt = Some(now.getEpochSecond),
-                expiration = Some(exp),
+                expiration = Some(exp.getEpochSecond),
                 jwtId = jwtId
               ).toJson
     } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp)
