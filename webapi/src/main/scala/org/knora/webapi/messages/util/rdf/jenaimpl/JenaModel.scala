@@ -399,6 +399,20 @@ class JenaModelFactory(private val nodeFactory: JenaNodeFactory) extends RdfMode
  * @param dataset the dataset to be queried.
  */
 class JenaRepository(private val dataset: jena.query.Dataset) extends RdfRepository {
+
+  override def doAsk(askQuery: String): Boolean = {
+    // Run the query.
+
+    val queryExecution: jena.query.QueryExecution =
+      jena.query.QueryExecutionFactory.create(askQuery, dataset)
+
+    val result: Boolean = queryExecution.execAsk
+
+    queryExecution.close()
+
+    result
+  }
+
   override def doSelect(selectQuery: String): SparqlSelectResult = {
     // Run the query.
 

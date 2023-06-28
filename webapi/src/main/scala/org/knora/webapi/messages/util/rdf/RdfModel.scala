@@ -439,6 +439,8 @@ trait RdfRepository {
    */
   def doSelect(selectQuery: String): SparqlSelectResult
 
+  def doAsk(askQuery: String): Boolean
+
   /**
    * Shuts down this repository. The underlying [[RdfModel]] may not be usable after its
    * [[RdfRepository]] has been shut down.
