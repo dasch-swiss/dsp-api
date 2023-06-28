@@ -1979,6 +1979,13 @@ case class UnformattedTextValueContentV2(
     }
 }
 
+// .orElseFail(
+//   BadRequestException(
+//     s"Invalid string value for UnformattedTextValue: ${jsonLdObject.value.get(ValueAsString)}"
+//   )
+// )
+// .someOrFail(BadRequestException())
+
 /**
  * Constructs [[UnformattedTextValueContentV2]] objects based on JSON-LD input.
  */
@@ -1990,7 +1997,7 @@ object UnformattedTextValueContentV2 {
     obj
       .getString(key)
       .mapError(BadRequestException(_))
-      .flatMap(ZIO.foreach(_)(it => RouteUtilZ.toSparqlEncodedString(it, s"Invalid key: $key: $it")))
+      .flatMap(ZIO.foreach(_)(s => RouteUtilZ.toSparqlEncodedString(s, s"Invalid string '$s' provided for $key")))
 
   private def getIriFromObject(obj: JsonLDObject, key: String): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
     obj
@@ -2013,12 +2020,7 @@ object UnformattedTextValueContentV2 {
       for {
         valueAsString <-
           getSparqlEncodedString(jsonLdObject, ValueAsString)
-            .orElseFail(
-              BadRequestException(
-                s"Invalid string value for UnformattedTextValue: ${jsonLdObject.value.get(ValueAsString)}"
-              )
-            )
-            .someOrFail(BadRequestException("Missing valueAsString for UnformattedTextValue"))
+            .someOrFail(BadRequestException(s"No text value provided for UnformattedTextValue"))
         maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
         comment               <- JsonLDUtil.getComment(jsonLdObject)
       } yield UnformattedTextValueContentV2(ApiV2Complex, valueAsString, maybeValueHasLanguage, comment)
