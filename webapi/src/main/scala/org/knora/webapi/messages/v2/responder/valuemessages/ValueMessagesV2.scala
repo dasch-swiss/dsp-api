@@ -2012,9 +2012,13 @@ object UnformattedTextValueContentV2 {
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       for {
         valueAsString <-
-          getSparqlEncodedString(jsonLdObject, ValueAsString).someOrFail(
-            BadRequestException("Missing valueAsString for UnformattedTextValue")
-          )
+          getSparqlEncodedString(jsonLdObject, ValueAsString)
+            .orElseFail(
+              BadRequestException(
+                s"Invalid string value for UnformattedTextValue: ${jsonLdObject.value.get(ValueAsString)}"
+              )
+            )
+            .someOrFail(BadRequestException("Missing valueAsString for UnformattedTextValue"))
         maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
         comment               <- JsonLDUtil.getComment(jsonLdObject)
       } yield UnformattedTextValueContentV2(ApiV2Complex, valueAsString, maybeValueHasLanguage, comment)
