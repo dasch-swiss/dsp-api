@@ -5,73 +5,155 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import com.typesafe.scalalogging.Logger
+import dsp.constants.SalsahGui
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaIriNode
 
+sealed trait TextType
+object TextType {
+  case object UnformattedText     extends TextType
+  case object FormattedText       extends TextType
+  case object CustomFormattedText extends TextType
+
+  def fromIri(iri: IRI): TextType =
+    iri match {
+      case SalsahGui.Textarea | SalsahGui.SimpleText => UnformattedText
+      case SalsahGui.Richtext                        => FormattedText
+      case _                                         => throw InconsistentRepositoryDataException(s"Unknown text type: $iri")
+    }
+}
+
+final case class TextValueProp(
+  graph: IRI,
+  project: IRI,
+  ontology: IRI,
+  iri: IRI,
+  guiElement: IRI,
+  textType: TextType,
+  statementsToRemove: Set[Statement]
+)
+
 class UpgradePluginXXX() extends UpgradePlugin {
+  private val predicatesToRemove: Set[IRI] = Set(
+    OntologyConstants.KnoraBase.ObjectClassConstraint,
+    SalsahGui.GuiElementProp,
+    SalsahGui.GuiAttribute
+  )
+
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
+  private val log: Logger = Logger(this.getClass)
+
   override def transform(model: RdfModel): Unit = {
-    val textValuePropsPerOntology = collectTextValueProps(model)
+    log.info("Transformation started.")
+    val ontologyToProjectMap: Map[IRI, IRI] = collectOntologyToProjectMap(model)
+    log.debug(s"Found ${ontologyToProjectMap.size} ontologies for ${ontologyToProjectMap.values.toSet.size} projects.")
+    val textValuePropsPerOntology: Map[IRI, Seq[IRI]] = collectTextValuePropIris(model)
+    log.debug(s"Found ${textValuePropsPerOntology.values.flatten.size} TextValue properties.")
+    // val textValuePropIris         = textValuePropsPerOntology.values.flatten.toSet
 
-    println(textValuePropsPerOntology)
+    val textValueProps = makeTextValueProps(model, textValuePropsPerOntology, ontologyToProjectMap)
+    textValueProps.foreach(p => println(p))
 
-    val textValueProps = textValuePropsPerOntology.values.flatten.toSet
-
-    println(textValueProps)
-
-    //
-    // val graphs: Set[IRI] = collectGraphs(model)
-    // println(graphs)
-    // val projects: Set[IRI] = collectProjects(model)
-    // println(projects)
-
-    // val modelsPerGraph: Map[IRI, RdfModel] =
-    //   model.groupBy(_.context).map { case (k, v) => k.map(_ -> v.asInstanceOf[RdfModel]) }.flatten.toMap
-    // println(modelsPerGraph.view.mapValues(_.size).toMap)
-
-    // val ontologies: Map[IRI, RdfModel] = modelsPerGraph.filter(_._1.contains("/ontology/"))
-    // println(ontologies.keySet)
-
-    // val textValuePropsPerOntology = ontologies.toSeq.map { case (k, v) => k -> collectTextValueProps(v) }
-    // println(textValuePropsPerOntology)
+    log.info("Transformation finished successfully.")
   }
 
-  private def collectTextValueProps(model: RdfModel): Map[IRI, Seq[IRI]] =
+  def collectOntologyToProjectMap(model: RdfModel): Map[IRI, IRI] = {
+    val ontologies: Set[IRI] =
+      model
+        .find(
+          None,
+          Some(nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
+          Some(nodeFactory.makeIriNode(OntologyConstants.Owl.Ontology))
+        )
+        .map(_.subj.stringValue.asInstanceOf[IRI])
+        .toSet
+
+    ontologies.map { ontology =>
+      val project: IRI =
+        model
+          .find(
+            Some(nodeFactory.makeIriNode(ontology)),
+            Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.AttachedToProject)),
+            None
+          )
+          .map(_.obj.stringValue.asInstanceOf[IRI])
+          .toList
+          .head
+      ontology -> project
+    }.toMap
+  }
+
+  private def collectTextValuePropIris(model: RdfModel): Map[IRI, Seq[IRI]] =
     model
       .find(
         None,
         Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ObjectClassConstraint)),
         Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue))
       )
-      .map(s => s.context.map(_ -> s.subj.stringValue.asInstanceOf[IRI]))
-      .flatten
+      .flatMap(s => s.context.map(_ -> s.subj.stringValue.asInstanceOf[IRI]))
       .foldLeft(Map.empty[IRI, Seq[IRI]]) { case (acc, (k, v)) =>
         acc + (k -> (acc.getOrElse(k, Seq.empty[IRI]) :+ v))
       }
 
-  // private def collectGraphs(model: RdfModel): Set[IRI] =
-  //   model.map(_.context).toSet.flatten
+  private def makeTextValueProps(
+    model: RdfModel,
+    props: Map[IRI, Seq[IRI]],
+    ontoToProjectMap: Map[IRI, IRI]
+  ): Set[TextValueProp] =
+    props.flatMap { case (onto: IRI, propIris: Seq[IRI]) =>
+      val project: IRI = ontoToProjectMap.getOrElse(
+        onto,
+        throw InconsistentRepositoryDataException(s"Ontology $onto is not attached to a project")
+      )
+      val y: Seq[TextValueProp] = propIris.map(prop => makeTextValueProp(model, prop, project, onto))
+      y.toSet
+    }.toSet
 
-  // private def collectProjects(model: RdfModel): Set[String] =
-  //   model
-  //     .find(None, Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.AttachedToProject)), None)
-  //     .map(_.obj.stringValue)
-  //     .toSet
+  private def makeTextValueProp(model: RdfModel, prop: IRI, project: IRI, onto: IRI): TextValueProp = {
+    val definitionStatements = model
+      .find(
+        Some(nodeFactory.makeIriNode(prop)),
+        None,
+        None
+      )
+      .toList
+    val definitionByPredicate: Map[IRI, Seq[Statement]] =
+      definitionStatements.groupBy(_.pred.stringValue.asInstanceOf[IRI])
 
-  // private def collectTextValueProps(model: RdfModel): Set[IRI] =
-  //   model
-  //     .find(
-  //       None,
-  //       Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ObjectClassConstraint)),
-  //       Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue))
-  //     )
-  //     .map(_.subj.stringValue.asInstanceOf[IRI])
-  //     .toSet
+    val statementsToRemove: Set[Statement] =
+      predicatesToRemove.foldLeft(Set.empty[Statement]) { case (acc, pred) =>
+        acc ++ definitionByPredicate.getOrElse(pred, Seq.empty[Statement])
+      }
+
+    val textType = definitionByPredicate
+      .getOrElse(
+        SalsahGui.GuiElementProp,
+        throw InconsistentRepositoryDataException(s"GuiElement not defined for $prop in $project")
+      )
+      .map(_.obj)
+      .toSet
+      .toList match {
+      case (obj: JenaIriNode) :: Nil => TextType.fromIri(obj.iri)
+      case objects =>
+        throw InconsistentRepositoryDataException(s"Unexpected GuiElements defined for $prop in $project: $objects")
+    }
+
+    TextValueProp(
+      graph = definitionStatements.head.context.get,
+      project = project,
+      ontology = onto,
+      iri = prop,
+      guiElement = definitionByPredicate(SalsahGui.GuiElementProp).head.obj.stringValue.asInstanceOf[IRI],
+      textType = textType,
+      statementsToRemove = statementsToRemove
+    )
+  }
 
   /*
    * TODO:
