@@ -60,7 +60,7 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     // val textValuePropIris         = textValuePropsPerOntology.values.flatten.toSet
 
     val textValueProps = makeTextValueProps(model, textValuePropsPerOntology, ontologyToProjectMap)
-    textValueProps.foreach(p => println(p))
+    // textValueProps.foreach(p => println(p))
 
     log.info("Transformation finished successfully.")
     println("Transformation finished successfully.")

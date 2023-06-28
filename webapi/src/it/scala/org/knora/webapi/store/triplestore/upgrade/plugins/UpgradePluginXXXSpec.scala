@@ -1,18 +1,91 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import zio._
-import zio.test._
+import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import org.knora.webapi.messages.util.rdf.RdfModel
+import org.knora.webapi.messages.util.rdf.RdfNodeFactory
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 
-object UpgradePluginXXXSpec extends UpgradePluginZSpec {
+class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
-  def plugin = new UpgradePluginXXX()
+  "Upgrade plugin XXX" should {
+    "transform knora-base:hasComment to FormattedTextValue" in {
+      // run the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_a.trig")
+      val plugin          = new UpgradePluginXXX(log)
+      plugin.transform(model)
 
-  def spec = suite("UpgradePluginXXX") {
-    test("test") {
-      for {
-        model <- trigFileToModel("../test_data/upgrade/xxx.trig")
-        res    = plugin.transform(model)
-      } yield assertTrue(true)
+      // check the ontology
+      val repo = model.asRepository
+      val query =
+        """|
+           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+           |
+           |ASK 
+           |FROM <http://www.knora.org/ontology/knora-base> 
+           |WHERE {
+           |    <http://www.knora.org/ontology/knora-base> knora-base:hasComment ?hc .
+           |    ?hc knora-base:objectClassConstraint knora-base:FormattedTextValue .
+           |    FILTER NOT EXISTS { ?hc salsah-gui:guiElement ?guiElement . }
+           |    FILTER NOT EXISTS { ?hc salsah-gui:guiAttribute ?guiAttribute . }
+           |}
+           |""".stripMargin
+      val askResult = repo.doAsk(query)
+      assert(askResult, "ASK should find knora-base:hasComment with the correrxctly updated shape")
+
+      // check the data
+      val query2 =
+        """|
+           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |
+           |SELECT ?s
+           |FROM <http://www.knora.org/data/0001/anything>
+           |WHERE {
+           |    ?s knora-base:hasComment ?v .
+           |    ?v a knora-base:FormattedTextValue .
+           |    ?v knora-base:valueHasString ?stringRepresentation . 
+           |    ?v knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
+           |}
+           |""".stripMargin
+
+      val queryResult2: SparqlSelectResult = repo.doSelect(selectQuery = query2)
+      val resBody: SparqlSelectResultBody  = queryResult2.results
+      assert(resBody.bindings.size == 1)
+
+      val foundResource: VariableResultsRow = resBody.bindings.head
+      val subj: Option[String]              = foundResource.rowMap.get("s")
+      assert(subj.contains("http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q"))
+      val stringRepresentation: Option[String] = foundResource.rowMap.get("stringRepresentation")
+      assert(stringRepresentation.contains("a text value without markup"))
+
+      println(queryResult2)
     }
   }
 }
+
+/*
+ *
+ * What needs to be covered in the test:
+ *
+ *   - [ ] removing GuiElement and GuiAttribute in ontology
+ *   - [ ] removing old type TextValue in ontology
+ *   - [ ] adding new type (Und-)FormattedTextValue in ontology
+ *   - [ ] removing old type TextValue in data
+ *   - [ ] adding new type (Und-)FormattedTextValue in data
+ *
+ *   - [ ] if no mapping in data and type in onto is simpleText/Paragraph, then use UnformattedTextValue
+ *   - [ ] if standard mapping in data and type in onto is simpleText/Paragraph, then use FormattedTextValue
+ *   - [ ] if no mapping in data and type in onto is richtext, then use FormattedTextValue
+ *   - [ ] if standard mapping in data and type in onto is richtext, then use FormattedTextValue
+ *   - [ ] if custom mapping in data and type in onto is richtext, then use CustomFormattedTextValue
+ *
+ *   - [ ] if data mixes standard and custom mapping, then throw exception
+ *   - [ ] if data mixes standard mapping and no mapping, then add minimal standoff to the ones without mapping
+ *
+ *   - [ ] knora-base:hasComment is transformed to FormattedTextValue
+ *
+ */
