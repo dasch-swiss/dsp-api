@@ -38,7 +38,7 @@ final case class TextValueProp(
   statementsToRemove: Set[Statement]
 )
 
-class UpgradePluginXXX() extends UpgradePlugin {
+class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
   private val predicatesToRemove: Set[IRI] = Set(
     OntologyConstants.KnoraBase.ObjectClassConstraint,
     SalsahGui.GuiElementProp,
@@ -47,20 +47,23 @@ class UpgradePluginXXX() extends UpgradePlugin {
 
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
-  private val log: Logger = Logger(this.getClass)
-
   override def transform(model: RdfModel): Unit = {
     log.info("Transformation started.")
+    println("Transformation started.")
+
     val ontologyToProjectMap: Map[IRI, IRI] = collectOntologyToProjectMap(model)
     log.debug(s"Found ${ontologyToProjectMap.size} ontologies for ${ontologyToProjectMap.values.toSet.size} projects.")
+    println(s"Found ${ontologyToProjectMap.size} ontologies for ${ontologyToProjectMap.values.toSet.size} projects.")
     val textValuePropsPerOntology: Map[IRI, Seq[IRI]] = collectTextValuePropIris(model)
     log.debug(s"Found ${textValuePropsPerOntology.values.flatten.size} TextValue properties.")
+    println(s"Found ${textValuePropsPerOntology.values.flatten.size} TextValue properties.")
     // val textValuePropIris         = textValuePropsPerOntology.values.flatten.toSet
 
     val textValueProps = makeTextValueProps(model, textValuePropsPerOntology, ontologyToProjectMap)
     textValueProps.foreach(p => println(p))
 
     log.info("Transformation finished successfully.")
+    println("Transformation finished successfully.")
   }
 
   def collectOntologyToProjectMap(model: RdfModel): Map[IRI, IRI] = {
