@@ -21,7 +21,6 @@ import java.net.http.HttpClient
 
 import dsp.valueobjects.Project
 import dsp.valueobjects.Project.ShortCode
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
@@ -128,9 +127,5 @@ final case class ProjectImportServiceLive(config: Triplestore, exportStorage: Pr
 }
 
 object ProjectImportServiceLive {
-  val layer: URLayer[ProjectExportStorageService with AppConfig, ProjectImportServiceLive] =
-    ZLayer.fromZIO(for {
-      config         <- ZIO.serviceWith[AppConfig](_.triplestore)
-      storageService <- ZIO.service[ProjectExportStorageService]
-    } yield ProjectImportServiceLive(config, storageService))
+  val layer = ZLayer.fromFunction(ProjectImportServiceLive.apply _)
 }

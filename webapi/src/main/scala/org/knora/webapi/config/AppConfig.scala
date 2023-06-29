@@ -205,7 +205,7 @@ final case class InstrumentationServerConfig(
 )
 
 object AppConfig {
-  type AppConfigurations = AppConfig with JwtConfig with DspIngestConfig
+  type AppConfigurations = AppConfig with JwtConfig with DspIngestConfig with Triplestore
 
   val layer: ULayer[AppConfigurations] = {
     val appConfigLayer = ZLayer {
@@ -216,7 +216,7 @@ object AppConfig {
   }
 
   def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
-    appConfigLayer ++ appConfigLayer.project(_.dspIngest) ++
+    appConfigLayer ++ appConfigLayer.project(_.dspIngest) ++ appConfigLayer.project(_.triplestore) ++
       appConfigLayer.project { appConfig =>
         val jwtConfig = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =
