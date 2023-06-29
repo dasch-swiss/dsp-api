@@ -19,6 +19,7 @@ import java.net.Authenticator
 import java.net.PasswordAuthentication
 import java.net.http.HttpClient
 
+import dsp.valueobjects.Project
 import dsp.valueobjects.Project.ShortCode
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Triplestore
@@ -30,6 +31,11 @@ trait ProjectImportService {
   def importTrigFile(file: Path): Task[Unit]
   def query(queryString: String)(exec: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet]
   def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
+}
+
+final case class Asset(belongsToProject: Project.ShortCode, internalFilename: String)
+object Asset {
+  def logString(it: Asset) = s"Asset(code: ${it.belongsToProject.value}, path: ${it.internalFilename}"
 }
 
 final case class ProjectImportServiceLive(config: Triplestore, exportStorage: ProjectExportStorageService)
@@ -108,7 +114,7 @@ final case class ProjectImportServiceLive(config: Triplestore, exportStorage: Pr
       _                    <- ZIO.logInfo(s"Importing assets from $assetDirAbsolutePath")
       assets <- Files
                   .find(assetsDir, 1)((path, attr) => attr.isRegularFile && !path.filename.endsWith(Path(".json")))
-                  .map(filepath => Asset(project, filepath.filename.toString))
+                  .map(filepath => Asset(project, filepath.toFile.toString))
                   .runCollect
       _ <- ZIO.logInfo(s"Found ${assets.size} from $assetDirAbsolutePath")
       _ <- ZIO.foreachParDiscard(assets)(asset => ZIO.logInfo(s"Importing asset ${Asset.logString(asset)}"))

@@ -12,7 +12,6 @@ import zio.ZLayer
 import zio.nio.file
 import zio.nio.file.Path
 
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 object ProjectExportServiceStub {
@@ -45,7 +44,7 @@ object ProjectExportServiceStub {
      */
     override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ???
 
-    override def exportProject(project: KnoraProject, user: UserADM): Task[file.Path] = ???
+    override def exportProject(project: KnoraProject): Task[file.Path] = ???
 
     override def listExports(): Task[Chunk[ProjectExportInfo]] = ???
   })

@@ -44,7 +44,8 @@ final case class AppConfig(
   cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
   instrumentationServerConfig: InstrumentationServerConfig,
-  jwt: JwtConfig
+  jwt: JwtConfig,
+  dspIngest: DspIngestConfig
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
   val defaultTimeoutAsDuration =
@@ -60,7 +61,8 @@ final case class AppConfig(
     )
   }
 }
-final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String], dspIngestAudience: String)
+final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String])
+final case class DspIngestConfig(baseUrl: String, audience: String)
 
 final case class KnoraApi(
   internalHost: String,
@@ -203,7 +205,7 @@ final case class InstrumentationServerConfig(
 )
 
 object AppConfig {
-  type AppConfigurations = AppConfig with JwtConfig
+  type AppConfigurations = AppConfig with JwtConfig with DspIngestConfig
 
   val layer: ULayer[AppConfigurations] = {
     val appConfigLayer = ZLayer {
@@ -214,7 +216,7 @@ object AppConfig {
   }
 
   def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
-    appConfigLayer ++
+    appConfigLayer ++ appConfigLayer.project(_.dspIngest) ++
       appConfigLayer.project { appConfig =>
         val jwtConfig = appConfig.jwt
         val issuerFromConfigOrDefault: Option[String] =
