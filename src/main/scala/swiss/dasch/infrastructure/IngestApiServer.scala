@@ -24,7 +24,7 @@ object IngestApiServer {
     ZIO.logInfo(s"Starting ${BuildInfo.name}") *>
       Server.install(app) *>
       ZIO.serviceWithZIO[ServiceConfig](c =>
-        ZIO.logInfo(s"Started ${BuildInfo.name} on http://${c.host}:${c.port}/info")
+        ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version} on http://${c.host}:${c.port}/info")
       )
       *>
       ZIO.never
