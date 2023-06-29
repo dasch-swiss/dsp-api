@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.riot.RDFFormat
 import zio._
@@ -21,7 +22,6 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This class may be run if you wish to apply your upgrade plugin on our test data.

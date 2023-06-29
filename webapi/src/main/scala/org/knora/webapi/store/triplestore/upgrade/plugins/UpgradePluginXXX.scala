@@ -6,18 +6,19 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
+
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaIriNode
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.UnformattedText
-import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.FormattedText
 import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.CustomFormattedText
-import dsp.valueobjects.UuidUtil
+import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.FormattedText
+import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.UnformattedText
 
 sealed trait TextType
 object TextType {
