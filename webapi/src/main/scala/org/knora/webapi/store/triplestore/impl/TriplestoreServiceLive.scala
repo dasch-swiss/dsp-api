@@ -365,17 +365,17 @@ case class TriplestoreServiceLive(
    */
   def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK] =
     for {
-      _      <- ZIO.logWarning("==>> Drop All Data Start")
+      _      <- ZIO.logInfo("==>> Drop All Data Start")
       graphs <- getAllGraphs
-      _      <- ZIO.logInfo(s"Found graphs: ${graphs.length}")
+      _      <- ZIO.logInfo(s"Number of graphs found: ${graphs.length}")
       _      <- ZIO.foreachDiscard(graphs)(dropGraph)
-      _      <- ZIO.logWarning("==>> Drop All Data End")
+      _      <- ZIO.logInfo("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
 
   private def dropGraph(graphName: String): Task[Unit] =
-    ZIO.logInfo(s"Dropping graph: $graphName") *>
+    ZIO.logInfo(s"==>> Dropping graph: $graphName") *>
       getSparqlHttpResponse(s"DROP GRAPH <$graphName>", isUpdate = true) *>
-      ZIO.logInfo(s"==>> Dropped graph: $graphName")
+      ZIO.logDebug("Graph dropped")
 
   /**
    * Gets all graphs stored in the triplestore.
