@@ -14,18 +14,21 @@ import scala.concurrent.duration.FiniteDuration
 
 import dsp.valueobjects.User
 
-object AppConfigZSpec extends ZIOSpecDefault {
+object AppConfigSpec extends ZIOSpecDefault {
 
   def spec = suite("ApplicationConfigSpec")(
     test("successfully provide the application configuration") {
       for {
         appConfig <- ZIO.service[AppConfig]
+        jwtConfig <- ZIO.service[JwtConfig]
       } yield {
-        assertTrue(appConfig.printExtendedConfig == false) &&
-        assertTrue(appConfig.jwtLongevityAsDuration == FiniteDuration(30L, TimeUnit.DAYS)) &&
-        assertTrue(appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS)) &&
-        assertTrue(appConfig.bcryptPasswordStrength == User.PasswordStrength(12)) &&
         assertTrue(
+          !appConfig.printExtendedConfig,
+          jwtConfig.expiration == java.time.Duration.ofDays(30),
+          jwtConfig.issuer.contains("0.0.0.0:3333"),
+          jwtConfig.dspIngestAudience == "http://localhost:3340",
+          appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS),
+          appConfig.bcryptPasswordStrength == User.PasswordStrength(12),
           appConfig.instrumentationServerConfig.interval == java.time.Duration.ofSeconds(5)
         )
       }

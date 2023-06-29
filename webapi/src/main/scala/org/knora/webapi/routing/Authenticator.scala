@@ -32,6 +32,7 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -789,32 +790,26 @@ trait JwtService {
   def extractUserIriFromToken(token: String): Task[Option[IRI]]
 }
 
-final case class JwtServiceLive(private val config: AppConfig, stringFormatter: StringFormatter) extends JwtService {
-  private val secret                  = config.jwtSecretKey
-  private val longevity               = config.jwtLongevityAsDuration
-  private val issuer                  = config.knoraApi.externalKnoraApiHostPort
+final case class JwtServiceLive(private val jwtConfig: JwtConfig, stringFormatter: StringFormatter) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
-
-  private val header: String = """{"typ":"JWT","alg":"HS256"}"""
-
-  private val logger = Logger(LoggerFactory.getLogger(this.getClass))
+  private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
+  private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
 
   override def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt] =
     for {
       now  <- Clock.instant
-      uuid <- ZIO.random.flatMap(_.nextUUID)
-      exp   = now.plusSeconds(longevity.toSeconds).getEpochSecond
-      jwtId = Some(UuidUtil.base64Encode(uuid))
+      uuid <- Random.nextUUID
+      exp   = now.plus(jwtConfig.expiration)
       claim = JwtClaim(
                 content = JsObject(content).compactPrint,
-                issuer = Some(issuer),
+                issuer = jwtConfig.issuer,
                 subject = Some(user.id),
                 audience = Some(Set("Knora", "Sipi")),
                 issuedAt = Some(now.getEpochSecond),
-                expiration = Some(exp),
-                jwtId = jwtId
+                expiration = Some(exp.getEpochSecond),
+                jwtId = Some(UuidUtil.base64Encode(uuid))
               ).toJson
-    } yield Jwt(JwtSprayJson.encode(header, claim, secret, algorithm), exp)
+    } yield Jwt(JwtSprayJson.encode(header, claim, jwtConfig.secret, algorithm), exp.getEpochSecond)
 
   /**
    * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
@@ -849,11 +844,11 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
    * @return the token's header and claim, or `None` if the token is invalid.
    */
   private def decodeToken(token: String): Option[(JwtHeader, JwtClaim)] =
-    JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
+    JwtSprayJson.decodeAll(token, jwtConfig.secret, Seq(JwtAlgorithm.HS256)) match {
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
           header.typ.isDefined,
-          claim.issuer.isDefined && claim.issuer.contains(issuer),
+          claim.issuer == jwtConfig.issuer,
           claim.subject.isDefined,
           claim.jwtId.isDefined,
           claim.issuedAt.isDefined,
@@ -874,5 +869,5 @@ final case class JwtServiceLive(private val config: AppConfig, stringFormatter: 
     }
 }
 object JwtServiceLive {
-  val layer: URLayer[AppConfig with StringFormatter, JwtServiceLive] = ZLayer.fromFunction(JwtServiceLive.apply _)
+  val layer: URLayer[JwtConfig with StringFormatter, JwtServiceLive] = ZLayer.fromFunction(JwtServiceLive.apply _)
 }

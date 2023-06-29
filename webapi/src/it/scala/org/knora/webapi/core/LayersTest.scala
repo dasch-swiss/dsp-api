@@ -8,6 +8,7 @@ package org.knora.webapi.core
 import zio._
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
@@ -279,7 +280,12 @@ object LayersTest {
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
-      FusekiTestContainer with SipiTestContainer with AppConfig with JwtService with IIIFService with StringFormatter
+      FusekiTestContainer
+        with SipiTestContainer
+        with AppConfigurations
+        with JwtService
+        with IIIFService
+        with StringFormatter
     ](
       AppConfigForTestContainers.testcontainers,
       FusekiTestContainer.layer,
@@ -290,7 +296,7 @@ object LayersTest {
     )
 
   private val fusekiTestcontainers =
-    ZLayer.make[FusekiTestContainer with AppConfig with JwtService with IIIFService with StringFormatter](
+    ZLayer.make[FusekiTestContainer with AppConfigurations with JwtService with IIIFService with StringFormatter](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
       IIIFServiceMockImpl.layer,

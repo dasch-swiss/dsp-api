@@ -11,16 +11,9 @@ import zio.config._
 import zio.config.magnolia._
 import zio.config.typesafe._
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.Duration
 import scala.concurrent.duration
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
-import dsp.errors.FileWriteException
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
@@ -32,8 +25,6 @@ final case class AppConfig(
   dumpMessages: Boolean,
   showInternalErrors: Boolean,
   bcryptPasswordStrength: Int,
-  jwtSecretKey: String,
-  jwtLongevity: String,
   cookieDomain: String,
   allowReloadOverHttp: Boolean,
   fallbackLanguage: String,
@@ -52,10 +43,10 @@ final case class AppConfig(
   triplestore: Triplestore,
   cacheService: CacheService,
   clientTestDataService: ClientTestDataService,
-  instrumentationServerConfig: InstrumentationServerConfig
+  instrumentationServerConfig: InstrumentationServerConfig,
+  jwt: JwtConfig
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
-  val jwtLongevityAsDuration            = scala.concurrent.duration.Duration(jwtLongevity)
   val defaultTimeoutAsDuration =
     scala.concurrent.duration.Duration.apply(defaultTimeout).asInstanceOf[duration.FiniteDuration]
   val cacheConfigs: Seq[org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig] = caches.map { c =>
@@ -68,25 +59,8 @@ final case class AppConfig(
       c.timeToIdleSeconds
     )
   }
-
-  // create the directories
-  val tmpDataDirCreation: Try[Path] = Try {
-    Files.createDirectories(Paths.get(tmpDatadir))
-  }
-  tmpDataDirCreation match {
-    case Success(_) => ZIO.logInfo(s"Created tmp directory $tmpDatadir")
-    case Failure(e) => throw FileWriteException(s"Tmp data directory $tmpDatadir could not be created: ${e.getMessage}")
-  }
-
-  val dataDirCreation: Try[Path] = Try {
-    Files.createDirectories(Paths.get(datadir))
-  }
-  dataDirCreation match {
-    case Success(_) => ZIO.logInfo(s"Created directory $datadir")
-    case Failure(e) => throw FileWriteException(s"Data directory $datadir could not be created: ${e.getMessage}")
-  }
-
 }
+final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String], dspIngestAudience: String)
 
 final case class KnoraApi(
   internalHost: String,
@@ -228,27 +202,23 @@ final case class InstrumentationServerConfig(
   interval: Duration
 )
 
-/**
- * Loads the application configuration using ZIO-Config from a Typesafe-Config format in `application.conf`.
- */
 object AppConfig {
+  type AppConfigurations = AppConfig with JwtConfig
 
-  /**
-   * Reads in the application configuration using ZIO-Config. ZIO-Config is capable of loading
-   * the Typesafe-Config format. Reads the 'app' configuration from 'application.conf'.
-   */
-  private val source: ConfigSource =
-    TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
+  val layer: ULayer[AppConfigurations] = {
+    val appConfigLayer = ZLayer {
+      val source = TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
+      read(descriptor[AppConfig].mapKey(toKebabCase) from source).orDie
+    }
+    projectAppConfigurations(appConfigLayer).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
+  }
 
-  /**
-   * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
-   */
-  private val configFromSource: IO[ReadError[String], AppConfig] = read(
-    descriptor[AppConfig].mapKey(toKebabCase) from source
-  )
-
-  /**
-   * Application configuration layer from application.conf
-   */
-  val layer: ULayer[AppConfig] = ZLayer(configFromSource.orDie).tap(_ => ZIO.logInfo(">>> AppConfig Initialized <<<"))
+  def projectAppConfigurations[R](appConfigLayer: URLayer[R, AppConfig]): URLayer[R, AppConfigurations] =
+    appConfigLayer ++
+      appConfigLayer.project { appConfig =>
+        val jwtConfig = appConfig.jwt
+        val issuerFromConfigOrDefault: Option[String] =
+          jwtConfig.issuer.orElse(Some(appConfig.knoraApi.externalKnoraApiHostPort))
+        jwtConfig.copy(issuer = issuerFromConfigOrDefault)
+      }
 }
