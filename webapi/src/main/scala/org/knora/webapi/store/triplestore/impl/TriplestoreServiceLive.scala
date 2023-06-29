@@ -112,7 +112,18 @@ case class TriplestoreServiceLive(
   private val repositoryDownloadPath = s"/$dbName"
   private val checkRepositoryPath    = "/$/server"
   private val repositoryUploadPath   = repositoryDownloadPath
-  private val logDelimiter           = "\n" + StringUtils.repeat('=', 80) + "\n"
+
+  private def checkResponse(sparql: String, resultStr: String) = {
+    val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
+    val message: String   = "Triplestore timed out while sending a response, after sending statuscode 200."
+
+    if (resultStr.contains("##  Query cancelled due to timeout during execution"))
+      ZIO.logError(message) *> ZIO.fail(TriplestoreTimeoutException(message))
+    else
+      ZIO.logError(
+        s"Couldn't parse response from triplestore:$delimiter$resultStr${delimiter}in response to SPARQL query:$delimiter$sparql"
+      ) *> ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
+  }
 
   /**
    * Simulates a read timeout.
@@ -143,23 +154,7 @@ case class TriplestoreServiceLive(
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
-        .foldZIO(
-          _ =>
-            if (resultStr.contains("##  Query cancelled due to timeout during execution")) {
-              ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
-                ZIO.fail(
-                  TriplestoreTimeoutException(
-                    "Triplestore timed out while sending a response, after sending statuscode 200."
-                  )
-                )
-            } else {
-              ZIO.logError(
-                s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
-              ) *>
-                ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
-            },
-          ZIO.succeed(_)
-        )
+        .foldZIO(_ => checkResponse(sparql, resultStr), ZIO.succeed(_))
 
     for {
       resultStr <-
@@ -198,23 +193,7 @@ case class TriplestoreServiceLive(
         }
 
         SparqlConstructResponse(statementMap.toMap)
-      }.foldZIO(
-        _ =>
-          if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
-            ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
-              ZIO.fail(
-                TriplestoreTimeoutException(
-                  "Triplestore timed out while sending a response, after sending statuscode 200."
-                )
-              )
-          } else {
-            ZIO.logError(
-              s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
-            ) *>
-              ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
-          },
-        ZIO.succeed(_)
-      )
+      }.foldZIO(_ => checkResponse(sparql, turtleStr), ZIO.succeed(_))
 
     for {
       turtleStr <-
