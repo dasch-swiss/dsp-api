@@ -225,6 +225,16 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
       )
     )
 
+  override def findFirst(
+    subj: Option[RdfResource],
+    pred: Option[IriNode],
+    obj: Option[RdfNode],
+    context: Option[IRI] = None
+  ): Option[Statement] = {
+    val iter = find(subj, pred, obj, context)
+    iter.nextOption()
+  }
+
   override def contains(statement: Statement): Boolean =
     datasetGraph.contains(statement.asJenaQuad)
 

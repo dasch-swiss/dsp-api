@@ -1,12 +1,7 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.messages.util.rdf.RdfNodeFactory
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
@@ -21,28 +16,24 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
       // check the ontology
       val repo = model.asRepository
       val query =
-        """|
-           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
            |PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
-           |
            |ASK 
            |FROM <http://www.knora.org/ontology/knora-base> 
            |WHERE {
-           |    <http://www.knora.org/ontology/knora-base> knora-base:hasComment ?hc .
+           |    BIND (knora-base:hasComment as ?hc)
            |    ?hc knora-base:objectClassConstraint knora-base:FormattedTextValue .
            |    FILTER NOT EXISTS { ?hc salsah-gui:guiElement ?guiElement . }
            |    FILTER NOT EXISTS { ?hc salsah-gui:guiAttribute ?guiAttribute . }
            |}
            |""".stripMargin
       val askResult = repo.doAsk(query)
-      assert(askResult, "ASK should find knora-base:hasComment with the correrxctly updated shape")
+      assert(askResult, "ASK should find knora-base:hasComment with the correctly updated shape")
 
       // check the data
       val query2 =
-        """|
-           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-           |
-           |SELECT ?s
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |SELECT *
            |FROM <http://www.knora.org/data/0001/anything>
            |WHERE {
            |    ?s knora-base:hasComment ?v .
@@ -60,9 +51,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
       val subj: Option[String]              = foundResource.rowMap.get("s")
       assert(subj.contains("http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q"))
       val stringRepresentation: Option[String] = foundResource.rowMap.get("stringRepresentation")
-      assert(stringRepresentation.contains("a text value without markup"))
-
-      println(queryResult2)
+      assert(stringRepresentation.contains("a text value without markup\u001e"))
     }
   }
 }

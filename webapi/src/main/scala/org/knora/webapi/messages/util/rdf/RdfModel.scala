@@ -277,6 +277,22 @@ trait RdfModel extends Iterable[Statement] {
   ): Iterator[Statement]
 
   /**
+   * Returns the first statement that match a pattern, or None.
+   *
+   * @param subj    the subject, or `None` to match any subject.
+   * @param pred    the predicate, or `None` to match any predicate.
+   * @param obj     the object, or `None` to match any object.
+   * @param context the IRI of a named graph, or `None` to match any graph.
+   * @return the first statement found, or None.
+   */
+  def findFirst(
+    subj: Option[RdfResource],
+    pred: Option[IriNode],
+    obj: Option[RdfNode],
+    context: Option[IRI] = None
+  ): Option[Statement]
+
+  /**
    * Checks whether the model contains the specified statement.
    *
    * @param statement the statement.
