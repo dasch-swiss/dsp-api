@@ -78,7 +78,9 @@ final case class AssetServiceLive(config: StorageConfig) extends AssetService {
     existingProjectDirectories.filter(_.filename.toString == shortcode.toString).runHead
 
   override def zipProject(shortcode: ProjectShortcode): Task[Option[Path]] =
-    findProject(shortcode).flatMap(_.map(zipProjectPath(_, shortcode)).getOrElse(ZIO.none))
+    ZIO.logInfo(s"Zipping project $shortcode") *>
+      findProject(shortcode).flatMap(_.map(zipProjectPath(_, shortcode)).getOrElse(ZIO.none)) <*
+      ZIO.logInfo(s"Zipping project $shortcode was successful")
 
   private def zipProjectPath(projectPath: Path, shortcode: ProjectShortcode) = {
     val targetFolder = config.tempPath / "zipped"
@@ -87,9 +89,11 @@ final case class AssetServiceLive(config: StorageConfig) extends AssetService {
 
   override def importProject(shortcode: ProjectShortcode, zipFile: Path): IO[Throwable, Unit] = {
     val targetFolder = config.assetPath / shortcode.toString
-    deleteExistingProjectFiles(shortcode) *>
+    ZIO.logInfo(s"Importing project $shortcode") *>
+      deleteExistingProjectFiles(shortcode) *>
       ZipUtility.unzipFile(zipFile, targetFolder) *>
-      Files.createDirectories(targetFolder)
+      Files.createDirectories(targetFolder) *>
+      ZIO.logInfo(s"Importing project $shortcode was successful")
   }
 
   private def deleteExistingProjectFiles(shortcode: ProjectShortcode): IO[IOException, Unit] =
