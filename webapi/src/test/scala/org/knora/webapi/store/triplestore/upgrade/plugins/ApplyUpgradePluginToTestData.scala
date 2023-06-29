@@ -7,9 +7,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.riot.RDFFormat
-import zio.Scope
-import zio.ZIO
-import zio.ZIOAppDefault
+import zio._
 
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -23,19 +21,27 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This class may be run if you wish to apply your upgrade plugin on our test data.
  * For this you must first provide an instance of your plugin as `val upgradePlugin`
  * and also specify the absolut path to the "test_data" folder in `val testDataPath`.
  */
-object ApplyUpgradePluginToTestData extends ZIOAppDefault {
+object ApplyUpgradePluginToTestData extends ZIOAppDefault with LazyLogging {
 
-  val upgradePlugin = new NoopPlugin()
-  val testDataPath  = "/test_data/all_data"
+  val upgradePlugin = new UpgradePluginXXX(logger)
+  val testDataPath  = "../test_data/all_data" // for VSCode
+  // val testDataPath  = "test_data/all_data" // for Intellij IDEA
 
   def discoverFiles(dirPath: String) =
-    Files.list(Path.of(dirPath)).filter(Files.isRegularFile(_)).iterator.asScala.toArray
+    Files
+      .list(Path.of(dirPath))
+      .filter(Files.isRegularFile(_))
+      .iterator
+      .asScala
+      .toList
+      .map(_.toAbsolutePath.normalize())
 
   def applyUpgradePluginTo(plugin: UpgradePlugin, path: Path): ZIO[Any with Scope, Throwable, Unit] = for {
     model            <- parseRdfModelFromFile(path)
