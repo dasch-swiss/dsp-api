@@ -113,7 +113,7 @@ case class TriplestoreServiceLive(
   private val checkRepositoryPath    = "/$/server"
   private val repositoryUploadPath   = repositoryDownloadPath
 
-  private def checkResponse(sparql: String, response: String) = {
+  private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] = {
     val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
     val message: String   = "Triplestore timed out while sending a response, after sending statuscode 200."
 
@@ -154,7 +154,7 @@ case class TriplestoreServiceLive(
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
-        .foldZIO(_ => checkResponse(sparql, resultStr), ZIO.succeed(_))
+        .orElse(processError(sparql, resultStr))
 
     for {
       resultStr <-
@@ -193,7 +193,7 @@ case class TriplestoreServiceLive(
         }
 
         SparqlConstructResponse(statementMap.toMap)
-      }.foldZIO(_ => checkResponse(sparql, turtleStr), ZIO.succeed(_))
+      }.orElse(processError(sparql, turtleStr))
 
     for {
       turtleStr <-
@@ -804,10 +804,10 @@ case class TriplestoreServiceLive(
    * @param client          the HTTP client to be used for the request.
    * @param request         the request to be sent.
    * @param context         the request context to be used.
-   * @param processResponse a function that processes the HTTP response.
+   * @param processError a function that processes the HTTP response.
    * @param simulateTimeout if `true`, simulate a read timeout.
-   * @tparam T the return type of `processResponse`.
-   * @return the return value of `processResponse`.
+   * @tparam T the return type of `processError`.
+   * @return the return value of `processError`.
    */
   private def doHttpRequest[T](
     client: CloseableHttpClient,
