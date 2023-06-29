@@ -113,15 +113,15 @@ case class TriplestoreServiceLive(
   private val checkRepositoryPath    = "/$/server"
   private val repositoryUploadPath   = repositoryDownloadPath
 
-  private def checkResponse(sparql: String, resultStr: String) = {
+  private def checkResponse(sparql: String, response: String) = {
     val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
     val message: String   = "Triplestore timed out while sending a response, after sending statuscode 200."
 
-    if (resultStr.contains("##  Query cancelled due to timeout during execution"))
+    if (response.contains("##  Query cancelled due to timeout during execution"))
       ZIO.logError(message) *> ZIO.fail(TriplestoreTimeoutException(message))
     else
       ZIO.logError(
-        s"Couldn't parse response from triplestore:$delimiter$resultStr${delimiter}in response to SPARQL query:$delimiter$sparql"
+        s"Couldn't parse response from triplestore:$delimiter$response${delimiter}in response to SPARQL query:$delimiter$sparql"
       ) *> ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
   }
 
