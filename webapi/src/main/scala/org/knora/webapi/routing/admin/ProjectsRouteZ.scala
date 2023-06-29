@@ -50,8 +50,6 @@ final case class ProjectsRouteZ(
           getAllProjectData(iriUrlEncoded, requestingUser)
         case (Method.POST -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "export", requestingUser) =>
           postExportProject(iriUrlEncoded, requestingUser)
-        case (Method.POST -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "import", requestingUser) =>
-          postImportProject(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "exports", requestingUser) =>
           getProjectExports(requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
@@ -60,6 +58,8 @@ final case class ProjectsRouteZ(
           getProjectMembersByShortname(shortname, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "members", requestingUser) =>
           getProjectMembersByShortcode(shortcode, requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "import", requestingUser) =>
+          postImportProject(shortcode, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "admin-members", requestingUser) =>
           getProjectAdminsByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "admin-members", requestingUser) =>
@@ -150,9 +150,8 @@ final case class ProjectsRouteZ(
     result     <- projectsService.exportProject(projectIri, requestingUser)
   } yield Response.json(result.toJson)
 
-  private def postImportProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] = for {
-    projectIri <- RouteUtilZ.urlDecode(iriUrlEncoded)
-    result     <- projectsService.importProject(projectIri, requestingUser)
+  private def postImportProject(shortCode: String, requestingUser: UserADM): Task[Response] = for {
+    result     <- projectsService.importProject(shortCode, requestingUser)
   } yield Response.json(result.toJson)
 
   private def getProjectExports(requestingUser: UserADM): Task[Response] =

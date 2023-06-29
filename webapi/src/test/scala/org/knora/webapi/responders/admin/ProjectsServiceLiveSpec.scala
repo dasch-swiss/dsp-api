@@ -5,24 +5,18 @@
 
 package org.knora.webapi.responders.admin
 
-import zio._
-import zio.mock._
-import zio.test._
-
 import dsp.valueobjects.V2._
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
-import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
+import org.knora.webapi.slice.admin.api.service.{ProjectADMRestService, ProjectsADMRestServiceLive}
+import org.knora.webapi.slice.admin.domain.service.{DspIngestClientMock, ProjectExportServiceStub, ProjectExportStorageServiceLive, ProjectImportServiceLive}
+import zio._
+import zio.mock._
+import zio.test._
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
@@ -66,7 +60,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       org.knora.webapi.slice.admin.domain.service.KnoraProjectRepoInMemory.layer,
       ProjectImportServiceLive.layer,
       ProjectExportStorageServiceLive.layer,
-      AppConfig.layer
+      AppConfig.layer,
+      DspIngestClientMock.layer
     )
 
   val getAllProjectsSpec: Spec[Any, Throwable] = test("get all projects") {

@@ -26,7 +26,6 @@ trait DspIngestClient {
 
   def importProject(shortCode: ShortCode, fileToImport: Path): Task[Path]
 }
-
 final case class DspIngestClientLive(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig
@@ -52,7 +51,10 @@ final case class DspIngestClientLive(
       request = Request
                   .post(Body.fromFile(fileToImport.toFile), importUrl)
                   .updateHeaders(_.addHeaders(Headers.bearerAuthorizationHeader(token.jwtString)))
-      _ <- Client.request(request).provideSomeLayer[Scope](Client.default)
+                  .updateHeaders(_.addHeaders(Headers.contentType("application/zip")))
+      response     <- Client.request(request).provideSomeLayer[Scope](Client.default)
+      bodyAsString <- response.body.asString
+      _            <- ZIO.logInfo(s"Response code: ${response.status} body $bodyAsString")
     } yield fileToImport
   }
 }

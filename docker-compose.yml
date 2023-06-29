@@ -55,7 +55,7 @@ services:
     command: --config=/sipi/config/sipi.docker-config.lua
 
   dsp-ingest:
-    image: daschswiss/dsp-ingest:latest
+    image: daschswiss/dsp-ingest:0.0.1-14-gae1246a
     ports:
       - "3340:3340"
     volumes:
