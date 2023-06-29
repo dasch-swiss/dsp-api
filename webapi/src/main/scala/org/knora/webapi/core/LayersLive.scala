@@ -10,7 +10,6 @@ import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
-import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util._
@@ -83,7 +82,6 @@ object LayersLive {
       with CkanResponderV1
       with ConstructResponseUtilV2
       with ConstructTransformer
-      with DspIngestConfig
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with HttpServer

@@ -82,10 +82,18 @@ import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
-import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectExportService
-import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
+import org.knora.webapi.slice.admin.domain.service.{
+  DspIngestClient,
+  DspIngestClientLive,
+  ProjectADMService,
+  ProjectADMServiceLive,
+  ProjectExportService,
+  ProjectExportServiceLive,
+  ProjectExportStorageService,
+  ProjectExportStorageServiceLive,
+  ProjectImportService,
+  ProjectImportServiceLive
+}
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.slice.common.api.RestPermissionServiceLive
@@ -120,10 +128,6 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
-import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
-import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectImportService
-import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
 
 object LayersTest {
 
@@ -133,7 +137,7 @@ object LayersTest {
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
-  type CommonR0 = ActorSystem with AppConfig with IIIFService with JwtService with StringFormatter
+  type CommonR0 = ActorSystem with AppConfigurations with IIIFService with JwtService with StringFormatter
   type CommonR =
     ApiRoutes
       with AppRouter
@@ -145,7 +149,7 @@ object LayersTest {
       with CkanResponderV1
       with ConstructResponseUtilV2
       with ConstructTransformer
-      with DspIngestConfig
+      with DspIngestClient
       with GravsearchTypeInspectionRunner
       with GroupsResponderADM
       with HttpServer
@@ -214,6 +218,7 @@ object LayersTest {
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
+      DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
