@@ -112,7 +112,18 @@ case class TriplestoreServiceLive(
   private val repositoryDownloadPath = s"/$dbName"
   private val checkRepositoryPath    = "/$/server"
   private val repositoryUploadPath   = repositoryDownloadPath
-  private val logDelimiter           = "\n" + StringUtils.repeat('=', 80) + "\n"
+
+  private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] = {
+    val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
+    val message: String   = "Triplestore timed out while sending a response, after sending statuscode 200."
+
+    if (response.contains("##  Query cancelled due to timeout during execution"))
+      ZIO.logError(message) *> ZIO.fail(TriplestoreTimeoutException(message))
+    else
+      ZIO.logError(
+        s"Couldn't parse response from triplestore:$delimiter$response${delimiter}in response to SPARQL query:$delimiter$sparql"
+      ) *> ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
+  }
 
   /**
    * Simulates a read timeout.
@@ -143,23 +154,7 @@ case class TriplestoreServiceLive(
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
-        .foldZIO(
-          _ =>
-            if (resultStr.contains("##  Query cancelled due to timeout during execution")) {
-              ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
-                ZIO.fail(
-                  TriplestoreTimeoutException(
-                    "Triplestore timed out while sending a response, after sending statuscode 200."
-                  )
-                )
-            } else {
-              ZIO.logError(
-                s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
-              ) *>
-                ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
-            },
-          ZIO.succeed(_)
-        )
+        .orElse(processError(sparql, resultStr))
 
     for {
       resultStr <-
@@ -198,23 +193,7 @@ case class TriplestoreServiceLive(
         }
 
         SparqlConstructResponse(statementMap.toMap)
-      }.foldZIO(
-        _ =>
-          if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
-            ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
-              ZIO.fail(
-                TriplestoreTimeoutException(
-                  "Triplestore timed out while sending a response, after sending statuscode 200."
-                )
-              )
-          } else {
-            ZIO.logError(
-              s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
-            ) *>
-              ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
-          },
-        ZIO.succeed(_)
-      )
+      }.orElse(processError(sparql, turtleStr))
 
     for {
       turtleStr <-
@@ -365,17 +344,17 @@ case class TriplestoreServiceLive(
    */
   def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK] =
     for {
-      _      <- ZIO.logWarning("==>> Drop All Data Start")
+      _      <- ZIO.logInfo("==>> Drop All Data Start")
       graphs <- getAllGraphs
-      _      <- ZIO.logInfo(s"Found graphs: ${graphs.length}")
+      _      <- ZIO.logInfo(s"Number of graphs found: ${graphs.length}")
       _      <- ZIO.foreachDiscard(graphs)(dropGraph)
-      _      <- ZIO.logWarning("==>> Drop All Data End")
+      _      <- ZIO.logInfo("==>> Drop All Data End")
     } yield DropDataGraphByGraphACK()
 
   private def dropGraph(graphName: String): Task[Unit] =
-    ZIO.logInfo(s"Dropping graph: $graphName") *>
+    ZIO.logInfo(s"==>> Dropping graph: $graphName") *>
       getSparqlHttpResponse(s"DROP GRAPH <$graphName>", isUpdate = true) *>
-      ZIO.logInfo(s"==>> Dropped graph: $graphName")
+      ZIO.logDebug("Graph dropped")
 
   /**
    * Gets all graphs stored in the triplestore.
@@ -825,10 +804,10 @@ case class TriplestoreServiceLive(
    * @param client          the HTTP client to be used for the request.
    * @param request         the request to be sent.
    * @param context         the request context to be used.
-   * @param processResponse a function that processes the HTTP response.
+   * @param processError a function that processes the HTTP response.
    * @param simulateTimeout if `true`, simulate a read timeout.
-   * @tparam T the return type of `processResponse`.
-   * @return the return value of `processResponse`.
+   * @tparam T the return type of `processError`.
+   * @return the return value of `processError`.
    */
   private def doHttpRequest[T](
     client: CloseableHttpClient,
