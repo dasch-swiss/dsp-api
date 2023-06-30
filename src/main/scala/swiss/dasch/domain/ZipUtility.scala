@@ -9,22 +9,8 @@ import zio.*
 import zio.nio.file.*
 import zio.stream.ZStream
 
-import java.io.{
-  ByteArrayInputStream,
-  ByteArrayOutputStream,
-  File,
-  FileInputStream,
-  FileNotFoundException,
-  FileOutputStream,
-  IOException,
-  InputStream,
-  OutputStream,
-  PipedInputStream,
-  PipedOutputStream,
-}
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
+import java.io.*
+import java.util.zip.{ ZipEntry, ZipInputStream, ZipOutputStream }
 
 object ZipUtility {
 

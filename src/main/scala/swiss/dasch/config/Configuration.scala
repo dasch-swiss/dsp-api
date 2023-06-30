@@ -11,9 +11,8 @@ import zio.*
 import zio.config.*
 import zio.config.ConfigDescriptor.*
 import zio.config.magnolia.descriptor
-import zio.config.typesafe.TypesafeConfigSource
+import zio.config.typesafe.{ FromConfigTypesafe, TypesafeConfigSource }
 import zio.nio.file.{ Files, Path }
-import zio.config.typesafe.FromConfigTypesafe
 
 object Configuration {
   final private case class ApplicationConf(
