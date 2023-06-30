@@ -15,7 +15,6 @@ import org.scalatest.DoNotDiscover
 import spray.json._
 
 import java.net.URLEncoder
-
 import org.knora.webapi._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -25,6 +24,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+
 /**
  * Tests the values route.
  */
@@ -33,10 +34,6 @@ class ValuesV1R2RSpec extends R2RSpec {
 
   private val valuesPath =
     DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
 
   private val integerValueIri      = new MutableTestIri
   private val timeValueIri         = new MutableTestIri

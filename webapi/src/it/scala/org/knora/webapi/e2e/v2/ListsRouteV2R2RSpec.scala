@@ -11,10 +11,10 @@ import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import spray.json.JsValue
 import spray.json.JsonParser
+
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
-
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
@@ -24,6 +24,8 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.routing.v2.ListsRouteV2
 import org.knora.webapi.util.FileUtil
 
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+
 /**
  * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
@@ -31,10 +33,6 @@ import org.knora.webapi.util.FileUtil
 class ListsRouteV2R2RSpec extends R2RSpec {
 
   private val listsPath = ListsRouteV2().makeRoute
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

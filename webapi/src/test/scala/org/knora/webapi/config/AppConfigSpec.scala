@@ -9,8 +9,7 @@ import zio.ZIO
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
+import java.time.Duration
 
 import dsp.valueobjects.User
 
@@ -25,9 +24,12 @@ object AppConfigSpec extends ZIOSpecDefault {
       } yield {
         assertTrue(
           !appConfig.printExtendedConfig,
-          appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS),
+          appConfig.defaultTimeout == Duration.ofMinutes(120),
+          appConfig.sipi.timeout == Duration.ofSeconds(120),
+          appConfig.triplestore.queryTimeout == Duration.ofSeconds(20),
+          appConfig.triplestore.gravsearchTimeout == Duration.ofSeconds(120),
           appConfig.bcryptPasswordStrength == User.PasswordStrength(12),
-          appConfig.instrumentationServerConfig.interval == java.time.Duration.ofSeconds(5),
+          appConfig.instrumentationServerConfig.interval == Duration.ofSeconds(5),
           dspIngestConfig.audience == "http://localhost:3340",
           dspIngestConfig.baseUrl == "http://localhost:3340",
           jwtConfig.expiration == java.time.Duration.ofDays(30),

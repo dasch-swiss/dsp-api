@@ -44,8 +44,8 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           dbtype = "tdb2",
           useHttps = false,
           host = container.getHost,
-          queryTimeout = "Duration.Undefined",
-          gravsearchTimeout = "Duration.Undefined",
+          queryTimeout = java.time.Duration.ofSeconds(5),
+          gravsearchTimeout = java.time.Duration.ofSeconds(5),
           autoInit = false,
           fuseki = Fuseki(
             port = container.getFirstMappedPort,

@@ -34,9 +34,6 @@ import org.knora.webapi.util.MutableTestIri
  */
 class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val timeout                                   = 5.seconds
-
   private val rootUser = SharedTestDataADM.rootUser
 
   private val notExistingProjectButValidProjectIri = "http://rdfh.ch/projects/notexisting"
@@ -46,7 +43,6 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return information for every project excluding system projects" in {
         appActor ! ProjectsGetRequestADM()
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
-
         assert(received.projects.contains(SharedTestDataADM.imagesProject))
         assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
         assert(!received.projects.contains(SharedTestDataADM.systemProjectIri))

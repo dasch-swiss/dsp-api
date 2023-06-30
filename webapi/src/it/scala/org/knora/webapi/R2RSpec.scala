@@ -5,21 +5,21 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import com.typesafe.scalalogging.Logger
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.Future
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
@@ -30,6 +30,8 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
+
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -62,6 +64,11 @@ abstract class R2RSpec
 
   // create a configured runtime
   implicit val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
+
+  // the default timeout for route tests
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
+  )
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code

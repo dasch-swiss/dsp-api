@@ -360,7 +360,7 @@ object IIIFServiceSipiImpl {
   private def acquire(sipiConfig: Sipi): UIO[CloseableHttpClient] = ZIO.attemptBlocking {
 
     // timeout from config
-    val sipiTimeoutMillis: Int = sipiConfig.timeoutInSeconds.toMillis.toInt
+    val sipiTimeoutMillis = sipiConfig.timeout.toMillis.toInt
 
     // Create a connection manager with custom configuration.
     val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()

@@ -28,8 +28,7 @@ import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration.SECONDS
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS, SECONDS}
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
@@ -57,10 +56,6 @@ import org.knora.webapi.util._
  */
 class ResourcesRouteV2E2ESpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
 
   private val anythingUserEmail             = SharedTestDataADM.anythingUser1.email
   private val password                      = SharedTestDataADM.testPass
