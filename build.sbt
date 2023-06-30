@@ -101,5 +101,4 @@ lazy val root = (project in file("."))
       case Cmd("USER", args @ _*) => true
       case cmd                    => false
     },
-    coverageEnabled := true
   )
