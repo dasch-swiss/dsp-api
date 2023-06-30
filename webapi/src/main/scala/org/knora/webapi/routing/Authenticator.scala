@@ -802,11 +802,11 @@ final case class JwtServiceLive(
   private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
 
   override def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt] =
-    createJwtToken(jwtConfig.issuer.get, user.id, Set("Knora", "Sipi"), Some(JsObject(content)))
+    createJwtToken(jwtConfig.issuerAsString(), user.id, Set("Knora", "Sipi"), Some(JsObject(content)))
   override def createJwtForDspIngest(): UIO[Jwt] =
     createJwtToken(
-      jwtConfig.issuer.get,
-      jwtConfig.issuer.get,
+      jwtConfig.issuerAsString(),
+      jwtConfig.issuerAsString(),
       Set(dspIngestConfig.audience),
       expiration = Some(10.minutes)
     )

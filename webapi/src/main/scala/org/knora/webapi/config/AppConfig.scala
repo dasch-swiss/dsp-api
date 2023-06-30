@@ -61,7 +61,13 @@ final case class AppConfig(
     )
   }
 }
-final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String])
+final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String]) {
+  def issuerAsString(): String = issuer.getOrElse(
+    throw new IllegalStateException(
+      "This should never happen, the issuer may be left blank in application.conf but the default is taken from external host and port."
+    )
+  )
+}
 final case class DspIngestConfig(baseUrl: String, audience: String)
 
 final case class KnoraApi(
