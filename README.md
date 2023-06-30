@@ -1,6 +1,7 @@
 ## Dsp-Ingest
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![Build And Test](https://github.com/dasch-swiss/dsp-ingest/actions/workflows/ci.yml/badge.svg)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3717de9ffb22413c98c23161a0242799)](https://app.codacy.com/gh/dasch-swiss/dsp-ingest/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/3717de9ffb22413c98c23161a0242799)](https://app.codacy.com/gh/dasch-swiss/dsp-ingest/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
 
