@@ -48,6 +48,6 @@ object Logger {
     else textLogger
   }
 
-  val layer: ZLayer[ServiceConfig, Nothing, Unit] =
+  val layer: URLayer[ServiceConfig, Unit] =
     Runtime.removeDefaultLoggers >>> logger >+> Slf4jBridge.initialize
 }
