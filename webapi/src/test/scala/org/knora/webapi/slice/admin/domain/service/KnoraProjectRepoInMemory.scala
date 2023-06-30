@@ -11,6 +11,9 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -20,13 +23,11 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
     with KnoraProjectRepo {
 
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = projects.get.map(
-    _.find(
-      id match {
-        case ProjectIdentifierADM.ShortcodeIdentifier(shortcode) => _.shortcode == shortcode
-        case ProjectIdentifierADM.ShortnameIdentifier(shortname) => _.shortname == shortname.value
-        case ProjectIdentifierADM.IriIdentifier(iri)             => _.id.value == iri.value
-      }
-    )
+    _.find(id match {
+      case ShortcodeIdentifier(shortcode) => _.shortcode == shortcode
+      case ShortnameIdentifier(shortname) => _.shortname == shortname.value
+      case IriIdentifier(iri)             => _.id.value == iri.value
+    })
   )
 }
 
