@@ -74,11 +74,12 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-logging-slf4j2-bridge" % zioLoggingVersion,
 
       // test
-      "dev.zio" %% "zio-test"          % zioVersion     % Test,
-      "dev.zio" %% "zio-test-sbt"      % zioVersion     % Test,
-      "dev.zio" %% "zio-test-junit"    % zioVersion     % Test,
-      "dev.zio" %% "zio-mock"          % zioMockVersion % Test,
-      "dev.zio" %% "zio-test-magnolia" % zioVersion     % Test,
+      "dev.zio"      %% "zio-test"               % zioVersion     % Test,
+      "dev.zio"      %% "zio-test-sbt"           % zioVersion     % Test,
+      "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
+      "dev.zio"      %% "zio-mock"               % zioMockVersion % Test,
+      "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.8"        % Test,
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
@@ -100,4 +101,5 @@ lazy val root = (project in file("."))
       case Cmd("USER", args @ _*) => true
       case cmd                    => false
     },
+    coverageEnabled := true
   )

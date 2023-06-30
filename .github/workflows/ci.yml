@@ -28,7 +28,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           cache: sbt
       - name: Build and Test
-        run: sbt -v +test +headerCheckAll +fmtCheck
+        run: sbt -v coverage test headerCheckAll fmtCheck coverageAggregate
       - name: Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
@@ -36,6 +36,12 @@ jobs:
           name: Unit Test Results
           path: ./target/test-reports/TEST-*.xml
           reporter: java-junit
+      - name: Upload coverage data to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./target/scala-3.3.0/coverage-report/cobertura.xml
+
 
   publish-docker-image:
     if: github.ref == 'refs/heads/main'
