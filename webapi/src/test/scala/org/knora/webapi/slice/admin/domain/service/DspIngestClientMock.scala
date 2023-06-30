@@ -15,9 +15,9 @@ import dsp.valueobjects.Project
 
 object DspIngestClientMock {
   final case class MockDspIngestClient() extends DspIngestClient {
-    override def exportProject(shortCode: Project.ShortCode): ZIO[Scope, Throwable, Path] =
+    override def exportProject(shortcode: Project.Shortcode): ZIO[Scope, Throwable, Path] =
       ZIO.succeed(Path("/tmp/test.zip"))
-    override def importProject(shortCode: Project.ShortCode, fileToImport: Path): Task[Path] =
+    override def importProject(shortcode: Project.Shortcode, fileToImport: Path): Task[Path] =
       ZIO.succeed(Path("/tmp/test.zip"))
   }
   val layer = ZLayer.fromFunction(MockDspIngestClient.apply _)

@@ -12,7 +12,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
-import dsp.valueobjects.Project.ShortCode
+import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -260,7 +260,7 @@ final case class ProjectsADMRestServiceLive(
     requestingUser: UserADM
   ): Task[ProjectImportResponse] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)
-    shortcode <- ShortCode.make(projectShortcode).toZIO
+    shortcode <- Shortcode.make(projectShortcode).toZIO
     path <-
       projectImportService
         .importProject(shortcode, requestingUser)

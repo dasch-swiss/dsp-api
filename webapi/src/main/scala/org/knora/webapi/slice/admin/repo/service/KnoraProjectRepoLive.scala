@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.repo.service
 import play.twirl.api.TxtFormat
 import zio._
 
+import dsp.valueobjects.Project
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
@@ -41,8 +42,8 @@ final case class KnoraProjectRepoLive(
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
     val maybeIri       = id.asIriIdentifierOption
     val maybeShortname = id.asShortnameIdentifierOption
-    val maybeShortCode = id.asShortcodeIdentifierOption
-    findOneByQuery(getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortCode))
+    val maybeShortcode = id.asShortcodeIdentifierOption
+    findOneByQuery(getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode))
   }
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
@@ -64,8 +65,10 @@ final case class KnoraProjectRepoLive(
     val propsMap   = subjectPropsTuple._2
     for {
       shortname <- mapper.getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap).map(_.value)
-      shortcode <- mapper.getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap).map(_.value)
-      longname  <- mapper.getSingleOption[StringLiteralV2](ProjectLongname, propsMap).map(_.map(_.value))
+      shortcode <- mapper
+                     .getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap)
+                     .flatMap(it => Project.Shortcode.make(it.value).toZIO)
+      longname <- mapper.getSingleOption[StringLiteralV2](ProjectLongname, propsMap).map(_.map(_.value))
       description <- mapper
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propsMap)
                        .map(_.map(it => V2.StringLiteralV2(it.value, it.language)))
