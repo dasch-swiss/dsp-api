@@ -42,7 +42,6 @@ jobs:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: ./target/scala-3.3.0/coverage-report/cobertura.xml
 
-
   publish-docker-image:
     if: github.ref == 'refs/heads/main'
     needs: build-and-test
