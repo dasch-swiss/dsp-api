@@ -245,7 +245,7 @@ final case class ProjectsADMRestServiceLive(
   override def exportProject(projectIri: String, requestingUser: UserADM): Task[ProjectExportResponse] = for {
     _       <- permissionService.ensureSystemAdmin(requestingUser)
     project <- findProject(projectIri)
-    zipFile <- projectExportService.exportProject(project, requestingUser)
+    zipFile <- projectExportService.exportProject(project)
   } yield ProjectExportResponse(zipFile.toString)
 
   private def findProject(iri: String): Task[KnoraProject] =

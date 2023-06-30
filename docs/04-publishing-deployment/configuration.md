@@ -30,8 +30,9 @@ A number of core settings is additionally configurable through system environmen
 | app.bcrypt-password-strength           | KNORA_WEBAPI_BCRYPT_PASSWORD_STRENGTH           | 12                    |
 | app.jwt.secret                         | KNORA_WEBAPI_JWT_SECRET_KEY                     | super-secret-key      |
 | app.jwt.expiration                     | KNORA_WEBAPI_JWT_LONGEVITY                      | 30 days               |
-| app.jwt.dsp-issuer-audience            | KNORA_WEBAPI_JWT_DSP_INGEST_AUDIENCE            | http://localhost:3340 | 
 | app.jwt.issuer                         | KNORA_WEBAPI_JWT_ISSUER                         | 0.0.0.0:3333          | 
+| app.dsp-ingest.audience                | KNORA_WEBAPI_DSP_INGEST_AUDIENCE                | http://localhost:3340 | 
+| app.dsp-ingest.base-url                | KNORA_WEBAPI_DSP_INGEST_BASE_URL                | http://localhost:3340 | 
 | app.cookie-domain                      | KNORA_WEBAPI_COOKIE_DOMAIN                      | localhost             |
 | app.allow-reload-over-http             | KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP             | false                 |
 | app.ark.resolver                       | KNORA_WEBAPI_ARK_RESOLVER_URL                   | http://0.0.0.0:3336   |

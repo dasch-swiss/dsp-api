@@ -19,8 +19,8 @@ import java.net.Authenticator
 import java.net.PasswordAuthentication
 import java.net.http.HttpClient
 
+import dsp.valueobjects.Project
 import dsp.valueobjects.Project.ShortCode
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
@@ -32,8 +32,16 @@ trait ProjectImportService {
   def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
 }
 
-final case class ProjectImportServiceLive(config: Triplestore, exportStorage: ProjectExportStorageService)
-    extends ProjectImportService {
+final case class Asset(belongsToProject: Project.ShortCode, internalFilename: String)
+object Asset {
+  def logString(it: Asset) = s"Asset(code: ${it.belongsToProject.value}, path: ${it.internalFilename}"
+}
+
+final case class ProjectImportServiceLive(
+  private val config: Triplestore,
+  private val exportStorage: ProjectExportStorageService,
+  private val dspIngestClient: DspIngestClient
+) extends ProjectImportService {
 
   private val fusekiBaseUrl: URL = {
     val str      = config.host + ":" + config.fuseki.port
@@ -101,30 +109,18 @@ final case class ProjectImportServiceLive(config: Triplestore, exportStorage: Pr
     } yield ()
   }
 
-  private def importAssets(unzipped: Path, project: ShortCode) = {
+  private def importAssets(unzipped: Path, project: ShortCode) = ZIO.scoped {
     val assetsDir = unzipped / ProjectExportStorageService.assetsDirectoryInExport
     (for {
-      assetDirAbsolutePath <- assetsDir.toAbsolutePath
-      _                    <- ZIO.logInfo(s"Importing assets from $assetDirAbsolutePath")
-      assets <- Files
-                  .find(assetsDir, 1)((path, attr) => attr.isRegularFile && !path.filename.endsWith(Path(".json")))
-                  .map(filepath => Asset(project, filepath.filename.toString))
-                  .runCollect
-      _ <- ZIO.logInfo(s"Found ${assets.size} from $assetDirAbsolutePath")
-      _ <- ZIO.foreachParDiscard(assets)(asset => ZIO.logInfo(s"Importing asset ${Asset.logString(asset)}"))
-      _ <- ZIO.logInfo(s"Imported assets from $assetDirAbsolutePath")
-    } yield ()).whenZIO(
-      Files
-        .isDirectory(assetsDir)
-        .tap(isDirectory => ZIO.logInfo(s"No assets found in $assetsDir").when(!isDirectory))
-    )
+      tempDir <- Files.createTempDirectoryScoped(Some("assets-import"), fileAttributes = Nil)
+      zipFile <- ZipUtility.zipFolder(assetsDir, tempDir)
+      _ <- dspIngestClient
+             .importProject(project, zipFile)
+             .tapError(err => ZIO.logError(s"Error importing assets: ${err.getMessage}"))
+    } yield ()).whenZIO(Files.isDirectory(assetsDir)) orElse ZIO.logWarning(s"No assets to import $project")
   }
 }
 
 object ProjectImportServiceLive {
-  val layer: URLayer[ProjectExportStorageService with AppConfig, ProjectImportServiceLive] =
-    ZLayer.fromZIO(for {
-      config         <- ZIO.serviceWith[AppConfig](_.triplestore)
-      storageService <- ZIO.service[ProjectExportStorageService]
-    } yield ProjectImportServiceLive(config, storageService))
+  val layer = ZLayer.fromFunction(ProjectImportServiceLive.apply _)
 }

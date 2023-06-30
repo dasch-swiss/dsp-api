@@ -23,7 +23,7 @@ object Main extends ZIOApp {
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
    * and cleaned up when the Runtime is shutdown.
    */
-  override def bootstrap: ZLayer[Any, Nothing, LayersLive.DspEnvironmentLive] =
+  override def bootstrap: ZLayer[Any, Nothing, Environment] =
     Logger.fromEnv() >>> LayersLive.dspLayersLive
 
   /**

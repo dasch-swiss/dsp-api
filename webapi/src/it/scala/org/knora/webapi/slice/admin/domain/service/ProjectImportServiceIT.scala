@@ -5,14 +5,14 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import dsp.valueobjects.Project
+import org.knora.webapi.config.{Fuseki, Triplestore}
+import org.knora.webapi.testcontainers.FusekiTestContainer
 import zio._
 import zio.nio.file._
 import zio.test._
-import java.io.IOException
 
-import org.knora.webapi.config.Fuseki
-import org.knora.webapi.config.Triplestore
-import org.knora.webapi.testcontainers.FusekiTestContainer
+import java.io.IOException
 
 object ProjectImportServiceIT extends ZIOSpecDefault {
 
@@ -24,11 +24,21 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
     } yield ProjectExportStorageServiceLive(exportDirectory)
   }
 
+  private val dspIngestClientLayer: ULayer[DspIngestClient] = ZLayer.succeed {
+    new DspIngestClient {
+      override def exportProject(shortCode: Project.ShortCode): ZIO[Scope, Throwable, Path] =
+        ZIO.succeed(Path("unused"))
+      override def importProject(shortCode: Project.ShortCode, fileToImport: Path): Task[Path] =
+        ZIO.succeed(Path("unused"))
+    }
+  }
+
   private val importServiceTestLayer
     : URLayer[FusekiTestContainer with ProjectExportStorageService, ProjectImportServiceLive] = ZLayer.fromZIO {
-    for {
+    (for {
       exportStorageService <- ZIO.service[ProjectExportStorageService]
       container            <- ZIO.service[FusekiTestContainer]
+      dspIngestClient      <- ZIO.service[DspIngestClient]
       config =
         Triplestore(
           dbtype = "tdb2",
@@ -45,7 +55,8 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
           ),
           profileQueries = false
         )
-    } yield ProjectImportServiceLive(config, exportStorageService)
+    } yield ProjectImportServiceLive(config, exportStorageService, dspIngestClient))
+      .provideSomeLayer[FusekiTestContainer with ProjectExportStorageService](dspIngestClientLayer)
   }
 
   private val trigContent =
