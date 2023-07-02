@@ -67,7 +67,7 @@ lazy val root = (project in file("."))
       // resolves problems when `sbt doc` failed with
       // [error] -- Error: typesafe/shared/src/main/scala/zio/config/typesafe/TypesafeConfigSource.scala:15:0
       // [error] undefined: new com.github.ghik.silencer.silent #
-      "com.github.ghik"       % "silencer-lib_2.13.11"     % "1.7.13",
+      "com.github.ghik"       % "silencer-lib_2.13.11"     % "1.17.13",
 
       // logging
       "dev.zio" %% "zio-logging"               % zioLoggingVersion,
