@@ -1,8 +1,9 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.messages.util.rdf._
+
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
@@ -173,10 +174,8 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
  *
  * What needs to be covered in the test:
  *
- *   - [ ] if no mapping in data and type in onto is simpleText/Paragraph, then use UnformattedTextValue
  *   - [ ] if standard mapping in data and type in onto is simpleText/Paragraph, then use FormattedTextValue
  *   - [ ] if no mapping in data and type in onto is richtext, then use FormattedTextValue
- *   - [ ] if standard mapping in data and type in onto is richtext, then use FormattedTextValue
  *   - [ ] if custom mapping in data and type in onto is richtext, then use CustomFormattedTextValue
  *
  *   - [ ] if data mixes standard and custom mapping, then throw exception
