@@ -2,6 +2,7 @@
  * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
@@ -247,6 +248,46 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
       val res4: Boolean = repo.doAsk(query4)
       assert(res4, "The textarea text value with markup should not have been modified.")
     }
+
+    "change the data to use StandardMapping, if no mapping is used but the ontology defines the property as Richtext" in {
+      // run the transformation on the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_d.trig")
+      val plugin          = new UpgradePluginXXX(log)
+      plugin.transform(model)
+      val repo = model.asRepository
+
+      // check the ontology
+      val query1 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |PREFIX freetest: <http://www.knora.org/ontology/0001/freetest#>
+           |ASK 
+           |FROM <http://www.knora.org/ontology/0001/freetest>
+           |WHERE { freetest:hasText knora-base:objectClassConstraint knora-base:FormattedTextValue . }
+           |""".stripMargin
+      val res1 = repo.doAsk(query1)
+      assert(res1, "The objectClassConstraint in the ontology should have been changed to FormattedTextValue.")
+
+      // check the data
+      val query2 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK
+           |FROM <http://www.knora.org/data/0001/freetest>
+           |WHERE {
+           |    BIND (<http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg> as ?s)
+           |    ?s a knora-base:FormattedTextValue .
+           |    ?s knora-base:valueHasString "simple text" .
+           |    ?s knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
+           |    ?s knora-base:valueHasMaxStandoffStartIndex 1 .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/0> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/1> .
+           |}
+           |""".stripMargin
+      val res2 = repo.doAsk(query2)
+      assert(
+        res2,
+        "The text value defined as Richtext in the ontology should have been changed to use StandardMapping."
+      )
+    }
   }
 }
 
@@ -254,7 +295,6 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
  *
  * What needs to be covered in the test:
  *
- *   - [ ] if no mapping in data and type in onto is richtext, then use FormattedTextValue
  *   - [ ] if custom mapping in data and type in onto is richtext, then use CustomFormattedTextValue
  *
  *   - [ ] if data mixes standard and custom mapping, then throw exception

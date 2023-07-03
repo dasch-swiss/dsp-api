@@ -330,7 +330,7 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
       case (UnformattedText, None) => changeTypeToUnformattedTextValue(adjustable)
       case (UnformattedText, Some(KnoraBase.StandardMapping)) =>
         throw InconsistentRepositoryDataException(
-          s"value ${adjustable.valueIri} has standard mapping but is defined as unformatted text."
+          s"value ${adjustable.valueIri} has standard mapping but is defined as unformatted text after verification (should never happen)."
         )
       case (FormattedText, None)                            => addStandardMappingToValue(model, adjustable)
       case (FormattedText, Some(KnoraBase.StandardMapping)) => changeTypeToFormattedTextValue(adjustable)
