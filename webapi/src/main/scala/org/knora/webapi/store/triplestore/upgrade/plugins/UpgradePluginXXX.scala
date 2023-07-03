@@ -327,13 +327,13 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     prop: TextValueProp
   ): Option[DataAdjustment] =
     (prop.textType, adjustable.mapping) match {
-      case (UnformattedText, None) => None
+      case (UnformattedText, None) => changeTypeToUnformattedTextValue(adjustable)
       case (UnformattedText, Some(KnoraBase.StandardMapping)) =>
         throw InconsistentRepositoryDataException(
           s"value ${adjustable.valueIri} has standard mapping but is defined as unformatted text."
         )
       case (FormattedText, None)                            => addStandardMappingToValue(model, adjustable)
-      case (FormattedText, Some(KnoraBase.StandardMapping)) => None
+      case (FormattedText, Some(KnoraBase.StandardMapping)) => changeTypeToFormattedTextValue(adjustable)
       case (UnformattedText | FormattedText, Some(mapping)) =>
         throw InconsistentRepositoryDataException(
           s"Unexpected custom mapping $mapping found on value ${adjustable.valueIri}."
@@ -342,6 +342,37 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
         throw InconsistentRepositoryDataException(s"Cannot create custom mapping in plugin for $prop")
       case (CustomFormattedText, Some(mapping)) => None
     }
+
+  private def changeTypeToFormattedTextValue(adjustable: AdjustableData): Option[DataAdjustment] =
+    changeType(adjustable, KnoraBase.FormattedTextValue)
+
+  private def changeTypeToUnformattedTextValue(adjustable: AdjustableData): Option[DataAdjustment] =
+    changeType(adjustable, KnoraBase.UnformattedTextValue)
+
+  private def changeType(adjustable: AdjustableData, newType: IRI): Option[DataAdjustment] =
+    Some(
+      DataAdjustment(
+        graph = adjustable.graph,
+        resourceIri = adjustable.resourceIri,
+        valueIri = adjustable.valueIri,
+        statementsToRemove = Set(
+          nodeFactory.makeStatement(
+            subj = nodeFactory.makeIriNode(adjustable.valueIri),
+            pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
+            obj = nodeFactory.makeIriNode(KnoraBase.TextValue),
+            context = Some(adjustable.graph)
+          )
+        ),
+        statementsToInsert = Set(
+          nodeFactory.makeStatement(
+            subj = nodeFactory.makeIriNode(adjustable.valueIri),
+            pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
+            obj = nodeFactory.makeIriNode(newType),
+            context = Some(adjustable.graph)
+          )
+        )
+      )
+    )
 
   private def addStandardMappingToValue(model: RdfModel, adjustable: AdjustableData): Option[DataAdjustment] = {
     val newMappingStatement: Statement = nodeFactory.makeStatement(
