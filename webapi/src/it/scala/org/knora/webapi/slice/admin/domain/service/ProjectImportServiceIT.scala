@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import dsp.valueobjects.Project
+import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.{Fuseki, Triplestore}
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import zio._
@@ -26,9 +27,9 @@ object ProjectImportServiceIT extends ZIOSpecDefault {
 
   private val dspIngestClientLayer: ULayer[DspIngestClient] = ZLayer.succeed {
     new DspIngestClient {
-      override def exportProject(shortCode: Project.ShortCode): ZIO[Scope, Throwable, Path] =
+      override def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
         ZIO.succeed(Path("unused"))
-      override def importProject(shortCode: Project.ShortCode, fileToImport: Path): Task[Path] =
+      override def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] =
         ZIO.succeed(Path("unused"))
     }
   }
