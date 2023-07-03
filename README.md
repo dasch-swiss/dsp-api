@@ -9,7 +9,7 @@
 The Dsp-Ingest service is designed to streamline and optimize the process of ingesting and managing data within the
 DaSCH Service Platform.
 By automating the ingestion process, Dsp-Ingest enables efficient data collection, transformation, transcoding,
-meta-data extraction, and storage, ensuring that the data is readily available for serving with Sipi.
+metadata extraction, and storage, ensuring that the data is readily available for serving with Sipi.
 This service aims to enhance the overall performance and effectiveness of DSP applications by simplifying and
 accelerating the data ingestion workflow.
 
