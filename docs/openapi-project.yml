@@ -6,7 +6,7 @@ info:
     The Project API is used to manage assets of a project.
     All endpoints are secured with [Bearer authentication](api-authentication.md).
   contact:
-    name: dsp-ingest API
+    name: Dsp-Ingest API
     email: info@dasch.swiss
     url: https://dasch.swiss
 servers:
