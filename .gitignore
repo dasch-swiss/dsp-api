@@ -18,6 +18,7 @@ webapi-it
 webapi-test
 upgrade/project
 sipi/test
+sipi/tmp-dsp-ingest/
 /docs/architecture/.structurizr
 /docs/architecture/workspace.json
 
