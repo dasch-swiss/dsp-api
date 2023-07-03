@@ -16,24 +16,24 @@ import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.stream.ZSink
 
-import dsp.valueobjects.Project.ShortCode
+import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.routing.JwtService
 
 @accessible
 trait DspIngestClient {
-  def exportProject(shortCode: ShortCode): ZIO[Scope, Throwable, Path]
+  def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path]
 
-  def importProject(shortCode: ShortCode, fileToImport: Path): Task[Path]
+  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
 }
 final case class DspIngestClientLive(
   jwtService: JwtService,
   dspIngestConfig: DspIngestConfig
 ) extends DspIngestClient {
 
-  def exportProject(shortCode: ShortCode): ZIO[Scope, Throwable, Path] =
+  def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
     for {
-      exportUrl <- ZIO.fromEither(URL.fromString(s"${dspIngestConfig.baseUrl}/project/${shortCode.value}/export"))
+      exportUrl <- ZIO.fromEither(URL.fromString(s"${dspIngestConfig.baseUrl}/project/${shortcode.value}/export"))
       token     <- jwtService.createJwtForDspIngest()
       request = Request
                   .post(Body.empty, exportUrl)
@@ -44,9 +44,9 @@ final case class DspIngestClientLive(
       _         <- response.body.asStream.run(ZSink.fromFile(exportFile.toFile))
     } yield exportFile
 
-  def importProject(shortCode: ShortCode, fileToImport: Path): Task[Path] = ZIO.scoped {
+  def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
     for {
-      importUrl <- ZIO.fromEither(URL.fromString(s"${dspIngestConfig.baseUrl}/project/${shortCode.value}/import"))
+      importUrl <- ZIO.fromEither(URL.fromString(s"${dspIngestConfig.baseUrl}/project/${shortcode.value}/import"))
       token     <- jwtService.createJwtForDspIngest()
       request = Request
                   .post(Body.fromFile(fileToImport.toFile), importUrl)

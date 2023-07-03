@@ -9,9 +9,11 @@ import zio.test._
 
 import java.util.UUID
 
+import dsp.valueobjects.Project.Shortcode
+
 object IdSpec extends ZIOSpecDefault {
 
-  private val shortCode = Project.ShortCode.make("0001").fold(e => throw e.head, v => v)
+  private val shortcode = Shortcode.make("0001").fold(e => throw e.head, v => v)
   private val uuid      = UUID.randomUUID
   private val iri = Iri.ProjectIri
     .make(s"http://rdfh.ch/projects/${UUID.randomUUID}")
@@ -23,23 +25,23 @@ object IdSpec extends ZIOSpecDefault {
   val projectIdTests = suite("ProjectId")(
     test("should create an ID from only a shortcode") {
       (for {
-        projectId <- ProjectId.make(shortCode)
-      } yield assertTrue(projectId.shortCode == shortCode) &&
+        projectId <- ProjectId.make(shortcode)
+      } yield assertTrue(projectId.shortcode == shortcode) &&
         assertTrue(!projectId.iri.value.isEmpty()) &&
         assertTrue(!projectId.uuid.toString().isEmpty())).toZIO
     },
     test("should create an ID from a shortcode and a UUID") {
       val expectedIri = Iri.ProjectIri.make(s"http://rdfh.ch/projects/$uuid").fold(e => throw e.head, v => v)
       (for {
-        projectId <- ProjectId.fromUuid(uuid, shortCode)
-      } yield assertTrue(projectId.shortCode == shortCode) &&
+        projectId <- ProjectId.fromUuid(uuid, shortcode)
+      } yield assertTrue(projectId.shortcode == shortcode) &&
         assertTrue(projectId.iri == expectedIri) &&
         assertTrue(projectId.uuid == uuid)).toZIO
     },
     test("should create an ID from a shortcode and an IRI") {
       (for {
-        projectId <- ProjectId.fromIri(iri, shortCode)
-      } yield assertTrue(projectId.shortCode == shortCode) &&
+        projectId <- ProjectId.fromIri(iri, shortcode)
+      } yield assertTrue(projectId.shortcode == shortcode) &&
         assertTrue(projectId.iri == iri) &&
         assertTrue(projectId.uuid.toString().length() == 36)).toZIO
     }

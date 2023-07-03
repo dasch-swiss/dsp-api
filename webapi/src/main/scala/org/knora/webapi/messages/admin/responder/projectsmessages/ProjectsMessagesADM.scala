@@ -513,12 +513,12 @@ object ProjectIdentifierADM {
   /**
    * Represents [[ShortcodeIdentifier]] identifier.
    *
-   * @param value that constructs the identifier in the type of [[ShortCode]] value object.
+   * @param value that constructs the identifier in the type of [[Shortcode]] value object.
    */
-  final case class ShortcodeIdentifier(value: ShortCode) extends ProjectIdentifierADM
+  final case class ShortcodeIdentifier(value: Shortcode) extends ProjectIdentifierADM
   object ShortcodeIdentifier {
     def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
-      ShortCode.make(value).map {
+      Shortcode.make(value).map {
         ShortcodeIdentifier(_)
       }
   }

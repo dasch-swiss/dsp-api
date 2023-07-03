@@ -117,7 +117,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val payload = ProjectCreatePayloadADM(
       None,
       TestDataFactory.projectShortName("newproject"),
-      TestDataFactory.projectShortCode("3333"),
+      TestDataFactory.projectShortcode("3333"),
       Some(TestDataFactory.projectName("project longname")),
       TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en")))),
       TestDataFactory.projectKeywords(Seq("test", "kewords")),
