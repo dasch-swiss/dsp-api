@@ -31,19 +31,20 @@ object Dependencies {
   val ZioVersion                  = "2.0.15"
 
   // ZIO - all Scala 3 compatible
-  val zio                   = "dev.zio" %% "zio"                       % ZioVersion
-  val zioConfig             = "dev.zio" %% "zio-config"                % ZioConfigVersion
-  val zioConfigMagnolia     = "dev.zio" %% "zio-config-magnolia"       % ZioConfigVersion
-  val zioConfigTypesafe     = "dev.zio" %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioHttpOld            = "io.d11"  %% "zhttp"                     % ZioHttpVersionOld
-  val zioHttp               = "dev.zio" %% "zio-http"                  % ZioHttpVersion
-  val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
-  val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
-  val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
-  val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
-  val zioMacros             = "dev.zio" %% "zio-macros"                % ZioVersion
-  val zioMetricsConnectors  = "dev.zio" %% "zio-metrics-connectors"    % ZioMetricsConnectorsVersion
-  val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
+  val zio                           = "dev.zio" %% "zio"                               % ZioVersion
+  val zioConfig                     = "dev.zio" %% "zio-config"                        % ZioConfigVersion
+  val zioConfigMagnolia             = "dev.zio" %% "zio-config-magnolia"               % ZioConfigVersion
+  val zioConfigTypesafe             = "dev.zio" %% "zio-config-typesafe"               % ZioConfigVersion
+  val zioHttpOld                    = "io.d11"  %% "zhttp"                             % ZioHttpVersionOld
+  val zioHttp                       = "dev.zio" %% "zio-http"                          % ZioHttpVersion
+  val zioJson                       = "dev.zio" %% "zio-json"                          % ZioJsonVersion
+  val zioLogging                    = "dev.zio" %% "zio-logging"                       % ZioLoggingVersion
+  val zioLoggingSlf4jBridge         = "dev.zio" %% "zio-logging-slf4j2-bridge"         % ZioLoggingVersion
+  val zioNio                        = "dev.zio" %% "zio-nio"                           % ZioNioVersion
+  val zioMacros                     = "dev.zio" %% "zio-macros"                        % ZioVersion
+  val zioMetricsConnectors          = "dev.zio" %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion
+  val zioMetricsPrometheusConnector = "dev.zio" %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion
+  val zioPrelude                    = "dev.zio" %% "zio-prelude"                       % ZioPreludeVersion
 
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
@@ -173,6 +174,7 @@ object Dependencies {
     zioNio,
     zioMacros,
     zioMetricsConnectors,
+    zioMetricsPrometheusConnector,
     zioPrelude
   )
 
