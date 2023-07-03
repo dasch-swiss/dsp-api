@@ -78,7 +78,10 @@ object ZipUtility {
    * @param destinationFolder The path to the folder where the content of the zip file is written to.
    */
   def unzipFile(zipFile: Path, destinationFolder: Path): Task[Path] = ZIO.scoped {
-    ZScopedJavaIoStreams.zipInputStream(zipFile).flatMap(unzip(_, destinationFolder)).as(destinationFolder)
+    ZScopedJavaIoStreams
+      .zipInputStream(zipFile)
+      .flatMap(stream => unzip(stream, destinationFolder))
+      .as(destinationFolder)
   }
   private def unzip(zipInput: ZipInputStream, destinationFolder: Path): Task[Path] =
     unzipNextEntry(zipInput, destinationFolder)

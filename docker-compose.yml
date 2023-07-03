@@ -54,7 +54,7 @@ services:
     # command: --config=/sipi/config/sipi.docker-test-config.lua ## command variant to start the sipi container with test routes enabled
     command: --config=/sipi/config/sipi.docker-config.lua
 
-  dsp-ingest:
+  ingest:
     image: daschswiss/dsp-ingest:latest
     ports:
       - "3340:3340"
@@ -62,8 +62,14 @@ services:
       - ${LOCAL_HOME}/sipi/images:/opt/images:delegated
       - ${LOCAL_HOME}/sipi/tmp-dsp-ingest:/opt/temp:delegated
     environment:
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=3340
+      - SERVICE_LOG_FORMAT=text
       - STORAGE_ASSET_DIR=/opt/images
       - STORAGE_TEMP_DIR=/opt/temp
+      - JWT_AUDIENCE=http://localhost:3340
+      - JWT_ISSUER=0.0.0.0:3333
+      - JWT_SECRET=UP 4888, nice 4-8-4 steam engine
 
   api:
     image: daschswiss/knora-api:latest

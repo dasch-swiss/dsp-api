@@ -15,15 +15,16 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
+
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithSipi
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -68,11 +69,12 @@ abstract class ITKnoraLiveSpec
   private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
-  implicit val runtime = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
+  implicit val runtime: Runtime.Scoped[DefaultTestEnvironmentWithSipi] =
+    Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // An effect for getting stuff out, so that we can pass them
   // to some legacy code
-  val routerAndConfig = for {
+  val routerAndConfig: ZIO[AppConfig with AppRouter, Nothing, (AppRouter, AppConfig)] = for {
     router <- ZIO.service[core.AppRouter]
     config <- ZIO.service[AppConfig]
   } yield (router, config)
@@ -81,13 +83,7 @@ abstract class ITKnoraLiveSpec
    * Create router and config by unsafe running them.
    */
   val (router: AppRouter, config: AppConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          routerAndConfig
-        )
-        .getOrThrowFiberFailure()
-    }
+    Unsafe.unsafe(implicit u => runtime.unsafe.run(routerAndConfig).getOrThrowFiberFailure())
 
   implicit lazy val system: akka.actor.ActorSystem     = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher

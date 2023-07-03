@@ -9,14 +9,10 @@ import zio.ULayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.ConstructResponseUtilV2Live
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADMLive
-import org.knora.webapi.messages.util.ValueUtilV1
-import org.knora.webapi.messages.util.ValueUtilV1Live
+import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
@@ -25,76 +21,19 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.admin.GroupsResponderADM
-import org.knora.webapi.responders.admin.GroupsResponderADMLive
-import org.knora.webapi.responders.admin.ListsResponderADM
-import org.knora.webapi.responders.admin.ListsResponderADMLive
-import org.knora.webapi.responders.admin.PermissionsResponderADM
-import org.knora.webapi.responders.admin.PermissionsResponderADMLive
-import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.responders.admin.ProjectsResponderADMLive
-import org.knora.webapi.responders.admin.SipiResponderADM
-import org.knora.webapi.responders.admin.SipiResponderADMLive
-import org.knora.webapi.responders.admin.StoresResponderADM
-import org.knora.webapi.responders.admin.StoresResponderADMLive
-import org.knora.webapi.responders.admin.UsersResponderADM
-import org.knora.webapi.responders.admin.UsersResponderADMLive
-import org.knora.webapi.responders.v1.CkanResponderV1
-import org.knora.webapi.responders.v1.CkanResponderV1Live
-import org.knora.webapi.responders.v1.ListsResponderV1
-import org.knora.webapi.responders.v1.ListsResponderV1Live
-import org.knora.webapi.responders.v1.OntologyResponderV1
-import org.knora.webapi.responders.v1.OntologyResponderV1Live
-import org.knora.webapi.responders.v1.ProjectsResponderV1
-import org.knora.webapi.responders.v1.ProjectsResponderV1Live
-import org.knora.webapi.responders.v1.ResourcesResponderV1
-import org.knora.webapi.responders.v1.ResourcesResponderV1Live
-import org.knora.webapi.responders.v1.SearchResponderV1
-import org.knora.webapi.responders.v1.SearchResponderV1Live
-import org.knora.webapi.responders.v1.StandoffResponderV1
-import org.knora.webapi.responders.v1.StandoffResponderV1Live
-import org.knora.webapi.responders.v1.UsersResponderV1
-import org.knora.webapi.responders.v1.UsersResponderV1Live
-import org.knora.webapi.responders.v1.ValuesResponderV1
-import org.knora.webapi.responders.v1.ValuesResponderV1Live
-import org.knora.webapi.responders.v2.ListsResponderV2
-import org.knora.webapi.responders.v2.ListsResponderV2Live
-import org.knora.webapi.responders.v2.OntologyResponderV2
-import org.knora.webapi.responders.v2.OntologyResponderV2Live
-import org.knora.webapi.responders.v2.ResourceUtilV2
-import org.knora.webapi.responders.v2.ResourceUtilV2Live
-import org.knora.webapi.responders.v2.ResourcesResponderV2
-import org.knora.webapi.responders.v2.ResourcesResponderV2Live
-import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.responders.v2.SearchResponderV2Live
-import org.knora.webapi.responders.v2.StandoffResponderV2
-import org.knora.webapi.responders.v2.StandoffResponderV2Live
-import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.responders.v2.ValuesResponderV2Live
+import org.knora.webapi.responders.admin._
+import org.knora.webapi.responders.v1._
+import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
-import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.AuthenticatorLive
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.domain.service.AssetService
-import org.knora.webapi.slice.admin.domain.service.AssetServiceLive
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
-import org.knora.webapi.slice.admin.domain.service.ProjectADMServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectExportService
-import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService
-import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectImportService
-import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
+import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.slice.common.api.RestPermissionServiceLive
@@ -133,9 +72,8 @@ object LayersLive {
   type DspEnvironmentLive =
     ActorSystem
       with ApiRoutes
-      with AppConfig
+      with AppConfigurations
       with AppRouter
-      with AssetService
       with Authenticator
       with CacheService
       with CacheServiceRequestMessageHandler
@@ -209,7 +147,6 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
-      AssetServiceLive.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
@@ -220,6 +157,7 @@ object LayersLive {
       CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
+      DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
       HttpServer.layer,
