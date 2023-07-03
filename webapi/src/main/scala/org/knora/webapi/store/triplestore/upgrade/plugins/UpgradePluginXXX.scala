@@ -500,29 +500,4 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
       obj = obj.getOrElse(statement.obj),
       context = context.getOrElse(statement.context)
     )
-
-  /*
-   * TODO:
-   *  - go project by project
-   *    -> find all projects
-   *    - for each project, go ontology by ontology
-   *      -> find all ontologies of the project
-   *      - for each ontology, find all properties that have a TextValue as object
-   *         - explicitely defined
-   *         - inherited from kb:hasComment
-   *           -> get the propertie's guiElement and optionally guiAttribute
-   *           -> remove the guiElement and guiAttribute
-   *         - if guiElement was Richtext, see if the data uses StandardMapping (or no mapping at all) or any other mapping
-   *           -> if StandardMapping or no mapping, make the objectClassConstraint FormattedTextValue
-   *           -> if any other mapping, make the objectClassConstraint CustomFormattedTextValue
-   *           -> if standard mapping and custom mapping are used, crash for now!
-   *        - if guiElement was SimpleText or Textarea, see if the data uses any mapping
-   *           -> if yes, treat as above
-   *           -> if no, make the objectClassConstraint UnformattedTextValue
-   *    - for each project data set, adjust the data accordingly
-   *      - for each of the identified properties used in data, get the value object the property points to
-   *        -> adjust the rdf:type according to the determined new objectClassConstraint of the property
-   * ... more?
-   */
-
 }

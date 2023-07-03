@@ -334,11 +334,3 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
     }
   }
 }
-
-/*
- *
- * What needs to be covered in the test:
- *
- *   - [ ] if data mixes standard and custom mapping, then throw exception
- *
- */
