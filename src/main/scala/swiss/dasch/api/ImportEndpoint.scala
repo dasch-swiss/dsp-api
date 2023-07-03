@@ -4,6 +4,7 @@
  */
 
 package swiss.dasch.api
+
 import eu.timepit.refined.auto.autoUnwrap
 import swiss.dasch.api.ApiStringConverters.fromPathVarToProjectShortcode
 import swiss.dasch.config.Configuration.StorageConfig
@@ -26,8 +27,10 @@ import zio.{ Chunk, Exit, Scope, URIO, ZIO, ZNothing }
 
 import java.io.IOException
 import java.util.zip.ZipFile
+
 object ImportEndpoint {
   case class UploadResponse(status: String = "okey")
+
   private object UploadResponse {
     implicit val schema: Schema[UploadResponse]       = DeriveSchema.gen[UploadResponse]
     implicit val encoder: JsonEncoder[UploadResponse] = DeriveJsonEncoder.gen[UploadResponse]
@@ -76,9 +79,11 @@ object ImportEndpoint {
              .whenZIO(Files.size(tempFile).mapBoth(e => ApiProblem.internalError(e), _ == 0))
       _ <-
         ZIO.scoped {
-          val acquire                   = ZIO.attemptBlockingIO(new ZipFile(tempFile.toFile))
+          val acquire = ZIO.attemptBlockingIO(new ZipFile(tempFile.toFile))
+
           def release(zipFile: ZipFile) = ZIO.succeed(zipFile.close())
-          ZIO.acquireRelease(acquire)(release).orElseFail(IllegalArguments(Map("body" -> "body is not a zip file")))
+
+          ZIO.acquireRelease(acquire)(release).orElseFail(IllegalArguments("body", "body is not a zip file"))
         }
     } yield ()).tapError(_ => Files.deleteIfExists(tempFile).mapError(ApiProblem.internalError))
 

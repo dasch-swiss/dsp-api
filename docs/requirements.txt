@@ -1,0 +1,6 @@
+mkdocs
+mkdocs-material
+mkdocs-monorepo-plugin
+mkdocs-include-markdown-plugin
+mkdocs-git-revision-date-plugin
+neoteroi-mkdocs

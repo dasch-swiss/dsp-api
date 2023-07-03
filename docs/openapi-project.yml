@@ -1,0 +1,165 @@
+openapi: 3.0.0
+info:
+  title: Project API
+  version: 0.0.1
+  description: >
+    The Project API is used to manage assets of a project.
+    All endpoints are secured with [Bearer authentication](api-authentication.md).
+  contact:
+    name: dsp-ingest API
+    email: info@dasch.swiss
+    url: https://dasch.swiss
+servers:
+  - url: http://localhost:3340
+    description: Local development server
+  - url: https://ingest.dev.dasch.swiss
+    description: Development server
+
+tags:
+  - name: project
+    description: DaSCH projects
+
+paths:
+  /project:
+    get:
+      summary: List all projects
+      description: List all projects containing assets and return their shortcode
+      operationId: list-projects
+      tags:
+        - project
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        shortcode:
+                          type: string
+                          description: The shortcode of the project.
+                          example: 000F
+
+  /project/{shortcode}/import:
+    post:
+      summary: Imports assets into a project
+      description: >
+        This endpoint imports assets into a project from a zip file.
+        The zip file must contain a directory with all asset of a project.
+      operationId: import-project
+      tags:
+        - project
+      parameters:
+        - name: shortcode
+          in: path
+          description: >
+            The shortcode of the project to import into.
+            Must be a valid shortcode, i.e. four digit hex number with leading zeros.
+            Example: 000F
+          required: true
+          schema:
+            type: string
+        - name: Content-Type
+          in: header
+          description: >
+            The content type of the request body.
+            Must be 'application/zip'.
+          required: true
+          schema:
+            type: string
+            example: application/zip
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the import.
+                    example: okey
+        '400':
+          description: Invalid shortcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IllegalArguments'
+
+  /project/{shortcode}/export:
+    post:
+      summary: Exports assets of a project
+      description: >
+        This endpoint exports all assets of a project as a zip file.
+      operationId: export-project
+      tags:
+        - project
+      parameters:
+        - name: shortcode
+          in: path
+          description: >
+            The shortcode of the project to export.
+            Must be a valid shortcode, i.e. four digit hex number with leading zeros.
+            Example: 000F
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            Content-Disposition:
+              description: >
+                The filename of the exported zip file.
+                The filename is the shortcode of the project.
+              schema:
+                type: string
+              example: 000F.zip
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid shortcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IllegalArguments'
+
+components:
+  schemas:
+    IllegalArgument:
+      type: object
+      properties:
+        argument:
+          type: string
+          description: >
+            The description of the invalid argument.
+          example: "Path variable 'shortcode'"
+        reason:
+          type: string
+          description: >
+            The reason why the argument is invalid.
+          example: "Invalid value 'invalid' must match \"[0-9a-fA-F]{4}\""
+    IllegalArguments:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/IllegalArgument'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: [ ]

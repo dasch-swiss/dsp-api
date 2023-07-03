@@ -18,7 +18,15 @@ object ProjectNotFound {
   def make(shortcode: ProjectShortcode): ProjectNotFound = ProjectNotFound(shortcode.toString)
 }
 
-case class IllegalArguments(errors: Map[String, String]) extends ApiProblem
+case class IllegalArguments(errors: List[IllegalArgument]) extends ApiProblem
+
+object IllegalArguments {
+  def apply(error: IllegalArgument): IllegalArguments = IllegalArguments(List(error))
+
+  def apply(argument: String, reason: String): IllegalArguments = IllegalArguments(IllegalArgument(argument, reason))
+}
+
+case class IllegalArgument(argument: String, reason: String)
 
 case class InternalProblem(errorMessage: String) extends ApiProblem
 
@@ -27,25 +35,26 @@ object ApiProblem {
   implicit val projectNotFoundSchema: Schema[ProjectNotFound]         = DeriveSchema.gen[ProjectNotFound]
   implicit val illegalArgumentsEncoder: JsonEncoder[IllegalArguments] = DeriveJsonEncoder.gen[IllegalArguments]
   implicit val illegalArgumentsSchema: Schema[IllegalArguments]       = DeriveSchema.gen[IllegalArguments]
+  implicit val illegalArgumentEncoder: JsonEncoder[IllegalArgument]   = DeriveJsonEncoder.gen[IllegalArgument]
   implicit val internalErrorEncoder: JsonEncoder[InternalProblem]     = DeriveJsonEncoder.gen[InternalProblem]
   implicit val internalErrorSchema: Schema[InternalProblem]           = DeriveSchema.gen[InternalProblem]
 
   def internalError(t: Throwable): InternalProblem =
     InternalProblem(t.getMessage)
 
-  val bodyIsEmpty: IllegalArguments = IllegalArguments(Map("Invalid request body" -> "Body is empty"))
+  val bodyIsEmpty: IllegalArguments = IllegalArguments("Body", "Body is empty")
 
   def invalidPathVariable(
       key: String,
       value: String,
       reason: String,
-    ): IllegalArguments = IllegalArguments(Map(s"Invalid path var: '$key''" -> s"'$value' is invalid: $reason"))
+    ): IllegalArguments = IllegalArguments(s"Path variable: '$key''", s"'$value' is invalid: $reason")
 
   def invalidHeader(
       key: String,
       value: String,
       reason: String,
-    ): IllegalArguments = IllegalArguments(Map(s"Invalid header: '$key''" -> s"'$value' is invalid: $reason"))
+    ): IllegalArguments = IllegalArguments(s"Header: '$key''", s"'$value' is invalid: $reason")
 
   def invalidHeaderContentType(actual: ContentType, expected: ContentType): IllegalArguments =
     invalidHeader("Content-Type", actual.toString, s"expected '$expected'")

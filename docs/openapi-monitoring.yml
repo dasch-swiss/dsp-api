@@ -1,0 +1,91 @@
+openapi: 3.0.0
+info:
+  title: Monitoring API
+  version: 1.0.0
+  description: >
+    These endpoints are used to operate the service and provide information about the service.
+    These endpoints are not secured.
+servers:
+  - url: http://localhost:3340
+    description: Local Development server
+  - url: https://ingest.dev.dasch.swiss
+    description: Development server
+paths:
+  /info:
+    get:
+      summary: Information about the service artifact
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: The name of the service
+                    example: dsp-ingest
+                  version:
+                    type: string
+                    description: The version of the service
+                    example: 0.0.1
+                  scalaVersion:
+                    type: string
+                    description: The scala version of the service
+                    example: 3.3.0
+                  sbtVersion:
+                    type: string
+                    description: The sbt version of the service
+                    example: 1.9.0
+                  buildTime:
+                    type: string
+                    format: date-time
+                    description: The build time of the service
+                    example: 2021-05-31T14:00:00Z
+                  gitCommit:
+                    type: string
+                    description: The git commit of the service
+                    example: 1234567890abcdef
+  /health:
+    get:
+      summary: The health of the service
+      description: >
+        The health of the service is determined by the presence of the correct filesystem structure.
+      responses:
+        '200':
+          description: The service is healthy response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Invalid shortcode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+  /metrics:
+    get:
+      summary: The metrics of the service
+      description: >
+        The metrics of the service are provided in [Prometheus](https://prometheus.io/docs/introduction/overview/) format.
+      responses:
+        '200':
+          description: The service metrics response
+          content:
+            text/plain:
+              example: >
+                # TYPE jvm_memory_pool_allocated_bytes_total counter
+                # HELP jvm_memory_pool_allocated_bytes_total
+                jvm_memory_pool_allocated_bytes_total{pool="G1 Old Gen",} 8320000.0 1688211033430
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the service, either UP or DOWN
+          example: UP

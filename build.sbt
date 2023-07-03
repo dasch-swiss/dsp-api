@@ -25,7 +25,6 @@ ThisBuild / organization      := "dasch.swiss"
 ThisBuild / version           := gitVersion
 ThisBuild / scalaVersion      := "3.3.0"
 ThisBuild / fork              := true
-ThisBuild / semanticdbEnabled := true
 
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
