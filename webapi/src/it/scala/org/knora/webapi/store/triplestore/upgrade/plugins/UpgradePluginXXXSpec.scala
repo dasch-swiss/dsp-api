@@ -288,6 +288,43 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
         "The text value defined as Richtext in the ontology should have been changed to use StandardMapping."
       )
     }
+
+    "update the objectClassConstraint and type for values with custom mapping" in {
+      // run the transformation on the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_e.trig")
+      val plugin          = new UpgradePluginXXX(log)
+      plugin.transform(model)
+      val repo = model.asRepository
+
+      // check the ontology
+      val query1 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |PREFIX freetest: <http://www.knora.org/ontology/0001/freetest#>
+           |ASK 
+           |FROM <http://www.knora.org/ontology/0001/freetest>
+           |WHERE { freetest:hasText knora-base:objectClassConstraint knora-base:CustomFormattedTextValue . }
+           |""".stripMargin
+      val res1 = repo.doAsk(query1)
+      assert(res1, "The objectClassConstraint in the ontology should have been changed to CustomFormattedTextValue.")
+
+      // check the data
+      val query2 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK
+           |FROM <http://www.knora.org/data/0001/freetest>
+           |WHERE {
+           |    BIND (<http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg> as ?s)
+           |    ?s a knora-base:CustomFormattedTextValue .
+           |    ?s knora-base:valueHasString "simple text" .
+           |    ?s knora-base:valueHasMapping <http://rdfh.ch/projects/0001/mappings/freetestCustomMapping> .
+           |    ?s knora-base:valueHasMaxStandoffStartIndex 1 .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/0> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/1> .
+           |}
+           |""".stripMargin
+      val res2 = repo.doAsk(query2)
+      assert(res2, "The text value with custom mapping should have only updated the type.")
+    }
   }
 }
 
@@ -295,9 +332,6 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
  *
  * What needs to be covered in the test:
  *
- *   - [ ] if custom mapping in data and type in onto is richtext, then use CustomFormattedTextValue
- *
  *   - [ ] if data mixes standard and custom mapping, then throw exception
- *   - [ ] if data mixes standard mapping and no mapping, then add minimal standoff to the ones without mapping
  *
  */
