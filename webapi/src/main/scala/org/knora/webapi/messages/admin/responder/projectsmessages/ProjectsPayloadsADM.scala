@@ -17,7 +17,7 @@ import dsp.valueobjects.Project._
  */
 final case class ProjectCreatePayloadADM(
   id: Option[ProjectIri] = None,
-  shortname: ShortName,
+  shortname: Shortname,
   shortcode: ShortCode,
   longname: Option[Name] = None,
   description: ProjectDescription,
@@ -33,7 +33,7 @@ object ProjectCreatePayloadADM {
 
   def make(apiRequest: CreateProjectApiRequestADM): Validation[Throwable, ProjectCreatePayloadADM] = {
     val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
-    val shortname: Validation[Throwable, ShortName]            = ShortName.make(apiRequest.shortname)
+    val shortname: Validation[Throwable, Shortname]            = Shortname.make(apiRequest.shortname)
     val shortcode: Validation[Throwable, ShortCode]            = ShortCode.make(apiRequest.shortcode)
     val longname: Validation[Throwable, Option[Name]]          = Name.make(apiRequest.longname)
     val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
@@ -51,7 +51,7 @@ object ProjectCreatePayloadADM {
  * Project update payload
  */
 final case class ProjectUpdatePayloadADM(
-  shortname: Option[ShortName] = None,
+  shortname: Option[Shortname] = None,
   longname: Option[Name] = None,
   description: Option[ProjectDescription] = None,
   keywords: Option[Keywords] = None,
@@ -65,7 +65,7 @@ object ProjectUpdatePayloadADM {
   implicit val codec: JsonCodec[ProjectUpdatePayloadADM] = DeriveJsonCodec.gen[ProjectUpdatePayloadADM]
 
   def make(apiRequest: ChangeProjectApiRequestADM): Validation[Throwable, ProjectUpdatePayloadADM] = {
-    val shortname: Validation[ValidationException, Option[ShortName]] = ShortName.make(apiRequest.shortname)
+    val shortname: Validation[ValidationException, Option[Shortname]] = Shortname.make(apiRequest.shortname)
     val longname: Validation[Throwable, Option[Name]]                 = Name.make(apiRequest.longname)
     val description: Validation[Throwable, Option[ProjectDescription]] =
       ProjectDescription.make(apiRequest.description)

@@ -116,7 +116,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val createProjectSpec: Spec[Any, Throwable] = test("create a project") {
     val payload = ProjectCreatePayloadADM(
       None,
-      TestDataFactory.projectShortName("newproject"),
+      TestDataFactory.projectShortname("newproject"),
       TestDataFactory.projectShortCode("3333"),
       Some(TestDataFactory.projectName("project longname")),
       TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en")))),
@@ -160,7 +160,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val iri        = "http://rdfh.ch/projects/0001"
     val projectIri = TestDataFactory.projectIri(iri)
     val projectUpdatePayload = ProjectUpdatePayloadADM(
-      Some(TestDataFactory.projectShortName("usn")),
+      Some(TestDataFactory.projectShortname("usn")),
       Some(TestDataFactory.projectName("updated project longname")),
       Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
       Some(TestDataFactory.projectKeywords(Seq("updated", "kewords"))),

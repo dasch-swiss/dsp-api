@@ -34,10 +34,10 @@ object ITTestDataFactory {
       .make(shortCode)
       .getOrElse(throw new IllegalArgumentException(s"Invalid ShortCode $shortCode."))
 
-  def projectShortName(shortName: String): ShortName =
-    ShortName
-      .make(shortName)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ShortName $shortName."))
+  def projectShortname(shortname: String): Shortname =
+    Shortname
+      .make(shortname)
+      .getOrElse(throw new IllegalArgumentException(s"Invalid Shortname $shortname."))
 
   def projectName(name: String): Name =
     Name

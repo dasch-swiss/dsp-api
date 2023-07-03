@@ -91,25 +91,25 @@ object Project {
   }
 
   /**
-   * Project ShortName value object.
+   * Project Shortname value object.
    */
-  sealed abstract case class ShortName private (value: String)
-  object ShortName { self =>
-    implicit val decoder: JsonDecoder[ShortName] = JsonDecoder[String].mapOrFail { case value =>
-      ShortName.make(value).toEitherWith(e => e.head.getMessage())
+  sealed abstract case class Shortname private (value: String)
+  object Shortname { self =>
+    implicit val decoder: JsonDecoder[Shortname] = JsonDecoder[String].mapOrFail { case value =>
+      Shortname.make(value).toEitherWith(e => e.head.getMessage())
     }
-    implicit val encoder: JsonEncoder[ShortName] =
-      JsonEncoder[String].contramap((shortName: ShortName) => shortName.value)
+    implicit val encoder: JsonEncoder[Shortname] =
+      JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
 
-    def make(value: String): Validation[ValidationException, ShortName] =
-      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
+    def make(value: String): Validation[ValidationException, Shortname] =
+      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing))
       else
         Validation
           .fromOption(validateAndEscapeProjectShortname(value))
-          .mapError(_ => ValidationException(ProjectErrorMessages.ShortNameInvalid(value)))
-          .map(new ShortName(_) {})
+          .mapError(_ => ValidationException(ProjectErrorMessages.ShortnameInvalid(value)))
+          .map(new Shortname(_) {})
 
-    def make(value: Option[String]): Validation[ValidationException, Option[ShortName]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[Shortname]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -266,8 +266,8 @@ object Project {
 object ProjectErrorMessages {
   val ShortCodeMissing           = "ShortCode cannot be empty."
   val ShortCodeInvalid           = (v: String) => s"ShortCode is invalid: $v"
-  val ShortNameMissing           = "Shortname cannot be empty."
-  val ShortNameInvalid           = (v: String) => s"Shortname is invalid: $v"
+  val ShortnameMissing           = "Shortname cannot be empty."
+  val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
   val NameMissing                = "Name cannot be empty."
   val NameInvalid                = (v: String) => s"Name is invalid: $v"
   val ProjectDescriptionsMissing = "Description cannot be empty."

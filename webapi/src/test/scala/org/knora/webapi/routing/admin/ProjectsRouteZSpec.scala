@@ -200,7 +200,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val request = Request.post(url = URL(basePathProjects), body = body)
       val user    = KnoraSystemInstances.Users.SystemUser
 
-      val shortname   = TestDataFactory.projectShortName("newproject")
+      val shortname   = TestDataFactory.projectShortname("newproject")
       val shortcode   = TestDataFactory.projectShortCode("3333")
       val longname    = TestDataFactory.projectName("project longname")
       val description = TestDataFactory.projectDescription(Seq(V2.StringLiteralV2("project description", Some("en"))))
@@ -308,7 +308,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   val updateProjectSpec: Spec[Any, Serializable] = suite("update a project")(
     test("successfully update a project") {
       val projectIri         = TestDataFactory.projectIri("http://rdfh.ch/projects/0001")
-      val updatedShortname   = TestDataFactory.projectShortName("usn")
+      val updatedShortname   = TestDataFactory.projectShortname("usn")
       val updatedLongname    = TestDataFactory.projectName("updated project longname")
       val updatedDescription = TestDataFactory.projectDescription(Seq(V2.StringLiteralV2("updated desc", Some("en"))))
       val updatedKeywords    = TestDataFactory.projectKeywords(Seq("updated", "keywords"))
