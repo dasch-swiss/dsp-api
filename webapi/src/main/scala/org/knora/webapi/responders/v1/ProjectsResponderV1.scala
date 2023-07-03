@@ -259,7 +259,7 @@ final case class ProjectsResponderV1Live(
   /**
    * Gets the project with the given shortname and returns the information as a [[ProjectInfoResponseV1]].
    *
-   * @param shortName            the shortname of the project requested.
+   * @param shortname            the shortname of the project requested.
    *
    * @param userProfile          the profile of user that is making the request.
    * @return information about the project as a [[ProjectInfoResponseV1]].
@@ -267,14 +267,14 @@ final case class ProjectsResponderV1Live(
    *         [[NotFoundException]] in the case that no project for the given shortname can be found.
    */
   private def projectInfoByShortnameGetRequestV1(
-    shortName: String,
+    shortname: String,
     userProfile: Option[UserProfileV1]
   ): Task[ProjectInfoResponseV1] =
     for {
       sparqlQueryString <- ZIO.attempt(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getProjectByShortname(
-                                 shortname = shortName
+                                 shortname = shortname
                                )
                                .toString()
                            )
@@ -284,7 +284,7 @@ final case class ProjectsResponderV1Live(
       projectIri <-
         ZIO
           .fromOption(projectResponse.results.bindings.headOption)
-          .mapBoth(_ => NotFoundException(s"Project '$shortName' not found"), _.rowMap("s"))
+          .mapBoth(_ => NotFoundException(s"Project '$shortname' not found"), _.rowMap("s"))
 
       ontologiesForProjects <- getOntologiesForProjects(
                                  projectIris = Set(projectIri),

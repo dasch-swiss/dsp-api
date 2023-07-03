@@ -62,8 +62,8 @@ final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends 
 
   private def toProjectExportInfo(projectDirAndFile: (Path, Path)) = {
     val (projectDirectory, exportFile) = projectDirAndFile
-    val projectShortName               = projectDirectory.filename.toString()
-    ProjectExportInfo(projectShortName, exportFile)
+    val projectShortname               = projectDirectory.filename.toString()
+    ProjectExportInfo(projectShortname, exportFile)
   }
 }
 
