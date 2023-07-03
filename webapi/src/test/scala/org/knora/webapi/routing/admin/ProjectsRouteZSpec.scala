@@ -179,7 +179,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
-        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortcode is invalid: XY"}""")
     }
   )
 
@@ -201,7 +201,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val user    = KnoraSystemInstances.Users.SystemUser
 
       val shortname   = TestDataFactory.projectShortname("newproject")
-      val shortcode   = TestDataFactory.projectShortCode("3333")
+      val shortcode   = TestDataFactory.projectShortcode("3333")
       val longname    = TestDataFactory.projectName("project longname")
       val description = TestDataFactory.projectDescription(Seq(V2.StringLiteralV2("project description", Some("en"))))
       val keywords    = TestDataFactory.projectKeywords(Seq("test project"))
@@ -486,7 +486,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
-        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortcode is invalid: XY"}""")
     },
     test("get all members by project shortname") {
       val shortname  = "someProject"
@@ -576,7 +576,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
         bodyAsString <- response.body.asString
       } yield assertTrue(response.status == Status.BadRequest) &&
-        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
+        assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortcode is invalid: XY"}""")
     },
     test("get all project admins by project shortname") {
       val shortname  = "someProject"
@@ -737,7 +737,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
           response     <- applyRoutes(request).provide(ProjectADMRestServiceMock.empty)
           bodyAsString <- response.body.asString
         } yield assertTrue(response.status == Status.BadRequest) &&
-          assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: ShortCode is invalid: XY"}""")
+          assertTrue(bodyAsString == """{"error":"dsp.errors.BadRequestException: Shortcode is invalid: XY"}""")
       }
     )
 }

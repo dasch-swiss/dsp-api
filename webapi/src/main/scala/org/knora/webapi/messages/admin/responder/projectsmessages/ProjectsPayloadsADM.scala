@@ -18,7 +18,7 @@ import dsp.valueobjects.Project._
 final case class ProjectCreatePayloadADM(
   id: Option[ProjectIri] = None,
   shortname: Shortname,
-  shortcode: ShortCode,
+  shortcode: Shortcode,
   longname: Option[Name] = None,
   description: ProjectDescription,
   keywords: Keywords,
@@ -34,7 +34,7 @@ object ProjectCreatePayloadADM {
   def make(apiRequest: CreateProjectApiRequestADM): Validation[Throwable, ProjectCreatePayloadADM] = {
     val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
     val shortname: Validation[Throwable, Shortname]            = Shortname.make(apiRequest.shortname)
-    val shortcode: Validation[Throwable, ShortCode]            = ShortCode.make(apiRequest.shortcode)
+    val shortcode: Validation[Throwable, Shortcode]            = Shortcode.make(apiRequest.shortcode)
     val longname: Validation[Throwable, Option[Name]]          = Name.make(apiRequest.longname)
     val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
     val keywords: Validation[Throwable, Keywords]              = Keywords.make(apiRequest.keywords)

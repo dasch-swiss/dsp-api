@@ -17,8 +17,8 @@ import dsp.valueobjects.Project._
  * This spec is used to test the [[Project]] value objects creation.
  */
 object ProjectSpec extends ZIOSpecDefault {
-  private val validShortCode   = "1234"
-  private val invalidShortCode = "12345"
+  private val validShortcode   = "1234"
+  private val invalidShortcode = "12345"
   private val validShortname1  = "valid-shortname"
   private val validShortname2  = "valid_1111"
   private val validName        = "That is the project longname"
@@ -29,7 +29,7 @@ object ProjectSpec extends ZIOSpecDefault {
   private val validLogo     = "/fu/bar/baz.jpg"
 
   def spec = suite("ProjectSpec")(
-    shortCodeTest,
+    shortcodeTest,
     shortnameTest,
     nameTest,
     projectDescriptionsTest,
@@ -39,39 +39,35 @@ object ProjectSpec extends ZIOSpecDefault {
     projectSelfJoinTest
   )
 
-  private val shortCodeTest = suite("ProjectSpec - ShortCode")(
+  private val shortcodeTest = suite("ProjectSpec - Shortcode")(
     test("pass an empty value and return an error") {
       assertTrue(
-        ShortCode.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
-      ) &&
-      assertTrue(
-        ShortCode.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
+        Shortcode.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing)),
+        Shortcode.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        ShortCode.make(invalidShortCode) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortCodeInvalid(invalidShortCode))
-        )
-      ) &&
-      assertTrue(
-        ShortCode.make(Some(invalidShortCode)) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortCodeInvalid(invalidShortCode))
+        Shortcode.make(invalidShortcode) == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortcode))
+        ),
+        Shortcode.make(Some(invalidShortcode)) == Validation.fail(
+          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortcode))
         )
       )
     },
     test("pass a valid value and successfully create value object") {
       for {
-        shortCode           <- ShortCode.make(validShortCode).toZIO
-        optionalShortCode   <- ShortCode.make(Option(validShortCode)).toZIO
-        shortCodeFromOption <- ZIO.fromOption(optionalShortCode)
-      } yield assertTrue(shortCode.value == validShortCode) &&
-        assert(optionalShortCode)(isSome(isSubtype[ShortCode](Assertion.anything))) &&
-        assertTrue(shortCodeFromOption.value == validShortCode)
+        shortcode           <- Shortcode.make(validShortcode).toZIO
+        optionalShortcode   <- Shortcode.make(Option(validShortcode)).toZIO
+        shortcodeFromOption <- ZIO.fromOption(optionalShortcode)
+      } yield assertTrue(shortcode.value == validShortcode) &&
+        assert(optionalShortcode)(isSome(isSubtype[Shortcode](Assertion.anything))) &&
+        assertTrue(shortcodeFromOption.value == validShortcode)
     },
     test("successfully validate passing None") {
       assertTrue(
-        ShortCode.make(None) == Validation.succeed(None)
+        Shortcode.make(None) == Validation.succeed(None)
       )
     }
   )
@@ -147,7 +143,7 @@ object ProjectSpec extends ZIOSpecDefault {
     },
     test("successfully validate passing None") {
       assertTrue(
-        ShortCode.make(None) == Validation.succeed(None)
+        Shortcode.make(None) == Validation.succeed(None)
       )
     }
   )
@@ -245,9 +241,8 @@ object ProjectSpec extends ZIOSpecDefault {
         status           <- ProjectStatus.make(true).toZIO
         optionalStatus   <- ProjectStatus.make(Option(false)).toZIO
         statusFromOption <- ZIO.fromOption(optionalStatus)
-      } yield assertTrue(status.value == true) &&
-        assert(optionalStatus)(isSome(isSubtype[ProjectStatus](Assertion.anything))) &&
-        assertTrue(statusFromOption.value == false)
+      } yield assertTrue(status.value, !statusFromOption.value) &&
+        assert(optionalStatus)(isSome(isSubtype[ProjectStatus](Assertion.anything)))
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -262,9 +257,8 @@ object ProjectSpec extends ZIOSpecDefault {
         selfJoin           <- ProjectSelfJoin.make(true).toZIO
         optionalSelfJoin   <- ProjectSelfJoin.make(Option(false)).toZIO
         selfJoinFromOption <- ZIO.fromOption(optionalSelfJoin)
-      } yield assertTrue(selfJoin.value == true) &&
-        assert(optionalSelfJoin)(isSome(isSubtype[ProjectSelfJoin](Assertion.anything))) &&
-        assertTrue(selfJoinFromOption.value == false)
+      } yield assertTrue(selfJoin.value, !selfJoinFromOption.value) &&
+        assert(optionalSelfJoin)(isSome(isSubtype[ProjectSelfJoin](Assertion.anything)))
     },
     test("successfully validate passing None") {
       assertTrue(
