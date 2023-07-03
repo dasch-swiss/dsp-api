@@ -34,6 +34,9 @@ object TextType {
     }
 }
 
+/**
+ * Represents a property that has a text value as its object class constraint.
+ */
 final case class TextValueProp(
   graph: IRI,
   project: IRI,
@@ -45,6 +48,9 @@ final case class TextValueProp(
   statementsToRemove: Set[Statement]
 )
 
+/**
+ * Represents a all necessary information to adjust a text value in data.
+ */
 final case class DataAdjustment(
   graph: IRI,
   resourceIri: IRI,
@@ -53,6 +59,9 @@ final case class DataAdjustment(
   statementsToInsert: Set[Statement]
 )
 
+/**
+ * Represents a value that may need to be adjusted.
+ */
 final case class AdjustableData(
   graph: IRI,
   resourceIri: IRI,
@@ -122,6 +131,9 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     log.info("Transformation finished successfully.")
   }
 
+  /**
+   * finds all ontologies in the model and maps them to the project they belong to.
+   */
   def collectOntologyToProjectMap(model: RdfModel): Map[IRI, IRI] = {
     val ontologies: Set[IRI] =
       model
@@ -148,6 +160,9 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     }.toMap
   }
 
+  /**
+   * finds all text value properties in the model and creates a map from ontology to text value property.
+   */
   private def collectTextValuePropIris(model: RdfModel): Map[IRI, Seq[IRI]] =
     model
       .find(
@@ -160,6 +175,14 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
         acc + (k -> (acc.getOrElse(k, Seq.empty[IRI]) :+ v))
       }
 
+  /**
+   * Given a map of text value properties per ontology, creates a set of [[TextValueProp]] objects.
+   *
+   * Notice that these objects are not yet verified against usage in data.
+   * This means that they may not actually be correct.
+   * E.g., if an ontology defines a property as unformatted text, but in data the corresponding values are formatted,
+   * then this property will will need to be adjusted in a separate step (see `verifyTextValueProps`).
+   */
   private def makeTextValueProps(
     model: RdfModel,
     props: Map[IRI, Seq[IRI]],
@@ -278,6 +301,9 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
         |    }
         |}""".stripMargin
 
+  /**
+   * Given a set of verified TextValueProps, produces a set of DataAdjustments that need to be made to the repository.
+   */
   private def collectDataAdjustments(model: RdfModel, props: Set[TextValueProp]): Set[DataAdjustment] = {
     val repo = model.asRepository
     def query(prop: TextValueProp): String =
@@ -309,6 +335,9 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     }
   }
 
+  /**
+   * Given a single verified TextValueProp and a AdjustableData, produces a DataAdjustment that can be applied to the repository.
+   */
   private def collectDataAdjustment(
     model: RdfModel,
     adjustable: AdjustableData,
@@ -331,12 +360,21 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
       case (CustomFormattedText, Some(mapping)) => changeTypeToCustomFormattedTextValue(adjustable)
     }
 
+  /**
+   * Simple DataAdjustment that changes the rdf:type of a value from TextValue to UnformattedTextValue.
+   */
   private def changeTypeToUnformattedTextValue(adjustable: AdjustableData): DataAdjustment =
     changeType(adjustable, KnoraBase.UnformattedTextValue)
 
+  /**
+   * Simple DataAdjustment that changes the rdf:type of a value from TextValue to FormattedTextValue.
+   */
   private def changeTypeToFormattedTextValue(adjustable: AdjustableData): DataAdjustment =
     changeType(adjustable, KnoraBase.FormattedTextValue)
 
+  /**
+   * Simple DataAdjustment that changes the rdf:type of a value from TextValue to CustomFormattedTextValue.
+   */
   private def changeTypeToCustomFormattedTextValue(adjustable: AdjustableData): DataAdjustment =
     changeType(adjustable, KnoraBase.CustomFormattedTextValue)
 
@@ -363,6 +401,9 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
       )
     )
 
+  /**
+   * Creates a complex DataAdjustment that takes an unformatted text value and adds a standard mapping and the minimal set of standoff properties to it.
+   */
   private def addStandardMappingToValue(model: RdfModel, adjustable: AdjustableData): DataAdjustment = {
     val newMappingStatement: Statement = nodeFactory.makeStatement(
       subj = nodeFactory.makeIriNode(adjustable.valueIri),
