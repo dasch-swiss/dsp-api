@@ -25,25 +25,26 @@ object Dependencies {
   val ZioJsonVersion              = "0.5.0"
   val ZioLoggingVersion           = "2.1.13"
   val ZioNioVersion               = "2.0.1"
-  val ZioMetricsConnectorsVersion = "2.0.8"
+  val ZioMetricsConnectorsVersion = "2.1.0"
   val ZioPreludeVersion           = "1.0.0-RC19"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.15"
 
   // ZIO - all Scala 3 compatible
-  val zio                   = "dev.zio" %% "zio"                       % ZioVersion
-  val zioConfig             = "dev.zio" %% "zio-config"                % ZioConfigVersion
-  val zioConfigMagnolia     = "dev.zio" %% "zio-config-magnolia"       % ZioConfigVersion
-  val zioConfigTypesafe     = "dev.zio" %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioHttpOld            = "io.d11"  %% "zhttp"                     % ZioHttpVersionOld
-  val zioHttp               = "dev.zio" %% "zio-http"                  % ZioHttpVersion
-  val zioJson               = "dev.zio" %% "zio-json"                  % ZioJsonVersion
-  val zioLogging            = "dev.zio" %% "zio-logging"               % ZioLoggingVersion
-  val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
-  val zioNio                = "dev.zio" %% "zio-nio"                   % ZioNioVersion
-  val zioMacros             = "dev.zio" %% "zio-macros"                % ZioVersion
-  val zioMetricsConnectors  = "dev.zio" %% "zio-metrics-connectors"    % ZioMetricsConnectorsVersion
-  val zioPrelude            = "dev.zio" %% "zio-prelude"               % ZioPreludeVersion
+  val zio                           = "dev.zio" %% "zio"                               % ZioVersion
+  val zioConfig                     = "dev.zio" %% "zio-config"                        % ZioConfigVersion
+  val zioConfigMagnolia             = "dev.zio" %% "zio-config-magnolia"               % ZioConfigVersion
+  val zioConfigTypesafe             = "dev.zio" %% "zio-config-typesafe"               % ZioConfigVersion
+  val zioHttpOld                    = "io.d11"  %% "zhttp"                             % ZioHttpVersionOld
+  val zioHttp                       = "dev.zio" %% "zio-http"                          % ZioHttpVersion
+  val zioJson                       = "dev.zio" %% "zio-json"                          % ZioJsonVersion
+  val zioLogging                    = "dev.zio" %% "zio-logging"                       % ZioLoggingVersion
+  val zioLoggingSlf4jBridge         = "dev.zio" %% "zio-logging-slf4j2-bridge"         % ZioLoggingVersion
+  val zioNio                        = "dev.zio" %% "zio-nio"                           % ZioNioVersion
+  val zioMacros                     = "dev.zio" %% "zio-macros"                        % ZioVersion
+  val zioMetricsConnectors          = "dev.zio" %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion
+  val zioMetricsPrometheusConnector = "dev.zio" %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion
+  val zioPrelude                    = "dev.zio" %% "zio-prelude"                       % ZioPreludeVersion
 
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
@@ -67,8 +68,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.1" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.1" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.3" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.3" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -78,8 +79,8 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.1.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.73"
+    "org.springframework.security" % "spring-security-core" % "6.1.1" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.75"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
@@ -173,6 +174,7 @@ object Dependencies {
     zioNio,
     zioMacros,
     zioMetricsConnectors,
+    zioMetricsPrometheusConnector,
     zioPrelude
   )
 
