@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
+import dsp.errors.InconsistentRepositoryDataException
 
 class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
@@ -324,6 +325,12 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
            |""".stripMargin
       val res2 = repo.doAsk(query2)
       assert(res2, "The text value with custom mapping should have only updated the type.")
+    }
+
+    "not perform the update, if a property mixes standard and custom mapping" in {
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_f.trig")
+      val plugin          = new UpgradePluginXXX(log)
+      assertThrows[InconsistentRepositoryDataException](plugin.transform(model))
     }
   }
 }

@@ -317,6 +317,7 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
             mapping = row.rowMap.get("mapping")
           )
         )
+      println(s"adjustables: $adjustables")
       adjustables.map(adjustable => collectDataAdjustment(model, adjustable, prop)).toSet
     }
   }
@@ -325,7 +326,8 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     model: RdfModel,
     adjustable: AdjustableData,
     prop: TextValueProp
-  ): DataAdjustment =
+  ): DataAdjustment = {
+    println(s"adjustable: $adjustable     -     ${prop.textType} -> ${adjustable.mapping}")
     (prop.textType, adjustable.mapping) match {
       case (UnformattedText, None) => changeTypeToUnformattedTextValue(adjustable)
       case (UnformattedText, Some(KnoraBase.StandardMapping)) =>
@@ -342,6 +344,7 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
         throw InconsistentRepositoryDataException(s"Cannot create custom mapping in plugin for $prop")
       case (CustomFormattedText, Some(mapping)) => changeTypeToCustomFormattedTextValue(adjustable)
     }
+  }
 
   private def changeTypeToUnformattedTextValue(adjustable: AdjustableData): DataAdjustment =
     changeType(adjustable, KnoraBase.UnformattedTextValue)
