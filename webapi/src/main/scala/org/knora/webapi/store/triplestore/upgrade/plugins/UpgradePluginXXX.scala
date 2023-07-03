@@ -106,10 +106,10 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     val dataStatementsToInsert = dataAdjustments.flatMap(_.statementsToInsert)
     log.debug(s"Found ${dataStatementsToInsert.size} statements in data to insert.")
 
-    val ontologyStatementsToRemove = textValueProps.flatMap(_.statementsToRemove)
+    val ontologyStatementsToRemove = verifiedTextValueProps.flatMap(_.statementsToRemove)
     log.debug(s"Found ${ontologyStatementsToRemove.size} statements in ontologies to remove.")
     println(s"Found ${ontologyStatementsToRemove.size} statements in ontologies to remove.")
-    val ontologyStatementsToInsert = textValueProps.map(tvp =>
+    val ontologyStatementsToInsert = verifiedTextValueProps.map(tvp =>
       nodeFactory.makeStatement(
         tvp.objectClassConstraint.subj,
         tvp.objectClassConstraint.pred,

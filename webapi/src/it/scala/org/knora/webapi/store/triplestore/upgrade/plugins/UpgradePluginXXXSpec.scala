@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
@@ -10,7 +14,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
 
   "Upgrade plugin XXX" should {
     "transform knora-base:hasComment to FormattedTextValue" in {
-      // run the model
+      // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_a.trig")
       val plugin          = new UpgradePluginXXX(log)
       plugin.transform(model)
@@ -57,7 +61,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
     }
 
     "only adjust the objectClassConstraint and the Type, if the ontology and mappings in data align" in {
-      // run the model
+      // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_b.trig")
       val plugin          = new UpgradePluginXXX(log)
       plugin.transform(model)
@@ -167,6 +171,82 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
       val res7: Boolean = repo.doAsk(query7)
       assert(res7, "The richtext text value should have an updated type but the same text value, mapping and standoff.")
     }
+
+    "update the ontology accordingly, if a property is defined as SimpleText/Textarea but uses StandardMapping" in {
+      // run the transformation on the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_c.trig")
+      val plugin          = new UpgradePluginXXX(log)
+      plugin.transform(model)
+      val repo = model.asRepository
+
+      // check the ontology
+      val query1 =
+        """|SELECT ?p ?o 
+           |FROM <http://www.knora.org/ontology/0001/freetest>
+           |WHERE { <http://www.knora.org/ontology/0001/freetest#hasSimpleText> ?p ?o . }
+           |""".stripMargin
+      val res1: SparqlSelectResult     = repo.doSelect(query1)
+      val resMap1: Map[String, String] = res1.results.bindings.map(row => row.rowMap("p") -> row.rowMap("o")).toMap
+      val expected1 = Map(
+        OntologyConstants.Rdf.Type                         -> "http://www.w3.org/2002/07/owl#ObjectProperty",
+        OntologyConstants.Rdfs.Label                       -> "Simple Text",
+        OntologyConstants.Rdfs.SubPropertyOf               -> OntologyConstants.KnoraBase.HasValue,
+        OntologyConstants.KnoraBase.SubjectClassConstraint -> "http://www.knora.org/ontology/0001/freetest#FreeTest",
+        OntologyConstants.KnoraBase.ObjectClassConstraint  -> OntologyConstants.KnoraBase.FormattedTextValue
+      )
+      assert(resMap1 == expected1)
+      val query2 =
+        """|SELECT ?p ?o 
+           |FROM <http://www.knora.org/ontology/0001/freetest>
+           |WHERE { <http://www.knora.org/ontology/0001/freetest#hasTextareaText> ?p ?o . }
+           |""".stripMargin
+      val res2: SparqlSelectResult     = repo.doSelect(query2)
+      val resMap2: Map[String, String] = res2.results.bindings.map(row => row.rowMap("p") -> row.rowMap("o")).toMap
+      val expected2 = Map(
+        OntologyConstants.Rdf.Type                         -> "http://www.w3.org/2002/07/owl#ObjectProperty",
+        OntologyConstants.Rdfs.Label                       -> "Text Area Text",
+        OntologyConstants.Rdfs.SubPropertyOf               -> OntologyConstants.KnoraBase.HasValue,
+        OntologyConstants.KnoraBase.SubjectClassConstraint -> "http://www.knora.org/ontology/0001/freetest#FreeTest",
+        OntologyConstants.KnoraBase.ObjectClassConstraint  -> OntologyConstants.KnoraBase.FormattedTextValue
+      )
+      assert(resMap2 == expected2)
+
+      // check the data
+      val query3 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK
+           |FROM <http://www.knora.org/data/0001/freetest>
+           |WHERE {
+           |    BIND (<http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg> as ?s)
+           |    ?s a knora-base:FormattedTextValue .
+           |    ?s knora-base:valueHasString "simple text with markup" .
+           |    ?s knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
+           |    ?s knora-base:valueHasMaxStandoffStartIndex 2 .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/0> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/1> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/2> .
+           |}
+           |""".stripMargin
+      val res3: Boolean = repo.doAsk(query3)
+      assert(res3, "The simple text value with markup should not have been modified.")
+      val query4 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK
+           |FROM <http://www.knora.org/data/0001/freetest>
+           |WHERE {
+           |    BIND (<http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/d71beeUvQAqMueB6eRZfVA> as ?s)
+           |    ?s a knora-base:FormattedTextValue .
+           |    ?s knora-base:valueHasString "textarea text with markup" .
+           |    ?s knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
+           |    ?s knora-base:valueHasMaxStandoffStartIndex 2 .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/d71beeUvQAqMueB6eRZfVA/standoff/0> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/d71beeUvQAqMueB6eRZfVA/standoff/1> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/d71beeUvQAqMueB6eRZfVA/standoff/2> .
+           |}
+           |""".stripMargin
+      val res4: Boolean = repo.doAsk(query4)
+      assert(res4, "The textarea text value with markup should not have been modified.")
+    }
   }
 }
 
@@ -174,7 +254,6 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
  *
  * What needs to be covered in the test:
  *
- *   - [ ] if standard mapping in data and type in onto is simpleText/Paragraph, then use FormattedTextValue
  *   - [ ] if no mapping in data and type in onto is richtext, then use FormattedTextValue
  *   - [ ] if custom mapping in data and type in onto is richtext, then use CustomFormattedTextValue
  *
