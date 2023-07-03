@@ -78,37 +78,29 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
 
   override def transform(model: RdfModel): Unit = {
     log.info("Transformation started.")
-    println("Transformation started.")
 
     val ontologyToProjectMap: Map[IRI, IRI] = collectOntologyToProjectMap(model)
     log.debug(s"Found ${ontologyToProjectMap.size} ontologies for ${ontologyToProjectMap.values.toSet.size} projects.")
-    println(s"Found ${ontologyToProjectMap.size} ontologies for ${ontologyToProjectMap.values.toSet.size} projects.")
 
     val textValuePropsPerOntology: Map[IRI, Seq[IRI]] = collectTextValuePropIris(model)
     log.debug(s"Found ${textValuePropsPerOntology.values.flatten.size} TextValue properties.")
-    println(s"Found ${textValuePropsPerOntology.values.flatten.size} TextValue properties.")
 
     val textValueProps: Set[TextValueProp] = makeTextValueProps(model, textValuePropsPerOntology, ontologyToProjectMap)
     log.debug(s"Created ${textValueProps.size} TextValueProperty objects.")
-    println(s"Created ${textValueProps.size} TextValueProperty objects.")
 
     val verifiedTextValueProps: Set[TextValueProp] = verifyTextValueProps(model, textValueProps)
     log.debug(s"Verified ${verifiedTextValueProps.size} TextValueProperty objects against usage in data.")
-    println(s"Verified ${verifiedTextValueProps.size} TextValueProperty objects against usage in data.")
 
     val dataAdjustments = collectDataAdjustments(model, verifiedTextValueProps)
     log.debug(s"Found ${dataAdjustments.size} values in data to adjust.")
-    println(s"Found ${dataAdjustments.size} values in data to adjust.")
 
     val dataStatementsToRemove = dataAdjustments.flatMap(_.statementsToRemove)
     log.debug(s"Found ${dataStatementsToRemove.size} statements in data to remove.")
-    println(s"Found ${dataStatementsToRemove.size} statements in data to remove.")
     val dataStatementsToInsert = dataAdjustments.flatMap(_.statementsToInsert)
     log.debug(s"Found ${dataStatementsToInsert.size} statements in data to insert.")
 
     val ontologyStatementsToRemove = verifiedTextValueProps.flatMap(_.statementsToRemove)
     log.debug(s"Found ${ontologyStatementsToRemove.size} statements in ontologies to remove.")
-    println(s"Found ${ontologyStatementsToRemove.size} statements in ontologies to remove.")
     val ontologyStatementsToInsert = verifiedTextValueProps.map(tvp =>
       nodeFactory.makeStatement(
         tvp.objectClassConstraint.subj,
@@ -118,20 +110,16 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
       )
     )
     log.debug(s"Found ${ontologyStatementsToInsert.size} statements in ontologies to insert.")
-    println(s"Found ${ontologyStatementsToInsert.size} statements in ontologies to insert.")
 
     val statementsToRemove = dataStatementsToRemove ++ ontologyStatementsToRemove
     log.info(s"Removing ${statementsToRemove.size} statements.")
-    println(s"Removing ${statementsToRemove.size} statements.")
     model.removeStatements(statementsToRemove)
 
     val statementsToInsert = dataStatementsToInsert ++ ontologyStatementsToInsert
     log.info(s"Inserting ${statementsToInsert.size} statements.")
-    println(s"Inserting ${statementsToInsert.size} statements.")
     model.addStatements(statementsToInsert)
 
     log.info("Transformation finished successfully.")
-    println("Transformation finished successfully.")
   }
 
   def collectOntologyToProjectMap(model: RdfModel): Map[IRI, IRI] = {
@@ -317,7 +305,6 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
             mapping = row.rowMap.get("mapping")
           )
         )
-      println(s"adjustables: $adjustables")
       adjustables.map(adjustable => collectDataAdjustment(model, adjustable, prop)).toSet
     }
   }
@@ -326,8 +313,7 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
     model: RdfModel,
     adjustable: AdjustableData,
     prop: TextValueProp
-  ): DataAdjustment = {
-    println(s"adjustable: $adjustable     -     ${prop.textType} -> ${adjustable.mapping}")
+  ): DataAdjustment =
     (prop.textType, adjustable.mapping) match {
       case (UnformattedText, None) => changeTypeToUnformattedTextValue(adjustable)
       case (UnformattedText, Some(KnoraBase.StandardMapping)) =>
@@ -344,7 +330,6 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
         throw InconsistentRepositoryDataException(s"Cannot create custom mapping in plugin for $prop")
       case (CustomFormattedText, Some(mapping)) => changeTypeToCustomFormattedTextValue(adjustable)
     }
-  }
 
   private def changeTypeToUnformattedTextValue(adjustable: AdjustableData): DataAdjustment =
     changeType(adjustable, KnoraBase.UnformattedTextValue)
