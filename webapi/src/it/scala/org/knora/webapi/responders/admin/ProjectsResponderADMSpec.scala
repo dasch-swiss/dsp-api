@@ -164,11 +164,11 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       val newProjectIri = new MutableTestIri
 
       "CREATE a project and return the project info if the supplied shortname is unique" in {
-        val shortCode = "111c"
+        val shortcode = "111c"
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
-            shortname = ShortName.make("newproject").fold(error => throw error.head, value => value),
-            shortcode = ShortCode.make(shortCode).fold(error => throw error.head, value => value), // lower case
+            shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
+            shortcode = Shortcode.make(shortcode).fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
@@ -184,7 +184,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
         received.project.shortname should be("newproject")
-        received.project.shortcode should be(shortCode.toUpperCase) // upper case
+        received.project.shortcode should be(shortcode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
         received.project.description should be(
           Seq(V2.StringLiteralV2(value = "project description", language = Some("en")))
@@ -262,8 +262,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
-            shortname = ShortName.make("newproject2").fold(error => throw error.head, value => value),
-            shortcode = ShortCode.make("1112").fold(error => throw error.head, value => value), // lower case
+            shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
+            shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
             longname = Some(Name.make("project longname").fold(error => throw error.head, value => value)),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
@@ -294,8 +294,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
-            shortname = ShortName.make("project_with_character").fold(error => throw error.head, value => value),
-            shortcode = ShortCode.make("1312").fold(error => throw error.head, value => value), // lower case
+            shortname = Shortname.make("project_with_character").fold(error => throw error.head, value => value),
+            shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
@@ -326,8 +326,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
-            shortname = ShortName.make("newproject").fold(error => throw error.head, value => value),
-            shortcode = ShortCode.make("111C").fold(error => throw error.head, value => value), // lower case
+            shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
+            shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
@@ -346,8 +346,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
-            shortname = ShortName.make("newproject3").fold(error => throw error.head, value => value),
-            shortcode = ShortCode.make("111C").fold(error => throw error.head, value => value), // lower case
+            shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
+            shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))

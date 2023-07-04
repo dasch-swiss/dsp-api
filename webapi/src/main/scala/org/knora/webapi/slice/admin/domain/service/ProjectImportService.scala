@@ -20,19 +20,19 @@ import java.net.PasswordAuthentication
 import java.net.http.HttpClient
 
 import dsp.valueobjects.Project
-import dsp.valueobjects.Project.ShortCode
+import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 @accessible
 trait ProjectImportService {
-  def importProject(id: ShortCode, user: UserADM): Task[Option[Path]]
+  def importProject(id: Shortcode, user: UserADM): Task[Option[Path]]
   def importTrigFile(file: Path): Task[Unit]
   def query(queryString: String)(exec: QueryExecution => ResultSet): ZIO[Scope, Throwable, ResultSet]
   def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
 }
 
-final case class Asset(belongsToProject: Project.ShortCode, internalFilename: String)
+final case class Asset(belongsToProject: Project.Shortcode, internalFilename: String)
 object Asset {
   def logString(it: Asset) = s"Asset(code: ${it.belongsToProject.value}, path: ${it.internalFilename}"
 }
@@ -79,12 +79,12 @@ final case class ProjectImportServiceLive(
     ZIO.acquireRelease(acquire)(release).map(executor)
   }
 
-  override def importProject(projectShortcode: ShortCode, user: UserADM): Task[Option[Path]] = {
+  override def importProject(projectShortcode: Shortcode, user: UserADM): Task[Option[Path]] = {
     val projectImport = exportStorage.projectExportFullPath(projectShortcode)
     ZIO.whenZIO(Files.exists(projectImport))(importProject(projectImport, projectShortcode))
   }
 
-  private def importProject(projectImport: Path, project: ShortCode): Task[Path] = ZIO.scoped {
+  private def importProject(projectImport: Path, project: Shortcode): Task[Path] = ZIO.scoped {
     for {
       projectImportAbsolutePath <- projectImport.toAbsolutePath
       _                         <- ZIO.logInfo(s"Importing project $projectImportAbsolutePath")
@@ -96,8 +96,8 @@ final case class ProjectImportServiceLive(
     } yield projectImport
   }
 
-  private def importTriples(path: Path, projectShortCode: ShortCode) = {
-    val trigFile = path / exportStorage.trigFilename(projectShortCode)
+  private def importTriples(path: Path, shortcode: Shortcode) = {
+    val trigFile = path / exportStorage.trigFilename(shortcode)
     for {
       trigFileAbsolutePath <- trigFile.toAbsolutePath
       _                    <- ZIO.logInfo(s"Importing triples from $trigFileAbsolutePath")
@@ -109,7 +109,7 @@ final case class ProjectImportServiceLive(
     } yield ()
   }
 
-  private def importAssets(unzipped: Path, project: ShortCode) = ZIO.scoped {
+  private def importAssets(unzipped: Path, project: Shortcode) = ZIO.scoped {
     val assetsDir = unzipped / ProjectExportStorageService.assetsDirectoryInExport
     (for {
       tempDir <- Files.createTempDirectoryScoped(Some("assets-import"), fileAttributes = Nil)

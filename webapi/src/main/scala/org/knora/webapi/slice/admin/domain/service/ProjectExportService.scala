@@ -203,7 +203,7 @@ final case class ProjectExportServiceLive(
     val exportedAssetsDir = tempDir / ProjectExportStorageService.assetsDirectoryInExport
     for {
       _       <- Files.createDirectory(exportedAssetsDir)
-      zipFile <- dspIngestClient.exportProject(project.projectShortCode)
+      zipFile <- dspIngestClient.exportProject(project.shortcode)
       _       <- ZipUtility.unzipFile(zipFile, exportedAssetsDir)
     } yield exportedAssetsDir
   }

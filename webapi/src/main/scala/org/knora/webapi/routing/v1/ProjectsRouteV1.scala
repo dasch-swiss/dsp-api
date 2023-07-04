@@ -58,10 +58,10 @@ final case class ProjectsRouteV1()(
     requestContext: RequestContext
   ): ZIO[Authenticator with StringFormatter, Throwable, ProjectInfoByShortnameGetRequestV1] =
     for {
-      shortNameDecoded <- RouteUtilZ.urlDecode(shortname)
+      shortnameDecoded <- RouteUtilZ.urlDecode(shortname)
       userProfile      <- RouteUtilV1.getUserProfileV1(requestContext)
     } yield ProjectInfoByShortnameGetRequestV1(
-      shortname = shortNameDecoded,
+      shortname = shortnameDecoded,
       userProfileV1 = Some(userProfile)
     )
 }

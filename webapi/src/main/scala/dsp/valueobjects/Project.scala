@@ -20,18 +20,6 @@ object Project {
   // A regex for matching a string containing the project ID.
   private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
 
-  /**
-   * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
-   *
-   * @param shortcode the project's shortcode.
-   * @return the shortcode in upper case.
-   */
-  def validateProjectShortCode(shortCode: String, errorFun: => Nothing): String =
-    ProjectIDRegex.findFirstIn(shortCode.toUpperCase) match {
-      case Some(value) => value
-      case None        => errorFun
-    }
-
   // A regex sub-pattern for ontology prefix labels and local entity names. According to
   // <https://www.w3.org/TR/turtle/#prefixed-name>, a prefix label in Turtle must be a valid XML NCName
   // <https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName>. Knora also requires a local entity name to
@@ -63,27 +51,27 @@ object Project {
   // TODO-mpro: longname, description, keywords, logo are missing enhanced validation
 
   /**
-   * Project ShortCode value object.
+   * Project Shortcode value object.
    */
-  sealed abstract case class ShortCode private (value: String)
-  object ShortCode { self =>
-    implicit val decoder: JsonDecoder[ShortCode] = JsonDecoder[String].mapOrFail { case value =>
-      ShortCode.make(value).toEitherWith(e => e.head.getMessage())
+  sealed abstract case class Shortcode private (value: String)
+  object Shortcode { self =>
+    implicit val decoder: JsonDecoder[Shortcode] = JsonDecoder[String].mapOrFail { case value =>
+      Shortcode.make(value).toEitherWith(e => e.head.getMessage())
     }
-    implicit val encoder: JsonEncoder[ShortCode] =
-      JsonEncoder[String].contramap((shortCode: ShortCode) => shortCode.value)
+    implicit val encoder: JsonEncoder[Shortcode] =
+      JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
-    def make(value: String): Validation[ValidationException, ShortCode] =
+    def make(value: String): Validation[ValidationException, Shortcode] =
       if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeMissing))
+        Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
       } else {
         ProjectIDRegex.matches(value.toUpperCase) match {
-          case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortCodeInvalid(value)))
-          case true  => Validation.succeed(new ShortCode(value.toUpperCase) {})
+          case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeInvalid(value)))
+          case true  => Validation.succeed(new Shortcode(value.toUpperCase) {})
         }
       }
 
-    def make(value: Option[String]): Validation[ValidationException, Option[ShortCode]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[Shortcode]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -91,25 +79,25 @@ object Project {
   }
 
   /**
-   * Project ShortName value object.
+   * Project Shortname value object.
    */
-  sealed abstract case class ShortName private (value: String)
-  object ShortName { self =>
-    implicit val decoder: JsonDecoder[ShortName] = JsonDecoder[String].mapOrFail { case value =>
-      ShortName.make(value).toEitherWith(e => e.head.getMessage())
+  sealed abstract case class Shortname private (value: String)
+  object Shortname { self =>
+    implicit val decoder: JsonDecoder[Shortname] = JsonDecoder[String].mapOrFail { case value =>
+      Shortname.make(value).toEitherWith(e => e.head.getMessage())
     }
-    implicit val encoder: JsonEncoder[ShortName] =
-      JsonEncoder[String].contramap((shortName: ShortName) => shortName.value)
+    implicit val encoder: JsonEncoder[Shortname] =
+      JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
 
-    def make(value: String): Validation[ValidationException, ShortName] =
-      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ShortNameMissing))
+    def make(value: String): Validation[ValidationException, Shortname] =
+      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing))
       else
         Validation
           .fromOption(validateAndEscapeProjectShortname(value))
-          .mapError(_ => ValidationException(ProjectErrorMessages.ShortNameInvalid(value)))
-          .map(new ShortName(_) {})
+          .mapError(_ => ValidationException(ProjectErrorMessages.ShortnameInvalid(value)))
+          .map(new Shortname(_) {})
 
-    def make(value: Option[String]): Validation[ValidationException, Option[ShortName]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[Shortname]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -264,10 +252,10 @@ object Project {
 }
 
 object ProjectErrorMessages {
-  val ShortCodeMissing           = "ShortCode cannot be empty."
-  val ShortCodeInvalid           = (v: String) => s"ShortCode is invalid: $v"
-  val ShortNameMissing           = "Shortname cannot be empty."
-  val ShortNameInvalid           = (v: String) => s"Shortname is invalid: $v"
+  val ShortcodeMissing           = "Shortcode cannot be empty."
+  val ShortcodeInvalid           = (v: String) => s"Shortcode is invalid: $v"
+  val ShortnameMissing           = "Shortname cannot be empty."
+  val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
   val NameMissing                = "Name cannot be empty."
   val NameInvalid                = (v: String) => s"Name is invalid: $v"
   val ProjectDescriptionsMissing = "Description cannot be empty."
