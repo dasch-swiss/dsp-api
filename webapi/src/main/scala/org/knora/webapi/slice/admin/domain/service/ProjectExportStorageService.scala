@@ -8,7 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio._
 import zio.nio.file._
 
-import dsp.valueobjects.Project.ShortCode
+import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService.exportFileEnding
@@ -17,26 +17,25 @@ case class ProjectExportInfo(projectShortname: String, path: Path)
 
 trait ProjectExportStorageService {
 
-  def projectExportDirectory(project: KnoraProject): Path
-  def projectExportDirectory(shortCode: ShortCode): Path
+  def projectExportDirectory(project: KnoraProject): Path = projectExportDirectory(project.shortcode)
+  def projectExportDirectory(shortcode: Shortcode): Path
 
-  def projectExportFilename(project: KnoraProject): String =
-    s"${project.shortcode}-export${ProjectExportStorageService.exportFileEnding}"
+  def projectExportFilename(project: KnoraProject): String = projectExportFilename(project.shortcode)
 
-  def projectExportFilename(shortCode: ShortCode): String =
-    s"${shortCode.value}-export${ProjectExportStorageService.exportFileEnding}"
+  def projectExportFilename(shortcode: Shortcode): String =
+    s"${shortcode.value}-export${ProjectExportStorageService.exportFileEnding}"
 
   def projectExportFullPath(project: KnoraProject): Path =
-    projectExportDirectory(project) / projectExportFilename(project)
+    projectExportFullPath(project.shortcode)
 
-  def projectExportFullPath(shortCode: ShortCode): Path =
-    projectExportDirectory(shortCode) / projectExportFilename(shortCode)
+  def projectExportFullPath(shortcode: Shortcode): Path =
+    projectExportDirectory(shortcode) / projectExportFilename(shortcode)
 
   def listExports(): Task[Chunk[ProjectExportInfo]]
 
-  def trigFilename(project: KnoraProject): String    = trigFilename(project.shortcode)
-  def trigFilename(shortCode: ShortCode): String     = trigFilename(shortCode.value)
-  def trigFilename(projectShortcode: String): String = s"$projectShortcode.trig"
+  def trigFilename(project: KnoraProject): String = trigFilename(project.shortcode)
+  def trigFilename(shortcode: Shortcode): String  = trigFilename(shortcode.value)
+  def trigFilename(shortcode: String): String     = s"$shortcode.trig"
 
 }
 
@@ -46,8 +45,7 @@ object ProjectExportStorageService {
 }
 
 final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends ProjectExportStorageService {
-  override def projectExportDirectory(project: KnoraProject): Path = exportDirectory / s"${project.shortcode}"
-  override def projectExportDirectory(shortCode: ShortCode): Path  = exportDirectory / shortCode.value
+  override def projectExportDirectory(shortcode: Shortcode): Path = exportDirectory / shortcode.value
   override def listExports(): Task[Chunk[ProjectExportInfo]] =
     Files
       .list(exportDirectory)
@@ -64,8 +62,8 @@ final case class ProjectExportStorageServiceLive(exportDirectory: Path) extends 
 
   private def toProjectExportInfo(projectDirAndFile: (Path, Path)) = {
     val (projectDirectory, exportFile) = projectDirAndFile
-    val projectShortName               = projectDirectory.filename.toString()
-    ProjectExportInfo(projectShortName, exportFile)
+    val projectShortname               = projectDirectory.filename.toString()
+    ProjectExportInfo(projectShortname, exportFile)
   }
 }
 

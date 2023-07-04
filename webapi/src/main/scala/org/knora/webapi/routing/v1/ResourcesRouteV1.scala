@@ -300,7 +300,7 @@ final case class ResourcesRouteV1()(
                       ZIO.serviceWithZIO[MessageRelay](
                         _.ask[GetFileMetadataResponse](GetFileMetadataRequest(tempFilePath, userADM))
                       )
-                    fileValue <- makeFileValue(filename, fileMetadataResponse, project.shortcode)
+                    fileValue <- makeFileValue(filename, fileMetadataResponse, project.shortcode.value)
                   } yield Some(fileValue)
                 case None => ZIO.none
               }
@@ -356,7 +356,7 @@ final case class ResourcesRouteV1()(
       _       <- ZIO.fail(BadRequestException(duplicatesErrorMsg)).when(duplicateClientIDs.nonEmpty)
       project <- RouteUtilV1.getProjectByIri(projectIri)
       resourcesToCreate <-
-        ZIO.foreach(resourceRequest)(createOneResourceRequestFromXmlImport(_, project.shortcode, userProfile))
+        ZIO.foreach(resourceRequest)(createOneResourceRequestFromXmlImport(_, project.shortcode.value, userProfile))
     } yield MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID)
   }
 

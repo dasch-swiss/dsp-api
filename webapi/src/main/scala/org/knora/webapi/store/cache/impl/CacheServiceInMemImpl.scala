@@ -141,7 +141,7 @@ case class CacheServiceInMemImpl(
    * @param shortname of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortname(shortname: Project.ShortName): UIO[Option[ProjectADM]] =
+  def getProjectByShortname(shortname: Project.Shortname): UIO[Option[ProjectADM]] =
     (for {
       iri     <- lut.get(shortname.value).some
       project <- projects.get(iri).some
@@ -153,7 +153,7 @@ case class CacheServiceInMemImpl(
    * @param shortcode of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortcode(shortcode: Project.ShortCode): UIO[Option[ProjectADM]] =
+  def getProjectByShortcode(shortcode: Project.Shortcode): UIO[Option[ProjectADM]] =
     (for {
       iri     <- lut.get(shortcode.value).some
       project <- projects.get(iri).some
