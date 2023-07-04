@@ -154,16 +154,14 @@ final case class ProjectsRouteZ(
           )
     } yield r
 
-  private def postExportProject(shortcode: String, requestingUser: UserADM): Task[Response] = for {
-    result <- projectsService.exportProject(shortcode, requestingUser)
-  } yield Response.json(result.toJson)
+  private def postExportProject(shortcode: String, requestingUser: UserADM): Task[Response] =
+    projectsService.exportProject(shortcode, requestingUser).map(_.toJson).map(Response.json(_))
 
-  private def postImportProject(shortcode: String, requestingUser: UserADM): Task[Response] = for {
-    result <- projectsService.importProject(shortcode, requestingUser)
-  } yield Response.json(result.toJson)
+  private def postImportProject(shortcode: String, requestingUser: UserADM): Task[Response] =
+    projectsService.importProject(shortcode, requestingUser).map(_.toJson).map(Response.json(_))
 
   private def getProjectExports(requestingUser: UserADM): Task[Response] =
-    projectsService.listExports(requestingUser).map(chunk => Response.json(chunk.toJson)).logError
+    projectsService.listExports(requestingUser).map(_.toJson).map(Response.json(_))
 
   private def getProjectMembersByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
