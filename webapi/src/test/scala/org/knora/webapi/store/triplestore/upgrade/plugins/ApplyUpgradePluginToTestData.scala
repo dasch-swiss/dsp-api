@@ -30,8 +30,9 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  */
 object ApplyUpgradePluginToTestData extends ZIOAppDefault with LazyLogging {
 
-  val upgradePlugin = new UpgradePluginXXX(logger)
-  val testDataPath  = "../test_data/all_data" // for VSCode
+  val upgradePlugin = new NoopPlugin()
+  // val upgradePlugin = new UpgradePluginPR2710(logger)
+  val testDataPath = "../test_data/all_data" // for VSCode
   // val testDataPath  = "test_data/all_data" // for Intellij IDEA
 
   def discoverFiles(dirPath: String) =
