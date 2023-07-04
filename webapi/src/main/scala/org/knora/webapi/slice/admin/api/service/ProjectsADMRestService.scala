@@ -13,7 +13,6 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -46,8 +45,8 @@ trait ProjectADMRestService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
-  def exportProject(shortcode: IRI, requestingUser: UserADM): Task[ProjectExportResponse]
-  def importProject(shortcode: IRI, requestingUser: UserADM): Task[ProjectImportResponse]
+  def exportProject(shortcode: String, requestingUser: UserADM): Task[ProjectExportResponse]
+  def importProject(shortcode: String, requestingUser: UserADM): Task[ProjectImportResponse]
   def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]]
   def getProjectMembers(
     projectIdentifier: ProjectIdentifierADM,
@@ -248,7 +247,7 @@ final case class ProjectsADMRestServiceLive(
     zipFile   <- projectExportService.exportProject(project)
   } yield ProjectExportResponse(zipFile.toString)
 
-  private def convertStringToShortcode(shortcodeStr: IRI): IO[BadRequestException, Shortcode] =
+  private def convertStringToShortcode(shortcodeStr: String): IO[BadRequestException, Shortcode] =
     Shortcode.make(shortcodeStr).toZIO.mapError(err => BadRequestException(err.msg))
 
   override def importProject(
