@@ -31,9 +31,11 @@ final case class DspIngestClientLive(
   dspIngestConfig: DspIngestConfig
 ) extends DspIngestClient {
 
+  private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
+
   def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
     for {
-      exportUrl <- ZIO.fromEither(URL.fromString(s"${dspIngestConfig.baseUrl}/project/${shortcode.value}/export"))
+      exportUrl <- ZIO.fromEither(URL.fromString(s"${projectsPath(shortcode)}/export"))
       token     <- jwtService.createJwtForDspIngest()
       request = Request
                   .post(Body.empty, exportUrl)
@@ -46,7 +48,7 @@ final case class DspIngestClientLive(
 
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
     for {
-      importUrl <- ZIO.fromEither(URL.fromString(s"${dspIngestConfig.baseUrl}/project/${shortcode.value}/import"))
+      importUrl <- ZIO.fromEither(URL.fromString(s"${projectsPath(shortcode)}/import"))
       token     <- jwtService.createJwtForDspIngest()
       request = Request
                   .post(Body.fromFile(fileToImport.toFile), importUrl)
