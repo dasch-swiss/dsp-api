@@ -59,7 +59,7 @@
 :StandoffVisualTag
     rdf:type        owl:Class ;
     rdfs:subClassOf knora-base:StandoffTag ;
-    rdfs:comment    "Represents visual markup information in a TextValue"@en .
+    rdfs:comment    "Represents visual markup information in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffStructuralTag
@@ -67,7 +67,7 @@
 :StandoffStructuralTag
     rdf:type        owl:Class ;
     rdfs:subClassOf knora-base:StandoffTag ;
-    rdfs:comment    "Represents structural markup information in a TextValue"@en .
+    rdfs:comment    "Represents structural markup information in a StandoffTextValue"@en .
 
 
 #################################################################
@@ -85,7 +85,7 @@
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :standoffRootTagHasDocumentType ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:comment    "Represents the root node if the TextValue has been created from XML"@en .
+    rdfs:comment    "Represents the root node if the StandoffTextValue has been created from XML"@en .
 
 ###  http://www.knora.org/ontology/standoff#StandoffHyperlinkTag
 
@@ -118,7 +118,7 @@
 :StandoffParagraphTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a paragraph in a TextValue"@en .
+    rdfs:comment    "Represents a paragraph in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffHeader1Tag
@@ -126,7 +126,7 @@
 :StandoffHeader1Tag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a header of level 1 in a TextValue"@en .
+    rdfs:comment    "Represents a header of level 1 in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffHeader2Tag
@@ -134,7 +134,7 @@
 :StandoffHeader2Tag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a header of level 2 in a TextValue"@en .
+    rdfs:comment    "Represents a header of level 2 in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffHeader3Tag
@@ -142,7 +142,7 @@
 :StandoffHeader3Tag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a header of level 3 in a TextValue"@en .
+    rdfs:comment    "Represents a header of level 3 in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffHeader4Tag
@@ -150,7 +150,7 @@
 :StandoffHeader4Tag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a header of level 4 in a TextValue"@en .
+    rdfs:comment    "Represents a header of level 4 in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffHeader5Tag
@@ -158,7 +158,7 @@
 :StandoffHeader5Tag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a header of level 5 in a TextValue"@en .
+    rdfs:comment    "Represents a header of level 5 in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffHeader6Tag
@@ -166,7 +166,7 @@
 :StandoffHeader6Tag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a header of level 6 in a TextValue"@en .
+    rdfs:comment    "Represents a header of level 6 in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffOrderedListTag
@@ -174,7 +174,7 @@
 :StandoffOrderedListTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents an ordered list in a TextValue"@en .
+    rdfs:comment    "Represents an ordered list in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffUnorderedListTag
@@ -182,7 +182,7 @@
 :StandoffUnorderedListTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents an unordered list in a TextValue"@en .
+    rdfs:comment    "Represents an unordered list in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffListElementTag
@@ -190,7 +190,7 @@
 :StandoffListElementTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a list element in a TextValue"@en .
+    rdfs:comment    "Represents a list element in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffTableBodyTag
@@ -198,7 +198,7 @@
 :StandoffTableBodyTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a table body in a TextValue"@en .
+    rdfs:comment    "Represents a table body in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffTableTag
@@ -206,7 +206,7 @@
 :StandoffTableTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents a table in a TextValue"@en .
+    rdfs:comment    "Represents a table in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffTableRowTag
@@ -238,7 +238,7 @@
 :StandoffItalicTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents italics in a TextValue"@en .
+    rdfs:comment    "Represents italics in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffBoldTag
@@ -246,14 +246,14 @@
 :StandoffBoldTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents bold text in a TextValue"@en .
+    rdfs:comment    "Represents bold text in a StandoffTextValue"@en .
 
 ###  http://www.knora.org/ontology/standoff-html-editor#StandoffCiteTag
 
 :StandoffCiteTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffStructuralTag ;
-    rdfs:comment    "Represents the title of a work in a TextValue"@en .
+    rdfs:comment    "Represents the title of a work in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffUnderlineTag
@@ -261,7 +261,7 @@
 :StandoffUnderlineTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents underlined text in a TextValue"@en .
+    rdfs:comment    "Represents underlined text in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffStrikethroughTag
@@ -269,7 +269,7 @@
 :StandoffStrikethroughTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents struck text in a TextValue"@en .
+    rdfs:comment    "Represents struck text in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffSuperscriptTag
@@ -277,7 +277,7 @@
 :StandoffSuperscriptTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents superscript in a TextValue"@en .
+    rdfs:comment    "Represents superscript in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff#StandoffSubscriptTag
@@ -285,7 +285,7 @@
 :StandoffSubscriptTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents subscript in a TextValue"@en .
+    rdfs:comment    "Represents subscript in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff-html-editor#StandoffLineTag
@@ -293,7 +293,7 @@
 :StandoffLineTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents a line to seperate content in a TextValue"@en .
+    rdfs:comment    "Represents a line to seperate content in a StandoffTextValue"@en .
 
 
 ###  http://www.knora.org/ontology/standoff-html-editor#StandoffPreTag
@@ -301,4 +301,4 @@
 :StandoffPreTag
     rdf:type        owl:Class ;
     rdfs:subClassOf :StandoffVisualTag ;
-    rdfs:comment    "Represents a preformatted content in a TextValue"@en .
+    rdfs:comment    "Represents a preformatted content in a StandoffTextValue"@en .
