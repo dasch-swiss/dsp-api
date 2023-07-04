@@ -147,7 +147,7 @@ final case class ProjectsRouteZ(
     } yield r
 
   private def postExportProject(shortcode: String, requestingUser: UserADM): Task[Response] = for {
-    result     <- projectsService.exportProject(shortcode, requestingUser)
+    result <- projectsService.exportProject(shortcode, requestingUser)
   } yield Response.json(result.toJson)
 
   private def postImportProject(shortcode: String, requestingUser: UserADM): Task[Response] = for {

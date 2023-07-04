@@ -42,41 +42,27 @@ object ProjectSpec extends ZIOSpecDefault {
   private val shortcodeTest = suite("ProjectSpec - Shortcode")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Shortcode.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing)),
-        Shortcode.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
+        Shortcode.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         Shortcode.make(invalidShortcode) == Validation.fail(
           ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortcode))
-        ),
-        Shortcode.make(Some(invalidShortcode)) == Validation.fail(
-          ValidationException(ProjectErrorMessages.ShortcodeInvalid(invalidShortcode))
         )
       )
     },
     test("pass a valid value and successfully create value object") {
       for {
-        shortcode           <- Shortcode.make(validShortcode).toZIO
-        optionalShortcode   <- Shortcode.make(Option(validShortcode)).toZIO
-        shortcodeFromOption <- ZIO.fromOption(optionalShortcode)
-      } yield assertTrue(shortcode.value == validShortcode) &&
-        assert(optionalShortcode)(isSome(isSubtype[Shortcode](Assertion.anything))) &&
-        assertTrue(shortcodeFromOption.value == validShortcode)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Shortcode.make(None) == Validation.succeed(None)
-      )
+        shortcode <- Shortcode.make(validShortcode).toZIO
+      } yield assertTrue(shortcode.value == validShortcode)
     }
   )
 
   private val shortnameTest = suite("ProjectSpec - Shortname")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Shortname.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing)),
-        Shortname.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing))
+        Shortname.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing))
       )
     },
     test("pass an invalid value and return an error") {
@@ -140,11 +126,6 @@ object ProjectSpec extends ZIOSpecDefault {
       } yield assertTrue(name.value == validName) &&
         assert(optionalName)(isSome(isSubtype[Name](Assertion.anything))) &&
         assertTrue(nameFromOption.value == validName)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Shortcode.make(None) == Validation.succeed(None)
-      )
     }
   )
 
@@ -153,9 +134,7 @@ object ProjectSpec extends ZIOSpecDefault {
       assertTrue(
         ProjectDescription.make(Seq.empty) == Validation.fail(
           ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing)
-        )
-      ) &&
-      assertTrue(
+        ),
         ProjectDescription.make(Some(Seq.empty)) == Validation.fail(
           ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing)
         )

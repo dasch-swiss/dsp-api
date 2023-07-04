@@ -4,8 +4,9 @@
  */
 
 package org.knora.webapi.slice.admin.domain.service
-import dsp.valueobjects.Project.Shortcode
 import zio.Task
+
+import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
