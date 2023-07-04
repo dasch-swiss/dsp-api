@@ -37,8 +37,8 @@ class ProjectsV1E2ESpec
   private val testPass            = java.net.URLEncoder.encode("test", "utf-8")
   private val projectIri          = SharedTestDataV1.imagesProjectInfo.id
   private val projectIriEnc       = java.net.URLEncoder.encode(projectIri, "utf-8")
-  private val projectShortName    = SharedTestDataV1.imagesProjectInfo.shortname
-  private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
+  private val projectShortname    = SharedTestDataV1.imagesProjectInfo.shortname
+  private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortname, "utf-8")
 
   "The Projects Route ('v1/projects')" when {
 

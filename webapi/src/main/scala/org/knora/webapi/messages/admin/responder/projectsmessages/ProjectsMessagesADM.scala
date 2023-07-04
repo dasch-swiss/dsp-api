@@ -526,12 +526,12 @@ object ProjectIdentifierADM {
   /**
    * Represents [[ShortnameIdentifier]] identifier.
    *
-   * @param value that constructs the identifier in the type of [[ShortName]] value object.
+   * @param value that constructs the identifier in the type of [[Shortname]] value object.
    */
-  final case class ShortnameIdentifier(value: ShortName) extends ProjectIdentifierADM
+  final case class ShortnameIdentifier(value: Shortname) extends ProjectIdentifierADM
   object ShortnameIdentifier {
     def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
-      ShortName.make(value).map {
+      Shortname.make(value).map {
         ShortnameIdentifier(_)
       }
   }
