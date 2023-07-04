@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
 import swiss.dasch.domain.{ AssetService, ProjectShortcode }
 import zio.http.Header.{ ContentDisposition, ContentType }
 import zio.http.HttpError.*
@@ -22,16 +23,15 @@ import zio.{ Chunk, Exit, Scope, URIO, ZIO, ZNothing }
 import java.io.{ File, IOException }
 
 object ExportEndpoint {
-  private val shortcodePathVarName = "shortcode"
-  private type ContentDispositionStream = (ContentDisposition, ContentType, ZStream[Any, Nothing, Byte])
-  private val contentTypeApplicationZip = ContentType.parse("application/zip").toOption.get
-  private val downloadCodec             =
-    HeaderCodec.contentDisposition ++ HeaderCodec.contentType ++ ContentCodec.contentStream[Byte] ++ StatusCodec.status(
-      Status.Ok
-    )
 
-  private val exportEndpoint: Endpoint[String, ApiProblem, ContentDispositionStream, None] = Endpoint
-    .post("project" / string(shortcodePathVarName) / "export")
+  private val downloadCodec =
+    HeaderCodec.contentDisposition ++
+      HeaderCodec.contentType ++
+      ContentCodec.contentStream[Byte] ++
+      StatusCodec.status(Status.Ok)
+
+  private val exportEndpoint = Endpoint
+    .post(projects / shortcodePathVar / "export")
     .outCodec(downloadCodec)
     .outErrors(
       HttpCodec.error[ProjectNotFound](Status.NotFound),
@@ -39,27 +39,26 @@ object ExportEndpoint {
       HttpCodec.error[InternalProblem](Status.InternalServerError),
     )
 
-  private val postExportShortCodeHandler: String => ZIO[AssetService, ApiProblem, ContentDispositionStream] =
-    (shortcode: String) =>
-      ApiStringConverters
-        .fromPathVarToProjectShortcode(shortcode)
-        .flatMap { code =>
-          AssetService
-            .zipProject(code)
-            .some
-            .mapBoth(
-              {
-                case Some(err) => ApiProblem.internalError(err)
-                case _         => ApiProblem.projectNotFound(code)
-              },
-              path =>
-                (
-                  ContentDisposition.Attachment(Some(s"export-$shortcode.zip")),
-                  contentTypeApplicationZip,
-                  ZStream.fromFile(path.toFile).orDie,
-                ),
-            )
-        }
-
-  val app: App[AssetService] = exportEndpoint.implement(postExportShortCodeHandler).toApp
+  val app: App[AssetService] = exportEndpoint
+    .implement((shortcodeStr: String) =>
+      for {
+        shortcode <- ApiStringConverters.fromPathVarToProjectShortcode(shortcodeStr)
+        response  <- AssetService
+                       .zipProject(shortcode)
+                       .some
+                       .mapBoth(
+                         {
+                           case Some(err) => ApiProblem.internalError(err)
+                           case _         => ApiProblem.projectNotFound(shortcode)
+                         },
+                         path =>
+                           (
+                             ContentDisposition.Attachment(Some(s"export-$shortcode.zip")),
+                             ContentType(MediaType.application.zip),
+                             ZStream.fromFile(path.toFile).orDie,
+                           ),
+                       )
+      } yield response
+    )
+    .toApp
 }

@@ -39,17 +39,20 @@ object ApiProblem {
   implicit val internalErrorEncoder: JsonEncoder[InternalProblem]     = DeriveJsonEncoder.gen[InternalProblem]
   implicit val internalErrorSchema: Schema[InternalProblem]           = DeriveSchema.gen[InternalProblem]
 
-  def internalError(t: Throwable): InternalProblem =
-    InternalProblem(t.getMessage)
+  def internalError(t: Throwable): InternalProblem = InternalProblem(t.getMessage)
 
-  val bodyIsEmpty: IllegalArguments = IllegalArguments("Body", "Body is empty")
+  // body
+  val bodyIsEmpty: IllegalArguments                 = invalidBody("Body is empty")
+  def invalidBody(reason: String): IllegalArguments = IllegalArguments.apply("Body", reason)
 
+  // path variables
   def invalidPathVariable(
       key: String,
       value: String,
       reason: String,
     ): IllegalArguments = IllegalArguments(s"Path variable: '$key''", s"'$value' is invalid: $reason")
 
+  // headers
   def invalidHeader(
       key: String,
       value: String,
@@ -59,5 +62,6 @@ object ApiProblem {
   def invalidHeaderContentType(actual: ContentType, expected: ContentType): IllegalArguments =
     invalidHeader("Content-Type", actual.toString, s"expected '$expected'")
 
+  // other
   def projectNotFound(shortcode: ProjectShortcode): ProjectNotFound = ProjectNotFound.make(shortcode)
 }

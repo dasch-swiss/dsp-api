@@ -4,7 +4,7 @@ nav:
   - Overview:
       - Introduction: index.md
       - API documentation:
-          - Project Endpoints: api-endpoints-project.md
+          - Projects Endpoints: api-endpoints-projects.md
           - Monitoring Endpoints: api-endpoints-monitoring.md
           - Authentication: api-authentication.md
 

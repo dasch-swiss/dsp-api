@@ -18,13 +18,13 @@ import java.net.URI
 object ExportEndpointSpec extends ZIOSpecDefault {
 
   private def postExport(shortcode: String | ProjectShortcode): ZIO[AssetService, Option[Response], Response] = {
-    val url = URL(Root / "project" / shortcode.toString / "export")
+    val url = URL(Root / "projects" / shortcode.toString / "export")
     ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
   }
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
     suite("ExportEndpoint")(
-      suite("POST on /project/{shortcode}/export should")(
+      suite("POST on /projects/{shortcode}/export should")(
         test("given the project does not exist, return 404") {
           for {
             response <- postExport(nonExistentProject)

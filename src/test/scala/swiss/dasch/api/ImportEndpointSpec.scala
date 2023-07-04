@@ -26,12 +26,12 @@ object ImportEndpointSpec extends ZIOSpecDefault {
       body: Body,
       headers: Headers,
     ) = {
-    val url = URL(Root / "project" / shortcode.toString / "import")
+    val url = URL(Root / "projects" / shortcode.toString / "import")
     ImportEndpoint.app.runZIO(Request.post(body, url).updateHeaders(_ => headers))
   }
 
   val spec = suite("ImportEndpoint")(
-    suite("POST on /project/{shortcode}/import should")(
+    suite("POST on /projects/{shortcode}/import should")(
       test("given the shortcode is invalid, return 400")(for {
         response <- postImport("invalid-shortcode", bodyFromZipFile, validContentTypeHeaders)
       } yield assertTrue(response.status == Status.BadRequest)),

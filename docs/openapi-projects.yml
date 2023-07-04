@@ -3,7 +3,7 @@ info:
   title: Project API
   version: 0.0.1
   description: >
-    The Project API is used to manage assets of a project.
+    The Projects API is used to manage assets of a project.
     All endpoints are secured with [Bearer authentication](api-authentication.md).
   contact:
     name: Dsp-Ingest API
@@ -16,17 +16,17 @@ servers:
     description: Development server
 
 tags:
-  - name: project
+  - name: projects
     description: DaSCH projects
 
 paths:
-  /project:
+  /projects:
     get:
       summary: List all projects
       description: List all projects containing assets and return their shortcode
       operationId: list-projects
       tags:
-        - project
+        - projects
       responses:
         '200':
           description: Successful response
@@ -45,7 +45,7 @@ paths:
                           description: The shortcode of the project.
                           example: 000F
 
-  /project/{shortcode}/import:
+  /projects/{shortcode}/import:
     post:
       summary: Imports assets into a project
       description: >
@@ -53,7 +53,7 @@ paths:
         The zip file must contain a directory with all asset of a project.
       operationId: import-project
       tags:
-        - project
+        - projects
       parameters:
         - name: shortcode
           in: path
@@ -92,14 +92,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/IllegalArguments'
 
-  /project/{shortcode}/export:
+  /projects/{shortcode}/export:
     post:
       summary: Exports assets of a project
       description: >
         This endpoint exports all assets of a project as a zip file.
       operationId: export-project
       tags:
-        - project
+        - projects
       parameters:
         - name: shortcode
           in: path

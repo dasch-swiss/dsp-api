@@ -6,6 +6,7 @@
 package swiss.dasch.api
 
 import eu.timepit.refined.auto.autoUnwrap
+import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
 import swiss.dasch.api.ApiStringConverters.fromPathVarToProjectShortcode
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.{ AssetService, ProjectShortcode }
@@ -23,7 +24,7 @@ import zio.nio.file.Files
 import zio.schema.codec.JsonCodec.JsonEncoder
 import zio.schema.{ DeriveSchema, Schema }
 import zio.stream.{ ZSink, ZStream }
-import zio.{ Chunk, Exit, Scope, URIO, ZIO, ZNothing }
+import zio.*
 
 import java.io.IOException
 import java.util.zip.ZipFile
@@ -36,10 +37,9 @@ object ImportEndpoint {
     implicit val encoder: JsonEncoder[UploadResponse] = DeriveJsonEncoder.gen[UploadResponse]
   }
 
-  private val importEndpoint
-      : Endpoint[(String, ZStream[Any, Nothing, Byte], ContentType), ApiProblem, UploadResponse, None] =
+  private val importEndpoint =
     Endpoint
-      .post("project" / string("shortcode") / "import")
+      .post(projects / shortcodePathVar / "import")
       // Files must be uploaded as zip files with the header 'Content-Type' 'application/zip' and the file in the body.
       // For now we check the ContentType in the implementation as zio-http doesn't support it yet to specify it
       // in the endpoint definition.
@@ -59,7 +59,7 @@ object ImportEndpoint {
         ) =>
         for {
           pShortcode <- ApiStringConverters.fromPathVarToProjectShortcode(shortcode)
-          _          <- ApiContentTypes.verifyContentType(actual, ApiContentTypes.applicationZip)
+          _          <- verifyContentType(actual, ContentType(MediaType.application.zip))
           tempFile   <- ZIO.serviceWith[StorageConfig](_.importPath / s"import-$pShortcode.zip")
           _          <- stream
                           .run(ZSink.fromFile(tempFile.toFile))
@@ -71,6 +71,9 @@ object ImportEndpoint {
         } yield UploadResponse()
     )
     .toApp
+
+  private def verifyContentType(actual: ContentType, expected: ContentType): IO[IllegalArguments, Unit] =
+    ZIO.fail(ApiProblem.invalidHeaderContentType(actual, expected)).when(actual != expected).unit
 
   private def validateInputFile(tempFile: file.Path): ZIO[Any, ApiProblem, Unit] =
     (for {
