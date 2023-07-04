@@ -4,13 +4,15 @@
  */
 
 package org.knora.webapi.slice.admin.domain.service
+import dsp.valueobjects.Project.Shortcode
 import zio.Task
-
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.common.repo.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait KnoraProjectRepo extends Repository[KnoraProject, InternalIri] {
   def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
+  def findByShortcode(shortcode: Shortcode) = findById(ShortcodeIdentifier(shortcode))
 }

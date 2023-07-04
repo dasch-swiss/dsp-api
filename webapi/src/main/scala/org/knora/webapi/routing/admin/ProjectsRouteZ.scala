@@ -48,8 +48,7 @@ final case class ProjectsRouteZ(
           updateProject(iriUrlEncoded, request, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
-        case (Method.POST -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "export", requestingUser) =>
-          postExportProject(iriUrlEncoded, requestingUser)
+
         case (Method.GET -> !! / "admin" / "projects" / "exports", requestingUser) =>
           getProjectExports(requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
@@ -60,6 +59,8 @@ final case class ProjectsRouteZ(
           getProjectMembersByShortcode(shortcode, requestingUser)
         case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "import", requestingUser) =>
           postImportProject(shortcode, requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "iri" / shortcode / "export", requestingUser) =>
+          postExportProject(shortcode, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "admin-members", requestingUser) =>
           getProjectAdminsByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "admin-members", requestingUser) =>
@@ -145,9 +146,8 @@ final case class ProjectsRouteZ(
           )
     } yield r
 
-  private def postExportProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] = for {
-    projectIri <- RouteUtilZ.urlDecode(iriUrlEncoded)
-    result     <- projectsService.exportProject(projectIri, requestingUser)
+  private def postExportProject(shortcode: String, requestingUser: UserADM): Task[Response] = for {
+    result     <- projectsService.exportProject(shortcode, requestingUser)
   } yield Response.json(result.toJson)
 
   private def postImportProject(shortcode: String, requestingUser: UserADM): Task[Response] = for {
