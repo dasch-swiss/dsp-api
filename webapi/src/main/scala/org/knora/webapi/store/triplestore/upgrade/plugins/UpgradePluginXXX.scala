@@ -42,7 +42,6 @@ final case class TextValueProp(
   project: IRI,
   ontology: IRI,
   iri: IRI,
-  guiElement: IRI,
   textType: TextType,
   objectClassConstraint: Statement,
   statementsToRemove: Set[Statement]
@@ -214,17 +213,13 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
       }
 
     val textType = definitionByPredicate
-      .getOrElse(
-        SalsahGui.GuiElementProp,
-        throw InconsistentRepositoryDataException(s"GuiElement not defined for $prop in $project")
-      )
-      .map(_.obj)
-      .toSet
-      .toList match {
-      case (obj: JenaIriNode) :: Nil => TextType.fromIri(obj.iri)
-      case objects =>
-        throw InconsistentRepositoryDataException(s"Unexpected GuiElements defined for $prop in $project: $objects")
-    }
+      .get(SalsahGui.GuiElementProp)
+      .map(_.map(_.obj).toSet.toList match {
+        case (obj: JenaIriNode) :: Nil => TextType.fromIri(obj.iri)
+        case objects =>
+          throw InconsistentRepositoryDataException(s"Unexpected GuiElements defined for $prop in $project: $objects")
+      })
+      .getOrElse(TextType.UnformattedText)
 
     val objectClassConstraint = definitionByPredicate
       .getOrElse(
@@ -238,7 +233,6 @@ class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
       project = project,
       ontology = onto,
       iri = prop,
-      guiElement = definitionByPredicate(SalsahGui.GuiElementProp).head.obj.stringValue.asInstanceOf[IRI],
       textType = textType,
       objectClassConstraint = objectClassConstraint,
       statementsToRemove = statementsToRemove
