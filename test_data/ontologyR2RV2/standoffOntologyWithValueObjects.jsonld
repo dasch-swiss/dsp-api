@@ -179,7 +179,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents bold text in a TextValue",
+            "rdfs:comment": "Represents bold text in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffBoldTag"
         },
@@ -361,7 +361,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents the title of a work in a TextValue",
+            "rdfs:comment": "Represents the title of a work in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffCiteTag"
         },
@@ -543,7 +543,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a header of level 1 in a TextValue",
+            "rdfs:comment": "Represents a header of level 1 in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffHeader1Tag"
         },
@@ -634,7 +634,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a header of level 2 in a TextValue",
+            "rdfs:comment": "Represents a header of level 2 in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffHeader2Tag"
         },
@@ -725,7 +725,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a header of level 3 in a TextValue",
+            "rdfs:comment": "Represents a header of level 3 in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffHeader3Tag"
         },
@@ -816,7 +816,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a header of level 4 in a TextValue",
+            "rdfs:comment": "Represents a header of level 4 in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffHeader4Tag"
         },
@@ -907,7 +907,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a header of level 5 in a TextValue",
+            "rdfs:comment": "Represents a header of level 5 in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffHeader5Tag"
         },
@@ -998,7 +998,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a header of level 6 in a TextValue",
+            "rdfs:comment": "Represents a header of level 6 in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffHeader6Tag"
         },
@@ -1195,7 +1195,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents italics in a TextValue",
+            "rdfs:comment": "Represents italics in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffItalicTag"
         },
@@ -1286,7 +1286,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a line to seperate content in a TextValue",
+            "rdfs:comment": "Represents a line to seperate content in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffLineTag"
         },
@@ -1377,7 +1377,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a list element in a TextValue",
+            "rdfs:comment": "Represents a list element in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffListElementTag"
         },
@@ -1468,7 +1468,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents an ordered list in a TextValue",
+            "rdfs:comment": "Represents an ordered list in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffOrderedListTag"
         },
@@ -1559,7 +1559,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a paragraph in a TextValue",
+            "rdfs:comment": "Represents a paragraph in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffParagraphTag"
         },
@@ -1650,7 +1650,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a preformatted content in a TextValue",
+            "rdfs:comment": "Represents a preformatted content in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffPreTag"
         },
@@ -1748,7 +1748,7 @@
                     "owl:maxCardinality": 1
                 }
             ],
-            "rdfs:comment": "Represents the root node if the TextValue has been created from XML",
+            "rdfs:comment": "Represents the root node if the StandoffTextValue has been created from XML",
             "@type": "owl:Class",
             "@id": "standoff:StandoffRootTag"
         },
@@ -1839,7 +1839,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents struck text in a TextValue",
+            "rdfs:comment": "Represents struck text in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffStrikethroughTag"
         },
@@ -1930,7 +1930,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents structural markup information in a TextValue",
+            "rdfs:comment": "Represents structural markup information in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffStructuralTag"
         },
@@ -2021,7 +2021,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents subscript in a TextValue",
+            "rdfs:comment": "Represents subscript in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffSubscriptTag"
         },
@@ -2112,7 +2112,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents superscript in a TextValue",
+            "rdfs:comment": "Represents superscript in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffSuperscriptTag"
         },
@@ -2203,7 +2203,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a table body in a TextValue",
+            "rdfs:comment": "Represents a table body in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffTableBodyTag"
         },
@@ -2476,7 +2476,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents a table in a TextValue",
+            "rdfs:comment": "Represents a table in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffTableTag"
         },
@@ -2567,7 +2567,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents underlined text in a TextValue",
+            "rdfs:comment": "Represents underlined text in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffUnderlineTag"
         },
@@ -2658,7 +2658,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents an unordered list in a TextValue",
+            "rdfs:comment": "Represents an unordered list in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffUnorderedListTag"
         },
@@ -2749,7 +2749,7 @@
                     "knora-api:isInherited": true
                 }
             ],
-            "rdfs:comment": "Represents visual markup information in a TextValue",
+            "rdfs:comment": "Represents visual markup information in a StandoffTextValue",
             "@type": "owl:Class",
             "@id": "standoff:StandoffVisualTag"
         },
