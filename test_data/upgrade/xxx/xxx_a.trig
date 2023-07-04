@@ -1,0 +1,42 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms:    <http://purl.org/dc/terms/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
+@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
+@prefix biblio: <http://www.knora.org/ontology/0801/biblio#> .
+
+<http://www.knora.org/ontology/knora-base> {
+
+  <http://www.knora.org/ontology/knora-base>
+    rdf:type                     owl:Ontology ;
+    rdfs:label                   "The Knora base ontology"@en ;
+    knora-base:attachedToProject knora-admin:SystemProject ;
+    knora-base:ontologyVersion   "knora-base v25" .
+
+  knora-base:hasComment
+      rdf:type                          owl:ObjectProperty ;
+      rdfs:label                        "Comment"@en ;
+      knora-base:subjectClassConstraint knora-base:Resource ;
+      knora-base:objectClassConstraint  knora-base:TextValue ;
+      knora-base:isEditable             true ;
+      salsah-gui:guiElement             salsah-gui:Richtext ;
+      rdfs:subPropertyOf                knora-base:hasValue .
+}
+
+
+<http://www.knora.org/data/0001/anything> {
+  
+    <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q> 
+        a                     anything:Thing ;
+        knora-base:hasComment <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw> .
+
+    <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw>
+        a                         knora-base:TextValue ;
+        knora-base:valueHasString "a text value without markup" .
+}
