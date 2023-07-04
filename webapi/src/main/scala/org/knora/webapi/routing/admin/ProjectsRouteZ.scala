@@ -36,6 +36,7 @@ final case class ProjectsRouteZ(
   private val projectRoutes: Http[Any, Nothing, (Request, UserADM), Response] =
     Http
       .collectZIO[(Request, UserADM)] {
+        // project crud
         case (Method.GET -> !! / "admin" / "projects", _)                           => getProjects()
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, _)   => getProjectByIri(iriUrlEncoded)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname, _) => getProjectByShortname(shortname)
@@ -49,27 +50,34 @@ final case class ProjectsRouteZ(
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
 
+        // export/import endpoints
         case (Method.GET -> !! / "admin" / "projects" / "exports", requestingUser) =>
           getProjectExports(requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "import", requestingUser) =>
+          postImportProject(shortcode, requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "export", requestingUser) =>
+          postExportProject(shortcode, requestingUser)
+
+        // project members
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
           getProjectMembersByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "members", requestingUser) =>
           getProjectMembersByShortname(shortname, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "members", requestingUser) =>
           getProjectMembersByShortcode(shortcode, requestingUser)
-        case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "import", requestingUser) =>
-          postImportProject(shortcode, requestingUser)
-        case (Method.POST -> !! / "admin" / "projects" / "iri" / shortcode / "export", requestingUser) =>
-          postExportProject(shortcode, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "admin-members", requestingUser) =>
           getProjectAdminsByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "admin-members", requestingUser) =>
           getProjectAdminsByShortname(shortname, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "admin-members", requestingUser) =>
           getProjectAdminsByShortcode(shortcode, requestingUser)
+
+        // keywords
         case (Method.GET -> !! / "admin" / "projects" / "Keywords", _) => getKeywords()
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "Keywords", _) =>
           getKeywordsByProjectIri(iriUrlEncoded)
+
+        // view settings
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "RestrictedViewSettings", _) =>
           getRestrictedViewSettingsByProjectIri(iriUrlEncoded)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "RestrictedViewSettings", _) =>
