@@ -77,6 +77,9 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
 
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
+  private val biblioTitlePropertyIri: IRI = "http://www.knora.org/ontology/0801/biblio#publicationHasTitle"
+  private val leooMappingIri: IRI         = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/leooLetterMapping"
+
   private def typeToNode(textType: TextType): RdfNode =
     textType match {
       case TextType.UnformattedText     => nodeFactory.makeIriNode(KnoraBase.UnformattedTextValue)
@@ -248,12 +251,10 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     val repo: RdfRepository = model.asRepository
     props.map { prop =>
       prop.textType match {
-        case UnformattedText =>
-          if (!propertyHasStandardMapping(repo, prop)) prop
-          else prop.copy(textType = FormattedText)
-        case FormattedText =>
+        case CustomFormattedText => prop
+        case _ =>
           (propertyHasStandardMapping(repo, prop), propertyHasCustomMapping(repo, prop)) match {
-            case (true, false)  => prop
+            case (true, false)  => prop.copy(textType = FormattedText)
             case (false, true)  => prop.copy(textType = CustomFormattedText)
             case (false, false) => prop
             case (true, true) =>
@@ -261,7 +262,6 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
                 s"Property ${prop.iri} in ${prop.project} has both a standard and a custom mapping in data."
               )
           }
-        case CustomFormattedText => prop
       }
     }
   }
@@ -350,7 +350,8 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
           s"Unexpected custom mapping $mapping found on value ${adjustable.valueIri}."
         )
       case (CustomFormattedText, None | Some(KnoraBase.StandardMapping)) =>
-        throw InconsistentRepositoryDataException(s"Cannot create custom mapping in plugin for $prop")
+        if (prop.iri == biblioTitlePropertyIri) addLeooMappingToValue(model, adjustable)
+        else throw InconsistentRepositoryDataException(s"Cannot create custom mapping in plugin for $prop")
       case (CustomFormattedText, Some(mapping)) => changeTypeToCustomFormattedTextValue(adjustable)
     }
 
@@ -415,10 +416,44 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     val newStringValue: Statement =
       copyStatement(stringValueStatement, obj = Some(nodeFactory.makeStringLiteral(newString)))
 
-    val newStandoffStatements: Set[Statement] = generateStandoffStatements(adjustable, newString.length())
+    val newStandoffStatements: Set[Statement] =
+      generateStandardMappingStandoffStatements(adjustable, newString.length())
 
     val statementsToRemove = Set(typeStatement, stringValueStatement)
     val statementsToInsert = Set(newMappingStatement, newTypeStatement, newStringValue) ++ newStandoffStatements
+    DataAdjustment(
+      graph = adjustable.graph,
+      resourceIri = adjustable.resourceIri,
+      valueIri = adjustable.valueIri,
+      statementsToRemove = statementsToRemove,
+      statementsToInsert = statementsToInsert
+    )
+  }
+
+  /**
+   * Creates a complex DataAdjustment that takes an unformatted text value
+   * and adds the BEOL LEOO mapping and the minimal set of standoff properties to it.
+   */
+  private def addLeooMappingToValue(model: RdfModel, adjustable: AdjustableData): DataAdjustment = {
+    val newMappingStatement: Statement = nodeFactory.makeStatement(
+      subj = nodeFactory.makeIriNode(adjustable.valueIri),
+      pred = nodeFactory.makeIriNode(KnoraBase.ValueHasMapping),
+      obj = nodeFactory.makeIriNode(leooMappingIri),
+      context = Some(adjustable.graph)
+    )
+
+    val typeStatement: Statement = findTypeStatement(adjustable, model)
+    val newTypeStatement: Statement =
+      copyStatement(typeStatement, obj = Some(nodeFactory.makeIriNode(KnoraBase.CustomFormattedTextValue)))
+
+    val stringValueStatement: Statement = findStringValueStatement(adjustable, model)
+    val stringValue: String             = stringValueStatement.obj.stringValue
+
+    val newStandoffStatements: Set[Statement] =
+      generateLeooMappingStandoffStatements(adjustable, stringValue.length())
+
+    val statementsToRemove = Set(typeStatement)
+    val statementsToInsert = Set(newMappingStatement, newTypeStatement) ++ newStandoffStatements
     DataAdjustment(
       graph = adjustable.graph,
       resourceIri = adjustable.resourceIri,
@@ -456,7 +491,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         )
       )
 
-  private def generateStandoffStatements(value: AdjustableData, stringLength: Int): Set[Statement] = {
+  private def generateStandardMappingStandoffStatements(value: AdjustableData, stringLength: Int): Set[Statement] = {
     lazy val newUuid = UuidUtil.makeRandomBase64EncodedUuid
     val standoffIri0 = s"${value.valueIri}/standoff/0"
     val standoffIri1 = s"${value.valueIri}/standoff/1"
@@ -480,6 +515,20 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       makeIntStatement(standoffIri1, KnoraBase.StandoffTagHasStartIndex, 1, value.graph),
       makeStringStatement(standoffIri1, KnoraBase.StandoffTagHasUUID, newUuid, value.graph),
       makeStatement(standoffIri1, KnoraBase.StandoffTagHasStartParent, standoffIri0, value.graph)
+    )
+  }
+
+  private def generateLeooMappingStandoffStatements(value: AdjustableData, stringLength: Int): Set[Statement] = {
+    lazy val newUuid = UuidUtil.makeRandomBase64EncodedUuid
+    val standoffIri0 = s"${value.valueIri}/standoff/0"
+    Set(
+      makeIntStatement(value.valueIri, KnoraBase.ValueHasMaxStandoffStartIndex, 0, value.graph),
+      makeStatement(value.valueIri, KnoraBase.ValueHasStandoff, standoffIri0, value.graph),
+      makeStatement(standoffIri0, OntologyConstants.Rdf.Type, OntologyConstants.Standoff.StandoffRootTag, value.graph),
+      makeIntStatement(standoffIri0, KnoraBase.StandoffTagHasStart, 0, value.graph),
+      makeIntStatement(standoffIri0, KnoraBase.StandoffTagHasEnd, stringLength, value.graph),
+      makeIntStatement(standoffIri0, KnoraBase.StandoffTagHasStartIndex, 0, value.graph),
+      makeStringStatement(standoffIri0, KnoraBase.StandoffTagHasUUID, newUuid, value.graph)
     )
   }
 

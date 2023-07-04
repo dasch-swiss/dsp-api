@@ -332,5 +332,42 @@ class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
       val plugin          = new UpgradePluginPR2710(log)
       assertThrows[InconsistentRepositoryDataException](plugin.transform(model))
     }
+
+    "update values of type biblio:publicationHasTitle to use the BEOL LEOO mapping" in {
+      // run the transformation on the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710g.trig")
+      val plugin          = new UpgradePluginPR2710(log)
+      plugin.transform(model)
+      val repo = model.asRepository
+
+      // check the ontology
+      val query1 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |PREFIX biblio: <http://www.knora.org/ontology/0801/biblio#>
+           |ASK 
+           |FROM <http://www.knora.org/ontology/0801/biblio>
+           |WHERE { biblio:publicationHasTitle knora-base:objectClassConstraint knora-base:CustomFormattedTextValue . }
+           |""".stripMargin
+      val res1 = repo.doAsk(query1)
+      assert(res1, "The objectClassConstraint in the ontology should have been changed to CustomFormattedTextValue.")
+
+      // check the data
+      val query2 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK
+           |FROM <http://www.knora.org/data/0801/beol>
+           |WHERE {
+           |    BIND (<http://rdfh.ch/0801/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg> as ?s)
+           |    ?s a knora-base:CustomFormattedTextValue .
+           |    ?s knora-base:valueHasString "simple title" .
+           |    ?s knora-base:valueHasMapping <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/leooLetterMapping> .
+           |    ?s knora-base:valueHasMaxStandoffStartIndex 0 .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0801/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg/standoff/0> .
+           |}
+           |""".stripMargin
+      val res2 = repo.doAsk(query2)
+      assert(res2, "The biblio:publicationHasTitle should have been changed to use the BEOL LEOO mapping.")
+
+    }
   }
 }
