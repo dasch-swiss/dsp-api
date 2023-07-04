@@ -68,7 +68,7 @@ final case class AdjustableData(
   mapping: Option[IRI]
 )
 
-class UpgradePluginXXX(log: Logger) extends UpgradePlugin {
+class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
   private val predicatesToRemove: Set[IRI] = Set(
     KnoraBase.ObjectClassConstraint,
     SalsahGui.GuiElementProp,

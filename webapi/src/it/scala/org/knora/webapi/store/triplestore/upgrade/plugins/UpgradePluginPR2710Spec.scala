@@ -11,14 +11,14 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import dsp.errors.InconsistentRepositoryDataException
 
-class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
+class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   "Upgrade plugin XXX" should {
     "transform knora-base:hasComment to FormattedTextValue" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_a.trig")
-      val plugin          = new UpgradePluginXXX(log)
+      val plugin          = new UpgradePluginPR2710(log)
       plugin.transform(model)
       val repo = model.asRepository
 
@@ -65,7 +65,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
     "only adjust the objectClassConstraint and the Type, if the ontology and mappings in data align" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_b.trig")
-      val plugin          = new UpgradePluginXXX(log)
+      val plugin          = new UpgradePluginPR2710(log)
       plugin.transform(model)
       val repo = model.asRepository
 
@@ -177,7 +177,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
     "update the ontology accordingly, if a property is defined as SimpleText/Textarea but uses StandardMapping" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_c.trig")
-      val plugin          = new UpgradePluginXXX(log)
+      val plugin          = new UpgradePluginPR2710(log)
       plugin.transform(model)
       val repo = model.asRepository
 
@@ -253,7 +253,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
     "change the data to use StandardMapping, if no mapping is used but the ontology defines the property as Richtext" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_d.trig")
-      val plugin          = new UpgradePluginXXX(log)
+      val plugin          = new UpgradePluginPR2710(log)
       plugin.transform(model)
       val repo = model.asRepository
 
@@ -293,7 +293,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
     "update the objectClassConstraint and type for values with custom mapping" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_e.trig")
-      val plugin          = new UpgradePluginXXX(log)
+      val plugin          = new UpgradePluginPR2710(log)
       plugin.transform(model)
       val repo = model.asRepository
 
@@ -329,7 +329,7 @@ class UpgradePluginXXXSpec extends UpgradePluginSpec with LazyLogging {
 
     "not perform the update, if a property mixes standard and custom mapping" in {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/xxx/xxx_f.trig")
-      val plugin          = new UpgradePluginXXX(log)
+      val plugin          = new UpgradePluginPR2710(log)
       assertThrows[InconsistentRepositoryDataException](plugin.transform(model))
     }
   }
