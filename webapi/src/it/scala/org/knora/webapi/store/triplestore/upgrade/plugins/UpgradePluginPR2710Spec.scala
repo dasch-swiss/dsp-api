@@ -14,7 +14,7 @@ import dsp.errors.InconsistentRepositoryDataException
 class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
-  "Upgrade plugin XXX" should {
+  "Upgrade plugin PR2710" should {
     "transform knora-base:hasComment to FormattedTextValue" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710a.trig")
