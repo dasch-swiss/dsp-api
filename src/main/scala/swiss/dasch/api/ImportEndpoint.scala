@@ -67,7 +67,8 @@ object ImportEndpoint {
           _          <- validateInputFile(tempFile)
           _          <- AssetService
                           .importProject(pShortcode, tempFile)
-                          .mapError(ApiProblem.internalError)
+                          .logError(s"Error while importing project $shortcode")
+                          .mapError(e => ApiProblem.internalError(s"Error while importing project $shortcode: ${e.getMessage}"))
         } yield UploadResponse()
     )
     .toApp
