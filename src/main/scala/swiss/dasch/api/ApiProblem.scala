@@ -40,6 +40,7 @@ object ApiProblem {
   implicit val internalErrorSchema: Schema[InternalProblem]           = DeriveSchema.gen[InternalProblem]
 
   def internalError(t: Throwable): InternalProblem = InternalProblem(t.getMessage)
+  def internalError(msg: String): InternalProblem  = InternalProblem(msg)
 
   // body
   val bodyIsEmpty: IllegalArguments                 = invalidBody("Body is empty")
