@@ -22,38 +22,15 @@ import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.UnformattedTe
 
 sealed trait TextType
 object TextType {
-  case object UnformattedText     extends TextType
-  case object FormattedText       extends TextType
-  case object CustomFormattedText extends TextType
+  case object UnformattedText                          extends TextType
+  case object FormattedText                            extends TextType
+  case class CustomFormattedText(mapping: Option[IRI]) extends TextType
 
   def fromIri(iri: IRI): TextType =
     iri match {
       case SalsahGui.Textarea | SalsahGui.SimpleText => UnformattedText
       case SalsahGui.Richtext                        => FormattedText
       case _                                         => throw InconsistentRepositoryDataException(s"Unknown text type: $iri")
-    }
-}
-
-sealed trait Mapping {
-  def toIri: Option[IRI] =
-    this match {
-      case Mapping.NoMapping                      => None
-      case Mapping.StandardMapping                => Some(KnoraBase.StandardMapping)
-      case Mapping.CustomMapping(mappingIri: IRI) => Some(mappingIri)
-      case Mapping.UnknownCustomMapping           => throw InconsistentRepositoryDataException("Unknown custom mapping")
-    }
-}
-object Mapping {
-  case object NoMapping                     extends Mapping
-  case object StandardMapping               extends Mapping
-  case object UnknownCustomMapping          extends Mapping
-  case class CustomMapping(mappingIri: IRI) extends Mapping
-
-  def fromTextType(textType: TextType): Mapping =
-    textType match {
-      case UnformattedText     => NoMapping
-      case FormattedText       => StandardMapping
-      case CustomFormattedText => UnknownCustomMapping
     }
 }
 
@@ -67,7 +44,6 @@ final case class TextValueProp(
   iri: IRI,
   textType: TextType,
   objectClassConstraint: Statement,
-  mapping: Mapping,
   statementsToRemove: Set[Statement]
 )
 
@@ -101,14 +77,13 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
 
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
-  private val biblioTitlePropertyIri: IRI = "http://www.knora.org/ontology/0801/biblio#publicationHasTitle"
-  private val leooMappingIri: IRI         = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/leooLetterMapping"
+  private val leooMappingIri: IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/leooLetterMapping"
 
   private def typeToNode(textType: TextType): RdfNode =
     textType match {
-      case TextType.UnformattedText     => nodeFactory.makeIriNode(KnoraBase.UnformattedTextValue)
-      case TextType.FormattedText       => nodeFactory.makeIriNode(KnoraBase.FormattedTextValue)
-      case TextType.CustomFormattedText => nodeFactory.makeIriNode(KnoraBase.CustomFormattedTextValue)
+      case TextType.UnformattedText        => nodeFactory.makeIriNode(KnoraBase.UnformattedTextValue)
+      case TextType.FormattedText          => nodeFactory.makeIriNode(KnoraBase.FormattedTextValue)
+      case TextType.CustomFormattedText(_) => nodeFactory.makeIriNode(KnoraBase.CustomFormattedTextValue)
     }
 
   override def transform(model: RdfModel): Unit = {
@@ -262,7 +237,6 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       iri = prop,
       textType = textType,
       objectClassConstraint = objectClassConstraint,
-      mapping = Mapping.fromTextType(textType),
       statementsToRemove = statementsToRemove
     )
   }
@@ -285,22 +259,17 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       prop.textType match {
         case UnformattedText =>
           (hasStandardMapping, hasCustomMapping) match {
-            case (true, false) => prop.copy(textType = FormattedText, mapping = Mapping.StandardMapping)
+            case (true, false) => prop.copy(textType = FormattedText)
             case (false, true) =>
-              prop.copy(
-                textType = CustomFormattedText,
-                mapping = Mapping.CustomMapping(propertyGetCustomMappingIri(repo, prop))
-              )
+              prop.copy(textType = CustomFormattedText(Some(propertyGetCustomMappingIri(repo, prop))))
             case _ => prop
           }
         case FormattedText =>
-          if (hasCustomMapping)
-            prop.copy(
-              textType = CustomFormattedText,
-              mapping = Mapping.CustomMapping(propertyGetCustomMappingIri(repo, prop))
-            )
+          if (hasCustomMapping) prop.copy(textType = CustomFormattedText(Some(propertyGetCustomMappingIri(repo, prop))))
           else prop
-        case CustomFormattedText => prop.copy(mapping = Mapping.CustomMapping(propertyGetCustomMappingIri(repo, prop)))
+        case CustomFormattedText(None) =>
+          prop.copy(textType = CustomFormattedText(Some(propertyGetCustomMappingIri(repo, prop))))
+        case CustomFormattedText(Some(_)) => prop
       }
     }
   }
@@ -404,22 +373,40 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     adjustable: AdjustableData,
     prop: TextValueProp
   ): DataAdjustment =
-    (prop.textType, adjustable.mapping) match {
-      case (UnformattedText, None) => changeTypeToUnformattedTextValue(adjustable)
-      case (UnformattedText, Some(KnoraBase.StandardMapping)) =>
-        throw InconsistentRepositoryDataException(
-          s"value ${adjustable.valueIri} has standard mapping but is defined as unformatted text after verification (should never happen)."
-        )
-      case (FormattedText, None)                            => addStandardMappingToValue(model, adjustable)
-      case (FormattedText, Some(KnoraBase.StandardMapping)) => changeTypeToFormattedTextValue(adjustable)
-      case (UnformattedText | FormattedText, Some(mapping)) =>
-        throw InconsistentRepositoryDataException(
-          s"Unexpected custom mapping $mapping found on value ${adjustable.valueIri}."
-        )
-      case (CustomFormattedText, None | Some(KnoraBase.StandardMapping)) =>
-        if (prop.iri == biblioTitlePropertyIri) addLeooMappingToValue(model, adjustable)
-        else throw InconsistentRepositoryDataException(s"Cannot create custom mapping in plugin for $prop")
-      case (CustomFormattedText, Some(mapping)) => changeTypeToCustomFormattedTextValue(adjustable)
+    prop.textType match {
+      case UnformattedText =>
+        adjustable.mapping match {
+          case None => changeTypeToUnformattedTextValue(adjustable)
+          case Some(mapping) =>
+            throw InconsistentRepositoryDataException(
+              s"should never happen: ${prop.iri} should be unformatted text but has a mapping: $mapping"
+            )
+        }
+      case FormattedText =>
+        adjustable.mapping match {
+          case None                            => addStandardMappingToValue(model, adjustable)
+          case Some(KnoraBase.StandardMapping) => changeTypeToFormattedTextValue(adjustable)
+          case Some(mapping) =>
+            throw InconsistentRepositoryDataException(
+              s"should never happen: ${prop.iri} should be formatted text but has a custom mapping: $mapping"
+            )
+        }
+      case CustomFormattedText(Some(mapping)) =>
+        adjustable.mapping match {
+          case None => addCustomMappingToUnformattedValue(model, adjustable, mapping)
+          case Some(KnoraBase.StandardMapping) =>
+            throw InconsistentRepositoryDataException(
+              s"Cannot change mapping from standard mapping to $mapping for ${prop.iri}"
+            )
+          case Some(currentMapping) =>
+            if (currentMapping == mapping) changeTypeToCustomFormattedTextValue(adjustable)
+            else
+              throw InconsistentRepositoryDataException(
+                s"Cannot change mapping from $currentMapping to $mapping for ${prop.iri}"
+              )
+        }
+      case CustomFormattedText(None) =>
+        throw InconsistentRepositoryDataException(s"Custom mapping missing for ${prop.iri}")
     }
 
   /**
@@ -496,6 +483,17 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       statementsToInsert = statementsToInsert
     )
   }
+
+  private def addCustomMappingToUnformattedValue(
+    model: RdfModel,
+    adjustable: AdjustableData,
+    mapping: IRI
+  ): DataAdjustment =
+    if (mapping == leooMappingIri) addLeooMappingToValue(model, adjustable)
+    else {
+      println(s"Unknown mapping: $mapping for ${adjustable.valueIri}")
+      throw InconsistentRepositoryDataException(s"Unknown mapping: $mapping")
+    }
 
   /**
    * Creates a complex DataAdjustment that takes an unformatted text value
