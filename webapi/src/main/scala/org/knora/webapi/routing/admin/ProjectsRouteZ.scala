@@ -36,6 +36,7 @@ final case class ProjectsRouteZ(
   private val projectRoutes: Http[Any, Nothing, (Request, UserADM), Response] =
     Http
       .collectZIO[(Request, UserADM)] {
+        // project crud
         case (Method.GET -> !! / "admin" / "projects", _)                           => getProjects()
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded, _)   => getProjectByIri(iriUrlEncoded)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname, _) => getProjectByShortname(shortname)
@@ -48,27 +49,35 @@ final case class ProjectsRouteZ(
           updateProject(iriUrlEncoded, request, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "AllData", requestingUser) =>
           getAllProjectData(iriUrlEncoded, requestingUser)
-        case (Method.POST -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "export", requestingUser) =>
-          postExportProject(iriUrlEncoded, requestingUser)
+
+        // export/import endpoints
         case (Method.GET -> !! / "admin" / "projects" / "exports", requestingUser) =>
           getProjectExports(requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "import", requestingUser) =>
+          postImportProject(shortcode, requestingUser)
+        case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "export", requestingUser) =>
+          postExportProject(shortcode, requestingUser)
+
+        // project members
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "members", requestingUser) =>
           getProjectMembersByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "members", requestingUser) =>
           getProjectMembersByShortname(shortname, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "members", requestingUser) =>
           getProjectMembersByShortcode(shortcode, requestingUser)
-        case (Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "import", requestingUser) =>
-          postImportProject(shortcode, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "admin-members", requestingUser) =>
           getProjectAdminsByIri(iriUrlEncoded, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "admin-members", requestingUser) =>
           getProjectAdminsByShortname(shortname, requestingUser)
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "admin-members", requestingUser) =>
           getProjectAdminsByShortcode(shortcode, requestingUser)
+
+        // keywords
         case (Method.GET -> !! / "admin" / "projects" / "Keywords", _) => getKeywords()
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "Keywords", _) =>
           getKeywordsByProjectIri(iriUrlEncoded)
+
+        // view settings
         case (Method.GET -> !! / "admin" / "projects" / "iri" / iriUrlEncoded / "RestrictedViewSettings", _) =>
           getRestrictedViewSettingsByProjectIri(iriUrlEncoded)
         case (Method.GET -> !! / "admin" / "projects" / "shortname" / shortname / "RestrictedViewSettings", _) =>
@@ -145,17 +154,14 @@ final case class ProjectsRouteZ(
           )
     } yield r
 
-  private def postExportProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] = for {
-    projectIri <- RouteUtilZ.urlDecode(iriUrlEncoded)
-    result     <- projectsService.exportProject(projectIri, requestingUser)
-  } yield Response.json(result.toJson)
+  private def postExportProject(shortcode: String, requestingUser: UserADM): Task[Response] =
+    projectsService.exportProject(shortcode, requestingUser).map(_.toJson).map(Response.json(_))
 
-  private def postImportProject(shortcode: String, requestingUser: UserADM): Task[Response] = for {
-    result <- projectsService.importProject(shortcode, requestingUser)
-  } yield Response.json(result.toJson)
+  private def postImportProject(shortcode: String, requestingUser: UserADM): Task[Response] =
+    projectsService.importProject(shortcode, requestingUser).map(_.toJson).map(Response.json(_))
 
   private def getProjectExports(requestingUser: UserADM): Task[Response] =
-    projectsService.listExports(requestingUser).map(chunk => Response.json(chunk.toJson)).logError
+    projectsService.listExports(requestingUser).map(_.toJson).map(Response.json(_))
 
   private def getProjectMembersByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
