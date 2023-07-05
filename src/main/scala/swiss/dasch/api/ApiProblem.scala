@@ -39,8 +39,9 @@ object ApiProblem {
   implicit val internalErrorEncoder: JsonEncoder[InternalProblem]     = DeriveJsonEncoder.gen[InternalProblem]
   implicit val internalErrorSchema: Schema[InternalProblem]           = DeriveSchema.gen[InternalProblem]
 
-  def internalError(t: Throwable): InternalProblem = InternalProblem(t.getMessage)
-  def internalError(msg: String): InternalProblem  = InternalProblem(msg)
+  def internalError(msg: String): InternalProblem               = InternalProblem(msg)
+  def internalError(t: Throwable): InternalProblem              = InternalProblem(t.getMessage)
+  def internalError(msg: String, t: Throwable): InternalProblem = InternalProblem(s"$msg: ${t.getMessage}")
 
   // body
   val bodyIsEmpty: IllegalArguments                 = invalidBody("Body is empty")

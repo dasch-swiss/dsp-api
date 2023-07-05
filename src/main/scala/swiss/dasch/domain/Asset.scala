@@ -90,16 +90,14 @@ final case class AssetServiceLive(config: StorageConfig) extends AssetService {
   override def importProject(shortcode: ProjectShortcode, zipFile: Path): IO[Throwable, Unit] = {
     val targetFolder = config.assetPath / shortcode.toString
     ZIO.logInfo(s"Importing project $shortcode") *>
-      deleteExistingProjectFiles(shortcode) *>
-      ZipUtility.unzipFile(zipFile, targetFolder) *>
+      deleteExistingProjectFiles(shortcode).flatMap(no => ZIO.logDebug(s"Deleted $no files in $targetFolder")) *>
       Files.createDirectories(targetFolder) *>
+      ZipUtility.unzipFile(zipFile, targetFolder) *>
       ZIO.logInfo(s"Importing project $shortcode was successful")
   }
 
-  private def deleteExistingProjectFiles(shortcode: ProjectShortcode): IO[IOException, Unit] =
-    deleteRecursive(projectPath(shortcode))
-      .whenZIO(Files.exists(projectPath(shortcode)))
-      .unit
+  private def deleteExistingProjectFiles(shortcode: ProjectShortcode): IO[IOException, Long] =
+    deleteRecursive(projectPath(shortcode)).whenZIO(Files.exists(projectPath(shortcode)))
 
   // The zio.nio.file.Files.deleteRecursive function has a bug in 2.0.1
   // https://github.com/zio/zio-nio/pull/588/files <- this PR fixes it

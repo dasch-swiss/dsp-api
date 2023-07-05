@@ -65,13 +65,13 @@ object ImportEndpoint {
           _                 <- stream
                                  .run(ZSink.fromFile(tempFile.toFile))
                                  .logError(writeFileErrorMsg)
-                                 .mapError(e => ApiProblem.internalError(writeFileErrorMsg + ": " + e.getMessage))
+                                 .mapError(e => ApiProblem.internalError(writeFileErrorMsg, e))
           _                 <- validateInputFile(tempFile)
           importFileErrorMsg = s"Error while importing project $shortcode"
           _                 <- AssetService
                                  .importProject(pShortcode, tempFile)
                                  .logError(importFileErrorMsg)
-                                 .mapError(e => ApiProblem.internalError(importFileErrorMsg + ": " + e.getMessage))
+                                 .mapError(e => ApiProblem.internalError(importFileErrorMsg, e))
         } yield UploadResponse()
     )
     .toApp
@@ -90,7 +90,7 @@ object ImportEndpoint {
 
           def release(zipFile: ZipFile) = ZIO.succeed(zipFile.close())
 
-          ZIO.acquireRelease(acquire)(release).orElseFail(IllegalArguments("body", "body is not a zip file"))
+          ZIO.acquireRelease(acquire)(release).orElseFail(ApiProblem.invalidBody("Body does not contain a zip file"))
         }
     } yield ()).tapError(_ => Files.deleteIfExists(tempFile).mapError(ApiProblem.internalError))
 
