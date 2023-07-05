@@ -9,6 +9,7 @@ nav:
           - Authentication: api-authentication.md
       - Service documentation:
           - Configuration: service-configuration.md
+          - Filesystem Setup: service-filesystem-setup.md
 
 plugins:
   - include-markdown
@@ -37,4 +38,4 @@ markdown_extensions:
       alternate_style: true
 
 extra_css:
-  - css/mkdocsoad.css
+  - css/mkdocsoad-v1.0.2.css

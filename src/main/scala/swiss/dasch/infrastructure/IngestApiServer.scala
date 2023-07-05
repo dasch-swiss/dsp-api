@@ -20,7 +20,7 @@ object IngestApiServer {
   private val managementApps = HealthEndpoint.app ++ InfoEndpoint.app ++ MetricsEndpoint.app
   private val app            = ((managementApps ++ serviceApps)
     @@ HttpRoutesMiddlewares.dropTrailingSlash)
-    @@ HttpRoutesMiddlewares.cors(CorsConfig()) @@ requestLogging
+    @@ HttpRoutesMiddlewares.cors(CorsConfig())
 
   def startup() =
     ZIO.logInfo(s"Starting ${BuildInfo.name}") *>

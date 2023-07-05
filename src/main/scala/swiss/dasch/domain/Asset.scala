@@ -97,7 +97,7 @@ final case class AssetServiceLive(config: StorageConfig) extends AssetService {
   }
 
   private def deleteExistingProjectFiles(shortcode: ProjectShortcode): IO[IOException, Long] =
-    deleteRecursive(projectPath(shortcode)).whenZIO(Files.exists(projectPath(shortcode)))
+    deleteRecursive(projectPath(shortcode)).whenZIO(Files.exists(projectPath(shortcode))).map(_.getOrElse(0L))
 
   // The zio.nio.file.Files.deleteRecursive function has a bug in 2.0.1
   // https://github.com/zio/zio-nio/pull/588/files <- this PR fixes it

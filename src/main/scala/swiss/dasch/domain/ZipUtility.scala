@@ -125,7 +125,7 @@ object ZipUtility {
 object ScopedIoStreams {
 
   /** Creates a [[java.io.FileInputStream]] by opening a connection to an actual file, the file named by the File object
-    * file in the file system.
+    * file in the filesystem.
     *
     * @param path
     *   the actual file to read from, must exist
@@ -175,7 +175,7 @@ object ScopedIoStreams {
     ZIO.fromAutoCloseable(ZIO.succeed(new ByteArrayInputStream(new Array[Byte](bufferSize))))
 
   /** Creates a new managed [[java.io.FileOutputStream]] by opening a connection to an actual file, the file named by
-    * the File object file in the file system.
+    * the File object file in the filesystem.
     *
     * @param path
     *   the actual file to write to, must exist

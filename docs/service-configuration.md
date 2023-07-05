@@ -23,6 +23,8 @@ There are a couple of groups of variables:
 | `STORAGE_ASSET_DIR` | `localdev/storage/images` | Path to the folder where the assets will be stored       |
 | `STORAGE_TEMP_DIR`  | `localdev/storage/temp`   | Path to the folder where temporary files will be created |
 
+The layout in these folders is explained in detail in the chapter ["Filesystem Setup"](service-filesystem-setup.md).
+
 ## Jwt
 
 | Variable           | Default                            | Description                                                                                                                                               |
