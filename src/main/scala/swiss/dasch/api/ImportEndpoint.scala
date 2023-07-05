@@ -58,17 +58,20 @@ object ImportEndpoint {
           actual: ContentType,
         ) =>
         for {
-          pShortcode <- ApiStringConverters.fromPathVarToProjectShortcode(shortcode)
-          _          <- verifyContentType(actual, ContentType(MediaType.application.zip))
-          tempFile   <- ZIO.serviceWith[StorageConfig](_.importPath / s"import-$pShortcode.zip")
-          _          <- stream
-                          .run(ZSink.fromFile(tempFile.toFile))
-                          .mapError(ApiProblem.internalError)
-          _          <- validateInputFile(tempFile)
-          _          <- AssetService
-                          .importProject(pShortcode, tempFile)
-                          .logError(s"Error while importing project $shortcode")
-                          .mapError(e => ApiProblem.internalError(s"Error while importing project $shortcode: ${e.getMessage}"))
+          pShortcode        <- ApiStringConverters.fromPathVarToProjectShortcode(shortcode)
+          _                 <- verifyContentType(actual, ContentType(MediaType.application.zip))
+          tempFile          <- ZIO.serviceWith[StorageConfig](_.importPath / s"import-$pShortcode.zip")
+          writeFileErrorMsg  = s"Error while writing file $tempFile for project $shortcode"
+          _                 <- stream
+                                 .run(ZSink.fromFile(tempFile.toFile))
+                                 .logError(writeFileErrorMsg)
+                                 .mapError(e => ApiProblem.internalError(writeFileErrorMsg + ": " + e.getMessage))
+          _                 <- validateInputFile(tempFile)
+          importFileErrorMsg = s"Error while importing project $shortcode"
+          _                 <- AssetService
+                                 .importProject(pShortcode, tempFile)
+                                 .logError(importFileErrorMsg)
+                                 .mapError(e => ApiProblem.internalError(importFileErrorMsg + ": " + e.getMessage))
         } yield UploadResponse()
     )
     .toApp
