@@ -33,7 +33,7 @@ object IngestApiServer {
   val layer: URLayer[ServiceConfig, Server] = ZLayer
     .service[ServiceConfig]
     .flatMap { cfg =>
-      Server.defaultWith(_.binding(cfg.get.host, cfg.get.port))
+      Server.defaultWith(_.binding(cfg.get.host, cfg.get.port).enableRequestStreaming)
     }
     .orDie
 }
