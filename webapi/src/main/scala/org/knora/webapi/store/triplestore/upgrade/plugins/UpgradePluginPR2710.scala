@@ -34,6 +34,29 @@ object TextType {
     }
 }
 
+sealed trait Mapping {
+  def toIri: Option[IRI] =
+    this match {
+      case Mapping.NoMapping                      => None
+      case Mapping.StandardMapping                => Some(KnoraBase.StandardMapping)
+      case Mapping.CustomMapping(mappingIri: IRI) => Some(mappingIri)
+      case Mapping.UnknownCustomMapping           => throw InconsistentRepositoryDataException("Unknown custom mapping")
+    }
+}
+object Mapping {
+  case object NoMapping                     extends Mapping
+  case object StandardMapping               extends Mapping
+  case object UnknownCustomMapping          extends Mapping
+  case class CustomMapping(mappingIri: IRI) extends Mapping
+
+  def fromTextType(textType: TextType): Mapping =
+    textType match {
+      case UnformattedText     => NoMapping
+      case FormattedText       => StandardMapping
+      case CustomFormattedText => UnknownCustomMapping
+    }
+}
+
 /**
  * Represents a property that has a text value as its object class constraint.
  */
@@ -44,6 +67,7 @@ final case class TextValueProp(
   iri: IRI,
   textType: TextType,
   objectClassConstraint: Statement,
+  mapping: Mapping,
   statementsToRemove: Set[Statement]
 )
 
@@ -215,7 +239,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         acc ++ definitionByPredicate.getOrElse(pred, Seq.empty[Statement])
       }
 
-    val textType = definitionByPredicate
+    val textType: TextType = definitionByPredicate
       .get(SalsahGui.GuiElementProp)
       .map(_.map(_.obj).toSet.toList match {
         case (obj: JenaIriNode) :: Nil => TextType.fromIri(obj.iri)
@@ -238,6 +262,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       iri = prop,
       textType = textType,
       objectClassConstraint = objectClassConstraint,
+      mapping = Mapping.fromTextType(textType),
       statementsToRemove = statementsToRemove
     )
   }
@@ -250,18 +275,32 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
   private def verifyTextValueProps(model: RdfModel, props: Set[TextValueProp]): Set[TextValueProp] = {
     val repo: RdfRepository = model.asRepository
     props.map { prop =>
+      val hasStandardMapping = propertyHasStandardMapping(repo, prop)
+      val hasCustomMapping   = propertyHasCustomMapping(repo, prop)
+      if (hasStandardMapping && hasCustomMapping) {
+        throw InconsistentRepositoryDataException(
+          s"Property ${prop.iri} in ${prop.project} has both a standard and a custom mapping in data."
+        )
+      }
       prop.textType match {
-        case CustomFormattedText => prop
-        case _ =>
-          (propertyHasStandardMapping(repo, prop), propertyHasCustomMapping(repo, prop)) match {
-            case (true, false)  => prop.copy(textType = FormattedText)
-            case (false, true)  => prop.copy(textType = CustomFormattedText)
-            case (false, false) => prop
-            case (true, true) =>
-              throw InconsistentRepositoryDataException(
-                s"Property ${prop.iri} in ${prop.project} has both a standard and a custom mapping in data."
+        case UnformattedText =>
+          (hasStandardMapping, hasCustomMapping) match {
+            case (true, false) => prop.copy(textType = FormattedText, mapping = Mapping.StandardMapping)
+            case (false, true) =>
+              prop.copy(
+                textType = CustomFormattedText,
+                mapping = Mapping.CustomMapping(propertyGetCustomMappingIri(repo, prop))
               )
+            case _ => prop
           }
+        case FormattedText =>
+          if (hasCustomMapping)
+            prop.copy(
+              textType = CustomFormattedText,
+              mapping = Mapping.CustomMapping(propertyGetCustomMappingIri(repo, prop))
+            )
+          else prop
+        case CustomFormattedText => prop.copy(mapping = Mapping.CustomMapping(propertyGetCustomMappingIri(repo, prop)))
       }
     }
   }
@@ -278,7 +317,8 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         |        ?res <${prop.iri}> ?val .
         |        ?val knora-base:valueHasMapping <${KnoraBase.StandardMapping}> .
         |    }
-        |}""".stripMargin
+        |}
+        |""".stripMargin
 
   private def propertyHasCustomMapping(repo: RdfRepository, prop: TextValueProp): Boolean =
     repo.doAsk(hasCustomMappingQuery(prop))
@@ -293,7 +333,34 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         |        ?val knora-base:valueHasMapping ?mapping .
         |        FILTER (?mapping != <${KnoraBase.StandardMapping}>) .
         |    }
-        |}""".stripMargin
+        |}
+        |""".stripMargin
+
+  private def propertyGetCustomMappingIri(repo: RdfRepository, prop: TextValueProp): IRI = {
+    val query =
+      s"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |SELECT DISTINCT ?mapping
+          |WHERE {
+          |    GRAPH ?graph {
+          |        ?resource <${prop.iri}> ?value . 
+          |        ?value knora-base:valueHasMapping ?mapping .
+          |        FILTER (?mapping != <${KnoraBase.StandardMapping}>) .
+          |    }
+          |}
+          |""".stripMargin
+    val res = repo.doSelect(query)
+    if (res.results.bindings.size > 1) {
+      throw InconsistentRepositoryDataException(
+        s"Property ${prop.iri} in ${prop.project} has more than one mapping in data."
+      )
+    }
+    res.getFirstRow.rowMap.getOrElse(
+      "mapping",
+      throw InconsistentRepositoryDataException(
+        s"Property ${prop.iri} in ${prop.project} has no mapping in data."
+      )
+    )
+  }
 
   /**
    * Given a set of verified TextValueProps, produces a set of DataAdjustments that need to be made to the repository.
