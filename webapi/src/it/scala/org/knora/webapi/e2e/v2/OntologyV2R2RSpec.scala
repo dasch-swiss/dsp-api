@@ -43,6 +43,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util._
 
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
   private val anythingUsername    = anythingUserProfile.email
@@ -66,10 +68,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     DSPApiDirectives.handleErrors(system, appConfig)(OntologiesRouteV2().makeRoute)
   private val resourcesPath =
     DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(appConfig).makeRoute)
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

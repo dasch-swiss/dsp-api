@@ -38,9 +38,6 @@ class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  // The default timeout for receiving reply messages from actors.
-  private val timeout = 10.seconds
-
   "The lists responder v2" should {
     "return a list" in {
       appActor ! ListGetRequestV2(

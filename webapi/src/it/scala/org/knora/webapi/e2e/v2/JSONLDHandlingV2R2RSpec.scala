@@ -13,12 +13,13 @@ import spray.json._
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
-
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.v2.ResourcesRouteV2
+
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-end specification for the handling of JSONLD documents.
@@ -26,10 +27,6 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
   private val resourcesPath = ResourcesRouteV2(appConfig).makeRoute
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

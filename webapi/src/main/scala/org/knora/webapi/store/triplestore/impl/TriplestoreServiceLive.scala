@@ -85,8 +85,8 @@ case class TriplestoreServiceLive(
   )
 
   // timeouts sent to Fuseki
-  private val queryTimeoutString      = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
-  private val gravsearchTimeoutString = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
+  private val queryTimeoutString      = config.triplestore.queryTimeout.toSeconds.toInt.toString
+  private val gravsearchTimeoutString = config.triplestore.gravsearchTimeout.toSeconds.toInt.toString
 
   // the client config used for queries to the triplestore. The timeout has to be larger than
   // config.triplestore.queryTimeoutAsDuration and config.triplestore.gravsearchTimeoutAsDuration.
@@ -1014,7 +1014,7 @@ object TriplestoreServiceLive {
     ZIO.attemptBlocking {
 
       // timeout from config
-      val sipiTimeoutMillis: Int = config.sipi.timeoutInSeconds.toMillis.toInt
+      val sipiTimeoutMillis: Int = config.sipi.timeout.toMillis.toInt
 
       // Create a connection manager with custom configuration.
       val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()

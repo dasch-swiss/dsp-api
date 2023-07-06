@@ -24,8 +24,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  */
 class UsersResponderV1Spec extends CoreSpec with ImplicitSender {
 
-  private val timeout = 5.seconds
-
   private val rootUser      = SharedTestDataV1.rootUser
   private val rootUserIri   = rootUser.userData.user_id.get
   private val rootUserEmail = rootUser.userData.email.get

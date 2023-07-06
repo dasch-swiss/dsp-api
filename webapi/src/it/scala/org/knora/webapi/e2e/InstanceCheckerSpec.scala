@@ -9,12 +9,13 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 
 import java.nio.file.Paths
-
 import dsp.errors.AssertionException
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.util.FileUtil
+
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * Tests [[InstanceChecker]].
@@ -23,7 +24,7 @@ class InstanceCheckerSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
   )
 
   private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker

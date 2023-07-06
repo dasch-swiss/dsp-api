@@ -87,8 +87,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
   private val password = SharedTestDataADM.testPass
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration * 2
+  override implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
+    FiniteDuration(appConfig.defaultTimeout.toNanos * 2, NANOSECONDS)
   )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher

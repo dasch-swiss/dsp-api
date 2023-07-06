@@ -44,6 +44,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
@@ -61,10 +63,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV2().makeRoute)
   private val valuesPath =
     DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

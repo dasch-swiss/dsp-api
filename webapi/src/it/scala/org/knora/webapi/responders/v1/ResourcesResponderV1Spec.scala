@@ -656,7 +656,7 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
   override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   // The default timeout for receiving reply messages from actors.
-  private val timeout = 60.seconds
+  override implicit val timeout: FiniteDuration = 60.seconds
 
   private val newBookResourceIri = new MutableTestIri
   private val newPageResourceIri = new MutableTestIri
