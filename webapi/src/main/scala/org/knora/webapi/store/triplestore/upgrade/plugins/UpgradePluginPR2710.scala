@@ -19,8 +19,18 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.CustomFormattedText
 import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.FormattedText
 import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.UnformattedText
+import scala.annotation.tailrec
 
-sealed trait TextType
+sealed trait TextType {
+  def isNarrower(other: TextType): Boolean =
+    (this, other) match {
+      case (UnformattedText, UnformattedText) => false
+      case (UnformattedText, _)               => true
+      case (FormattedText, FormattedText)     => false
+      case (FormattedText, _)                 => true
+      case (CustomFormattedText(_), _)        => false
+    }
+}
 object TextType {
   case object UnformattedText                          extends TextType
   case object FormattedText                            extends TextType
@@ -98,8 +108,14 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     val textValueProps: Set[TextValueProp] = makeTextValueProps(model, textValuePropsPerOntology, ontologyToProjectMap)
     log.debug(s"Created ${textValueProps.size} TextValueProperty objects.")
 
-    val verifiedTextValueProps: Set[TextValueProp] = verifyTextValueProps(model, textValueProps)
-    log.debug(s"Verified ${verifiedTextValueProps.size} TextValueProperty objects against usage in data.")
+    val dataVerifiedTextValueProps: Set[TextValueProp] = verifyTextValuePropsAgainstData(model, textValueProps)
+    log.debug(s"Verified ${dataVerifiedTextValueProps.size} TextValueProperty objects against usage in data.")
+
+    val verifiedTextValueProps: Set[TextValueProp] =
+      verifyTextValuePropsWithInheritance(model, dataVerifiedTextValueProps)
+    log.debug(
+      s"Verified ${verifiedTextValueProps.size} TextValueProperty objects against the ontology for inheritance implications."
+    )
 
     val dataAdjustments = collectDataAdjustments(model, verifiedTextValueProps)
     log.debug(s"Found ${dataAdjustments.size} values in data to adjust.")
@@ -246,7 +262,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
    * If not, the TextValueProperty is updated accordingly.
    * This happens e.g. when a property is defined as unformatted text but in data it has standoff defined
    */
-  private def verifyTextValueProps(model: RdfModel, props: Set[TextValueProp]): Set[TextValueProp] = {
+  private def verifyTextValuePropsAgainstData(model: RdfModel, props: Set[TextValueProp]): Set[TextValueProp] = {
     val repo: RdfRepository = model.asRepository
     props.map { prop =>
       val hasStandardMapping = propertyHasStandardMapping(repo, prop)
@@ -272,6 +288,64 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         case CustomFormattedText(Some(_)) => prop
       }
     }
+  }
+
+  /**
+   * Verifies that the TextValueProperties align with their sub- and superproperties.
+   * If not, the TextValueProperty is updated accordingly.
+   * Sub- and superproperties must have the same objectClassConstraint.
+   * Hence, if either is widened (e.g. unformatted to formatted text), then all of its potential subproperties
+   * must be widened as well as its potential superproperty and all its respective subproperties.
+   */
+  private def verifyTextValuePropsWithInheritance(model: RdfModel, props: Set[TextValueProp]): Set[TextValueProp] = {
+    val repo: RdfRepository    = model.asRepository
+    val propertyIris: Set[IRI] = props.map(_.iri)
+    val subProperties: Map[IRI, Set[IRI]] =
+      propertyIris.map(propIri => propIri -> getSubProperties(repo, propIri)).filter(_._2.nonEmpty).toMap
+
+    def findViolation(pp: Set[TextValueProp]): Option[(TextValueProp, TextValueProp)] =
+      pp.flatMap { prop =>
+        val subProps: Set[TextValueProp] =
+          subProperties.getOrElse(prop.iri, Set.empty[IRI]).flatMap { subPropIri =>
+            pp.find(_.iri == subPropIri)
+          }
+        val violatingSubProp: Option[TextValueProp] =
+          subProps.find(prop.textType != _.textType)
+        violatingSubProp.map { violating =>
+          if (prop.textType.isNarrower(violating.textType)) (prop, violating)
+          else (violating, prop)
+        }
+      }.headOption
+
+    @tailrec
+    def changeAndCheck(pp: Set[TextValueProp]): Set[TextValueProp] =
+      findViolation(pp) match {
+        case None => pp
+        case Some((toWiden, widenedBy)) =>
+          val widened = toWiden.copy(
+            textType = widenedBy.textType,
+            objectClassConstraint =
+              copyStatement(toWiden.objectClassConstraint, obj = Some(widenedBy.objectClassConstraint.obj)),
+            statementsToRemove = toWiden.statementsToRemove + toWiden.objectClassConstraint
+          )
+          val updated = pp - toWiden + widened
+          changeAndCheck(updated)
+      }
+
+    changeAndCheck(props)
+  }
+
+  private def getSubProperties(repo: RdfRepository, propIri: IRI): Set[IRI] = {
+    val query =
+      s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |SELECT ?sub
+          |WHERE {
+          |    GRAPH ?g {
+          |        ?sub rdfs:subPropertyOf <${propIri}> .
+          |    }
+          |}
+          |""".stripMargin
+    repo.doSelect(query).results.bindings.map(_.rowMap("sub")).toSet
   }
 
   private def propertyHasStandardMapping(repo: RdfRepository, prop: TextValueProp): Boolean =
