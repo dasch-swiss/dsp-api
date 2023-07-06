@@ -24,7 +24,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
@@ -52,7 +51,6 @@ final case class OntologyResponderV1Live(
     message.isInstanceOf[OntologyResponderRequestV1]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case LoadOntologiesRequestV1(userProfile) => loadOntologies(userProfile)
     case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) =>
       getEntityInfoResponseV1(resourceIris, propertyIris, userProfile)
     case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) =>
@@ -79,17 +77,6 @@ final case class OntologyResponderV1Live(
   private def noClassConstraintException(iri: IRI) = InconsistentRepositoryDataException(
     s"Property $iri has no knora-base:objectClassConstraint"
   )
-
-  /**
-   * Loads and caches all ontology information.
-   *
-   * @param userProfile          the profile of the user making the request.
-   * @return a [[LoadOntologiesResponse]].
-   */
-  private def loadOntologies(userProfile: UserADM): Task[LoadOntologiesResponse] =
-    messageRelay
-      .ask[SuccessResponseV2](LoadOntologiesRequestV2(userProfile))
-      .as(LoadOntologiesResponse())
 
   /**
    * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.

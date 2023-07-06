@@ -12,7 +12,6 @@ import zio.ZIO
 import zio.ZLayer
 
 import java.time.Instant
-
 import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
@@ -52,7 +51,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
  * - The triplestore.
  * - The constant knora-api v2 ontologies that are defined in Scala rather than in the triplestore, [[KnoraBaseToApiV2SimpleTransformationRules]] and [[KnoraBaseToApiV2ComplexTransformationRules]].
  *
- * It maintains an in-memory cache of all ontology data. This cache can be refreshed by sending a [[LoadOntologiesRequestV2]].
+ * It maintains an in-memory cache of all ontology data. This cache can be refreshed by using [[OntologyCache.loadOntologies]].
  *
  * Read requests to the ontology responder may contain internal or external IRIs as needed. Response messages from the
  * ontology responder will contain internal IRIs and definitions, unless a constant API v2 ontology was requested,
@@ -84,7 +83,6 @@ final case class OntologyResponderV2Live(
     message.isInstanceOf[OntologiesResponderRequestV2]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case r: LoadOntologiesRequestV2 => ontologyCache.loadOntologies(r.requestingUser)
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
       getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
     case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) =>
