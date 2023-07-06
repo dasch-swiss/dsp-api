@@ -22,7 +22,8 @@ PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 SELECT DISTINCT ?isUsed
 
 WHERE {
-  	BIND(IRI("@entityIri") AS ?entity)
+    BIND(IRI("@entityIri") AS ?entity)
+    ?s ?p ?entity .
     BIND(true AS ?isUsed)
-	?s ?p ?entity
 }
+LIMIT 1
