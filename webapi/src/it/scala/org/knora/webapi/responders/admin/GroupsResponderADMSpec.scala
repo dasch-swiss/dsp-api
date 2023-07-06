@@ -27,7 +27,6 @@ import org.knora.webapi.util.MutableTestIri
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.
  */
 class GroupsResponderADMSpec extends CoreSpec {
-  private val timeout             = 5.seconds
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
   private val rootUser            = SharedTestDataADM.rootUser

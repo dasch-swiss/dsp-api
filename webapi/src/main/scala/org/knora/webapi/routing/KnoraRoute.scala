@@ -37,7 +37,7 @@ case class KnoraRouteData(system: akka.actor.ActorSystem, appActor: akka.actor.A
 abstract class KnoraRoute(routeData: KnoraRouteData, protected implicit val runtime: Runtime[Authenticator]) {
 
   implicit protected val system: ActorSystem                = routeData.system
-  implicit protected val timeout: Timeout                   = routeData.appConfig.defaultTimeoutAsDuration
+  implicit protected val timeout: Timeout                   = Timeout.create(routeData.appConfig.defaultTimeout)
   implicit protected val executionContext: ExecutionContext = system.dispatcher
   implicit protected val stringFormatter: StringFormatter   = StringFormatter.getGeneralInstance
   implicit protected val appActor: ActorRef                 = routeData.appActor

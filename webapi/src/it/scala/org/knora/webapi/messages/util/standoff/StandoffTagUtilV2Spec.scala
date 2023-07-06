@@ -23,7 +23,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
  * Tests [[StandoffTagUtilV2]].
  */
 class StandoffTagUtilV2Spec extends CoreSpec {
-  private implicit val timeout: Timeout                 = 10.seconds
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val standoff1: Vector[StandoffTagV2] = Vector(

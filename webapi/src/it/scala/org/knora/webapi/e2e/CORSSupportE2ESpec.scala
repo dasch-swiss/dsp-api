@@ -12,16 +12,19 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.headers.`Access-Control-Allow-Methods`
 import akka.http.scaladsl.testkit.RouteTestTimeout
-
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-end test specification for testing [[CORSSupport]].
  */
 class CORSSupportE2ESpec extends E2ESpec {
 
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(appConfig.defaultTimeoutAsDuration)
+  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
+  )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
