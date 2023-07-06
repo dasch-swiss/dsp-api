@@ -13,7 +13,6 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -22,7 +21,6 @@ import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectExportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
@@ -47,8 +45,8 @@ trait ProjectADMRestService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
-  def exportProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectExportResponse]
-  def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse]
+  def exportProject(shortcode: String, requestingUser: UserADM): Task[ProjectExportResponse]
+  def importProject(shortcode: String, requestingUser: UserADM): Task[ProjectImportResponse]
   def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]]
   def getProjectMembers(
     projectIdentifier: ProjectIdentifierADM,
@@ -242,25 +240,22 @@ final case class ProjectsADMRestServiceLive(
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
-  override def exportProject(projectIri: String, requestingUser: UserADM): Task[ProjectExportResponse] = for {
-    _       <- permissionService.ensureSystemAdmin(requestingUser)
-    project <- findProject(projectIri)
-    zipFile <- projectExportService.exportProject(project)
+  override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[ProjectExportResponse] = for {
+    _         <- permissionService.ensureSystemAdmin(requestingUser)
+    shortcode <- convertStringToShortcode(shortcodeStr)
+    project   <- projectRepo.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found."))
+    zipFile   <- projectExportService.exportProject(project)
   } yield ProjectExportResponse(zipFile.toString)
 
-  private def findProject(iri: String): Task[KnoraProject] =
-    IriIdentifier
-      .fromString(iri)
-      .toZIO
-      .orElseFail(BadRequestException(s"Invalid project IRI: $iri"))
-      .flatMap(projectIri => projectRepo.findById(projectIri).someOrFail(NotFoundException(s"Project $iri not found.")))
+  private def convertStringToShortcode(shortcodeStr: String): IO[BadRequestException, Shortcode] =
+    Shortcode.make(shortcodeStr).toZIO.mapError(err => BadRequestException(err.msg))
 
   override def importProject(
-    projectShortcode: String,
+    shortcodeStr: String,
     requestingUser: UserADM
   ): Task[ProjectImportResponse] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)
-    shortcode <- Shortcode.make(projectShortcode).toZIO
+    shortcode <- convertStringToShortcode(shortcodeStr)
     path <-
       projectImportService
         .importProject(shortcode, requestingUser)

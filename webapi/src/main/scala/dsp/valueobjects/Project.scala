@@ -70,12 +70,6 @@ object Project {
           case true  => Validation.succeed(new Shortcode(value.toUpperCase) {})
         }
       }
-
-    def make(value: Option[String]): Validation[ValidationException, Option[Shortcode]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
   }
 
   /**
