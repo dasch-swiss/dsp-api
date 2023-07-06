@@ -7,7 +7,6 @@ package org.knora.webapi
 
 import akka.actor
 import akka.testkit.{ImplicitSender, TestKitBase}
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi

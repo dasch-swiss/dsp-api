@@ -7,8 +7,9 @@ package org.knora.webapi.core
 
 import com.typesafe.scalalogging.LazyLogging
 import zio._
-
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
@@ -22,16 +23,17 @@ trait TestStartupUtils extends LazyLogging {
    *
    * @param rdfDataObjects a list of [[RdfDataObject]]
    */
-  def prepareRepository(rdfDataObjects: List[RdfDataObject]): ZIO[TriplestoreService with AppRouter, Throwable, Unit] =
+  def prepareRepository(
+    rdfDataObjects: List[RdfDataObject]
+  ): ZIO[TriplestoreService with OntologyCache, Throwable, Unit] =
     for {
-      _         <- ZIO.logInfo("Loading test data started ...")
-      tss       <- ZIO.service[TriplestoreService]
-      _         <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
-      _         <- ZIO.logInfo("... loading test data done.")
-      _         <- ZIO.logInfo("Loading ontologies into cache started ...")
-      appRouter <- ZIO.service[AppRouter]
-      _         <- appRouter.populateOntologyCaches.orDie
-      _         <- ZIO.logInfo("... loading ontologies into cache done.")
+      _   <- ZIO.logInfo("Loading test data started ...")
+      tss <- ZIO.service[TriplestoreService]
+      _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
+      _   <- ZIO.logInfo("... loading test data done.")
+      _   <- ZIO.logInfo("Loading ontologies into cache started ...")
+      _   <- OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser).orDie
+      _   <- ZIO.logInfo("... loading ontologies into cache done.")
     } yield ()
 
 }
