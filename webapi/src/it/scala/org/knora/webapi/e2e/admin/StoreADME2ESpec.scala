@@ -9,9 +9,9 @@ import akka.http.scaladsl.model.ContentTypes
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes
 import spray.json._
-
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import zio.Duration
 
 /**
  * End-to-End (E2E) test specification for testing the 'v1/store' route.
@@ -32,7 +32,7 @@ class StoreADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
         baseApiUrl + "/admin/store/ResetTriplestoreContent",
         HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
       )
-      val response = singleAwaitingRequest(request)
+      val response = singleAwaitingRequest(request, Duration.fromSeconds(480))
       assert(response.status === StatusCodes.OK)
     }
   }

@@ -17,9 +17,8 @@ import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestore
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -45,7 +44,8 @@ final case class StoresResponderADMLive(
   appConfig: AppConfig,
   cacheService: CacheService,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService
+  triplestoreService: TriplestoreService,
+  ontologyCache: OntologyCache
 ) extends StoresResponderADM
     with MessageHandler {
 
@@ -74,24 +74,28 @@ final case class StoresResponderADMLive(
                )
              )
              .when(!appConfig.allowReloadOverHttp)
-      resetResponse          <- triplestoreService.resetTripleStoreContent(rdfDataObjects, prependDefaults)
-      _                      <- ZIO.logDebug(s"resetTriplestoreContent - triplestore reset done - ${resetResponse.toString}")
-      loadOntologiesResponse <- messageRelay.ask[SuccessResponseV2](LoadOntologiesRequestV2(systemUser))
-      _                      <- ZIO.logDebug(s"resetTriplestoreContent - load ontology done - ${loadOntologiesResponse.toString}")
-      _                      <- cacheService.flushDB(systemUser)
-      _                      <- ZIO.logDebug(s"resetTriplestoreContent - flushing cache store done.")
+      resetResponse <- triplestoreService.resetTripleStoreContent(rdfDataObjects, prependDefaults)
+      _             <- ZIO.logDebug(s"resetTriplestoreContent - triplestore reset done - ${resetResponse.toString}")
+      _             <- ontologyCache.loadOntologies(systemUser)
+      _             <- ZIO.logDebug(s"resetTriplestoreContent - load ontology done.")
+      _             <- cacheService.flushDB(systemUser)
+      _             <- ZIO.logDebug(s"resetTriplestoreContent - flushing cache store done.")
     } yield ResetTriplestoreContentResponseADM("success")
 }
 
 object StoresResponderADMLive {
-  val layer: URLayer[TriplestoreService with MessageRelay with CacheService with AppConfig, StoresResponderADMLive] =
+  val layer: URLayer[
+    TriplestoreService with MessageRelay with CacheService with AppConfig with OntologyCache,
+    StoresResponderADMLive
+  ] =
     ZLayer.fromZIO {
       for {
         config  <- ZIO.service[AppConfig]
         cs      <- ZIO.service[CacheService]
         mr      <- ZIO.service[MessageRelay]
         ts      <- ZIO.service[TriplestoreService]
-        handler <- mr.subscribe(StoresResponderADMLive(config, cs, mr, ts))
+        oc      <- ZIO.service[OntologyCache]
+        handler <- mr.subscribe(StoresResponderADMLive(config, cs, mr, ts, oc))
       } yield handler
     }
 }

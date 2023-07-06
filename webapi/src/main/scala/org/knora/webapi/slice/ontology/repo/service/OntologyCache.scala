@@ -24,7 +24,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.OntologyUtil
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
@@ -433,9 +432,9 @@ trait OntologyCache {
    * Loads and caches all ontology information.
    *
    * @param requestingUser the user making the request.
-   * @return a [[SuccessResponseV2]].
+   * @return [[Unit]]
    */
-  def loadOntologies(requestingUser: UserADM): Task[SuccessResponseV2]
+  def loadOntologies(requestingUser: UserADM): Task[Unit]
 
   /**
    * Gets the ontology data from the cache.
@@ -500,7 +499,7 @@ final case class OntologyCacheLive(
    * @param requestingUser the user making the request.
    * @return a [[SuccessResponseV2]].
    */
-  override def loadOntologies(requestingUser: UserADM): Task[SuccessResponseV2] =
+  override def loadOntologies(requestingUser: UserADM): Task[Unit] =
     for {
       _ <-
         ZIO
@@ -515,6 +514,7 @@ final case class OntologyCacheLive(
                                        .getAllOntologyMetadata()
                                        .toString()
                                    )
+      _                           <- ZIO.logInfo(s"Loading ontologies into cache")
       allOntologyMetadataResponse <- triplestoreService.sparqlHttpSelect(allOntologyMetadataSparql)
       allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
         OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
@@ -579,8 +579,9 @@ final case class OntologyCacheLive(
 
       ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseFutures)
 
-      _ = makeOntologyCache(allOntologyMetadata, ontologyGraphs)
-    } yield SuccessResponseV2("Ontologies loaded.")
+      cacheData <- makeOntologyCache(allOntologyMetadata, ontologyGraphs)
+      _         <- ZIO.logInfo(s"Loaded ${cacheData.ontologies.values.size} ontologies into cache")
+    } yield ()
 
   /**
    * Given ontology metadata and ontology graphs read from the triplestore, constructs the ontology cache.
@@ -591,7 +592,7 @@ final case class OntologyCacheLive(
   private def makeOntologyCache(
     allOntologyMetadata: Map[SmartIri, OntologyMetadataV2],
     ontologyGraphs: Iterable[OntologyGraph]
-  ): Unit = {
+  ): Task[OntologyCacheData] = ZIO.attempt {
     // Get the IRIs of all the entities in each ontology.
 
     // A map of ontology IRIs to class IRIs in each ontology.
@@ -905,6 +906,7 @@ final case class OntologyCacheLive(
 
     // Update the cache.
     storeCacheData(ontologyCacheData)
+    ontologyCacheData
   }
 
   /**

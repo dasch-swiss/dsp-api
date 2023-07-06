@@ -13,6 +13,8 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNO
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -28,7 +30,7 @@ final case class AppServer(
   ts: TriplestoreService,
   ru: RepositoryUpdater,
   as: ActorSystem,
-  ar: AppRouter,
+  ontologyCache: OntologyCache,
   iiifs: IIIFService,
   cs: CacheService,
   hs: HttpServer,
@@ -83,7 +85,9 @@ final case class AppServer(
   private def populateOntologyCaches(requiresRepository: Boolean): Task[Unit] =
     for {
       _ <- state.set(AppState.LoadingOntologies)
-      _ <- ar.populateOntologyCaches.when(requiresRepository)
+      _ <- ontologyCache
+             .loadOntologies(KnoraSystemInstances.Users.SystemUser)
+             .when(requiresRepository)
       _ <- state.set(AppState.OntologiesReady)
     } yield ()
 
@@ -156,7 +160,7 @@ object AppServer {
       with TriplestoreService
       with RepositoryUpdater
       with ActorSystem
-      with AppRouter
+      with OntologyCache
       with IIIFService
       with CacheService
       with HttpServer
@@ -171,12 +175,12 @@ object AppServer {
       ts       <- ZIO.service[TriplestoreService]
       ru       <- ZIO.service[RepositoryUpdater]
       as       <- ZIO.service[ActorSystem]
-      ar       <- ZIO.service[AppRouter]
+      oc       <- ZIO.service[OntologyCache]
       iiifs    <- ZIO.service[IIIFService]
       cs       <- ZIO.service[CacheService]
       hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]
-      appServer = AppServer(state, ts, ru, as, ar, iiifs, cs, hs, c)
+      appServer = AppServer(state, ts, ru, as, oc, iiifs, cs, hs, c)
     } yield appServer
 
   /**
