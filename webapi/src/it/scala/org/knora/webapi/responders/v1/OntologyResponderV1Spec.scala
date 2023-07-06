@@ -36,9 +36,6 @@ object OntologyResponderV1Spec {
  */
 class OntologyResponderV1Spec extends CoreSpec with ImplicitSender {
 
-  // The default timeout for receiving reply messages from actors.
-  private val timeout = 10.seconds
-
   private val page = ResourceTypeResponseV1(
     restype_info = ResTypeInfoV1(
       properties = Vector(

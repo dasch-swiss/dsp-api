@@ -16,7 +16,6 @@ import org.knora.webapi.routing.UnsafeZioRun
 object ResourceUtilV2Spec {}
 
 class ResourceUtilV2Spec extends CoreSpec {
-  implicit val timeout: Timeout             = appConfig.defaultTimeoutAsDuration
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(

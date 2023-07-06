@@ -20,7 +20,6 @@ import org.knora.webapi.routing.UnsafeZioRun
 class CardinalitiesSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = appConfig.defaultTimeoutAsDuration
 
   val freetestOntologyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
 

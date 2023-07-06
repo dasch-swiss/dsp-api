@@ -28,7 +28,7 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 
-  private val timeout = 30.seconds
+  override implicit val timeout: FiniteDuration = 30.seconds
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

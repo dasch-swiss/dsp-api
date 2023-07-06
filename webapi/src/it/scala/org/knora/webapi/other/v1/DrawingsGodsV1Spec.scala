@@ -28,8 +28,6 @@ import org.knora.webapi.util.MutableUserADM
 @DoNotDiscover
 class DrawingsGodsV1Spec extends CoreSpec with TriplestoreJsonProtocol {
 
-  private val timeout = 5.seconds
-
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(

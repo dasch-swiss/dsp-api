@@ -12,7 +12,6 @@ import zio.config.magnolia._
 import zio.config.typesafe._
 
 import java.time.Duration
-import scala.concurrent.duration
 
 import org.knora.webapi.util.cache.CacheUtil
 
@@ -21,7 +20,7 @@ import org.knora.webapi.util.cache.CacheUtil
  */
 final case class AppConfig(
   printExtendedConfig: Boolean,
-  defaultTimeout: String,
+  defaultTimeout: Duration,
   dumpMessages: Boolean,
   showInternalErrors: Boolean,
   bcryptPasswordStrength: Int,
@@ -48,8 +47,6 @@ final case class AppConfig(
   dspIngest: DspIngestConfig
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
-  val defaultTimeoutAsDuration =
-    scala.concurrent.duration.Duration.apply(defaultTimeout).asInstanceOf[duration.FiniteDuration]
   val cacheConfigs: Seq[org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig] = caches.map { c =>
     CacheUtil.KnoraCacheConfig(
       c.cacheName,
@@ -106,7 +103,7 @@ final case class Sipi(
   internalProtocol: String,
   internalHost: String,
   internalPort: Int,
-  timeout: String,
+  timeout: Duration,
   externalProtocol: String,
   externalHost: String,
   externalPort: Int,
@@ -124,8 +121,6 @@ final case class Sipi(
     internalProtocol + "://" + internalHost + (if (internalPort != 80) ":" + internalPort else "")
   val externalBaseUrl: String =
     externalProtocol + "://" + externalHost + (if (externalPort != 80) ":" + externalPort else "")
-  val timeoutInSeconds: duration.Duration = scala.concurrent.duration.Duration(timeout)
-
 }
 
 final case class Ark(
@@ -180,15 +175,12 @@ final case class Triplestore(
   dbtype: String,
   useHttps: Boolean,
   host: String,
-  queryTimeout: String,
-  gravsearchTimeout: String,
+  queryTimeout: Duration,
+  gravsearchTimeout: Duration,
   autoInit: Boolean,
   fuseki: Fuseki,
   profileQueries: Boolean
-) {
-  val queryTimeoutAsDuration      = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
-  val gravsearchTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(gravsearchTimeout))
-}
+)
 
 final case class Fuseki(
   port: Int,

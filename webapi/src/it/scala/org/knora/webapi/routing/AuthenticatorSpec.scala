@@ -29,8 +29,6 @@ object AuthenticatorSpec {
 
 class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodTester {
 
-  implicit val timeout: Timeout = appConfig.defaultTimeoutAsDuration
-
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private def testUserAdmFromIri(iri: String) = UserADM(iri, "", "", "", "", false, "")

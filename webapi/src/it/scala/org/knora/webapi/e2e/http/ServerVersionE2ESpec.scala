@@ -8,16 +8,17 @@ package org.knora.webapi.e2e.http
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.version.ServerVersion
+
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-End (E2E) test specification for testing the server response.
  */
 class ServerVersionE2ESpec extends E2ESpec {
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
+    FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
   )
 
   "The Server" should {

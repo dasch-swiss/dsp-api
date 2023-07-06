@@ -37,8 +37,6 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
     RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/books")
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
-  // The default timeout for receiving reply messages from actors.
-  private val timeout = 10.seconds
 
   "The search responder v2" should {
 

@@ -530,7 +530,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   }
 
   // The default timeout for receiving reply messages from actors.
-  private val timeout = 30.seconds
+  override implicit val timeout: FiniteDuration = 30.seconds
 
   "Load test data" in {
     appActor ! GetMappingRequestV2(

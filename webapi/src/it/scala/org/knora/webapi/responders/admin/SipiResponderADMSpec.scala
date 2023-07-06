@@ -25,7 +25,7 @@ class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
   )
 
   // The default timeout for receiving reply messages from actors.
-  private val timeout = 20.seconds
+  override implicit val timeout: FiniteDuration = 20.seconds
 
   "The Sipi responder" should {
     "return details of a full quality file value" in {

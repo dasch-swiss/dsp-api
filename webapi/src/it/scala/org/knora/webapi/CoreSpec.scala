@@ -7,6 +7,7 @@ package org.knora.webapi
 
 import akka.actor
 import akka.testkit.{ImplicitSender, TestKitBase}
+import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
@@ -20,6 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import zio._
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS, SECONDS}
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -84,6 +86,9 @@ abstract class CoreSpec
 
   // needed by some tests
   val appConfig = config
+
+  // the default timeout for all tests
+  implicit val timeout: FiniteDuration = FiniteDuration(10, SECONDS)
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */

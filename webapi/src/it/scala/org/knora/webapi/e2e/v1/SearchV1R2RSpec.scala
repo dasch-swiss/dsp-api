@@ -13,11 +13,12 @@ import org.scalatest.DoNotDiscover
 import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
-
 import dsp.errors.InvalidApiJsonException
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v1.SearchRouteV1
+
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
@@ -27,10 +28,6 @@ import org.knora.webapi.routing.v1.SearchRouteV1
 class SearchV1R2RSpec extends R2RSpec {
 
   private val searchPath = SearchRouteV1().makeRoute
-
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
