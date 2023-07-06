@@ -19,10 +19,8 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
-SELECT DISTINCT ?isUsed
-
+ASK
 WHERE {
-  	BIND(IRI("@entityIri") AS ?entity)
-    BIND(true AS ?isUsed)
-	?s ?p ?entity
+    BIND(IRI("@entityIri") AS ?entity)
+    ?s ?p ?entity .
 }

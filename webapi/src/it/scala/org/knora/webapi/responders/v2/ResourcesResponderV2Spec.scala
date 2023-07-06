@@ -2320,19 +2320,15 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Check that the deleted link value that pointed to the resource has also been erased.
-
-      val isEntityUsedSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      val isEntityUsedQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .isEntityUsed(
           entityIri = resourceIriToErase.get.toSmartIri.toInternalIri,
           ignoreKnoraConstraints = true
         )
-        .toString()
 
-      appActor ! SparqlSelectRequest(isEntityUsedSparql)
+      appActor ! SparqlAskRequest(isEntityUsedQuery)
 
-      expectMsgPF(timeout) { case entityUsedResponse: SparqlSelectResult =>
-        assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
-      }
+      expectMsgPF(timeout) { case SparqlAskResponse(isUsed) => assert(!isUsed, s"Link value was not erased") }
     }
   }
   "When given a custom IRI" should {

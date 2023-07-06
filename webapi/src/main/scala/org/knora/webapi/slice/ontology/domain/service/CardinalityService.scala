@@ -283,11 +283,11 @@ final case class CardinalityServiceLive(
       // via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
       val query = twirl.queries.sparql.v2.txt.isEntityUsed(classIri, ignoreKnoraConstraints = true)
       tripleStore
-        .sparqlHttpSelect(query.toString())
-        .map(_.results.bindings)
+        .sparqlHttpAsk(query)
+        .map(_.result)
         .map {
-          case seq if seq.isEmpty => CanReplaceCardinalityCheckResult.Success
-          case _                  => IsInUseCheckFailure
+          case true  => IsInUseCheckFailure
+          case false => CanReplaceCardinalityCheckResult.Success
         }
     }
 

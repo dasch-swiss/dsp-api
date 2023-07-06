@@ -2065,24 +2065,19 @@ final case class PermissionsResponderADMLive(
         // check that there is a permission with a given IRI
         _ <- permissionGetADM(permissionIriInternal, requestingUser)
         // Is permission in use?
-        _ <- isPermissionUsed(
-               permissionIri = permissionIriInternal,
-               errorFun = throw UpdateNotPerformedException(
-                 s"Permission $permissionIri cannot be deleted, because it is in use."
-               )
-             )
-
+        _ <-
+          ZIO
+            .fail(UpdateNotPerformedException(s"Permission $permissionIriInternal is in use and cannot be deleted."))
+            .whenZIO(
+              triplestoreService.sparqlHttpAsk(twirl.queries.sparql.admin.txt.isEntityUsed(permissionIri)).map(_.result)
+            )
         _          <- deletePermission(permissionIriInternal)
         sf          = StringFormatter.getGeneralInstance
         iriExternal = sf.toSmartIri(permissionIri).toOntologySchema(ApiV2Complex).toString
 
-      } yield PermissionDeleteResponseADM(iriExternal, true)
+      } yield PermissionDeleteResponseADM(iriExternal, deleted = true)
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      permissionIri,
-      permissionDeleteTask()
-    )
+    IriLocker.runWithIriLock(apiRequestID, permissionIri, permissionDeleteTask())
   }
 
   /**
@@ -2269,30 +2264,6 @@ final case class PermissionsResponderADMLive(
             throw UpdateNotPerformedException(
               s"Permission <$permissionIri> was not erased. Please report this as a possible bug."
             )
-          }
-    } yield ()
-
-  /**
-   * Helper method to check if a permission is in use.
-   *
-   * @param permissionIri  the IRI of the permission.
-   * @param errorFun a function that throws an exception. It will be called if the permission is used.
-   * @return a [[Boolean]].
-   */
-  protected def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Task[Unit] =
-    for {
-      isPermissionUsedSparql <- ZIO.attempt(
-                                  twirl.queries.sparql.admin.txt
-                                    .isEntityUsed(
-                                      entityIri = permissionIri
-                                    )
-                                    .toString()
-                                )
-
-      isPermissionUsedResponse <- triplestoreService.sparqlHttpSelect(isPermissionUsedSparql)
-
-      _ = if (isPermissionUsedResponse.results.bindings.nonEmpty) {
-            errorFun
           }
     } yield ()
 

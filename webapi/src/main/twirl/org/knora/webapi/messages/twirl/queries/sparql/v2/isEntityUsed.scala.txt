@@ -24,11 +24,9 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT DISTINCT ?isUsed
-
+ASK
 WHERE {
     BIND(IRI("@{entityIri.value}") AS ?entity)
-    BIND(true AS ?isUsed)
 
     ?s ?p ?entity .
 

@@ -126,6 +126,7 @@ trait TriplestoreService {
    * @return a [[SparqlAskResponse]].
    */
   def sparqlHttpAsk(sparql: String): Task[SparqlAskResponse]
+  def sparqlHttpAsk(query: TxtFormat.Appendable): Task[SparqlAskResponse] = sparqlHttpAsk(query.toString)
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
