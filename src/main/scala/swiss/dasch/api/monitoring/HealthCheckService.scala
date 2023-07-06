@@ -6,8 +6,11 @@
 package swiss.dasch.api.monitoring
 
 import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.infrastructure.FileSystemCheck
 import zio.nio.file.Files
 import zio.{ UIO, ULayer, URIO, URLayer, ZIO, ZLayer }
+
+import java.io.IOException
 
 trait HealthCheckService  {
   def check: UIO[Health]
@@ -16,14 +19,14 @@ object HealthCheckService {
   def check: URIO[HealthCheckService, Health] = ZIO.serviceWithZIO(_.check)
 }
 
-final class HealthCheckServiceLive(config: StorageConfig) extends HealthCheckService {
+final class HealthCheckServiceLive(filesystemCheck: FileSystemCheck) extends HealthCheckService {
   override def check: UIO[Health] =
-    (Files.isDirectory(config.assetPath) && Files.isDirectory(config.tempPath)).map {
+    filesystemCheck.checkExpectedFoldersExist().map {
       case true  => Health.up()
       case false => Health.down()
     }
 }
 
 object HealthCheckServiceLive {
-  val layer: URLayer[StorageConfig, HealthCheckService] = ZLayer.fromFunction(HealthCheckServiceLive(_))
+  val layer: URLayer[FileSystemCheck, HealthCheckServiceLive] = ZLayer.fromFunction(HealthCheckServiceLive(_))
 }
