@@ -7,21 +7,16 @@ package org.knora.webapi.core
 
 import akka.actor.ActorRef
 import akka.actor.Props
-import akka.pattern._
 import akka.routing.RoundRobinPool
-import akka.util.Timeout
 import zio._
 import zio.macros.accessible
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
@@ -34,7 +29,6 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 trait AppRouter {
   val system: akka.actor.ActorSystem
   val ref: ActorRef
-  val populateOntologyCaches: Task[Unit]
 }
 
 object AppRouter {
@@ -86,18 +80,6 @@ object AppRouter {
           ).withRouter(new RoundRobinPool(1_000)),
           name = APPLICATION_MANAGER_ACTOR_NAME
         )
-
-        /* Calls into the OntologyResponderV2 to initiate loading of the ontologies into the cache. */
-        val populateOntologyCaches: Task[Unit] = {
-
-          val request = LoadOntologiesRequestV2(requestingUser = KnoraSystemInstances.Users.SystemUser)
-          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(60, scala.concurrent.duration.SECONDS))
-
-          for {
-            response <- ZIO.fromFuture(_ => ref.ask(request)(timeout).mapTo[SuccessResponseV2])
-            _        <- ZIO.logInfo(response.message)
-          } yield ()
-        }
       }
     }.tap(_ => ZIO.logInfo(">>> AppRouter Initialized <<<"))
 }

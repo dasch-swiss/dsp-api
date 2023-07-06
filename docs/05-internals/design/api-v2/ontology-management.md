@@ -15,8 +15,7 @@ It is responsible for:
 - Creating and updating ontologies in response to API requests.
 - Ensuring that all user-created ontologies are consistent and conform to [knora-base](../../../02-dsp-ontologies/knora-base.md).
 
-When Knora starts, the ontology responder receives a `LoadOntologiesRequestV2`
-message. It then:
+When Knora starts it will load all ontologies from the triplestore into the ontology cache:
 
 1. Loads all ontologies found in the triplestore into suitable Scala data structures,
    which include indexes of relations between entities (e.g. `rdfs:subClassOf` relations),
