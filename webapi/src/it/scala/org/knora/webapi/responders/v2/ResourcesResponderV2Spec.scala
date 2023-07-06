@@ -2328,7 +2328,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! SparqlAskRequest(isEntityUsedQuery)
 
-      expectMsgPF(timeout) { case SparqlAskResponse(isUsed) => assert(isUsed, s"Link value was not erased") }
+      expectMsgPF(timeout) { case SparqlAskResponse(isUsed) => assert(!isUsed, s"Link value was not erased") }
     }
   }
   "When given a custom IRI" should {
