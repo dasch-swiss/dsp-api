@@ -20,7 +20,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import zio._
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS, SECONDS}
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 abstract class CoreSpec
     extends AnyWordSpec

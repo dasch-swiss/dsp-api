@@ -28,7 +28,7 @@ case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache 
    * @param requestingUser the user making the request.
    * @return a [[SuccessResponseV2]].
    */
-  override def loadOntologies(requestingUser: UserADM): Task[SuccessResponseV2] =
+  override def loadOntologies(requestingUser: UserADM): Task[Unit] =
     throw new UnsupportedOperationException("Not possible in tests. Provide the respective test data as Ref.")
 
   /**
