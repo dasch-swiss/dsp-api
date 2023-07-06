@@ -37,8 +37,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
  */
 class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
 
-  private val timeout: FiniteDuration = 8.seconds
-
   private val rootUser          = SharedTestDataADM.rootUser
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
   private val normalUser        = SharedTestDataADM.normalUser

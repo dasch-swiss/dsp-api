@@ -54,10 +54,6 @@ class StandoffV1R2RSpec extends R2RSpec {
 
   private val password = SharedTestDataADM.testPass
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    appConfig.defaultTimeoutAsDuration
-  )
-
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override lazy val rdfDataObjects = List(

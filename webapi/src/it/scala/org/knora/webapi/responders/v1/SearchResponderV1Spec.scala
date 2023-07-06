@@ -183,7 +183,7 @@ class SearchResponderV1Spec extends CoreSpec with ImplicitSender {
   )
 
   // The default timeout for receiving reply messages from actors.
-  private val timeout = 30.seconds
+  override implicit val timeout: FiniteDuration = 30.seconds
 
   // An expected response consisting of two books with the title "Zeitglöcklein des Lebens und Leidens Christi".
   private val twoZeitglöckleinBooksResponse = SearchGetResponseV1(

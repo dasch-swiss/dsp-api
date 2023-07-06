@@ -73,7 +73,6 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     )
 
   // The default timeout for receiving reply messages from actors.
-  private val timeout                      = 10.seconds
   private val fooIri                       = new MutableTestIri
   private val barIri                       = new MutableTestIri
   private val chairIri                     = new MutableTestIri
