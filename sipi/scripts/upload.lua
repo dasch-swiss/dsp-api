@@ -119,7 +119,7 @@ for file_index, file_params in pairs(server.uploads) do
 
     -- Create a IIIF base URL for the converted file.
     local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() ..
-        '/' .. tmp_storage_file_path
+        '/tmp/' .. hashed_tmp_storage_filename
 
     -- Copy original file also to tmp
     success, error_msg = server.copyTmpfile(file_index, tmp_storage_original_path)
