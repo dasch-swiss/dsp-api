@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.util.Timeout
 import zio.ZIO
 import scala.concurrent.ExecutionContextExecutor
 
