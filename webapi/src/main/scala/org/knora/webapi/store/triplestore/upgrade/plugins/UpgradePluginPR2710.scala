@@ -7,6 +7,8 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
 
+import scala.annotation.tailrec
+
 import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.UuidUtil
@@ -19,7 +21,6 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.CustomFormattedText
 import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.FormattedText
 import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.UnformattedText
-import scala.annotation.tailrec
 
 sealed trait TextType {
   def isNarrower(other: TextType): Boolean =
