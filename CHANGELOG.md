@@ -1,5 +1,32 @@
 # Changelog
 
+## [29.1.0](https://github.com/dasch-swiss/dsp-api/compare/v29.0.1...v29.1.0) (2023-07-06)
+
+
+### Bug Fixes
+
+* Align path variable for export and import routes to use Shortcode ([#2734](https://github.com/dasch-swiss/dsp-api/issues/2734)) ([8cc2c62](https://github.com/dasch-swiss/dsp-api/commit/8cc2c6220d63cf82fbebc805cf068fa266a406e5))
+* Remove file path from temporaryUrl in upload response of Sipi ([#2737](https://github.com/dasch-swiss/dsp-api/issues/2737)) ([00e3b39](https://github.com/dasch-swiss/dsp-api/commit/00e3b39c67d36b0a1be8959a242006fd19b69f0f))
+* Update dsp-ingest endpoint that moved to `projects` in DspIngestClient ([#2735](https://github.com/dasch-swiss/dsp-api/issues/2735)) ([592bfc8](https://github.com/dasch-swiss/dsp-api/commit/592bfc82ab1e6e45c5ca11fc287b74cb932a1784))
+
+
+### Enhancements
+
+* Dsp-ingest integration for import/export of projects DEV-2297 ([#2722](https://github.com/dasch-swiss/dsp-api/issues/2722)) ([12402f3](https://github.com/dasch-swiss/dsp-api/commit/12402f3ec2e3ceee845110d5c588568e28066afd))
+
+
+### Maintenance
+
+* Add docker compose configuration for api accessing ingest ([#2736](https://github.com/dasch-swiss/dsp-api/issues/2736)) ([6ef3d17](https://github.com/dasch-swiss/dsp-api/commit/6ef3d17cd172e6f71bc15da249da24bb4be4becc))
+* Introduce JwtConfig and expose as layer ([#2719](https://github.com/dasch-swiss/dsp-api/issues/2719)) ([5737e18](https://github.com/dasch-swiss/dsp-api/commit/5737e18487e498daa25e50961e5c0a56d5aa5c26))
+* optimize isEntityInUse queries, use ASK ([#2739](https://github.com/dasch-swiss/dsp-api/issues/2739)) ([0cfa3d4](https://github.com/dasch-swiss/dsp-api/commit/0cfa3d4cb20cb17b5e3456a7457d3cc090d6cdd0))
+* Remove ontology responsibility from AppRouter ([#2740](https://github.com/dasch-swiss/dsp-api/issues/2740)) ([69f0d67](https://github.com/dasch-swiss/dsp-api/commit/69f0d67dc2b48314bbdafd5079be2e9edc6950a8))
+* Rename Shortcode everywhere and use its type in KnoraProject property (NO-TICKET) ([#2724](https://github.com/dasch-swiss/dsp-api/issues/2724)) ([f01c319](https://github.com/dasch-swiss/dsp-api/commit/f01c319ec9d77af3d333a405f1b7b10b72657818))
+* standarise shortname naming (NO-TICKET) ([#2733](https://github.com/dasch-swiss/dsp-api/issues/2733)) ([990030d](https://github.com/dasch-swiss/dsp-api/commit/990030d13343de8920990430e1fa7a0fa49c5392))
+* **TriplestoreServiceLive:** minor improvements ([#2721](https://github.com/dasch-swiss/dsp-api/issues/2721)) ([d31ba01](https://github.com/dasch-swiss/dsp-api/commit/d31ba01931a3592a71992aaf817bcc658d805b27))
+* update dependencies ([#2717](https://github.com/dasch-swiss/dsp-api/issues/2717)) ([ff712bf](https://github.com/dasch-swiss/dsp-api/commit/ff712bf0b5da47ede1920230a79140458dc559f0))
+* Use Duration type for AppConfig properties (NO-TICKET) ([#2720](https://github.com/dasch-swiss/dsp-api/issues/2720)) ([2b2b551](https://github.com/dasch-swiss/dsp-api/commit/2b2b551c728961d7cebee185e82e68e94844c778))
+
 ## [29.0.1](https://github.com/dasch-swiss/dsp-api/compare/v29.0.0...v29.0.1) (2023-06-22)
 
 

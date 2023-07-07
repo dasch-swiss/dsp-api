@@ -9,19 +9,19 @@ import akka.actor.Status
 import akka.testkit.ImplicitSender
 
 import scala.concurrent.duration._
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 /**
- * Tests that the [[LoadOntologiesRequestV2]] request does not load invalid data into the cache.
+ * Tests that the [[OntologyCache.loadOntologies]] method does not load invalid data into the cache.
  */
-class LoadOntologiesRequestV2Spec extends CoreSpec with ImplicitSender {
+class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
   private val INVALID_ONTO_NAME = "http://www.knora.org/ontology/invalid"
 
   /**
@@ -37,16 +37,12 @@ class LoadOntologiesRequestV2Spec extends CoreSpec with ImplicitSender {
     appActor ! ResetRepositoryContent(rdfDataObjs)
     expectMsg(5.minutes, ResetRepositoryContentACK())
 
-    appActor ! LoadOntologiesRequestV2(
-      requestingUser = KnoraSystemInstances.Users.SystemUser
-    )
-
-    expectMsgPF(10.seconds) { res =>
-      res match {
-        case sr: SuccessResponseV2 => Right(sr)
-        case f: Status.Failure     => Left(f)
-      }
-    }
+    UnsafeZioRun
+      .run(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
+      .toEither
+      .map(_ => SuccessResponseV2("OK"))
+      .left
+      .map(e => Status.Failure(e))
   }
 
   "The LoadOntologiesRequestV2 request sent to the OntologyResponderV2" should {

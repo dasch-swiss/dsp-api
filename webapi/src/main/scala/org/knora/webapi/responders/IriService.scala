@@ -46,8 +46,7 @@ final case class IriService(
   ): Task[Boolean] = {
     val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .isEntityUsed(entityIri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
-      .toString()
-    triplestoreService.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
+    triplestoreService.sparqlHttpAsk(query).map(_.result)
   }
 
   /**

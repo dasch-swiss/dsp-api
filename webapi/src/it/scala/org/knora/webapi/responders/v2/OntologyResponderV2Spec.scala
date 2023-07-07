@@ -11,7 +11,6 @@ import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
-
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -28,9 +27,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.util.MutableTestIri
+
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
@@ -460,12 +462,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       assert(!cachedMetadataResponse.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
 
       // Reload the ontologies from the triplestore and check again.
-
-      appActor ! LoadOntologiesRequestV2(
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
-
-      expectMsgType[SuccessResponseV2](10.seconds)
+      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
 
       appActor ! OntologyMetadataGetByProjectRequestV2(
         requestingUser = imagesUser
@@ -835,12 +832,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-
-      appActor ! LoadOntologiesRequestV2(
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
-
-      expectMsgType[SuccessResponseV2](10.seconds)
+      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
 
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
@@ -948,12 +940,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-
-      appActor ! LoadOntologiesRequestV2(
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
-
-      expectMsgType[SuccessResponseV2](10.seconds)
+      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
 
       appActor ! PropertiesGetRequestV2(
         propertyIris = Set(propertyIri),
@@ -3832,12 +3819,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Reload the ontology cache and see if we get the same result.
-
-      appActor ! LoadOntologiesRequestV2(
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
-
-      expectMsgType[SuccessResponseV2](10.seconds)
+      UnsafeZioRun.runOrThrow(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))
 
       appActor ! linkPropGetRequest
 

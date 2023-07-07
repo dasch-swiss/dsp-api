@@ -258,8 +258,9 @@ case class SparqlUpdateResponse()
  *
  * @param sparql the SPARQL string.
  */
-case class SparqlAskRequest(sparql: String) extends TriplestoreRequest {
-  def this(txt: TxtFormat.Appendable) = this(txt.toString())
+case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
+object SparqlAskRequest {
+  def apply(query: TxtFormat.Appendable): SparqlAskRequest = SparqlAskRequest(query.toString)
 }
 
 /**

@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status.Failure
 
 import java.util.UUID
-import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
@@ -29,7 +28,6 @@ import org.knora.webapi.util.MutableTestIri
 class GroupsResponderADMSpec extends CoreSpec {
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
-  private val rootUser            = SharedTestDataADM.rootUser
 
   "The GroupsResponder " when {
     "asked about all groups" should {
@@ -81,7 +79,7 @@ class GroupsResponderADMSpec extends CoreSpec {
               )
               .fold(e => throw e.head, v => v),
             project = ProjectIri.make(SharedTestDataADM.imagesProjectIri).fold(e => throw e.head, v => v),
-            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
+            status = GroupStatus.active,
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -114,7 +112,7 @@ class GroupsResponderADMSpec extends CoreSpec {
               .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             project = ProjectIri.make(SharedTestDataADM.imagesProjectIri).fold(e => throw e.head, v => v),
-            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
+            status = GroupStatus.active,
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
           requestingUser = SharedTestDataADM.imagesUser01,

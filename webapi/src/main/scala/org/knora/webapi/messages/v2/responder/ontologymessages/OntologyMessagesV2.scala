@@ -49,14 +49,6 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 with RelayedMes
 }
 
 /**
- * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
- * starts, before it accepts any API requests. A successful response will be a [[SuccessResponseV2]].
- *
- * @param requestingUser the user making the request.
- */
-case class LoadOntologiesRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
-
-/**
  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].
  *
  * @param ontologyName   the name of the ontology to be created.
