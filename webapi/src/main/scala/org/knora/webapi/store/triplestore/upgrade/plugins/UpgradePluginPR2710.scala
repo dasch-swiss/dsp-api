@@ -32,9 +32,9 @@ sealed trait TextType {
     }
 }
 object TextType {
-  case object UnformattedText                          extends TextType
-  case object FormattedText                            extends TextType
-  case class CustomFormattedText(mapping: Option[IRI]) extends TextType
+  case object UnformattedText                       extends TextType
+  case object FormattedText                         extends TextType
+  case class CustomFormattedText(mapping: Set[IRI]) extends TextType
 
   def fromIri(iri: IRI): TextType =
     iri match {
@@ -277,15 +277,15 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
           (hasStandardMapping, hasCustomMapping) match {
             case (true, false) => prop.copy(textType = FormattedText)
             case (false, true) =>
-              prop.copy(textType = CustomFormattedText(Some(propertyGetCustomMappingIri(repo, prop))))
+              prop.copy(textType = CustomFormattedText(propertyGetCustomMappingIris(repo, prop)))
             case _ => prop
           }
         case FormattedText =>
-          if (hasCustomMapping) prop.copy(textType = CustomFormattedText(Some(propertyGetCustomMappingIri(repo, prop))))
+          if (hasCustomMapping) prop.copy(textType = CustomFormattedText(propertyGetCustomMappingIris(repo, prop)))
           else prop
-        case CustomFormattedText(None) =>
-          prop.copy(textType = CustomFormattedText(Some(propertyGetCustomMappingIri(repo, prop))))
-        case CustomFormattedText(Some(_)) => prop
+        case CustomFormattedText(mapping) if mapping.isEmpty =>
+          prop.copy(textType = CustomFormattedText(propertyGetCustomMappingIris(repo, prop)))
+        case CustomFormattedText(_) => prop
       }
     }
   }
@@ -379,7 +379,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         |}
         |""".stripMargin
 
-  private def propertyGetCustomMappingIri(repo: RdfRepository, prop: TextValueProp): IRI = {
+  private def propertyGetCustomMappingIris(repo: RdfRepository, prop: TextValueProp): Set[IRI] = {
     val query =
       s"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |SELECT DISTINCT ?mapping
@@ -392,17 +392,9 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
           |}
           |""".stripMargin
     val res = repo.doSelect(query)
-    if (res.results.bindings.size > 1) {
-      throw InconsistentRepositoryDataException(
-        s"Property ${prop.iri} in ${prop.project} has more than one mapping in data."
-      )
-    }
-    res.getFirstRow.rowMap.getOrElse(
-      "mapping",
-      throw InconsistentRepositoryDataException(
-        s"Property ${prop.iri} in ${prop.project} has no mapping in data."
-      )
-    )
+    if (res.results.bindings.size > 1)
+      log.warn(s"Property ${prop.iri} in ${prop.project} has more than one mapping in data: ${res.results.bindings}.")
+    res.results.bindings.map(_.rowMap("mapping")).toSet
   }
 
   /**
@@ -465,21 +457,23 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
               s"should never happen: ${prop.iri} should be formatted text but has a custom mapping: $mapping"
             )
         }
-      case CustomFormattedText(Some(mapping)) =>
+      case CustomFormattedText(mappings) if mappings.nonEmpty =>
         adjustable.mapping match {
-          case None => addCustomMappingToUnformattedValue(model, adjustable, mapping)
+          case None =>
+            if (mappings.size == 1) addCustomMappingToUnformattedValue(model, adjustable, mappings.head)
+            else throw InconsistentRepositoryDataException(s"Cannot apply multiple mappings to ${prop.iri}: $mappings")
           case Some(KnoraBase.StandardMapping) =>
             throw InconsistentRepositoryDataException(
-              s"Cannot change mapping from standard mapping to $mapping for ${prop.iri}"
+              s"Cannot change mapping from standard mapping to $mappings for ${prop.iri}"
             )
           case Some(currentMapping) =>
-            if (currentMapping == mapping) changeTypeToCustomFormattedTextValue(adjustable)
+            if (mappings.contains(currentMapping)) changeTypeToCustomFormattedTextValue(adjustable)
             else
               throw InconsistentRepositoryDataException(
-                s"Cannot change mapping from $currentMapping to $mapping for ${prop.iri}"
+                s"Cannot change mapping from $currentMapping to $mappings for ${prop.iri}"
               )
         }
-      case CustomFormattedText(None) =>
+      case CustomFormattedText(_) =>
         throw InconsistentRepositoryDataException(s"Custom mapping missing for ${prop.iri}")
     }
 
