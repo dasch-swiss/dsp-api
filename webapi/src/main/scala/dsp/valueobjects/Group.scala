@@ -60,13 +60,9 @@ object Group {
    */
   sealed abstract case class GroupStatus private (value: Boolean)
   object GroupStatus { self =>
-    def make(value: Boolean): Validation[Throwable, GroupStatus] =
-      Validation.succeed(new GroupStatus(value) {})
-    def make(value: Option[Boolean]): Validation[Throwable, Option[GroupStatus]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+    val active: GroupStatus               = new GroupStatus(true) {}
+    val inactive: GroupStatus             = new GroupStatus(false) {}
+    def make(value: Boolean): GroupStatus = if (value) active else inactive
   }
 
   /**

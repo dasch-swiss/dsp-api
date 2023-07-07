@@ -5,7 +5,6 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.{Fuseki, Triplestore}
 import org.knora.webapi.testcontainers.FusekiTestContainer

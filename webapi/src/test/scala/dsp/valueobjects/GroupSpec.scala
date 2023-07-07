@@ -91,13 +91,12 @@ object GroupSpec extends ZIOSpecDefault {
   )
 
   private val groupStatusTest = suite("GroupSpec - GroupStatus")(
-    test("pass a valid object and successfully create value object") {
-      assertTrue(GroupStatus.make(true).toOption.get.value == true) &&
-      assertTrue(GroupStatus.make(Some(false)).getOrElse(null).get.value == false)
-    },
-    test("successfully validate passing None") {
+    test("creating a GroupStatus") {
       assertTrue(
-        GroupStatus.make(None) == Validation.succeed(None)
+        !GroupStatus.inactive.value,
+        GroupStatus.active.value,
+        GroupStatus.make(true).value,
+        !GroupStatus.make(false).value
       )
     }
   )

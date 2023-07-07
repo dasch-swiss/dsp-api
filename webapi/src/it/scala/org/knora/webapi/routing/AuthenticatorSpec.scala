@@ -6,7 +6,6 @@
 package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
-import akka.util.Timeout
 import org.scalatest.PrivateMethodTester
 
 import dsp.errors.BadCredentialsException

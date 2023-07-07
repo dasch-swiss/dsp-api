@@ -7,8 +7,6 @@ package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
 
-import scala.concurrent.duration._
-
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.SchemaOptions
