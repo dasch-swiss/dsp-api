@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import akka.util.Timeout
 import zio.ZIO
 
 import org.knora.webapi.CoreSpec
