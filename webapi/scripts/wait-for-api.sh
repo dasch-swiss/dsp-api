@@ -58,5 +58,5 @@ until check-health; do
 
     attempt_counter=$((attempt_counter+1))
     echo "Attempt ${attempt_counter} of ${TIMEOUT} - DSP-API is not ready yet"
-    sleep 1
+    sleep 5
 done
