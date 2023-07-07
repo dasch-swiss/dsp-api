@@ -130,28 +130,12 @@ case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], ne
 sealed trait UsersResponderRequestADM extends KnoraRequestADM with RelayedMessage
 
 /**
- * Get all information about all users in form of a sequence of [[UserADM]]. Returns an empty sequence if
- * no users are found. Administration permission checking is skipped.
- *
- * @param userInformationTypeADM the extent of the information returned.
- * @param requestingUser         the user that is making the request.
- */
-case class UsersGetADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: UserADM
-) extends UsersResponderRequestADM
-
-/**
  * Get all information about all users in form of [[UsersGetResponseADM]]. The UsersResponderRequestADM returns either
  * something or a NotFound exception if there are no users found. Administration permission checking is performed.
  *
- * @param userInformationTypeADM the extent of the information returned.
  * @param requestingUser         the user initiating the request.
  */
-case class UsersGetRequestADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
-  requestingUser: UserADM
-) extends UsersResponderRequestADM
+case class UsersGetRequestADM(requestingUser: UserADM) extends UsersResponderRequestADM
 
 /**
  * A message that requests a user's profile either by IRI, username, or email. A successful response will be a [[UserADM]].

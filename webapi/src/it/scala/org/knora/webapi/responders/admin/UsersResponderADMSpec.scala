@@ -52,34 +52,26 @@ class UsersResponderADMSpec extends CoreSpec with ImplicitSender {
   "The UsersResponder " when {
     "asked about all users" should {
       "return a list if asked by SystemAdmin" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = rootUser
-        )
+        appActor ! UsersGetRequestADM(requestingUser = rootUser)
         val response = expectMsgType[UsersGetResponseADM](timeout)
         response.users.nonEmpty should be(true)
         response.users.size should be(18)
       }
 
       "return a list if asked by ProjectAdmin" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = anythingAdminUser
-        )
+        appActor ! UsersGetRequestADM(requestingUser = anythingAdminUser)
         val response = expectMsgType[UsersGetResponseADM](timeout)
         response.users.nonEmpty should be(true)
         response.users.size should be(18)
       }
 
       "return 'ForbiddenException' if asked by normal user'" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = normalUser
-        )
+        appActor ! UsersGetRequestADM(requestingUser = normalUser)
         expectMsg(timeout, Failure(ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")))
       }
 
       "not return the system and anonymous users" in {
-        appActor ! UsersGetRequestADM(
-          requestingUser = rootUser
-        )
+        appActor ! UsersGetRequestADM(requestingUser = rootUser)
         val response = expectMsgType[UsersGetResponseADM](timeout)
         response.users.nonEmpty should be(true)
         response.users.size should be(18)

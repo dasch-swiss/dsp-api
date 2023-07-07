@@ -7,18 +7,21 @@ package org.knora.webapi.slice.common.api
 
 import zio._
 import zio.macros.accessible
-
 import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.common.api.RestPermissionService.isActive
-import org.knora.webapi.slice.common.api.RestPermissionService.isSystemAdmin
-import org.knora.webapi.slice.common.api.RestPermissionService.isSystemOrProjectAdmin
+import org.knora.webapi.slice.common.api.RestPermissionService.{
+  isActive,
+  isProjectAdminInAnyProject,
+  isSystemAdmin,
+  isSystemOrProjectAdmin
+}
 
 /**
  * Provides methods for checking permissions.
  * This service is used by the REST API services.
  * All `ensure...` methods fail with a [[ForbiddenException]] if the user is not active or the respective check fails.
+ *
  * @see [[RestPermissionServiceLive]].
  */
 @accessible
@@ -27,6 +30,7 @@ trait RestPermissionService {
   /**
    * Checks if the user is a system administrator.
    * Checks if the user is active.
+   *
    * @param user The [[UserADM]] to check.
    * @return [[Unit]] if the user is active and a system administrator.
    *         Fails with a [[ForbiddenException]] otherwise.
@@ -43,6 +47,8 @@ trait RestPermissionService {
    *         Fails with a [[ForbiddenException]] otherwise.
    */
   def ensureSystemOrProjectAdmin(user: UserADM, project: KnoraProject): IO[ForbiddenException, Unit]
+
+  def ensureSystemOrProjectAdminInAnyProject(user: UserADM): IO[ForbiddenException, Unit]
 }
 
 /**
@@ -54,8 +60,9 @@ object RestPermissionService {
   def isActive(userADM: UserADM): Boolean                           = userADM.status
   def isSystemAdmin(user: UserADM): Boolean                         = user.permissions.isSystemAdmin
   def isProjectAdmin(user: UserADM, project: KnoraProject): Boolean = user.permissions.isProjectAdmin(project.id)
-  def isSystemOrProjectAdmin(project: KnoraProject)(userADM: UserADM): Boolean =
-    isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
+  def isSystemOrProjectAdmin(project: KnoraProject)(user: UserADM): Boolean =
+    isSystemAdmin(user) || isProjectAdmin(user, project)
+  def isProjectAdminInAnyProject(user: UserADM): Boolean = user.permissions.isProjectAdminInAnyProject()
 }
 
 final case class RestPermissionServiceLive() extends RestPermissionService {
@@ -81,6 +88,12 @@ final case class RestPermissionServiceLive() extends RestPermissionService {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
     checkActiveUser(user, isSystemOrProjectAdmin(project), msg)
+  }
+
+  override def ensureSystemOrProjectAdminInAnyProject(user: UserADM): IO[ForbiddenException, Unit] = {
+    lazy val msg =
+      s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
+    checkActiveUser(user, u => isSystemAdmin(u) || isProjectAdminInAnyProject(u), msg)
   }
 }
 
