@@ -101,33 +101,33 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     log.info("Transformation started.")
 
     val ontologyToProjectMap: Map[IRI, IRI] = collectOntologyToProjectMap(model)
-    log.debug(s"Found ${ontologyToProjectMap.size} ontologies for ${ontologyToProjectMap.values.toSet.size} projects.")
+    log.info(s"Found ${ontologyToProjectMap.size} ontologies for ${ontologyToProjectMap.values.toSet.size} projects.")
 
     val textValuePropsPerOntology: Map[IRI, Seq[IRI]] = collectTextValuePropIris(model)
-    log.debug(s"Found ${textValuePropsPerOntology.values.flatten.size} TextValue properties.")
+    log.info(s"Found ${textValuePropsPerOntology.values.flatten.size} TextValue properties.")
 
     val textValueProps: Set[TextValueProp] = makeTextValueProps(model, textValuePropsPerOntology, ontologyToProjectMap)
-    log.debug(s"Created ${textValueProps.size} TextValueProperty objects.")
+    log.info(s"Created ${textValueProps.size} TextValueProperty objects.")
 
     val dataVerifiedTextValueProps: Set[TextValueProp] = verifyTextValuePropsAgainstData(model, textValueProps)
-    log.debug(s"Verified ${dataVerifiedTextValueProps.size} TextValueProperty objects against usage in data.")
+    log.info(s"Verified ${dataVerifiedTextValueProps.size} TextValueProperty objects against usage in data.")
 
     val verifiedTextValueProps: Set[TextValueProp] =
       verifyTextValuePropsWithInheritance(model, dataVerifiedTextValueProps)
-    log.debug(
+    log.info(
       s"Verified ${verifiedTextValueProps.size} TextValueProperty objects against the ontology for inheritance implications."
     )
 
     val dataAdjustments = collectDataAdjustments(model, verifiedTextValueProps)
-    log.debug(s"Found ${dataAdjustments.size} values in data to adjust.")
+    log.info(s"Found ${dataAdjustments.size} values in data to adjust.")
 
     val dataStatementsToRemove = dataAdjustments.flatMap(_.statementsToRemove)
-    log.debug(s"Found ${dataStatementsToRemove.size} statements in data to remove.")
+    log.info(s"Found ${dataStatementsToRemove.size} statements in data to remove.")
     val dataStatementsToInsert = dataAdjustments.flatMap(_.statementsToInsert)
-    log.debug(s"Found ${dataStatementsToInsert.size} statements in data to insert.")
+    log.info(s"Found ${dataStatementsToInsert.size} statements in data to insert.")
 
     val ontologyStatementsToRemove = verifiedTextValueProps.flatMap(_.statementsToRemove)
-    log.debug(s"Found ${ontologyStatementsToRemove.size} statements in ontologies to remove.")
+    log.info(s"Found ${ontologyStatementsToRemove.size} statements in ontologies to remove.")
     val ontologyStatementsToInsert = verifiedTextValueProps.map(tvp =>
       nodeFactory.makeStatement(
         tvp.objectClassConstraint.subj,
@@ -136,7 +136,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         tvp.objectClassConstraint.context
       )
     )
-    log.debug(s"Found ${ontologyStatementsToInsert.size} statements in ontologies to insert.")
+    log.info(s"Found ${ontologyStatementsToInsert.size} statements in ontologies to insert.")
 
     val statementsToRemove = dataStatementsToRemove ++ ontologyStatementsToRemove
     log.info(s"Removing ${statementsToRemove.size} statements.")
