@@ -304,36 +304,60 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     val subProperties: Map[IRI, Set[IRI]] =
       propertyIris.map(propIri => propIri -> getSubProperties(repo, propIri)).filter(_._2.nonEmpty).toMap
 
-    def findViolation(pp: Set[TextValueProp]): Option[(TextValueProp, TextValueProp)] =
-      pp.flatMap { prop =>
-        val subProps: Set[TextValueProp] =
-          subProperties.getOrElse(prop.iri, Set.empty[IRI]).flatMap { subPropIri =>
-            pp.find(_.iri == subPropIri)
-          }
-        val violatingSubProp: Option[TextValueProp] =
-          subProps.find(prop.textType != _.textType)
-        violatingSubProp.map { violating =>
-          if (prop.textType.isNarrower(violating.textType)) (prop, violating)
-          else (violating, prop)
+    def findViolation(pp: Set[TextValueProp]): Option[(TextValueProp, TextValueProp)] = {
+      val violatingSuperProp: Option[TextValueProp] = pp.find { p =>
+        subProperties.get(p.iri) match {
+          case Some(ss) =>
+            ss.exists { subPropIri =>
+              val subProp: Option[TextValueProp] = pp.find(_.iri == subPropIri)
+              subProp match {
+                case Some(sub) => sub.textType != p.textType
+                case None      => false
+              }
+            }
+          case None => false
         }
-      }.headOption
+      }
+      for {
+        superProp   <- violatingSuperProp
+        subPropIris <- subProperties.get(superProp.iri)
+        violatingSubPropertyIri <-
+          subPropIris.find { subPropIri =>
+            val subProp: Option[TextValueProp] = pp.find(_.iri == subPropIri)
+            subProp match {
+              case Some(sub) => sub.textType != superProp.textType
+              case None      => false
+            }
+          }
+        violatingSubProp <- pp.find(_.iri == violatingSubPropertyIri)
+        res =
+          if (superProp.textType.isNarrower(violatingSubProp.textType)) (violatingSubProp, superProp)
+          else (superProp, violatingSubProp)
+      } yield res
+    }
 
     @tailrec
-    def changeAndCheck(pp: Set[TextValueProp]): Set[TextValueProp] =
-      findViolation(pp) match {
-        case None => pp
-        case Some((toWiden, widenedBy)) =>
-          val widened = toWiden.copy(
-            textType = widenedBy.textType,
-            objectClassConstraint =
-              copyStatement(toWiden.objectClassConstraint, obj = Some(widenedBy.objectClassConstraint.obj)),
-            statementsToRemove = toWiden.statementsToRemove + toWiden.objectClassConstraint
-          )
-          val updated = pp - toWiden + widened
-          changeAndCheck(updated)
+    def changeAndCheck(pp: Set[TextValueProp], depth: Int): Set[TextValueProp] =
+      if (depth > 500)
+        throw InconsistentRepositoryDataException(
+          "Could not resolve ontology violations with a reasonable amount of repetitions."
+        )
+      else {
+        findViolation(pp) match {
+          case None => pp
+          case Some((toWiden, widenedBy)) =>
+            val widened: TextValueProp = toWiden.copy(
+              textType = widenedBy.textType,
+              objectClassConstraint =
+                copyStatement(toWiden.objectClassConstraint, obj = Some(widenedBy.objectClassConstraint.obj)),
+              statementsToRemove = toWiden.statementsToRemove + toWiden.objectClassConstraint
+            )
+            val updated = pp - toWiden + widened
+            changeAndCheck(updated, depth + 1)
+        }
       }
 
-    changeAndCheck(props)
+    changeAndCheck(props, 0)
   }
 
   private def getSubProperties(repo: RdfRepository, propIri: IRI): Set[IRI] = {
@@ -559,10 +583,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     mapping: IRI
   ): DataAdjustment =
     if (mapping == leooMappingIri) addLeooMappingToValue(model, adjustable)
-    else {
-      println(s"Unknown mapping: $mapping for ${adjustable.valueIri}")
-      throw InconsistentRepositoryDataException(s"Unknown mapping: $mapping")
-    }
+    else throw InconsistentRepositoryDataException(s"Unknown mapping: $mapping")
 
   /**
    * Creates a complex DataAdjustment that takes an unformatted text value
