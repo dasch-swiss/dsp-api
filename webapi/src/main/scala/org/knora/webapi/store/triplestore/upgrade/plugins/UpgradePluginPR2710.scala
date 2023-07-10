@@ -491,12 +491,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
             throw InconsistentRepositoryDataException(
               s"Cannot change mapping from standard mapping to $mappings for ${prop.iri}"
             )
-          case Some(currentMapping) =>
-            if (mappings.contains(currentMapping)) changeTypeToCustomFormattedTextValue(adjustable)
-            else
-              throw InconsistentRepositoryDataException(
-                s"Cannot change mapping from $currentMapping to $mappings for ${prop.iri}"
-              )
+          case Some(currentMapping) => changeTypeToCustomFormattedTextValue(adjustable)
         }
       case CustomFormattedText(_) =>
         throw InconsistentRepositoryDataException(s"Custom mapping missing for ${prop.iri}")
