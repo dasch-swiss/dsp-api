@@ -331,14 +331,14 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
           }
         violatingSubProp <- pp.find(_.iri == violatingSubPropertyIri)
         res =
-          if (superProp.textType.isNarrower(violatingSubProp.textType)) (violatingSubProp, superProp)
+          if (violatingSubProp.textType.isNarrower(superProp.textType)) (violatingSubProp, superProp)
           else (superProp, violatingSubProp)
       } yield res
     }
 
     @tailrec
     def changeAndCheck(pp: Set[TextValueProp], depth: Int): Set[TextValueProp] =
-      if (depth > 500)
+      if (depth > 100)
         throw InconsistentRepositoryDataException(
           "Could not resolve ontology violations with a reasonable amount of repetitions."
         )
