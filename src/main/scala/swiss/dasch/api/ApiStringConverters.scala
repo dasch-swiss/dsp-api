@@ -5,14 +5,12 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.api.ApiPathCodecSegments.shortcodePathVarStr
 import swiss.dasch.domain.ProjectShortcode
 import zio.{ IO, ZIO }
 
 object ApiStringConverters {
-
-  private val defaultName = "shortcode"
-
-  def fromPathVarToProjectShortcode(value: String, pathVariableName: String = defaultName)
+  def fromPathVarToProjectShortcode(value: String, pathVariableName: String = shortcodePathVarStr)
       : IO[IllegalArguments, ProjectShortcode] =
     ZIO
       .fromEither(ProjectShortcode.make(value))

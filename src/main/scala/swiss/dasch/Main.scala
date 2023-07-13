@@ -9,7 +9,7 @@ import swiss.dasch.api.*
 import swiss.dasch.api.monitoring.*
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.{ JwtConfig, ServiceConfig, StorageConfig }
-import swiss.dasch.domain.{ AssetService, AssetServiceLive }
+import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.{ FileSystemCheck, FileSystemCheckLive, IngestApiServer, Logger }
 import swiss.dasch.version.BuildInfo
 import zio.*
@@ -23,17 +23,21 @@ object Main extends ZIOAppDefault {
   override val bootstrap: Layer[ReadError[String], ServiceConfig with JwtConfig with StorageConfig] =
     Configuration.layer >+> Logger.layer
 
-  private val ensureFilesystem = FileSystemCheck.smokeTestOrDie() *> FileSystemCheck.createTempFolders()
-
   override val run: ZIO[Any, Any, Nothing] =
-    (ensureFilesystem *> IngestApiServer.startup())
+    (FileSystemCheck.smokeTestOrDie() *> IngestApiServer.startup())
       .provide(
-        AssetServiceLive.layer,
+        AssetInfoServiceLive.layer,
         AuthenticatorLive.layer,
         Configuration.layer,
+        FileChecksumServiceLive.layer,
         FileSystemCheckLive.layer,
         HealthCheckServiceLive.layer,
+        ImportServiceLive.layer,
         IngestApiServer.layer,
         Metrics.layer,
+        ProjectServiceLive.layer,
+        ReportServiceLive.layer,
+        StorageServiceLive.layer,
+//        ZLayer.Debug.mermaid ,
       )
 }

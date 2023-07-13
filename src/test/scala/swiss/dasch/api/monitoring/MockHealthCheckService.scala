@@ -5,7 +5,7 @@
 
 package swiss.dasch.api.monitoring
 
-import zio._
+import zio.*
 
 final class MockHealthCheckService(val statusRef: Ref[Health]) extends HealthCheckService {
   override def check: UIO[Health] = statusRef.get

@@ -7,14 +7,15 @@ package swiss.dasch.api
 
 import swiss.dasch.api.ImportEndpointSpec.postImport
 import swiss.dasch.config.Configuration.StorageConfig
-import zio.test.{ ZIOSpecDefault, assertCompletes, assertTrue }
-import swiss.dasch.domain.{ AssetService, AssetServiceLive, ProjectShortcode }
-import swiss.dasch.test.{ SpecConfigurations, SpecConstants, SpecPaths }
-import swiss.dasch.test.SpecConstants.{ emptyProject, existingProject, nonExistentProject }
+import swiss.dasch.domain.*
+import swiss.dasch.test.SpecConstants.Projects.*
 import swiss.dasch.test.SpecPaths.pathFromResource
-import zio.{ Chunk, UIO, URIO, ZIO }
+import swiss.dasch.test.{ SpecConfigurations, SpecConstants, SpecPaths }
 import zio.http.*
 import zio.nio.file.Files
+import zio.test.{ ZIOSpecDefault, assertCompletes, assertTrue }
+import zio.{ Chunk, UIO, URIO, ZIO }
+
 object ImportEndpointSpec extends ZIOSpecDefault {
 
   private val validContentTypeHeaders = Headers(Header.ContentType(MediaType.application.zip))
@@ -68,11 +69,19 @@ object ImportEndpointSpec extends ZIOSpecDefault {
         } yield assertTrue(response.status == Status.BadRequest, importDoesNotExist)
       },
     )
-  ).provide(AssetServiceLive.layer, SpecConfigurations.storageConfigLayer)
+  ).provide(
+    AssetInfoServiceLive.layer,
+    FileChecksumServiceLive.layer,
+    ImportServiceLive.layer,
+    ProjectServiceLive.layer,
+    SpecConfigurations.storageConfigLayer,
+    StorageServiceLive.layer,
+  )
 
   private def validateImportedProjectExists(storageConfig: StorageConfig, shortcode: String | ProjectShortcode)
-      : UIO[Boolean] =
+      : UIO[Boolean] = {
     val expectedFiles = List("info", "jp2", "jp2.orig").map("FGiLaT4zzuV-CqwbEDFAFeS." + _)
     val projectPath   = storageConfig.assetPath / shortcode.toString
     ZIO.foreach(expectedFiles)(file => Files.exists(projectPath / file)).map(_.forall(identity))
+  }
 }

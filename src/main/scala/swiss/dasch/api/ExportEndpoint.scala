@@ -6,12 +6,12 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
-import swiss.dasch.domain.{ AssetService, ProjectShortcode }
+import swiss.dasch.domain.{ ProjectService, ProjectShortcode }
 import zio.http.Header.{ ContentDisposition, ContentType }
 import zio.http.HttpError.*
 import zio.http.Path.Segment.Root
-import zio.http.codec.HttpCodec.*
 import zio.http.codec.*
+import zio.http.codec.HttpCodec.*
 import zio.http.endpoint.EndpointMiddleware.None
 import zio.http.endpoint.{ Endpoint, Routes }
 import zio.http.{ Header, * }
@@ -39,11 +39,11 @@ object ExportEndpoint {
       HttpCodec.error[InternalProblem](Status.InternalServerError),
     )
 
-  val app: App[AssetService] = exportEndpoint
+  val app: App[ProjectService] = exportEndpoint
     .implement((shortcodeStr: String) =>
       for {
         shortcode <- ApiStringConverters.fromPathVarToProjectShortcode(shortcodeStr)
-        response  <- AssetService
+        response  <- ProjectService
                        .zipProject(shortcode)
                        .some
                        .mapBoth(

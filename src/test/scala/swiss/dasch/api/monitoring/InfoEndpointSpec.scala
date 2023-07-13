@@ -8,8 +8,8 @@ package swiss.dasch.api.monitoring
 import swiss.dasch.api.monitoring.InfoEndpoint.InfoEndpointResponse
 import swiss.dasch.version.BuildInfo
 import zio.http.{ Request, Root, Status, URL }
-import zio.test.*
 import zio.json.EncoderOps
+import zio.test.*
 
 object InfoEndpointSpec extends ZIOSpecDefault {
   val spec = suite("InfoEndpointSpec")(

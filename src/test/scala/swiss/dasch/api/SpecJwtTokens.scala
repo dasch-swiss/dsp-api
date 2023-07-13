@@ -7,7 +7,7 @@ package swiss.dasch.api
 
 import pdi.jwt.*
 import pdi.jwt.exceptions.JwtException
-import swiss.dasch.config.Configuration.{ ServiceConfig, JwtConfig }
+import swiss.dasch.config.Configuration.{ JwtConfig, ServiceConfig }
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConfigurations.jwtConfigLayer
 import zio.*

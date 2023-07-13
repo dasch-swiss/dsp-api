@@ -7,9 +7,9 @@ package swiss.dasch.infrastructure
 
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
-import zio.{ Exit, Scope, ZIO, ZLayer }
-import zio.test.{ ZIOSpecDefault, assertCompletes, assertTrue }
 import zio.nio.file.*
+import zio.test.{ ZIOSpecDefault, assertCompletes, assertTrue }
+import zio.{ Exit, Scope, ZIO, ZLayer }
 
 import java.io.IOException
 
@@ -38,16 +38,5 @@ object FileSystemCheckLiveSpec extends ZIOSpecDefault {
         result <- FileSystemCheck.smokeTestOrDie().exit
       } yield assertTrue(result.isFailure)
     }.provide(ZLayer.succeed(StorageConfig("does-not-exist", "does-not-exist")), FileSystemCheckLive.layer),
-    test("should create import and export folder in temp if they do not exist") {
-      for {
-        config             <- ZIO.service[StorageConfig]
-        _                  <- FileSystemCheck.createTempFolders()
-        exportFolderExists <- Files.isDirectory(config.importPath)
-        importFolderExists <- Files.isDirectory(config.exportPath)
-      } yield assertTrue(exportFolderExists, importFolderExists)
-    }.provide(
-      ZLayer.scoped(createOnlyAssetAndTempFolder.map(StorageConfig.apply)),
-      FileSystemCheckLive.layer,
-    ),
   )
 }

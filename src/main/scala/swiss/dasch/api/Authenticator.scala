@@ -5,12 +5,12 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.config.Configuration.JwtConfig
-import zio.*
-import zio.prelude.Validation
 import pdi.jwt.*
 import pdi.jwt.exceptions.JwtException
+import swiss.dasch.config.Configuration.JwtConfig
+import zio.*
 import zio.http.{ HttpAppMiddleware, RequestHandlerMiddleware }
+import zio.prelude.Validation
 
 trait Authenticator  {
   def authenticate(token: String): ZIO[Any, NonEmptyChunk[AuthenticationError], JwtClaim]
@@ -56,7 +56,7 @@ final case class AuthenticatorLive(jwtConfig: JwtConfig) extends Authenticator {
       _     <- verifyClaim(claim)
     } yield claim
 
-  private def verifyClaim(claim: JwtClaim): IO[NonEmptyChunk[AuthenticationError], JwtClaim] =
+  private def verifyClaim(claim: JwtClaim): IO[NonEmptyChunk[AuthenticationError], JwtClaim] = {
     val audVal = if (claim.audience.getOrElse(Set.empty).contains(audience)) { Validation.succeed(claim) }
     else { Validation.fail(AuthenticationError.invalidAudience(jwtConfig)) }
 
@@ -64,6 +64,7 @@ final case class AuthenticatorLive(jwtConfig: JwtConfig) extends Authenticator {
     else { Validation.fail(AuthenticationError.invalidIssuer(jwtConfig)) }
 
     ZIO.fromEither(Validation.validateWith(issVal, audVal)((_, _) => claim).toEither)
+  }
 }
 
 object AuthenticatorLive {

@@ -6,8 +6,8 @@
 package swiss.dasch.infrastructure
 import swiss.dasch.config.Configuration.ServiceConfig
 import zio.*
-import zio.logging.LogFormat.*
 import zio.logging.*
+import zio.logging.LogFormat.*
 import zio.logging.slf4j.bridge.Slf4jBridge
 
 object Logger {

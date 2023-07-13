@@ -7,20 +7,21 @@ package swiss.dasch.domain
 
 import swiss.dasch.test.SpecPaths.pathFromResource
 import zio.Scope
+import zio.json.*
 import zio.nio.charset.Charset
 import zio.nio.file.{ Files, Path }
 import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertCompletes, assertTrue }
-import zio.json.*
-object DotInfoFileContentSpec extends ZIOSpecDefault {
+
+object AssetInfoFileContentSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("DotInfoFileContent")(test("parsing a file works") {
+    suite("AssetInfoFileContent")(test("parsing a file works") {
       for {
         actual <- Files
                     .readAllLines(pathFromResource("test-folder-structure/0001/fg/il/FGiLaT4zzuV-CqwbEDFAFeS.info"))
-                    .map(lines => lines.mkString.fromJson[DotInfoFileContent])
+                    .map(lines => lines.mkString.fromJson[AssetInfoFileContent])
       } yield assertTrue(
         actual.contains(
-          DotInfoFileContent(
+          AssetInfoFileContent(
             internalFilename = "FGiLaT4zzuV-CqwbEDFAFeS.jp2",
             originalInternalFilename = "FGiLaT4zzuV-CqwbEDFAFeS.jp2.orig",
             originalFilename = "250x250.jp2",

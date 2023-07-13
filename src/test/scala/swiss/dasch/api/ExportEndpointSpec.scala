@@ -5,19 +5,19 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.domain.{ AssetService, AssetServiceLive, ProjectShortcode }
+import swiss.dasch.domain.*
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.test.SpecConstants.{ existingProject, nonExistentProject }
-import zio.{ Scope, ZIO }
-import zio.http.{ URL, * }
+import swiss.dasch.test.SpecConstants.Projects.*
+import zio.http.*
 import zio.test.Assertion.equalTo
 import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertCompletes, assertTrue, assertZIO }
+import zio.{ Scope, ZIO }
 
 import java.net.URI
 
 object ExportEndpointSpec extends ZIOSpecDefault {
 
-  private def postExport(shortcode: String | ProjectShortcode): ZIO[AssetService, Option[Response], Response] = {
+  private def postExport(shortcode: String | ProjectShortcode): ZIO[ProjectService, Option[Response], Response] = {
     val url = URL(Root / "projects" / shortcode.toString / "export")
     ExportEndpoint.app.runZIO(Request.post(Body.empty, url))
   }
@@ -48,5 +48,11 @@ object ExportEndpointSpec extends ZIOSpecDefault {
           )
         },
       )
-    ).provide(AssetServiceLive.layer, SpecConfigurations.storageConfigLayer)
+    ).provide(
+      AssetInfoServiceLive.layer,
+      FileChecksumServiceLive.layer,
+      ProjectServiceLive.layer,
+      SpecConfigurations.storageConfigLayer,
+      StorageServiceLive.layer,
+    )
 }
