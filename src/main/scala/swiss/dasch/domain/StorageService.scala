@@ -27,6 +27,7 @@ trait StorageService  {
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]
 }
 object StorageService {
+  def maxParallelism(): Int                                                                            = 10
   def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, Path]               =
     ZIO.serviceWithZIO[StorageService](_.getProjectDirectory(projectShortcode))
   def getAssetDirectory(asset: Asset): RIO[StorageService, Path]                                       =

@@ -99,7 +99,7 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
       .walk(path)
       .filter(_.filename.toString.endsWith(".info"))
       .filterZIO(path => Files.isRegularFile(path) && Files.isHidden(path).negate)
-      .mapZIO(loadFromFilesystem(_, shortcode))
+      .mapZIOPar(StorageService.maxParallelism())(loadFromFilesystem(_, shortcode))
 }
 object AssetInfoServiceLive {
   val layer = ZLayer.fromFunction(AssetInfoServiceLive.apply _)

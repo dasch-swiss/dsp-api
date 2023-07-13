@@ -81,7 +81,7 @@ final case class ImportServiceLive(
       _       <- ZipUtility.unzipFile(zipFile, tempDir).mapError(IoError(_))
       checks  <- assetInfos
                    .findAllInPath(tempDir, shortcode)
-                   .mapZIO(assetService.verifyChecksum)
+                   .mapZIOPar(StorageService.maxParallelism())(assetService.verifyChecksum)
                    .runCollect
                    .mapBoth(IoError(_), _.flatten)
       _       <- ZIO.fail(InvalidChecksums).when(checks.exists(!_.checksumMatches))

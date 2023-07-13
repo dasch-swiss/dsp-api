@@ -12,6 +12,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FileUtils
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
+import zio.ZIO.ifZIO
 import zio.json.{ DeriveJsonCodec, DeriveJsonDecoder, DeriveJsonEncoder, JsonCodec, JsonDecoder, JsonEncoder }
 import zio.nio.file.Files.{ delete, deleteIfExists, isDirectory, newDirectoryStream }
 import zio.nio.file.{ Files, Path }
@@ -57,14 +58,16 @@ final case class ProjectServiceLive(
     ZStream
       .fromZIO(storage.getAssetDirectory())
       .flatMap(newDirectoryStream(_))
-      .filterZIO(directoryContainsNonHiddenRegularFile)
+      .flatMapPar(StorageService.maxParallelism())(path =>
+        ZStream.succeed(path).filterZIO(directoryContainsNonHiddenRegularFile)
+      )
       .runCollect
       .map(toProjectShortcodes)
 
   private def directoryContainsNonHiddenRegularFile(path: Path) =
     Files.isDirectory(path) &&
     Files
-      .walk(path)
+      .walk(path, maxDepth = 3)
       .filterZIO(it => Files.isRegularFile(it) && Files.isHidden(it).negate)
       .runHead
       .map(_.isDefined)

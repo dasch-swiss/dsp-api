@@ -7,9 +7,10 @@ package swiss.dasch.domain
 
 import zio.*
 
-final case class Report(results: Map[AssetInfo, Chunk[ChecksumResult]])
+final case class Report(results: Map[AssetInfo, Chunk[ChecksumResult]], nrOfAssets: Int)
+
 object Report {
-  def make(map: Map[AssetInfo, Chunk[ChecksumResult]]): Report = Report(map)
+  def make(map: Map[AssetInfo, Chunk[ChecksumResult]]): Report = Report(map, map.size)
 }
 
 trait ReportService  {
@@ -25,7 +26,7 @@ final case class ReportServiceLive(projectService: ProjectService, assetService:
   override def checksumReport(projectShortcode: ProjectShortcode): Task[Report] =
     projectService
       .findAssetInfosOfProject(projectShortcode)
-      .mapZIO(info => assetService.verifyChecksum(info).map((info, _)))
+      .mapZIOPar(StorageService.maxParallelism())(info => assetService.verifyChecksum(info).map((info, _)))
       .runCollect
       .map(_.toMap)
       .map(Report.make)
