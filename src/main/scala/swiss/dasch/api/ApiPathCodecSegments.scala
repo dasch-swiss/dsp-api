@@ -9,7 +9,10 @@ import zio.http.codec.HttpCodec.string
 import zio.http.codec.PathCodec
 
 object ApiPathCodecSegments {
-  val projects: PathCodec[Unit]           = "projects"
+  // project paths
+  val projects: PathCodec[Unit] = "projects"
+
+  // project path variables
   val shortcodePathVarStr                 = "shortcode"
   val shortcodePathVar: PathCodec[String] = string(shortcodePathVarStr)
 }

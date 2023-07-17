@@ -47,17 +47,12 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
   override def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo] =
     for {
       content   <- storageService.loadJsonFile[AssetInfoFileContent](infoFile)
-      assetMaybe = assetIdFromFilename(Path(content.internalFilename)).map(id => Asset(id, shortcode))
+      assetMaybe = AssetId.makeFromPath(Path(content.internalFilename)).map(id => Asset(id, shortcode))
       assetInfo <- assetMaybe match {
                      case Some(asset) => toAssetInfo(content, infoFile.parent.orNull, asset)
                      case None        => ZIO.fail(IllegalArgumentException(s"Unable to parse asset id from $infoFile"))
                    }
     } yield assetInfo
-
-  private def assetIdFromFilename(file: Path): Option[AssetId] = {
-    val filename = file.filename.toString
-    AssetId.make(filename.substring(0, filename.lastIndexOf("."))).toOption
-  }
 
   override def findByAsset(asset: Asset): Task[AssetInfo] =
     getInfoFilePath(asset).flatMap(parseAssetInfoFile(asset, _))

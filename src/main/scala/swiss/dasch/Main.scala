@@ -36,6 +36,7 @@ object Main extends ZIOAppDefault {
         Metrics.layer,
         ProjectServiceLive.layer,
         ReportServiceLive.layer,
+        SipiClientLive.layer,
         StorageServiceLive.layer,
 //        ZLayer.Debug.mermaid ,
       )

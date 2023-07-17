@@ -19,6 +19,7 @@ object Configuration {
       jwt: JwtConfig,
       service: ServiceConfig,
       storage: StorageConfig,
+      sipi: SipiConfig,
     )
 
   final case class JwtConfig(
@@ -34,16 +35,21 @@ object Configuration {
       logFormat: String,
     )
 
+  final case class SipiConfig(useLocalDev: Boolean)
+
   final case class StorageConfig(assetDir: String, tempDir: String) {
     val assetPath: Path = Path(assetDir)
     val tempPath: Path  = Path(tempDir)
   }
 
-  val layer: Layer[ReadError[String], ServiceConfig with JwtConfig with StorageConfig] = {
+  val layer: Layer[ReadError[String], ServiceConfig with JwtConfig with StorageConfig with SipiConfig] = {
     val applicationConf = ZConfig.fromTypesafeConfig(
       ZIO.attempt(ConfigFactory.defaultApplication().resolve()),
       descriptor[ApplicationConf].mapKey(toKebabCase),
     )
-    applicationConf.project(_.service) ++ applicationConf.project(_.storage) ++ applicationConf.project(_.jwt)
+    applicationConf.project(_.service) ++
+      applicationConf.project(_.storage) ++
+      applicationConf.project(_.jwt) ++
+      applicationConf.project(_.sipi)
   }
 }
