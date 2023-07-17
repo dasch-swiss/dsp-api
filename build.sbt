@@ -239,6 +239,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
+    dockerLabels := Map[String, Option[String]](
+      "org.opencontainers.image.version"  -> (ThisBuild / version).value.some,
+      "org.opencontainers.image.revision" -> git.gitHeadCommit.value,
+      "org.opencontainers.image.source"   -> Some("github.com/dasch-swiss/dsp-api")
+    ).collect { case (key, Some(value)) => (key, value) },
     dockerCommands += Cmd(
       "RUN",
       "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"
