@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   app:
-    image: daschswiss/dsp-app:v10.19.2
+    image: daschswiss/dsp-app:v10.21.0-24-g2a1ac2d
     ports:
       - "4200:4200"
     networks:
@@ -70,7 +70,7 @@ services:
       - JWT_AUDIENCE=http://localhost:3340
       - JWT_ISSUER=0.0.0.0:3333
       - JWT_SECRET=UP 4888, nice 4-8-4 steam engine
-#      - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
+  #      - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
 
   api:
     image: daschswiss/knora-api:latest
