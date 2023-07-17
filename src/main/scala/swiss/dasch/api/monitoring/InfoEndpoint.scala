@@ -5,7 +5,6 @@
 
 package swiss.dasch.api.monitoring
 
-import swiss.dasch.api.ImportEndpoint.UploadResponse
 import swiss.dasch.version.BuildInfo
 import zio.*
 import zio.http.*

@@ -5,16 +5,14 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.api.ImportEndpointSpec.postImport
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
 import swiss.dasch.test.SpecConstants.Projects.*
-import swiss.dasch.test.SpecPaths.pathFromResource
 import swiss.dasch.test.{ SpecConfigurations, SpecConstants, SpecPaths }
 import zio.http.*
 import zio.nio.file.Files
-import zio.test.{ ZIOSpecDefault, assertCompletes, assertTrue }
-import zio.{ Chunk, UIO, URIO, ZIO }
+import zio.test.{ ZIOSpecDefault, assertTrue }
+import zio.{ UIO, ZIO }
 
 object ImportEndpointSpec extends ZIOSpecDefault {
 

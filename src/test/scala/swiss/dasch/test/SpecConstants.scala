@@ -5,7 +5,6 @@
 
 package swiss.dasch.test
 
-import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.domain.{ Asset, AssetId, ProjectShortcode, Sha256Hash }
 import swiss.dasch.test.SpecConstants.Projects.existingProject

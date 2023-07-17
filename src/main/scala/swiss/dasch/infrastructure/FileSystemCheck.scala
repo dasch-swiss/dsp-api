@@ -6,7 +6,7 @@
 package swiss.dasch.infrastructure
 
 import swiss.dasch.config.Configuration.StorageConfig
-import zio.nio.file.{ Files, Path }
+import zio.nio.file.Files
 import zio.{ UIO, URLayer, ZIO, ZLayer }
 
 import java.io.IOException

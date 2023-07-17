@@ -8,11 +8,9 @@ package swiss.dasch.api
 import swiss.dasch.api.ApiPathCodecSegments.projects
 import swiss.dasch.domain.{ ProjectService, ProjectShortcode }
 import zio.*
-import zio.http.codec.HttpCodec
 import zio.http.endpoint.Endpoint
 import zio.http.{ App, Status }
 import zio.json.{ DeriveJsonEncoder, JsonEncoder }
-import zio.schema.codec.JsonCodec.JsonEncoder
 import zio.schema.{ DeriveSchema, Schema }
 object ListProjectsEndpoint {
   final case class ProjectResponse(shortcode: String)

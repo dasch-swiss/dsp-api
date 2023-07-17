@@ -8,7 +8,6 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
-import zio.nio.file.Path
 
 opaque type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-]{4,}$"]
 object AssetId {

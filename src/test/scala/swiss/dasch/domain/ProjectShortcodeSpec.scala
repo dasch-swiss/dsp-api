@@ -9,8 +9,6 @@ import zio.*
 import zio.stream.ZStream
 import zio.test.*
 
-import scala.collection.immutable.AbstractSeq
-
 object ProjectShortcodeSpec extends ZIOSpecDefault {
 
   def randomFourDigitHexString: UIO[String] = {

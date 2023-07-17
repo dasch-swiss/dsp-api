@@ -5,18 +5,15 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FileUtils
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
-import zio.json.{ DecoderOps, DeriveJsonCodec, JsonCodec, JsonDecoder }
+import zio.json.{ DecoderOps, JsonDecoder }
 import zio.nio.file.{ Files, Path }
-import zio.prelude.Validation
 
 import java.io.IOException
 import java.time.format.DateTimeFormatter
 import java.time.{ ZoneId, ZoneOffset }
-import java.util.UUID
 
 trait StorageService  {
   def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path]

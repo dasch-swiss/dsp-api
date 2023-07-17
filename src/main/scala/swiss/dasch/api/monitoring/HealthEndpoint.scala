@@ -5,10 +5,8 @@
 
 package swiss.dasch.api.monitoring
 
-import swiss.dasch.api.monitoring.{ DOWN, Health, HealthCheckService, UP }
 import zio.*
 import zio.http.*
-import zio.http.endpoint.Endpoint
 import zio.json.EncoderOps
 
 object HealthEndpoint {

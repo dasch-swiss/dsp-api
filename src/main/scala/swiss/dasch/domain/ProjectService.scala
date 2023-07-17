@@ -8,17 +8,13 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
-import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FileUtils
-import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
-import zio.ZIO.ifZIO
-import zio.json.{ DeriveJsonCodec, DeriveJsonDecoder, DeriveJsonEncoder, JsonCodec, JsonDecoder, JsonEncoder }
-import zio.nio.file.Files.{ delete, deleteIfExists, isDirectory, newDirectoryStream }
+import zio.nio.file.Files.{ isDirectory, newDirectoryStream }
 import zio.nio.file.{ Files, Path }
-import zio.stream.{ ZSink, ZStream }
+import zio.stream.ZStream
 
-import java.io.{ FileNotFoundException, IOException }
+import java.io.IOException
 
 opaque type ProjectShortcode = String Refined MatchesRegex["""^\p{XDigit}{4,4}$"""]
 type IiifPrefix              = ProjectShortcode

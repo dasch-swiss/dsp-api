@@ -9,8 +9,7 @@ import swiss.dasch.test.SpecConfigurations.jwtConfigLayer
 import zio.*
 import zio.http.*
 import zio.http.endpoint.*
-import zio.http.endpoint.EndpointMiddleware.Typed
-import zio.test.{ TestAspect, ZIOSpecDefault, assertCompletes, assertTrue }
+import zio.test.{ TestAspect, ZIOSpecDefault, assertTrue }
 
 object AuthenticatorMiddlewareSpec extends ZIOSpecDefault {
 

@@ -5,29 +5,18 @@
 
 package swiss.dasch.api
 
-import eu.timepit.refined.auto.autoUnwrap
 import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
 import swiss.dasch.api.ApiStringConverters.fromPathVarToProjectShortcode
-import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
 import zio.*
-import zio.http.Header.{ ContentDisposition, ContentType }
-import zio.http.HttpError.*
-import zio.http.Path.Segment.Root
+import zio.http.Header.ContentType
 import zio.http.codec.*
 import zio.http.codec.HttpCodec.*
-import zio.http.endpoint.EndpointMiddleware.None
-import zio.http.endpoint.{ Endpoint, Routes }
+import zio.http.endpoint.Endpoint
 import zio.http.{ Header, * }
 import zio.json.{ DeriveJsonEncoder, JsonEncoder }
-import zio.nio.file
-import zio.nio.file.Files
-import zio.schema.codec.JsonCodec.JsonEncoder
 import zio.schema.{ DeriveSchema, Schema }
-import zio.stream.{ ZSink, ZStream }
-
-import java.io.IOException
-import java.util.zip.ZipFile
+import zio.stream.ZStream
 
 object ImportEndpoint {
   case class UploadResponse(status: String = "okey")

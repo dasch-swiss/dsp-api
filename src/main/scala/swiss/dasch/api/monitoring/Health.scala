@@ -5,7 +5,6 @@
 
 package swiss.dasch.api.monitoring
 
-import zio.json.internal.Write
 import zio.json.{ DeriveJsonEncoder, JsonEncoder }
 
 sealed trait Status { self =>

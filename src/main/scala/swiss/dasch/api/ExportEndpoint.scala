@@ -6,21 +6,14 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
-import swiss.dasch.domain.{ ProjectService, ProjectShortcode }
+import swiss.dasch.domain.ProjectService
 import zio.http.Header.{ ContentDisposition, ContentType }
-import zio.http.HttpError.*
-import zio.http.Path.Segment.Root
 import zio.http.codec.*
 import zio.http.codec.HttpCodec.*
-import zio.http.endpoint.EndpointMiddleware.None
-import zio.http.endpoint.{ Endpoint, Routes }
+import zio.http.endpoint.Endpoint
 import zio.http.{ Header, * }
-import zio.nio.file
 import zio.schema.Schema
 import zio.stream.ZStream
-import zio.{ Chunk, Exit, Scope, URIO, ZIO, ZNothing }
-
-import java.io.{ File, IOException }
 
 object ExportEndpoint {
 

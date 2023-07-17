@@ -6,18 +6,10 @@
 package swiss.dasch.api
 
 import pdi.jwt.*
-import pdi.jwt.exceptions.JwtException
-import swiss.dasch.config.Configuration.{ JwtConfig, ServiceConfig }
-import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.test.SpecConfigurations.jwtConfigLayer
+import swiss.dasch.config.Configuration.JwtConfig
 import zio.*
-import zio.json.ast.Json
-import zio.prelude.{ Validation, ZValidation }
-import zio.test.{ TestAspect, ZIOSpecDefault, assertCompletes, assertTrue }
 
 import java.time.Instant
-import java.time.temporal.ChronoUnit
-import scala.util.Try
 
 object SpecJwtTokens {
   def validToken(): URIO[JwtConfig, String]                      = createToken()

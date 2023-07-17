@@ -8,9 +8,8 @@ package swiss.dasch.domain
 import swiss.dasch.test.SpecPaths.pathFromResource
 import zio.Scope
 import zio.json.*
-import zio.nio.charset.Charset
-import zio.nio.file.{ Files, Path }
-import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertCompletes, assertTrue }
+import zio.nio.file.Files
+import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertTrue }
 
 object AssetInfoFileContentSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment with Scope, Any] =

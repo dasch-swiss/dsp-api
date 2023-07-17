@@ -6,15 +6,12 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
-import eu.timepit.refined.string.{ MatchesRegex, Trimmed }
-import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.string.MatchesRegex
 import zio.*
-import zio.json.{ DecoderOps, DeriveJsonCodec, JsonCodec }
-import zio.nio.file.{ Files, Path }
+import zio.nio.file.Path
 
-import java.io.{ FileInputStream, FileNotFoundException, IOException }
+import java.io.{ FileInputStream, FileNotFoundException }
 
 opaque type Sha256Hash = String Refined MatchesRegex["^[A-Fa-f0-9]{64}$"]
 object Sha256Hash {

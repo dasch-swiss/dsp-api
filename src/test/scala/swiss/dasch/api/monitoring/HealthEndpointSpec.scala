@@ -5,7 +5,6 @@
 
 package swiss.dasch.api.monitoring
 
-import swiss.dasch.api.monitoring.{ HealthEndpoint, MockHealthCheckService }
 import zio.http.*
 import zio.json.DecoderOps
 import zio.json.ast.Json

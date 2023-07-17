@@ -6,10 +6,7 @@
 package swiss.dasch.test
 import org.apache.commons.io.FileUtils
 import swiss.dasch.config.Configuration.{ JwtConfig, StorageConfig }
-import swiss.dasch.test.SpecPaths.pathFromResource
-import zio.nio.file.Files.newDirectoryStream
-import zio.nio.file.{ Files, Path }
-import zio.stream.ZStream
+import zio.nio.file.Files
 import zio.{ Layer, ULayer, ZIO, ZLayer }
 
 import java.io.IOException

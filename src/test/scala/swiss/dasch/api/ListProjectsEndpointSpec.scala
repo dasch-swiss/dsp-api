@@ -10,7 +10,7 @@ import swiss.dasch.domain.*
 import swiss.dasch.test.SpecConfigurations
 import zio.http.{ Request, Root, Status, URL }
 import zio.json.*
-import zio.test.{ ZIOSpecDefault, assertCompletes, assertTrue }
+import zio.test.{ ZIOSpecDefault, assertTrue }
 import zio.{ Chunk, http }
 
 object ListProjectsEndpointSpec extends ZIOSpecDefault {

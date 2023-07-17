@@ -7,19 +7,13 @@ package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.*
 import swiss.dasch.domain.*
-import zio.http.Header.{ ContentDisposition, ContentType }
-import zio.http.HttpError.*
-import zio.http.Path.Segment.Root
+import zio.Chunk
 import zio.http.codec.*
 import zio.http.codec.HttpCodec.*
-import zio.http.endpoint.EndpointMiddleware.None
-import zio.http.endpoint.{ Endpoint, Routes }
-import zio.http.{ Header, * }
-import zio.json.{ DeriveJsonEncoder, JsonEncoder, JsonError }
-import zio.nio.file
+import zio.http.endpoint.Endpoint
+import zio.http.*
+import zio.json.{ DeriveJsonEncoder, JsonEncoder }
 import zio.schema.{ DeriveSchema, Schema }
-import zio.stream.ZStream
-import zio.{ Chunk, Exit, Scope, URIO, ZIO, ZNothing }
 
 import scala.collection.immutable.Map
 

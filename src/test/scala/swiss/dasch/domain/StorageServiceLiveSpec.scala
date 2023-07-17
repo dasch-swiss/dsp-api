@@ -5,21 +5,18 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
-import swiss.dasch.test.SpecConstants.Assets.existingAsset
 import swiss.dasch.test.SpecConstants.Projects.existingProject
 import zio.*
-import zio.nio.file.{ Files, Path }
+import zio.nio.file.Files
 import zio.test.*
 
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneId, ZoneOffset }
-import java.util.UUID
+import java.time.{ ZoneId, ZoneOffset }
 
 object StorageServiceLiveSpec extends ZIOSpecDefault {
 

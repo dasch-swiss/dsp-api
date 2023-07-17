@@ -5,12 +5,8 @@
 
 package swiss.dasch.api.monitoring
 
-import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.infrastructure.FileSystemCheck
-import zio.nio.file.Files
-import zio.{ UIO, ULayer, URIO, URLayer, ZIO, ZLayer }
-
-import java.io.IOException
+import zio.{ UIO, URIO, URLayer, ZIO, ZLayer }
 
 trait HealthCheckService  {
   def check: UIO[Health]

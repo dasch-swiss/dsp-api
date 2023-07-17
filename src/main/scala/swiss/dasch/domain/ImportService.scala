@@ -8,10 +8,8 @@ package swiss.dasch.domain
 import org.apache.commons.io.FileUtils
 import zio.*
 import zio.nio.file.*
-import zio.nio.file.Files.newDirectoryStream
 import zio.stream.*
 
-import java.nio.file.StandardCopyOption
 import java.util.zip.ZipFile
 
 sealed trait ImportFailed
