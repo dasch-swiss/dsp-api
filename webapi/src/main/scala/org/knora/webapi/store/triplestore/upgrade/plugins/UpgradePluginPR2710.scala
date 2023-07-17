@@ -559,6 +559,9 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     val newString                       = stringValueStatement.obj.stringValue + "\u001E"
     val newStringValue: Statement =
       copyStatement(stringValueStatement, obj = Some(nodeFactory.makeStringLiteral(newString.replaceAll("\n", ""))))
+    // note: for CKEditor it would have to be
+    // "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>   x</p></text>"
+    // (every odd space is a non-breaking space U+00a0)
 
     val newStandoffStatements: Set[Statement] =
       generateStandardMappingStandoffStatements(adjustable, newString)
