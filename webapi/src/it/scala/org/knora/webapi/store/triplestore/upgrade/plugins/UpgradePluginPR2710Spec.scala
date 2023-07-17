@@ -411,5 +411,33 @@ class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
       val res2 = repo.doAsk(query2)
       assert(res2, "The biblio:editionHasTitle should have been changed to use the BEOL LEOO mapping.")
     }
+
+    "replace newline characters with linebreak standoff markup, when transforming unformatted text to formatted text" in {
+      // run the transformation on the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710i.trig")
+      val plugin          = new UpgradePluginPR2710(log)
+      plugin.transform(model)
+      val repo = model.asRepository
+
+      // check the data
+      val query =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK
+           |FROM <http://www.knora.org/data/0001/anything>
+           |WHERE {
+           |    BIND (<http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw> as ?s)
+           |    ?s a knora-base:FormattedTextValue .
+           |    ?s knora-base:valueHasString "a text value without markup          but with linebreaks in it" .
+           |    ?s knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
+           |    ?s knora-base:valueHasMaxStandoffStartIndex 3 .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw/standoff/0> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw/standoff/1> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw/standoff/2> .
+           |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw/standoff/3> .
+           |}
+           |""".stripMargin
+      val res = repo.doAsk(query)
+      assert(res, "Newlines should have been converted to Standoff.")
+    }
   }
 }

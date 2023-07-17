@@ -578,6 +578,7 @@ object OntologyConstants {
     val StandoffParagraphTag: IRI     = StandoffPrefixExpansion + "StandoffParagraphTag"
     val StandoffItalicTag: IRI        = StandoffPrefixExpansion + "StandoffItalicTag"
     val StandoffBoldTag: IRI          = StandoffPrefixExpansion + "StandoffBoldTag"
+    val StandoffBrTag: IRI            = StandoffPrefixExpansion + "StandoffBrTag"
     val StandoffUnderlineTag: IRI     = StandoffPrefixExpansion + "StandoffUnderlineTag"
     val StandoffStrikethroughTag: IRI = StandoffPrefixExpansion + "StandoffStrikethroughTag"
 

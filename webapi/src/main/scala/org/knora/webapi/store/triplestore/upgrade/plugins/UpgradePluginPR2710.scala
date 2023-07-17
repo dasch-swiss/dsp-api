@@ -90,6 +90,8 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
 
   private val leooMappingIri: IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/leooLetterMapping"
 
+  private lazy val newUuid = UuidUtil.makeRandomBase64EncodedUuid
+
   private def typeToNode(textType: TextType): RdfNode =
     textType match {
       case TextType.UnformattedText        => nodeFactory.makeIriNode(KnoraBase.UnformattedTextValue)
@@ -556,10 +558,10 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
     val stringValueStatement: Statement = findStringValueStatement(adjustable, model)
     val newString                       = stringValueStatement.obj.stringValue + "\u001E"
     val newStringValue: Statement =
-      copyStatement(stringValueStatement, obj = Some(nodeFactory.makeStringLiteral(newString)))
+      copyStatement(stringValueStatement, obj = Some(nodeFactory.makeStringLiteral(newString.replaceAll("\n", ""))))
 
     val newStandoffStatements: Set[Statement] =
-      generateStandardMappingStandoffStatements(adjustable, newString.length())
+      generateStandardMappingStandoffStatements(adjustable, newString)
 
     val statementsToRemove = Set(typeStatement, stringValueStatement)
     val statementsToInsert = Set(newMappingStatement, newTypeStatement, newStringValue) ++ newStandoffStatements
@@ -641,12 +643,38 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
         )
       )
 
-  private def generateStandardMappingStandoffStatements(value: AdjustableData, stringLength: Int): Set[Statement] = {
-    lazy val newUuid = UuidUtil.makeRandomBase64EncodedUuid
+  private def generateStandardMappingStandoffStatements(value: AdjustableData, stringValue: String): Set[Statement] = {
     val standoffIri0 = s"${value.valueIri}/standoff/0"
     val standoffIri1 = s"${value.valueIri}/standoff/1"
+    val stringLength = stringValue.length
+    val newlines     = stringValue.count(_ == '\n')
+
+    @tailrec
+    def generateStandoffBreakStatements(
+      value: AdjustableData,
+      stringValue: String,
+      standoffStartIndex: Int,
+      acc: Set[Statement]
+    ): Set[Statement] = {
+      val newlineIndex = stringValue.indexOf("\n")
+      if (newlineIndex > -1) {
+        val iri            = s"${value.valueIri}/standoff/$standoffStartIndex"
+        val newStringValue = stringValue.replaceFirst("\n", "")
+        val paragraphStatements = Set(
+          makeStatement(value.valueIri, KnoraBase.ValueHasStandoff, iri, value.graph),
+          makeStatement(iri, OntologyConstants.Rdf.Type, OntologyConstants.Standoff.StandoffBrTag, value.graph),
+          makeIntStatement(iri, KnoraBase.StandoffTagHasStart, newlineIndex, value.graph),
+          makeIntStatement(iri, KnoraBase.StandoffTagHasEnd, newlineIndex, value.graph),
+          makeIntStatement(iri, KnoraBase.StandoffTagHasStartIndex, standoffStartIndex, value.graph),
+          makeStringStatement(iri, KnoraBase.StandoffTagHasUUID, newUuid, value.graph),
+          makeStatement(iri, KnoraBase.StandoffTagHasStartParent, standoffIri1, value.graph)
+        )
+        generateStandoffBreakStatements(value, newStringValue, standoffStartIndex + 1, acc ++ paragraphStatements)
+      } else acc
+    }
+
     Set(
-      makeIntStatement(value.valueIri, KnoraBase.ValueHasMaxStandoffStartIndex, 1, value.graph),
+      makeIntStatement(value.valueIri, KnoraBase.ValueHasMaxStandoffStartIndex, 1 + newlines, value.graph),
       makeStatement(value.valueIri, KnoraBase.ValueHasStandoff, standoffIri0, value.graph),
       makeStatement(value.valueIri, KnoraBase.ValueHasStandoff, standoffIri1, value.graph),
       makeStatement(standoffIri0, OntologyConstants.Rdf.Type, OntologyConstants.Standoff.StandoffRootTag, value.graph),
@@ -665,7 +693,7 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       makeIntStatement(standoffIri1, KnoraBase.StandoffTagHasStartIndex, 1, value.graph),
       makeStringStatement(standoffIri1, KnoraBase.StandoffTagHasUUID, newUuid, value.graph),
       makeStatement(standoffIri1, KnoraBase.StandoffTagHasStartParent, standoffIri0, value.graph)
-    )
+    ) ++ generateStandoffBreakStatements(value, stringValue, 2, Set.empty[Statement])
   }
 
   private def generateLeooMappingStandoffStatements(value: AdjustableData, stringLength: Int): Set[Statement] = {
