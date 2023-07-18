@@ -25,11 +25,11 @@ import org.knora.webapi.store.triplestore.upgrade.plugins.TextType.UnformattedTe
 sealed trait TextType {
   def isNarrower(other: TextType): Boolean =
     (this, other) match {
-      case (UnformattedText, UnformattedText) => false
-      case (UnformattedText, _)               => true
-      case (FormattedText, FormattedText)     => false
-      case (FormattedText, _)                 => true
-      case (CustomFormattedText(_), _)        => false
+      case (UnformattedText, UnformattedText)               => false
+      case (UnformattedText, _)                             => true
+      case (FormattedText, UnformattedText | FormattedText) => false
+      case (FormattedText, _)                               => true
+      case (CustomFormattedText(_), _)                      => false
     }
 }
 object TextType {
