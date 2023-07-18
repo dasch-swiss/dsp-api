@@ -369,7 +369,7 @@ class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
       assert(res2, "The biblio:publicationHasTitle should have been changed to use the BEOL LEOO mapping.")
     }
 
-    "provided a subclass uses a mapping in data, also use the mapping in the super property and all its subproperties" in {
+    "use the mapping in the super property and all its subproperties if a subclass uses a custom mapping in data" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710h.trig")
       val plugin          = new UpgradePluginPR2710(log)
