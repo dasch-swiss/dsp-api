@@ -369,9 +369,50 @@ class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
       assert(res2, "The biblio:publicationHasTitle should have been changed to use the BEOL LEOO mapping.")
     }
 
-    "use the mapping in the super property and all its subproperties if a subclass uses a custom mapping in data" in {
+    "use the mapping in the super property and all its subproperties if a subclass uses standard mapping" in {
       // run the transformation on the model
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710h.trig")
+      val plugin          = new UpgradePluginPR2710(log)
+      plugin.transform(model)
+      val repo = model.asRepository
+
+      // check the ontology
+      val query1 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |PREFIX f: <http://www.knora.org/ontology/0001/freetest#>
+           |ASK 
+           |FROM <http://www.knora.org/ontology/0001/freetest> 
+           |WHERE {
+           |    f:hasSuperText knora-base:objectClassConstraint knora-base:FormattedTextValue . 
+           |    f:hasUnformattedSubText knora-base:objectClassConstraint knora-base:FormattedTextValue .
+           |    f:hasFormattedSubText knora-base:objectClassConstraint knora-base:FormattedTextValue .
+           |}
+           |""".stripMargin
+      val res1 = repo.doAsk(query1)
+      assert(
+        res1,
+        "The objectClassConstraint of the subproperty, superproperty and all its subproperties in the ontology should have been changed to FormattedTextValue."
+      )
+
+      // check the data
+      val query2 =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK 
+           |FROM <http://www.knora.org/data/0001/freetest> 
+           |WHERE {
+           |    <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/d71beeUvQAqMueB6eRZfVA> a knora-base:FormattedTextValue ;
+           |                                knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
+           |    <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/irjNZuctTCmg3NvaVL751g> a knora-base:FormattedTextValue ;
+           |                                knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
+           |}
+           |""".stripMargin
+      val res2 = repo.doAsk(query2)
+      assert(res2, "The text values should have been changed to FormattedTextValue.")
+    }
+
+    "use the mapping in the super property and all its subproperties if a subclass uses a custom mapping in data" in {
+      // run the transformation on the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710i.trig")
       val plugin          = new UpgradePluginPR2710(log)
       plugin.transform(model)
       val repo = model.asRepository
@@ -414,7 +455,7 @@ class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
 
     "replace newline characters with linebreak standoff markup, when transforming unformatted text to formatted text" in {
       // run the transformation on the model
-      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710i.trig")
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710j.trig")
       val plugin          = new UpgradePluginPR2710(log)
       plugin.transform(model)
       val repo = model.asRepository

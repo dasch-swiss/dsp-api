@@ -21,77 +21,71 @@
     knora-base:ontologyVersion   "knora-base v25" .
 }
 
-<http://www.knora.org/ontology/0801/biblio> {
+<http://www.knora.org/ontology/0001/freetest> {
 
-  <http://www.knora.org/ontology/0801/biblio>
+  <http://www.knora.org/ontology/0001/freetest>
       rdf:type                        owl:Ontology ;
       rdfs:label                      "The free test ontology" ;
-      knora-base:attachedToProject    <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+      knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
       knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
 
-  biblio:hasTitle
+  freetest:hasSuperText
       rdf:type                          owl:ObjectProperty ;
       rdfs:subPropertyOf                knora-base:hasValue ;
-      rdfs:label                        "Title"@en ;
+      knora-base:subjectClassConstraint freetest:FreeTest ;
       knora-base:objectClassConstraint  knora-base:TextValue ;
       salsah-gui:guiElement             salsah-gui:SimpleText ;
       salsah-gui:guiAttribute           "size=80",
                                         "maxlength=255" .
 
-  biblio:publicationHasTitle
+  freetest:hasUnformattedSubText
       rdf:type                          owl:ObjectProperty ;
-      rdfs:subPropertyOf                biblio:hasTitle ;
-      rdfs:label                        "Publication Title"@en ;
-      knora-base:objectClassConstraint  knora-base:TextValue .
+      rdfs:subPropertyOf                freetest:hasSuperText ;
+      rdfs:label                        "Text Area Text"@en ;
+      knora-base:subjectClassConstraint freetest:FreeTest ;
+      knora-base:objectClassConstraint  knora-base:TextValue ;
+      salsah-gui:guiElement             salsah-gui:SimpleText ;
+      salsah-gui:guiAttribute           "size=80",
+                                        "maxlength=255" .
 
-  biblio:editionHasTitle
+  freetest:hasFormattedSubText
       rdf:type                          owl:ObjectProperty ;
-      rdfs:subPropertyOf                biblio:hasTitle ;
-      rdfs:label                        "Edition Title"@en ;
-      knora-base:objectClassConstraint  knora-base:TextValue .
+      rdfs:subPropertyOf                freetest:hasSuperText ;
+      knora-base:subjectClassConstraint freetest:FreeTest ;
+      knora-base:objectClassConstraint  knora-base:TextValue ;
+      salsah-gui:guiElement             salsah-gui:Richtext .
 }
 
-<http://www.knora.org/data/0801/beol> {
+<http://www.knora.org/data/0001/freetest> {
 
-  <http://rdfh.ch/0801/VkOHrWPzS2OZkQtCyYT3ng>
-    a                            biblio:Publication ;
+  <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng>
+    a                            freetest:FreeTest ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>  ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
-    biblio:publicationHasTitle   <http://rdfh.ch/0801/hkG1C7o7QcqxuJvy3J7DbQ/values/sitkvHbsRdqm41wPYXnZEw>;
-    knora-base:isDeleted         false .
+    freetest:hasUnformattedSubText <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/d71beeUvQAqMueB6eRZfVA> ;
+    freetest:hasFormattedSubText   <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/irjNZuctTCmg3NvaVL751g> ;
+    rdfs:label                     "instance with text value properties" ;
+    knora-base:isDeleted           false .
 
-  <http://rdfh.ch/0801/hkG1C7o7QcqxuJvy3J7DbQ/values/sitkvHbsRdqm41wPYXnZEw>
+  <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/d71beeUvQAqMueB6eRZfVA>
+    a                            knora-base:TextValue ;
+    knora-base:valueHasUUID      "d71beeUvQAqMueB6eRZfVA"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasString    "text" ;
+    knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+  <http://rdfh.ch/0001/VkOHrWPzS2OZkQtCyYT3ng/values/irjNZuctTCmg3NvaVL751g>
     a                                        knora-base:TextValue ;
-    knora-base:valueHasUUID                  "sitkvHbsRdqm41wPYXnZEw"^^xsd:string ;
+    knora-base:valueHasUUID                  "irjNZuctTCmg3NvaVL751g"^^xsd:string ;
     knora-base:isDeleted                     false ;
     knora-base:valueCreationDate             "2018-05-28T15:52:03.897Z"^^xsd:dateTime ;
     knora-base:valueHasOrder                 0 ;
-    knora-base:valueHasString                "title with formula" ;
-    knora-base:valueHasMapping               <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/leooLetterMapping> ;
-    knora-base:valueHasMaxStandoffStartIndex 1 ;
-    knora-base:valueHasStandoff              <http://rdfh.ch/0801/hkG1C7o7QcqxuJvy3J7DbQ/values/sitkvHbsRdqm41wPYXnZEw/standoff/0> ,
-                                             <http://rdfh.ch/0801/hkG1C7o7QcqxuJvy3J7DbQ/values/sitkvHbsRdqm41wPYXnZEw/standoff/1> ;
-    knora-base:hasPermissions                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
-    knora-base:attachedToUser                <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
-
-  <http://rdfh.ch/0801/hkG1C7o7QcqxuJvy3J7DbQ>
-    a                            biblio:Edition ;
-    knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>  ;
-    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
-    knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
-    biblio:editionHasTitle       <http://rdfh.ch/0801/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg> ;
-    knora-base:isDeleted         false .
-
-  <http://rdfh.ch/0801/VkOHrWPzS2OZkQtCyYT3ng/values/AdEsJfjFT5Ox07BC8ztUDg>
-    a                                        knora-base:TextValue ;
-    knora-base:valueHasUUID                  "AdEsJfjFT5Ox07BC8ztUDg"^^xsd:string ;
-    knora-base:isDeleted                     false ;
-    knora-base:valueCreationDate             "2018-05-28T15:52:03.897Z"^^xsd:dateTime ;
-    knora-base:valueHasOrder                 0 ;
-    knora-base:valueHasString                "simple title" ;
+    knora-base:valueHasString                "text" ;
     knora-base:hasPermissions                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:attachedToUser                <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 }
