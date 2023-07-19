@@ -2211,7 +2211,7 @@
     rdfs:subClassOf :StandoffTextValue ,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasOriginalString ;
-                      owl:maxCardinality "0"^^xsd:nonNegativeInteger ] ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] ;
     :canBeInstantiated true .
 
 
