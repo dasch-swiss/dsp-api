@@ -7,8 +7,6 @@ package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
 
-import scala.concurrent.duration._
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -33,7 +31,6 @@ class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
   private val listsResponderV2SpecFullData              = new ListsResponderV2SpecFullData
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
