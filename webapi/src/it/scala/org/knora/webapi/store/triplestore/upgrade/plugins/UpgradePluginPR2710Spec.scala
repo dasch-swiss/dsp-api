@@ -468,7 +468,7 @@ class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
            |WHERE {
            |    BIND (<http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw> as ?s)
            |    ?s a knora-base:FormattedTextValue .
-           |    ?s knora-base:valueHasString "a text value without markup          but with linebreaks in it" .
+           |    ?s knora-base:valueHasString "a text valuewithout markupbut with linebreaks in it" .
            |    ?s knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> .
            |    ?s knora-base:valueHasMaxStandoffStartIndex 3 .
            |    ?s knora-base:valueHasStandoff <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw/standoff/0> .

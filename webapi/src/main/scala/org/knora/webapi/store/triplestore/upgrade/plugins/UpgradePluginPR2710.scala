@@ -556,9 +556,18 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       copyStatement(typeStatement, obj = Some(nodeFactory.makeIriNode(KnoraBase.FormattedTextValue)))
 
     val stringValueStatement: Statement = findStringValueStatement(adjustable, model)
-    val newString                       = stringValueStatement.obj.stringValue + "\u001E"
+    val origString                      = stringValueStatement.obj.stringValue
+    val origStringStatement = copyStatement(
+      stringValueStatement,
+      pred = Some(nodeFactory.makeIriNode(KnoraBase.ValueHasOriginalString))
+    )
+
+    val newString = normalizeWhitespace(origString) + "\u001E"
     val newStringValue: Statement =
-      copyStatement(stringValueStatement, obj = Some(nodeFactory.makeStringLiteral(newString.replaceAll("\n", ""))))
+      copyStatement(
+        stringValueStatement,
+        obj = Some(nodeFactory.makeStringLiteral(newString.replaceAll("\n", "\u001E")))
+      )
     // note: for CKEditor it would have to be
     // "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>   x</p></text>"
     // (every odd space is a non-breaking space U+00a0)
@@ -576,6 +585,9 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       statementsToInsert = statementsToInsert
     )
   }
+
+  private def normalizeWhitespace(s: String): String =
+    s.trim.replaceAll("[\\s&&[^\n]]+", " ").replaceAll(" ?\n ?", "\n")
 
   private def addCustomMappingToUnformattedValue(
     model: RdfModel,
