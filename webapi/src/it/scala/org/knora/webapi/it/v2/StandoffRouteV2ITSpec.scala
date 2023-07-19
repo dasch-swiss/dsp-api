@@ -65,12 +65,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   private val freetestXSLTIRI      = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
-    RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    ),
     RdfDataObject(
       path = "test_data/ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
