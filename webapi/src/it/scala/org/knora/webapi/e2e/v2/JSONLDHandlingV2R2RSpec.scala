@@ -5,21 +5,18 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.testkit.RouteTestTimeout
 import spray.json._
 
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
+
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.v2.ResourcesRouteV2
-
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-end specification for the handling of JSONLD documents.
@@ -32,7 +29,6 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
   )
 
