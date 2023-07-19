@@ -1268,6 +1268,16 @@
     :objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/knora-base#valueHasString
+
+:valueHasOriginalString
+    rdf:type                  owl:DatatypeProperty ;
+    rdfs:subPropertyOf        :valueHas ;
+    rdfs:comment              "A string representation of the previous state of an unformatted TextValue, before it was normalized and converted to a FormattedTextValue in the course of the data migration to v30."@en ;
+    :subjectClassConstraint   :FormattedTextValue ;
+    :objectDatatypeConstraint xsd:string .
+
+
 ###  http://www.knora.org/ontology/knora-base#hasPermissions
 
 :hasPermissions
@@ -2184,7 +2194,7 @@
     rdfs:subClassOf :TextValue,
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasStandoff ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger ], # TODO: check correct cardinalities for standoff properties
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
                     [ rdf:type           owl:Restriction ;
                       owl:onProperty     :valueHasMaxStandoffStartIndex ;
                       owl:maxCardinality "1"^^xsd:nonNegativeInteger ],
@@ -2198,7 +2208,10 @@
 :FormattedTextValue
     rdf:type        owl:Class ;
     rdfs:label      "A TextValue with rich text formatting according to the <http://rdfh.ch/standoff/mappings/StandardMapping>"@en ;
-    rdfs:subClassOf :StandoffTextValue ;
+    rdfs:subClassOf :StandoffTextValue ,
+                    [ rdf:type           owl:Restriction ;
+                      owl:onProperty     :valueHasOriginalString ;
+                      owl:maxCardinality "0"^^xsd:nonNegativeInteger ] ;
     :canBeInstantiated true .
 
 
