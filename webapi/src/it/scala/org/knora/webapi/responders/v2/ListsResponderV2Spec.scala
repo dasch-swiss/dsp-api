@@ -16,22 +16,15 @@ import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object ListsResponderV2Spec {
-  private val userProfile = SharedTestDataADM.anythingUser2
-}
-
 /**
  * Tests [[ListsResponderV2]].
  */
 class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
 
-  import ListsResponderV2Spec._
-
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val listsResponderV2SpecFullData              = new ListsResponderV2SpecFullData
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
@@ -39,7 +32,7 @@ class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
     "return a list" in {
       appActor ! ListGetRequestV2(
         listIri = "http://rdfh.ch/lists/0001/treeList",
-        requestingUser = userProfile
+        requestingUser = SharedTestDataADM.anythingUser2
       )
 
       expectMsgPF(timeout) { case response: ListGetResponseV2 =>
@@ -50,7 +43,7 @@ class ListsResponderV2Spec extends CoreSpec with ImplicitSender {
     "return a node" in {
       appActor ! NodeGetRequestV2(
         nodeIri = "http://rdfh.ch/lists/0001/treeList11",
-        requestingUser = userProfile
+        requestingUser = SharedTestDataADM.anythingUser2
       )
 
       expectMsgPF(timeout) { case response: NodeGetResponseV2 =>
