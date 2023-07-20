@@ -244,16 +244,6 @@ init-db-test-empty: env-file stack-down-delete-volumes stack-db-only ## initiali
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-empty
 
-.PHONY: init-db-test-unit
-init-db-test-unit: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository
-	@echo $@
-	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit
-
-.PHONY: init-db-test-unit-minimal
-init-db-test-unit-minimal: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository with minimal data
-	@echo $@
-	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
-
 .PHONY: init-db-from-test
 init-db-from-test: ## init local database with data from test server. Use as `make init-db-from-test PW=database-password`
 	@echo $@

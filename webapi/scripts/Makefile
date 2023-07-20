@@ -10,14 +10,6 @@ fuseki-init-knora-test-minimal: ## initializes Fuseki with the knora-test reposi
 fuseki-init-knora-test-empty: ## initializes Fuseki with the knora-test repository and no data
 	./fuseki-init-knora-test-empty.sh
 
-.PHONY: fuseki-init-knora-test-unit
-fuseki-init-knora-test-unit: ## initializes Fuseki with the knora-test-unit repository and no data
-	./fuseki-init-knora-test-unit.sh
-
-.PHONY: fuseki-init-knora-test-unit-minimal
-fuseki-init-knora-test-unit-minimal: ## initializes Fuseki with the knora-test-unit repository and minimal data
-	./fuseki-init-knora-test-unit-minimal.sh
-
 .PHONY: help
 help: ## this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
