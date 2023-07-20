@@ -136,7 +136,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   ) {
     def makeFile(mediaType: MediaType.NonBinary): Path = {
       val fileSuffix = mediaType.fileExtensions.head
-      Paths.get("..", "test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
+      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
     }
 
     /**
