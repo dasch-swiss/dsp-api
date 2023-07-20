@@ -5,23 +5,16 @@
 
 package org.knora.webapi.slice.ontology.repo.service
 
-import java.time.Instant
 import dsp.constants.SalsahGui
-
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.{CoreSpec, InternalSchema}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SmartIriLiteralV2, StringLiteralV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{PredicateInfoV2, PropertyInfoContentV2, ReadPropertyInfoV2}
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
+
+import java.time.Instant
 
 /**
  * This spec is used to test [[org.knora.webapi.slice.ontology.repo.service.OntologyCache]].

@@ -19,12 +19,7 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
-import org.knora.webapi.responders.v2.ontology.{
-  CardinalityHandler,
-  CardinalityHandlerLive,
-  OntologyHelpers,
-  OntologyHelpersLive
-}
+import org.knora.webapi.responders.v2.ontology.{CardinalityHandler, CardinalityHandlerLive, OntologyHelpers, OntologyHelpersLive}
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.{AuthenticatorService, ProjectsRouteZ}
 import org.knora.webapi.slice.admin.api.service.{ProjectADMRestService, ProjectsADMRestServiceLive}
@@ -34,24 +29,19 @@ import org.knora.webapi.slice.common.api.{RestPermissionService, RestPermissionS
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.{RestCardinalityService, RestCardinalityServiceLive}
 import org.knora.webapi.slice.ontology.domain.service.{CardinalityService, OntologyRepo}
-import org.knora.webapi.slice.ontology.repo.service.{
-  OntologyCache,
-  OntologyCacheLive,
-  OntologyRepoLive,
-  PredicateRepositoryLive
-}
+import org.knora.webapi.slice.ontology.repo.service.{OntologyCache, OntologyCacheLive, OntologyRepoLive, PredicateRepositoryLive}
 import org.knora.webapi.slice.resourceinfo.api.{ResourceInfoRoute, RestResourceInfoService}
 import org.knora.webapi.slice.resourceinfo.domain.{IriConverter, ResourceInfoRepo}
-import org.knora.webapi.store.cache.{CacheServiceRequestMessageHandler, CacheServiceRequestMessageHandlerLive}
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.{IIIFRequestMessageHandler, IIIFRequestMessageHandlerLive}
+import org.knora.webapi.store.cache.{CacheServiceRequestMessageHandler, CacheServiceRequestMessageHandlerLive}
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.{IIIFServiceMockImpl, IIIFServiceSipiImpl}
-import org.knora.webapi.store.triplestore.{TriplestoreRequestMessageHandler, TriplestoreRequestMessageHandlerLive}
+import org.knora.webapi.store.iiif.{IIIFRequestMessageHandler, IIIFRequestMessageHandlerLive}
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.store.triplestore.{TriplestoreRequestMessageHandler, TriplestoreRequestMessageHandlerLive}
 import org.knora.webapi.testcontainers.{FusekiTestContainer, SipiTestContainer}
 import org.knora.webapi.testservices.TestClientService
 import zio._

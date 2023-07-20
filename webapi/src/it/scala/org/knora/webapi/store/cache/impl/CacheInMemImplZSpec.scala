@@ -6,12 +6,10 @@
 package org.knora.webapi.store.cache.impl
 
 import dsp.errors.BadRequestException
-
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
 import zio.ZLayer

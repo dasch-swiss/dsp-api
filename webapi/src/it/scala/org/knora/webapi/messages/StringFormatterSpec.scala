@@ -5,12 +5,13 @@
 
 package org.knora.webapi.messages
 
-import java.time.Instant
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
+
+import java.time.Instant
 
 /**
  * Tests [[StringFormatter]].

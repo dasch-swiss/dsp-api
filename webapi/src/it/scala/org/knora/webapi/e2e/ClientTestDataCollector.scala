@@ -6,12 +6,10 @@
 package org.knora.webapi.e2e
 
 import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.config.AppConfig
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
-
-import org.knora.webapi.config.AppConfig
+import java.nio.file.{Files, Path}
 
 /**
  * Collects E2E test requests and responses for use as client test data.

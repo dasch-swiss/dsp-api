@@ -6,16 +6,14 @@
 package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
-import scala.collection.Map
-
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
+
+import scala.collection.Map
 
 class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
 

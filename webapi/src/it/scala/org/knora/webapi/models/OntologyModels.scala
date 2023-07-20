@@ -5,11 +5,10 @@
 
 package org.knora.webapi.models
 
+import dsp.valueobjects.{LangString, LanguageCode}
+
 import java.time.Instant
 import scala.annotation.tailrec
-
-import dsp.valueobjects.LangString
-import dsp.valueobjects.LanguageCode
 
 object Comments {
   def handleOptionalComment(comment: Option[LangString]): String =

@@ -7,19 +7,14 @@ package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import spray.json._
-import zio.durationInt
-
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.AkkaHttpUtils
+import spray.json._
+import zio.durationInt
 
 /**
  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.

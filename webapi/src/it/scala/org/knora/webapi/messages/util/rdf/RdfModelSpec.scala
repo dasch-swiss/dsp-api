@@ -5,14 +5,12 @@
 
 package org.knora.webapi.util.rdf
 
-import java.io.BufferedInputStream
-import java.io.FileInputStream
-
 import dsp.errors.AssertionException
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.IRI
+import org.knora.webapi.{CoreSpec, IRI}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
+
+import java.io.{BufferedInputStream, FileInputStream}
 
 /**
  * Tests implementations of [[RdfModel]].

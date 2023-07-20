@@ -7,6 +7,7 @@ package org.knora.webapi.testservices
 
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import dsp.errors.{AssertionException, BadRequestException, NotFoundException}
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -14,37 +15,27 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.config.SocketConfig
 import org.apache.http.entity.ContentType
-import org.apache.http.entity.mime.HttpMultipartMode
-import org.apache.http.entity.mime.MultipartEntityBuilder
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.HttpClients
+import org.apache.http.entity.mime.{HttpMultipartMode, MultipartEntityBuilder}
+import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
-import spray.json.JsObject
-import spray.json._
-import zio._
-import java.nio.file.Path
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.ActorSystem
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.{SipiUploadResponse, SipiUploadWithoutProcessingResponse}
 import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponseJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
-import org.knora.webapi.messages.store.sipimessages.SipiUploadWithoutProcessingResponse
+import spray.json.{JsObject, _}
+import zio._
+
+import java.nio.file.Path
+import java.util.concurrent.TimeUnit
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * Represents a file to be uploaded to the IIF Service.

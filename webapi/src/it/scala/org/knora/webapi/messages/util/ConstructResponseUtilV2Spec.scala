@@ -6,23 +6,19 @@
 package org.knora.webapi.messages.util
 
 import akka.testkit.ImplicitSender
-import zio.FiberFailure
-import zio.Unsafe
-import zio.ZIO
-import java.nio.file.Paths
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.responders.v2.ResourcesResponderV2SpecFullData
-import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
+import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.FileUtil
+import zio.{FiberFailure, Unsafe, ZIO}
+
+import java.nio.file.Paths
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
  * Tests [[ConstructResponseUtilV2]].
