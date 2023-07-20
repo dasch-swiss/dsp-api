@@ -20,7 +20,7 @@ upload-graph ../../test_data/ontologies/incunabula-onto.ttl http://www.knora.org
 upload-graph ../../test_data/all_data/incunabula-data.ttl http://www.knora.org/data/0803/incunabula
 upload-graph ../../test_data/ontologies/dokubib-onto.ttl http://www.knora.org/ontology/0804/dokubib
 upload-graph ../../test_data/ontologies/images-onto.ttl http://www.knora.org/ontology/00FF/images
-upload-graph ../../test_data/demo_data/images-demo-data.ttl http://www.knora.org/data/00FF/images
+upload-graph ../../test_data/all_data/images-demo-data.ttl http://www.knora.org/data/00FF/images
 upload-graph ../../test_data/ontologies/anything-onto.ttl http://www.knora.org/ontology/0001/anything
 upload-graph ../../test_data/all_data/anything-data.ttl http://www.knora.org/data/0001/anything
 upload-graph ../../test_data/ontologies/minimal-onto.ttl http://www.knora.org/ontology/0001/minimal

@@ -36,8 +36,7 @@ class KnoraSipiAuthenticationITSpec
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   "The Knora/Sipi authentication" should {
@@ -67,8 +66,7 @@ class KnoraSipiAuthenticationITSpec
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =
-        Get(s"$baseInternalSipiUrl/0803/incunabula_0000000002.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
-
+        Get(s"$baseInternalSipiUrl/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)
     }
