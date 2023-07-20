@@ -22,6 +22,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2, ValuesRouteV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{FileUtil, MutableTestIri}
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 import java.net.URLEncoder
