@@ -794,8 +794,7 @@ trait JwtService {
 
 final case class JwtServiceLive(
   private val jwtConfig: JwtConfig,
-  private val dspIngestConfig: DspIngestConfig,
-  private val stringFormatter: StringFormatter
+  private val dspIngestConfig: DspIngestConfig
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
@@ -891,6 +890,6 @@ final case class JwtServiceLive(
     }
 }
 object JwtServiceLive {
-  val layer: URLayer[DspIngestConfig with JwtConfig with StringFormatter, JwtServiceLive] =
+  val layer: URLayer[DspIngestConfig with JwtConfig, JwtServiceLive] =
     ZLayer.fromFunction(JwtServiceLive.apply _)
 }
