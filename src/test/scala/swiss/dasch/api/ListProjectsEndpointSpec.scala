@@ -5,7 +5,7 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.api.ListProjectsEndpoint.{ ProjectResponse, ProjectsResponse }
+import swiss.dasch.api.ListProjectsEndpoint.ProjectResponse
 import swiss.dasch.domain.*
 import swiss.dasch.test.SpecConfigurations
 import zio.http.{ Request, Root, Status, URL }
@@ -20,7 +20,7 @@ object ListProjectsEndpointSpec extends ZIOSpecDefault {
       for {
         response <- ListProjectsEndpoint.app.runZIO(Request.get(URL(Root / "projects")))
         body     <- response.body.asString
-      } yield assertTrue(response.status == Status.Ok, body == ProjectsResponse(Chunk(ProjectResponse("0001"))).toJson)
+      } yield assertTrue(response.status == Status.Ok, body == Chunk(ProjectResponse("0001")).toJson)
     }
   ).provide(
     AssetInfoServiceLive.layer,

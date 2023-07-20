@@ -5,18 +5,26 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.domain.{ MaintenanceActions, ProjectService, SipiClient }
+import swiss.dasch.domain.{ FileChecksumService, MaintenanceActions, ProjectService, SipiClient }
 import zio.*
 import zio.http.codec.HttpCodec.*
 import zio.http.codec.*
 import zio.http.endpoint.*
 import zio.http.*
-import zio.stream.ZSink
+import zio.json.{ DeriveJsonEncoder, JsonEncoder }
+import zio.schema.{ DeriveSchema, Schema }
 
 object MaintenanceEndpoint {
 
+  final case class MappingEntry(internalFilename: String, originalFilename: String)
+  object MappingEntry {
+    implicit val encoder: JsonEncoder[MappingEntry] = DeriveJsonEncoder.gen[MappingEntry]
+    implicit val schema: Schema[MappingEntry]       = DeriveSchema.gen[MappingEntry]
+  }
+
   private val endpoint = Endpoint
     .post("maintenance" / "create-originals" / string("shortcode"))
+    .inCodec(ContentCodec.content[Chunk[MappingEntry]](MediaType.application.json))
     .out[String](Status.Accepted)
     .outErrors(
       HttpCodec.error[ProjectNotFound](Status.NotFound),
@@ -24,25 +32,29 @@ object MaintenanceEndpoint {
       HttpCodec.error[InternalProblem](Status.InternalServerError),
     )
 
-  val app: App[SipiClient with ProjectService] = endpoint.implement(shortcodeStr => handle(shortcodeStr)).toApp
+  val app: App[SipiClient with ProjectService with FileChecksumService] =
+    endpoint.implement {
+      case (shortCodeStr: String, mapping: Chunk[MappingEntry]) =>
+        handle(shortCodeStr, mapping.map(e => e.internalFilename -> e.originalFilename).toMap)
+    }.toApp
 
-  private def handle(shortcodeStr: String): ZIO[SipiClient with ProjectService, ApiProblem, String] =
-    ApiStringConverters
-      .fromPathVarToProjectShortcode(shortcodeStr)
-      .flatMap(code =>
-        ProjectService.findProject(code).some.mapError {
-          case Some(e) => ApiProblem.internalError(e)
-          case _       => ApiProblem.projectNotFound(code)
-        }
-      )
-      .flatMap { projectPath =>
-        ZIO.logInfo(s"Creating originals for $projectPath") *>
-          MaintenanceActions
-            .createTifOriginals(projectPath)
-            .as(1)
-            .run(ZSink.sum)
-            .tap(count => ZIO.logInfo(s"Created $count originals for $projectPath"))
-            .forkDaemon
-      }
-      .as("work in progress")
+  private def handle(shortcodeStr: String, mapping: Map[String, String])
+      : ZIO[SipiClient with ProjectService with FileChecksumService, ApiProblem, String] =
+    for {
+      projectPath <-
+        ApiStringConverters
+          .fromPathVarToProjectShortcode(shortcodeStr)
+          .flatMap(code =>
+            ProjectService.findProject(code).some.mapError {
+              case Some(e) => ApiProblem.internalError(e)
+              case _       => ApiProblem.projectNotFound(code)
+            }
+          )
+      _           <- ZIO.logInfo(s"Creating originals for $projectPath")
+      _           <- MaintenanceActions
+                       .createOriginals(projectPath, mapping)
+                       .tap(count => ZIO.logInfo(s"Created $count originals for $projectPath"))
+                       .logError
+                       .forkDaemon
+    } yield "work in progress"
 }

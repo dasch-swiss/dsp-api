@@ -67,20 +67,30 @@ final private case class SipiCommandLineLive(prefix: String) extends SipiCommand
   * https://sipi.io/running/#command-line-options
   */
 sealed trait SipiImageFormat {
-  def toCliString: String
-  def extension: String = toCliString
+  def extension: String
+  def toCliString: String                          = extension
+  def additionalExtensions: List[String]           = List.empty
+  def allExtensions: List[String]                  = additionalExtensions.appended(this.extension)
+  def acceptsExtension(extension: String): Boolean = allExtensions.contains(extension.toLowerCase)
 }
 case object Jpx extends SipiImageFormat {
-  override def toCliString: String = "jpx"
+  override def extension: String                  = "jpx"
+  override def additionalExtensions: List[String] = List("jp2")
 }
 case object Jpg extends SipiImageFormat {
-  override def toCliString: String = "jpg"
+  override def extension: String                  = "jpg"
+  override def additionalExtensions: List[String] = List("jpeg")
 }
 case object Tif extends SipiImageFormat {
-  override def toCliString: String = "tif"
+  override def extension: String                  = "tif"
+  override def additionalExtensions: List[String] = List("tiff")
 }
 case object Png extends SipiImageFormat {
-  override def toCliString: String = "png"
+  override def extension: String = "png"
+}
+object SipiImageFormat       {
+  def fromExtension(extension: String): Option[SipiImageFormat] =
+    List(Jpx, Jpg, Tif, Png).find(_.acceptsExtension(extension))
 }
 
 final case class SipiOutput(stdOut: String, stdErr: String)

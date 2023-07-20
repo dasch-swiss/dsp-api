@@ -5,15 +5,17 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.api.MaintenanceEndpoint.MappingEntry
 import swiss.dasch.domain.*
+import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.{ existingProject, nonExistentProject }
 import swiss.dasch.test.{ SpecConfigurations, SpecConstants }
-import swiss.dasch.test.SpecConstants.*
+import zio.*
 import zio.http.*
+import zio.json.EncoderOps
 import zio.nio.file
 import zio.nio.file.Files
 import zio.test.*
-import zio.*
 
 object MaintenanceEndpointSpec extends ZIOSpecDefault {
 
@@ -21,8 +23,14 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
     awaitThis.repeatUntil(identity).timeout(timeout).map(_.getOrElse(false))
 
   private val createOriginalsSuite = {
-    def createOriginalsRequest(shortcode: ProjectShortcode | String) =
-      Request.post(Body.empty, URL(Root / "maintenance" / "create-originals" / shortcode.toString))
+    def createOriginalsRequest(
+        shortcode: ProjectShortcode | String,
+        body: List[MappingEntry] = List.empty,
+      ) =
+      Request
+        .post(Body.fromString(body.toJson), URL(Root / "maintenance" / "create-originals" / shortcode.toString))
+        .updateHeaders(_.addHeader(Header.ContentType(MediaType.application.json)))
+
     suite("/maintenance/create-originals")(
       test("should return 404 for a non-existent project") {
         val request = createOriginalsRequest(nonExistentProject)
@@ -42,14 +50,43 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
           response <- MaintenanceEndpoint.app.runZIO(request).logError
         } yield assertTrue(response.status == Status.Accepted)
       },
-      test("should return 204 for a project shortcode and create original") {
-        val asset   = Asset("1ACilM7l8UQ-EGONbx28BUW".toAssetId, existingProject)
-        val request = createOriginalsRequest(asset.belongsToProject)
+      test("should return 204 for a project shortcode and create originals for jp2 and jpx assets") {
+        def doesOrigExist(asset: Asset, format: SipiImageFormat) = StorageService.getAssetDirectory(asset).flatMap {
+          // Since the create original maintenance action is forked into the background
+          // we need to wait (i.e. `awaitTrue') for the file to be created.
+          assetDir => awaitTrue(Files.exists(assetDir / s"${asset.id}.${format.extension}.orig"))
+        }
+
+        def loadAssetInfo(asset: Asset) = StorageService.getAssetDirectory(asset).flatMap {
+          // Since the create original maintenance action is forked into the background
+          // we need to wait (i.e. `awaitTrue') for the file to be created.
+          assetDir => awaitTrue(Files.exists(assetDir / s"${asset.id}.info")) *> AssetInfoService.findByAsset(asset)
+        }
+
+        val assetJpx    = Asset("aaaa-a-jpx-without-orig".toAssetId, existingProject)
+        val assetJp2    = Asset("bbbb-a-jp2-without-orig".toAssetId, existingProject)
+        val testMapping = MappingEntry(s"${assetJpx.id}.jpx", "ORIGINAL.jpg")
+        val request     = createOriginalsRequest(existingProject, List(testMapping))
+
         for {
-          response      <- MaintenanceEndpoint.app.runZIO(request).logError
-          assetDir      <- StorageService.getAssetDirectory(asset)
-          newOrigExists <- awaitTrue(Files.exists(assetDir / s"${asset.id}.tif.orig"))
-        } yield assertTrue(response.status == Status.Accepted, newOrigExists)
+          response         <- MaintenanceEndpoint.app.runZIO(request).logError
+          newOrigExistsJpx <- doesOrigExist(assetJpx, Jpg)
+          newOrigExistsJp2 <- doesOrigExist(assetJp2, Tif)
+          assetInfoJpx     <- loadAssetInfo(assetJpx)
+          assetInfoJp2     <- loadAssetInfo(assetJp2)
+          checksumsCorrect <-
+            (FileChecksumService.verifyChecksum(assetInfoJpx) <&> FileChecksumService.verifyChecksum(assetInfoJp2))
+              .map(_ ++ _)
+              .filterOrFail(_.size == 4)(new AssertionError("Expected four checksum results"))
+              .map(_.forall(_.checksumMatches == true))
+        } yield assertTrue(
+          response.status == Status.Accepted,
+          newOrigExistsJpx,
+          newOrigExistsJp2,
+          assetInfoJpx.originalFilename.toString == "ORIGINAL.jpg",
+          assetInfoJp2.originalFilename.toString == s"${assetJp2.id}.tif",
+          checksumsCorrect,
+        )
       },
     ) @@ TestAspect.withLiveClock
   }

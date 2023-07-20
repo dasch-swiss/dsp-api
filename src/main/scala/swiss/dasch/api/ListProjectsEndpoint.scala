@@ -8,12 +8,14 @@ package swiss.dasch.api
 import swiss.dasch.api.ApiPathCodecSegments.projects
 import swiss.dasch.domain.{ ProjectService, ProjectShortcode }
 import zio.*
+import zio.http.Header.ContentRange.EndTotal
+import zio.http.codec.{ ContentCodec, HeaderCodec }
 import zio.http.endpoint.Endpoint
 import zio.http.{ App, Status }
 import zio.json.{ DeriveJsonEncoder, JsonEncoder }
 import zio.schema.{ DeriveSchema, Schema }
 object ListProjectsEndpoint {
-  final case class ProjectResponse(shortcode: String)
+  final case class ProjectResponse(id: String)
   object ProjectResponse {
     def make(shortcode: ProjectShortcode): ProjectResponse = ProjectResponse(shortcode.toString)
 
@@ -21,15 +23,9 @@ object ListProjectsEndpoint {
     implicit val jsonEncoder: JsonEncoder[ProjectResponse] = DeriveJsonEncoder.gen[ProjectResponse]
   }
 
-  final case class ProjectsResponse(projects: Chunk[ProjectResponse])
-  object ProjectsResponse {
-    implicit val schema: Schema[ProjectsResponse]           = DeriveSchema.gen[ProjectsResponse]
-    implicit val jsonEncoder: JsonEncoder[ProjectsResponse] = DeriveJsonEncoder.gen[ProjectsResponse]
-  }
-
   private val listProjectsEndpoint = Endpoint
     .get(projects)
-    .out[ProjectsResponse]
+    .outCodec(HeaderCodec.contentRange ++ ContentCodec.content[Chunk[ProjectResponse]])
     .outError[InternalProblem](Status.InternalServerError)
 
   val app: App[ProjectService] = listProjectsEndpoint
@@ -38,7 +34,7 @@ object ListProjectsEndpoint {
         .listAllProjects()
         .mapBoth(
           ApiProblem.internalError,
-          shortcodes => ProjectsResponse(shortcodes.map(ProjectResponse.make)),
+          shortcodes => (EndTotal("items", 0, shortcodes.size, shortcodes.size), shortcodes.map(ProjectResponse.make)),
         )
     )
     .toApp

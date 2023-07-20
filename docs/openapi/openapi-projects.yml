@@ -33,17 +33,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  projects:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        shortcode:
-                          type: string
-                          description: The shortcode of the project.
-                          example: 000F
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: The shortcode of the project.
+                      example: 000F
 
   /projects/{shortcode}/import:
     post:
