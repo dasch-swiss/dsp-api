@@ -8,7 +8,12 @@ package org.knora.webapi.util
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.DateUtilV1.DateRange
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{
+  DateValueV1,
+  JulianDayNumberValueV1,
+  KnoraCalendarV1,
+  KnoraPrecisionV1
+}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 

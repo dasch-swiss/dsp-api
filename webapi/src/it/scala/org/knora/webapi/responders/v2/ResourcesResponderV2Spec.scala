@@ -13,7 +13,12 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.util.{
+  CalendarNameGregorian,
+  DatePrecisionYear,
+  KnoraSystemInstances,
+  PermissionUtilADM
+}
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._

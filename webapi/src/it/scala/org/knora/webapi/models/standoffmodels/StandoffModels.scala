@@ -9,7 +9,11 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{
+  CreateMappingRequestMetadataV2,
+  CreateMappingRequestV2,
+  CreateMappingRequestXMLV2
+}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.anythingProjectIri
 import spray.json.DefaultJsonProtocol._
 import spray.json._

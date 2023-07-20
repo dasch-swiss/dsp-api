@@ -19,7 +19,11 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceRequestV2, CreateResourceV2, CreateValueInNewResourceV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{
+  CreateResourceRequestV2,
+  CreateResourceV2,
+  CreateValueInNewResourceV2
+}
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

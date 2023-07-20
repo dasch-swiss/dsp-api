@@ -6,7 +6,12 @@
 package org.knora.webapi.sharedtestdata
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionADM, DefaultObjectAccessPermissionADM, ObjectAccessPermissionADM, PermissionADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  AdministrativePermissionADM,
+  DefaultObjectAccessPermissionADM,
+  ObjectAccessPermissionADM,
+  PermissionADM
+}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 

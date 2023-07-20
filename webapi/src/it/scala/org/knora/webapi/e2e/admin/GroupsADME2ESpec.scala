@@ -23,7 +23,7 @@ import scala.concurrent.duration._
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol  {
+class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
   // Directory path for generated client test data

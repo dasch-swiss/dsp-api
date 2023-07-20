@@ -14,7 +14,12 @@ import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{
+  ProjectAdminMembersGetRequestADM,
+  ProjectAdminMembersGetResponseADM,
+  ProjectMembersGetRequestADM,
+  ProjectMembersGetResponseADM
+}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2

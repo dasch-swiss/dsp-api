@@ -12,7 +12,10 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
-import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil}
+import org.knora.webapi.messages.util.search.gravsearch.types.{
+  GravsearchTypeInspectionRunner,
+  GravsearchTypeInspectionUtil
+}
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 import zio.ZIO

@@ -8,7 +8,11 @@ package org.knora.webapi.responders.v2
 import akka.actor.Status
 import akka.testkit.ImplicitSender
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent, ResetRepositoryContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{
+  RdfDataObject,
+  ResetRepositoryContent,
+  ResetRepositoryContentACK
+}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.UnsafeZioRun

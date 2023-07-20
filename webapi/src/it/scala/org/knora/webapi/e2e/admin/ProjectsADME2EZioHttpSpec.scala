@@ -27,10 +27,7 @@ import scala.concurrent.duration._
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class ProjectsADME2EZioHttpSpec
-    extends E2ESpec
-    with ProjectsADMJsonProtocol
-    with TriplestoreJsonProtocol {
+class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol with TriplestoreJsonProtocol {
 
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass

@@ -10,7 +10,12 @@ import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetProjectADM, CacheServiceGetUserADM, CacheServicePutProjectADM, CacheServicePutUserADM}
+import org.knora.webapi.messages.store.cacheservicemessages.{
+  CacheServiceGetProjectADM,
+  CacheServiceGetUserADM,
+  CacheServicePutProjectADM,
+  CacheServicePutUserADM
+}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**

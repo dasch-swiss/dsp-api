@@ -9,7 +9,11 @@ import dsp.constants.SalsahGui
 import org.knora.webapi.{CoreSpec, InternalSchema}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SmartIriLiteralV2, StringLiteralV2}
-import org.knora.webapi.messages.v2.responder.ontologymessages.{PredicateInfoV2, PropertyInfoContentV2, ReadPropertyInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{
+  PredicateInfoV2,
+  PropertyInfoContentV2,
+  ReadPropertyInfoV2
+}
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData

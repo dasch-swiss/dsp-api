@@ -12,7 +12,10 @@ import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.{Iri, V2}
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{ListChildNodeCreatePayloadADM, ListRootNodeCreatePayloadADM}
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{
+  ListChildNodeCreatePayloadADM,
+  ListRootNodeCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
