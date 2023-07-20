@@ -170,7 +170,7 @@ pushed to the git repository or every pull request, triggers the build.
 Additionally, in Github there is a small checkmark beside every commit,
 signaling the status of the build (successful, unsuccessful, ongoing).
 
-The build that is executed on Github CI Actions is defined in `.github/workflows/*.yml`.
+The build that is executed on Github CI Actions is defined in the `.github/workflows/*.yml` files.
 
 ## Webapi Server Startup-Flags
 
