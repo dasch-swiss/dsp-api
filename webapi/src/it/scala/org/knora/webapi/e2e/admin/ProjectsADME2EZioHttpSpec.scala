@@ -17,7 +17,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
@@ -30,7 +29,6 @@ import scala.concurrent.duration._
  */
 class ProjectsADME2EZioHttpSpec
     extends E2ESpec
-    with SessionJsonProtocol
     with ProjectsADMJsonProtocol
     with TriplestoreJsonProtocol {
 

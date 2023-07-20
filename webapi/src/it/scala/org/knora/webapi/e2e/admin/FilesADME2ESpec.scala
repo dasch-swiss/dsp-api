@@ -6,13 +6,11 @@
 package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.Cookie
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
@@ -24,7 +22,7 @@ import scala.concurrent.duration._
  *
  * This spec tests the 'admin/files'.
  */
-class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJsonProtocol {
+class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   private val anythingAdminEmail    = SharedTestDataV1.anythingAdminUser.userData.email.get
   private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")
@@ -37,19 +35,6 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
-
-  private def sessionLogin(email: String, password: String): String = {
-
-    val request                = Get(baseApiUrl + s"/v1/session?login&email=$email&password=$password")
-    val response: HttpResponse = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK)
-
-    val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
-    sr.sid
-  }
-
-  private def sessionLogout(sessionId: String): Unit =
-    Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KnoraAuthenticationCookieName, sessionId)
 
   "The Files Route ('admin/files') using token credentials" should {
 
@@ -106,54 +91,6 @@ class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJ
 
       (fr.permissionCode === 1) should be(true)
 
-    }
-  }
-
-  "The Files Route ('admin/files') using session credentials" ignore {
-
-    "return CR (8) permission code" in {
-      /* login */
-      val sessionId = sessionLogin(anythingAdminEmailEnc, testPass)
-
-      /* anything image */
-      val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KnoraAuthenticationCookieName,
-        sessionId
-      )
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      // println(response.toString)
-
-      assert(response.status == StatusCodes.OK)
-
-      val fr: SipiFileInfoGetResponseADM =
-        Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
-
-      (fr.permissionCode === 8) should be(true)
-
-      /* logout */
-      sessionLogout(sessionId)
-    }
-
-    "return RV (1) permission code" in {
-      /* login */
-      val sessionId = sessionLogin(normalUserEmailEnc, testPass)
-
-      /* anything image */
-      val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KnoraAuthenticationCookieName,
-        sessionId
-      )
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      // println(response.toString)
-
-      assert(response.status == StatusCodes.OK)
-
-      val fr: SipiFileInfoGetResponseADM =
-        Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
-
-      (fr.permissionCode === 1) should be(true)
     }
   }
 }

@@ -13,7 +13,6 @@ import org.knora.webapi.{E2ESpec, IRI}
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -26,7 +25,6 @@ import scala.concurrent.duration._
  */
 class CreateListItemsRouteADME2ESpec
     extends E2ESpec
-    with SessionJsonProtocol
     with TriplestoreJsonProtocol
     with ListADMJsonProtocol {
 

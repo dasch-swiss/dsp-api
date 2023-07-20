@@ -18,7 +18,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -33,7 +32,6 @@ class UsersADME2ESpec
     extends E2ESpec
     with ProjectsADMJsonProtocol
     with GroupsADMJsonProtocol
-    with SessionJsonProtocol
     with TriplestoreJsonProtocol {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
