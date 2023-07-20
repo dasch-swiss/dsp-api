@@ -44,8 +44,9 @@ object SipiIT extends ZIOSpecDefault {
   private def getWithoutAuthorization(path: String) =
     SipiTestContainer.resolveUrl(path).map(Request.get).flatMap(Client.request(_))
 
+  // expires May 2033
   private val jwt =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwLjAuMC4wOjMzMzMiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy9yb290IiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjE2ODk3NTY1MzksImlhdCI6MTY4NzE2NDUzOSwianRpIjoiSG9SSFg5V1lSZHV6VnVmTXZFT1c4USJ9.tlTqr1NGjsOqnMRxjDW1TokDjGAPO5nvG-pcbn09Hrw"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwLjAuMC4wOjMzMzMiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy9yb290IiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjIwMDAwMDAwMDAsImlhdCI6MTY4NzE2NDUzOSwianRpIjoiSG9SSFg5V1lSZHV6VnVmTXZFT1c4USJ9.4RO0MdoKAlm4_xa9PKU86BdU2cX9hUBxDnc2VQRgjwM"
 
   private val cookiesSuite =
     suite("Given a request is authorized using cookies")(
