@@ -57,7 +57,10 @@ class DeleteListItemsRouteADME2ESpec
     )
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   val rootCreds: CredentialsADM = CredentialsADM(

@@ -15,7 +15,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI
 
 /**
- * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
+ * This object holds the same user which are loaded with 'test_data/project_data/admin-data.ttl'. Using this object
  * in tests, allows easier updating of details as they change over time.
  */
 object SharedTestDataV1 {

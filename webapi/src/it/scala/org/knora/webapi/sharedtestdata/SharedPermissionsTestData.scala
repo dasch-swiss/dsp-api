@@ -19,7 +19,7 @@ case class oap(iri: String, p: ObjectAccessPermissionADM)
 case class doap(iri: String, p: DefaultObjectAccessPermissionADM)
 
 /**
- * This object holds data representations for the data in 'test_data/all_data/permissions-data.ttl'.
+ * This object holds data representations for the data in 'test_data/project_data/permissions-data.ttl'.
  */
 object SharedPermissionsTestData {
 
