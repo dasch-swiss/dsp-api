@@ -232,17 +232,17 @@ test-shared: ## tests the shared projects (build is not called from this target)
 .PHONY: init-db-test
 init-db-test: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
 	@echo $@
-	@$(MAKE) -C webapi/scripts fuseki-init-knora-test
+	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test.sh
 
 .PHONY: init-db-test-minimal
 init-db-test-minimal: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
-	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
+	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-minimal.sh
 
 .PHONY: init-db-test-empty
 init-db-test-empty: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
-	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-empty
+	cd $(CURRENT_DIR)/webapi/scripts && ./fuseki-init-knora-test-empty.sh
 
 .PHONY: init-db-from-test
 init-db-from-test: ## init local database with data from test server. Use as `make init-db-from-test PW=database-password`
