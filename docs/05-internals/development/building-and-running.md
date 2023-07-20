@@ -163,14 +163,6 @@ To publish all Docker images to Dockerhub
 $ make docker-publish
 ```
 
-## Load Testing on Mac OS X
-
-To test Knora with many concurrent connections on Mac OS
-X, you will need to adjust some kernel parameters to allow more open
-connections, to recycle ephemeral ports more quickly, and to use a wider
-range of ephemeral port numbers. The script
-`webapi/scripts/macOS-kernel-test-config.sh` will do this.
-
 ## Continuous Integration
 
 For continuous integration testing, we use Github CI Actions. Every commit
@@ -178,8 +170,7 @@ pushed to the git repository or every pull request, triggers the build.
 Additionally, in Github there is a small checkmark beside every commit,
 signaling the status of the build (successful, unsuccessful, ongoing).
 
-The build that is executed on Github CI Actions is defined in
-`.github/workflows/main.yml`.
+The build that is executed on Github CI Actions is defined in `.github/workflows/*.yml`.
 
 ## Webapi Server Startup-Flags
 
