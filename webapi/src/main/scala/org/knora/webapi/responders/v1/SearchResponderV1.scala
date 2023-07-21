@@ -22,7 +22,7 @@ import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.twirl.SearchCriterion
-import org.knora.webapi.messages.util.DateUtil
+import org.knora.webapi.messages.util.{DateUtil, KnoraCalendarType}
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -30,7 +30,6 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetRequ
 import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetResponseV1
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.searchmessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
@@ -439,7 +438,7 @@ final case class SearchResponderV1Live(
 
                   // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
                   val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
-                  val calendar   = KnoraCalendarV1.lookup(parsedDate(0))
+                  val calendar   = KnoraCalendarType.lookup(parsedDate(0))
 
                   // val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
                   // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)

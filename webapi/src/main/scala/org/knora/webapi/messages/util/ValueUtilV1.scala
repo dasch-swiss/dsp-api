@@ -810,7 +810,7 @@ final case class ValueUtilV1Live(
         KnoraCalendarPrecision.lookup(predicates(OntologyConstants.KnoraBase.ValueHasStartPrecision).literals.head),
       dateprecision2 =
         KnoraCalendarPrecision.lookup(predicates(OntologyConstants.KnoraBase.ValueHasEndPrecision).literals.head),
-      calendar = KnoraCalendarV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
+      calendar = KnoraCalendarType.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
     )
 
     ZIO.attempt(DateUtil.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1))

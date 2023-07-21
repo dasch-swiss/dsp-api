@@ -13,7 +13,32 @@ import java.util.GregorianCalendar
 import dsp.errors.{AssertionException, BadRequestException, InconsistentRepositoryDataException}
 import org.knora.webapi.messages.{StringFormatter, ValuesValidator, util}
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
+
+/**
+ * An enumeration of the types of calendars Knora supports. Note: do not use the `withName` method to get instances
+ * of the values of this enumeration; use `lookup` instead, because it reports errors better.
+ */
+object KnoraCalendarType extends Enumeration {
+  val JULIAN: Value        = Value(0, "JULIAN")
+  val GREGORIAN: Value     = Value(1, "GREGORIAN")
+  val JEWISH: Value        = Value(2, "JEWISH")
+  val REVOLUTIONARY: Value = Value(3, "REVOLUTIONARY")
+
+  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+  /**
+   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+   * [[InconsistentRepositoryDataException]].
+   *
+   * @param name the name of the value.
+   * @return the requested value.
+   */
+  def lookup(name: String): Value =
+    valueMap.get(name) match {
+      case Some(value) => value
+      case None        => throw InconsistentRepositoryDataException(s"Calendar type not supported: $name")
+    }
+}
 
 /**
  * An enumeration of the types of calendar precisions Knora supports. Note: do not use the `withName` method to get instances
@@ -50,11 +75,11 @@ object KnoraCalendarPrecision extends Enumeration {
  * @param dateprecision2 the precision of the end of the date.
  */
 case class JulianDayNumberValue(
-  dateval1: Int,
-  dateval2: Int,
-  calendar: KnoraCalendarV1.Value,
-  dateprecision1: KnoraCalendarPrecision.Value,
-  dateprecision2: KnoraCalendarPrecision.Value
+                                 dateval1: Int,
+                                 dateval2: Int,
+                                 calendar: KnoraCalendarType.Value,
+                                 dateprecision1: KnoraCalendarPrecision.Value,
+                                 dateprecision2: KnoraCalendarPrecision.Value
 ) {
 
   override def toString: String = {
@@ -156,10 +181,10 @@ object DateUtil {
    * era is given, AD/CE is assumed.
    *
    * @param dateString   A string representation of the given date conforming to the expected format.
-   * @param calendarType a [[KnoraCalendarV1.Value]] specifying the calendar.
+   * @param calendarType a [[KnoraCalendarType.Value]] specifying the calendar.
    * @return A tuple containing two calendar dates (interval) and a precision.
    */
-  def dateString2DateRange(dateString: String, calendarType: KnoraCalendarV1.Value): DateRange = {
+  def dateString2DateRange(dateString: String, calendarType: KnoraCalendarType.Value): DateRange = {
     val changeDate: Date = getGregorianCalendarChangeDate(calendarType)
 
     val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
@@ -329,9 +354,9 @@ object DateUtil {
    * @return a string in `YYYY[-MM[-DD] ]` format.
    */
   def julianDayNumber2DateString(
-    julianDay: Int,
-    calendarType: KnoraCalendarV1.Value,
-    precision: KnoraCalendarPrecision.Value
+                                  julianDay: Int,
+                                  calendarType: KnoraCalendarType.Value,
+                                  precision: KnoraCalendarPrecision.Value
   ): String = {
     val gregorianCalendar = convertJulianDayNumberToJavaGregorianCalendar(julianDay, calendarType)
     val year              = gregorianCalendar.get(Calendar.YEAR)
@@ -376,7 +401,7 @@ object DateUtil {
    */
   def convertJulianDayNumberToJavaGregorianCalendar(
     julianDay: Int,
-    calendarType: KnoraCalendarV1.Value
+    calendarType: KnoraCalendarType.Value
   ): GregorianCalendar = {
     val conv              = new JDateTime(julianDay.toDouble)
     val gregorianCalendar = new GregorianCalendar
@@ -388,11 +413,11 @@ object DateUtil {
     gregorianCalendar
   }
 
-  private def getGregorianCalendarChangeDate(calendarType: KnoraCalendarV1.Value): Date =
+  private def getGregorianCalendarChangeDate(calendarType: KnoraCalendarType.Value): Date =
     // https://docs.oracle.com/javase/7/docs/api/java/util/GregorianCalendar.html#setGregorianChange%28java.util.Date%29
     calendarType match {
-      case KnoraCalendarV1.JULIAN => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
-      case KnoraCalendarV1.GREGORIAN =>
+      case KnoraCalendarType.JULIAN => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
+      case KnoraCalendarType.GREGORIAN =>
         new Date(java.lang.Long.MIN_VALUE) // for Gregorian: if calendar given in Gregorian cal
       case _ => throw BadRequestException(s"Invalid calendar name: $calendarType")
     }
@@ -409,7 +434,7 @@ object DateUtil {
 
     // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
     val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
-    val calendar   = KnoraCalendarV1.lookup(parsedDate(0))
+    val calendar   = KnoraCalendarType.lookup(parsedDate(0))
 
     if (parsedDate.length > 2) {
       // it is a period: 0 : cal | 1 : start | 2 : end

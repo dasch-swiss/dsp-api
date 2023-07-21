@@ -22,8 +22,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter, 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.util.{DateUtil, JulianDayNumberValue, KnoraCalendarPrecision}
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
+import org.knora.webapi.messages.util.{DateUtil, JulianDayNumberValue, KnoraCalendarPrecision, KnoraCalendarType}
 import org.knora.webapi.messages.v1.responder.valuemessages.UpdateValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -1523,7 +1522,7 @@ object StandoffTagUtilV2 {
             )
             .dataTypeXMLAttribute
 
-          val calendar = KnoraCalendarV1.lookup(
+          val calendar = KnoraCalendarType.lookup(
             standoffTagV2.attributes
               .find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasCalendar)
               .get

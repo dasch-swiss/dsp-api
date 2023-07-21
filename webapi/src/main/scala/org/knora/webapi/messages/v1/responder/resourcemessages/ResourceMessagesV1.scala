@@ -21,7 +21,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.KnoraCalendarPrecision
+import org.knora.webapi.messages.util.{KnoraCalendarPrecision, KnoraCalendarType}
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
@@ -913,7 +913,7 @@ case class ResourceCreateValueObjectResponseV1(
                                                 dateval2: Option[Map[LiteralValueType.Value, String]] = None,
                                                 dateprecision1: Option[Map[LiteralValueType.Value, KnoraCalendarPrecision.Value]] = None,
                                                 dateprecision2: Option[Map[LiteralValueType.Value, KnoraCalendarPrecision.Value]] = None,
-                                                calendar: Option[Map[LiteralValueType.Value, KnoraCalendarV1.Value]] = None,
+                                                calendar: Option[Map[LiteralValueType.Value, KnoraCalendarType.Value]] = None,
                                                 timeval1: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
                                                 timeval2: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
                                                 resource_id: Map[LiteralValueType.Value, IRI],

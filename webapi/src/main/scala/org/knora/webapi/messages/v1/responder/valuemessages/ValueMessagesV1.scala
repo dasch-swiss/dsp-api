@@ -21,7 +21,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.messages.util.{DateUtil, KnoraCalendarPrecision}
+import org.knora.webapi.messages.util.{DateUtil, KnoraCalendarPrecision, KnoraCalendarType}
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -573,34 +573,6 @@ case class ValueObjectV1(
   comment: Option[String] = None,
   order: Int = 0
 )
-
-/**
- * An enumeration of the types of calendars Knora supports. Note: do not use the `withName` method to get instances
- * of the values of this enumeration; use `lookup` instead, because it reports errors better.
- */
-object KnoraCalendarV1 extends Enumeration {
-  val JULIAN: Value        = Value(0, "JULIAN")
-  val GREGORIAN: Value     = Value(1, "GREGORIAN")
-  val JEWISH: Value        = Value(2, "JEWISH")
-  val REVOLUTIONARY: Value = Value(3, "REVOLUTIONARY")
-
-  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-  /**
-   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-   * [[InconsistentRepositoryDataException]].
-   *
-   * @param name the name of the value.
-   * @return the requested value.
-   */
-  def lookup(name: String): Value =
-    valueMap.get(name) match {
-      case Some(value) => value
-      case None        => throw InconsistentRepositoryDataException(s"Calendar type not supported: $name")
-    }
-}
-
-
 
 /**
  * Represents a [[StandoffTagV2]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
@@ -1248,7 +1220,7 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
  * @param dateval2 the end date of the period, if any.
  * @param calendar the type of calendar used in the date.
  */
-case class DateValueV1(dateval1: String, dateval2: String, era1: String, era2: String, calendar: KnoraCalendarV1.Value)
+case class DateValueV1(dateval1: String, dateval2: String, era1: String, era2: String, calendar: KnoraCalendarType.Value)
     extends ApiValueV1 {
 
   def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
@@ -1775,15 +1747,15 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 
   /**
-   * Converts between [[KnoraCalendarV1]] objects and [[JsValue]] objects.
+   * Converts between [[KnoraCalendarType]] objects and [[JsValue]] objects.
    */
-  implicit object KnoraCalendarV1JsonFormat extends JsonFormat[KnoraCalendarV1.Value] {
-    def read(jsonVal: JsValue): KnoraCalendarV1.Value = jsonVal match {
-      case JsString(str) => KnoraCalendarV1.lookup(str)
+  implicit object KnoraCalendarV1JsonFormat extends JsonFormat[KnoraCalendarType.Value] {
+    def read(jsonVal: JsValue): KnoraCalendarType.Value = jsonVal match {
+      case JsString(str) => KnoraCalendarType.lookup(str)
       case _             => throw BadRequestException(s"Invalid calendar in JSON: $jsonVal")
     }
 
-    def write(calendarV1Value: KnoraCalendarV1.Value): JsValue = JsString(calendarV1Value.toString)
+    def write(calendarV1Value: KnoraCalendarType.Value): JsValue = JsString(calendarV1Value.toString)
   }
 
   /**
