@@ -22,7 +22,6 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin._
-import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
@@ -79,7 +78,6 @@ object LayersLive {
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
       with CardinalityService
-      with CkanResponderV1
       with ConstructResponseUtilV2
       with ConstructTransformer
       with GravsearchTypeInspectionRunner
@@ -93,13 +91,11 @@ object LayersLive {
       with JwtService
       with KnoraProjectRepo
       with ListsResponderADM
-      with ListsResponderV1
       with ListsResponderV2
       with MessageRelay
       with OntologyCache
       with OntologyHelpers
       with OntologyRepo
-      with OntologyResponderV1
       with OntologyResponderV2
       with PermissionUtilADM
       with PermissionsResponderADM
@@ -110,21 +106,17 @@ object LayersLive {
       with ProjectExportStorageService
       with ProjectImportService
       with ProjectsResponderADM
-      with ProjectsResponderV1
       with QueryTraverser
       with RepositoryUpdater
       with ResourceUtilV2
       with ResourceUtilV2
-      with ResourcesResponderV1
       with ResourcesResponderV2
       with RestCardinalityService
       with RestPermissionService
       with RestResourceInfoService
-      with SearchResponderV1
       with SearchResponderV2
       with SipiResponderADM
       with OntologyInferencer
-      with StandoffResponderV1
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
@@ -133,9 +125,7 @@ object LayersLive {
       with TriplestoreRequestMessageHandler
       with TriplestoreService
       with UsersResponderADM
-      with UsersResponderV1
       with ValueUtilV1
-      with ValuesResponderV1
       with ValuesResponderV2
 
   /**
@@ -154,7 +144,6 @@ object LayersLive {
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
       CardinalityService.layer,
-      CkanResponderV1Live.layer,
       ConstructResponseUtilV2Live.layer,
       ConstructTransformer.layer,
       DspIngestClientLive.layer,
@@ -170,13 +159,11 @@ object LayersLive {
       JwtServiceLive.layer,
       KnoraProjectRepoLive.layer,
       ListsResponderADMLive.layer,
-      ListsResponderV1Live.layer,
       ListsResponderV2Live.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
       OntologyRepoLive.layer,
-      OntologyResponderV1Live.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
       PermissionsResponderADMLive.layer,
@@ -188,23 +175,19 @@ object LayersLive {
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsResponderADMLive.layer,
-      ProjectsResponderV1Live.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
       ResourceInfoRoute.layer,
       ResourceUtilV2Live.layer,
-      ResourcesResponderV1Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
       RestPermissionServiceLive.layer,
       RestResourceInfoService.layer,
-      SearchResponderV1Live.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
       OntologyInferencer.layer,
-      StandoffResponderV1Live.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
@@ -213,9 +196,7 @@ object LayersLive {
       TriplestoreRequestMessageHandlerLive.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
-      UsersResponderV1Live.layer,
       ValueUtilV1Live.layer,
-      ValuesResponderV1Live.layer,
       ValuesResponderV2Live.layer
     )
 }
