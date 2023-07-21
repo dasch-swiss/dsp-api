@@ -15,7 +15,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
@@ -44,8 +43,7 @@ object AppRouter {
       with OntologyRepo
       with PermissionUtilADM
       with ResourceUtilV2
-      with StandoffTagUtilV2
-      with ValueUtilV1,
+      with StandoffTagUtilV2,
     Nothing,
     AppRouter
   ] =
@@ -65,7 +63,6 @@ object AppRouter {
               with PermissionUtilADM
               with ResourceUtilV2
               with StandoffTagUtilV2
-              with ValueUtilV1
           ]
       } yield new AppRouter {
         implicit val system: akka.actor.ActorSystem = as.system

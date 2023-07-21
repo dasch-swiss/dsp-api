@@ -20,12 +20,11 @@ object SharedTestDataV1 {
 
   /**
    * **********************************
-   */
-  /** System Admin Data                * */
-  /**
+   *
+   * System Admin Data
+   *
    * **********************************
    */
-  val systemProjectIri: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
 
   /* represents the user profile of 'root' as found in admin-data.ttl */
   def rootUser: UserProfileV1 = SharedTestDataADM.rootUser.asUserProfileV1
@@ -81,11 +80,6 @@ object SharedTestDataV1 {
       )
     )
   )
-
-  /* represents the full project info of the Knora System project */
-  def systemProjectInfo: ProjectInfoV1 =
-    SharedTestDataADM.systemProject.asProjectInfoV1
-      .copy(ontologies = Seq(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
   /**
    * **********************************

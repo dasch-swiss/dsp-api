@@ -26,8 +26,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionT
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.util.GroupedProps.ValueLiterals
-import org.knora.webapi.messages.util.GroupedProps.ValueProps
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -161,35 +159,6 @@ object PermissionUtilADM extends LazyLogging {
    * @return `true` if the property is relevant to calculating permissions.
    */
   def isPermissionRelevant(p: IRI): Boolean = permissionRelevantAssertions.contains(p)
-
-  /**
-   * Given a list of predicates and objects pertaining to a entity, returns only the ones that are relevant to
-   * permissions (i.e. the permissions themselves, plus the creator and project).
-   *
-   * @param assertions a list containing the permission-relevant predicates and objects
-   *                   pertaining to the entity. Other predicates will be filtered out.
-   * @return a list of permission-relevant predicates and objects.
-   */
-  def filterPermissionRelevantAssertions(assertions: Seq[(IRI, IRI)]): Vector[(IRI, IRI)] =
-    assertions.filter { case (p, _) =>
-      isPermissionRelevant(p)
-    }.toVector
-
-  /**
-   * Given a [[ValueProps]] describing a `knora-base:Value`, returns the permission-relevant assertions contained
-   * in the [[ValueProps]] (i.e. permission assertion, plus assertions about the entity's creator and project).
-   *
-   * @param valueProps a [[ValueProps]] describing a `knora-base:Value`.
-   * @return a list of permission-relevant predicates and objects.
-   */
-  def filterPermissionRelevantAssertionsFromValueProps(valueProps: ValueProps): Vector[(IRI, IRI)] =
-    valueProps.literalData.foldLeft(Vector.empty[(IRI, IRI)]) { case (acc, (predicate: IRI, ValueLiterals(literals))) =>
-      if (isPermissionRelevant(predicate)) {
-        acc ++ literals.map(literal => (predicate, literal))
-      } else {
-        acc
-      }
-    }
 
   /**
    * Calculates the highest permission level a user can be granted on a entity.
@@ -783,57 +752,6 @@ object PermissionUtilADM extends LazyLogging {
       case Some(permissionCode) => permissionCode >= permissionStringsToPermissionLevels(userNeedsPermission).toInt
       case None                 => false
     }
-
-  /**
-   * Determines the permissions that a user has on a `knora-base:Value`, and returns an integer permission code.
-   *
-   * @param valueIri      the IRI of the `knora-base:Value`.
-   * @param valueProps    a [[ValueProps]] containing the permission-relevant predicates and objects
-   *                      pertaining to the value, grouped by predicate. The predicates must include
-   *                      [[OntologyConstants.KnoraBase.AttachedToUser]], and should include
-   *                      [[OntologyConstants.KnoraBase.AttachedToProject]]
-   *                      and [[OntologyConstants.KnoraBase.HasPermissions]]. Other predicates may be
-   *                      included, but they will be ignored, so there is no need to filter them before passing them to
-   *                      this function.
-   * @param entityProject if provided, the `knora-base:attachedToProject` of the resource containing the value. Otherwise,
-   *                      this predicate must be in `valueProps`.
-   * @param userProfile   the profile of the user making the request.
-   * @return a code representing the user's permission level on the value.
-   */
-  def getUserPermissionWithValuePropsV1(
-    valueIri: IRI,
-    valueProps: ValueProps,
-    entityProject: Option[IRI],
-    userProfile: UserProfileV1
-  ): Option[Int] = {
-
-    // Either entityProject must be provided, or there must be a knora-base:attachedToProject in valueProps.
-
-    val valuePropsAssertions: Vector[(IRI, IRI)] = filterPermissionRelevantAssertionsFromValueProps(valueProps)
-    val valuePropsProject: Option[IRI] =
-      valuePropsAssertions.find(_._1 == OntologyConstants.KnoraBase.AttachedToProject).map(_._2)
-    val providedProjects = Vector(valuePropsProject, entityProject).flatten.distinct
-
-    if (providedProjects.isEmpty) {
-      throw InconsistentRepositoryDataException(s"No knora-base:attachedToProject was provided for entity $valueIri")
-    }
-
-    if (providedProjects.size > 1) {
-      throw InconsistentRepositoryDataException(
-        s"Two different values of knora-base:attachedToProject were provided for entity $valueIri: ${valuePropsProject.get} and ${entityProject.get}"
-      )
-    }
-
-    val valuePropsAssertionsWithoutProject: Vector[(IRI, IRI)] =
-      valuePropsAssertions.filter(_._1 != OntologyConstants.KnoraBase.AttachedToProject)
-    val projectAssertion: (IRI, IRI) = (OntologyConstants.KnoraBase.AttachedToProject, providedProjects.head)
-
-    getUserPermissionFromAssertionsV1(
-      entityIri = valueIri,
-      assertions = valuePropsAssertionsWithoutProject :+ projectAssertion,
-      userProfile = userProfile
-    )
-  }
 
   /**
    * Determines the permissions that a user has on a entity, and returns an integer permission code.

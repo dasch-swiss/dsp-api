@@ -118,7 +118,6 @@ object LayersTest {
       with TriplestoreRequestMessageHandler
       with TriplestoreService
       with UsersResponderADM
-      with ValueUtilV1
       with ValuesResponderV2
 
   private val commonLayersForAllIntegrationTests =
@@ -182,7 +181,6 @@ object LayersTest {
       TriplestoreRequestMessageHandlerLive.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
-      ValueUtilV1Live.layer,
       ValuesResponderV2Live.layer
     )
 

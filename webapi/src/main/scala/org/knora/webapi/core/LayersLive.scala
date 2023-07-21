@@ -125,7 +125,6 @@ object LayersLive {
       with TriplestoreRequestMessageHandler
       with TriplestoreService
       with UsersResponderADM
-      with ValueUtilV1
       with ValuesResponderV2
 
   /**
@@ -196,7 +195,6 @@ object LayersLive {
       TriplestoreRequestMessageHandlerLive.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
-      ValueUtilV1Live.layer,
       ValuesResponderV2Live.layer
     )
 }

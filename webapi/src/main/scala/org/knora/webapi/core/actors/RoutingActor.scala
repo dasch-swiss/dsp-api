@@ -14,7 +14,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
@@ -37,7 +36,6 @@ final case class RoutingActor(
       with PermissionUtilADM
       with ResourceUtilV2
       with StandoffTagUtilV2
-      with ValueUtilV1
   ]
 ) extends Actor {
   def receive: Receive = {

@@ -13,73 +13,10 @@ import spray.json.NullOptions
 import spray.json.RootJsonFormat
 
 import org.knora.webapi.IRI
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
-
-// use 'admin' route for writing.
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
-
-/**
- * An abstract trait representing a request message that can be sent to [[org.knora.webapi.responders.v1.ProjectsResponderV1]].
- */
-sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
-
-// Requests
-/**
- * Get all information about all projects in form of [[ProjectsResponseV1]]. The ProjectsGetRequestV1 returns either
- * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
- *
- * @param userProfile          the profile of the user making the request.
- */
-case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
-
-/**
- * Get all information about all projects in form of a sequence of [[ProjectInfoV1]]. Returns an empty sequence if
- * no projects are found. Administration permission checking is skipped.
- *
- * @param userProfile          the profile of the user making the request.
- */
-case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
-
-/**
- * Get info about a single project identified through its IRI. A successful response will be a [[ProjectInfoResponseV1]].
- *
- * @param iri                  the IRI of the project.
- * @param userProfileV1        the profile of the user making the request (optional).
- */
-case class ProjectInfoByIRIGetRequestV1(
-  iri: IRI,
-  userProfileV1: Option[UserProfileV1]
-) extends ProjectsResponderRequestV1
-
-/**
- * Get info about a single project identified through its IRI. A successful response will be an [[Option[ProjectInfoV1] ]].
- *
- * @param iri                  the IRI of the project.
- * @param userProfileV1        the profile of the user making the request (optional).
- */
-case class ProjectInfoByIRIGetV1(
-  iri: IRI,
-  userProfileV1: Option[UserProfileV1]
-) extends ProjectsResponderRequestV1
-
-/**
- * Find everything about a single project identified through its shortname.
- *
- * @param shortname            of the project.
- * @param userProfileV1        the profile of the user making the request.
- */
-case class ProjectInfoByShortnameGetRequestV1(
-  shortname: String,
-  userProfileV1: Option[UserProfileV1]
-) extends ProjectsResponderRequestV1
 
 // Responses
 /**
