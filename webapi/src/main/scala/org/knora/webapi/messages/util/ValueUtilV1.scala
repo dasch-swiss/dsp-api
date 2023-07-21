@@ -807,9 +807,9 @@ final case class ValueUtilV1Live(
       dateval1 = predicates(OntologyConstants.KnoraBase.ValueHasStartJDN).literals.head.toInt,
       dateval2 = predicates(OntologyConstants.KnoraBase.ValueHasEndJDN).literals.head.toInt,
       dateprecision1 =
-        KnoraPrecisionV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasStartPrecision).literals.head),
+        KnoraCalendarPrecision.lookup(predicates(OntologyConstants.KnoraBase.ValueHasStartPrecision).literals.head),
       dateprecision2 =
-        KnoraPrecisionV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasEndPrecision).literals.head),
+        KnoraCalendarPrecision.lookup(predicates(OntologyConstants.KnoraBase.ValueHasEndPrecision).literals.head),
       calendar = KnoraCalendarV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
     )
 

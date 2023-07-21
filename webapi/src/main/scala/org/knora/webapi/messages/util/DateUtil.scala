@@ -10,12 +10,35 @@ import jodd.datetime.JDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
+import dsp.errors.{AssertionException, BadRequestException, InconsistentRepositoryDataException}
 import org.knora.webapi.messages.{StringFormatter, ValuesValidator, util}
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
+
+/**
+ * An enumeration of the types of calendar precisions Knora supports. Note: do not use the `withName` method to get instances
+ * of the values of this enumeration; use `lookup` instead, because it reports errors better.
+ */
+object KnoraCalendarPrecision extends Enumeration {
+  val DAY: Value   = Value(0, "DAY")
+  val MONTH: Value = Value(1, "MONTH")
+  val YEAR: Value  = Value(2, "YEAR")
+
+  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
+
+  /**
+   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
+   * [[InconsistentRepositoryDataException]].
+   *
+   * @param name the name of the value.
+   * @return the requested value.
+   */
+  def lookup(name: String): Value =
+    valueMap.get(name) match {
+      case Some(value) => value
+      case None        => throw InconsistentRepositoryDataException(s"Calendar precision not supported: $name")
+    }
+}
 
 /**
  * Represents a date value as a period bounded by Julian Day Numbers. Knora stores dates internally in this format.
@@ -27,18 +50,18 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
  * @param dateprecision2 the precision of the end of the date.
  */
 case class JulianDayNumberValue(
-                                 dateval1: Int,
-                                 dateval2: Int,
-                                 calendar: KnoraCalendarV1.Value,
-                                 dateprecision1: KnoraPrecisionV1.Value,
-                                 dateprecision2: KnoraPrecisionV1.Value
-                               ) {
+  dateval1: Int,
+  dateval2: Int,
+  calendar: KnoraCalendarV1.Value,
+  dateprecision1: KnoraCalendarPrecision.Value,
+  dateprecision2: KnoraCalendarPrecision.Value
+) {
 
   override def toString: String = {
     // use only precision DAY: either the date is exact (a certain day)
     // or it is a period expressed as a range from one day to another.
-    val date1 = DateUtil.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
-    val date2 = DateUtil.julianDayNumber2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
+    val date1 = DateUtil.julianDayNumber2DateString(dateval1, calendar, KnoraCalendarPrecision.DAY)
+    val date2 = DateUtil.julianDayNumber2DateString(dateval2, calendar, KnoraCalendarPrecision.DAY)
 
     // if date1 and date2 are identical, it's not a period.
     if (date1 == date2) {
@@ -50,6 +73,7 @@ case class JulianDayNumberValue(
     }
   }
 }
+
 /**
  * Utility functions for converting dates.
  */
@@ -62,7 +86,7 @@ object DateUtil {
    * @param end       the latest possible value for the date.
    * @param precision the precision that was used to calculate the date range.
    */
-  case class DateRange(start: GregorianCalendar, end: GregorianCalendar, precision: KnoraPrecisionV1.Value)
+  case class DateRange(start: GregorianCalendar, end: GregorianCalendar, precision: KnoraCalendarPrecision.Value)
 
   /**
    * Converts a [[DateValueV1]] to a [[JulianDayNumberValue]].
@@ -203,7 +227,7 @@ object DateUtil {
           )                  // December 31st of the given year. Attention: in java.util.Calendar, month count starts with 0
           intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
-          DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.YEAR)
+          DateRange(intervalStart, intervalEnd, KnoraCalendarPrecision.YEAR)
 
         } catch {
           case e: IllegalArgumentException =>
@@ -243,7 +267,7 @@ object DateUtil {
           )                  // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
           intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
-          DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.MONTH)
+          DateRange(intervalStart, intervalEnd, KnoraCalendarPrecision.MONTH)
         } catch {
           case e: IllegalArgumentException =>
             throw BadRequestException(s"The provided date $dateString is invalid: ${e.getMessage}")
@@ -265,7 +289,7 @@ object DateUtil {
           )                // Attention: in java.util.Calendar, month count starts with 0
           exactDate.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
-          DateRange(exactDate, exactDate, KnoraPrecisionV1.DAY)
+          DateRange(exactDate, exactDate, KnoraCalendarPrecision.DAY)
         } catch {
           case e: IllegalArgumentException =>
             throw BadRequestException(s"The provided date $dateString is invalid: ${e.getMessage}")
@@ -307,7 +331,7 @@ object DateUtil {
   def julianDayNumber2DateString(
     julianDay: Int,
     calendarType: KnoraCalendarV1.Value,
-    precision: KnoraPrecisionV1.Value
+    precision: KnoraCalendarPrecision.Value
   ): String = {
     val gregorianCalendar = convertJulianDayNumberToJavaGregorianCalendar(julianDay, calendarType)
     val year              = gregorianCalendar.get(Calendar.YEAR)
@@ -316,15 +340,15 @@ object DateUtil {
     val day = gregorianCalendar.get(Calendar.DAY_OF_MONTH)
     val era = eraToString(gregorianCalendar.get(Calendar.ERA))
     precision match {
-      case KnoraPrecisionV1.YEAR =>
+      case KnoraCalendarPrecision.YEAR =>
         // Year precision: just include the year.
         f"$year%04d $era"
 
-      case KnoraPrecisionV1.MONTH =>
+      case KnoraCalendarPrecision.MONTH =>
         // Month precision: include the year and the month.
         f"$year%04d-$month%02d $era"
 
-      case KnoraPrecisionV1.DAY =>
+      case KnoraCalendarPrecision.DAY =>
         // Day precision: include the year, the month, and the day.
         f"$year%04d-$month%02d-$day%02d $era"
     }

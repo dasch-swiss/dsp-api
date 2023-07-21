@@ -7,9 +7,9 @@ package org.knora.webapi.util
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util
-import org.knora.webapi.messages.util.{DateUtil, JulianDayNumberValue}
+import org.knora.webapi.messages.util.{DateUtil, JulianDayNumberValue, KnoraCalendarPrecision}
 import org.knora.webapi.messages.util.DateUtil.DateRange
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, KnoraCalendarV1}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -36,8 +36,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval1 = 2192808,
           dateval2 = 2192808,
           calendar = KnoraCalendarV1.JULIAN,
-          dateprecision1 = KnoraPrecisionV1.DAY,
-          dateprecision2 = KnoraPrecisionV1.DAY
+          dateprecision1 = KnoraCalendarPrecision.DAY,
+          dateprecision2 = KnoraCalendarPrecision.DAY
         )
       )
 
@@ -117,8 +117,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval1 = 0,
           dateval2 = 0,
           calendar = KnoraCalendarV1.JULIAN,
-          dateprecision1 = KnoraPrecisionV1.DAY,
-          dateprecision2 = KnoraPrecisionV1.DAY
+          dateprecision1 = KnoraCalendarPrecision.DAY,
+          dateprecision2 = KnoraCalendarPrecision.DAY
         )
       )
 
@@ -140,8 +140,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval1 = 2440291,
           dateval2 = 2440291,
           calendar = KnoraCalendarV1.GREGORIAN,
-          dateprecision1 = KnoraPrecisionV1.DAY,
-          dateprecision2 = KnoraPrecisionV1.DAY
+          dateprecision1 = KnoraCalendarPrecision.DAY,
+          dateprecision2 = KnoraCalendarPrecision.DAY
         )
       )
 
@@ -167,8 +167,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval1 = 2192801,
           dateval2 = 2440291,
           calendar = KnoraCalendarV1.GREGORIAN,
-          dateprecision1 = KnoraPrecisionV1.MONTH,
-          dateprecision2 = KnoraPrecisionV1.DAY
+          dateprecision1 = KnoraCalendarPrecision.MONTH,
+          dateprecision2 = KnoraCalendarPrecision.DAY
         )
       )
 
@@ -192,8 +192,8 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
           dateval1 = 2453615,
           dateval2 = 2457235,
           calendar = KnoraCalendarV1.GREGORIAN,
-          dateprecision1 = KnoraPrecisionV1.MONTH,
-          dateprecision2 = KnoraPrecisionV1.MONTH
+          dateprecision1 = KnoraCalendarPrecision.MONTH,
+          dateprecision2 = KnoraCalendarPrecision.MONTH
         )
       )
 

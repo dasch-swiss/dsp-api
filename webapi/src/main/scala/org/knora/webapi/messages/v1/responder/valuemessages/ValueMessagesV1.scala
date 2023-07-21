@@ -10,7 +10,6 @@ import spray.json._
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
@@ -22,7 +21,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.messages.util.DateUtil
+import org.knora.webapi.messages.util.{DateUtil, KnoraCalendarPrecision}
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -601,30 +600,7 @@ object KnoraCalendarV1 extends Enumeration {
     }
 }
 
-/**
- * An enumeration of the types of calendar precisions Knora supports. Note: do not use the `withName` method to get instances
- * of the values of this enumeration; use `lookup` instead, because it reports errors better.
- */
-object KnoraPrecisionV1 extends Enumeration {
-  val DAY: Value   = Value(0, "DAY")
-  val MONTH: Value = Value(1, "MONTH")
-  val YEAR: Value  = Value(2, "YEAR")
 
-  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-  /**
-   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-   * [[InconsistentRepositoryDataException]].
-   *
-   * @param name the name of the value.
-   * @return the requested value.
-   */
-  def lookup(name: String): Value =
-    valueMap.get(name) match {
-      case Some(value) => value
-      case None        => throw InconsistentRepositoryDataException(s"Calendar precision not supported: $name")
-    }
-}
 
 /**
  * Represents a [[StandoffTagV2]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
@@ -1812,15 +1788,15 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   /**
    * å
-   * Converts between [[KnoraPrecisionV1]] objects and [[JsValue]] objects.
+   * Converts between [[KnoraCalendarPrecision]] objects and [[JsValue]] objects.
    */
-  implicit object KnoraPrecisionV1JsonFormat extends JsonFormat[KnoraPrecisionV1.Value] {
-    def read(jsonVal: JsValue): KnoraPrecisionV1.Value = jsonVal match {
-      case JsString(str) => KnoraPrecisionV1.lookup(str)
+  implicit object KnoraPrecisionV1JsonFormat extends JsonFormat[KnoraCalendarPrecision.Value] {
+    def read(jsonVal: JsValue): KnoraCalendarPrecision.Value = jsonVal match {
+      case JsString(str) => KnoraCalendarPrecision.lookup(str)
       case _             => throw BadRequestException(s"Invalid precision in JSON: $jsonVal")
     }
 
-    def write(precisionV1Value: KnoraPrecisionV1.Value): JsValue = JsString(precisionV1Value.toString)
+    def write(precisionV1Value: KnoraCalendarPrecision.Value): JsValue = JsString(precisionV1Value.toString)
   }
 
   /**
