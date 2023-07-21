@@ -10,8 +10,13 @@ import jodd.datetime.JDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
-import dsp.errors.{AssertionException, BadRequestException, InconsistentRepositoryDataException}
-import org.knora.webapi.messages.{StringFormatter, ValuesValidator, util}
+
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.util
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 
 /**
@@ -75,11 +80,11 @@ object KnoraCalendarPrecision extends Enumeration {
  * @param dateprecision2 the precision of the end of the date.
  */
 case class JulianDayNumberValue(
-                                 dateval1: Int,
-                                 dateval2: Int,
-                                 calendar: KnoraCalendarType.Value,
-                                 dateprecision1: KnoraCalendarPrecision.Value,
-                                 dateprecision2: KnoraCalendarPrecision.Value
+  dateval1: Int,
+  dateval2: Int,
+  calendar: KnoraCalendarType.Value,
+  dateprecision1: KnoraCalendarPrecision.Value,
+  dateprecision2: KnoraCalendarPrecision.Value
 ) {
 
   override def toString: String = {
@@ -354,9 +359,9 @@ object DateUtil {
    * @return a string in `YYYY[-MM[-DD] ]` format.
    */
   def julianDayNumber2DateString(
-                                  julianDay: Int,
-                                  calendarType: KnoraCalendarType.Value,
-                                  precision: KnoraCalendarPrecision.Value
+    julianDay: Int,
+    calendarType: KnoraCalendarType.Value,
+    precision: KnoraCalendarPrecision.Value
   ): String = {
     val gregorianCalendar = convertJulianDayNumberToJavaGregorianCalendar(julianDay, calendarType)
     val year              = gregorianCalendar.get(Calendar.YEAR)

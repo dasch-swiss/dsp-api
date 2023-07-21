@@ -6,6 +6,7 @@
 package org.knora.webapi.messages.util
 
 import zio._
+
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import dsp.errors.OntologyConstraintException

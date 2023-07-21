@@ -10,6 +10,7 @@ import spray.json._
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
@@ -21,7 +22,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.{KnoraCalendarPrecision, KnoraCalendarType}
+import org.knora.webapi.messages.util.KnoraCalendarPrecision
+import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
@@ -906,20 +908,20 @@ object LiteralValueType extends Enumeration {
  * @param order          the order of the value (valueHasOrder).
  */
 case class ResourceCreateValueObjectResponseV1(
-                                                textval: Map[LiteralValueType.Value, String],
-                                                ival: Option[Map[LiteralValueType.Value, Int]] = None,
-                                                dval: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
-                                                dateval1: Option[Map[LiteralValueType.Value, String]] = None,
-                                                dateval2: Option[Map[LiteralValueType.Value, String]] = None,
-                                                dateprecision1: Option[Map[LiteralValueType.Value, KnoraCalendarPrecision.Value]] = None,
-                                                dateprecision2: Option[Map[LiteralValueType.Value, KnoraCalendarPrecision.Value]] = None,
-                                                calendar: Option[Map[LiteralValueType.Value, KnoraCalendarType.Value]] = None,
-                                                timeval1: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
-                                                timeval2: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
-                                                resource_id: Map[LiteralValueType.Value, IRI],
-                                                property_id: Map[LiteralValueType.Value, IRI],
-                                                person_id: Map[LiteralValueType.Value, IRI],
-                                                order: Map[LiteralValueType.Value, Int]
+  textval: Map[LiteralValueType.Value, String],
+  ival: Option[Map[LiteralValueType.Value, Int]] = None,
+  dval: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
+  dateval1: Option[Map[LiteralValueType.Value, String]] = None,
+  dateval2: Option[Map[LiteralValueType.Value, String]] = None,
+  dateprecision1: Option[Map[LiteralValueType.Value, KnoraCalendarPrecision.Value]] = None,
+  dateprecision2: Option[Map[LiteralValueType.Value, KnoraCalendarPrecision.Value]] = None,
+  calendar: Option[Map[LiteralValueType.Value, KnoraCalendarType.Value]] = None,
+  timeval1: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
+  timeval2: Option[Map[LiteralValueType.Value, BigDecimal]] = None,
+  resource_id: Map[LiteralValueType.Value, IRI],
+  property_id: Map[LiteralValueType.Value, IRI],
+  person_id: Map[LiteralValueType.Value, IRI],
+  order: Map[LiteralValueType.Value, Int]
 ) {
   // TODO: do we need to add geonames here?
 

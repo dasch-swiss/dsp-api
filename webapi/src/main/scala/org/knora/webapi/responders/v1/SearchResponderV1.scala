@@ -22,7 +22,8 @@ import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.twirl.SearchCriterion
-import org.knora.webapi.messages.util.{DateUtil, KnoraCalendarType}
+import org.knora.webapi.messages.util.DateUtil
+import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.rdf.VariableResultsRow

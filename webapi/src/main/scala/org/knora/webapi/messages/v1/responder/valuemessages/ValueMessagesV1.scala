@@ -10,6 +10,7 @@ import spray.json._
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
@@ -21,7 +22,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.messages.util.{DateUtil, KnoraCalendarPrecision, KnoraCalendarType}
+import org.knora.webapi.messages.util.KnoraCalendarPrecision
+import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -1201,8 +1203,6 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
     }
 }
 
-
-
 /**
  * Represents a date value as represented in Knora API v1.
  *
@@ -1220,8 +1220,13 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
  * @param dateval2 the end date of the period, if any.
  * @param calendar the type of calendar used in the date.
  */
-case class DateValueV1(dateval1: String, dateval2: String, era1: String, era2: String, calendar: KnoraCalendarType.Value)
-    extends ApiValueV1 {
+case class DateValueV1(
+  dateval1: String,
+  dateval2: String,
+  era1: String,
+  era2: String,
+  calendar: KnoraCalendarType.Value
+) extends ApiValueV1 {
 
   def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
 
