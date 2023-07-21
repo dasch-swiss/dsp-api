@@ -59,7 +59,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private var linkValueUUID    = UUID.randomUUID
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   // If true, writes some API responses to test data files. If false, compares the API responses to the existing test data files.
@@ -673,7 +673,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     val expectedResponseStr =
       readOrWriteTextFile(
         responseStr,
-        Paths.get("..", s"test_data/valuesE2EV2/$fileBasename.jsonld"),
+        Paths.get("..", s"test_data/generated_test_data/valuesE2EV2/$fileBasename.jsonld"),
         writeTestDataFiles
       )
     compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
@@ -2048,7 +2048,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a text value with standoff containing escaped text" in {
       val resourceIri                               = AThing.iri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val jsonLDEntity                              = FileUtil.readTextFile(Paths.get("..", "test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
+      val jsonLDEntity =
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
@@ -3967,8 +3968,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update a text value with standoff containing escaped text" in {
       val resourceIri                               = AThing.iri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val jsonLDEntity                              = FileUtil.readTextFile(Paths.get("..", "test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
-      val jsonLDEntityWithResourceValueIri          = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
+      val jsonLDEntity =
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
+      val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
       val request = Put(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)

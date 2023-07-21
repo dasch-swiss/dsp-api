@@ -18,7 +18,10 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
   override implicit val timeout: FiniteDuration = 30.seconds
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   val countTriplesQuery: String =

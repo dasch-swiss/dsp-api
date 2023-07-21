@@ -33,7 +33,10 @@ class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
   val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   "The Files Route ('admin/files') using token credentials" should {

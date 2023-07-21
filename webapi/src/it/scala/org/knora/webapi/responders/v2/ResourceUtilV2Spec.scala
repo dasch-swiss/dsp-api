@@ -18,7 +18,10 @@ class ResourceUtilV2Spec extends CoreSpec {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   "ResourceUtil" when {

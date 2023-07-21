@@ -201,11 +201,11 @@ following example content:
     "name": "http://www.knora.org/ontology/salsah-gui"
   },
   {
-    "path": "test_data/ontologies/incunabula-onto.ttl",
+    "path": "test_data/project_ontologies/incunabula-onto.ttl",
     "name": "http://www.knora.org/ontology/0803/incunabula"
   },
   {
-    "path": "test_data/all_data/incunabula-data.ttl",
+    "path": "test_data/project_data/incunabula-data.ttl",
     "name": "http://www.knora.org/data/incunabula"
   }
 ]

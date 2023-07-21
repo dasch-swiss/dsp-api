@@ -20,7 +20,10 @@ import scala.concurrent.duration._
 class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    )
   )
 
   // The default timeout for receiving reply messages from actors.

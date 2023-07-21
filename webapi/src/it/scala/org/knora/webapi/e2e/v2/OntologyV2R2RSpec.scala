@@ -64,20 +64,23 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
-      path = "test_data/ontologies/example-box.ttl",
+      path = "test_data/project_ontologies/example-box.ttl",
       name = "http://www.knora.org/ontology/shared/example-box"
     ),
-    RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal"),
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/minimal-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/minimal"
+    ),
+    RdfDataObject(
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     ),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   // Directory path for generated client test data
@@ -118,7 +121,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   ) {
     def makeFile(mediaType: MediaType.NonBinary): Path = {
       val fileSuffix = mediaType.fileExtensions.head
-      Paths.get("..", "test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
+      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
     }
 
     /**

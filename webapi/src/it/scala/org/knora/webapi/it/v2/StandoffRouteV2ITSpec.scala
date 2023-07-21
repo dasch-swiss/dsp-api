@@ -59,12 +59,15 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   private val freetestXSLTIRI      = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+    RdfDataObject(
+      path = "test_data/project_data/freetest-data.ttl",
+      name = "http://www.knora.org/data/0001/freetest"
+    )
   )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
@@ -205,7 +208,9 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       )
 
       val expectedAnswerJSONLD =
-        FileUtil.readTextFile(Paths.get("../test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("../test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld")
+        )
 
       compareJSONLDForMappingCreationResponse(
         expectedJSONLD = expectedAnswerJSONLD,

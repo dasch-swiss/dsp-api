@@ -108,7 +108,9 @@ class JsonLDUtilSpec() extends CoreSpec {
     "convert JSON-LD representing an ontology to an RDF4J Model" in {
       // Read a JSON-LD file.
       val inputJsonLD: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld")
+        )
 
       // Parse it to a JsonLDDocument.
       val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
@@ -118,7 +120,9 @@ class JsonLDUtilSpec() extends CoreSpec {
 
       // Read an isomorphic Turtle file.
       val expectedTurtle: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl")
+        )
 
       // Parse the Turtle to an RDF4J Model.
       val expectedModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
@@ -130,7 +134,9 @@ class JsonLDUtilSpec() extends CoreSpec {
     "convert an RDF4J Model representing an ontology to JSON-LD" in {
       // Read a Turtle file.
       val turtle =
-        FileUtil.readTextFile(Paths.get("..", "test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl")
+        )
 
       // Parse it to an RDF4J Model.
       val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
@@ -146,7 +152,9 @@ class JsonLDUtilSpec() extends CoreSpec {
 
       // Read an isomorphic JSON-LD file.
       val expectedJsonLD =
-        FileUtil.readTextFile(Paths.get("..", "test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/ontologyR2RV2/anythingOntologyWithValueObjects.jsonld")
+        )
 
       // Parse it to an RDF4J Model.
       val jsonLDExpectedModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedJsonLD, rdfFormat = JsonLD)
@@ -158,7 +166,9 @@ class JsonLDUtilSpec() extends CoreSpec {
     "convert JSON-LD representing a resource to an RDF4J Model" in {
       // Read a JSON-LD file.
       val inputJsonLD: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+        )
 
       // Parse it to a JsonLDDocument.
       val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(inputJsonLD)
@@ -174,7 +184,9 @@ class JsonLDUtilSpec() extends CoreSpec {
 
       // Read an isomorphic Turtle file.
       val expectedTurtle =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+        )
 
       // Parse it to an RDF4J Model.
       val expectedModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
@@ -185,7 +197,9 @@ class JsonLDUtilSpec() extends CoreSpec {
 
     "convert an RDF4J Model representing a resource to JSON-LD" in {
       // Read a Turtle file.
-      val turtle = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+      val turtle = FileUtil.readTextFile(
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+      )
 
       // Parse it to an RDF4J Model.
       val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
@@ -201,7 +215,9 @@ class JsonLDUtilSpec() extends CoreSpec {
 
       // Read an isomorphic JSON-LD file.
       val expectedJsonLD =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+        )
 
       // Parse it to a JsonLDDocument and compare it with the generated one.
       val expectedJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(expectedJsonLD)

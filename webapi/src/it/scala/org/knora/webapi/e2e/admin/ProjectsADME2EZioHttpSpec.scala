@@ -43,7 +43,10 @@ class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol wit
   private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   s"The Projects Route ($baseApiUrl -> 'admin/projects')" when {
