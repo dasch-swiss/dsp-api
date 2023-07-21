@@ -7,7 +7,13 @@ package org.knora.webapi.util
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util
-import org.knora.webapi.messages.util.{DateUtil, DateValueV1, JulianDayNumberValue, KnoraCalendarPrecision, KnoraCalendarType}
+import org.knora.webapi.messages.util.{
+  DateUtil,
+  DateValueV1,
+  JulianDayNumberValue,
+  KnoraCalendarPrecision,
+  KnoraCalendarType
+}
 import org.knora.webapi.messages.util.DateUtil.DateRange
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike

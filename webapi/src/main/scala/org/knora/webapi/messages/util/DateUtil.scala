@@ -10,12 +10,15 @@ import jodd.datetime.JDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter, ValuesValidator, util}
-
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.util
 
 /**
  * Represents a date value as represented in Knora API v1.
@@ -35,16 +38,16 @@ import org.knora.webapi.messages.{OntologyConstants, StringFormatter, ValuesVali
  * @param calendar the type of calendar used in the date.
  */
 case class DateValueV1(
-                        dateval1: String,
-                        dateval2: String,
-                        era1: String,
-                        era2: String,
-                        calendar: KnoraCalendarType.Value
-                      ) {
+  dateval1: String,
+  dateval2: String,
+  era1: String,
+  era2: String,
+  calendar: KnoraCalendarType.Value
+) {
   def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
 
   override def toString: String =
-  // if date1 and date2 are identical, it's not a period.
+    // if date1 and date2 are identical, it's not a period.
     if (dateval1 == dateval2) {
       // one exact day
       dateval1 + " " + era1

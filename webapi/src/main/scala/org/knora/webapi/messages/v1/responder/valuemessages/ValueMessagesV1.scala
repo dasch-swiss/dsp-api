@@ -10,6 +10,7 @@ import spray.json._
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
@@ -21,7 +22,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.messages.util.{DateValueV1, KnoraCalendarPrecision, KnoraCalendarType}
+import org.knora.webapi.messages.util.DateValueV1
+import org.knora.webapi.messages.util.KnoraCalendarPrecision
+import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -1200,8 +1203,6 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
         throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
     }
 }
-
-
 
 /**
  * Represents an RGB color value.

@@ -17,7 +17,6 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 
-
 /**
  * Represents a user's profile.
  *
@@ -204,6 +203,6 @@ object UserV1JsonProtocol
     with ProjectV1JsonProtocol
     with PermissionsADMJsonProtocol {
 
-  implicit val userDataV1Format: JsonFormat[UserDataV1]                           = lazyFormat(jsonFormat8(UserDataV1))
-  implicit val userProfileV1Format: JsonFormat[UserProfileV1]                     = jsonFormat6(UserProfileV1)
+  implicit val userDataV1Format: JsonFormat[UserDataV1]       = lazyFormat(jsonFormat8(UserDataV1))
+  implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
 }
