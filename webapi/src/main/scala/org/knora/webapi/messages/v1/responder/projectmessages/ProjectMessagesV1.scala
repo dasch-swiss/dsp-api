@@ -7,38 +7,10 @@ package org.knora.webapi.messages.v1.responder.projectmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
-import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.NullOptions
-import spray.json.RootJsonFormat
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.KnoraResponseV1
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-// Responses
-/**
- * Represents the Knora API v1 JSON response to a request for information about all projects.
- *
- * @param projects information about all existing projects.
- */
-case class ProjectsResponseV1(projects: Seq[ProjectInfoV1]) extends KnoraResponseV1 with ProjectV1JsonProtocol {
-  def toJsValue: JsValue = projectsResponseV1Format.write(this)
-}
-
-/**
- * Represents the Knora API v1 JSON response to a request for information about a single project.
- *
- * @param project_info all information about the project.
- */
-case class ProjectInfoResponseV1(project_info: ProjectInfoV1) extends KnoraResponseV1 with ProjectV1JsonProtocol {
-  def toJsValue: JsValue = projectInfoResponseV1Format.write(this)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Components of messages
 
 /**
  * Represents basic information about a project.
@@ -75,16 +47,5 @@ case class ProjectInfoV1(
  * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
  */
 trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
-
-  // Some of these formatters have to use lazyFormat because there is a recursive dependency between this
-  // protocol and UserV1JsonProtocol. See ttps://github.com/spray/spray-json#jsonformats-for-recursive-types.
-  // rootFormat makes it return the expected type again.
-  // https://github.com/spray/spray-json#jsonformats-for-recursive-types
   implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
-  implicit val projectsResponseV1Format: RootJsonFormat[ProjectsResponseV1] = rootFormat(
-    lazyFormat(jsonFormat(ProjectsResponseV1, "projects"))
-  )
-  implicit val projectInfoResponseV1Format: RootJsonFormat[ProjectInfoResponseV1] = rootFormat(
-    lazyFormat(jsonFormat(ProjectInfoResponseV1, "project_info"))
-  )
 }

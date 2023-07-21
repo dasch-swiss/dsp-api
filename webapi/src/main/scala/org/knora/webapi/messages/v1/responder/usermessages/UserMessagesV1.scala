@@ -8,181 +8,15 @@ package org.knora.webapi.messages.v1.responder.usermessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
-import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi._
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
-
-// use 'admin' route for writing
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-/**
- * An abstract trait representing message that can be sent to `UsersResponderV1`.
- */
-sealed trait UsersResponderRequestV1 extends KnoraRequestV1 with RelayedMessage
-
-/**
- * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
- * something or a NotFound exception if there are no users found. Administration permission checking is performed.
- *
- * @param userProfileV1 the profile of the user that is making the request.
- */
-case class UsersGetRequestV1(userProfileV1: UserProfileV1) extends UsersResponderRequestV1
-
-/**
- * Get all information about all users in form of a sequence of [[UserDataV1]]. Returns an empty sequence if
- * no users are found. Administration permission checking is skipped.
- */
-case class UsersGetV1(userProfile: UserProfileV1) extends UsersResponderRequestV1
-
-/**
- * A message that requests basic user data. A successful response will be a [[UserDataV1]].
- *
- * @param userIri the IRI of the user to be queried.
- * @param short   denotes if all information should be returned. If short == true, then token and password are not returned.
- */
-case class UserDataByIriGetV1(userIri: IRI, short: Boolean = true) extends UsersResponderRequestV1
-
-/**
- * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
- *
- * @param userIri              the IRI of the user to be queried.
- * @param userProfileType      the extent of the information returned.
- */
-case class UserProfileByIRIGetRequestV1(
-  userIri: IRI,
-  userProfileType: UserProfileType,
-  userProfile: UserProfileV1
-) extends UsersResponderRequestV1
-
-/**
- * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
- *
- * @param userIri         the IRI of the user to be queried.
- * @param userProfileType the extent of the information returned.
- */
-case class UserProfileByIRIGetV1(
-  userIri: IRI,
-  userProfileType: UserProfileType
-) extends UsersResponderRequestV1
-
-/**
- * A message that requests a user's profile. A successful response will be a [[UserProfileResponseV1]].
- *
- * @param email                the email of the user to be queried.
- * @param userProfileType      the extent of the information returned.
- * @param userProfile          the requesting user's profile.
- */
-case class UserProfileByEmailGetRequestV1(
-  email: String,
-  userProfileType: UserProfileType,
-  userProfile: UserProfileV1
-) extends UsersResponderRequestV1
-
-/**
- * A message that requests a user's profile. A successful response will be a [[UserProfileV1]].
- *
- * @param email                the email of the user to be queried.
- * @param userProfileType      the extent of the information returned.
- */
-case class UserProfileByEmailGetV1(
-  email: String,
-  userProfileType: UserProfileType
-) extends UsersResponderRequestV1
-
-/**
- * Requests user's project memberships.
- *
- * @param userIri       the IRI of the user.
- * @param userProfileV1 the user profile of the user requesting the update.
- * @param apiRequestID  the ID of the API request.
- */
-case class UserProjectMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID)
-    extends UsersResponderRequestV1
-
-/**
- * Requests user's project admin memberships.
- *
- * @param userIri       the IRI of the user.
- * @param userProfileV1 the user profile of the user requesting the update.
- * @param apiRequestID  the ID of the API request.
- */
-case class UserProjectAdminMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID)
-    extends UsersResponderRequestV1
-
-/**
- * Requests user's group memberships.
- *
- * @param userIri       the IRI of the user.
- * @param userProfileV1 the user profile of the user requesting the update.
- * @param apiRequestID  the ID of the API request.
- */
-case class UserGroupMembershipsGetRequestV1(userIri: IRI, userProfileV1: UserProfileV1, apiRequestID: UUID)
-    extends UsersResponderRequestV1
-
-// Responses
-
-/**
- * Represents an answer to a request for a list of all users.
- *
- * @param users a sequence of user profiles of the requested type.
- */
-case class UsersGetResponseV1(users: Seq[UserDataV1]) extends KnoraResponseV1 {
-  def toJsValue: JsValue = UserV1JsonProtocol.usersGetResponseV1Format.write(this)
-}
-
-/**
- * Represents an answer to a user profile request.
- *
- * @param userProfile the user's profile of the requested type.
- */
-case class UserProfileResponseV1(userProfile: UserProfileV1) extends KnoraResponseV1 {
-  def toJsValue: JsValue = UserV1JsonProtocol.userProfileResponseV1Format.write(this)
-}
-
-/**
- * Represents an answer to a request for a list of all projects the user is member of.
- *
- * @param projects a sequence of projects the user is member of.
- */
-case class UserProjectMembershipsGetResponseV1(projects: Seq[IRI]) extends KnoraResponseV1 {
-  def toJsValue: JsValue = UserV1JsonProtocol.userProjectMembershipsGetResponseV1Format.write(this)
-}
-
-/**
- * Represents an answer to a request for a list of all projects the user is member of the project admin group.
- *
- * @param projects a sequence of projects the user is member of the project admin group.
- */
-case class UserProjectAdminMembershipsGetResponseV1(projects: Seq[IRI]) extends KnoraResponseV1 {
-  def toJsValue: JsValue = UserV1JsonProtocol.userProjectAdminMembershipsGetResponseV1Format.write(this)
-}
-
-/**
- * Represents an answer to a request for a list of all groups the user is member of.
- *
- * @param groups a sequence of groups the user is member of.
- */
-case class UserGroupMembershipsGetResponseV1(groups: Seq[IRI]) extends KnoraResponseV1 {
-  def toJsValue: JsValue = UserV1JsonProtocol.userGroupMembershipsGetResponseV1Format.write(this)
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Components of messages
 
 /**
  * Represents a user's profile.
@@ -216,12 +50,12 @@ case class UserProfileV1(
         // SCrypt
         import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
         val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
-        encoder.matches(password, hashedPassword.toString)
+        encoder.matches(password, hashedPassword)
       } else if (hashedPassword.startsWith("$2a$")) {
         // BCrypt
         import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
         val encoder = new BCryptPasswordEncoder()
-        encoder.matches(password, hashedPassword.toString)
+        encoder.matches(password, hashedPassword)
       } else {
         // SHA-1
         val md = java.security.MessageDigest.getInstance("SHA-1")
@@ -287,21 +121,6 @@ case class UserProfileV1(
       case _ => throw BadRequestException(s"The requested userProfileType: $userProfileType is invalid.")
     }
 
-  def getDigest: String = {
-    val md    = java.security.MessageDigest.getInstance("SHA-1")
-    val time  = System.currentTimeMillis().toString
-    val value = (time + userData.toString).getBytes("UTF-8")
-    md.digest(value).map("%02x".format(_)).mkString
-  }
-
-  def setSessionId(sessionId: String): UserProfileV1 =
-    UserProfileV1(
-      userData = userData,
-      groups = groups,
-      permissionData = permissionData,
-      sessionId = Some(sessionId)
-    )
-
   def isAnonymousUser: Boolean =
     userData.user_id.isEmpty
 
@@ -334,17 +153,7 @@ case class UserDataV1(
   status: Option[Boolean] = Some(true),
   lang: String
 ) {
-
-  def fullname: Option[String] =
-    (firstname, lastname) match {
-      case (Some(firstnameStr), Some(lastnameStr)) => Some(firstnameStr + " " + lastnameStr)
-      case (Some(firstnameStr), None)              => Some(firstnameStr)
-      case (None, Some(lastnameStr))               => Some(lastnameStr)
-      case (None, None)                            => None
-    }
-
   def toJsValue: JsValue = UserV1JsonProtocol.userDataV1Format.write(this)
-
 }
 
 /**
@@ -397,13 +206,4 @@ object UserV1JsonProtocol
 
   implicit val userDataV1Format: JsonFormat[UserDataV1]                           = lazyFormat(jsonFormat8(UserDataV1))
   implicit val userProfileV1Format: JsonFormat[UserProfileV1]                     = jsonFormat6(UserProfileV1)
-  implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1]       = jsonFormat1(UsersGetResponseV1)
-  implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
-  implicit val userProjectMembershipsGetResponseV1Format: RootJsonFormat[UserProjectMembershipsGetResponseV1] =
-    jsonFormat1(UserProjectMembershipsGetResponseV1)
-  implicit val userProjectAdminMembershipsGetResponseV1Format
-    : RootJsonFormat[UserProjectAdminMembershipsGetResponseV1] = jsonFormat1(UserProjectAdminMembershipsGetResponseV1)
-  implicit val userGroupMembershipsGetResponseV1Format: RootJsonFormat[UserGroupMembershipsGetResponseV1] = jsonFormat1(
-    UserGroupMembershipsGetResponseV1
-  )
 }

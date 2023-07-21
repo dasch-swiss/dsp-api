@@ -16,9 +16,8 @@ object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
       for {
         appConfig     <- ZIO.service[AppConfig]
         sipiContainer <- ZIO.service[SipiTestContainer]
-        sipiPort      <- ZIO.succeed(sipiContainer.container.getFirstMappedPort)
       } yield {
-        assertTrue(appConfig.sipi.internalPort == sipiPort)
+        assertTrue(appConfig.sipi.internalPort == sipiContainer.port)
       }
     }
   ).provide(
