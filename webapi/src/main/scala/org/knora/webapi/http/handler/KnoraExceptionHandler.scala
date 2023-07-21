@@ -41,7 +41,7 @@ object KnoraExceptionHandler extends LazyLogging {
       extractRequest { request =>
         val url = request.uri.path.toString
 
-         if (url.startsWith("/v2")) {
+        if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(rre, appConfig))
         } else {
           complete(exceptionToJsonHttpResponseADM(rre, appConfig))
@@ -55,7 +55,7 @@ object KnoraExceptionHandler extends LazyLogging {
 
         logger.error(s"Internal Server Exception: Unable to run route $url", ise)
 
-         if (url.startsWith("/v2")) {
+        if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(ise, appConfig))
         } else {
           complete(exceptionToJsonHttpResponseADM(ise, appConfig))
