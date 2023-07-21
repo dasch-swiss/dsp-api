@@ -5,11 +5,6 @@
 
 package org.knora.webapi.messages.v1.responder.projectmessages
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.JsonFormat
-import spray.json.NullOptions
-
 import org.knora.webapi.IRI
 
 /**
@@ -39,13 +34,3 @@ case class ProjectInfoV1(
   status: Boolean,
   selfjoin: Boolean
 )
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formating
-
-/**
- * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
- */
-trait ProjectV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
-  implicit val projectInfoV1Format: JsonFormat[ProjectInfoV1] = jsonFormat11(ProjectInfoV1)
-}
