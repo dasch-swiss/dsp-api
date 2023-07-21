@@ -10,14 +10,49 @@ import jodd.datetime.JDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util
-import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter, ValuesValidator, util}
+
+
+/**
+ * Represents a date value as represented in Knora API v1.
+ *
+ * A [[DateValueV1]] can represent either single date or a period with start and end dates (`dateval1` and `dateval2`).
+ * If it represents a single date, `dateval1` will have a value but `dateval2` will be `None`. Both `dateval1` and `dateval2`
+ * can indicate degrees of uncertainty, using the following formats:
+ *
+ * - `YYYY-MM-DD` specifies a particular day, with no uncertainty.
+ * - `YYYY-MM` indicates that the year and the month are known, but that the day of the month is uncertain. In effect, this specifies a range of possible dates, from the first day of the month to the last day of the month.
+ * - `YYYY` indicates that only the year is known. In effect, this specifies a range of possible dates, from the first day of the year to the last day of the year.
+ *
+ * The year and month values refer to years and months in the calendar specified by `calendar`.
+ *
+ * @param dateval1 the start date of the period.
+ * @param dateval2 the end date of the period, if any.
+ * @param calendar the type of calendar used in the date.
+ */
+case class DateValueV1(
+                        dateval1: String,
+                        dateval2: String,
+                        era1: String,
+                        era2: String,
+                        calendar: KnoraCalendarType.Value
+                      ) {
+  def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
+
+  override def toString: String =
+  // if date1 and date2 are identical, it's not a period.
+    if (dateval1 == dateval2) {
+      // one exact day
+      dateval1 + " " + era1
+    } else {
+      // period: from to
+      dateval1 + " " + era1 + " - " + dateval2 + " " + era2
+    }
+}
 
 /**
  * An enumeration of the types of calendars Knora supports. Note: do not use the `withName` method to get instances

@@ -10,7 +10,6 @@ import spray.json._
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
@@ -22,8 +21,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.KnoraCalendarPrecision
-import org.knora.webapi.messages.util.KnoraCalendarType
+import org.knora.webapi.messages.util.{DateValueV1, KnoraCalendarPrecision, KnoraCalendarType}
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject

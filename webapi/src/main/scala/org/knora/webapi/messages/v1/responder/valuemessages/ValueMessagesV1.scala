@@ -10,7 +10,6 @@ import spray.json._
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
@@ -22,8 +21,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.messages.util.KnoraCalendarPrecision
-import org.knora.webapi.messages.util.KnoraCalendarType
+import org.knora.webapi.messages.util.{DateValueV1, KnoraCalendarPrecision, KnoraCalendarType}
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -1203,45 +1201,7 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
     }
 }
 
-/**
- * Represents a date value as represented in Knora API v1.
- *
- * A [[DateValueV1]] can represent either single date or a period with start and end dates (`dateval1` and `dateval2`).
- * If it represents a single date, `dateval1` will have a value but `dateval2` will be `None`. Both `dateval1` and `dateval2`
- * can indicate degrees of uncertainty, using the following formats:
- *
- * - `YYYY-MM-DD` specifies a particular day, with no uncertainty.
- * - `YYYY-MM` indicates that the year and the month are known, but that the day of the month is uncertain. In effect, this specifies a range of possible dates, from the first day of the month to the last day of the month.
- * - `YYYY` indicates that only the year is known. In effect, this specifies a range of possible dates, from the first day of the year to the last day of the year.
- *
- * The year and month values refer to years and months in the calendar specified by `calendar`.
- *
- * @param dateval1 the start date of the period.
- * @param dateval2 the end date of the period, if any.
- * @param calendar the type of calendar used in the date.
- */
-case class DateValueV1(
-  dateval1: String,
-  dateval2: String,
-  era1: String,
-  era2: String,
-  calendar: KnoraCalendarType.Value
-) extends ApiValueV1 {
 
-  def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
-
-  override def toString: String =
-    // if date1 and date2 are identical, it's not a period.
-    if (dateval1 == dateval2) {
-      // one exact day
-      dateval1 + " " + era1
-    } else {
-      // period: from to
-      dateval1 + " " + era1 + " - " + dateval2 + " " + era2
-    }
-
-  def toJsValue: JsValue = ApiValueV1JsonProtocol.dateValueV1Format.write(this)
-}
 
 /**
  * Represents an RGB color value.

@@ -7,9 +7,8 @@ package org.knora.webapi.util
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util
-import org.knora.webapi.messages.util.{DateUtil, JulianDayNumberValue, KnoraCalendarPrecision, KnoraCalendarType}
+import org.knora.webapi.messages.util.{DateUtil, DateValueV1, JulianDayNumberValue, KnoraCalendarPrecision, KnoraCalendarType}
 import org.knora.webapi.messages.util.DateUtil.DateRange
-import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -243,7 +242,6 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
       assertThrows[BadRequestException] {
         DateUtil.dateString2DateRange("2017-00", KnoraCalendarType.GREGORIAN)
       }
-
     }
   }
 }
