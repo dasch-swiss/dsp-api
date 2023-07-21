@@ -11,7 +11,6 @@ import zio.ZLayer
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -19,15 +18,11 @@ import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter, ValuesValidator, util}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.util.DateUtil
-import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
+import org.knora.webapi.messages.util.{DateUtil, JulianDayNumberValue}
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
 import org.knora.webapi.messages.v1.responder.valuemessages.UpdateValueV1
@@ -1536,7 +1531,7 @@ object StandoffTagUtilV2 {
               .stringValue
           )
 
-          val julianDayCountValueV1: UpdateValueV1 = JulianDayNumberValueV1(
+          val julianDayCountValueV1 = util.JulianDayNumberValue(
             dateval1 = standoffTagV2.attributes
               .find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasStartJDN)
               .get

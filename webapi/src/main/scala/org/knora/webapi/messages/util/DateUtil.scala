@@ -10,16 +10,46 @@ import jodd.datetime.JDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.{StringFormatter, ValuesValidator, util}
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
 
+/**
+ * Represents a date value as a period bounded by Julian Day Numbers. Knora stores dates internally in this format.
+ *
+ * @param dateval1       the beginning of the date (a Julian day number).
+ * @param dateval2       the end of the date (a Julian day number).
+ * @param calendar       the preferred calendar for representing the date.
+ * @param dateprecision1 the precision of the beginning of the date.
+ * @param dateprecision2 the precision of the end of the date.
+ */
+case class JulianDayNumberValue(
+                                 dateval1: Int,
+                                 dateval2: Int,
+                                 calendar: KnoraCalendarV1.Value,
+                                 dateprecision1: KnoraPrecisionV1.Value,
+                                 dateprecision2: KnoraPrecisionV1.Value
+                               ) {
+
+  override def toString: String = {
+    // use only precision DAY: either the date is exact (a certain day)
+    // or it is a period expressed as a range from one day to another.
+    val date1 = DateUtil.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
+    val date2 = DateUtil.julianDayNumber2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
+
+    // if date1 and date2 are identical, it's not a period.
+    if (date1 == date2) {
+      // one exact day
+      date1
+    } else {
+      // period: from to
+      date1 + " - " + date2
+    }
+  }
+}
 /**
  * Utility functions for converting dates.
  */
@@ -35,12 +65,12 @@ object DateUtil {
   case class DateRange(start: GregorianCalendar, end: GregorianCalendar, precision: KnoraPrecisionV1.Value)
 
   /**
-   * Converts a [[DateValueV1]] to a [[JulianDayNumberValueV1]].
+   * Converts a [[DateValueV1]] to a [[JulianDayNumberValue]].
    *
    * @param dateValueV1 the [[DateValueV1]] to be converted.
-   * @return a [[JulianDayNumberValueV1]].
+   * @return a [[JulianDayNumberValue]].
    */
-  def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValueV1 = {
+  def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValue = {
     // Get the start and end date ranges of the DateValueV1.
 
     val dateRange1 =
@@ -48,7 +78,7 @@ object DateUtil {
     val dateRange2 =
       dateString2DateRange(dateValueV1.dateval2 + StringFormatter.EraSeparator + dateValueV1.era2, dateValueV1.calendar)
 
-    JulianDayNumberValueV1(
+    util.JulianDayNumberValue(
       dateval1 = convertDateToJulianDayNumber(dateRange1.start),
       dateval2 = convertDateToJulianDayNumber(dateRange2.end),
       calendar = dateValueV1.calendar,
@@ -58,12 +88,12 @@ object DateUtil {
   }
 
   /**
-   * Converts a [[JulianDayNumberValueV1]] to a [[DateValueV1]].
+   * Converts a [[JulianDayNumberValue]] to a [[DateValueV1]].
    *
-   * @param julianDayNumberValueV1 the [[JulianDayNumberValueV1]] to be converted.
+   * @param julianDayNumberValueV1 the [[JulianDayNumberValue]] to be converted.
    * @return a [[DateValueV1]].
    */
-  def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValueV1): DateValueV1 = {
+  def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValue): DateValueV1 = {
     val dateval1 = julianDayNumber2DateString(
       julianDayNumberValueV1.dateval1,
       julianDayNumberValueV1.calendar,
@@ -344,12 +374,12 @@ object DateUtil {
     }
 
   /**
-   * Creates a [[JulianDayNumberValueV1]] from a date String (e.g. "GREGORIAN:2015-12-03").
+   * Creates a [[JulianDayNumberValue]] from a date String (e.g. "GREGORIAN:2015-12-03").
    *
    * @param dateStr the date String to be processed.
-   * @return a [[JulianDayNumberValueV1]] representing the date.
+   * @return a [[JulianDayNumberValue]] representing the date.
    */
-  def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
+  def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValue = {
     val datestring =
       ValuesValidator.validateDate(dateStr).getOrElse(throw BadRequestException(s"Invalid date format: $dateStr"))
 
@@ -370,7 +400,7 @@ object DateUtil {
       if (dateval1 > dateval2)
         throw BadRequestException(s"Invalid input for period: start is bigger than end: $dateStr")
 
-      JulianDayNumberValueV1(
+      util.JulianDayNumberValue(
         calendar = calendar,
         dateval1 = dateval1,
         dateprecision1 = start.precision,
@@ -383,7 +413,7 @@ object DateUtil {
 
       val date: DateRange = dateString2DateRange(parsedDate(1), calendar)
 
-      JulianDayNumberValueV1(
+      util.JulianDayNumberValue(
         calendar = calendar,
         dateval1 = convertDateToJulianDayNumber(date.start),
         dateval2 = convertDateToJulianDayNumber(date.end),

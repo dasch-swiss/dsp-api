@@ -1253,51 +1253,7 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
     }
 }
 
-/**
- * Represents a date value as a period bounded by Julian Day Numbers. Knora stores dates internally in this format.
- *
- * @param dateval1       the beginning of the date (a Julian day number).
- * @param dateval2       the end of the date (a Julian day number).
- * @param calendar       the preferred calendar for representing the date.
- * @param dateprecision1 the precision of the beginning of the date.
- * @param dateprecision2 the precision of the end of the date.
- */
-case class JulianDayNumberValueV1(
-  dateval1: Int,
-  dateval2: Int,
-  calendar: KnoraCalendarV1.Value,
-  dateprecision1: KnoraPrecisionV1.Value,
-  dateprecision2: KnoraPrecisionV1.Value
-) extends UpdateValueV1 {
 
-  def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
-
-  override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean =
-    other match {
-      case _: DateValueV1 => DateUtil.julianDayNumberValueV1ToDateValueV1(this) == other
-      case otherValue =>
-        throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
-    }
-
-  override def isRedundant(currentVersion: ApiValueV1): Boolean = isDuplicateOfOtherValue(currentVersion)
-
-  // value for String representation of a date in templates.
-  override def toString: String = {
-    // use only precision DAY: either the date is exact (a certain day)
-    // or it is a period expressed as a range from one day to another.
-    val date1 = DateUtil.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
-    val date2 = DateUtil.julianDayNumber2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
-
-    // if date1 and date2 are identical, it's not a period.
-    if (date1 == date2) {
-      // one exact day
-      date1
-    } else {
-      // period: from to
-      date1 + " - " + date2
-    }
-  }
-}
 
 /**
  * Represents a date value as represented in Knora API v1.

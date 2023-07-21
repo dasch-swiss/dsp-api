@@ -6,14 +6,10 @@
 package org.knora.webapi.util
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.messages.util.DateUtil
+import org.knora.webapi.messages.util
+import org.knora.webapi.messages.util.{DateUtil, JulianDayNumberValue}
 import org.knora.webapi.messages.util.DateUtil.DateRange
-import org.knora.webapi.messages.v1.responder.valuemessages.{
-  DateValueV1,
-  JulianDayNumberValueV1,
-  KnoraCalendarV1,
-  KnoraPrecisionV1
-}
+import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -36,7 +32,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
       val bundesbriefJulianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(bundesbriefDateValueV1)
 
       bundesbriefJulianDayCountValueV1 should be(
-        JulianDayNumberValueV1(
+        util.JulianDayNumberValue(
           dateval1 = 2192808,
           dateval2 = 2192808,
           calendar = KnoraCalendarV1.JULIAN,
@@ -117,7 +113,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
       val theJulianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
 
       theJulianDayCountValueV1 should be(
-        JulianDayNumberValueV1(
+        util.JulianDayNumberValue(
           dateval1 = 0,
           dateval2 = 0,
           calendar = KnoraCalendarV1.JULIAN,
@@ -140,7 +136,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
       val benBirthdayJulianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(benBirthdayDateValueV1)
 
       benBirthdayJulianDayCountValueV1 should be(
-        JulianDayNumberValueV1(
+        util.JulianDayNumberValue(
           dateval1 = 2440291,
           dateval2 = 2440291,
           calendar = KnoraCalendarV1.GREGORIAN,
@@ -167,7 +163,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
       val julianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(dateValueV1)
 
       julianDayCountValueV1 should be(
-        JulianDayNumberValueV1(
+        util.JulianDayNumberValue(
           dateval1 = 2192801,
           dateval2 = 2440291,
           calendar = KnoraCalendarV1.GREGORIAN,
@@ -192,7 +188,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
       val julianDayCountValueV1 = DateUtil.dateValueV1ToJulianDayNumberValueV1(dateValueV1)
 
       julianDayCountValueV1 should be(
-        JulianDayNumberValueV1(
+        util.JulianDayNumberValue(
           dateval1 = 2453615,
           dateval2 = 2457235,
           calendar = KnoraCalendarV1.GREGORIAN,

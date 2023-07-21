@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.util
 
 import zio._
-
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotImplementedException
 import dsp.errors.OntologyConstraintException
@@ -804,7 +803,7 @@ final case class ValueUtilV1Live(
   private def makeDateValue(valueProps: ValueProps): Task[ApiValueV1] = {
     val predicates = valueProps.literalData
 
-    val julianDayNumberValueV1 = JulianDayNumberValueV1(
+    val julianDayNumberValueV1 = JulianDayNumberValue(
       dateval1 = predicates(OntologyConstants.KnoraBase.ValueHasStartJDN).literals.head.toInt,
       dateval2 = predicates(OntologyConstants.KnoraBase.ValueHasEndJDN).literals.head.toInt,
       dateprecision1 =
