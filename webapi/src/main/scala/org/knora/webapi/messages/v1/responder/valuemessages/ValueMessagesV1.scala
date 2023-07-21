@@ -22,7 +22,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.messages.util.DateUtilV1
+import org.knora.webapi.messages.util.DateUtil
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -1274,7 +1274,7 @@ case class JulianDayNumberValueV1(
 
   override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean =
     other match {
-      case _: DateValueV1 => DateUtilV1.julianDayNumberValueV1ToDateValueV1(this) == other
+      case _: DateValueV1 => DateUtil.julianDayNumberValueV1ToDateValueV1(this) == other
       case otherValue =>
         throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
     }
@@ -1285,8 +1285,8 @@ case class JulianDayNumberValueV1(
   override def toString: String = {
     // use only precision DAY: either the date is exact (a certain day)
     // or it is a period expressed as a range from one day to another.
-    val date1 = DateUtilV1.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
-    val date2 = DateUtilV1.julianDayNumber2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
+    val date1 = DateUtil.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
+    val date2 = DateUtil.julianDayNumber2DateString(dateval2, calendar, KnoraPrecisionV1.DAY)
 
     // if date1 and date2 are identical, it's not a period.
     if (date1 == date2) {

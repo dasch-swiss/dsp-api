@@ -22,7 +22,7 @@ import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.twirl.SearchCriterion
-import org.knora.webapi.messages.util.DateUtilV1
+import org.knora.webapi.messages.util.DateUtil
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -447,11 +447,11 @@ final case class SearchResponderV1Live(
                   val (dateStart, dateEnd) = if (parsedDate.length > 2) {
                     // it is a period: 0 : cal | 1 : start | 2 : end
 
-                    val periodStart = DateUtilV1.dateString2DateRange(parsedDate(1), calendar).start
-                    val periodEnd   = DateUtilV1.dateString2DateRange(parsedDate(2), calendar).end
+                    val periodStart = DateUtil.dateString2DateRange(parsedDate(1), calendar).start
+                    val periodEnd   = DateUtil.dateString2DateRange(parsedDate(2), calendar).end
 
-                    val start = DateUtilV1.convertDateToJulianDayNumber(periodStart)
-                    val end   = DateUtilV1.convertDateToJulianDayNumber(periodEnd)
+                    val start = DateUtil.convertDateToJulianDayNumber(periodStart)
+                    val end   = DateUtil.convertDateToJulianDayNumber(periodEnd)
 
                     // check if end is bigger than start (the user could have submitted a period where start is bigger than end)
                     if (start > end)
@@ -461,10 +461,10 @@ final case class SearchResponderV1Live(
                   } else {
                     // no period: 0 : cal | 1 : start
 
-                    val dateRange = DateUtilV1.dateString2DateRange(parsedDate(1), calendar)
+                    val dateRange = DateUtil.dateString2DateRange(parsedDate(1), calendar)
 
-                    val start = DateUtilV1.convertDateToJulianDayNumber(dateRange.start)
-                    val end   = DateUtilV1.convertDateToJulianDayNumber(dateRange.end)
+                    val start = DateUtil.convertDateToJulianDayNumber(dateRange.start)
+                    val end   = DateUtil.convertDateToJulianDayNumber(dateRange.end)
 
                     (start, end)
                   }

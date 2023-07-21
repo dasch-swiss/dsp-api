@@ -23,7 +23,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
 /**
  * Utility functions for converting dates.
  */
-object DateUtilV1 {
+object DateUtil {
 
   /**
    * Represents a date with a specified precision as a range of possible dates.

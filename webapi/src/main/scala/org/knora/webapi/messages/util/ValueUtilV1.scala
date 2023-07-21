@@ -573,7 +573,7 @@ final case class ValueUtilV1Live(
         )
 
       case dateValue: DateValueV1 =>
-        val julianDayCountValue = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(dateValue)
+        val julianDayCountValue = DateUtil.dateValueV1ToJulianDayNumberValueV1(dateValue)
         basicObjectResponse.copy(
           dateval1 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval1)),
           dateval2 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval2)),
@@ -814,7 +814,7 @@ final case class ValueUtilV1Live(
       calendar = KnoraCalendarV1.lookup(predicates(OntologyConstants.KnoraBase.ValueHasCalendar).literals.head)
     )
 
-    ZIO.attempt(DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1))
+    ZIO.attempt(DateUtil.julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1))
   }
 
   /**
