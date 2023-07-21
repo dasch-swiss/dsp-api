@@ -341,7 +341,7 @@ object DateUtil {
    * @param era java.calendar era property.
    * @return string format of era.
    */
-  def eraToString(era: Int): String =
+  private def eraToString(era: Int): String =
     era match {
 
       case 1     => StringFormatter.Era_CE
@@ -404,7 +404,7 @@ object DateUtil {
    * @param calendarType the type of calendar to be used to configure the [[GregorianCalendar]].
    * @return a [[GregorianCalendar]].
    */
-  def convertJulianDayNumberToJavaGregorianCalendar(
+  private def convertJulianDayNumberToJavaGregorianCalendar(
     julianDay: Int,
     calendarType: KnoraCalendarType.Value
   ): GregorianCalendar = {
