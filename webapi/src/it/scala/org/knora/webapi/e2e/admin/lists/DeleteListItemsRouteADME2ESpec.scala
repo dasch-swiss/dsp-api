@@ -10,10 +10,10 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.e2e.admin.lists
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.AkkaHttpUtils
 
@@ -52,17 +52,17 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
     )
   )
 
-  val rootCreds: CredentialsADM = CredentialsADM(
+  val rootCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.rootUser,
     "test"
   )
 
-  val anythingUserCreds: CredentialsADM = CredentialsADM(
+  val anythingUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingUser1,
     "test"
   )
 
-  val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
+  val anythingAdminUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingAdminUser,
     "test"
   )

@@ -9,10 +9,10 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.e2e.admin.lists
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.AkkaHttpUtils
 
@@ -38,22 +38,22 @@ class UpdateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtoco
     )
   )
 
-  val rootCreds: CredentialsADM = CredentialsADM(
+  val rootCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.rootUser,
     "test"
   )
 
-  val normalUserCreds: CredentialsADM = CredentialsADM(
+  val normalUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.normalUser,
     "test"
   )
 
-  val anythingUserCreds: CredentialsADM = CredentialsADM(
+  val anythingUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingUser1,
     "test"
   )
 
-  val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
+  val anythingAdminUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingAdminUser,
     "test"
   )

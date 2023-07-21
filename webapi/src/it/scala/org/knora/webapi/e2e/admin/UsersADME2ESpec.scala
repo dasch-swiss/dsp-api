@@ -18,7 +18,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
@@ -36,23 +35,13 @@ class UsersADME2ESpec
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
-  val rootCreds: CredentialsV1 = CredentialsV1(
-    SharedTestDataADM.rootUser.id,
-    SharedTestDataADM.rootUser.email,
-    "test"
-  )
-
-  val projectAdminCreds: CredentialsV1 = CredentialsV1(
-    SharedTestDataADM.imagesUser01.id,
-    SharedTestDataADM.imagesUser01.email,
-    "test"
-  )
-
-  val normalUserCreds: CredentialsV1 = CredentialsV1(
-    SharedTestDataADM.normalUser.id,
-    SharedTestDataADM.normalUser.email,
-    "test"
-  )
+  private val rootUser                       = SharedTestDataADM.rootUser
+  private val projectAdminUser               = SharedTestDataADM.imagesUser01
+  private val normalUser                     = SharedTestDataADM.normalUser
+  private def addRootUserCredentials         = addCredentials(rootUser)
+  private def addProjectAdminUserCredentials = addCredentials(projectAdminUser)
+  private def addNormalUserCredentials       = addCredentials(normalUser)
+  private def addCredentials(user: UserADM)  = addCredentials(BasicHttpCredentials(user.email, user.password.orNull))
 
   private val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.get
   private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
@@ -81,15 +70,12 @@ class UsersADME2ESpec
   /**
    * Convenience method returning the users project memberships.
    *
-   * @param userIri     the user's IRI.
-   * @param credentials the credentials of the user making the request.
+   * @param userIri the user's IRI.
    */
-  private def getUserProjectMemberships(userIri: IRI, credentials: CredentialsV1): Seq[ProjectADM] = {
+  private def getUserProjectMemberships(userIri: IRI) = {
     val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
-    val request = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/project-memberships") ~> addCredentials(
-      BasicHttpCredentials(credentials.email, credentials.password)
-    )
-    val response: HttpResponse = singleAwaitingRequest(request)
+    val request    = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/project-memberships") ~> addRootUserCredentials
+    val response   = singleAwaitingRequest(request)
     AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
   }
 
@@ -97,14 +83,11 @@ class UsersADME2ESpec
    * Convenience method returning the users project-admin memberships.
    *
    * @param userIri     the user's IRI.
-   * @param credentials the credentials of the user making the request.
    */
-  private def getUserProjectAdminMemberships(userIri: IRI, credentials: CredentialsV1): Seq[ProjectADM] = {
+  private def getUserProjectAdminMemberships(userIri: IRI) = {
     val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
-    val request = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/project-admin-memberships") ~> addCredentials(
-      BasicHttpCredentials(credentials.email, credentials.password)
-    )
-    val response: HttpResponse = singleAwaitingRequest(request)
+    val request    = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/project-admin-memberships") ~> addRootUserCredentials
+    val response   = singleAwaitingRequest(request)
     AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
   }
 
@@ -112,14 +95,11 @@ class UsersADME2ESpec
    * Convenience method returning the users group memberships.
    *
    * @param userIri     the user's IRI.
-   * @param credentials the credentials of the user making the request.
    */
-  private def getUserGroupMemberships(userIri: IRI, credentials: CredentialsV1): Seq[GroupADM] = {
+  private def getUserGroupMemberships(userIri: IRI) = {
     val userIriEnc = java.net.URLEncoder.encode(userIri, "utf-8")
-    val request = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/group-memberships") ~> addCredentials(
-      BasicHttpCredentials(credentials.email, credentials.password)
-    )
-    val response: HttpResponse = singleAwaitingRequest(request)
+    val request    = Get(baseApiUrl + s"/admin/users/iri/$userIriEnc/group-memberships") ~> addRootUserCredentials
+    val response   = singleAwaitingRequest(request)
     AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[GroupADM]]
   }
 
@@ -127,7 +107,7 @@ class UsersADME2ESpec
     "used to query user information [FUNCTIONALITY]" should {
       "return all users" in {
         val request =
-          Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          Get(baseApiUrl + s"/admin/users") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -145,9 +125,7 @@ class UsersADME2ESpec
 
       "return a single user profile identified by iri" in {
         /* Correct username and password */
-        val request = Get(baseApiUrl + s"/admin/users/iri/${rootCreds.urlEncodedIri}") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users/iri/${rootUser.id}") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -165,9 +143,7 @@ class UsersADME2ESpec
 
       "return a single user profile identified by email" in {
         /* Correct username and password */
-        val request = Get(baseApiUrl + s"/admin/users/email/${rootCreds.urlEncodedEmail}") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users/email/${rootUser.id}") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -177,7 +153,7 @@ class UsersADME2ESpec
         /* Correct username and password */
         val request = Get(
           baseApiUrl + s"/admin/users/username/${SharedTestDataADM.rootUser.username}"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -187,9 +163,7 @@ class UsersADME2ESpec
 
     "used to query user information [PERMISSIONS]" should {
       "return single user for SystemAdmin" in {
-        val request = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         clientTestDataCollector.addFile(
@@ -205,9 +179,7 @@ class UsersADME2ESpec
       }
 
       "return single user for itself" in {
-        val request = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addCredentials(
-          BasicHttpCredentials(normalUserCreds.email, normalUserCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addNormalUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         clientTestDataCollector.addFile(
@@ -223,9 +195,7 @@ class UsersADME2ESpec
       }
 
       "return only public information for single user for non SystemAdmin and self" in {
-        val request = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addCredentials(
-          BasicHttpCredentials(projectAdminCreds.email, projectAdminCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addProjectAdminUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
@@ -270,7 +240,7 @@ class UsersADME2ESpec
 
       "return all users for SystemAdmin" in {
         val request =
-          Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          Get(baseApiUrl + s"/admin/users") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         clientTestDataCollector.addFile(
@@ -286,9 +256,7 @@ class UsersADME2ESpec
       }
 
       "return all users for ProjectAdmin" in {
-        val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(
-          BasicHttpCredentials(projectAdminCreds.email, projectAdminCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users") ~> addProjectAdminUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         clientTestDataCollector.addFile(
@@ -304,9 +272,7 @@ class UsersADME2ESpec
       }
 
       "return 'Forbidden' for all users for normal user" in {
-        val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(
-          BasicHttpCredentials(normalUserCreds.email, normalUserCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users") ~> addNormalUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.Forbidden)
       }
@@ -432,7 +398,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$userIriEncoded/BasicUserInformation",
           HttpEntity(ContentTypes.`application/json`, updateUserRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -445,9 +411,7 @@ class UsersADME2ESpec
       "return the special characters correctly when getting a user with special characters in givenName and familyName" in {
         val userIriEncoded = java.net.URLEncoder.encode(otherCustomUserIri, "utf-8")
 
-        val request = Get(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -642,7 +606,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$userIriEncoded/BasicUserInformation",
           HttpEntity(ContentTypes.`application/json`, updateUserRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -686,7 +650,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$missingUserIri/BasicUserInformation",
           HttpEntity(ContentTypes.`application/json`, updateUserRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.NotFound)
@@ -706,7 +670,7 @@ class UsersADME2ESpec
         val request2 = Put(
           baseApiUrl + s"/admin/users/iri/$missingUserIriNone/BasicUserInformation",
           HttpEntity(ContentTypes.`application/json`, updateUserRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response2: HttpResponse = singleAwaitingRequest(request2)
 
         response2.status should be(StatusCodes.BadRequest)
@@ -743,9 +707,9 @@ class UsersADME2ESpec
         )
 
         val request1 = Put(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
-        ) ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
         logger.debug(s"response: ${response1.toString}")
         response1.status should be(StatusCodes.OK)
@@ -763,7 +727,7 @@ class UsersADME2ESpec
 
         // check if the password was changed, i.e. if the new one is accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUserCreds.email, "test123456")
+          BasicHttpCredentials(normalUser.email, "test123456")
         ) // new password
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -780,16 +744,16 @@ class UsersADME2ESpec
                     """.stripMargin
 
         val request1 = Put(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/Password",
           HttpEntity(ContentTypes.`application/json`, params01)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test")) // requester's password
+        ) ~> addCredentials(BasicHttpCredentials(rootUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
         logger.debug(s"response: ${response1.toString}")
         response1.status should be(StatusCodes.OK)
 
         // check if the password was changed, i.e. if the new one is accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUserCreds.email, "test654321")
+          BasicHttpCredentials(normalUser.email, "test654321")
         ) // new password
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -813,9 +777,9 @@ class UsersADME2ESpec
         )
 
         val request1 = Put(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
-        ) ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
         response1.status should be(StatusCodes.BadRequest)
@@ -833,7 +797,7 @@ class UsersADME2ESpec
 
         // check that the password was not changed, i.e. the old one is still accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUserCreds.email, "test654321")
+          BasicHttpCredentials(normalUser.email, "test654321")
         ) // old password (taken from previous test)
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -857,9 +821,9 @@ class UsersADME2ESpec
         )
 
         val request1 = Put(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/Password",
           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)
-        ) ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
+        ) ~> addCredentials(BasicHttpCredentials(normalUser.email, "test")) // requester's password
         val response1: HttpResponse = singleAwaitingRequest(request1)
 
         response1.status should be(StatusCodes.BadRequest)
@@ -877,7 +841,7 @@ class UsersADME2ESpec
 
         // check that the password was not changed, i.e. the old one is still accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUserCreds.email, "test654321")
+          BasicHttpCredentials(normalUser.email, "test654321")
         ) // old password
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
@@ -903,7 +867,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
           HttpEntity(ContentTypes.`application/json`, changeUserStatusRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -932,7 +896,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
           HttpEntity(ContentTypes.`application/json`, updateUserRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
 
@@ -958,7 +922,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/SystemAdmin",
           HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -982,7 +946,7 @@ class UsersADME2ESpec
         val badRequest = Put(
           baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/SystemAdmin",
           HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val badResponse: HttpResponse = singleAwaitingRequest(badRequest)
         badResponse.status should be(StatusCodes.BadRequest)
       }
@@ -996,7 +960,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/SystemAdmin",
           HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
       }
@@ -1012,7 +976,7 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/Status",
           HttpEntity(ContentTypes.`application/json`, params)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
       }
@@ -1029,16 +993,14 @@ class UsersADME2ESpec
         val request = Put(
           baseApiUrl + s"/admin/users/iri/$anonymousUserIriEncoded/Status",
           HttpEntity(ContentTypes.`application/json`, params)
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
       }
 
       "delete a user" in {
-        val userIriEncoded = java.net.URLEncoder.encode(customUserIri, "utf-8")
-        val request = Delete(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val userIriEncoded         = java.net.URLEncoder.encode(customUserIri, "utf-8")
+        val request                = Delete(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -1055,9 +1017,7 @@ class UsersADME2ESpec
       }
 
       "not allow deleting the system user" in {
-        val request = Delete(baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request                = Delete(baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
       }
@@ -1065,9 +1025,7 @@ class UsersADME2ESpec
       "not allow deleting the anonymous user" in {
         val anonymousUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.AnonymousUser.id, "utf-8")
 
-        val request = Delete(baseApiUrl + s"/admin/users/iri/$anonymousUserIriEncoded") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request                = Delete(baseApiUrl + s"/admin/users/iri/$anonymousUserIriEncoded") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
       }
@@ -1076,9 +1034,8 @@ class UsersADME2ESpec
 
     "used to query project memberships" should {
       "return all projects the user is a member of" in {
-        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-memberships") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request =
+          Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-memberships") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
@@ -1092,7 +1049,7 @@ class UsersADME2ESpec
         )
 
         // testing getUserProjectMemberships method, which should return the same result
-        projects should contain allElementsOf getUserProjectMemberships(multiUserIri, rootCreds)
+        projects should contain allElementsOf getUserProjectMemberships(multiUserIri)
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -1108,17 +1065,17 @@ class UsersADME2ESpec
 
     "used to modify project membership" should {
       "add user to project" in {
-        val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeUpdate = getUserProjectMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq())
 
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
 
-        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
+        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         clientTestDataCollector.addFile(
@@ -1134,17 +1091,17 @@ class UsersADME2ESpec
       }
 
       "don't add user to project if user is already a member" in {
-        val membershipsBeforeTryUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeTryUpdate = getUserProjectMemberships(normalUser.id)
 
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.BadRequest)
 
         // verify that users's project memberships weren't changed
-        val membershipsAfterTryUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
+        val membershipsAfterTryUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterTryUpdate should equal(membershipsBeforeTryUpdate)
 
         clientTestDataCollector.addFile(
@@ -1160,17 +1117,17 @@ class UsersADME2ESpec
       }
 
       "remove user from project" in {
-        val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeUpdate = getUserProjectMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
 
-        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
+        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
 
         clientTestDataCollector.addFile(
@@ -1191,7 +1148,7 @@ class UsersADME2ESpec
       "return all projects the user is a member of the project admin group" in {
         val request = Get(
           baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-admin-memberships"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
@@ -1204,7 +1161,7 @@ class UsersADME2ESpec
         )
 
         // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
-        projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri, rootCreds)
+        projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri)
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -1223,34 +1180,34 @@ class UsersADME2ESpec
       "add user to project admin group only if he is already member of that project" in {
         // add user as project admin to images project - returns a BadRequest because user is not member of the project
         val requestWithoutBeingMember = Post(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-admin-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val responseWithoutBeingMember: HttpResponse = singleAwaitingRequest(requestWithoutBeingMember)
 
         assert(responseWithoutBeingMember.status === StatusCodes.BadRequest)
 
         // add user as member to images project
         val requestAddUserToProject = Post(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val responseAddUserToProject: HttpResponse = singleAwaitingRequest(requestAddUserToProject)
 
         assert(responseAddUserToProject.status === StatusCodes.OK)
 
         // verfiy that user is not yet project admin in images project
-        val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq())
 
         // add user as project admin to images project
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-admin-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
 
         // verify that user has been added as project admin to images project
-        val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUser.id)
         membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         clientTestDataCollector.addFile(
@@ -1266,18 +1223,18 @@ class UsersADME2ESpec
       }
 
       "remove user from project admin group" in {
-        val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUser.id)
 
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-admin-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
 
-        val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsAfterUpdate = getUserProjectAdminMemberships(normalUser.id)
 
         membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
 
@@ -1296,26 +1253,26 @@ class UsersADME2ESpec
       "remove user from project which also removes him from project admin group" in {
         // add user as project admin to images project
         val requestAddUserAsProjectAdmin = Post(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-admin-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-admin-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val responseAddUserAsProjectAdmin: HttpResponse = singleAwaitingRequest(requestAddUserAsProjectAdmin)
 
         assert(responseAddUserAsProjectAdmin.status === StatusCodes.OK)
 
         // verify that user has been added as project admin to images project
-        val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProjectExternal))
 
         // remove user as project member from images project
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/project-memberships/$imagesProjectIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
 
         // verify that user has also been removed as project admin from images project
-        val projectAdminMembershipsAfterUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
+        val projectAdminMembershipsAfterUpdate = getUserProjectAdminMemberships(normalUser.id)
 
         projectAdminMembershipsAfterUpdate should equal(Seq())
       }
@@ -1324,9 +1281,7 @@ class UsersADME2ESpec
 
     "used to query group memberships" should {
       "return all groups the user is a member of" in {
-        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/group-memberships") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password)
-        )
+        val request                = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/group-memberships") ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
@@ -1336,7 +1291,7 @@ class UsersADME2ESpec
         groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroupExternal)
 
         // testing getUserGroupMemberships method, which should return the same result
-        groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)
+        groups should contain allElementsOf getUserGroupMemberships(multiUserIri)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1354,17 +1309,17 @@ class UsersADME2ESpec
 
     "used to modify group membership" should {
       "add user to group" in {
-        val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeUpdate = getUserGroupMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq.empty[GroupADM])
 
         val request = Post(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/group-memberships/$imagesReviewerGroupIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/group-memberships/$imagesReviewerGroupIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
 
-        val membershipsAfterUpdate = getUserGroupMemberships(normalUserIri, rootCreds)
+        val membershipsAfterUpdate = getUserGroupMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
 
         clientTestDataCollector.addFile(
@@ -1380,17 +1335,17 @@ class UsersADME2ESpec
       }
 
       "remove user from group" in {
-        val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
+        val membershipsBeforeUpdate = getUserGroupMemberships(normalUser.id)
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroupExternal))
 
         val request = Delete(
-          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/group-memberships/$imagesReviewerGroupIriEnc"
-        ) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          baseApiUrl + s"/admin/users/iri/${normalUser.id}/group-memberships/$imagesReviewerGroupIriEnc"
+        ) ~> addRootUserCredentials
         val response: HttpResponse = singleAwaitingRequest(request)
 
         assert(response.status === StatusCodes.OK)
 
-        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
+        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri)
         membershipsAfterUpdate should equal(Seq.empty[GroupADM])
 
         clientTestDataCollector.addFile(

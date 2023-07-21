@@ -10,10 +10,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.e2e.admin.lists
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.AkkaHttpUtils
 
@@ -43,7 +43,7 @@ class GetListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol w
     )
   )
 
-  val rootCreds: CredentialsADM = CredentialsADM(
+  val rootCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.rootUser,
     "test"
   )
