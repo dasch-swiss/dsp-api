@@ -41,8 +41,14 @@ class SipiV1R2RSpec extends R2RSpec {
   private val testPass                    = "test"
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/all_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/images-demo-data.ttl",
+      name = "http://www.knora.org/data/00FF/images"
+    )
   )
 
   /* we need to run our app with the mocked sipi implementation */

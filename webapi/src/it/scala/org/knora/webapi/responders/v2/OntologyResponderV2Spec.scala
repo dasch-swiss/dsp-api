@@ -53,23 +53,23 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(
       RdfDataObject(
-        path = "test_data/ontologies/example-box.ttl",
+        path = "test_data/project_ontologies/example-box.ttl",
         name = "http://www.knora.org/ontology/shared/example-box"
       ),
       RdfDataObject(
-        path = "test_data/all_data/anything-data.ttl",
+        path = "test_data/project_data/anything-data.ttl",
         name = "http://www.knora.org/data/0001/anything"
       ),
       RdfDataObject(
-        path = "test_data/ontologies/anything-onto.ttl",
+        path = "test_data/project_ontologies/anything-onto.ttl",
         name = "http://www.knora.org/ontology/0001/anything"
       ),
       RdfDataObject(
-        path = "test_data/ontologies/freetest-onto.ttl",
+        path = "test_data/project_ontologies/freetest-onto.ttl",
         name = "http://www.knora.org/ontology/0001/freetest"
       ),
       RdfDataObject(
-        path = "test_data/all_data/freetest-data.ttl",
+        path = "test_data/project_data/freetest-data.ttl",
         name = "http://www.knora.org/data/0001/freetest"
       )
     )

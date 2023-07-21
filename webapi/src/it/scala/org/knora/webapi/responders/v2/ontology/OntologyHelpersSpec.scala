@@ -28,11 +28,11 @@ class OntologyHelpersSpec extends CoreSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     )
   )

@@ -28,10 +28,19 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/books"),
-    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/books")
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    ),
+    RdfDataObject(
+      path = "test_data/project_ontologies/books-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/books"
+    ),
+    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books")
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 

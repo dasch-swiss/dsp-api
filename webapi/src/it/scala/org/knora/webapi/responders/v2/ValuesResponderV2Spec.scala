@@ -65,18 +65,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
     RdfDataObject(
-      path = "test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
+      path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula"
     ),
-    RdfDataObject(path = "test_data/all_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     )
   )

@@ -36,7 +36,10 @@ class KnoraSipiAuthenticationITSpec
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   "The Knora/Sipi authentication" should {
