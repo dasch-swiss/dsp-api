@@ -9,7 +9,7 @@ import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
 import java.time.Instant
 

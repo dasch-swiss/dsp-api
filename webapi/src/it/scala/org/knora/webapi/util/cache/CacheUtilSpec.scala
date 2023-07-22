@@ -7,7 +7,7 @@ package org.knora.webapi.util.cache
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
 class CacheUtilSpec extends CoreSpec {
 
@@ -19,8 +19,8 @@ class CacheUtilSpec extends CoreSpec {
     "allow to set and get the value " in {
       CacheUtil.removeAllCaches()
       CacheUtil.createCaches(appConfig.cacheConfigs)
-      CacheUtil.put(cacheName, sessionId, SharedTestDataV1.rootUser)
-      CacheUtil.get(cacheName, sessionId) should be(Some(SharedTestDataV1.rootUser))
+      CacheUtil.put(cacheName, sessionId, SharedTestDataADM2.rootUser)
+      CacheUtil.get(cacheName, sessionId) should be(Some(SharedTestDataADM2.rootUser))
     }
 
     "return none if key is not found " in {

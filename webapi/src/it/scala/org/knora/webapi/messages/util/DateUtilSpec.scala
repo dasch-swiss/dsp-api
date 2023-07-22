@@ -7,14 +7,8 @@ package org.knora.webapi.util
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util
-import org.knora.webapi.messages.util.{
-  DateUtil,
-  DateValueV1,
-  JulianDayNumberValue,
-  KnoraCalendarPrecision,
-  KnoraCalendarType
-}
 import org.knora.webapi.messages.util.DateUtil.DateRange
+import org.knora.webapi.messages.util.{DateUtil, DateValue, KnoraCalendarPrecision, KnoraCalendarType}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -26,7 +20,7 @@ import java.util.{Calendar, GregorianCalendar}
 class DateUtilSpec extends AnyWordSpecLike with Matchers {
   "The DateUtilV1 class" should {
     "convert a date in YYYY-MM-DD format, in the Julian calendar, into a Julian day count, and back again" in {
-      val bundesbriefDateValueV1 = DateValueV1(
+      val bundesbriefDateValueV1 = DateValue(
         dateval1 = "1291-08-01",
         dateval2 = "1291-08-01",
         era1 = "CE",
@@ -88,7 +82,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
     }
 
     "convert a date in YYYY-MM-DD Era format, to Date Range and back to String" in {
-      val someDateValueV1 = DateValueV1(
+      val someDateValueV1 = DateValue(
         dateval1 = "4713-01-01",
         dateval2 = "4713-01-01",
         era1 = "BCE",
@@ -107,7 +101,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
     }
 
     "convert a date in YYYY-MM-DD Era format, in the Julian calendar, into a Julian day count" in {
-      val someDateValueV1 = DateValueV1(
+      val someDateValueV1 = DateValue(
         dateval1 = "4713-01-01",
         dateval2 = "4713-01-01",
         era1 = "BCE",
@@ -130,7 +124,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
     }
 
     "convert a date in YYYY-MM-DD format, in the Gregorian calendar, into a Julian day count, and back again" in {
-      val benBirthdayDateValueV1 = DateValueV1(
+      val benBirthdayDateValueV1 = DateValue(
         dateval1 = "1969-03-10",
         dateval2 = "1969-03-10",
         era2 = "CE",
@@ -157,7 +151,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
     }
 
     "convert a time period consisting of two dates in YYYY-MM and YYYY-MM-DD format, in the Gregorian calendar, into a Julian day count, and back again" in {
-      val dateValueV1 = DateValueV1(
+      val dateValueV1 = DateValue(
         dateval1 = "1291-08",
         dateval2 = "1969-03-10",
         era2 = "CE",
@@ -182,7 +176,7 @@ class DateUtilSpec extends AnyWordSpecLike with Matchers {
     }
 
     "convert a time period consisting of two dates in YYYY-MM format, in the Gregorian calendar" in {
-      val dateValueV1 = DateValueV1(
+      val dateValueV1 = DateValue(
         dateval1 = "2005-09",
         dateval2 = "2015-07",
         era2 = "CE",

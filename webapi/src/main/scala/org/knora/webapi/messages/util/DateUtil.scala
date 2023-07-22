@@ -23,7 +23,7 @@ import org.knora.webapi.messages.util
 /**
  * Represents a date value as represented in Knora API v1.
  *
- * A [[DateValueV1]] can represent either single date or a period with start and end dates (`dateval1` and `dateval2`).
+ * A [[DateValue]] can represent either single date or a period with start and end dates (`dateval1` and `dateval2`).
  * If it represents a single date, `dateval1` will have a value but `dateval2` will be `None`. Both `dateval1` and `dateval2`
  * can indicate degrees of uncertainty, using the following formats:
  *
@@ -37,7 +37,7 @@ import org.knora.webapi.messages.util
  * @param dateval2 the end date of the period, if any.
  * @param calendar the type of calendar used in the date.
  */
-case class DateValueV1(
+case class DateValue(
   dateval1: String,
   dateval2: String,
   era1: String,
@@ -157,12 +157,12 @@ object DateUtil {
   case class DateRange(start: GregorianCalendar, end: GregorianCalendar, precision: KnoraCalendarPrecision.Value)
 
   /**
-   * Converts a [[DateValueV1]] to a [[JulianDayNumberValue]].
+   * Converts a [[DateValue]] to a [[JulianDayNumberValue]].
    *
-   * @param dateValueV1 the [[DateValueV1]] to be converted.
+   * @param dateValueV1 the [[DateValue]] to be converted.
    * @return a [[JulianDayNumberValue]].
    */
-  def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValue = {
+  def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValue): JulianDayNumberValue = {
     // Get the start and end date ranges of the DateValueV1.
 
     val dateRange1 =
@@ -180,12 +180,12 @@ object DateUtil {
   }
 
   /**
-   * Converts a [[JulianDayNumberValue]] to a [[DateValueV1]].
+   * Converts a [[JulianDayNumberValue]] to a [[DateValue]].
    *
    * @param julianDayNumberValueV1 the [[JulianDayNumberValue]] to be converted.
-   * @return a [[DateValueV1]].
+   * @return a [[DateValue]].
    */
-  def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValue): DateValueV1 = {
+  def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValue): DateValue = {
     val dateval1 = julianDayNumber2DateString(
       julianDayNumberValueV1.dateval1,
       julianDayNumberValueV1.calendar,
@@ -202,7 +202,7 @@ object DateUtil {
     if (dateEra1.length < 2) throw AssertionException(s"$dateval1 does not have an era")
     if (dateEra2.length < 2) throw AssertionException(s"$dateval2 does not have an era")
 
-    DateValueV1(
+    DateValue(
       dateval1 = dateEra1(0),
       dateval2 = dateEra2(0),
       era1 = dateEra1(1),

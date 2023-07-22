@@ -18,7 +18,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataADM2}
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
 import java.net.URLEncoder
@@ -46,10 +46,10 @@ class UsersADME2ESpec
     BasicHttpCredentials(user.email, "test")
   )
 
-  private val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.get
+  private val normalUserIri    = SharedTestDataADM2.normalUser.userData.user_id.get
   private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-  private val multiUserIri    = SharedTestDataV1.multiuserUser.userData.user_id.get
+  private val multiUserIri    = SharedTestDataADM2.multiuserUser.userData.user_id.get
   private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
   private val imagesProjectIri    = SharedTestDataADM.imagesProject.id

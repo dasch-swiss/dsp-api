@@ -5,18 +5,16 @@
 
 package org.knora.webapi.sharedtestdata
 
-import org.knora.webapi.IRI
+import org.knora.webapi.{IRI, sharedtestdata}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI
 
 /**
  * This object holds the same user which are loaded with 'test_data/project_data/admin-data.ttl'. Using this object
  * in tests, allows easier updating of details as they change over time.
  */
-object SharedTestDataV1 {
+object SharedTestDataADM2 {
 
   /**
    * **********************************
@@ -27,23 +25,23 @@ object SharedTestDataV1 {
    */
 
   /* represents the user profile of 'root' as found in admin-data.ttl */
-  def rootUser: UserProfileV1 = SharedTestDataADM.rootUser.asUserProfileV1
+  def rootUser: UserProfile = UserProfile.from(SharedTestDataADM.rootUser)
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
-  def superUser: UserProfileV1 = SharedTestDataADM.superUser.asUserProfileV1
+  def superUser: UserProfile = UserProfile.from(SharedTestDataADM.superUser)
 
   /* represents the user profile of 'normal user' as found in admin-data.ttl */
-  def normalUser: UserProfileV1 = SharedTestDataADM.normalUser.asUserProfileV1
+  def normalUser: UserProfile = UserProfile.from(SharedTestDataADM.normalUser)
 
   /* represents the user profile of 'inactive user' as found in admin-data.ttl */
-  def inactiveUser: UserProfileV1 = SharedTestDataADM.inactiveUser.asUserProfileV1
+  def inactiveUser: UserProfile = UserProfile.from(SharedTestDataADM.inactiveUser)
 
   /* represents an anonymous user */
-  def anonymousUser: UserProfileV1 = SharedTestDataADM.anonymousUser.asUserProfileV1
+  def anonymousUser: UserProfile = UserProfile.from(SharedTestDataADM.anonymousUser)
 
   /* represents the 'multiuser' as found in admin-data.ttl */
-  def multiuserUser = UserProfileV1(
-    userData = UserDataV1(
+  def multiuserUser = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/multiuser"),
       firstname = Some("Multi"),
       lastname = Some("User"),
@@ -91,8 +89,8 @@ object SharedTestDataV1 {
   val imagesProjectIri = "http://rdfh.ch/projects/00FF"
 
   /* represents 'user01' as found in admin-data.ttl  */
-  def imagesUser01 = UserProfileV1(
-    userData = UserDataV1(
+  def imagesUser01 = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/c266a56709"),
       firstname = Some("User01"),
       lastname = Some("User"),
@@ -122,8 +120,8 @@ object SharedTestDataV1 {
   )
 
   /* represents 'user02' as found in admin-data.ttl  */
-  def imagesUser02 = UserProfileV1(
-    userData = UserDataV1(
+  def imagesUser02 = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/97cec4000f"),
       firstname = Some("User02"),
       lastname = Some("User"),
@@ -149,8 +147,8 @@ object SharedTestDataV1 {
   )
 
   /* represents 'images-reviewer-user' as found in admin-data.ttl  */
-  def imagesReviewerUser = UserProfileV1(
-    userData = UserDataV1(
+  def imagesReviewerUser = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/images-reviewer-user"),
       firstname = Some("User03"),
       lastname = Some("User"),
@@ -180,7 +178,7 @@ object SharedTestDataV1 {
   )
 
   /* represents the full project info of the images project */
-  def imagesProjectInfo = ProjectInfoV1(
+  def imagesProjectInfo = sharedtestdata.ProjectInfo(
     id = imagesProjectIri,
     shortname = "images",
     shortcode = "00FF",
@@ -188,7 +186,6 @@ object SharedTestDataV1 {
     description = Some("A demo project of a collection of images"),
     keywords = Some("collection, images"),
     logo = None,
-    institution = Some("http://rdfh.ch/institutions/dhlab-basel"),
     ontologies = Seq(SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI),
     status = true,
     selfjoin = false
@@ -204,8 +201,8 @@ object SharedTestDataV1 {
   val incunabulaProjectIri = "http://rdfh.ch/projects/0803"
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
-  def incunabulaProjectAdminUser = UserProfileV1(
-    userData = UserDataV1(
+  def incunabulaProjectAdminUser = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/b83acc5f05"),
       firstname = Some("User"),
       lastname = Some("Test"),
@@ -235,8 +232,8 @@ object SharedTestDataV1 {
   )
 
   /* represents 'root_alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
-  def incunabulaCreatorUser = UserProfileV1(
-    userData = UserDataV1(
+  def incunabulaCreatorUser = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/91e19f1e01"),
       firstname = Some("Administrator-alt"),
       lastname = Some("Admin-alt"),
@@ -262,8 +259,8 @@ object SharedTestDataV1 {
   )
 
   /* represents 'root_alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
-  def incunabulaMemberUser = UserProfileV1(
-    userData = UserDataV1(
+  def incunabulaMemberUser = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/incunabulaMemberUser"),
       firstname = Some("User"),
       lastname = Some("Test2"),
@@ -289,7 +286,7 @@ object SharedTestDataV1 {
   )
 
   /* represents the ProjectInfoV1 of the incunabula project */
-  def incunabulaProjectInfo = ProjectInfoV1(
+  def incunabulaProjectInfo = sharedtestdata.ProjectInfo(
     id = incunabulaProjectIri,
     shortname = "incunabula",
     shortcode = "0803",
@@ -301,7 +298,6 @@ object SharedTestDataV1 {
       "Basel, Basler Frühdrucke, Bilderfolgen, Contectualisation of images, Inkunabel, Kunsthistorisches Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Narrenschiff, Sebastian Brant, Wiegendrucke, early print, incunabula, ship of fools"
     ),
     logo = Some("incunabula_logo.png"),
-    institution = None,
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
     status = true,
     selfjoin = false
@@ -316,8 +312,8 @@ object SharedTestDataV1 {
    */
   val anythingProjectIri = "http://rdfh.ch/projects/0001"
 
-  def anythingAdminUser = UserProfileV1(
-    userData = UserDataV1(
+  def anythingAdminUser = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/AnythingAdminUser"),
       firstname = Some("Anything"),
       lastname = Some("Admin"),
@@ -346,8 +342,8 @@ object SharedTestDataV1 {
     )
   )
 
-  def anythingUser1 = UserProfileV1(
-    userData = UserDataV1(
+  def anythingUser1 = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"),
       firstname = Some("Anything"),
       lastname = Some("User01"),
@@ -372,8 +368,8 @@ object SharedTestDataV1 {
     )
   )
 
-  def anythingUser2 = UserProfileV1(
-    userData = UserDataV1(
+  def anythingUser2 = sharedtestdata.UserProfile(
+    userData = UserData(
       user_id = Some("http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"),
       firstname = Some("Anything"),
       lastname = Some("User02"),
@@ -398,7 +394,7 @@ object SharedTestDataV1 {
     )
   )
 
-  def anythingProjectInfo = ProjectInfoV1(
+  def anythingProjectInfo = sharedtestdata.ProjectInfo(
     id = anythingProjectIri,
     shortname = "anything",
     shortcode = "0001",
@@ -406,7 +402,6 @@ object SharedTestDataV1 {
     description = Some("Anything Project"),
     keywords = None,
     logo = None,
-    institution = None,
     ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
     status = true,
     selfjoin = false
@@ -421,7 +416,7 @@ object SharedTestDataV1 {
    */
   val beolProjectIri = "http://rdfh.ch/projects/0801"
 
-  def beolProjectInfo = ProjectInfoV1(
+  def beolProjectInfo = sharedtestdata.ProjectInfo(
     id = beolProjectIri,
     shortname = "beol",
     shortcode = "0801",
@@ -429,14 +424,13 @@ object SharedTestDataV1 {
     description = Some("Bernoulli-Euler Online"),
     keywords = None,
     logo = None,
-    institution = None,
     ontologies = Seq("http://www.knora.org/ontology/0801/beol"),
     status = true,
     selfjoin = false
   )
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
-  def beolUser = UserProfileV1(
-    UserDataV1(
+  def beolUser = sharedtestdata.UserProfile(
+    UserData(
       user_id = Some("http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE"),
       firstname = Some("BEOL"),
       lastname = Some("BEOL"),
@@ -461,7 +455,7 @@ object SharedTestDataV1 {
    */
   val dokubibProjectIri = "http://rdfh.ch/projects/0804"
 
-  def dokubibProjectInfo = ProjectInfoV1(
+  def dokubibProjectInfo = sharedtestdata.ProjectInfo(
     id = dokubibProjectIri,
     shortname = "dokubib",
     shortcode = "0804",
@@ -469,7 +463,6 @@ object SharedTestDataV1 {
     description = Some("Dokubib"),
     keywords = None,
     logo = None,
-    institution = None,
     ontologies = Seq("http://www.knora.org/ontology/0804/dokubib"),
     status = false,
     selfjoin = false
@@ -484,7 +477,7 @@ object SharedTestDataV1 {
    */
   val webernProjectIIri = "http://rdfh.ch/projects/0806"
 
-  def webernProjectInfo = ProjectInfoV1(
+  def webernProjectInfo = sharedtestdata.ProjectInfo(
     id = webernProjectIIri,
     shortname = "webern",
     shortcode = "0806",
@@ -492,7 +485,6 @@ object SharedTestDataV1 {
     description = Some("Historisch-kritische Edition des Gesamtschaffens von Anton Webern."),
     keywords = None,
     logo = None,
-    institution = None,
     ontologies = Seq("http://www.knora.org/ontology/0806/webern"),
     status = false,
     selfjoin = false

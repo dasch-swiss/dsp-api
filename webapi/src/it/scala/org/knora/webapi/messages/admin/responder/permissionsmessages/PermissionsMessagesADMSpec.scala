@@ -13,7 +13,7 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePerm
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.sharedtestdata.SharedTestDataV1._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.sharedtestdata._
 
 import java.util.UUID

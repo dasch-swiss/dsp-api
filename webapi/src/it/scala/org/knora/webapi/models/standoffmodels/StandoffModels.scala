@@ -14,7 +14,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.{
   CreateMappingRequestV2,
   CreateMappingRequestXMLV2
 }
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.anythingProjectIri
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 

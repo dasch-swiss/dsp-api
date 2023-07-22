@@ -19,7 +19,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePay
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
-import org.knora.webapi.sharedtestdata.SharedTestDataV1._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.util.MutableTestIri
 
 import java.util.UUID

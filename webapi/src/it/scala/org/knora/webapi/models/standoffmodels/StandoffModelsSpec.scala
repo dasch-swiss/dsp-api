@@ -7,7 +7,7 @@ package org.knora.webapi.models.standoffmodels
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.{anythingProjectIri, incunabulaProjectIri}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.{anythingProjectIri, incunabulaProjectIri}
 import spray.json._
 
 class StandoffModelsSpec extends CoreSpec {
