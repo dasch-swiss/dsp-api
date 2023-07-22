@@ -30,14 +30,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
   "PermissionUtil" should {
 
     "return user's max permission for a specific resource (incunabula normal project member user)" in {
-      PermissionUtilADM.getUserPermissionV1(
-        entityIri = "http://rdfh.ch/00014b43f902",
-        entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.incunabulaProjectIri,
-        entityPermissionLiteral = permissionLiteral,
-        userProfile = SharedTestDataV1.incunabulaMemberUser
-      ) should equal(Some(6)) // modify permission
-
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataV1.incunabulaProjectIri,
@@ -47,14 +39,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
     }
 
     "return user's max permission for a specific resource (incunabula project admin user)" in {
-      PermissionUtilADM.getUserPermissionV1(
-        entityIri = "http://rdfh.ch/00014b43f902",
-        entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.incunabulaProjectIri,
-        entityPermissionLiteral = permissionLiteral,
-        userProfile = SharedTestDataV1.incunabulaProjectAdminUser
-      ) should equal(Some(8)) // change rights permission
-
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataV1.incunabulaProjectIri,
@@ -64,14 +48,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
     }
 
     "return user's max permission for a specific resource (incunabula creator user)" in {
-      PermissionUtilADM.getUserPermissionV1(
-        entityIri = "http://rdfh.ch/00014b43f902",
-        entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.incunabulaProjectIri,
-        entityPermissionLiteral = permissionLiteral,
-        userProfile = SharedTestDataV1.incunabulaCreatorUser
-      ) should equal(Some(8)) // change rights permission
-
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataV1.incunabulaProjectIri,
@@ -81,14 +57,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
     }
 
     "return user's max permission for a specific resource (root user)" in {
-      PermissionUtilADM.getUserPermissionV1(
-        entityIri = "http://rdfh.ch/00014b43f902",
-        entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.incunabulaProjectIri,
-        entityPermissionLiteral = permissionLiteral,
-        userProfile = SharedTestDataV1.rootUser
-      ) should equal(Some(8)) // change rights permission
-
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataV1.incunabulaProjectIri,
@@ -98,14 +66,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
     }
 
     "return user's max permission for a specific resource (normal user)" in {
-      PermissionUtilADM.getUserPermissionV1(
-        entityIri = "http://rdfh.ch/00014b43f902",
-        entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.incunabulaProjectIri,
-        entityPermissionLiteral = permissionLiteral,
-        userProfile = SharedTestDataV1.normalUser
-      ) should equal(Some(2)) // view permission
-
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataV1.incunabulaProjectIri,
@@ -115,14 +75,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
     }
 
     "return user's max permission for a specific resource (anonymous user)" in {
-      PermissionUtilADM.getUserPermissionV1(
-        entityIri = "http://rdfh.ch/00014b43f902",
-        entityCreator = "http://rdfh.ch/users/91e19f1e01",
-        entityProject = SharedTestDataV1.incunabulaProjectIri,
-        entityPermissionLiteral = permissionLiteral,
-        userProfile = SharedTestDataV1.anonymousUser
-      ) should equal(Some(1)) // restricted view permission
-
       PermissionUtilADM.getUserPermissionADM(
         entityCreator = "http://rdfh.ch/users/91e19f1e01",
         entityProject = SharedTestDataV1.incunabulaProjectIri,
@@ -137,12 +89,6 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
         (OntologyConstants.KnoraBase.AttachedToProject, SharedTestDataV1.incunabulaProjectIri),
         (OntologyConstants.KnoraBase.HasPermissions, permissionLiteral)
       )
-
-      PermissionUtilADM.getUserPermissionFromAssertionsV1(
-        entityIri = "http://rdfh.ch/00014b43f902",
-        assertions = assertions,
-        userProfile = SharedTestDataV1.incunabulaMemberUser
-      ) should equal(Some(6)) // modify permissions
 
       PermissionUtilADM.getUserPermissionFromAssertionsADM(
         entityIri = "http://rdfh.ch/00014b43f902",
@@ -194,7 +140,7 @@ class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
       ) should contain allElementsOf permissionsSet
     }
 
-    "build a 'PermissionV1' object" in {
+    "build a 'PermissionADM' object" in {
       PermissionUtilADM.buildPermissionObject(
         name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
         iris = Set("1", "2", "3")

@@ -28,7 +28,6 @@ import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
@@ -695,51 +694,6 @@ object PermissionUtilADM extends LazyLogging {
   // API v1 methods
 
   /**
-   * Determines the permissions that a user has on a entity, and returns an integer permissions code.
-   *
-   * @param entityIri   the IRI of the entity.
-   * @param assertions  a [[Seq]] containing all the permission-relevant predicates and objects
-   *                    pertaining to the entity. The predicates must include
-   *                    [[OntologyConstants.KnoraBase.AttachedToUser]] and
-   *                    [[OntologyConstants.KnoraBase.AttachedToProject]], and should include
-   *                    [[OntologyConstants.KnoraBase.HasPermissions]].
-   *                    Other predicates may be included, but they will be ignored, so there is no need to filter
-   *                    them before passing them to this function.
-   * @param userProfile the profile of the user making the request.
-   * @return a code representing the user's permission level for the entity.
-   */
-  def getUserPermissionFromAssertionsV1(
-    entityIri: IRI,
-    assertions: Seq[(IRI, String)],
-    userProfile: UserProfileV1
-  ): Option[Int] = {
-    // Get the entity's creator, project, and permissions.
-    val assertionMap: Map[IRI, String] = assertions.toMap
-
-    // Anything with permissions must have an creator and a project.
-    val entityCreator: IRI = assertionMap.getOrElse(
-      OntologyConstants.KnoraBase.AttachedToUser,
-      throw InconsistentRepositoryDataException(s"entity $entityIri has no creator")
-    )
-    val entityProject: IRI = assertionMap.getOrElse(
-      OntologyConstants.KnoraBase.AttachedToProject,
-      throw InconsistentRepositoryDataException(s"entity $entityIri has no project")
-    )
-    val entityPermissionLiteral: String = assertionMap.getOrElse(
-      OntologyConstants.KnoraBase.HasPermissions,
-      throw InconsistentRepositoryDataException(s"entity $entityIri has no knora-base:hasPermissions predicate")
-    )
-
-    getUserPermissionV1(
-      entityIri = entityIri,
-      entityCreator = entityCreator,
-      entityProject = entityProject,
-      entityPermissionLiteral = entityPermissionLiteral,
-      userProfile = userProfile
-    )
-  }
-
-  /**
    * Checks whether an integer permission code implies a particular permission property.
    *
    * @param userHasPermissionCode the integer permission code that the user has, or [[None]] if the user has no permissions
@@ -752,73 +706,6 @@ object PermissionUtilADM extends LazyLogging {
       case Some(permissionCode) => permissionCode >= permissionStringsToPermissionLevels(userNeedsPermission).toInt
       case None                 => false
     }
-
-  /**
-   * Determines the permissions that a user has on a entity, and returns an integer permission code.
-   *
-   * @param entityIri               the IRI of the entity.
-   * @param entityCreator           the IRI of the user that created the entity.
-   * @param entityProject           the IRI of the entity's project.
-   * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
-   * @param userProfile             the profile of the user making the request.
-   * @return a code representing the user's permission level for the entity.
-   */
-  def getUserPermissionV1(
-    entityIri: IRI,
-    entityCreator: IRI,
-    entityProject: IRI,
-    entityPermissionLiteral: String,
-    userProfile: UserProfileV1
-  ): Option[Int] = {
-
-    val maybePermissionLevel =
-      if (
-        userProfile.isSystemUser || userProfile.permissionData.isSystemAdmin || userProfile.permissionData
-          .hasProjectAdminAllPermissionFor(entityProject)
-      ) {
-        // If the user is the system user, is in the SystemAdmin group or has ProjectAdminAllPermission, just give them the maximum permission.
-        Some(MaxPermissionLevel)
-      } else {
-        val entityPermissions: Map[EntityPermission, Set[IRI]] = parsePermissions(entityPermissionLiteral)
-
-        // Make a list of all the groups (both built-in and custom) that the user belongs to in relation
-        // to the entity.
-        val userGroups: Set[IRI] = userProfile.userData.user_id match {
-          case Some(userIri) =>
-            // The user is a known user.
-            // If the user is the creator of the entity, put the user in the "creator" built-in group.
-            val creatorOption = if (userIri == entityCreator) {
-              Some(OntologyConstants.KnoraAdmin.Creator)
-            } else {
-              None
-            }
-
-            val otherGroups = userProfile.permissionData.groupsPerProject.get(entityProject) match {
-              case Some(groups) => groups
-              case None         => Set.empty[IRI]
-            }
-
-            // Make the complete list of the user's groups: KnownUser, the user's built-in (e.g., ProjectAdmin,
-            // ProjectMember) and non-built-in groups, possibly creator, and possibly SystemAdmin.
-            Set(OntologyConstants.KnoraAdmin.KnownUser) ++ otherGroups ++ creatorOption
-
-          case None =>
-            // The user is an unknown user; put them in the UnknownUser built-in group.
-            Set(OntologyConstants.KnoraAdmin.UnknownUser)
-        }
-
-        // Find the highest permission that can be granted to the user.
-        calculateHighestGrantedPermissionLevel(entityPermissions, userGroups) match {
-          case Some(highestPermissionCode) => Some(highestPermissionCode)
-          case None                        =>
-            // If the result is that they would get no permissions, give them user whatever permission an
-            // unknown user would have.
-            calculateHighestGrantedPermissionLevel(entityPermissions, Set(OntologyConstants.KnoraAdmin.UnknownUser))
-        }
-      }
-
-    maybePermissionLevel.map(_.toInt)
-  }
 }
 
 trait PermissionUtilADM {
