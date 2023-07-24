@@ -23,7 +23,6 @@ case class UserProfile(
   userData: UserData = UserData(lang = "en"),
   groups: Seq[IRI] = Seq.empty[IRI],
   projects_info: Map[IRI, ProjectInfo] = Map.empty[IRI, ProjectInfo],
-  sessionId: Option[String] = None,
   isSystemUser: Boolean = false,
   permissionData: PermissionsDataADM = PermissionsDataADM()
 )
@@ -49,8 +48,7 @@ object UserProfile {
         permissionData = PermissionsDataADM(
           groupsPerProject = userADM.permissions.groupsPerProject,
           administrativePermissionsPerProject = userADM.permissions.administrativePermissionsPerProject
-        ),
-        sessionId = userADM.sessionId
+        )
       )
     }
 

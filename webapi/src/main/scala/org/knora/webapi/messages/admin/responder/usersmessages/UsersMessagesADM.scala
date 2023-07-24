@@ -452,7 +452,7 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
  * @param permissions The user's permissions.
  */
 final case class UserADM(
-  id: IRI,
+  id: String,
   username: String,
   email: String,
   givenName: String,
@@ -463,7 +463,6 @@ final case class UserADM(
   token: Option[String] = None,
   groups: Seq[GroupADM] = Vector.empty[GroupADM],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
-  sessionId: Option[String] = None,
   permissions: PermissionsDataADM = PermissionsDataADM()
 ) extends Ordered[UserADM] { self =>
 
@@ -510,13 +509,12 @@ final case class UserADM(
         self.copy(
           username = "",
           email = "",
-          password = None,
-          token = None,
           status = false,
           lang = "",
+          password = None,
+          token = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
-          sessionId = None,
           permissions = PermissionsDataADM()
         )
       case UserInformationTypeADM.Short =>
@@ -525,15 +523,10 @@ final case class UserADM(
           token = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
-          sessionId = None,
           permissions = PermissionsDataADM()
         )
       case UserInformationTypeADM.Restricted =>
-        self.copy(
-          password = None,
-          token = None,
-          sessionId = None
-        )
+        self.copy(password = None, token = None)
       case UserInformationTypeADM.Full =>
         self
       case _ => throw BadRequestException(s"The requested userTemplateType: $userTemplateType is invalid.")
@@ -885,7 +878,7 @@ object UsersADMJsonProtocol
     with GroupsADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
-  implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
+  implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat12(UserADM)
   implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
     CreateUserApiRequestADM,
     "id",

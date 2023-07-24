@@ -53,7 +53,6 @@ object SharedTestDataADM2 {
     ),
     groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo, imagesProjectIri -> imagesProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         incunabulaProjectIri -> List(
@@ -102,7 +101,6 @@ object SharedTestDataADM2 {
     ),
     groups = List.empty[IRI],
     projects_info = Map(imagesProjectIri -> imagesProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         imagesProjectIri -> List(
@@ -133,7 +131,6 @@ object SharedTestDataADM2 {
     ),
     groups = List.empty[IRI],
     projects_info = Map(imagesProjectIri -> imagesProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -160,7 +157,6 @@ object SharedTestDataADM2 {
     ),
     groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
     projects_info = Map(imagesProjectIri -> imagesProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         imagesProjectIri -> List(
@@ -214,7 +210,6 @@ object SharedTestDataADM2 {
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         incunabulaProjectIri -> List(
@@ -245,7 +240,6 @@ object SharedTestDataADM2 {
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         incunabulaProjectIri -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
@@ -272,7 +266,6 @@ object SharedTestDataADM2 {
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(incunabulaProjectIri -> incunabulaProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         incunabulaProjectIri -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
@@ -325,7 +318,6 @@ object SharedTestDataADM2 {
     ),
     groups = Seq.empty[IRI],
     projects_info = Map(anythingProjectIri -> anythingProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         anythingProjectIri -> List(
@@ -355,7 +347,6 @@ object SharedTestDataADM2 {
     ),
     groups = Seq.empty[IRI],
     projects_info = Map(anythingProjectIri -> anythingProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -381,7 +372,6 @@ object SharedTestDataADM2 {
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(anythingProjectIri -> anythingProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -442,7 +432,6 @@ object SharedTestDataADM2 {
     ),
     groups = Vector.empty[IRI],
     projects_info = Map(beolProjectIri -> beolProjectInfo),
-    sessionId = None,
     permissionData = PermissionsDataADM()
   )
 
