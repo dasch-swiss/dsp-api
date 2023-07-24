@@ -11,7 +11,6 @@ import akka.routing.RoundRobinPool
 import zio._
 import zio.macros.accessible
 
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
@@ -33,7 +32,6 @@ trait AppRouter {
 object AppRouter {
   val layer: ZLayer[
     core.ActorSystem
-      with AppConfig
       with CardinalityHandler
       with CardinalityService
       with ConstructResponseUtilV2
@@ -50,7 +48,6 @@ object AppRouter {
     ZLayer {
       for {
         as           <- ZIO.service[core.ActorSystem]
-        appConfig    <- ZIO.service[AppConfig]
         messageRelay <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
@@ -69,11 +66,7 @@ object AppRouter {
 
         val ref: ActorRef = system.actorOf(
           Props(
-            core.actors.RoutingActor(
-              appConfig,
-              messageRelay,
-              runtime
-            )
+            core.actors.RoutingActor(messageRelay, runtime)
           ).withRouter(new RoundRobinPool(1_000)),
           name = APPLICATION_MANAGER_ACTOR_NAME
         )

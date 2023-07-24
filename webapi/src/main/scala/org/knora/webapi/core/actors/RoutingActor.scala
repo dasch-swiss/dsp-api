@@ -9,7 +9,6 @@ import akka.actor.Actor
 import zio._
 
 import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
@@ -24,7 +23,6 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.util.ActorUtil
 
 final case class RoutingActor(
-  appConfig: AppConfig,
   messageRelay: MessageRelay,
   implicit val runtime: Runtime[
     CardinalityHandler
