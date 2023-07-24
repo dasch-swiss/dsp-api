@@ -12,7 +12,7 @@ import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRes
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -24,9 +24,9 @@ import scala.concurrent.duration._
  */
 class FilesADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
-  private val anythingAdminEmail    = SharedTestDataV1.anythingAdminUser.userData.email.get
+  private val anythingAdminEmail    = SharedTestDataADM2.anythingAdminUser.userData.email.get
   private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")
-  private val normalUserEmail       = SharedTestDataV1.normalUser.userData.email.get
+  private val normalUserEmail       = SharedTestDataADM2.normalUser.userData.email.get
   private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
   private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
 

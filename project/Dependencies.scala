@@ -177,38 +177,4 @@ object Dependencies {
     zioMetricsPrometheusConnector,
     zioPrelude
   )
-
-  // schema project dependencies
-  val schemaApiLibraryDependencies = Seq(
-    zioHttpOld
-  )
-
-  val schemaCoreLibraryDependencies = Seq(
-    zioPrelude,
-    zioTest    % Test,
-    zioTestSbt % Test
-  )
-
-  val schemaRepoLibraryDependencies                  = Seq()
-  val schemaRepoEventStoreServiceLibraryDependencies = Seq()
-  val schemaRepoSearchServiceLibraryDependencies     = Seq()
-
-  // shared project dependencies
-  val sharedLibraryDependencies = Seq(
-    bouncyCastle,
-    commonsLang3,
-    commonsValidator,
-    gwtServlet,
-    scalaLogging,
-    springSecurityCore,
-    zioPrelude,
-    zioConfig,
-    zioConfigMagnolia,
-    zioConfigTypesafe,
-    zioTest    % Test,
-    zioTestSbt % Test,
-    zioLogging,
-    zioLoggingSlf4jBridge,
-    zioJson
-  )
 }

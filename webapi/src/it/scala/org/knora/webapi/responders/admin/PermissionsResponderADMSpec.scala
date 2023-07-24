@@ -17,7 +17,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataADM2}
 
 import java.util.UUID
 import scala.collection.Map
@@ -54,90 +54,90 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return the permissions profile (root user)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.rootUser.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.rootUser.groups,
+          projectIris = SharedTestDataADM2.rootUser.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.rootUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = true,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.rootUser.permissionData)
+        expectMsg(SharedTestDataADM2.rootUser.permissionData)
       }
 
       "return the permissions profile (multi group user)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.multiuserUser.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.multiuserUser.groups,
+          projectIris = SharedTestDataADM2.multiuserUser.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.multiuserUser.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.incunabulaProjectIri, SharedTestDataADM.imagesProjectIri),
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.multiuserUser.permissionData)
+        expectMsg(SharedTestDataADM2.multiuserUser.permissionData)
       }
 
       "return the permissions profile (incunabula project admin user)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.incunabulaProjectAdminUser.groups,
+          projectIris = SharedTestDataADM2.incunabulaProjectAdminUser.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.incunabulaProjectAdminUser.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.incunabulaProjectIri),
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.incunabulaProjectAdminUser.permissionData)
+        expectMsg(SharedTestDataADM2.incunabulaProjectAdminUser.permissionData)
       }
 
       "return the permissions profile (incunabula creator user)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.incunabulaCreatorUser.groups,
+          projectIris = SharedTestDataADM2.incunabulaProjectAdminUser.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.incunabulaCreatorUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.incunabulaCreatorUser.permissionData)
+        expectMsg(SharedTestDataADM2.incunabulaCreatorUser.permissionData)
       }
 
       "return the permissions profile (incunabula normal project member user)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.incunabulaMemberUser.groups,
+          projectIris = SharedTestDataADM2.incunabulaProjectAdminUser.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.incunabulaMemberUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.incunabulaMemberUser.permissionData)
+        expectMsg(SharedTestDataADM2.incunabulaMemberUser.permissionData)
       }
 
       "return the permissions profile (images user 01)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.imagesUser01.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.imagesUser01.groups,
+          projectIris = SharedTestDataADM2.imagesUser01.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.imagesUser01.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.imagesProjectIri),
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.imagesUser01.permissionData)
+        expectMsg(SharedTestDataADM2.imagesUser01.permissionData)
       }
 
       "return the permissions profile (images-reviewer-user)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.imagesReviewerUser.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.imagesReviewerUser.groups,
+          projectIris = SharedTestDataADM2.imagesReviewerUser.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.imagesReviewerUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.imagesReviewerUser.permissionData)
+        expectMsg(SharedTestDataADM2.imagesReviewerUser.permissionData)
       }
 
       "return the permissions profile (anything user 01)" in {
         appActor ! PermissionDataGetADM(
-          projectIris = SharedTestDataV1.anythingUser1.projects_info.keys.toSeq,
-          groupIris = SharedTestDataV1.anythingUser1.groups,
+          projectIris = SharedTestDataADM2.anythingUser1.projects_info.keys.toSeq,
+          groupIris = SharedTestDataADM2.anythingUser1.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(SharedTestDataV1.anythingUser1.permissionData)
+        expectMsg(SharedTestDataADM2.anythingUser1.permissionData)
       }
     }
     "ask for userAdministrativePermissionsGetADM" should {
@@ -506,7 +506,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "fail and return a 'DuplicateValueException' when a doap permission for project and group combination already exists" in {
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataV1.incunabulaProjectIri,
+            forProject = SharedTestDataADM2.incunabulaProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
@@ -516,7 +516,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataV1.incunabulaProjectIri}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
+              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
                     .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
@@ -529,7 +529,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "fail and return a 'DuplicateValueException' when a doap permission for project and resourceClass combination already exists" in {
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataV1.incunabulaProjectIri,
+            forProject = SharedTestDataADM2.incunabulaProjectIri,
             forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
             hasPermissions = Set(
               PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
@@ -542,7 +542,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataV1.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
+              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
                     .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
@@ -555,7 +555,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "fail and return a 'DuplicateValueException' when a doap permission for project and property combination already exists" in {
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataV1.incunabulaProjectIri,
+            forProject = SharedTestDataADM2.incunabulaProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
             hasPermissions = Set(
               PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)
@@ -567,7 +567,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataV1.incunabulaProjectIri}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
+              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
                     .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
@@ -580,7 +580,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "fail and return a 'DuplicateValueException' when a doap permission for project, resource class, and property combination already exists" in {
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataV1.incunabulaProjectIri,
+            forProject = SharedTestDataADM2.incunabulaProjectIri,
             forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
             forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
             hasPermissions = Set(
@@ -594,7 +594,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataV1.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
+              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
                 s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM

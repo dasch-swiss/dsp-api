@@ -41,15 +41,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/root",
       username = "root",
       email = "root@example.com",
-      password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "System",
       familyName = "Administrator",
       status = true,
       lang = "de",
+      password = Option("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
@@ -64,15 +63,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/superuser",
       username = "superuser",
       email = "super.user@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Super",
       familyName = "User",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           systemProjectIri -> List(OntologyConstants.KnoraAdmin.SystemAdmin)
@@ -86,15 +84,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/normaluser",
       username = "normaluser",
       email = "normal.user@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Normal",
       familyName = "User",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      sessionId = None,
       permissions = PermissionsDataADM()
     )
 
@@ -104,15 +101,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/inactiveuser",
       username = "inactiveuser",
       email = "inactive.user@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Inactive",
       familyName = "User",
       status = false,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      sessionId = None,
       permissions = PermissionsDataADM()
     )
 
@@ -125,15 +121,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/multiuser",
       username = "multiuser",
       email = "multi.user@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Multi",
       familyName = "User",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq(imagesReviewerGroup),
       projects = Seq(incunabulaProject, imagesProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           incunabulaProjectIri -> List(
@@ -207,15 +202,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/c266a56709",
       username = "user01.user1",
       email = "user01.user1@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "User01",
       familyName = "User",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(imagesProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           imagesProjectIri -> List(
@@ -238,15 +232,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/97cec4000f",
       username = "user02.user",
       email = "user02.user@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "User02",
       familyName = "User",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(imagesProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           imagesProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -265,15 +258,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/images-reviewer-user",
       username = "images-reviewer-user",
       email = "images-reviewer-user@example.com",
-      password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
-      token = None,
       givenName = "User03",
       familyName = "User",
       status = true,
       lang = "de",
+      password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
+      token = None,
       groups = Seq(imagesReviewerGroup),
       projects = Seq(imagesProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           imagesProjectIri -> List(
@@ -377,15 +369,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/b83acc5f05",
       username = "user.test",
       email = "user.test@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "User",
       familyName = "Test",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(incunabulaProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           incunabulaProjectIri -> List(
@@ -408,15 +399,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/91e19f1e01",
       username = "root_alt",
       email = "root-alt@example.com",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Administrator-alt",
       familyName = "Admin-alt",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(incunabulaProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -435,15 +425,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/incunabulaMemberUser",
       username = "incunabulaMemberUser",
       email = "test.user2@test.ch",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "User",
       familyName = "Test2",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(incunabulaProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           incunabulaProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -551,15 +540,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/AnythingAdminUser",
       username = "AnythingAdminUser",
       email = "anything.admin@example.org",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Anything",
       familyName = "Admin",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(anythingProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           anythingProjectIri -> List(
@@ -581,15 +569,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
       username = "anything.user01",
       email = "anything.user01@example.org",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Anything",
       familyName = "User01",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(anythingProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           anythingProjectIri -> List(
@@ -610,15 +597,14 @@ object SharedTestDataADM {
       id = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
       username = "anything.user02",
       email = "anything.user02@example.org",
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-      token = None,
       givenName = "Anything",
       familyName = "User02",
       status = true,
       lang = "de",
+      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq(anythingProject),
-      sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           anythingProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -702,15 +688,14 @@ object SharedTestDataADM {
     id = "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
     username = "beol",
     email = "beol@example.com",
-    password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
-    token = None,
     givenName = "BEOL",
     familyName = "BEOL",
     status = true,
     lang = "en",
+    password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
+    token = None,
     groups = Seq.empty[GroupADM],
     projects = Seq(beolProject),
-    sessionId = None,
     permissions = PermissionsDataADM(
       groupsPerProject = Map(
         beolProjectIri -> List(OntologyConstants.KnoraAdmin.ProjectMember, OntologyConstants.KnoraAdmin.ProjectAdmin)

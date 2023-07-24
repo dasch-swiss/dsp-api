@@ -6,7 +6,6 @@
 @import org.knora.webapi._
 @import dsp.errors.SparqlGenerationException
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**
  * Generates statements to be added to the WHERE clause of a SPARQL update when creating a new link between resources.

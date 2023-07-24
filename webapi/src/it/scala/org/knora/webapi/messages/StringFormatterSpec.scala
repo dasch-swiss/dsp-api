@@ -9,7 +9,7 @@ import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
 import java.time.Instant
 
@@ -717,16 +717,6 @@ class StringFormatterSpec extends CoreSpec {
       )
     }
 
-    "validate import namespace with project shortcode" in {
-      val defaultNamespace = "http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
-      stringFormatter
-        .xmlImportNamespaceToInternalOntologyIriV1(defaultNamespace)
-        .getOrElse(
-          throw AssertionException("Invalid XML import namespace")
-        )
-        .toString should be("http://www.knora.org/ontology/0801/biblio")
-    }
-
     "validate internal ontology path" in {
       val urlPath = "/ontology/knora-api/simple/v2"
       stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath) should be(true)
@@ -928,14 +918,6 @@ class StringFormatterSpec extends CoreSpec {
       val retrieveDurationPerIri = retrieveDuration / totalIris.toDouble
 
       println(f"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri%1.5f ms")
-    }
-
-    "return the data named graph of a project with short code" in {
-      val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode
-      val shortname = SharedTestDataV1.imagesProjectInfo.shortname
-      val expected  = s"http://www.knora.org/data/$shortcode/$shortname"
-      val result    = stringFormatter.projectDataNamedGraphV1(SharedTestDataV1.imagesProjectInfo)
-      result should be(expected)
     }
 
     "generate an ARK URL for a resource IRI without a timestamp" in {

@@ -9,7 +9,6 @@
 @import dsp.errors.SparqlGenerationException
 @import dsp.valueobjects.UuidUtil
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**
  * Generates statements to be added to the INSERT clause of a SPARQL update when creating a new link between resources.

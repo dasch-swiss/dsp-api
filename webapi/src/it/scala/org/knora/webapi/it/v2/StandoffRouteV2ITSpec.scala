@@ -21,7 +21,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.{Authenticati
 import org.knora.webapi.models.filemodels.{FileType, UploadFileRequest}
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.anythingProjectIri
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
 import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff

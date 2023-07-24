@@ -26,11 +26,10 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.util.DateUtilV1
-import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
-import org.knora.webapi.messages.v1.responder.valuemessages.UpdateValueV1
+import org.knora.webapi.messages.util
+import org.knora.webapi.messages.util.DateUtil
+import org.knora.webapi.messages.util.KnoraCalendarPrecision
+import org.knora.webapi.messages.util.KnoraCalendarType
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -1092,7 +1091,7 @@ object StandoffTagUtilV2 {
           val dateString: String =
             getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffDateTag, standoffNodeFromXML)
 
-          val dateValue = DateUtilV1.createJDNValueV1FromDateString(dateString)
+          val dateValue = DateUtil.createJDNValueV1FromDateString(dateString)
 
           val dateCalendar = StandoffTagStringAttributeV2(
             standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasCalendar.toSmartIri,
@@ -1529,14 +1528,14 @@ object StandoffTagUtilV2 {
             )
             .dataTypeXMLAttribute
 
-          val calendar = KnoraCalendarV1.lookup(
+          val calendar = KnoraCalendarType.lookup(
             standoffTagV2.attributes
               .find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasCalendar)
               .get
               .stringValue
           )
 
-          val julianDayCountValueV1: UpdateValueV1 = JulianDayNumberValueV1(
+          val julianDayCountValueV1 = util.JulianDayNumberValue(
             dateval1 = standoffTagV2.attributes
               .find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasStartJDN)
               .get
@@ -1547,13 +1546,13 @@ object StandoffTagUtilV2 {
               .get
               .stringValue
               .toInt,
-            dateprecision1 = KnoraPrecisionV1.lookup(
+            dateprecision1 = KnoraCalendarPrecision.lookup(
               standoffTagV2.attributes
                 .find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasStartPrecision)
                 .get
                 .stringValue
             ),
-            dateprecision2 = KnoraPrecisionV1.lookup(
+            dateprecision2 = KnoraCalendarPrecision.lookup(
               standoffTagV2.attributes
                 .find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasEndPrecision)
                 .get

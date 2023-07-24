@@ -30,8 +30,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.messages.v1.responder.usermessages._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -226,7 +224,7 @@ case class UserChangePasswordRequestADM(
  * Request updating the users status ('knora-base:isActiveUser' property)
  *
  * @param userIri              the IRI of the user to be updated.
- * @param status               the [[Status]] containing the new status (true / false).
+ * @param status               the [[UserStatus]] containing the new status (true / false).
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
@@ -454,7 +452,7 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
  * @param permissions The user's permissions.
  */
 final case class UserADM(
-  id: IRI,
+  id: String,
   username: String,
   email: String,
   givenName: String,
@@ -465,7 +463,6 @@ final case class UserADM(
   token: Option[String] = None,
   groups: Seq[GroupADM] = Vector.empty[GroupADM],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
-  sessionId: Option[String] = None,
   permissions: PermissionsDataADM = PermissionsDataADM()
 ) extends Ordered[UserADM] { self =>
 
@@ -512,13 +509,12 @@ final case class UserADM(
         self.copy(
           username = "",
           email = "",
-          password = None,
-          token = None,
           status = false,
           lang = "",
+          password = None,
+          token = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
-          sessionId = None,
           permissions = PermissionsDataADM()
         )
       case UserInformationTypeADM.Short =>
@@ -527,15 +523,10 @@ final case class UserADM(
           token = None,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
-          sessionId = None,
           permissions = PermissionsDataADM()
         )
       case UserInformationTypeADM.Restricted =>
-        self.copy(
-          password = None,
-          token = None,
-          sessionId = None
-        )
+        self.copy(password = None, token = None)
       case UserInformationTypeADM.Full =>
         self
       case _ => throw BadRequestException(s"The requested userTemplateType: $userTemplateType is invalid.")
@@ -563,80 +554,10 @@ final case class UserADM(
 
   def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
 
-  def fullname: String = givenName + " " + familyName
-
-  def getDigest: String = {
-    val md    = java.security.MessageDigest.getInstance("SHA-1")
-    val time  = System.currentTimeMillis().toString
-    val value = (time + this.toString).getBytes("UTF-8")
-    md.digest(value).map("%02x".format(_)).mkString
-  }
-
-  def setSessionId(sessionId: String): UserADM =
-    UserADM(
-      id = id,
-      username = username,
-      email = email,
-      password = password,
-      token = token,
-      givenName = givenName,
-      familyName = familyName,
-      status = status,
-      lang = lang,
-      groups = groups,
-      projects = projects,
-      sessionId = Some(sessionId),
-      permissions = permissions
-    )
-
   def isActive: Boolean =
     status
 
   def toJsValue: JsValue = UsersADMJsonProtocol.userADMFormat.write(this)
-
-  // ToDo: Refactor by using implicit conversions (when I manage to understand them)
-  // and probably value classes: https://docs.scala-lang.org/overviews/core/value-classes.html
-  def asUserProfileV1: UserProfileV1 =
-    if (this.isAnonymousUser) {
-      UserProfileV1()
-    } else {
-
-      val v1Groups: Seq[IRI] = groups.map(_.id)
-
-      val projectsWithoutBuiltinProjects = projects
-        .filter(_.id != OntologyConstants.KnoraAdmin.SystemProject)
-        .filter(_.id != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject)
-      val projectInfosV1 = projectsWithoutBuiltinProjects.map(_.asProjectInfoV1)
-      val projects_info_v1: Map[IRI, ProjectInfoV1] =
-        projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfoV1]
-
-      UserProfileV1(
-        userData = this.asUserDataV1,
-        groups = v1Groups,
-        projects_info = projects_info_v1,
-        permissionData = PermissionsDataADM(
-          groupsPerProject = permissions.groupsPerProject,
-          administrativePermissionsPerProject = permissions.administrativePermissionsPerProject
-        ),
-        sessionId = sessionId
-      )
-    }
-
-  def asUserDataV1: UserDataV1 =
-    UserDataV1(
-      user_id = if (this.isAnonymousUser) {
-        None
-      } else {
-        Some(id)
-      },
-      email = Some(email),
-      password = password,
-      token = token,
-      firstname = Some(givenName),
-      lastname = Some(familyName),
-      status = Some(status),
-      lang = lang
-    )
 
   def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 }
@@ -847,13 +768,13 @@ case class UserChangeRequestADM(
   // change project memberships (could also involve changing projectAdmin memberships)
   if (
     projects.isDefined && projectsAdmin.isDefined && parametersCount > 2 ||
-    projects.isDefined && !projectsAdmin.isDefined && parametersCount > 1
+    projects.isDefined && projectsAdmin.isEmpty && parametersCount > 1
   ) {
     throw BadRequestException("Too many parameters sent for project membership change.")
   }
 
   // change projectAdmin memberships only (without changing project memberships)
-  if (projectsAdmin.isDefined && !projects.isDefined && parametersCount > 1) {
+  if (projectsAdmin.isDefined && projects.isEmpty && parametersCount > 1) {
     throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
   }
 
@@ -884,7 +805,7 @@ case class UserUpdateBasicInformationPayloadADM(
   familyName: Option[FamilyName] = None,
   lang: Option[LanguageCode] = None
 ) {
-  def isAtLeastOneParamSet = Seq(username, email, givenName, familyName, lang).flatten.nonEmpty
+  def isAtLeastOneParamSet: Boolean = Seq(username, email, givenName, familyName, lang).flatten.nonEmpty
 }
 
 object UserUpdateBasicInformationPayloadADM {
@@ -957,7 +878,7 @@ object UsersADMJsonProtocol
     with GroupsADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
-  implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
+  implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat12(UserADM)
   implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
     CreateUserApiRequestADM,
     "id",

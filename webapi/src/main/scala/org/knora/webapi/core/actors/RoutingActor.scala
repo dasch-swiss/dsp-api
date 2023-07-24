@@ -9,12 +9,10 @@ import akka.actor.Actor
 import zio._
 
 import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
@@ -25,7 +23,6 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.util.ActorUtil
 
 final case class RoutingActor(
-  appConfig: AppConfig,
   messageRelay: MessageRelay,
   implicit val runtime: Runtime[
     CardinalityHandler
@@ -37,7 +34,6 @@ final case class RoutingActor(
       with PermissionUtilADM
       with ResourceUtilV2
       with StandoffTagUtilV2
-      with ValueUtilV1
   ]
 ) extends Actor {
   def receive: Receive = {

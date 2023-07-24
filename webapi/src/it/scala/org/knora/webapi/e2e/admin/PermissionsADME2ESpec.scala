@@ -11,7 +11,7 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataADM2}
 import org.knora.webapi.util.AkkaHttpUtils
 import spray.json._
 import zio.durationInt
@@ -32,7 +32,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
     "getting permissions" should {
       "return a group's administrative permission" in {
 
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
         val groupIri   = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
@@ -61,7 +61,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "return a project's administrative permissions" in {
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
@@ -86,7 +86,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "return a project's default object access permissions" in {
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
@@ -111,7 +111,7 @@ class PermissionsADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
       }
 
       "return a project's all permissions" in {
-        val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+        val projectIri = java.net.URLEncoder.encode(SharedTestDataADM2.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)

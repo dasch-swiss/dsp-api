@@ -11,17 +11,17 @@ nav:
       - The Knora Base Ontology: 02-dsp-ontologies/knora-base.md
       - The SALSAH GUI Ontology: 02-dsp-ontologies/salsah-gui.md
   - DSP-API Endpoints:
-      - DSP-API V1:
-          - Introduction: 03-endpoints/api-v1/introduction.md
-          - Authentication: 03-endpoints/api-v1/authentication.md
-          - Reading and Searching Resources: 03-endpoints/api-v1/reading-and-searching-resources.md
-          - XML to Standoff Mapping: 03-endpoints/api-v1/xml-to-standoff-mapping.md
-          - Adding Resources: 03-endpoints/api-v1/adding-resources.md
-          - Reading and Searching Resources: 03-endpoints/api-v1/reading-and-searching-resources.md
-          - Reading Values: 03-endpoints/api-v1/reading-values.md
-          - Adding Values: 03-endpoints/api-v1/adding-values.md
-          - Changing Values: 03-endpoints/api-v1/changing-values.md
-          - Deleting Resources and Values: 03-endpoints/api-v1/delete-resources-and-values.md
+#      - DSP-API V1:
+#          - Introduction: 03-endpoints/api-v1/introduction.md
+#          - Authentication: 03-endpoints/api-v1/authentication.md
+#          - Reading and Searching Resources: 03-endpoints/api-v1/reading-and-searching-resources.md
+#          - XML to Standoff Mapping: 03-endpoints/api-v1/xml-to-standoff-mapping.md
+#          - Adding Resources: 03-endpoints/api-v1/adding-resources.md
+#          - Reading and Searching Resources: 03-endpoints/api-v1/reading-and-searching-resources.md
+#          - Reading Values: 03-endpoints/api-v1/reading-values.md
+#          - Adding Values: 03-endpoints/api-v1/adding-values.md
+#          - Changing Values: 03-endpoints/api-v1/changing-values.md
+#          - Deleting Resources and Values: 03-endpoints/api-v1/delete-resources-and-values.md
       - DSP-API V2:
           - Introduction: 03-endpoints/api-v2/introduction.md
           - Authentication: 03-endpoints/api-v2/authentication.md

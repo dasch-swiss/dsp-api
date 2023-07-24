@@ -29,7 +29,6 @@ class UsersMessagesADMSpec extends CoreSpec {
   private val lang        = SharedTestDataADM.rootUser.lang
   private val groups      = SharedTestDataADM.rootUser.groups
   private val projects    = SharedTestDataADM.rootUser.projects
-  private val sessionId   = SharedTestDataADM.rootUser.sessionId
   private val permissions = SharedTestDataADM.rootUser.permissions
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -40,30 +39,28 @@ class UsersMessagesADMSpec extends CoreSpec {
         id = id,
         username = username,
         email = email,
-        password = password,
-        token = token,
         givenName = givenName,
         familyName = familyName,
         status = status,
         lang = lang,
+        password = password,
+        token = token,
         groups = groups,
         projects = projects,
-        sessionId = sessionId,
         permissions = permissions
       )
       val rootUserRestricted = UserADM(
         id = id,
         username = username,
         email = email,
-        password = None,
-        token = None,
         givenName = givenName,
         familyName = familyName,
         status = status,
         lang = lang,
+        password = None,
+        token = None,
         groups = groups,
         projects = projects,
-        sessionId = sessionId,
         permissions = permissions.ofType(PermissionProfileType.Restricted)
       )
 
@@ -91,15 +88,14 @@ class UsersMessagesADMSpec extends CoreSpec {
         id = "something",
         username = "something",
         email = "something",
-        password = Some(hp),
-        token = None,
         givenName = "something",
         familyName = "something",
         status = status,
         lang = lang,
+        password = Some(hp),
+        token = None,
         groups = groups,
         projects = projects,
-        sessionId = sessionId,
         permissions = PermissionsDataADM()
       )
 
@@ -117,15 +113,14 @@ class UsersMessagesADMSpec extends CoreSpec {
         id = "something",
         username = "something",
         email = "something",
-        password = Some(hp),
-        token = None,
         givenName = "something",
         familyName = "something",
         status = status,
         lang = lang,
+        password = Some(hp),
+        token = None,
         groups = groups,
         projects = projects,
-        sessionId = sessionId,
         permissions = PermissionsDataADM()
       )
 

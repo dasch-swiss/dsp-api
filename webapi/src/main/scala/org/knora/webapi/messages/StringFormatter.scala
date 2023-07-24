@@ -16,7 +16,6 @@ import zio.prelude.Validation
 
 import java.time._
 import java.time.temporal.ChronoField
-import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import scala.concurrent.ExecutionContext
@@ -32,13 +31,11 @@ import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
@@ -132,16 +129,6 @@ object StringFormatter {
   private val ArkVersion: String = "1"
 
   /**
-   * The length of the canonical representation of a UUID.
-   */
-  private val CanonicalUuidLength = 36
-
-  /**
-   * The length of a Base64-encoded UUID.
-   */
-  private val Base64UuidLength = 22
-
-  /**
    * The maximum number of times that `makeUnusedIri` will try to make a new, unused IRI.
    */
   val MAX_IRI_ATTEMPTS: Int = 5
@@ -150,14 +137,6 @@ object StringFormatter {
    * The domain name used to construct Knora IRIs.
    */
   private val IriDomain: String = "rdfh.ch"
-
-  /**
-   * A container for an XML import namespace and its prefix label.
-   *
-   * @param namespace   the namespace.
-   * @param prefixLabel the prefix label.
-   */
-  case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
 
   /*
 
@@ -483,8 +462,6 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
    */
   private def isOntologySchema(schema: OntologySchema): Boolean = getOntologySchema.contains(schema)
   def isApiV2ComplexSchema: Boolean                             = isOntologySchema(ApiV2Complex)
-  def isApiV2SimpleSchema: Boolean                              = isOntologySchema(ApiV2Simple)
-  def isInternalSchema: Boolean                                 = isOntologySchema(InternalSchema)
 
   /**
    * Converts this IRI to another ontology schema.
@@ -589,8 +566,6 @@ class StringFormatter private (
   initForTest: Boolean = false
 ) {
 
-  private val base64Decoder = Base64.getUrlDecoder
-
   // The host and port number that this Knora server is running on, and that should be used
   // when constructing IRIs for project-specific ontologies.
   private val knoraApiHostAndPort: Option[String] = if (initForTest) {
@@ -648,10 +623,6 @@ class StringFormatter private (
   // Reserved words used in Knora API v2 IRI version segments.
   private val versionSegmentWords = Set("simple", "v2")
 
-  // Reserved words that cannot be used in project-specific ontology names.
-  private val reservedIriWords =
-    Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
-
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
   private val ProjectIDPattern: String =
     """\p{XDigit}{4,4}"""
@@ -672,21 +643,6 @@ class StringFormatter private (
     case None              => None
   }
 
-  // A regex for a project-specific XML import namespace.
-  private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-    "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
-      "(shared/)?((" + ProjectIDPattern + ")/)?(" + nCNamePattern + ")" +
-      OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
-  ).r
-
-  // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
-  // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
-  private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-    "^(p(" + ProjectIDPattern + ")-)?(" + nCNamePattern + ")__(" + nCNamePattern + ")$"
-  ).r
-
-  private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
-
   // A regex for matching a string containing an email address.
   private val EmailAddressRegex: Regex =
     """^.+@.+$""".r
@@ -695,8 +651,6 @@ class StringFormatter private (
   // using the "URL and Filename safe" Base 64 alphabet, without padding, as specified in Table 2 of
   // RFC 4648.
   private val Base64UrlPattern = "[A-Za-z0-9_-]+"
-
-  private val Base64UrlPatternRegex: Regex = ("^" + Base64UrlPattern + "$").r
 
   // Calculates check digits for resource IDs in ARK URLs.
   private val base64UrlCheckDigit = new Base64UrlCheckDigit
@@ -1550,114 +1504,6 @@ class StringFormatter private (
     }
 
   /**
-   * Converts the IRI of a project-specific internal ontology (used in the triplestore) to an XML prefix label and
-   * namespace for use in data import.
-   *
-   * @param internalOntologyIri the IRI of the project-specific internal ontology. Any trailing # character will be
-   *                            stripped before the conversion.
-   * @return the corresponding XML prefix label and import namespace.
-   */
-  def internalOntologyIriToXmlNamespaceInfoV1(internalOntologyIri: SmartIri): XmlImportNamespaceInfoV1 = {
-    val namespace = new StringBuilder(
-      OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart
-    )
-
-    if (internalOntologyIri.isKnoraSharedDefinitionIri) {
-      namespace.append("shared/")
-    }
-
-    internalOntologyIri.getProjectCode match {
-      case Some(projectCode) =>
-        if (projectCode != DefaultSharedOntologiesProjectCode) {
-          namespace.append(projectCode).append('/')
-        }
-
-      case None => ()
-    }
-
-    namespace
-      .append(internalOntologyIri.getOntologyName)
-      .append(OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd)
-    XmlImportNamespaceInfoV1(namespace = namespace.toString, prefixLabel = internalOntologyIri.getLongPrefixLabel)
-  }
-
-  /**
-   * Converts an XML namespace (used in XML data import) to the IRI of a project-specific internal ontology (used
-   * in the triplestore). The resulting IRI will not end in a # character.
-   *
-   * @param namespace the XML namespace.
-   * @return the corresponding project-specific internal ontology IRI.
-   */
-  def xmlImportNamespaceToInternalOntologyIriV1(namespace: String): Option[SmartIri] =
-    namespace match {
-      case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
-          if !isBuiltInOntologyName(ontologyName) =>
-        val isShared = Option(shared).nonEmpty
-
-        val definedProjectCode: Option[String] =
-          if (Option(projectCode).nonEmpty) Some(projectCode)
-          else if (isShared) Some(DefaultSharedOntologiesProjectCode)
-          else None
-
-        definedProjectCode.flatMap(code =>
-          Some(
-            makeProjectSpecificInternalOntologyIri(
-              internalOntologyName = externalToInternalOntologyName(ontologyName),
-              isShared = isShared,
-              projectCode = code
-            )
-          )
-        )
-
-      case _ => None
-    }
-
-  /**
-   * Converts a XML element name in a particular namespace (used in XML data import) to the IRI of a
-   * project-specific internal ontology entity (used in the triplestore).
-   *
-   * @param namespace    the XML namespace.
-   * @param elementLabel the XML element label.
-   * @return the corresponding project-specific internal ontology entity IRI.
-   */
-  def xmlImportElementNameToInternalOntologyIriV1(namespace: String, elementLabel: String): Option[IRI] =
-    xmlImportNamespaceToInternalOntologyIriV1(namespace).map(_.toString + "#" + elementLabel)
-
-  /**
-   * In XML import data, a property from another ontology is referred to as `prefixLabel__localName`. The prefix label
-   * may start with a project ID (prefixed with 'p') and a hyphen. This function attempts to parse a property name in
-   * that format.
-   *
-   * @param prefixLabelAndLocalName a string that may refer to a property in the format `prefixLabel__localName`.
-   * @return if successful, a `Some` containing the entity's internal IRI, otherwise `None`.
-   */
-  def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] =
-    prefixLabelAndLocalName match {
-      case PropertyFromOtherOntologyInXmlImportRegex(_, projectID, prefixLabel, localName) =>
-        Option(projectID) match {
-          case Some(definedProjectID) =>
-            // Is this ia shared ontology?
-            // TODO: when multiple shared project ontologies are supported, this will need to be done differently.
-            if (definedProjectID == DefaultSharedOntologiesProjectCode) {
-              Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/shared/$prefixLabel#$localName")
-            } else {
-              Some(
-                s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$definedProjectID/$prefixLabel#$localName"
-              )
-            }
-
-          case None =>
-            if (prefixLabel == OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel) {
-              Some(s"${OntologyConstants.KnoraBase.KnoraBasePrefixExpansion}$localName")
-            } else {
-              throw BadRequestException(s"Invalid prefix label and local name: $prefixLabelAndLocalName")
-            }
-        }
-
-      case _ => None
-    }
-
-  /**
    * Determines whether a URL path refers to a built-in API v2 ontology (simple or complex).
    *
    * @param urlPath the URL path.
@@ -1680,15 +1526,6 @@ class StringFormatter private (
       case ApiV2OntologyUrlPathRegex(_, _, ontologyName, _) if !isBuiltInOntologyName(ontologyName) => true
       case _                                                                                        => false
     }
-
-  /**
-   * Given the projectInfo calculates the project's data named graph.
-   *
-   * @param projectInfo the project's [[ProjectInfoV1]].
-   * @return the IRI of the project's data named graph.
-   */
-  def projectDataNamedGraphV1(projectInfo: ProjectInfoV1): IRI =
-    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
 
   /**
    * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
@@ -1963,30 +1800,6 @@ class StringFormatter private (
   def makeRandomListIri(shortcode: String): String = {
     val knoraListUuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
-  }
-
-  /**
-   * Converts the IRI of a property that points to a resource into the IRI of the corresponding link value property.
-   *
-   * @param linkPropertyIri the IRI of the property that points to a resource.
-   * @return the IRI of the corresponding link value property.
-   */
-  def linkPropertyIriToLinkValuePropertyIri(linkPropertyIri: IRI): IRI = {
-    implicit val stringFormatter: StringFormatter = this
-
-    linkPropertyIri.toSmartIri.fromLinkPropToLinkValueProp.toString
-  }
-
-  /**
-   * Converts the IRI of a property that points to a `knora-base:LinkValue` into the IRI of the corresponding link property.
-   *
-   * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
-   * @return the IRI of the corresponding link property.
-   */
-  def linkValuePropertyIriToLinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
-    implicit val stringFormatter: StringFormatter = this
-
-    linkValuePropertyIri.toSmartIri.fromLinkValuePropToLinkProp.toString
   }
 
   /**
