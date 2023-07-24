@@ -5,44 +5,29 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.util.Timeout
-
-import java.net.URLEncoder
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.IRI
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
+import dsp.valueobjects.V2
+import org.knora.webapi.{E2ESpec, IRI}
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.AkkaHttpUtils
-import org.knora.webapi.util.MutableTestIri
-import dsp.valueobjects.V2
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+
+import java.net.URLEncoder
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class ProjectsADME2EZioHttpSpec
-    extends E2ESpec
-    with SessionJsonProtocol
-    with ProjectsADMJsonProtocol
-    with TriplestoreJsonProtocol {
+class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol with TriplestoreJsonProtocol {
 
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass

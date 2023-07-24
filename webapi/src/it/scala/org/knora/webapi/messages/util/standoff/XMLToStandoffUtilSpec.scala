@@ -5,14 +5,12 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.StringFormatter
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 import java.util.UUID
-
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.StringFormatter
 
 /**
  * Tests [[XMLToStandoffUtil]].

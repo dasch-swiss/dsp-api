@@ -5,10 +5,9 @@
 
 package org.knora.webapi.core
 
-import zio._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
+import zio._
 
 object ActorSystemTest {
 

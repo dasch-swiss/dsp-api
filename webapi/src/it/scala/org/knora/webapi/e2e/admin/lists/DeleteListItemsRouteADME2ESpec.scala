@@ -6,34 +6,22 @@
 package org.knora.webapi.e2e.admin.lists
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
+import org.knora.webapi.util.AkkaHttpUtils
 
 import scala.concurrent.duration._
-
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
-import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.AkkaHttpUtils
 
 /**
  * End-to-End (E2E) test specification for testing  endpoint.
  */
-class DeleteListItemsRouteADME2ESpec
-    extends E2ESpec
-    with SessionJsonProtocol
-    with TriplestoreJsonProtocol
-    with ListADMJsonProtocol {
+class DeleteListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 

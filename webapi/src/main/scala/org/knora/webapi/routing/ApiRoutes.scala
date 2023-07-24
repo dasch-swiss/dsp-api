@@ -24,7 +24,6 @@ import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
-import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
@@ -115,17 +114,6 @@ private final case class ApiRoutesImpl(
               HealthRoute().makeRoute ~
                 VersionRoute().makeRoute ~
                 RejectingRoute(appConfig, runtime).makeRoute ~
-                ResourcesRouteV1().makeRoute ~
-                ValuesRouteV1().makeRoute ~
-                StandoffRouteV1().makeRoute ~
-                ListsRouteV1().makeRoute ~
-                ResourceTypesRouteV1().makeRoute ~
-                SearchRouteV1().makeRoute ~
-                AuthenticationRouteV1().makeRoute ~
-                AssetsRouteV1().makeRoute ~
-                CkanRouteV1().makeRoute ~
-                UsersRouteV1().makeRoute ~
-                ProjectsRouteV1().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
                 SearchRouteV2(appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~

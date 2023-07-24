@@ -6,12 +6,14 @@
 package org.knora.webapi.sharedtestdata
 
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ObjectAccessPermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  AdministrativePermissionADM,
+  DefaultObjectAccessPermissionADM,
+  ObjectAccessPermissionADM,
+  PermissionADM
+}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.sharedtestdata.SharedTestDataV1._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 
 /* Helper case classes */
 case class ap(iri: String, p: AdministrativePermissionADM)
@@ -176,7 +178,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/kJ_xFUUJQLS9eJ3S9PazXQ",
       p = AdministrativePermissionADM(
         iri = "http://rdfh.ch/permissions/003-a1",
-        forProject = SharedTestDataV1.incunabulaProjectIri,
+        forProject = SharedTestDataADM2.incunabulaProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
         hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
       )
@@ -187,7 +189,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/OySsjGn8QSqIpXUiSYnSSQ",
       p = AdministrativePermissionADM(
         iri = "http://rdfh.ch/permissions/003-a2",
-        forProject = SharedTestDataV1.incunabulaProjectIri,
+        forProject = SharedTestDataADM2.incunabulaProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
         hasPermissions = Set(
           PermissionADM.ProjectResourceCreateAllPermission,
@@ -229,7 +231,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ",
       p = DefaultObjectAccessPermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ",
-        forProject = SharedTestDataV1.incunabulaProjectIri,
+        forProject = SharedTestDataADM2.incunabulaProjectIri,
         forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
         hasPermissions = Set(
           PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
@@ -245,7 +247,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA",
       p = DefaultObjectAccessPermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA",
-        forProject = SharedTestDataV1.incunabulaProjectIri,
+        forProject = SharedTestDataADM2.incunabulaProjectIri,
         forResourceClass = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
         hasPermissions = Set(
           PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
@@ -261,7 +263,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/V7Fc9gnTRHWPN1xVXYVt9A",
       p = DefaultObjectAccessPermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/V7Fc9gnTRHWPN1xVXYVt9A",
-        forProject = SharedTestDataV1.incunabulaProjectIri,
+        forProject = SharedTestDataADM2.incunabulaProjectIri,
         forResourceClass = Some(INCUNABULA_PAGE_RESOURCE_CLASS),
         hasPermissions = Set(
           PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
@@ -276,7 +278,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg",
       p = DefaultObjectAccessPermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/T12XnPXxQ42jBMIf6RK1pg",
-        forProject = SharedTestDataV1.incunabulaProjectIri,
+        forProject = SharedTestDataADM2.incunabulaProjectIri,
         forProperty = Some(INCUNABULA_PartOf_Property),
         hasPermissions = Set(
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
@@ -290,7 +292,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/5r5B_SJzTuCf8Hwj3MZmgw",
       p = DefaultObjectAccessPermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/5r5B_SJzTuCf8Hwj3MZmgw",
-        forProject = SharedTestDataV1.incunabulaProjectIri,
+        forProject = SharedTestDataADM2.incunabulaProjectIri,
         forResourceClass = Some(INCUNABULA_PAGE_RESOURCE_CLASS),
         forProperty = Some(INCUNABULA_PartOf_Property),
         hasPermissions = Set(
@@ -311,7 +313,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/XFozeICsTE2gHSOsm4ZMIw",
       p = AdministrativePermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/XFozeICsTE2gHSOsm4ZMIw",
-        forProject = SharedTestDataV1.anythingProjectIri,
+        forProject = SharedTestDataADM2.anythingProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
         hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
       )
@@ -322,7 +324,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/bsVy3VaOStWq_t8dvVMrdA",
       p = AdministrativePermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/bsVy3VaOStWq_t8dvVMrdA",
-        forProject = SharedTestDataV1.anythingProjectIri,
+        forProject = SharedTestDataADM2.anythingProjectIri,
         forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
         hasPermissions = Set(
           PermissionADM.ProjectResourceCreateAllPermission,
@@ -336,7 +338,7 @@ object SharedPermissionsTestData {
       iri = "http://rdfh.ch/permissions/00FF/ui0_8nxjSEibtn2hQpCJVQ",
       p = DefaultObjectAccessPermissionADM(
         iri = "http://rdfh.ch/permissions/00FF/ui0_8nxjSEibtn2hQpCJVQ",
-        forProject = SharedTestDataV1.anythingProjectIri,
+        forProject = SharedTestDataADM2.anythingProjectIri,
         forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
         hasPermissions = Set(
           PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),

@@ -5,14 +5,12 @@
 
 package org.knora.webapi.util.rdf
 
-import spray.json.JsValue
-import spray.json.JsonParser
-
-import java.nio.file.Paths
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
+import spray.json.{JsValue, JsonParser}
+
+import java.nio.file.Paths
 
 /**
  * Tests [[JsonLDUtil]].

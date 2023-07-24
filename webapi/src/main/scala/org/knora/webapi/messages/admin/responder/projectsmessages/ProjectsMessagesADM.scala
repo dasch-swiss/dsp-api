@@ -30,7 +30,6 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -392,35 +391,6 @@ case class ProjectADM(
    * Allows to sort collections of ProjectADM. Sorting is done by the id.
    */
   def compare(that: ProjectADM): Int = this.id.compareTo(that.id)
-
-  def asProjectInfoV1: ProjectInfoV1 = {
-
-    val descriptionV1 = if (description.nonEmpty) {
-      Some(description.head.value)
-    } else {
-      None
-    }
-
-    val keywordsV1 = if (keywords.nonEmpty) {
-      Some(keywords.mkString(", "))
-    } else {
-      None
-    }
-
-    ProjectInfoV1(
-      id = id,
-      shortname = shortname,
-      shortcode = shortcode,
-      longname = longname,
-      description = descriptionV1,
-      keywords = keywordsV1,
-      logo = logo,
-      institution = None,
-      ontologies = ontologies,
-      status = status,
-      selfjoin = selfjoin
-    )
-  }
 
   override def equals(that: Any): Boolean =
     // Ignore the order of sequences when testing equality for this class.

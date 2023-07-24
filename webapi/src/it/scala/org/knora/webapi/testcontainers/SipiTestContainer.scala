@@ -5,19 +5,16 @@
 
 package org.knora.webapi.testcontainers
 
-import org.testcontainers.containers.BindMode
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.DockerImageName
-import org.testcontainers.utility.MountableFile
+import org.knora.webapi.http.version.BuildInfo
+import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.utility.{DockerImageName, MountableFile}
 import zio._
 import zio.http.URL
 import zio.nio.file.Path
-import java.net.NetworkInterface
-import java.net.UnknownHostException
+
+import java.net.{NetworkInterface, UnknownHostException}
 import java.nio.file.Paths
 import scala.jdk.CollectionConverters._
-
-import org.knora.webapi.http.version.BuildInfo
 
 final case class SipiTestContainer(container: GenericContainer[Nothing]) {
   def copyFileToImageFolderInContainer(prefix: String, filename: String): Task[Unit] = {

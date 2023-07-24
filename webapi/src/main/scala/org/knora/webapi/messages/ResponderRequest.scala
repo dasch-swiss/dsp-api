@@ -15,11 +15,6 @@ object ResponderRequest {
   trait KnoraRequestV2 extends ResponderRequest
 
   /**
-   * A tagging trait for messages that can be sent to Knora API v1 responders.
-   */
-  trait KnoraRequestV1 extends ResponderRequest
-
-  /**
    * A tagging trait for messages that can be sent to Knora Admin responders.
    */
   trait KnoraRequestADM extends ResponderRequest

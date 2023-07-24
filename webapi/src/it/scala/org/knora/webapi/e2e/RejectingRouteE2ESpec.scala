@@ -6,7 +6,6 @@
 package org.knora.webapi.e2e
 
 import akka.http.scaladsl.model._
-
 import org.knora.webapi.E2ESpec
 
 /**

@@ -6,42 +6,28 @@
 package org.knora.webapi.e2e.v2
 
 import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart}
+import dsp.valueobjects.Iri
+import org.knora.webapi._
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords, JsonLDUtil}
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2, ValuesRouteV2}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{FileUtil, MutableTestIri}
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import spray.json.JsString
 
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
-
-import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.e2e.v2.ResponseCheckerV2._
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.v1.ValuesRouteV1
-import org.knora.webapi.routing.v2.ResourcesRouteV2
-import org.knora.webapi.routing.v2.SearchRouteV2
-import org.knora.webapi.routing.v2.StandoffRouteV2
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.MutableTestIri
 
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
@@ -59,7 +45,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
   private val standoffPath =
     DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV2().makeRoute)
   private val valuesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV2().makeRoute)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -9089,30 +9075,31 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
       }
 
-      // Next, create a resource with a text value containing a standoff date tag. TODO: Use API v2.
+      // Next, create a resource with a text value containing a standoff date tag.
 
-      val xmlFileToSend = Paths.get("..", "test_data/test_route/texts/HTML.xml")
-
-      val newValueParams =
-        s"""
-           |{
-           |  "project_id": "http://rdfh.ch/projects/0001",
-           |  "res_id": "http://rdfh.ch/0001/a-thing",
-           |  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
-           |  "richtext_value": {
-           |        "xml": ${JsString(FileUtil.readTextFile(xmlFileToSend))},
-           |        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
+      val xmlForJson = stringFormatter.toJsonEncodedString(
+        FileUtil.readTextFile(Paths.get("..", "test_data/test_route/texts/HTML.xml"))
+      )
+      val requestBody =
+        s"""{
+           |  "@id" : "http://rdfh.ch/0001/a-thing",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:textValueAsXml" : $xmlForJson,
+           |    "knora-api:textValueHasMapping" : {
+           |      "@id": "$anythingProjectIri/mappings/HTMLMapping"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
-           |}
-                 """.stripMargin
+           |}""".stripMargin
 
-      Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
+      Post("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, requestBody)) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
-      ) ~> valuesPath ~> check {
-
-        assert(status == StatusCodes.OK)
-
-      }
+      ) ~> valuesPath ~> check(assert(status == StatusCodes.OK))
 
       // Finally, do a Gravsearch query that finds the date tag.
 
