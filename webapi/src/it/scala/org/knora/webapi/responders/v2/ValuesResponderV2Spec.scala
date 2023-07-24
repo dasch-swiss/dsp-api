@@ -81,7 +81,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   )
 
   // The default timeout for receiving reply messages from actors.
-  override implicit val timeout = 30.seconds
+  override implicit val timeout: FiniteDuration = 30.seconds
 
   private val firstIntValueVersionIri                   = new MutableTestIri
   private val intValueIri                               = new MutableTestIri
