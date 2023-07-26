@@ -106,7 +106,7 @@ private final case class ApiRoutesImpl(
   private implicit val executionContext: ExecutionContext = system.dispatcher
 
   val routes: Route =
-    logDuration {
+    logDuration(runtime) {
       ServerVersion.addServerHeader {
         DSPApiDirectives.handleErrors(routeData.system, appConfig) {
           CorsDirectives.cors(CorsSettings(routeData.system)) {
