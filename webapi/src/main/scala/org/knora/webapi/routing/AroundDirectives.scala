@@ -33,7 +33,7 @@ trait AroundDirectives extends InstrumentationSupport {
   def logDuration(implicit runtime: zio.Runtime[Any]): Directive0 = extractRequestContext.flatMap { ctx =>
     val start = System.currentTimeMillis()
     mapResponse { resp =>
-      val duration = start - System.currentTimeMillis()
+      val duration =  System.currentTimeMillis() - start
       val message  = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}ms"
       if (resp.status.isFailure()) metricsLogger.warn(message) else metricsLogger.debug(message)
 
