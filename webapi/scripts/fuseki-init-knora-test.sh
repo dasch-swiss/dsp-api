@@ -16,8 +16,8 @@ upload-graph ../../knora-ontologies/salsah-gui.ttl http://www.knora.org/ontology
 upload-graph ../../test_data/project_data/admin-data.ttl http://www.knora.org/data/admin
 upload-graph ../../test_data/project_data/permissions-data.ttl http://www.knora.org/data/permissions
 upload-graph ../../test_data/project_data/system-data.ttl http://www.knora.org/data/0000/SystemProject
-upload-graph ../../test_data/project_ontologies/incunabula-onto.ttl http://www.knora.org/ontology/0803/incunabula
-upload-graph ../../test_data/project_data/incunabula-data.ttl http://www.knora.org/data/0803/incunabula
+# upload-graph ../../test_data/project_ontologies/incunabula-onto.ttl http://www.knora.org/ontology/0803/incunabula
+# upload-graph ../../test_data/project_data/incunabula-data.ttl http://www.knora.org/data/0803/incunabula
 upload-graph ../../test_data/project_ontologies/dokubib-onto.ttl http://www.knora.org/ontology/0804/dokubib
 upload-graph ../../test_data/project_ontologies/images-onto.ttl http://www.knora.org/ontology/00FF/images
 upload-graph ../../test_data/project_data/images-demo-data.ttl http://www.knora.org/data/00FF/images

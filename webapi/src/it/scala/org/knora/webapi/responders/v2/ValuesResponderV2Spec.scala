@@ -400,17 +400,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
   }
 
-  "Load test data" in {
-    appActor ! GetMappingRequestV2(
-      mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      requestingUser = KnoraSystemInstances.Users.SystemUser
-    )
-
-    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
-      standardMapping = Some(mappingResponse.mapping)
-    }
-  }
-
   "The values responder" should {
     "create an integer value" in {
       // Add the value.
@@ -1218,7 +1207,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        requestingUser = incunabulaUser,
+        requestingUser = SharedTestDataADM.imagesUser02,
         apiRequestID = UUID.randomUUID
       )
 

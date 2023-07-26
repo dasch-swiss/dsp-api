@@ -6,19 +6,27 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
+import org.xmlunit.diff.Diff
+
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.UUID
+import scala.concurrent.duration._
+
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.{
-  CalendarNameGregorian,
-  DatePrecisionYear,
-  KnoraSystemInstances,
-  PermissionUtilADM
-}
+import org.knora.webapi.messages.util.CalendarNameGregorian
+import org.knora.webapi.messages.util.DatePrecisionYear
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -28,16 +36,9 @@ import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.xmlunit.builder.{DiffBuilder, Input}
-import org.xmlunit.diff.Diff
-
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-import scala.concurrent.duration._
+import org.knora.webapi.sharedtestdata.SharedTestDataV2
 
 object ResourcesResponderV2Spec {
-  private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
 
   private val anythingUserProfile = SharedTestDataADM.anythingUser2
 
@@ -46,8 +47,6 @@ object ResourcesResponderV2Spec {
   private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
   private val defaultStillImageFileValuePermissions =
     "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
-
-  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
   private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
   private var aThingLastModificationDate = Instant.now
@@ -221,7 +220,7 @@ class GraphTestData {
     ontologySchema = InternalSchema
   )
 
-  val graphForIncunabulaUser: GraphDataGetResponseV2 = GraphDataGetResponseV2(
+  val graphForImagesUser: GraphDataGetResponseV2 = GraphDataGetResponseV2(
     edges = Vector(
       GraphEdgeV2(
         target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
@@ -404,10 +403,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_data/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
-    ),
     RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
@@ -516,11 +511,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   }
 
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
-    val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .getStandoffTagByUUID(
-        uuid = uuid
-      )
-      .toString()
+    val sparqlQuery =
+      s"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |SELECT DISTINCT ?standoffTag
+          |WHERE { ?standoffTag knora-base:standoffTagHasUUID "${UuidUtil.base64Encode(uuid)}" . }
+          |""".stripMargin
 
     appActor ! SparqlSelectRequest(sparqlQuery)
 
@@ -534,147 +529,75 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   // The default timeout for receiving reply messages from actors.
   override implicit val timeout: FiniteDuration = 30.seconds
 
-  "Load test data" in {
-    appActor ! GetMappingRequestV2(
-      mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      requestingUser = KnoraSystemInstances.Users.SystemUser
-    )
-
-    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
-      standardMapping = Some(mappingResponse.mapping)
-    }
-  }
+  private val anythingUser = SharedTestDataADM.anythingUser1
 
   "The resources responder v2" should {
-    "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-
+    "return a full description of a single resource" in {
+      val resource = SharedTestDataV2.Anything.resource1
+      val iri      = resource.resourceIri
       appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+        resourceIris = Seq(iri),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = anythingUser
       )
-
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-          received = response
-        )
+        assert(response.resources.length == 1)
+        val responseResource = response.resources.head
+        assert(responseResource.resourceIri == iri)
+        assert(responseResource.values == resource.values)
+        assert(responseResource == resource)
       }
-
     }
 
-    "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-
+    "return a preview descriptions of a single resource" in {
+      val resource = SharedTestDataV2.Anything.resource1Preview
+      val iri      = resource.resourceIri
       appActor ! ResourcesPreviewGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+        resourceIris = Seq(iri),
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = anythingUser
       )
-
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
-          received = response
-        )
+        assert(response.resources.length == 1)
+        val responseResource = response.resources.head
+        assert(responseResource.resourceIri == resource.resourceIri)
+        assert(responseResource == resource)
       }
-
     }
 
-    "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
-
+    "return full descriptions of two resources ignoring duplicate IRIs" in {
+      val iri1 = SharedTestDataV2.Anything.resource1.resourceIri
+      val iri2 = SharedTestDataV2.Anything.resource2.resourceIri
       appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
+        resourceIris = Seq(iri1, iri1, iri2),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = anythingUser
       )
-
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
-          received = response
-        )
+        assert(response.resources.length == 2)
+        assert(response.resources.head == SharedTestDataV2.Anything.resource1)
+        assert(response.resources.last == SharedTestDataV2.Anything.resource2)
       }
-
     }
 
-    "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
-
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-          received = response
-        )
-      }
-
-    }
-
-    "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
-
+    "return preview descriptions of two resources ignoring duplicate IRIs" in {
+      val iri1 = SharedTestDataV2.Anything.resource1Preview.resourceIri
+      val iri2 = SharedTestDataV2.Anything.resource2Preview.resourceIri
       appActor ! ResourcesPreviewGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+        resourceIris = Seq(iri1, iri1, iri2),
         targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
+        requestingUser = anythingUser
       )
-
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
-          received = response
-        )
+        assert(response.resources.length == 2)
+        assert(response.resources.head == SharedTestDataV2.Anything.resource1Preview)
+        assert(response.resources.last == SharedTestDataV2.Anything.resource2Preview)
       }
-
-    }
-
-    "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
-
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected =
-            resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
-          received = response
-        )
-      }
-
-    }
-
-    "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
-
-      appActor ! ResourcesGetRequestV2(
-        resourceIris =
-          Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
-      )
-
-      // the redundant Iri should be ignored (distinct)
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-          received = response
-        )
-      }
-
     }
 
     "return a resource of type thing with text as TEI/XML" in {
-
       appActor ! ResourceTEIGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup",
         textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
@@ -698,7 +621,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "return a resource of type Something with text with standoff as TEI/XML" in {
-
       appActor ! ResourceTEIGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g",
         textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
@@ -776,7 +698,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "get the latest version of a value, given its UUID" in {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
+        valueUuid = Some(UuidUtil.base64Decode("pLlW4ODASumZfZFbJdpw1g").get),
         targetSchema = ApiV2Complex,
         requestingUser = anythingUserProfile
       )
@@ -792,7 +714,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "get a past version of a value, given its UUID and a timestamp" in {
       appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
-        valueUuid = Some(UuidUtil.decode("pLlW4ODASumZfZFbJdpw1g")),
+        valueUuid = Some(UuidUtil.base64Decode("pLlW4ODASumZfZFbJdpw1g").get),
         versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
         targetSchema = ApiV2Complex,
         requestingUser = anythingUserProfile
@@ -831,15 +753,15 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         inbound = true,
         outbound = true,
         excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+        requestingUser = SharedTestDataADM.imagesUser01
       )
 
       val response = expectMsgType[GraphDataGetResponseV2](timeout)
       val edges    = response.edges
       val nodes    = response.nodes
 
-      edges should contain theSameElementsAs graphTestData.graphForIncunabulaUser.edges
-      nodes should contain theSameElementsAs graphTestData.graphForIncunabulaUser.nodes
+      edges should contain theSameElementsAs graphTestData.graphForImagesUser.edges
+      nodes should contain theSameElementsAs graphTestData.graphForImagesUser.nodes
     }
 
     "return a graph containing a standoff link" in {
@@ -873,10 +795,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with no values" in {
-      // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -885,14 +804,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      // Check that the response contains the correct metadata.
-
+      appActor ! CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
 
@@ -921,10 +833,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with no values and custom permissions" in {
-      // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -934,12 +843,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)
       expectMsgType[ReadResourcesSequenceV2](timeout)
 
       // Get the resource from the triplestore and check it.
@@ -957,8 +861,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with values" in {
-      // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
@@ -1116,8 +1018,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with a still image file value" in {
-      // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
@@ -1153,8 +1053,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with document representation" in {
-      // Create the resource.
-
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
@@ -1187,8 +1085,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a resource with archive representation" in {
-      // Create the resource.
-
       val resourceIri: String = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputResource = UploadFileRequest
@@ -1224,196 +1120,115 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create a resource with missing required values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#VideoSequenceThing".toSmartIri,
+        label = "invalid thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.anythingProject
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, anythingUser, UUID.randomUUID)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
     "not create a resource with too many values for the cardinality of a property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
+      val inputResource = CreateResourceV2(
+        resourceIri = None,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#VideoThing".toSmartIri,
+        label = "invalid resource",
+        values = Map(
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTitle".toSmartIri -> Seq(
+            CreateValueInNewResourceV2(TextValueContentV2(ApiV2Complex, Some("title 1"))),
+            CreateValueInNewResourceV2(TextValueContentV2(ApiV2Complex, Some("title 2")))
           )
         ),
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 1")
-            )
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 2")
-            )
-          )
-        )
+        projectADM = SharedTestDataADM.anythingProject
       )
 
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, anythingUser, UUID.randomUUID)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
     "not create a resource with a property for which there is no cardinality in the resource class" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test pagenum")
-            )
-          )
-        )
-      )
-
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
+        resourceIri = None,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#VideoThing".toSmartIri,
+        label = "invalid resource",
+        values = Map(
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasSubtitle".toSmartIri ->
+            Seq(CreateValueInNewResourceV2(TextValueContentV2(ApiV2Complex, Some("invalid value subtitle"))))
+        ),
+        projectADM = SharedTestDataADM.anythingProject
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, anythingUser, UUID.randomUUID)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
     "not create a resource with duplicate values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
-            )
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 2")
-            )
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
+      val inputResource = CreateResourceV2(
+        resourceIri = None,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        label = "invalid thing",
+        values = Map(
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
+            CreateValueInNewResourceV2(
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = 42
+              )
+            ),
+            CreateValueInNewResourceV2(
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = 42
+              )
             )
           )
-        )
+        ),
+        projectADM = SharedTestDataADM.anythingProject
       )
 
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, anythingUser, UUID.randomUUID)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
 
     "not create a resource if the user doesn't have permission to create resources in the project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
+      val inputResource = CreateResourceV2(
+        resourceIri = None,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument".toSmartIri,
+        label = "invalid resource",
+        values = Map(
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDocumentTitle".toSmartIri -> Seq(
+            CreateValueInNewResourceV2(
+              valueContent = TextValueContentV2(
+                ontologySchema = ApiV2Complex,
+                maybeValueHasString = Some("title")
+              )
             )
           )
-        )
+        ),
+        projectADM = SharedTestDataADM.anythingProject
       )
 
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesUser01, UUID.randomUUID)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
     "not create a resource with a link to a nonexistent other resource" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
@@ -1426,7 +1241,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
+        resourceIri = None,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
         values = inputValues,
@@ -1585,31 +1400,19 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     "not create a resource with a link to a resource of the wrong class for the link property" in {
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri
-            )
-          )
-        )
-      )
-
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "invalid thing",
-        values = inputValues,
+        values = Map(
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
+            CreateValueInNewResourceV2(LinkValueContentV2(ApiV2Complex, "http://rdfh.ch/0001/a-thing-picture"))
+          )
+        ),
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, anythingUserProfile, UUID.randomUUID)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
@@ -1674,38 +1477,30 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create a resource that uses a class from another non-shared project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         label = "test thing",
         values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject
+        projectADM = SharedTestDataADM.imagesProject
       )
 
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
+      appActor ! CreateResourceRequestV2(inputResource, SharedTestDataADM.imagesUser01, UUID.randomUUID)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
     "not update a resource's metadata if the user does not have permission to update the resource" in {
-      val updateRequest = UpdateResourceMetadataRequestV2(
+      appActor ! UpdateResourceMetadataRequestV2(
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("new test label"),
-        requestingUser = incunabulaUserProfile,
+        requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
-
-      appActor ! updateRequest
-
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
