@@ -7,14 +7,18 @@ package org.knora.webapi.routing
 
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
-import org.knora.webapi.instrumentation.InstrumentationSupport
-import zio.{Chunk, Duration}
+import zio.Chunk
+import zio.Duration
+import zio.metrics.Metric
 import zio.metrics.Metric.Counter
-import zio.metrics.{Metric, MetricKeyType, MetricState}
+import zio.metrics.MetricKeyType
+import zio.metrics.MetricState
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
 import java.util.regex.Pattern
+
+import org.knora.webapi.instrumentation.InstrumentationSupport
 
 /**
  * Akka HTTP directives which can be wrapped around a [[akka.http.scaladsl.server.Route]]].
