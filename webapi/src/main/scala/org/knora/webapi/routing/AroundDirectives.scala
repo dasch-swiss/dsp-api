@@ -14,7 +14,6 @@ import zio.metrics.Metric.Counter
 import zio.metrics.MetricKeyType
 import zio.metrics.MetricState
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit.MILLIS
 import java.util.regex.Pattern
 
@@ -30,12 +29,12 @@ trait AroundDirectives extends InstrumentationSupport {
    */
   private val requestCounter: Counter[Long] = Metric.counter("http_request_count")
   private val requestTimer: Metric[MetricKeyType.Histogram, Duration, MetricState.Histogram] =
-    Metric.timer("http_request_duration", MILLIS, Chunk(10, 100, 1_000, 10_000, 100_000))
+    Metric.timer("http_request_duration", MILLIS, Chunk.iterate(1.0, 5)(_ * 10))
   def logDuration(implicit runtime: zio.Runtime[Any]): Directive0 = extractRequestContext.flatMap { ctx =>
-    val start = Duration.fromInstant(Instant.now)
+    val start = System.currentTimeMillis()
     mapResponse { resp =>
-      val duration = start minus Duration.fromInstant(Instant.now)
-      val message  = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}"
+      val duration = start - System.currentTimeMillis()
+      val message  = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}ms"
       if (resp.status.isFailure()) metricsLogger.warn(message) else metricsLogger.debug(message)
 
       val path          = replaceIris(ctx.request.uri.path.toString())
@@ -43,7 +42,9 @@ trait AroundDirectives extends InstrumentationSupport {
       val responseCode  = s"${resp.status.intValue()}"
       val counterMetric = addTags(requestCounter, path, httpMethod, responseCode)
       val timerMetric   = addTags(requestTimer, path, httpMethod, responseCode)
-      UnsafeZioRun.runOrThrow((counterMetric.increment *> timerMetric.update(duration)).ignore.as(resp))
+      UnsafeZioRun.runOrThrow(
+        (counterMetric.increment *> timerMetric.update(Duration.fromMillis(duration))).ignore.as(resp)
+      )
     }
   }
 
