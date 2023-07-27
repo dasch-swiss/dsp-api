@@ -6,19 +6,23 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.duration._
+
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.{
-  CalendarNameGregorian,
-  DatePrecisionYear,
-  KnoraSystemInstances,
-  PermissionUtilADM
-}
+import org.knora.webapi.messages.util.CalendarNameGregorian
+import org.knora.webapi.messages.util.DatePrecisionYear
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder._
@@ -26,14 +30,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.models.filemodels.{ChangeFileRequest, FileType}
+import org.knora.webapi.models.filemodels.ChangeFileRequest
+import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.MutableTestIri
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.duration._
+import org.knora.webapi.sharedtestdata.SharedTestDataV2
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -41,19 +43,15 @@ import scala.concurrent.duration._
 class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
-  private val generationeIri   = "http://rdfh.ch/0803/c3f913666f"
-  private val aThingIri        = "http://rdfh.ch/0001/a-thing"
+  private val aThingIri = "http://rdfh.ch/0001/a-thing"
   private val freetestWithAPropertyFromAnythingOntologyIri =
     "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
   private val aThingPictureIri     = "http://rdfh.ch/0001/a-thing-picture"
   private val sierraIri            = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
   private val thingPictureClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
 
-  private val incunabulaUser        = SharedTestDataADM.incunabulaMemberUser
-  private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
-  private val anythingUser1         = SharedTestDataADM.anythingUser1
-  private val anythingUser2         = SharedTestDataADM.anythingUser2
+  private val anythingUser1 = SharedTestDataADM.anythingUser1
+  private val anythingUser2 = SharedTestDataADM.anythingUser2
 
   private val mimeTypeTIFF = "image/tiff"
   private val mimeTypeJP2  = "image/jp2"
@@ -68,10 +66,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
     RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
-    RdfDataObject(
-      path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
-    ),
     RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
@@ -83,30 +77,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   // The default timeout for receiving reply messages from actors.
   override implicit val timeout: FiniteDuration = 30.seconds
 
-  private val firstIntValueVersionIri                   = new MutableTestIri
-  private val intValueIri                               = new MutableTestIri
-  private val intValueIriForFreetest                    = new MutableTestIri
-  private val intValueIriWithCustomPermissions          = new MutableTestIri
-  private val intValueForRsyncIri                       = new MutableTestIri
-  private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
-  private val zeitglöckleinCommentWithStandoffIri       = new MutableTestIri
-  private val zeitglöckleinCommentWithCommentIri        = new MutableTestIri
-  private val zeitglöckleinSecondCommentWithStandoffIri = new MutableTestIri
-  private val lobComment1Iri                            = new MutableTestIri
-  private val lobComment2Iri                            = new MutableTestIri
-  private val decimalValueIri                           = new MutableTestIri
-  private val timeValueIri                              = new MutableTestIri
-  private val dateValueIri                              = new MutableTestIri
-  private val booleanValueIri                           = new MutableTestIri
-  private val geometryValueIri                          = new MutableTestIri
-  private val intervalValueIri                          = new MutableTestIri
-  private val listValueIri                              = new MutableTestIri
-  private val colorValueIri                             = new MutableTestIri
-  private val uriValueIri                               = new MutableTestIri
-  private val geonameValueIri                           = new MutableTestIri
-  private val linkValueIri                              = new MutableTestIri
-  private val standoffLinkValueIri                      = new MutableTestIri
-  private val stillImageFileValueIri                    = new MutableTestIri
+  private val firstIntValueVersionIri          = new MutableTestIri
+  private val intValueIri                      = new MutableTestIri
+  private val intValueIriForFreetest           = new MutableTestIri
+  private val intValueIriWithCustomPermissions = new MutableTestIri
+  private val intValueForRsyncIri              = new MutableTestIri
+  private val decimalValueIri                  = new MutableTestIri
+  private val timeValueIri                     = new MutableTestIri
+  private val dateValueIri                     = new MutableTestIri
+  private val booleanValueIri                  = new MutableTestIri
+  private val geometryValueIri                 = new MutableTestIri
+  private val intervalValueIri                 = new MutableTestIri
+  private val listValueIri                     = new MutableTestIri
+  private val colorValueIri                    = new MutableTestIri
+  private val uriValueIri                      = new MutableTestIri
+  private val geonameValueIri                  = new MutableTestIri
+  private val linkValueIri                     = new MutableTestIri
+  private val standoffLinkValueIri             = new MutableTestIri
+  private val stillImageFileValueIri           = new MutableTestIri
 
   private var integerValueUUID = UUID.randomUUID
   private var linkValueUUID    = UUID.randomUUID
@@ -399,6 +387,91 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       }
     }
   }
+
+  private def createLinkValue(
+    resourceIri: IRI,
+    targetResourceIri: IRI,
+    user: UserADM,
+    propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+  ) = appActor ! CreateValueRequestV2(
+    CreateValueV2(
+      resourceIri = resourceIri,
+      propertyIri = propertyIri,
+      resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+      valueContent = LinkValueContentV2(ApiV2Complex, targetResourceIri)
+    ),
+    requestingUser = user,
+    apiRequestID = UUID.randomUUID
+  )
+
+  private def createIntegerValue(
+    intValue: Int,
+    propertyIri: SmartIri,
+    resourceIri: IRI,
+    resourceClassIri: SmartIri,
+    user: UserADM,
+    comment: Option[String] = None
+  ) = appActor ! CreateValueRequestV2(
+    CreateValueV2(
+      resourceIri = resourceIri,
+      resourceClassIri = resourceClassIri,
+      propertyIri = propertyIri,
+      valueContent = IntegerValueContentV2(
+        ontologySchema = ApiV2Complex,
+        valueHasInteger = intValue
+      )
+    ),
+    requestingUser = user,
+    apiRequestID = UUID.randomUUID
+  )
+
+  private def createSimpleTextValue(
+    valueHasString: String,
+    propertyIri: SmartIri,
+    resourceIri: IRI,
+    resourceClassIri: SmartIri,
+    user: UserADM,
+    comment: Option[String] = None
+  ) = appActor ! CreateValueRequestV2(
+    CreateValueV2(
+      resourceIri = resourceIri,
+      resourceClassIri = resourceClassIri,
+      propertyIri = propertyIri,
+      valueContent = TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some(valueHasString),
+        comment = comment
+      )
+    ),
+    requestingUser = user,
+    apiRequestID = UUID.randomUUID
+  )
+
+  private def createStandoffTextValue(
+    valueHasString: String,
+    standoff: Seq[StandoffTagV2],
+    propertyIri: SmartIri,
+    resourceIri: IRI,
+    resourceClassIri: SmartIri,
+    user: UserADM,
+    comment: Option[String] = None
+  ) = appActor ! CreateValueRequestV2(
+    CreateValueV2(
+      resourceIri = resourceIri,
+      resourceClassIri = resourceClassIri,
+      propertyIri = propertyIri,
+      valueContent = TextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        maybeValueHasString = Some(valueHasString),
+        comment = comment,
+        mappingIri = Some(OntologyConstants.KnoraBase.StandardMapping),
+        mapping = standardMapping,
+        standoff = standoff
+      )
+    ),
+    requestingUser = user,
+    apiRequestID = UUID.randomUUID
+  )
 
   "The values responder" should {
     "create an integer value" in {
@@ -1217,149 +1290,99 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a text value without standoff" in {
-      val valueHasString                            = "Comment 1a"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+      val valueHasString             = "text value"
+      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
+      val resourceClassIri: SmartIri = SharedTestDataV2.AnythingOntology.thingClassIri
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
+      createSimpleTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1)
+      val valueIri = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        createValueResponse.valueIri
       }
 
       // Read the value back to check that it was added correctly.
-
       val valueFromTriplestore = getValue(
-        resourceIri = zeitglöckleinIri,
+        resourceIri = aThingIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
-        expectedValueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-        requestingUser = incunabulaUser
+        expectedValueIri = valueIri,
+        requestingUser = anythingUser1
       )
 
       valueFromTriplestore.valueContent match {
         case savedValue: TextValueContentV2 => assert(savedValue.valueHasString.contains(valueHasString))
         case _                              => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
       }
+
     }
 
     "not create a duplicate text value without standoff" in {
-      val valueHasString        = "Comment 1a"
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+      val valueHasString                            = "text value"
+      val propertyIri: SmartIri                     = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
+      val resourceClassIri: SmartIri                = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
-
+      createSimpleTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
     "create a text value with a comment" in {
-      val valueHasString                            = "this is a text value that has a comment"
-      val valueHasComment                           = "this is a comment"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+      val valueHasString   = "text value with comment"
+      val propertyIri      = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
+      val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+      val comment          = Some("This is a comment")
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            comment = Some(valueHasComment)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
+      createSimpleTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1, comment)
+      val valueIri = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        createValueResponse.valueIri
       }
 
-      // Read the value back to check that it was added correctly.
-
       val valueFromTriplestore = getValue(
-        resourceIri = zeitglöckleinIri,
+        resourceIri = aThingIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
-        expectedValueIri = zeitglöckleinCommentWithCommentIri.get,
-        requestingUser = incunabulaUser
+        expectedValueIri = valueIri,
+        requestingUser = anythingUser1
       )
 
       valueFromTriplestore.valueContent match {
         case savedValue: TextValueContentV2 =>
           assert(savedValue.valueHasString.contains(valueHasString))
-          savedValue.comment should ===(Some(valueHasComment))
-
+          assert(savedValue.comment == comment)
         case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
       }
     }
 
     "create a text value with standoff" in {
-      val valueHasString = "Comment 1aa"
+      val valueHasString   = "Comment 1aa"
+      val resourceIri      = SharedTestDataV2.Anything.resource1.resourceIri
+      val propertyIri      = SharedTestDataV2.AnythingOntology.hasRichtextPropIriExternal
+      val resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIri
+      val standoff         = sampleStandoff // XXX: not yet adjusted
 
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoff,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
+      createStandoffTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
+      val valueIri = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        createValueResponse.valueIri
       }
 
       // Read the value back to check that it was added correctly.
 
       val valueFromTriplestore = getValue(
-        resourceIri = zeitglöckleinIri,
+        resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
         propertyIriForGravsearch = propertyIri,
         propertyIriInResult = propertyIri,
-        expectedValueIri = zeitglöckleinCommentWithStandoffIri.get,
-        requestingUser = incunabulaUser
+        expectedValueIri = valueIri,
+        requestingUser = anythingUser1
       )
 
       valueFromTriplestore.valueContent match {
@@ -1374,27 +1397,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create a duplicate text value with standoff (even if the standoff is different)" in {
-      val valueHasString = "Comment 1aa"
+      val valueHasString   = "Comment 1aa"
+      val resourceIri      = SharedTestDataV2.Anything.resource1.resourceIri
+      val propertyIri      = SharedTestDataV2.AnythingOntology.hasRichtextPropIriExternal
+      val resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIri
+      val standoff         = sampleStandoffModified // XXX: not yet adjusted
 
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoffModified,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
-
+      createStandoffTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
@@ -2105,27 +2114,14 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a link between two resources" in {
-      val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-      val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+      val resourceIri: IRI               = SharedTestDataV2.Anything.resource1.resourceIri
+      val targetResourceIri: IRI         = SharedTestDataV2.Anything.resource2.resourceIri
+      val linkPropertyIri: SmartIri      = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+      val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
 
-      val createValueRequest = CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          propertyIri = linkValuePropertyIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = zeitglöckleinIri
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
+      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! createValueRequest
-
+      createLinkValue(resourceIri, targetResourceIri, anythingUser1)
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
         linkValueIri.set(createValueResponse.valueIri)
         linkValueUUID = createValueResponse.valueUUID
@@ -2137,12 +2133,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         propertyIriForGravsearch = linkPropertyIri,
         propertyIriInResult = linkValuePropertyIri,
         expectedValueIri = linkValueIri.get,
-        requestingUser = incunabulaUser
+        requestingUser = anythingUser1
       )
 
       valueFromTriplestore match {
         case readLinkValueV2: ReadLinkValueV2 =>
-          readLinkValueV2.valueContent.referredResourceIri should ===(zeitglöckleinIri)
+          readLinkValueV2.valueContent.referredResourceIri should ===(targetResourceIri)
           readLinkValueV2.valueHasRefCount should ===(1)
 
         case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
@@ -2150,65 +2146,36 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create a duplicate link" in {
-      val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+      val resourceIri: IRI       = SharedTestDataV2.Anything.resource1.resourceIri
+      val targetResourceIri: IRI = SharedTestDataV2.Anything.resource2.resourceIri
 
-      val createValueRequest = CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = zeitglöckleinIri
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
-
-      appActor ! createValueRequest
-
+      createLinkValue(resourceIri, targetResourceIri, anythingUser1)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
     "not accept a link property in a request to create a link between two resources" in {
-      val resourceIri: IRI          = "http://rdfh.ch/0803/cb1a74e3e2f6"
+      val resourceIri: IRI          = SharedTestDataV2.Anything.resource1.resourceIri
+      val targetResourceIri: IRI    = SharedTestDataV2.Anything.resource2.resourceIri
       val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
 
-      val createValueRequest = CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkPropertyIri,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = zeitglöckleinIri
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
-
-      appActor ! createValueRequest
-
+      createLinkValue(resourceIri, targetResourceIri, anythingUser1, propertyIri = linkPropertyIri)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
     "not create a standoff link directly" in {
+      val resourceIri: IRI       = SharedTestDataV2.Anything.resource1.resourceIri
+      val targetResourceIri: IRI = SharedTestDataV2.Anything.resource2.resourceIri
+
       appActor ! CreateValueRequestV2(
         CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          resourceIri = resourceIri,
+          resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIriExternal,
           propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri
-          )
+          valueContent = LinkValueContentV2(ApiV2Complex, targetResourceIri)
         ),
         requestingUser = SharedTestDataADM.superUser,
         apiRequestID = UUID.randomUUID
@@ -2244,21 +2211,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not add a new value to a deleted resource" in {
-      val resourceIri: IRI      = "http://rdfh.ch/0803/9935159f67"
-      val valueHasString        = "Comment 2"
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+      val resourceIri: IRI      = SharedTestDataV2.Anything.deletedResourceIri
+      val valueHasString        = "Some String Value"
+      val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
 
       appActor ! CreateValueRequestV2(
         CreateValueV2(
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIriExternal,
           propertyIri = propertyIri,
           valueContent = TextValueContentV2(
             ontologySchema = ApiV2Complex,
             maybeValueHasString = Some(valueHasString)
           )
         ),
-        requestingUser = incunabulaUser,
+        requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
 
@@ -2269,13 +2236,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not add a new value if the resource's rdf:type is not correctly given" in {
       val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+      val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasIntegerPropIriExternal
       val intValue              = 2048
 
       appActor ! CreateValueRequestV2(
         CreateValueV2(
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          resourceClassIri = SharedTestDataV2.AnythingOntology.blueThingClassIriExternal,
           propertyIri = propertyIri,
           valueContent = IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
@@ -2292,20 +2259,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not add a new value of the wrong type" in {
-      val resourceIri: IRI      = "http://rdfh.ch/0803/21abac2162"
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate".toSmartIri
+      val resourceIri: IRI      = SharedTestDataV2.Anything.resource1.resourceIri
+      val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasIntegerPropIriExternal
 
       appActor ! CreateValueRequestV2(
         CreateValueV2(
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIriExternal,
           propertyIri = propertyIri,
           valueContent = TextValueContentV2(
             ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("this is not a date")
+            maybeValueHasString = Some("this is not an integer")
           )
         ),
-        requestingUser = incunabulaUser,
+        requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
 
@@ -2315,44 +2282,12 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not add a new value that would violate a cardinality restriction" in {
-      val resourceIri: IRI = "http://rdfh.ch/0803/4f11adaf"
+      val propertyIri      = SharedTestDataV2.AnythingOntology.hasIntegerPropIriExternal
+      val resourceClassIri = SharedTestDataV2.AnythingOntology.thingWithMaxCardinalityClassIriExternal
+      val resourceIri: IRI = SharedTestDataV2.Anything.resourceWithMaxCardinalityIri
+      // hasInteger has cardinality 1 and a value is already present
 
-      // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/0803/4f11adaf is already part of a book.
-
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
-          propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = "http://rdfh.ch/0803/e41ab5695c"
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[OntologyConstraintException])
-      }
-
-      // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/0803/4f11adaf already has a seqnum.
-
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = "http://rdfh.ch/0803/4f11adaf",
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
-          propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = 1
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
-      )
-
+      createIntegerValue(-1, propertyIri, resourceIri, resourceClassIri, anythingUser1)
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[OntologyConstraintException])
       }

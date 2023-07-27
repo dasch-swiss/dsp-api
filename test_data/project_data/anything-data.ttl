@@ -2400,3 +2400,25 @@
     knora-base:valueHasOrder     0 ;
     knora-base:valueHasRefCount  "1"^^xsd:int ;
     knora-base:isDeleted         false .
+
+# thing with max cardinality
+<http://rdfh.ch/0001/t1TgU0hUS3O3DDE9thMqdQ>
+    a                            anything:AudioThing ;
+    anything:hasInteger          <http://rdfh.ch/0001/t1TgU0hUS3O3DDE9thMqdQ/values/5btBYtgJT06vzdC490R7og> ;
+    rdfs:label                   "thing with exactly one integer value" ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    knora-base:isDeleted         false .
+
+<http://rdfh.ch/0001/t1TgU0hUS3O3DDE9thMqdQ/values/5btBYtgJT06vzdC490R7og> 
+    a                            knora-base:IntValue ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:valueHasUUID      "5btBYtgJT06vzdC490R7og"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    knora-base:valueCreationDate "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
+    knora-base:valueHasInteger   42 ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasString    "42" .
