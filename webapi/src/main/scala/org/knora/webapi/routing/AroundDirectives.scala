@@ -34,7 +34,7 @@ trait AroundDirectives extends InstrumentationSupport {
     val start = System.currentTimeMillis()
     mapResponse { resp =>
       val duration = System.currentTimeMillis() - start
-      val message = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}ms"
+      val message  = s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}ms"
       if (resp.status.isFailure()) metricsLogger.warn(message) else metricsLogger.debug(message)
 
       val path          = replaceIris(ctx.request.uri.path.toString())
