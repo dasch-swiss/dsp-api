@@ -1,5 +1,19 @@
 # Changelog
 
+## [29.1.1](https://github.com/dasch-swiss/dsp-api/compare/v29.1.0...v29.1.1) (2023-07-24)
+
+
+### Maintenance
+
+* add some OCI docker image labels to DSP-API for DataDog source code linking (INFRA-328) ([#2750](https://github.com/dasch-swiss/dsp-api/issues/2750)) ([b3296dc](https://github.com/dasch-swiss/dsp-api/commit/b3296dcf4fb2f6c6fa6920086f83c1a2ed9cee1b))
+* bump Jena Fuseki version to 4.9.0 ([#2761](https://github.com/dasch-swiss/dsp-api/issues/2761)) ([92b3ca3](https://github.com/dasch-swiss/dsp-api/commit/92b3ca3fc5ffd9ba65399660f80751ea5d445ae5))
+* fix expired token in SIPI test ([#2755](https://github.com/dasch-swiss/dsp-api/issues/2755)) ([fd1ce2b](https://github.com/dasch-swiss/dsp-api/commit/fd1ce2b650c2c2c67998bfb20989f1facd4d233f))
+* reorganize test data ([#2757](https://github.com/dasch-swiss/dsp-api/issues/2757)) ([9b68d1c](https://github.com/dasch-swiss/dsp-api/commit/9b68d1cca4646c4ab6fe522ad73a5b87316665d1))
+* Simplify GroupStatus model ([#2741](https://github.com/dasch-swiss/dsp-api/issues/2741)) ([0b6d102](https://github.com/dasch-swiss/dsp-api/commit/0b6d10222cb43d8ddec41fe0e55818871f3f9b1d))
+* simplify test data in repository ([#2753](https://github.com/dasch-swiss/dsp-api/issues/2753)) ([a2a7fb7](https://github.com/dasch-swiss/dsp-api/commit/a2a7fb7ee671d9e93b3bfeb140db200739dbbe2a))
+* tidy up scripts ([#2754](https://github.com/dasch-swiss/dsp-api/issues/2754)) ([8bb261f](https://github.com/dasch-swiss/dsp-api/commit/8bb261fc5bf2351fb6dbd96e8d3e1c20450155a9))
+* Use JwtService to generate a jwt in SipiIT ([#2756](https://github.com/dasch-swiss/dsp-api/issues/2756)) ([70037b0](https://github.com/dasch-swiss/dsp-api/commit/70037b0801582f1c2ee4977736f9e4d8440362a2))
+
 ## [29.1.0](https://github.com/dasch-swiss/dsp-api/compare/v29.0.1...v29.1.0) (2023-07-06)
 
 
