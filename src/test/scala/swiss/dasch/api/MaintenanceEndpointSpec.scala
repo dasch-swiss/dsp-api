@@ -7,6 +7,7 @@ package swiss.dasch.api
 
 import swiss.dasch.api.MaintenanceEndpoint.MappingEntry
 import swiss.dasch.domain.*
+import swiss.dasch.domain.SipiImageFormat.Jpg
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.{ existingProject, nonExistentProject }
 import swiss.dasch.test.{ SpecConfigurations, SpecConstants }
@@ -70,8 +71,8 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
 
         for {
           response         <- MaintenanceEndpoint.app.runZIO(request).logError
-          newOrigExistsJpx <- doesOrigExist(assetJpx, Jpg)
-          newOrigExistsJp2 <- doesOrigExist(assetJp2, Tif)
+          newOrigExistsJpx <- doesOrigExist(assetJpx, SipiImageFormat.Jpg)
+          newOrigExistsJp2 <- doesOrigExist(assetJp2, SipiImageFormat.Tif)
           assetInfoJpx     <- loadAssetInfo(assetJpx)
           assetInfoJp2     <- loadAssetInfo(assetJp2)
           checksumsCorrect <-
@@ -95,17 +96,10 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
     .provide(
       AssetInfoServiceLive.layer,
       FileChecksumServiceLive.layer,
+      ImageServiceLive.layer,
       ProjectServiceLive.layer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
-      ZLayer.succeed(SipiClientMock()),
+      SipiClientMock.layer,
     )
-}
-
-final case class SipiClientMock() extends SipiClient {
-  override def transcodeImageFile(
-      fileIn: file.Path,
-      fileOut: file.Path,
-      outputFormat: SipiImageFormat,
-    ): Task[SipiOutput] = Files.createFile(fileOut).as(SipiOutput("", ""))
 }

@@ -64,7 +64,7 @@ final case class ProjectServiceLive(
     Files.isDirectory(path) &&
     Files
       .walk(path, maxDepth = 3)
-      .filterZIO(it => Files.isRegularFile(it) && Files.isHidden(it).negate)
+      .filterZIO(FileFilters.isNonHiddenRegularFile)
       .runHead
       .map(_.isDefined)
 

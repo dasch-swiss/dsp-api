@@ -12,13 +12,22 @@ import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.existingProject
 import zio.*
+import zio.json.{ DeriveJsonCodec, JsonCodec }
 import zio.nio.file.Files
 import zio.test.*
+import zio.test.Assertion.failsWithA
 
+import java.nio.file.NoSuchFileException
+import java.text.ParseException
 import java.time.format.DateTimeFormatter
 import java.time.{ ZoneId, ZoneOffset }
 
 object StorageServiceLiveSpec extends ZIOSpecDefault {
+
+  final private case class SomeJsonContent(value: String)
+  private object SomeJsonContent {
+    implicit val codec: JsonCodec[SomeJsonContent] = DeriveJsonCodec.gen[SomeJsonContent]
+  }
 
   val spec = suite("StorageServiceLiveSpec")(
     test("should return the path of the folder where the asset is stored") {
@@ -97,6 +106,50 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
             )
           isRemoved   <- Files.notExists(tempDir)
         } yield assertTrue(isRemoved)
+      },
+    ),
+    suite("load and save json files")(
+      test("should overwrite (i.e. create new) and load a json file") {
+        ZIO.scoped {
+          val expected = SomeJsonContent("test")
+          for {
+            tempDir <- Files.createTempDirectoryScoped(Some("test"), List.empty)
+            testFile = tempDir / "create-new-test.json"
+            _       <- StorageService.saveJsonFile(testFile, expected)
+            actual  <- StorageService.loadJsonFile[SomeJsonContent](testFile)
+          } yield assertTrue(actual == expected)
+        }
+      },
+      test("should overwrite existing file and load a json file") {
+        ZIO.scoped {
+          val expected = SomeJsonContent("test-expected")
+          for {
+            tempDir <- Files.createTempDirectoryScoped(Some("test"), List.empty)
+            testFile = tempDir / "overwrite-test.json"
+            _       <- StorageService.saveJsonFile(testFile, SomeJsonContent("test-this-should-be-overwritten"))
+            _       <- StorageService.saveJsonFile(testFile, expected)
+            actual  <- StorageService.loadJsonFile[SomeJsonContent](testFile)
+          } yield assertTrue(actual == expected)
+        }
+      },
+      test("should fail to load a non-existing json file") {
+        ZIO.scoped {
+          for {
+            tempDir <- Files.createTempDirectoryScoped(Some("test"), List.empty)
+            testFile = tempDir / "this-does-not-exist.json"
+            actual  <- StorageService.loadJsonFile[SomeJsonContent](testFile).exit
+          } yield assert(actual)(failsWithA[NoSuchFileException])
+        }
+      },
+      test("should fail to load a non existing json file") {
+        ZIO.scoped {
+          for {
+            tempDir <- Files.createTempDirectoryScoped(Some("test"), List.empty)
+            testFile = tempDir / "this-does-not-exist.json"
+            _       <- Files.createFile(testFile) *> Files.writeLines(testFile, List("not a json file"))
+            actual  <- StorageService.loadJsonFile[SomeJsonContent](testFile).exit
+          } yield assert(actual)(failsWithA[ParseException])
+        }
       },
     ),
   ).provide(AssetInfoServiceLive.layer, StorageServiceLive.layer, SpecConfigurations.storageConfigLayer)

@@ -8,10 +8,14 @@ package swiss.dasch.domain
 import org.apache.commons.io.FileUtils
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
-import zio.json.{ DecoderOps, JsonDecoder }
+import zio.json.{ DecoderOps, EncoderOps, JsonDecoder, JsonEncoder }
 import zio.nio.file.{ Files, Path }
+import zio.stream.ZStream
 
 import java.io.IOException
+import java.nio.file.StandardOpenOption.*
+import java.nio.file.{ OpenOption, StandardOpenOption }
+import java.text.ParseException
 import java.time.format.DateTimeFormatter
 import java.time.{ ZoneId, ZoneOffset }
 
@@ -22,22 +26,31 @@ trait StorageService  {
   def getTempDirectory(): UIO[Path]
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]
+  def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit]
 }
 object StorageService {
-  def maxParallelism(): Int                                                                            = 10
-  def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, Path]               =
+  def findInPath(
+      path: Path,
+      filter: FileFilter,
+      maxDepth: Int = Int.MaxValue,
+    ): ZStream[Any, IOException, Path] =
+    Files.walk(path, maxDepth).filterZIO(filter)
+  def maxParallelism(): Int                                                                                           = 10
+  def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, Path]                              =
     ZIO.serviceWithZIO[StorageService](_.getProjectDirectory(projectShortcode))
-  def getAssetDirectory(asset: Asset): RIO[StorageService, Path]                                       =
+  def getAssetDirectory(asset: Asset): RIO[StorageService, Path]                                                      =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory(asset))
-  def getAssetDirectory(): RIO[StorageService, Path]                                                   =
+  def getAssetDirectory(): RIO[StorageService, Path]                                                                  =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory())
-  def getTempDirectory(): RIO[StorageService, Path]                                                    =
+  def getTempDirectory(): RIO[StorageService, Path]                                                                   =
     ZIO.serviceWithZIO[StorageService](_.getTempDirectory())
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None)
       : ZIO[Scope with StorageService, IOException, Path] =
     ZIO.serviceWithZIO[StorageService](_.createTempDirectoryScoped(directoryName, prefix))
-  def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): ZIO[StorageService, Throwable, A] =
+  def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): ZIO[StorageService, Throwable, A]                =
     ZIO.serviceWithZIO[StorageService](_.loadJsonFile(file)(decoder))
+  def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): ZIO[StorageService, Throwable, Unit] =
+    ZIO.serviceWithZIO[StorageService](_.saveJsonFile(file, content)(encoder))
 }
 
 final case class StorageServiceLive(config: StorageConfig) extends StorageService {
@@ -75,8 +88,13 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
       .flatMap(lines =>
         ZIO
           .fromEither(lines.mkString.fromJson[A])
-          .mapError(e => new IllegalArgumentException(s"Unable to parse $file, reason: $e"))
+          .mapError(e => new ParseException(s"Unable to parse $file, reason: $e", -1))
       )
+
+  override def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit] = {
+    val bytes = Chunk.fromIterable((content.toJsonPretty + "\n").getBytes)
+    Files.writeBytes(file, bytes, CREATE, WRITE, TRUNCATE_EXISTING)
+  }
 }
 object StorageServiceLive {
   val layer: URLayer[StorageConfig, StorageService] = ZLayer.fromFunction(StorageServiceLive.apply _)

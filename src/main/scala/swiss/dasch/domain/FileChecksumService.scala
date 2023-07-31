@@ -23,7 +23,6 @@ trait FileChecksumService  {
   def verifyChecksumOrig(asset: Asset): Task[Boolean]
   def verifyChecksumDerivative(asset: Asset): Task[Boolean]
   def verifyChecksum(assetInfo: AssetInfo): Task[Chunk[ChecksumResult]]
-  def createSha256Hash(path: Path): IO[FileNotFoundException, Sha256Hash]
 }
 object FileChecksumService {
   def verifyChecksumOrig(asset: Asset): ZIO[FileChecksumService, Throwable, Boolean]                   =
@@ -32,8 +31,22 @@ object FileChecksumService {
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksumDerivative(asset))
   def verifyChecksum(assetInfo: AssetInfo): ZIO[FileChecksumService, Throwable, Chunk[ChecksumResult]] =
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksum(assetInfo))
-  def createSha256Hash(path: Path): ZIO[FileChecksumService, FileNotFoundException, Sha256Hash]        =
-    ZIO.serviceWithZIO[FileChecksumService](_.createSha256Hash(path))
+
+  def createSha256Hash(path: Path): IO[FileNotFoundException, Sha256Hash] =
+    ZIO.scoped(ScopedIoStreams.fileInputStream(path).flatMap(hashSha256))
+
+  private def hashSha256(fis: FileInputStream): UIO[Sha256Hash] = {
+    val digest    = java.security.MessageDigest.getInstance("SHA-256")
+    val buffer    = new Array[Byte](8192)
+    var bytesRead = 0
+    while ({
+      bytesRead = fis.read(buffer)
+      bytesRead != -1
+    }) digest.update(buffer, 0, bytesRead)
+    val sb        = new StringBuilder
+    for (byte <- digest.digest()) sb.append(String.format("%02x", Byte.box(byte)))
+    ZIO.fromEither(Sha256Hash.make(sb.toString())).mapError(IllegalStateException(_)).orDie
+  }
 }
 
 final case class FileChecksumServiceLive(assetInfos: AssetInfoService) extends FileChecksumService {
@@ -47,7 +60,8 @@ final case class FileChecksumServiceLive(assetInfos: AssetInfoService) extends F
     assetInfos.findByAsset(asset).map(checksumAndFile).flatMap(verifyChecksum)
 
   private def verifyChecksum(fileAndChecksum: FileAndChecksum): Task[Boolean] =
-    createSha256Hash(fileAndChecksum.file)
+    FileChecksumService
+      .createSha256Hash(fileAndChecksum.file)
       .logError(s"Unable to calculate checksum for ${fileAndChecksum.file}")
       .map(_ == fileAndChecksum.checksum)
 
@@ -58,21 +72,6 @@ final case class FileChecksumServiceLive(assetInfos: AssetInfoService) extends F
       origResult       <- verifyChecksum(original).map(ChecksumResult(original.file, _))
       derivativeResult <- verifyChecksum(derivative).map(ChecksumResult(derivative.file, _))
     } yield Chunk(origResult, derivativeResult)
-  }
-
-  def createSha256Hash(path: Path): IO[FileNotFoundException, Sha256Hash] =
-    ZIO.scoped(ScopedIoStreams.fileInputStream(path).flatMap(hashSha256))
-
-  private def hashSha256(fis: FileInputStream): UIO[Sha256Hash] = {
-    val digest    = java.security.MessageDigest.getInstance("SHA-256")
-    val buffer    = new Array[Byte](8192)
-    var bytesRead = 0
-    while ({
-      bytesRead = fis.read(buffer); bytesRead != -1
-    }) digest.update(buffer, 0, bytesRead)
-    val sb        = new StringBuilder
-    for (byte <- digest.digest()) sb.append(String.format("%02x", Byte.box(byte)))
-    ZIO.fromEither(Sha256Hash.make(sb.toString())).mapError(IllegalStateException(_)).orDie
   }
 }
 

@@ -8,11 +8,21 @@ package swiss.dasch.domain
 import org.apache.commons.io.FilenameUtils
 import zio.json.EncoderOps
 import swiss.dasch.domain
+import swiss.dasch.domain.FileFilters.isJpeg2000
+import swiss.dasch.domain.SipiImageFormat.Tif
 import zio.*
 import zio.nio.file.{ Files, Path }
 import zio.stream.{ ZSink, ZStream }
 
 object MaintenanceActions {
+
+  def applyTopLeftCorrections(projectPath: Path): ZIO[ImageService, Throwable, Int] =
+    findJpeg2000Files(projectPath)
+      .mapZIOPar(8)(ImageService.applyTopLeftCorrection)
+      .map(_.map(_ => 1).getOrElse(0))
+      .run(ZSink.sum)
+
+  private def findJpeg2000Files(projectPath: Path) = StorageService.findInPath(projectPath, isJpeg2000)
 
   def createOriginals(projectPath: Path, mapping: Map[String, String])
       : ZIO[FileChecksumService with SipiClient, Throwable, Int] =
@@ -20,16 +30,6 @@ object MaintenanceActions {
       .flatMap(findAssetsWithoutOriginal(_, mapping))
       .mapZIOPar(8)(createOriginalAndUpdateInfoFile)
       .run(ZSink.sum)
-
-  private def findJpeg2000Files(projectPath: Path): ZStream[Any, Throwable, Path] =
-    Files
-      .walk(projectPath)
-      .filterZIO(p => Files.isRegularFile(p) && Files.isHidden(p).negate && isJpeg2000File(p))
-
-  private def isJpeg2000File(p: Path) = {
-    val filename = p.filename.toString
-    ZIO.succeed(filename.endsWith(".jpx") || filename.endsWith(".jp2"))
-  }
 
   final private case class CreateOriginalFor(
       assetId: AssetId,
@@ -101,8 +101,7 @@ object MaintenanceActions {
     } yield ()
   }
 
-  private def createNewAssetInfoFileContent(c: CreateOriginalFor)
-      : ZIO[FileChecksumService, Throwable, AssetInfoFileContent] =
+  private def createNewAssetInfoFileContent(c: CreateOriginalFor): IO[Throwable, AssetInfoFileContent] =
     for {
       checksumOriginal   <- FileChecksumService.createSha256Hash(c.originalPath)
       checksumDerivative <- FileChecksumService.createSha256Hash(c.jpxPath)
