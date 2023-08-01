@@ -117,7 +117,7 @@ object Dependencies {
   val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
 
   val webapiIntegrationTestDependencies = Seq(
     akkaHttpTestkit,
