@@ -1,5 +1,12 @@
 # Changelog
 
+## [29.1.2](https://github.com/dasch-swiss/dsp-api/compare/v29.1.1...v29.1.2) (2023-08-02)
+
+
+### Maintenance
+
+* update dependencies ([#2770](https://github.com/dasch-swiss/dsp-api/issues/2770)) ([6e3857e](https://github.com/dasch-swiss/dsp-api/commit/6e3857e93f9f01e729b108603449f75c26382c0f))
+
 ## [29.1.1](https://github.com/dasch-swiss/dsp-api/compare/v29.1.0...v29.1.1) (2023-07-24)
 
 
