@@ -6,23 +6,19 @@
 package org.knora.webapi.messages.util
 
 import akka.testkit.ImplicitSender
-import zio.FiberFailure
-import zio.Unsafe
-import zio.ZIO
-import java.nio.file.Paths
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.responders.v2.ResourcesResponderV2SpecFullData
-import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
+import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.FileUtil
+import zio.{FiberFailure, Unsafe, ZIO}
+
+import java.nio.file.Paths
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 
 /**
  * Tests [[ConstructResponseUtilV2]].
@@ -40,7 +36,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
     "convert a resource Turtle response into a resource" in {
       val resourceIri: IRI = "http://rdfh.ch/0803/c5058f3a"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/Zeitglocklein.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/Zeitglocklein.ttl")
+        )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
@@ -90,7 +88,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
     "convert a resource Turtle response with hidden values into a resource with the anything admin user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl")
+        )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
@@ -141,7 +141,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
     "convert a resource Turtle response with hidden values into a resource with the incunabula user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl")
+        )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
@@ -192,7 +194,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
     "convert a resource Turtle response with a hidden thing into a resource with the anything admin user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl")
+        )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
@@ -243,7 +247,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
     "convert a resource Turtle response with a hidden thing into a resource with an unknown user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl")
+        )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
@@ -294,7 +300,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
     "convert a resource Turtle response with standoff into a resource with anything admin user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/a-thing-with-text-values"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/thingWithStandoff.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/thingWithStandoff.ttl")
+        )
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
@@ -375,7 +383,8 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
        */
 
       val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/76570a749901", "http://rdfh.ch/0803/773f258402")
-      val turtleStr: String      = FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/mainQuery1.ttl"))
+      val turtleStr: String =
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/mainQuery1.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
@@ -457,7 +466,8 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
        */
 
       val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/ff17e5ef9601")
-      val turtleStr: String      = FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/mainQuery2.ttl"))
+      val turtleStr: String =
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/mainQuery2.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         Unsafe.unsafe { implicit u =>
           runtime.unsafe

@@ -6,20 +6,17 @@
 package org.knora.webapi.it.v2
 
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import java.nio.file.Files
-import java.nio.file.Paths
+import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import java.nio.file.{Files, Paths}
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -36,8 +33,10 @@ class KnoraSipiAuthenticationITSpec
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   "The Knora/Sipi authentication" should {
@@ -67,8 +66,7 @@ class KnoraSipiAuthenticationITSpec
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =
-        Get(s"$baseInternalSipiUrl/0803/incunabula_0000000002.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
-
+        Get(s"$baseInternalSipiUrl/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)
     }

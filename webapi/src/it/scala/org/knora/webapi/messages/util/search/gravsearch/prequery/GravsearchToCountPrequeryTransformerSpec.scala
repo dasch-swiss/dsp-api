@@ -5,22 +5,22 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scala.collection.mutable.ArrayBuffer
 import dsp.errors.AssertionException
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
+import org.knora.webapi.messages.util.search.gravsearch.types.{
+  GravsearchTypeInspectionRunner,
+  GravsearchTypeInspectionUtil
+}
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 import zio._
 
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
+import scala.collection.mutable.ArrayBuffer
 
 class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
 

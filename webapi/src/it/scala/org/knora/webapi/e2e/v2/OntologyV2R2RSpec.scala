@@ -5,45 +5,30 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.Accept
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import spray.json._
-
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.time.Instant
-import scala.concurrent.ExecutionContextExecutor
+import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
 import dsp.valueobjects.{Iri, LangString, LanguageCode}
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter, ValuesValidator}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.models._
-import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.routing.v2.ResourcesRouteV2
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.routing.v2.{OntologiesRouteV2, ResourcesRouteV2}
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util._
+import spray.json._
 
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+import java.net.URLEncoder
+import java.nio.file.{Files, Path, Paths}
+import java.time.Instant
+import scala.concurrent.ExecutionContextExecutor
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
@@ -79,20 +64,23 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
-      path = "test_data/ontologies/example-box.ttl",
+      path = "test_data/project_ontologies/example-box.ttl",
       name = "http://www.knora.org/ontology/shared/example-box"
     ),
-    RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal"),
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/minimal-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/minimal"
+    ),
+    RdfDataObject(
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     ),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   // Directory path for generated client test data
@@ -133,7 +121,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   ) {
     def makeFile(mediaType: MediaType.NonBinary): Path = {
       val fileSuffix = mediaType.fileExtensions.head
-      Paths.get("..", "test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
+      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
     }
 
     /**

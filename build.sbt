@@ -41,8 +41,7 @@ lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
-    sipi,
-    schemaCore
+    sipi
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
@@ -239,6 +238,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
+    dockerLabels := Map[String, Option[String]](
+      "org.opencontainers.image.version"  -> (ThisBuild / version).value.some,
+      "org.opencontainers.image.revision" -> git.gitHeadCommit.value,
+      "org.opencontainers.image.source"   -> Some("github.com/dasch-swiss/dsp-api")
+    ).collect { case (key, Some(value)) => (key, value) },
     dockerCommands += Cmd(
       "RUN",
       "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"
@@ -265,19 +269,4 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "fuseki"   -> Dependencies.fusekiImage
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
-  )
-  .dependsOn(schemaCore)
-
-//////////////////////////////////////
-// DSP's new codebase
-//////////////////////////////////////
-
-// schema project
-lazy val schemaCore = project
-  .in(file("dsp-schema/core"))
-  .settings(
-    scalacOptions ++= customScalacOptions,
-    name := "schemaCore",
-    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )

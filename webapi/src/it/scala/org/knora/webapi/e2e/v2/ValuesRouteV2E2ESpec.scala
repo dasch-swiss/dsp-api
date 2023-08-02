@@ -8,8 +8,19 @@ package org.knora.webapi.e2e.v2
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
+import dsp.errors.AssertionException
+import dsp.valueobjects.{Iri, UuidUtil}
+import org.knora.webapi._
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter, ValuesValidator}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util._
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 import java.net.URLEncoder
@@ -18,23 +29,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import dsp.errors.AssertionException
-import dsp.valueobjects.{Iri, UuidUtil}
-import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
@@ -65,7 +59,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private var linkValueUUID    = UUID.randomUUID
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   // If true, writes some API responses to test data files. If false, compares the API responses to the existing test data files.
@@ -679,7 +673,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     val expectedResponseStr =
       readOrWriteTextFile(
         responseStr,
-        Paths.get("..", s"test_data/valuesE2EV2/$fileBasename.jsonld"),
+        Paths.get("..", s"test_data/generated_test_data/valuesE2EV2/$fileBasename.jsonld"),
         writeTestDataFiles
       )
     compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
@@ -2054,7 +2048,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a text value with standoff containing escaped text" in {
       val resourceIri                               = AThing.iri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val jsonLDEntity                              = FileUtil.readTextFile(Paths.get("..", "test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
+      val jsonLDEntity =
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
@@ -3973,8 +3968,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update a text value with standoff containing escaped text" in {
       val resourceIri                               = AThing.iri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val jsonLDEntity                              = FileUtil.readTextFile(Paths.get("..", "test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
-      val jsonLDEntityWithResourceValueIri          = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
+      val jsonLDEntity =
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
+      val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
       val request = Put(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)

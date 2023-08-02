@@ -5,15 +5,15 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import org.knora.webapi.{ApiV2Complex, CoreSpec}
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SmartIriLiteralV2, SparqlSelectRequest}
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.{ApiV2Complex, CoreSpec}
 
 import java.util.UUID
 
@@ -26,11 +26,11 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     )
   )

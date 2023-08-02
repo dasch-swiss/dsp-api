@@ -9,28 +9,21 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
+import org.knora.webapi.core.{AppRouter, AppServer, TestStartupUtils}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.util.{FileUtil, LogAspect}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.concurrent.Future
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.AppServer
-import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
-import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.LogAspect
-
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**

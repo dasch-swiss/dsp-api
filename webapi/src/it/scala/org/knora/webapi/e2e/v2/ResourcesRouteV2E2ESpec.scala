@@ -5,22 +5,28 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.MediaRange
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.Accept
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
+import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
+import com.typesafe.config.{Config, ConfigFactory}
+import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
+import org.knora.webapi._
+import org.knora.webapi.e2e.{ClientTestDataCollector, InstanceChecker, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter, ValuesValidator}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.v2.OntologiesRouteV2
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
+import org.knora.webapi.util._
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import spray.json.JsValue
-import spray.json.JsonParser
+import spray.json.{JsValue, JsonParser}
 import zio.durationInt
 
 import java.net.URLEncoder
@@ -28,28 +34,7 @@ import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS, SECONDS}
-import dsp.errors.AssertionException
-import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.InstanceChecker
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.e2e.v2.ResponseCheckerV2._
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 /**
  * Tests the API v2 resources route.
@@ -71,23 +56,25 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
   private val writeTestDataFiles = false
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/sequences-onto.ttl",
+      path = "test_data/project_ontologies/sequences-onto.ttl",
       name = "http://www.knora.org/ontology/0001/sequences"
     ),
     RdfDataObject(
-      path = "test_data/all_data/sequences-data.ttl",
+      path = "test_data/project_data/sequences-data.ttl",
       name = "http://www.knora.org/data/0001/sequences"
     )
   )
@@ -153,7 +140,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -181,7 +168,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerTurtle = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"),
         writeTestDataFiles
       )
       assert(parseTurtle(responseAsString) == parseTurtle(expectedAnswerTurtle))
@@ -195,7 +182,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerRdfXml = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"),
         writeTestDataFiles
       )
       assert(parseRdfXml(responseAsString) == parseRdfXml(expectedAnswerRdfXml))
@@ -209,7 +196,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -223,7 +210,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/AThing.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/AThing.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -240,7 +227,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -263,7 +250,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerTurtle =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"),
           writeTestDataFiles
         )
       assert(parseTurtle(responseAsString) == parseTurtle(expectedAnswerTurtle))
@@ -279,7 +266,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerRdfXml =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.rdf"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.rdf"),
           writeTestDataFiles
         )
       assert(parseRdfXml(responseAsString) == parseRdfXml(expectedAnswerRdfXml))
@@ -294,7 +281,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimplePreview.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimplePreview.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -310,7 +297,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -324,7 +311,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -338,7 +325,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingWithBCEDate.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithBCEDate.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -359,7 +346,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingWithBCEDate2.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithBCEDate2.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -380,7 +367,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingWithListValue.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithListValue.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -403,7 +390,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingWithListValueSimple.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithListValueSimple.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -424,7 +411,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithLinkComplex.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -446,7 +433,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingWithLinkSimple.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithLinkSimple.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -468,7 +455,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingWithTextLangComplex.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithTextLangComplex.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -491,7 +478,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingWithTextLangSimple.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithTextLangSimple.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -513,7 +500,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/Testding.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/Testding.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -536,7 +523,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingWithPicture.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithPicture.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -560,7 +547,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingWithOneHiddenResource.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithOneHiddenResource.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -582,7 +569,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingWithOneDeletedResource.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithOneDeletedResource.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -604,7 +591,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingWithVersionHistory.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithVersionHistory.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -619,7 +606,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingWithVersionHistory.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithVersionHistory.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -633,7 +620,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/CompleteVersionHistory.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/CompleteVersionHistory.jsonld"),
           writeTestDataFiles
         )
       compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -649,7 +636,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/PartialVersionHistory.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/PartialVersionHistory.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -680,7 +667,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             val expectedAnswerJSONLD =
               readOrWriteTextFile(
                 versionResponseAsString,
-                Paths.get("..", s"test_data/resourcesR2RV2/ThingWithVersionHistory$arkTimestamp.jsonld"),
+                Paths.get(
+                  "..",
+                  s"test_data/generated_test_data/resourcesR2RV2/ThingWithVersionHistory$arkTimestamp.jsonld"
+                ),
                 writeTestDataFiles
               )
             compareJSONLDForResourcesResponse(
@@ -724,7 +714,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingGraphBoth.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingGraphBoth.jsonld"),
         writeTestDataFiles
       )
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -742,7 +732,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingGraphOutbound.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingGraphOutbound.jsonld"),
         writeTestDataFiles
       )
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -760,7 +750,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/ThingGraphInbound.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingGraphInbound.jsonld"),
         writeTestDataFiles
       )
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -781,7 +771,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingGraphBothWithExcludedProp.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingGraphBothWithExcludedProp.jsonld"),
           writeTestDataFiles
         )
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -800,7 +790,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedAnswerJSONLD =
         readOrWriteTextFile(
           responseAsString,
-          Paths.get("..", "test_data/resourcesR2RV2/ThingGraphBothWithDepth.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingGraphBothWithDepth.jsonld"),
           writeTestDataFiles
         )
       val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
@@ -854,7 +844,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD = readOrWriteTextFile(
         responseAsString,
-        Paths.get("..", "test_data/resourcesR2RV2/BooksFromIncunabula.jsonld"),
+        Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BooksFromIncunabula.jsonld"),
         writeTestDataFiles
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
@@ -1081,7 +1071,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "create a resource whose label contains a Unicode escape and quotation marks" in {
       val jsonLDEntity: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld")
+        )
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
@@ -1554,7 +1546,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "create a resource containing escaped text" in {
       val jsonLDEntity =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld")
+        )
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
@@ -1810,7 +1804,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
       // Create a resource containing the text of Hamlet.
 
-      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/hamlet.xml"))
+      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
 
       val jsonLDEntity =
         s"""{
@@ -1848,7 +1842,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     }
 
     "read the large text and its markup as XML, and check that it matches the original XML" ignore { // depends on previous test
-      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/hamlet.xml"))
+      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
 
       // Request the newly created resource.
       val resourceGetRequest = Get(
@@ -2101,7 +2095,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val expectedJson: JsValue = JsonParser(
         readOrWriteTextFile(
           responseStr,
-          Paths.get("..", "test_data/resourcesR2RV2/IIIFManifest.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/IIIFManifest.jsonld"),
           writeTestDataFiles
         )
       )

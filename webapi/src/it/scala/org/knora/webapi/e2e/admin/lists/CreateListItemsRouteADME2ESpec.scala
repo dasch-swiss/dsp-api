@@ -9,33 +9,21 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.knora.webapi.e2e.admin.lists
+import org.knora.webapi.{E2ESpec, IRI}
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.IRI
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.AkkaHttpUtils
-import org.knora.webapi.util.MutableTestIri
-
 /**
  * End-to-End (E2E) test specification for testing lists endpoint.
  */
-class CreateListItemsRouteADME2ESpec
-    extends E2ESpec
-    with SessionJsonProtocol
-    with TriplestoreJsonProtocol
-    with ListADMJsonProtocol {
+class CreateListItemsRouteADME2ESpec extends E2ESpec with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
@@ -45,22 +33,17 @@ class CreateListItemsRouteADME2ESpec
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
-  override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-  )
-
-  val anythingUserCreds: CredentialsADM = CredentialsADM(
+  val anythingUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingUser1,
     "test"
   )
 
-  val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
+  val anythingAdminUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.anythingAdminUser,
     "test"
   )
 
-  val beolAdminUserCreds: CredentialsADM = CredentialsADM(
+  val beolAdminUserCreds: CredentialsADM = lists.CredentialsADM(
     SharedTestDataADM.beolUser,
     "test"
   )

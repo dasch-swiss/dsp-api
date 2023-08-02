@@ -6,12 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
-
-import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.NotFoundException
+import dsp.errors.{BadRequestException, DuplicateValueException, NotFoundException}
 import dsp.valueobjects.Group._
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.V2
@@ -21,6 +16,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
+
+import java.util.UUID
 
 /**
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.

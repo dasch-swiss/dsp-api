@@ -6,15 +6,12 @@
 package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.config.AppConfig.AppConfigurations
+import org.knora.webapi.testcontainers.{FusekiTestContainer, SipiTestContainer}
 import zio._
 import zio.config._
-import zio.config.typesafe.TypesafeConfigSource
-
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
 import zio.config.magnolia._
-
-import org.knora.webapi.config.AppConfig.AppConfigurations
+import zio.config.typesafe.TypesafeConfigSource
 
 /**
  * Alters the AppConfig with the TestContainer ports for Fuseki and Sipi.

@@ -6,13 +6,11 @@
 package org.knora.webapi.it
 
 import akka.http.scaladsl.model._
+import org.knora.webapi.ITKnoraLiveSpec
 import spray.json._
 
-import java.util.NoSuchElementException
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-import org.knora.webapi.ITKnoraLiveSpec
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.

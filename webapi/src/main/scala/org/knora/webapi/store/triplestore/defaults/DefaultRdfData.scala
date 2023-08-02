@@ -40,47 +40,47 @@ object DefaultRdfData {
       name = "http://www.knora.org/ontology/salsah-gui"
     ),
     RdfDataObject(
-      path = "test_data/all_data/admin-data.ttl",
+      path = "test_data/project_data/admin-data.ttl",
       name = "http://www.knora.org/data/admin"
     ),
     RdfDataObject(
-      path = "test_data/all_data/permissions-data.ttl",
+      path = "test_data/project_data/permissions-data.ttl",
       name = "http://www.knora.org/data/permissions"
     ),
     RdfDataObject(
-      path = "test_data/all_data/system-data.ttl",
+      path = "test_data/project_data/system-data.ttl",
       name = "http://www.knora.org/data/0000/SystemProject"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/something-onto.ttl",
+      path = "test_data/project_ontologies/something-onto.ttl",
       name = "http://www.knora.org/ontology/0001/something"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/images-onto.ttl",
+      path = "test_data/project_ontologies/images-onto.ttl",
       name = "http://www.knora.org/ontology/00FF/images"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/beol-onto.ttl",
+      path = "test_data/project_ontologies/beol-onto.ttl",
       name = "http://www.knora.org/ontology/0801/beol"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/biblio-onto.ttl",
+      path = "test_data/project_ontologies/biblio-onto.ttl",
       name = "http://www.knora.org/ontology/0801/biblio"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/incunabula-onto.ttl",
+      path = "test_data/project_ontologies/incunabula-onto.ttl",
       name = "http://www.knora.org/ontology/0803/incunabula"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/dokubib-onto.ttl",
+      path = "test_data/project_ontologies/dokubib-onto.ttl",
       name = "http://www.knora.org/ontology/0804/dokubib"
     ),
     RdfDataObject(
-      path = "test_data/ontologies/webern-onto.ttl",
+      path = "test_data/project_ontologies/webern-onto.ttl",
       name = "http://www.knora.org/ontology/0806/webern"
     )
   )

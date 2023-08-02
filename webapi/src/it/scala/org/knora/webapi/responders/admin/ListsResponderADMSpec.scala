@@ -7,26 +7,22 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit._
-
-import java.util.UUID
-import scala.concurrent.duration._
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.UpdateNotPerformedException
+import dsp.errors.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.{Iri, V2}
 import org.knora.webapi._
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{
+  ListChildNodeCreatePayloadADM,
+  ListRootNodeCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1._
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.util.MutableTestIri
+
+import java.util.UUID
 
 /**
  * Tests [[ListsResponderADM]].
@@ -34,8 +30,14 @@ import org.knora.webapi.util.MutableTestIri
 class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/images-demo-data.ttl",
+      name = "http://www.knora.org/data/00FF/images"
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo

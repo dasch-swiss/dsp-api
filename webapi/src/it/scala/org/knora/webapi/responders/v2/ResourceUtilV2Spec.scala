@@ -5,13 +5,12 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.util.Timeout
-import zio.ZIO
-import scala.concurrent.ExecutionContextExecutor
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
+import zio.ZIO
+
+import scala.concurrent.ExecutionContextExecutor
 
 object ResourceUtilV2Spec {}
 
@@ -19,7 +18,10 @@ class ResourceUtilV2Spec extends CoreSpec {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   "ResourceUtil" when {
