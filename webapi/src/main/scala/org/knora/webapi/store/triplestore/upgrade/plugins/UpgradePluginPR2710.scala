@@ -556,12 +556,16 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       copyStatement(typeStatement, obj = Some(nodeFactory.makeIriNode(KnoraBase.FormattedTextValue)))
 
     val stringValueStatement: Statement = findStringValueStatement(adjustable, model)
-    val newString                       = stringValueStatement.obj.stringValue + "\u001E"
+    val origString                      = stringValueStatement.obj.stringValue
+
+    val normalizedString                      = normalizeWhitespace(origString)
+    val normalizedStringWithNewlinesCorrected = stripNewlinesForSpecificProjects(normalizedString, adjustable.graph)
+    val newString                             = normalizedStringWithNewlinesCorrected + "\u001E"
     val newStringValue: Statement =
-      copyStatement(stringValueStatement, obj = Some(nodeFactory.makeStringLiteral(newString.replaceAll("\n", ""))))
-    // note: for CKEditor it would have to be
-    // "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>   x</p></text>"
-    // (every odd space is a non-breaking space U+00a0)
+      copyStatement(
+        stringValueStatement,
+        obj = Some(nodeFactory.makeStringLiteral(newString.replaceAll("\n", "\u001E")))
+      )
 
     val newStandoffStatements: Set[Statement] =
       generateStandardMappingStandoffStatements(adjustable, newString)
@@ -576,6 +580,16 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
       statementsToInsert = statementsToInsert
     )
   }
+
+  private def normalizeWhitespace(s: String): String =
+    s.trim.replaceAll("[\\s&&[^\n]]+", " ").replaceAll(" ?\n ?", "\n")
+
+  def stripNewlinesForSpecificProjects(s: String, graph: IRI): String =
+    if (graph == "http://www.knora.org/data/0807/mls") {
+      val noEmSpace  = s.replaceAll("\u2003", " ")
+      val normalized = normalizeWhitespace(noEmSpace)
+      normalized.replaceAll(" ?\\- ?\n", "").replaceAll("\n", " ").replaceAll(" +", " ")
+    } else s
 
   private def addCustomMappingToUnformattedValue(
     model: RdfModel,
