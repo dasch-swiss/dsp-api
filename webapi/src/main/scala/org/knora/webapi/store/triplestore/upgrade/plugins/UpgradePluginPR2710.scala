@@ -557,20 +557,15 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
 
     val stringValueStatement: Statement = findStringValueStatement(adjustable, model)
     val origString                      = stringValueStatement.obj.stringValue
-    val origStringStatement = copyStatement(
-      stringValueStatement,
-      pred = Some(nodeFactory.makeIriNode(KnoraBase.ValueHasOriginalString))
-    )
 
-    val newString = normalizeWhitespace(origString) + "\u001E"
+    val normalizedString                      = normalizeWhitespace(origString)
+    val normalizedStringWithNewlinesCorrected = stripNewlinesForSpecificProjects(normalizedString, adjustable.graph)
+    val newString                             = normalizedStringWithNewlinesCorrected + "\u001E"
     val newStringValue: Statement =
       copyStatement(
         stringValueStatement,
         obj = Some(nodeFactory.makeStringLiteral(newString.replaceAll("\n", "\u001E")))
       )
-    // note: for CKEditor it would have to be
-    // "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>   x</p></text>"
-    // (every odd space is a non-breaking space U+00a0)
 
     val newStandoffStatements: Set[Statement] =
       generateStandardMappingStandoffStatements(adjustable, newString)
@@ -588,6 +583,13 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
 
   private def normalizeWhitespace(s: String): String =
     s.trim.replaceAll("[\\s&&[^\n]]+", " ").replaceAll(" ?\n ?", "\n")
+
+  def stripNewlinesForSpecificProjects(s: String, graph: IRI): String =
+    if (graph == "http://www.knora.org/data/0807/mls") {
+      val noEmSpace  = s.replaceAll("\u2003", " ")
+      val normalized = normalizeWhitespace(noEmSpace)
+      normalized.replaceAll(" ?\\- ?\n", "").replaceAll("\n", " ").replaceAll(" +", " ")
+    } else s
 
   private def addCustomMappingToUnformattedValue(
     model: RdfModel,
