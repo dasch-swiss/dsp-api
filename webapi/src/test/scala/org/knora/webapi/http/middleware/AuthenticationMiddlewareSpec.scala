@@ -25,15 +25,14 @@ object AuthenticationMiddlewareSpec extends ZIOSpecDefault {
     id = "http://rdfh.ch/users/someuser",
     username = "someuser",
     email = "some.user@example.com",
-    password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
-    token = None,
     givenName = "Some",
     familyName = "User",
     status = true,
     lang = "en",
+    password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"),
+    token = None,
     groups = Seq.empty[GroupADM],
     projects = Seq.empty[ProjectADM],
-    sessionId = None,
     permissions = PermissionsDataADM()
   )
 

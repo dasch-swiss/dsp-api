@@ -32,7 +32,7 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault with LazyLogging {
 
   val upgradePlugin = new NoopPlugin()
   // val upgradePlugin = new UpgradePluginPR2710(logger)
-  val testDataPath = "../test_data/all_data" // for VSCode
+  val testDataPath = "../test_data/project_data" // for VSCode
   // val testDataPath  = "test_data/all_data" // for Intellij IDEA
 
   def discoverFiles(dirPath: String) =

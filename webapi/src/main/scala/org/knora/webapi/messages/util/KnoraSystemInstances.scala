@@ -25,15 +25,14 @@ object KnoraSystemInstances {
       id = OntologyConstants.KnoraAdmin.AnonymousUser,
       username = "anonymous",
       email = "anonymous@localhost",
-      password = None,
-      token = None,
       givenName = "Knora",
       familyName = "Anonymous",
       status = true,
       lang = "en",
+      password = None,
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      sessionId = None,
       permissions = PermissionsDataADM()
     )
 
@@ -44,15 +43,14 @@ object KnoraSystemInstances {
       id = OntologyConstants.KnoraAdmin.SystemUser,
       username = "system",
       email = "system@localhost",
-      password = None,
-      token = None,
       givenName = "Knora",
       familyName = "System",
       status = true,
       lang = "en",
+      password = None,
+      token = None,
       groups = Seq.empty[GroupADM],
       projects = Seq.empty[ProjectADM],
-      sessionId = None,
       permissions = PermissionsDataADM()
     )
   }

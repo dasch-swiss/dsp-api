@@ -6,32 +6,22 @@
 package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
-
-import scala.concurrent.duration._
-
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentRequest
-import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRequest
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
+
+import scala.concurrent.duration._
 
 class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 
   override implicit val timeout: FiniteDuration = 30.seconds
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    )
   )
 
   val countTriplesQuery: String =

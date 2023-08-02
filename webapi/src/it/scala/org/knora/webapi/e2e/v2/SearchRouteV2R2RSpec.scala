@@ -5,46 +5,29 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart}
 import dsp.valueobjects.Iri
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
+import org.knora.webapi._
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords, JsonLDUtil}
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2, ValuesRouteV2}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{FileUtil, MutableTestIri}
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import spray.json.JsString
 
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
-import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.e2e.v2.ResponseCheckerV2._
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.v1.ValuesRouteV1
-import org.knora.webapi.routing.v2.ResourcesRouteV2
-import org.knora.webapi.routing.v2.SearchRouteV2
-import org.knora.webapi.routing.v2.StandoffRouteV2
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.MutableTestIri
-
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
@@ -62,7 +45,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
   private val standoffPath =
     DSPApiDirectives.handleErrors(system, appConfig)(StandoffRouteV2().makeRoute)
   private val valuesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV1().makeRoute)
+    DSPApiDirectives.handleErrors(system, appConfig)(ValuesRouteV2().makeRoute)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -88,22 +71,27 @@ class SearchRouteV2R2RSpec extends R2RSpec {
   private val clientTestDataCollector = new ClientTestDataCollector(appConfig)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
-    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/books"),
-    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
-      path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
+    RdfDataObject(path = "test_data/project_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+    RdfDataObject(
+      path = "test_data/project_ontologies/books-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/books"
+    ),
+    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books"),
+    RdfDataObject(
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl",
       name = "http://www.knora.org/data/admin"
     ),
     RdfDataObject(
-      path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
       name = "http://www.knora.org/ontology/0666/gravsearchtest1"
     ),
     RdfDataObject(
-      path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
+      path = "test_data/generated_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
       name = "http://www.knora.org/data/0666/gravsearchtest1"
     )
   )
@@ -117,7 +105,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/NarrFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/NarrFulltextSearch.jsonld"),
           writeTestDataFiles
         )
 
@@ -148,7 +136,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/searchResponseWithHiddenResource.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/searchResponseWithHiddenResource.jsonld"),
             writeTestDataFiles
           )
 
@@ -166,7 +154,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", s"test_data/searchR2RV2/DingeFulltextSearch.jsonld"),
+          Paths.get("..", s"test_data/generated_test_data/searchR2RV2/DingeFulltextSearch.jsonld"),
           writeTestDataFiles
         )
 
@@ -185,7 +173,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", s"test_data/searchR2RV2/DingeFulltextSearchSimple.jsonld"),
+            Paths.get("..", s"test_data/generated_test_data/searchR2RV2/DingeFulltextSearchSimple.jsonld"),
             writeTestDataFiles
           )
 
@@ -215,7 +203,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingUniform.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingUniform.jsonld"),
           writeTestDataFiles
         )
 
@@ -233,7 +221,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingUniform.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingUniform.jsonld"),
           writeTestDataFiles
         )
 
@@ -251,7 +239,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/FulltextSearchWithImage.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/FulltextSearchWithImage.jsonld"),
             writeTestDataFiles
           )
 
@@ -316,7 +304,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseStr,
-            Paths.get("..", "test_data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -402,7 +390,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -448,7 +439,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -490,7 +484,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"),
+          Paths.get(
+            "..",
+            "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"
+          ),
           writeTestDataFiles
         )
 
@@ -533,7 +530,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"),
+          Paths.get(
+            "..",
+            "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"
+          ),
           writeTestDataFiles
         )
 
@@ -614,7 +614,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -659,7 +662,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"),
             writeTestDataFiles
           )
 
@@ -754,7 +757,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -804,7 +810,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"),
             writeTestDataFiles
           )
 
@@ -856,7 +862,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -906,7 +915,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"),
             writeTestDataFiles
           )
 
@@ -957,7 +966,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -1047,7 +1059,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/BooksPublishedOnDate.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedOnDate.jsonld"),
           writeTestDataFiles
         )
 
@@ -1098,7 +1110,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -1152,7 +1164,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -1205,7 +1217,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -1258,7 +1270,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -1311,7 +1323,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -1364,7 +1376,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -1418,7 +1430,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"),
             writeTestDataFiles
           )
 
@@ -1482,7 +1494,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/RegionsForPage.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/RegionsForPage.jsonld"),
           writeTestDataFiles
         )
 
@@ -1550,7 +1562,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"),
+            Paths
+              .get("..", "test_data/generated_test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"),
             writeTestDataFiles
           )
 
@@ -1612,7 +1625,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"),
             writeTestDataFiles
           )
 
@@ -1666,7 +1679,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/IncomingLinksForBook.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/IncomingLinksForBook.jsonld"),
           writeTestDataFiles
         )
 
@@ -1745,7 +1758,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
           writeTestDataFiles
         )
 
@@ -1791,7 +1804,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"),
           writeTestDataFiles
         )
 
@@ -1838,7 +1851,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"),
             writeTestDataFiles
           )
 
@@ -1881,7 +1894,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/thingWithURI.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingWithURI.jsonld"),
           writeTestDataFiles
         )
 
@@ -1963,7 +1976,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingWithBoolean.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBoolean.jsonld"),
           writeTestDataFiles
         )
 
@@ -2017,7 +2030,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithBooleanOptionalOffset0.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBooleanOptionalOffset0.jsonld"),
             writeTestDataFiles
           )
 
@@ -2074,7 +2087,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"),
             writeTestDataFiles
           )
 
@@ -2134,7 +2147,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"),
             writeTestDataFiles
           )
 
@@ -2183,7 +2196,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"),
             writeTestDataFiles
           )
 
@@ -2231,7 +2244,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -2279,7 +2292,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -2327,7 +2340,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -2372,7 +2385,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingWithListValue.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithListValue.jsonld"),
           writeTestDataFiles
         )
 
@@ -2419,7 +2432,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -2463,7 +2476,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -2480,7 +2493,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -2500,7 +2513,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
+            Paths
+              .get("..", "test_data/generated_test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
             writeTestDataFiles
           )
 
@@ -2537,7 +2551,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
+            Paths
+              .get("..", "test_data/generated_test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
             writeTestDataFiles
           )
 
@@ -2573,7 +2588,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
+            Paths
+              .get("..", "test_data/generated_test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
             writeTestDataFiles
           )
 
@@ -2663,7 +2679,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LinkObjectsToBooks.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LinkObjectsToBooks.jsonld"),
           writeTestDataFiles
         )
 
@@ -2722,7 +2738,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/letterWithAuthor.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithAuthor.jsonld"),
           writeTestDataFiles
         )
 
@@ -2840,7 +2856,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName.jsonld"),
             writeTestDataFiles
           )
 
@@ -2967,7 +2983,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -3021,7 +3037,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/foafPerson.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/foafPerson.jsonld"),
           writeTestDataFiles
         )
 
@@ -3068,7 +3084,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -3131,7 +3147,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -3184,7 +3200,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/incomingPagesForBook.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/incomingPagesForBook.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -3292,7 +3308,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -3332,7 +3348,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -3381,7 +3397,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -3428,7 +3444,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -3473,7 +3489,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -3517,7 +3533,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -3561,7 +3577,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -3602,7 +3618,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithoutName.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithoutName.jsonld"),
             writeTestDataFiles
           )
 
@@ -3645,7 +3661,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/booksWithPage100.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/booksWithPage100.jsonld"),
           writeTestDataFiles
         )
 
@@ -3690,7 +3706,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/lettersByMeier.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/lettersByMeier.jsonld"),
           writeTestDataFiles
         )
 
@@ -3729,7 +3745,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -3771,7 +3790,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -3809,7 +3831,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"),
+          Paths.get(
+            "..",
+            "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"
+          ),
           writeTestDataFiles
         )
 
@@ -3848,7 +3873,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"),
+          Paths.get(
+            "..",
+            "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"
+          ),
           writeTestDataFiles
         )
 
@@ -3921,7 +3949,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -3962,7 +3993,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"),
             writeTestDataFiles
           )
 
@@ -4046,7 +4077,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -4127,7 +4161,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"),
             writeTestDataFiles
           )
 
@@ -4172,7 +4206,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -4215,7 +4252,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"),
             writeTestDataFiles
           )
 
@@ -4259,7 +4296,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -4337,7 +4377,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/BooksPublishedOnDate.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedOnDate.jsonld"),
           writeTestDataFiles
         )
 
@@ -4381,7 +4421,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -4428,7 +4468,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -4475,7 +4515,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -4522,7 +4562,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -4569,7 +4609,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -4616,7 +4656,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -4663,7 +4703,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"),
             writeTestDataFiles
           )
 
@@ -4714,7 +4754,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/RegionsForPage.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/RegionsForPage.jsonld"),
           writeFile = false
         )
 
@@ -4769,7 +4809,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"),
+            Paths
+              .get("..", "test_data/generated_test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"),
             writeTestDataFiles
           )
 
@@ -4818,7 +4859,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"),
             writeTestDataFiles
           )
 
@@ -4863,7 +4904,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/IncomingLinksForBook.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/IncomingLinksForBook.jsonld"),
           writeTestDataFiles
         )
 
@@ -4936,7 +4977,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
           writeTestDataFiles
         )
 
@@ -4978,7 +5019,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"),
           writeTestDataFiles
         )
 
@@ -5021,7 +5062,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"),
             writeFile = false
           )
 
@@ -5097,7 +5138,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingWithBoolean.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBoolean.jsonld"),
           writeTestDataFiles
         )
 
@@ -5144,7 +5185,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"),
             writeTestDataFiles
           )
 
@@ -5198,7 +5239,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"),
             writeTestDataFiles
           )
 
@@ -5244,7 +5285,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"),
             writeTestDataFiles
           )
 
@@ -5290,7 +5331,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -5336,7 +5377,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -5380,7 +5421,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -5421,7 +5462,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingWithListValue.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithListValue.jsonld"),
           writeTestDataFiles
         )
 
@@ -5462,7 +5503,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -5500,7 +5541,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -5542,7 +5583,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LinkObjectsToBooks.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LinkObjectsToBooks.jsonld"),
           writeTestDataFiles
         )
 
@@ -5592,7 +5633,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/letterWithAuthor.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithAuthor.jsonld"),
           writeTestDataFiles
         )
 
@@ -5647,7 +5688,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName.jsonld"),
             writeTestDataFiles
           )
 
@@ -5702,7 +5743,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -5754,7 +5795,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/foafPerson.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/foafPerson.jsonld"),
           writeTestDataFiles
         )
 
@@ -5796,7 +5837,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -5845,7 +5886,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -5891,7 +5932,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/incomingPagesForBook.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/incomingPagesForBook.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -5980,7 +6021,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -6017,7 +6058,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -6057,7 +6098,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingWithListNodeLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithListNodeLabel.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -6144,7 +6185,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"),
             writeFile = false
           )
 
@@ -6242,7 +6283,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingsWithOptionalDecimalGreaterThan1.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingsWithOptionalDecimalGreaterThan1.jsonld"),
             writeTestDataFiles
           )
 
@@ -6284,7 +6325,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/booksWithPage100.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/booksWithPage100.jsonld"),
           writeTestDataFiles
         )
 
@@ -6329,7 +6370,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/lettersByMeier.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/lettersByMeier.jsonld"),
           writeTestDataFiles
         )
 
@@ -6368,7 +6409,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -6441,7 +6485,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -6484,7 +6531,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"),
             writeTestDataFiles
           )
 
@@ -6570,7 +6617,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -6650,7 +6700,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"),
             writeTestDataFiles
           )
 
@@ -6697,7 +6747,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -6740,7 +6793,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"),
             writeTestDataFiles
           )
 
@@ -6784,7 +6837,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"
+            ),
             writeTestDataFiles
           )
 
@@ -6828,7 +6884,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/BooksPublishedOnDate.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedOnDate.jsonld"),
           writeTestDataFiles
         )
 
@@ -6873,7 +6929,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -6921,7 +6977,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksNotPublishedOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -6969,7 +7025,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBeforeDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -7017,7 +7073,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -7065,7 +7121,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedAfterDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -7113,7 +7169,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"),
             writeTestDataFiles
           )
 
@@ -7161,7 +7217,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksPublishedBetweenDates.jsonld"),
             writeTestDataFiles
           )
 
@@ -7201,7 +7257,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/RegionsForPage.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/RegionsForPage.jsonld"),
           writeFile = false
         )
 
@@ -7256,7 +7312,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"),
+            Paths
+              .get("..", "test_data/generated_test_data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"),
             writeTestDataFiles
           )
 
@@ -7305,7 +7362,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"),
             writeTestDataFiles
           )
 
@@ -7349,7 +7406,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/IncomingLinksForBook.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/IncomingLinksForBook.jsonld"),
           writeTestDataFiles
         )
 
@@ -7389,7 +7446,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
           writeTestDataFiles
         )
 
@@ -7423,7 +7480,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingEqualsDecimal.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -7463,7 +7520,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingBiggerThanDecimal.jsonld"),
           writeTestDataFiles
         )
 
@@ -7500,7 +7557,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD: String =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingSmallerThanDecimal.jsonld"),
             writeTestDataFiles
           )
 
@@ -7545,7 +7602,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD: String =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithLinkToStart.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithLinkToStart.jsonld"),
             writeTestDataFiles
           )
 
@@ -7586,7 +7643,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD: String = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/PageOfThings.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/PageOfThings.jsonld"),
           writeTestDataFiles
         )
 
@@ -7636,7 +7693,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingWithBoolean.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBoolean.jsonld"),
           writeTestDataFiles
         )
 
@@ -7689,7 +7746,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"),
             writeTestDataFiles
           )
 
@@ -7744,7 +7801,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"),
             writeTestDataFiles
           )
 
@@ -7792,7 +7849,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"),
             writeTestDataFiles
           )
 
@@ -7838,7 +7895,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -7884,7 +7941,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
 
@@ -7925,7 +7982,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/ThingWithListValue.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithListValue.jsonld"),
           writeTestDataFiles
         )
 
@@ -7966,7 +8023,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8006,7 +8063,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LanguageFulltextSearch.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8048,7 +8105,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/LinkObjectsToBooks.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LinkObjectsToBooks.jsonld"),
           writeTestDataFiles
         )
 
@@ -8098,7 +8155,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/letterWithAuthor.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithAuthor.jsonld"),
           writeTestDataFiles
         )
 
@@ -8152,7 +8209,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName.jsonld"),
             writeTestDataFiles
           )
 
@@ -8206,7 +8263,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithPersonWithName2.jsonld"),
             writeTestDataFiles
           )
 
@@ -8247,7 +8304,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8296,7 +8353,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithAuthorWithInformation.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8344,7 +8401,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/incomingPagesForBook.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/incomingPagesForBook.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8435,7 +8492,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/regionsOfZeitgloecklein.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8631,7 +8688,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingReferringToSpecificListNode.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingReferringToSpecificListNode.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8671,7 +8728,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingNotReferringToSpecificListNode.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingNotReferringToSpecificListNode.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8741,7 +8798,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingReferringToSpecificListNodeWithSubnodes.jsonld"),
+            Paths.get(
+              "..",
+              "test_data/generated_test_data/searchR2RV2/thingReferringToSpecificListNodeWithSubnodes.jsonld"
+            ),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8778,7 +8838,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/letterWithSubject.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/letterWithSubject.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8815,7 +8875,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingsWithStandoffLinks.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingsWithStandoffLinks.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8853,7 +8913,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingsWithStandoffLinks.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingsWithStandoffLinks.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8890,7 +8950,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8928,7 +8988,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -8964,7 +9024,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             responseAs[String],
-            Paths.get("..", "test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
+            Paths
+              .get("..", "test_data/generated_test_data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"),
             writeTestDataFiles
           )
 
@@ -9014,30 +9075,31 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
       }
 
-      // Next, create a resource with a text value containing a standoff date tag. TODO: Use API v2.
+      // Next, create a resource with a text value containing a standoff date tag.
 
-      val xmlFileToSend = Paths.get("..", "test_data/test_route/texts/HTML.xml")
-
-      val newValueParams =
-        s"""
-           |{
-           |  "project_id": "http://rdfh.ch/projects/0001",
-           |  "res_id": "http://rdfh.ch/0001/a-thing",
-           |  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
-           |  "richtext_value": {
-           |        "xml": ${JsString(FileUtil.readTextFile(xmlFileToSend))},
-           |        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
+      val xmlForJson = stringFormatter.toJsonEncodedString(
+        FileUtil.readTextFile(Paths.get("..", "test_data/test_route/texts/HTML.xml"))
+      )
+      val requestBody =
+        s"""{
+           |  "@id" : "http://rdfh.ch/0001/a-thing",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:textValueAsXml" : $xmlForJson,
+           |    "knora-api:textValueHasMapping" : {
+           |      "@id": "$anythingProjectIri/mappings/HTMLMapping"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
-           |}
-                 """.stripMargin
+           |}""".stripMargin
 
-      Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
+      Post("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, requestBody)) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
-      ) ~> valuesPath ~> check {
-
-        assert(status == StatusCodes.OK)
-
-      }
+      ) ~> valuesPath ~> check(assert(status == StatusCodes.OK))
 
       // Finally, do a Gravsearch query that finds the date tag.
 
@@ -9141,7 +9203,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
       // Create a resource containing the text of Hamlet.
 
-      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/hamlet.xml"))
+      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
 
       val jsonLDEntity =
         s"""{
@@ -9182,7 +9244,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     }
 
     "search for the large text and its markup and receive it as XML, and check that it matches the original XML" ignore { // depends on previous test
-      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/hamlet.xml"))
+      val hamletXml = FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/hamlet.xml"))
 
       val gravsearchQuery =
         s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -9378,7 +9440,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ThingWithTimeStamp.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithTimeStamp.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9414,7 +9476,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ThingWithHiddenThing.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingWithHiddenThing.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9470,7 +9532,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val expectedAnswerJSONLD =
           readOrWriteTextFile(
             searchResponseStr,
-            Paths.get("..", "test_data/searchR2RV2/ThingFromQueryWithUnion.jsonld"),
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/ThingFromQueryWithUnion.jsonld"),
             writeTestDataFiles
           )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9676,7 +9738,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9705,7 +9767,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeFile = false
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9735,7 +9797,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeFile = false
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9765,7 +9827,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeFile = false
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9794,7 +9856,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeFile = false
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9823,7 +9885,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeFile = false
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9852,7 +9914,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeFile = false
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9881,7 +9943,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/ZeitgloeckleinViaLabel.jsonld"),
           writeFile = false
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9915,7 +9977,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD = readOrWriteTextFile(
           searchResponseStr,
-          Paths.get("..", "test_data/searchR2RV2/LetterNotToSelf.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/LetterNotToSelf.jsonld"),
           writeTestDataFiles
         )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
@@ -9948,7 +10010,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val searchResponseStr = responseAs[String]
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD =
-          readOrWriteTextFile(searchResponseStr, Paths.get("..", "test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+          readOrWriteTextFile(
+            searchResponseStr,
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/LetterNotToSelf.jsonld")
+          )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
       }
     }
@@ -9979,7 +10044,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val searchResponseStr = responseAs[String]
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD =
-          readOrWriteTextFile(searchResponseStr, Paths.get("..", "test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+          readOrWriteTextFile(
+            searchResponseStr,
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/LetterNotToSelf.jsonld")
+          )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
       }
     }
@@ -10010,7 +10078,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val searchResponseStr = responseAs[String]
         assert(status == StatusCodes.OK, searchResponseStr)
         val expectedAnswerJSONLD =
-          readOrWriteTextFile(searchResponseStr, Paths.get("..", "test_data/searchR2RV2/LetterNotToSelf.jsonld"))
+          readOrWriteTextFile(
+            searchResponseStr,
+            Paths.get("..", "test_data/generated_test_data/searchR2RV2/LetterNotToSelf.jsonld")
+          )
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
       }
     }
@@ -10035,7 +10106,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/SearchbylabelSimple.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/SearchbylabelSimple.jsonld"),
           writeTestDataFiles
         )
 
@@ -10064,7 +10135,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/SearchbylabelSimple.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/SearchbylabelSimple.jsonld"),
           writeTestDataFiles
         )
 
@@ -10097,7 +10168,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/SearchbylabelSpecialCharacters.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/SearchbylabelSpecialCharacters.jsonld"),
           writeTestDataFiles
         )
 
@@ -10125,7 +10196,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val expectedAnswerJSONLD = readOrWriteTextFile(
           responseAs[String],
-          Paths.get("..", "test_data/searchR2RV2/SearchbylabelSlashes.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/searchR2RV2/SearchbylabelSlashes.jsonld"),
           writeTestDataFiles
         )
 

@@ -858,7 +858,7 @@ case class TriplestoreServiceLive(
 
         (statusCode, entity) match {
           case (404, _) => ZIO.fail(NotFoundException.notFound)
-          case (500, Some(response)) if response.contains("Text search parse error") =>
+          case (400, Some(response)) if response.contains("Text search parse error") =>
             ZIO.fail(BadRequestException(s"$response"))
           case (500, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
           case (503, Some(response)) if response.contains("Query timed out") =>

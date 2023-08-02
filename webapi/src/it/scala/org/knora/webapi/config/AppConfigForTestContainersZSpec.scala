@@ -5,11 +5,9 @@
 
 package org.knora.webapi.config
 
+import org.knora.webapi.testcontainers.{FusekiTestContainer, SipiTestContainer}
 import zio._
 import zio.test._
-
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
 
 object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
 
@@ -18,9 +16,8 @@ object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
       for {
         appConfig     <- ZIO.service[AppConfig]
         sipiContainer <- ZIO.service[SipiTestContainer]
-        sipiPort      <- ZIO.succeed(sipiContainer.container.getFirstMappedPort)
       } yield {
-        assertTrue(appConfig.sipi.internalPort == sipiPort)
+        assertTrue(appConfig.sipi.internalPort == sipiContainer.port)
       }
     }
   ).provide(

@@ -478,7 +478,7 @@ final case class PermissionsResponderADMLive(
   ): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.admin.txt
                                .getAdministrativePermissionsForProject(
                                  projectIri = projectIRI
                                )
@@ -567,7 +567,7 @@ final case class PermissionsResponderADMLive(
   ): Task[Option[AdministrativePermissionADM]] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.admin.txt
                                .getAdministrativePermissionForProjectAndGroup(
                                  projectIri = projectIri,
                                  groupIri = groupIri
@@ -783,7 +783,7 @@ final case class PermissionsResponderADMLive(
             throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
           }
       sparqlQueryString <- ZIO.attempt(
-                             twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.admin.txt
                                .getObjectAccessPermission(
                                  resourceIri = Some(resourceIri),
                                  valueIri = None
@@ -840,7 +840,7 @@ final case class PermissionsResponderADMLive(
             throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
           }
       sparqlQueryString <- ZIO.attempt(
-                             twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.admin.txt
                                .getObjectAccessPermission(
                                  resourceIri = None,
                                  valueIri = Some(valueIri)
@@ -894,7 +894,7 @@ final case class PermissionsResponderADMLive(
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             twirl.queries.sparql.v1.txt
+                             twirl.queries.sparql.admin.txt
                                .getDefaultObjectAccessPermissionsForProject(
                                  projectIri = projectIri
                                )
@@ -991,7 +991,8 @@ final case class PermissionsResponderADMLive(
     propertyIri: Option[IRI]
   ): Task[Option[DefaultObjectAccessPermissionADM]] = {
     val query =
-      twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermission(projectIri, groupIri, resourceClassIri, propertyIri)
+      twirl.queries.sparql.admin.txt
+        .getDefaultObjectAccessPermission(projectIri, groupIri, resourceClassIri, propertyIri)
     triplestoreService
       .sparqlHttpSelect(query)
       .flatMap(toDefaultObjectAccessPermission(_, projectIri, groupIri, resourceClassIri, propertyIri))

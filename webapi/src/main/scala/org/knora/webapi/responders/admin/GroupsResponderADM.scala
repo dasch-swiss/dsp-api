@@ -289,7 +289,7 @@ final case class GroupsResponderADMLive(
                !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
              }
 
-      query                 = twirl.queries.sparql.v1.txt.getGroupMembersByIri(groupIri)
+      query                 = twirl.queries.sparql.admin.txt.getGroupMembersByIri(groupIri)
       groupMembersResponse <- triplestoreService.sparqlHttpSelect(query.toString())
 
       // get project member IRI from results rows

@@ -6,23 +6,19 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.duration._
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.CalendarNameGregorian
-import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.{
+  CalendarNameGregorian,
+  DatePrecisionYear,
+  KnoraSystemInstances,
+  PermissionUtilADM
+}
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder._
@@ -30,11 +26,14 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.models.filemodels.ChangeFileRequest
-import org.knora.webapi.models.filemodels.FileType
+import org.knora.webapi.models.filemodels.{ChangeFileRequest, FileType}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.MutableTestIri
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.duration._
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -65,18 +64,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
     RdfDataObject(
-      path = "test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
+      path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula"
     ),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
+      path = "test_data/project_ontologies/anything-onto.ttl",
       name = "http://www.knora.org/ontology/0001/anything"
     )
   )

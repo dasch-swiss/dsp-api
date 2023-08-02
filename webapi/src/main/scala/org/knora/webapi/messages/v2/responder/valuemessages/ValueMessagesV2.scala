@@ -22,6 +22,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
@@ -1276,25 +1277,25 @@ object ValueContentV2 {
                 jsonLdObject,
                 requestingUser
               )
-            case IntValue             => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
-            case DecimalValue         => DecimalValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case BooleanValue         => BooleanValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case DateValue            => DateValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case GeomValue            => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
-            case IntervalValue        => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
-            case TimeValue            => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
-            case LinkValue            => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ListValue            => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
-            case UriValue             => UriValueContentV2.fromJsonLdObject(jsonLdObject)
-            case GeonameValue         => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ColorValue           => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
-            case StillImageFileValue  => StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case DocumentFileValue    => DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case TextFileValue        => TextFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case AudioFileValue       => AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case MovingImageFileValue => MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case ArchiveFileValue     => ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case other                => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
+            case IntValue                    => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
+            case DecimalValue                => DecimalValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case BooleanValue                => BooleanValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case KnoraApiV2Complex.DateValue => DateValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case GeomValue                   => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
+            case IntervalValue               => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
+            case TimeValue                   => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
+            case LinkValue                   => LinkValueContentV2.fromJsonLdObject(jsonLdObject)
+            case ListValue                   => HierarchicalListValueContentV2.fromJsonLdObject(jsonLdObject)
+            case UriValue                    => UriValueContentV2.fromJsonLdObject(jsonLdObject)
+            case GeonameValue                => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
+            case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
+            case StillImageFileValue         => StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case DocumentFileValue           => DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case TextFileValue               => TextFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case AudioFileValue              => AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case MovingImageFileValue        => MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case ArchiveFileValue            => ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case other                       => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
           }
 
       } yield valueContent

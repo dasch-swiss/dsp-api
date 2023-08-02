@@ -10,26 +10,20 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.AkkaHttpUtils
-import org.knora.webapi.util.MutableTestIri
-
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol with SessionJsonProtocol {
+class GroupsADME2ESpec extends E2ESpec with GroupsADMJsonProtocol {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
   // Directory path for generated client test data

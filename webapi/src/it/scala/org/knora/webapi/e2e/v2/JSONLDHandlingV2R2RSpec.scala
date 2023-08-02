@@ -5,21 +5,17 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import spray.json._
-
-import java.net.URLEncoder
-import java.nio.file.Paths
-import scala.concurrent.ExecutionContextExecutor
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.v2.ResourcesRouteV2
+import spray.json._
 
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+import java.net.URLEncoder
+import java.nio.file.Paths
+import scala.concurrent.ExecutionContextExecutor
 
 /**
  * End-to-end specification for the handling of JSONLD documents.
@@ -31,9 +27,14 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    )
   )
 
   "The JSON-LD processor" should {
@@ -42,7 +43,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
       val jsonldWithPrefixes =
         readOrWriteTextFile(
           "",
-          Paths.get("..", "test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
           writeFile = false
         )
 
@@ -53,7 +54,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
       val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(
         readOrWriteTextFile(
           "",
-          Paths.get("..", "test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
           writeFile = false
         )
       )
@@ -76,7 +77,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
           JsonParser(
             readOrWriteTextFile(
               "",
-              Paths.get("..", "test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+              Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
               writeFile = false
             )
           ).asJsObject

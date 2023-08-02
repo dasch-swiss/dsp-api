@@ -5,14 +5,12 @@
 
 package org.knora.webapi.util.rdf
 
-import java.io.BufferedInputStream
-import java.io.FileInputStream
-
 import dsp.errors.AssertionException
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.IRI
+import org.knora.webapi.{CoreSpec, IRI}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
+
+import java.io.{BufferedInputStream, FileInputStream}
 
 /**
  * Tests implementations of [[RdfModel]].
@@ -296,7 +294,8 @@ class RdfModelSpec() extends CoreSpec {
     }
 
     "do a SPARQL SELECT query" in {
-      val fileInputStream = new BufferedInputStream(new FileInputStream("../test_data/all_data/anything-data.ttl"))
+      val fileInputStream =
+        new BufferedInputStream(new FileInputStream("../test_data/project_data/anything-data.ttl"))
       val anythingModel: RdfModel =
         rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
       fileInputStream.close()

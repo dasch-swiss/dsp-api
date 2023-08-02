@@ -38,7 +38,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
@@ -93,31 +92,12 @@ trait Authenticator {
   def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[UserADM]
 
   /**
-   * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message. No session is
-   * generated.
-   *
-   * @param requestContext       a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]]
-   */
-  def doAuthenticateV1(requestContext: RequestContext): Task[HttpResponse]
-
-  /**
    * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.
    *
    * @param requestContext a [[RequestContext]] containing the http request
    * @return a [[HttpResponse]]
    */
   def doLogoutV2(requestContext: RequestContext): Task[HttpResponse]
-
-  /**
-   * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message and cookie header
-   * with the generated session id for the client to save.
-   *
-   * @param requestContext       a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
-   *         the generated session id.
-   */
-  def doLoginV1(requestContext: RequestContext): Task[HttpResponse]
 
   /**
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
@@ -188,47 +168,6 @@ final case class AuthenticatorLive(
 ) extends Authenticator {
 
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
-
-  /**
-   * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message and cookie header
-   * with the generated session id for the client to save.
-   *
-   * @param requestContext       a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
-   *         the generated session id.
-   */
-  override def doLoginV1(requestContext: RequestContext): Task[HttpResponse] = {
-    val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
-
-    for {
-      userADM     <- getUserADMThroughCredentialsV2(credentials)
-      cookieDomain = Some(appConfig.cookieDomain)
-      jwt         <- jwtService.createJwt(userADM)
-      httpResponse = HttpResponse(
-                       headers = List(
-                         headers.`Set-Cookie`(
-                           HttpCookie(
-                             calculateCookieName(),
-                             jwt.jwtString,
-                             domain = cookieDomain,
-                             path = Some("/"),
-                             httpOnly = true
-                           )
-                         )
-                       ), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
-                       status = StatusCodes.OK,
-                       entity = HttpEntity(
-                         ContentTypes.`application/json`,
-                         JsObject(
-                           "status"      -> JsNumber(0),
-                           "message"     -> JsString("credentials are OK"),
-                           "sid"         -> JsString(jwt.jwtString),
-                           "userProfile" -> userADM.asUserProfileV1.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
-                         ).compactPrint
-                       )
-                     )
-    } yield httpResponse
-  }
 
   /**
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
@@ -317,29 +256,6 @@ final case class AuthenticatorLive(
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Authentication ENTRY POINT
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Checks if the credentials provided in [[RequestContext]] are valid, and if so returns a message. No session is
-   * generated.
-   *
-   * @param requestContext       a [[RequestContext]] containing the http request
-   * @return a [[HttpResponse]]
-   */
-  override def doAuthenticateV1(requestContext: RequestContext): Task[HttpResponse] =
-    getUserADMThroughCredentialsV2(extractCredentialsV2(requestContext))
-      .map(userADM =>
-        HttpResponse(
-          status = StatusCodes.OK,
-          entity = HttpEntity(
-            ContentTypes.`application/json`,
-            JsObject(
-              "status"      -> JsNumber(0),
-              "message"     -> JsString("credentials are OK"),
-              "userProfile" -> userADM.asUserProfileV1.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
-            ).compactPrint
-          )
-        )
-      )
 
   /**
    * Checks if the credentials provided in [[RequestContext]] are valid.
@@ -694,7 +610,7 @@ final case class AuthenticatorLive(
                     userIri <-
                       jwtService
                         .extractUserIriFromToken(jwtToken)
-                        .flatMap(ZIO.fromOption(_))
+                        .some
                         .orElseFail(
                           AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         )
@@ -705,7 +621,7 @@ final case class AuthenticatorLive(
                     userIri <-
                       jwtService
                         .extractUserIriFromToken(sessionToken)
-                        .flatMap(ZIO.fromOption(_))
+                        .some
                         .orElseFail(
                           AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         )
@@ -794,8 +710,7 @@ trait JwtService {
 
 final case class JwtServiceLive(
   private val jwtConfig: JwtConfig,
-  private val dspIngestConfig: DspIngestConfig,
-  private val stringFormatter: StringFormatter
+  private val dspIngestConfig: DspIngestConfig
 ) extends JwtService {
   private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
   private val header: String          = """{"typ":"JWT","alg":"HS256"}"""
@@ -891,6 +806,6 @@ final case class JwtServiceLive(
     }
 }
 object JwtServiceLive {
-  val layer: URLayer[DspIngestConfig with JwtConfig with StringFormatter, JwtServiceLive] =
+  val layer: URLayer[DspIngestConfig with JwtConfig, JwtServiceLive] =
     ZLayer.fromFunction(JwtServiceLive.apply _)
 }

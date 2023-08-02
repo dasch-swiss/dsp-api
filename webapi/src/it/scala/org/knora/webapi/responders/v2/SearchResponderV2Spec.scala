@@ -6,20 +6,16 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.SchemaOptions
+import dsp.errors.BadRequestException
+import org.knora.webapi.{ApiV2Complex, CoreSpec, SchemaOptions}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.{ReadValueV2, StillImageFileValueContentV2}
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import dsp.errors.BadRequestException
 
 /**
  * Tests [[SearchResponderV2]].
@@ -28,11 +24,19 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/books"),
-    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/books")
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
+    RdfDataObject(
+      path = "test_data/project_data/anything-data.ttl",
+      name = "http://www.knora.org/data/0001/anything"
+    ),
+    RdfDataObject(
+      path = "test_data/project_ontologies/books-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/books"
+    ),
+    RdfDataObject(path = "test_data/project_data/books-data.ttl", name = "http://www.knora.org/data/0001/books")
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 

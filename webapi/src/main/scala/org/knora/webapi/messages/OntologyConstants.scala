@@ -603,19 +603,6 @@ object OntologyConstants {
     val Contains: IRI = XPathPrefixExpansion + "contains"
   }
 
-  object KnoraXmlImportV1 {
-
-    object ProjectSpecificXmlImportNamespace {
-      val XmlImportNamespaceStart: String = KnoraApi.ApiOntologyStart
-      val XmlImportNamespaceEnd: String   = "/xml-import/v1#"
-    }
-
-    val KnoraXmlImportNamespacePrefixLabel: String = "knoraXmlImport"
-    val KnoraXmlImportNamespaceV1: IRI             = KnoraApi.ApiOntologyStart + KnoraXmlImportNamespacePrefixLabel + "/v1#"
-
-    val Resources: IRI = KnoraXmlImportNamespaceV1 + "resources"
-  }
-
   object KnoraApi {
     // The hostname of a Knora API ontology IRI.
     val ApiOntologyHostname: String = "http://api.knora.org"

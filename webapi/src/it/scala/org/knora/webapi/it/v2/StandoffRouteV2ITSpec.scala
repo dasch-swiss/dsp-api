@@ -6,13 +6,24 @@
 package org.knora.webapi.it.v2
 
 import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import dsp.valueobjects.Iri
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
+import org.knora.webapi._
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
+import org.knora.webapi.models.filemodels.{FileType, UploadFileRequest}
+import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
+import org.knora.webapi.util.{FileUtil, MutableTestIri}
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
 
@@ -20,23 +31,6 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
-import org.knora.webapi.models.filemodels.FileType
-import org.knora.webapi.models.filemodels.UploadFileRequest
-import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1.anythingProjectIri
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.MutableTestIri
 
 /**
  * Integration test specification for the standoff endpoint.
@@ -65,18 +59,15 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   private val freetestXSLTIRI      = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/anything"),
     RdfDataObject(
-      path = "test_data/ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    ),
-    RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+    RdfDataObject(
+      path = "test_data/project_data/freetest-data.ttl",
+      name = "http://www.knora.org/data/0001/freetest"
+    )
   )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
@@ -217,7 +208,9 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       )
 
       val expectedAnswerJSONLD =
-        FileUtil.readTextFile(Paths.get("../test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("../test_data/generated_test_data/standoffR2RV2/mappingCreationResponse.jsonld")
+        )
 
       compareJSONLDForMappingCreationResponse(
         expectedJSONLD = expectedAnswerJSONLD,

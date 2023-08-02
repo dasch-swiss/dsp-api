@@ -881,7 +881,7 @@ final case class UsersResponderADMLive(
     // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                .getUserByIri(
                                  userIri = userIri
                                )
@@ -1921,10 +1921,6 @@ final case class UsersResponderADMLive(
                    .head
                    .asInstanceOf[StringLiteralV2]
                    .value,
-                 password = propsMap
-                   .get(OntologyConstants.KnoraAdmin.Password.toSmartIri)
-                   .map(_.head.asInstanceOf[StringLiteralV2].value),
-                 token = None,
                  givenName = propsMap
                    .getOrElse(
                      OntologyConstants.KnoraAdmin.GivenName.toSmartIri,
@@ -1957,9 +1953,12 @@ final case class UsersResponderADMLive(
                    .head
                    .asInstanceOf[StringLiteralV2]
                    .value,
+                 password = propsMap
+                   .get(OntologyConstants.KnoraAdmin.Password.toSmartIri)
+                   .map(_.head.asInstanceOf[StringLiteralV2].value),
+                 token = None,
                  groups = groups,
                  projects = projects,
-                 sessionId = None,
                  permissions = permissionData
                )
 

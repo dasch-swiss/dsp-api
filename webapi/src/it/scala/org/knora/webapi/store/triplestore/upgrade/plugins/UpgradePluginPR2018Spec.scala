@@ -6,7 +6,6 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
-
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {

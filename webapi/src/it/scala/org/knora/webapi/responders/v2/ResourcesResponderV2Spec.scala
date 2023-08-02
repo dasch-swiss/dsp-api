@@ -6,27 +6,19 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
-import org.xmlunit.diff.Diff
-
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-import scala.concurrent.duration._
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.CalendarNameGregorian
-import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.{
+  CalendarNameGregorian,
+  DatePrecisionYear,
+  KnoraSystemInstances,
+  PermissionUtilADM
+}
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -36,6 +28,13 @@ import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
+
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.UUID
+import scala.concurrent.duration._
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -405,9 +404,12 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(
+      path = "test_data/project_data/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
+    RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(

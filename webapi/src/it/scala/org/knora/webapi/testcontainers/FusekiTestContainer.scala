@@ -5,22 +5,18 @@
 
 package org.knora.webapi.testcontainers
 
+import org.knora.webapi.http.version.BuildInfo
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
-import zio.ZIO
-import zio._
+import zio.{ZIO, _}
 import zio.http.URL
 import zio.macros.accessible
-import zio.nio.file.Files
-import zio.nio.file.Path
-import java.net.Authenticator
-import java.net.PasswordAuthentication
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
+import zio.nio.file.{Files, Path}
+
+import java.net.{Authenticator, PasswordAuthentication}
+import java.net.http.{HttpClient, HttpRequest}
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
-
-import org.knora.webapi.http.version.BuildInfo
 
 @accessible
 trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {

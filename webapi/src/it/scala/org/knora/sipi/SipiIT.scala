@@ -7,29 +7,25 @@ package org.knora.sipi
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.exactly
-import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
+import org.knora.sipi.MockDspApiServer.verify._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.routing.{JwtService, JwtServiceLive}
+import org.knora.webapi.testcontainers.SipiTestContainer
 import zio._
 import zio.http._
 import zio.http.model.Status
 import zio.json.DecoderOps
 import zio.json.ast.Json
 import zio.test._
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
-import org.knora.sipi.MockDspApiServer.verify._
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.sipimessages._
-import org.knora.webapi.testcontainers.SipiTestContainer
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
+import scala.util.{Failure, Success, Try}
 
 object SipiIT extends ZIOSpecDefault {
 
@@ -44,8 +40,10 @@ object SipiIT extends ZIOSpecDefault {
   private def getWithoutAuthorization(path: String) =
     SipiTestContainer.resolveUrl(path).map(Request.get).flatMap(Client.request(_))
 
-  private val jwt =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwLjAuMC4wOjMzMzMiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy9yb290IiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjE2ODk3NTY1MzksImlhdCI6MTY4NzE2NDUzOSwianRpIjoiSG9SSFg5V1lSZHV6VnVmTXZFT1c4USJ9.tlTqr1NGjsOqnMRxjDW1TokDjGAPO5nvG-pcbn09Hrw"
+  private val getToken = JwtService
+    .createJwt(SystemUser)
+    .map(_.jwtString)
+    .provide(JwtServiceLive.layer, AppConfig.layer)
 
   private val cookiesSuite =
     suite("Given a request is authorized using cookies")(
@@ -56,8 +54,9 @@ object SipiIT extends ZIOSpecDefault {
           "and responds with Ok"
       ) {
         for {
-          _ <- copyTestFilesToSipi
-          _ <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
+          jwt <- getToken
+          _   <- copyTestFilesToSipi
+          _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           response <-
             SipiTestContainer
               .resolveUrl(s"/$prefix/$imageTestfile/file")
@@ -79,8 +78,9 @@ object SipiIT extends ZIOSpecDefault {
           "and responds with Ok"
       ) {
         for {
-          _ <- copyTestFilesToSipi
-          _ <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
+          jwt <- getToken
+          _   <- copyTestFilesToSipi
+          _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           response <-
             SipiTestContainer
               .resolveUrl(s"/$prefix/$imageTestfile/file")
@@ -89,7 +89,7 @@ object SipiIT extends ZIOSpecDefault {
           requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
         } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)
       }
-    )
+    ) @@ TestAspect.withLiveClock
 
   private val knoraJsonEndpointSuite =
     suite("Endpoint /{prefix}/{identifier}/knora.json")(

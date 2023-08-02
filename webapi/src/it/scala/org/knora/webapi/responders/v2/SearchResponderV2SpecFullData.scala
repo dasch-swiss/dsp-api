@@ -7,8 +7,6 @@ package org.knora.webapi.responders.v2
 
 import akka.actor.ActorSystem
 import dsp.valueobjects.UuidUtil
-
-import java.time.Instant
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
@@ -17,6 +15,8 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import java.time.Instant
 
 class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 

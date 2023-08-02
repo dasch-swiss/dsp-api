@@ -5,14 +5,13 @@
 
 package org.knora.webapi.util.rdf
 
-import java.nio.file.Paths
-
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
+import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraTurtleResponseV2}
 import org.knora.webapi.util.FileUtil
+
+import java.nio.file.Paths
 
 /**
  * Tests the formatting of Knora API v2 responses.
@@ -129,7 +128,9 @@ class KnoraResponseV2Spec() extends CoreSpec {
     "convert Turtle to JSON-LD" in {
       // Read a Turtle file representing a resource. TODO: Use sample project metadata for this test.
       val turtle: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+        )
 
       // Wrap it in a KnoraTurtleResponseV2.
       val turtleTestResponse = TurtleTestResponse(turtle)
@@ -147,7 +148,9 @@ class KnoraResponseV2Spec() extends CoreSpec {
 
       // Read an isomorphic JSON-LD file and parse it to a JsonLDDocument.
       val expectedJsonLD: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+        )
       val parsedExpectedJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(expectedJsonLD)
 
       // Compare the two documents.
@@ -157,7 +160,9 @@ class KnoraResponseV2Spec() extends CoreSpec {
     "convert JSON-LD to Turtle" in {
       // Read a JSON-LD file representing a resource.
       val jsonLD: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
+        )
 
       // Wrap it in a KnoraJsonLDResponseV2.
       val jsonLDTestResponse = JsonLDTestResponse(JsonLDUtil.parseJsonLD(jsonLD))
@@ -175,7 +180,9 @@ class KnoraResponseV2Spec() extends CoreSpec {
 
       // Read an isomorphic Turtle file and parse it to an RDF4J Model.
       val expectedTurtle: String =
-        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+        FileUtil.readTextFile(
+          Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
+        )
       val parsedExpectedTurtle: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
 
       // Compare the two models.

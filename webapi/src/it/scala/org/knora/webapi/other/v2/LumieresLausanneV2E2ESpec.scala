@@ -5,15 +5,10 @@
 
 package org.knora.webapi.other.v2
 
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 
 /**
  * End-to-End (E2E) test specification for additional testing of permissions.
@@ -22,19 +17,19 @@ class LumieresLausanneV2E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
-      path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl",
+      path = "test_data/generated_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl",
       name = "http://www.knora.org/data/admin"
     ),
     RdfDataObject(
-      path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl",
+      path = "test_data/generated_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl",
       name = "http://www.knora.org/data/permissions"
     ),
     RdfDataObject(
-      path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl",
+      path = "test_data/generated_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl",
       name = "http://www.knora.org/ontology/0113/lumieres-lausanne"
     ),
     RdfDataObject(
-      path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl",
+      path = "test_data/generated_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl",
       name = "http://www.knora.org/data/0113/lumieres-lausanne"
     )
   )

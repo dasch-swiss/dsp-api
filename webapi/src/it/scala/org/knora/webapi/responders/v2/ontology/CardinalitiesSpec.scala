@@ -5,13 +5,11 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import zio.ZIO
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.routing.UnsafeZioRun
+import zio.ZIO
 
 /**
  * This spec is used to test [[CardinalityHandler]].
