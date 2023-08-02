@@ -8,19 +8,8 @@ package org.knora.webapi.e2e.v2
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import dsp.errors.AssertionException
-import dsp.valueobjects.{Iri, UuidUtil}
-import org.knora.webapi._
-import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter, ValuesValidator}
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 
 import java.net.URLEncoder
@@ -29,6 +18,25 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi._
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util._
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
@@ -63,10 +71,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
+      path = "test_data/project_ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
   )
 
   // If true, writes some API responses to test data files. If false, compares the API responses to the existing test data files.

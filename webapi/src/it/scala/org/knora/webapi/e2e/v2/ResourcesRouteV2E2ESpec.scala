@@ -5,28 +5,24 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
-import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpCharsets
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.MediaRange
+import akka.http.scaladsl.model.MediaTypes
+import akka.http.scaladsl.model.Multipart
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Accept
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.{Config, ConfigFactory}
-import dsp.errors.AssertionException
-import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.e2e.{ClientTestDataCollector, InstanceChecker, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.e2e.v2.ResponseCheckerV2._
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter, ValuesValidator}
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
-import org.knora.webapi.util._
-import org.xmlunit.builder.{DiffBuilder, Input}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import spray.json.{JsValue, JsonParser}
+import spray.json.JsValue
+import spray.json.JsonParser
 import zio.durationInt
 
 import java.net.URLEncoder
@@ -34,11 +30,30 @@ import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
-import akka.http.scaladsl.model.Multipart
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.MediaTypes
-import akka.http.scaladsl.model.HttpCharsets
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.SECONDS
+
+import dsp.errors.AssertionException
+import dsp.valueobjects.Iri
+import org.knora.webapi._
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.InstanceChecker
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.v2.OntologiesRouteV2
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util._
 
 /**
  * Tests the API v2 resources route.
