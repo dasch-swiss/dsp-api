@@ -43,15 +43,19 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV2
 class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val aThingIri = "http://rdfh.ch/0001/a-thing"
+  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
+  private val generationeIri   = "http://rdfh.ch/0803/c3f913666f"
+  private val aThingIri        = "http://rdfh.ch/0001/a-thing"
   private val freetestWithAPropertyFromAnythingOntologyIri =
     "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
   private val aThingPictureIri     = "http://rdfh.ch/0001/a-thing-picture"
   private val sierraIri            = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
   private val thingPictureClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
 
-  private val anythingUser1 = SharedTestDataADM.anythingUser1
-  private val anythingUser2 = SharedTestDataADM.anythingUser2
+  private val incunabulaUser        = SharedTestDataADM.incunabulaMemberUser
+  private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
+  private val anythingUser1         = SharedTestDataADM.anythingUser1
+  private val anythingUser2         = SharedTestDataADM.anythingUser2
 
   private val mimeTypeTIFF = "image/tiff"
   private val mimeTypeJP2  = "image/jp2"
@@ -66,6 +70,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
     RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(
+      path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
     RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
     RdfDataObject(
@@ -77,24 +85,30 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   // The default timeout for receiving reply messages from actors.
   override implicit val timeout: FiniteDuration = 30.seconds
 
-  private val firstIntValueVersionIri          = new MutableTestIri // XXX: get rid of these
-  private val intValueIri                      = new MutableTestIri
-  private val intValueIriForFreetest           = new MutableTestIri
-  private val intValueIriWithCustomPermissions = new MutableTestIri
-  private val intValueForRsyncIri              = new MutableTestIri
-  private val decimalValueIri                  = new MutableTestIri
-  private val timeValueIri                     = new MutableTestIri
-  private val dateValueIri                     = new MutableTestIri
-  private val booleanValueIri                  = new MutableTestIri
-  private val geometryValueIri                 = new MutableTestIri
-  private val intervalValueIri                 = new MutableTestIri
-  private val listValueIri                     = new MutableTestIri
-  private val colorValueIri                    = new MutableTestIri
-  private val uriValueIri                      = new MutableTestIri
-  private val geonameValueIri                  = new MutableTestIri
-  private val linkValueIri                     = new MutableTestIri
-  private val standoffLinkValueIri             = new MutableTestIri
-  private val stillImageFileValueIri           = new MutableTestIri
+  private val firstIntValueVersionIri                   = new MutableTestIri
+  private val intValueIri                               = new MutableTestIri
+  private val intValueIriForFreetest                    = new MutableTestIri
+  private val intValueIriWithCustomPermissions          = new MutableTestIri
+  private val intValueForRsyncIri                       = new MutableTestIri
+  private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
+  private val zeitglöckleinCommentWithStandoffIri       = new MutableTestIri
+  private val zeitglöckleinCommentWithCommentIri        = new MutableTestIri
+  private val zeitglöckleinSecondCommentWithStandoffIri = new MutableTestIri
+  private val lobComment1Iri                            = new MutableTestIri
+  private val lobComment2Iri                            = new MutableTestIri
+  private val decimalValueIri                           = new MutableTestIri
+  private val timeValueIri                              = new MutableTestIri
+  private val dateValueIri                              = new MutableTestIri
+  private val booleanValueIri                           = new MutableTestIri
+  private val geometryValueIri                          = new MutableTestIri
+  private val intervalValueIri                          = new MutableTestIri
+  private val listValueIri                              = new MutableTestIri
+  private val colorValueIri                             = new MutableTestIri
+  private val uriValueIri                               = new MutableTestIri
+  private val geonameValueIri                           = new MutableTestIri
+  private val linkValueIri                              = new MutableTestIri
+  private val standoffLinkValueIri                      = new MutableTestIri
+  private val stillImageFileValueIri                    = new MutableTestIri
 
   private var integerValueUUID = UUID.randomUUID // XXX: get rid of these
   private var linkValueUUID    = UUID.randomUUID
