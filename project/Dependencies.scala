@@ -131,7 +131,7 @@ object Dependencies {
     xmlunitCore,
     zioTest,
     zioTestSbt
-  ).map(_ % IntegrationTest)
+  ).map(_ % Test)
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock).map(_ % Test)
 
