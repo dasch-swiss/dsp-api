@@ -20,7 +20,7 @@ Global / semanticdbEnabled                              := true
 Global / semanticdbVersion                              := scalafixSemanticdb.revision
 Global / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
 
 lazy val buildSettings = Seq(
   organization := "org.knora",
@@ -41,7 +41,8 @@ lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
-    sipi
+    sipi,
+    integration
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
@@ -66,14 +67,14 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate webapi/IntegrationTest/headerCreate"
+  "; all webapi/headerCreate webapi/Test/headerCreate integration/headerCreate"
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck webapi/IntegrationTest/headerCheck"
+  "; all webapi/headerCheck webapi/Test/headerCheck integration/headerCheck"
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
-addCommandAlias("it", "IntegrationTest/test")
+addCommandAlias("it", "integration/test")
 
 lazy val customScalacOptions = Seq(
   "-feature",
@@ -161,14 +162,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.webapiIntegrationTestDependencies
-  )
-  .configs(IntegrationTest)
-  .settings(
-    inConfig(IntegrationTest) {
-      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(IntegrationTest)
-    },
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
   .settings(
     // add needed files to production jar
@@ -195,19 +189,123 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-Wunused:imports"
     ),
     logLevel := Level.Info,
+    javaAgents += Dependencies.aspectjweaver
+  )
+  .settings(
+    // prepare for publishing
+
+    // Skip packageDoc and packageSrc task on stage
+    Compile / packageDoc / mappings := Seq(),
+    Compile / packageSrc / mappings := Seq(),
+    // define folders inside container
+    Universal / mappings ++= {
+      // copy the scripts folder
+      directory("webapi/scripts") ++
+        // add knora-ontologies
+        directory("knora-ontologies") ++
+        // copy configuration files to config directory
+        contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
+    },
+    // add 'config' directory to the classpath of the start script,
+    Universal / scriptClasspath := Seq("webapi/scripts", "knora-ontologies", "../config/") ++ scriptClasspath.value,
+    // need this here, so that the Manifest inside the jars has the correct main class set.
+    Compile / mainClass := Some("org.knora.webapi.Main"),
+    // add dockerCommands used to create the image
+    // docker:stage, docker:publishLocal, docker:publish, docker:clean
+    Docker / dockerRepository := Some("daschswiss"),
+    Docker / packageName      := "knora-api",
+    dockerUpdateLatest        := true,
+    dockerBaseImage           := "eclipse-temurin:17-jre-focal",
+    dockerBuildxPlatforms     := Seq("linux/arm64/v8", "linux/amd64"),
+    Docker / maintainer       := "support@dasch.swiss",
+    Docker / dockerExposedPorts ++= Seq(3333, 3339),
+    Docker / defaultLinuxInstallLocation := "/opt/docker",
+    dockerLabels := Map[String, Option[String]](
+      "org.opencontainers.image.version"  -> (ThisBuild / version).value.some,
+      "org.opencontainers.image.revision" -> git.gitHeadCommit.value,
+      "org.opencontainers.image.source"   -> Some("github.com/dasch-swiss/dsp-api")
+    ).collect { case (key, Some(value)) => (key, value) },
+    dockerCommands += Cmd(
+      "RUN",
+      "apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*"
+    ), // install jq for container healthcheck
+    dockerCommands += Cmd(
+      """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
+        |CMD bash /opt/docker/scripts/healthcheck.sh || exit 1""".stripMargin
+    ),
+    // use filterNot to return all items that do NOT meet the criteria
+    dockerCommands := dockerCommands.value.filterNot {
+      // Remove USER command
+      case Cmd("USER", args @ _*) => true
+
+      // don't filter the rest; don't filter out anything that doesn't match a pattern
+      case cmd => false
+    }
+  )
+  .settings(
+    buildInfoKeys ++= Seq[BuildInfoKey](
+      name,
+      version,
+      "akkaHttp" -> Dependencies.AkkaHttpVersion,
+      "sipi"     -> Dependencies.sipiImage,
+      "fuseki"   -> Dependencies.fusekiImage
+    ),
+    buildInfoPackage := "org.knora.webapi.http.version"
+  )
+
+//////////////////////////////////////
+// INTEGRATION (./integration)
+//////////////////////////////////////
+
+run / connectInput := true
+
+lazy val integration: Project = Project(id = "integration", base = file("integration"))
+  .dependsOn(webapi, sipi)
+  .settings(buildSettings)
+  .settings(
+    inConfig(Test) {
+      Defaults.testSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(Test)
+    },
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations",
+      // silence twirl templates unused imports warnings
+      "-Wconf:src=target/.*:s",
+      "-Wunused:imports"
+    ),
+    logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
-    IntegrationTest / exportJars         := false,
-    IntegrationTest / fork               := true,  // run tests in a forked JVM
-    IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
-    IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel
-    // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    // IntegrationTest / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
-    // IntegrationTest / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-    // IntegrationTest / javaOptions += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", // starts sbt with debug port
-    IntegrationTest / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
-    IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
-    // add test framework for running zio-tests
-    IntegrationTest / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Test / exportJars         := false,
+    Test / fork               := true, // run tests in a forked JVM
+    Test / testForkedParallel := false,
+    Test / parallelExecution  := false,
+    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
+    Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.webapiIntegrationTestDependencies
+  )
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
+  .settings(
+    name := "webapi",
+    resolvers ++= Seq(
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+    )
+  )
+  .settings(
+    // add needed files to production jar
+    Compile / packageBin / mappings ++= Seq(
+      (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl")                         -> "knora-ontologies/knora-admin.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl")                          -> "knora-ontologies/knora-base.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl")                          -> "knora-ontologies/salsah-gui.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl")                       -> "knora-ontologies/standoff-data.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl")                       -> "knora-ontologies/standoff-onto.ttl",
+      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
+    ),
+    // use packaged jars (through packageBin) on classpaths instead of class directories for production
+    Compile / exportJars := true
   )
   .settings(
     // prepare for publishing
