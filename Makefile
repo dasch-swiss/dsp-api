@@ -190,7 +190,7 @@ stack-db-only: env-file  ## starts only fuseki.
 client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
 client-test-data: build ## runs the dsp-api e2e and r2r tests and generates client-test-data.
 	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
-	sbt -v "webapi/IntegrationTest/testOnly *E2ESpec *E2EZioHttpSpec *R2RSpec"
+	sbt -v "integration/testOnly *E2ESpec *E2EZioHttpSpec *R2RSpec"
 	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
 
 .PHONY: test-repository-upgrade
@@ -211,19 +211,16 @@ test-all: test integration-test zio-http-test
 
 .PHONY: test
 test: ## runs all unit tests
-	sbt -v coverage test coverageAggregate
+	sbt -v coverage "webapi/test" coverageAggregate
 
 .PHONY: integration-test
 integration-test: docker-build-sipi-image ## runs all integration tests
-	sbt -v coverage "IntegrationTest/test" coverageAggregate
+	sbt -v coverage "integration/test" coverageAggregate
 
 .PHONY: zio-http-test
 zio-http-test: ## runs tests against ZIO HTTP routes
-	sbt -v coverage "webapi/IntegrationTest/testOnly *ZioHttpSpec" -Dkey=zio coverageAggregate
+	sbt -v coverage "integration/testOnly *ZioHttpSpec" -Dkey=zio coverageAggregate
 
-.PHONY: test-shared
-test-shared: ## tests the shared projects (build is not called from this target)
-	sbt -v coverage "shared/test"
 
 #################################
 ## Database Management
@@ -337,6 +334,7 @@ clean-metals: ## clean SBT and Metals related stuff
 	@sbt "clean"
 
 
+.PHONY: clean
 clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp ## clean build artifacts
 	@rm -rf .env
 
