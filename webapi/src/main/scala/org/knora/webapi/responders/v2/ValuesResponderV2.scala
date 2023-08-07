@@ -9,6 +9,7 @@ import akka.http.scaladsl.util.FastFuture
 import zio.Task
 import zio.ZIO
 import zio._
+import zio.macros.accessible
 
 import java.time.Instant
 import java.util.UUID
@@ -53,7 +54,15 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Handles requests to read and write Knora values.
  */
-trait ValuesResponderV2
+@accessible
+trait ValuesResponderV2 {
+  def createValueV2(
+    createValue: CreateValueV2,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[CreateValueResponseV2]
+}
+
 final case class ValuesResponderV2Live(
   appConfig: AppConfig,
   iriService: IriService,
@@ -80,7 +89,7 @@ final case class ValuesResponderV2Live(
    * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case createValueRequest: CreateValueRequestV2 => createValueV2(createValueRequest)
+    case req: CreateValueRequestV2                => createValueV2(req.createValue, req.requestingUser, req.apiRequestID)
     case updateValueRequest: UpdateValueRequestV2 => updateValueV2(updateValueRequest)
     case deleteValueRequest: DeleteValueRequestV2 => deleteValueV2(deleteValueRequest)
     case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 =>
@@ -91,18 +100,24 @@ final case class ValuesResponderV2Live(
   /**
    * Creates a new value in an existing resource.
    *
-   * @param createValueRequest the request to create the value.
+   * @param valueToCreate the value to be created.
+   * @param requestingUser the user making the request.
+   * @param apiRequestID the API request ID.
    * @return a [[CreateValueResponseV2]].
    */
-  private def createValueV2(createValueRequest: CreateValueRequestV2): Task[CreateValueResponseV2] = {
-    def makeTaskFuture: Task[CreateValueResponseV2] = {
+  override def createValueV2(
+    valueToCreate: CreateValueV2,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[CreateValueResponseV2] = {
+    def taskZio: Task[CreateValueResponseV2] = {
       for {
         // Convert the submitted value to the internal schema.
         submittedInternalPropertyIri <-
-          ZIO.attempt(createValueRequest.createValue.propertyIri.toOntologySchema(InternalSchema))
+          ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
 
         submittedInternalValueContent: ValueContentV2 =
-          createValueRequest.createValue.valueContent
+          valueToCreate.valueContent
             .toOntologySchema(InternalSchema)
 
         // Get ontology information about the submitted property.
@@ -110,7 +125,7 @@ final case class ValuesResponderV2Live(
           PropertiesGetRequestV2(
             propertyIris = Set(submittedInternalPropertyIri),
             allLanguages = false,
-            requestingUser = createValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
         propertyInfoResponseForSubmittedProperty <-
@@ -124,17 +139,15 @@ final case class ValuesResponderV2Live(
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
               throw BadRequestException(
-                s"Invalid property <${createValueRequest.createValue.propertyIri}>. Use a link value property to submit a link."
+                s"Invalid property <${valueToCreate.propertyIri}>. Use a link value property to submit a link."
               )
             }
 
         // Don't accept knora-api:hasStandoffLinkToValue.
         _ =
-          if (
-            createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue
-          ) {
+          if (valueToCreate.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
             throw BadRequestException(
-              s"Values of <${createValueRequest.createValue.propertyIri}> cannot be created directly"
+              s"Values of <${valueToCreate.propertyIri}> cannot be created directly"
             )
           }
 
@@ -143,10 +156,10 @@ final case class ValuesResponderV2Live(
         // adjusted property.
         adjustedInternalPropertyInfo <-
           getAdjustedInternalPropertyInfo(
-            submittedPropertyIri = createValueRequest.createValue.propertyIri,
-            maybeSubmittedValueType = Some(createValueRequest.createValue.valueContent.valueType),
+            submittedPropertyIri = valueToCreate.propertyIri,
+            maybeSubmittedValueType = Some(valueToCreate.valueContent.valueType),
             propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
-            requestingUser = createValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
         adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
@@ -155,7 +168,7 @@ final case class ValuesResponderV2Live(
         // so we can see objects that the user doesn't have permission to see.
         resourceInfo <-
           getResourceWithPropertyValues(
-            resourceIri = createValueRequest.createValue.resourceIri,
+            resourceIri = valueToCreate.resourceIri,
             propertyInfo = adjustedInternalPropertyInfo,
             requestingUser = KnoraSystemInstances.Users.SystemUser
           )
@@ -164,17 +177,17 @@ final case class ValuesResponderV2Live(
         _ <- resourceUtilV2.checkResourcePermission(
                resourceInfo = resourceInfo,
                permissionNeeded = ModifyPermission,
-               requestingUser = createValueRequest.requestingUser
+               requestingUser = requestingUser
              )
 
         // Check that the resource has the rdf:type that the client thinks it has.
         _ =
           if (
-            resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri
+            resourceInfo.resourceClassIri != valueToCreate.resourceClassIri
               .toOntologySchema(InternalSchema)
           ) {
             throw BadRequestException(
-              s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>"
+              s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>"
             )
           }
 
@@ -183,7 +196,7 @@ final case class ValuesResponderV2Live(
           ClassesGetRequestV2(
             classIris = Set(resourceInfo.resourceClassIri),
             allLanguages = false,
-            requestingUser = createValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
         classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
@@ -194,8 +207,8 @@ final case class ValuesResponderV2Live(
           classInfo.allCardinalities.getOrElse(
             submittedInternalPropertyIri,
             throw BadRequestException(
-              s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
+              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>"
             )
           )
 
@@ -204,7 +217,7 @@ final case class ValuesResponderV2Live(
         _ <- checkPropertyObjectClassConstraint(
                propertyInfo = adjustedInternalPropertyInfo,
                valueContent = submittedInternalValueContent,
-               requestingUser = createValueRequest.requestingUser
+               requestingUser = requestingUser
              )
 
         // If it is a list value, check that it points to a real list node which is not a root node.
@@ -244,7 +257,7 @@ final case class ValuesResponderV2Live(
           ) {
             throw InconsistentRepositoryDataException(
               s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property"
+                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property"
             )
           }
 
@@ -254,7 +267,7 @@ final case class ValuesResponderV2Live(
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>"
+                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>"
             )
           }
 
@@ -275,7 +288,7 @@ final case class ValuesResponderV2Live(
                case textValueContent: TextValueContentV2 =>
                  checkResourceIris(
                    targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
-                   requestingUser = createValueRequest.requestingUser
+                   requestingUser = requestingUser
                  )
 
                case _ => ZIO.unit
@@ -287,12 +300,12 @@ final case class ValuesResponderV2Live(
             projectIri = resourceInfo.projectADM.id,
             resourceClassIri = resourceInfo.resourceClassIri,
             propertyIri = submittedInternalPropertyIri,
-            requestingUser = createValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
         // Did the user submit permissions for the new value?
         newValuePermissionLiteral <-
-          createValueRequest.createValue.permissions match {
+          valueToCreate.permissions match {
             case Some(permissions: String) =>
               // Yes. Validate them.
               for {
@@ -300,20 +313,20 @@ final case class ValuesResponderV2Live(
 
                 // Is the requesting user a system admin, or an admin of this project?
                 _ = if (
-                      !(createValueRequest.requestingUser.permissions.isProjectAdmin(
-                        createValueRequest.requestingUser.id
-                      ) || createValueRequest.requestingUser.permissions.isSystemAdmin)
+                      !(requestingUser.permissions.isProjectAdmin(
+                        requestingUser.id
+                      ) || requestingUser.permissions.isSystemAdmin)
                     ) {
 
                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
                       val permissionComparisonResult: PermissionComparisonResult =
                         PermissionUtilADM.comparePermissionsADM(
-                          entityCreator = createValueRequest.requestingUser.id,
+                          entityCreator = requestingUser.id,
                           entityProject = resourceInfo.projectADM.id,
                           permissionLiteralA = validatedCustomPermissions,
                           permissionLiteralB = defaultValuePermissions,
-                          requestingUser = createValueRequest.requestingUser
+                          requestingUser = requestingUser
                         )
 
                       if (permissionComparisonResult == AGreaterThanB) {
@@ -339,21 +352,21 @@ final case class ValuesResponderV2Live(
             resourceInfo = resourceInfo,
             propertyIri = adjustedInternalPropertyIri,
             value = submittedInternalValueContent,
-            valueIri = createValueRequest.createValue.valueIri,
-            valueUUID = createValueRequest.createValue.valueUUID,
-            valueCreationDate = createValueRequest.createValue.valueCreationDate,
-            valueCreator = createValueRequest.requestingUser.id,
+            valueIri = valueToCreate.valueIri,
+            valueUUID = valueToCreate.valueUUID,
+            valueCreationDate = valueToCreate.valueCreationDate,
+            valueCreator = requestingUser.id,
             valuePermissions = newValuePermissionLiteral,
-            requestingUser = createValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
         // Check that the value was written correctly to the triplestore.
         verifiedValue <-
           verifyValue(
-            resourceIri = createValueRequest.createValue.resourceIri,
+            resourceIri = valueToCreate.resourceIri,
             propertyIri = submittedInternalPropertyIri,
             unverifiedValue = unverifiedValue,
-            requestingUser = createValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
       } yield CreateValueResponseV2(
@@ -369,29 +382,24 @@ final case class ValuesResponderV2Live(
 
       // Don't allow anonymous users to create values.
       _ <- ZIO.attempt {
-             if (createValueRequest.requestingUser.isAnonymousUser) {
+             if (requestingUser.isAnonymousUser) {
                throw ForbiddenException("Anonymous users aren't allowed to create values")
              } else {
-               createValueRequest.requestingUser.id
+               requestingUser.id
              }
            }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <-
-        IriLocker.runWithIriLock(
-          createValueRequest.apiRequestID,
-          createValueRequest.createValue.resourceIri,
-          makeTaskFuture
-        )
+      taskResult <- IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri, taskZio)
     } yield taskResult
 
     // If we were creating a file value, have Sipi move the file to permanent storage if the update
     // was successful, or delete the temporary file if the update failed.
-    val fileValue = List(createValueRequest.createValue.valueContent)
+    val fileValue = List(valueToCreate.valueContent)
       .filter(_.isInstanceOf[FileValueContentV2])
       .map(_.asInstanceOf[FileValueContentV2])
 
-    resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, createValueRequest.requestingUser)
+    resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, requestingUser)
   }
 
   /**

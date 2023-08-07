@@ -18,6 +18,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
@@ -28,7 +29,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
  */
 final case class ValuesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig with Authenticator with IriConverter with StringFormatter with MessageRelay
+    AppConfig with Authenticator with IriConverter with StringFormatter with MessageRelay with ValuesResponderV2
   ]
 ) {
 
@@ -77,13 +78,16 @@ final case class ValuesRouteV2()(
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestTask = for {
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
-            requestingUser <- Authenticator.getUserADM(requestContext)
-            apiRequestID   <- RouteUtilZ.randomUuid()
-            msg            <- CreateValueRequestV2.fromJsonLd(requestDoc, apiRequestID, requestingUser)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+          RouteUtilV2.completeResponse(
+            for {
+              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              apiRequestID   <- RouteUtilZ.randomUuid()
+              req            <- CreateValueRequestV2.fromJsonLd(requestDoc, apiRequestID, requestingUser)
+              response       <- ValuesResponderV2.createValueV2(req.createValue, requestingUser, apiRequestID)
+            } yield response,
+            requestContext
+          )
         }
       }
     }
