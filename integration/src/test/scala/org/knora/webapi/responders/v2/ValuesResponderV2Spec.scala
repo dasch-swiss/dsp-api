@@ -6,9 +6,12 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import zio.Cause
+import zio.Exit
 
 import java.time.Instant
 import java.util.UUID
+import java.util.UUID.randomUUID
 import scala.concurrent.duration._
 
 import dsp.errors._
@@ -33,6 +36,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels.ChangeFileRequest
 import org.knora.webapi.models.filemodels.FileType
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.MutableTestIri
@@ -110,15 +114,15 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private val standoffLinkValueIri                      = new MutableTestIri
   private val stillImageFileValueIri                    = new MutableTestIri
 
-  private var integerValueUUID = UUID.randomUUID
-  private var linkValueUUID    = UUID.randomUUID
+  private var integerValueUUID = randomUUID
+  private var linkValueUUID    = randomUUID
 
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
       startPosition = 0,
       endPosition = 7,
-      uuid = UUID.randomUUID(),
+      uuid = randomUUID(),
       originalXMLID = None,
       startIndex = 0
     ),
@@ -126,7 +130,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
       startPosition = 0,
       endPosition = 10,
-      uuid = UUID.randomUUID(),
+      uuid = randomUUID(),
       originalXMLID = None,
       startIndex = 1
     )
@@ -137,7 +141,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
       startPosition = 1,
       endPosition = 7,
-      uuid = UUID.randomUUID(),
+      uuid = randomUUID(),
       originalXMLID = None,
       startIndex = 0
     ),
@@ -145,7 +149,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
       startPosition = 0,
       endPosition = 10,
-      uuid = UUID.randomUUID(),
+      uuid = randomUUID(),
       originalXMLID = None,
       startIndex = 1
     )
@@ -157,7 +161,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
       startPosition = 0,
       endPosition = 7,
-      uuid = UUID.randomUUID(),
+      uuid = randomUUID(),
       originalXMLID = None,
       startIndex = 0,
       attributes = Vector(
@@ -171,7 +175,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
       startPosition = 0,
       endPosition = 10,
-      uuid = UUID.randomUUID(),
+      uuid = randomUUID(),
       originalXMLID = None,
       startIndex = 1
     )
@@ -433,7 +437,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -460,27 +464,15 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create a duplicate integer value" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 4
+      val resourceIri      = aThingIri
+      val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+      val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+      val intVal           = IntegerValueContentV2(ApiV2Complex, 4)
+      val duplicateValue   = CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
-      )
+      val actual = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID).exit)
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assert(actual.exists(_ == Exit.Failure(Cause.die(DuplicateValueException()))))
     }
 
     "update an integer value" in {
@@ -515,7 +507,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -569,7 +561,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -629,7 +621,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! UpdateValueRequestV2(
         updateValueContent,
         requestingUser = anythingUser2,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -677,7 +669,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         requestingUser = anythingUser2,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgType[SuccessResponseV2](timeout)
@@ -707,7 +699,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -749,7 +741,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -801,7 +793,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -843,7 +835,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -897,7 +889,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -945,7 +937,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some(permissions)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -992,7 +984,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some(permissions)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1019,7 +1011,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some(permissions)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1033,7 +1025,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri: IRI                          = aThingIri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue                                  = 987
-      val valueUUID                                 = UUID.randomUUID
+      val valueUUID                                 = randomUUID
       val valueCreationDate                         = Instant.now
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
@@ -1050,7 +1042,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueCreationDate = Some(valueCreationDate)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1097,7 +1089,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueCreationDate = Some(valueCreationDate)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1128,7 +1120,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueCreationDate = Some(valueCreationDate)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -1178,7 +1170,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           newValueVersionIri = Some(newValueVersionIri.toSmartIri)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -1221,7 +1213,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1245,7 +1237,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1284,7 +1276,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1310,7 +1302,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1357,7 +1349,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1405,7 +1397,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1432,7 +1424,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1472,7 +1464,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1499,7 +1491,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1547,7 +1539,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = submittedValueContent
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1598,7 +1590,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = submittedValueContent
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1625,7 +1617,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1669,7 +1661,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1710,7 +1702,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1739,7 +1731,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1784,7 +1776,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1811,7 +1803,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1853,7 +1845,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1877,7 +1869,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1902,7 +1894,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1929,7 +1921,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -1971,7 +1963,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -1998,7 +1990,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -2040,7 +2032,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2067,7 +2059,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -2109,7 +2101,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2134,7 +2126,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! createValueRequest
@@ -2177,7 +2169,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! createValueRequest
@@ -2202,7 +2194,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! createValueRequest
@@ -2224,7 +2216,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = SharedTestDataADM.superUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2248,7 +2240,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2272,7 +2264,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2296,7 +2288,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2319,7 +2311,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2343,7 +2335,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2363,7 +2355,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2389,7 +2381,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               value = zeitglöckleinIri
             )
           ),
-          uuid = UUID.randomUUID(),
+          uuid = randomUUID(),
           originalXMLID = None,
           startIndex = 0
         )
@@ -2409,7 +2401,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -2485,7 +2477,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               value = zeitglöckleinIri
             )
           ),
-          uuid = UUID.randomUUID(),
+          uuid = randomUUID(),
           originalXMLID = None,
           startIndex = 0
         )
@@ -2505,7 +2497,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -2581,7 +2573,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2606,7 +2598,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2634,7 +2626,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some(permissions)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -2680,7 +2672,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some(permissions)
         ),
         requestingUser = anythingUser2,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2707,7 +2699,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some(permissions)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2734,7 +2726,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some(permissions)
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2768,7 +2760,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = permissions
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -2805,7 +2797,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = permissions
         ),
         requestingUser = anythingUser2,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2828,7 +2820,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = permissions
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2851,7 +2843,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = permissions
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2876,7 +2868,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2901,7 +2893,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -2946,7 +2938,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3015,7 +3007,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3043,7 +3035,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -3092,7 +3084,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3121,7 +3113,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3170,7 +3162,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3194,7 +3186,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3220,7 +3212,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3261,7 +3253,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3287,7 +3279,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3328,7 +3320,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3359,7 +3351,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = submittedValueContent
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3411,7 +3403,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = submittedValueContent
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3437,7 +3429,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3478,7 +3470,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3505,7 +3497,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3547,7 +3539,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3575,7 +3567,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3621,7 +3613,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3647,7 +3639,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3690,7 +3682,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3715,7 +3707,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3741,7 +3733,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3784,7 +3776,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3810,7 +3802,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3853,7 +3845,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3879,7 +3871,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
@@ -3922,7 +3914,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -3948,7 +3940,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! updateValueRequest
@@ -3995,7 +3987,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! updateValueRequest
@@ -4025,7 +4017,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! updateValueRequest
@@ -4074,7 +4066,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! updateValueRequest
@@ -4104,7 +4096,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! updateValueRequest
@@ -4154,7 +4146,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       appActor ! createValueRequest
@@ -4195,7 +4187,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = SharedTestDataADM.superUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -4332,7 +4324,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = valueContent
         ),
         requestingUser = incunabulaUser, // this user doesn't have the necessary permission
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(3.seconds) { case msg: akka.actor.Status.Failure =>
@@ -4366,7 +4358,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           valueContent = valueContent
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -4386,7 +4378,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         requestingUser = anythingUser2,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -4408,7 +4400,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgType[SuccessResponseV2](timeout)
@@ -4437,7 +4429,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         deleteComment = deleteComment,
         deleteDate = Some(deleteDate),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgType[SuccessResponseV2](timeout)
@@ -4460,7 +4452,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueIri = standoffLinkValueIri.get,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
         requestingUser = SharedTestDataADM.superUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -4480,7 +4472,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgType[SuccessResponseV2](timeout)
@@ -4516,7 +4508,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueIri = linkValueIRI,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
         requestingUser = incunabulaUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgType[SuccessResponseV2](timeout)
@@ -4540,7 +4532,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
         requestingUser = incunabulaCreatorUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -4563,7 +4555,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
@@ -4583,7 +4575,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some("CR knora-admin:Creator")
         ),
         requestingUser = SharedTestDataADM.imagesReviewerUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -4606,7 +4598,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
@@ -4626,7 +4618,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some("CR knora-admin:Creator")
         ),
         requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgClass(classOf[CreateValueResponseV2])
@@ -4647,7 +4639,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
         requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
@@ -4667,7 +4659,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           permissions = Some("CR knora-admin:Creator")
         ),
         requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       expectMsgClass(classOf[CreateValueResponseV2])
@@ -4693,7 +4685,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       val textValue1Iri: IRI = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -4736,7 +4728,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       val textValue2Version1Iri: IRI = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
@@ -4789,7 +4781,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           )
         ),
         requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+        apiRequestID = randomUUID
       )
 
       val textValue2Version2Iri = expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
