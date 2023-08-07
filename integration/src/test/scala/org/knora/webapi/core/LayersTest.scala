@@ -60,22 +60,33 @@ import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
 import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.apache.jena.query.Dataset
+import org.knora.webapi.config.AppConfig
 
 object LayersTest {
 
   /**
    * The `Environment`s that we require for the tests to run - with or without Sipi
    */
+  type DefaultTestEnvironmentWithInmemoryTriplestore = LayersLive.DspEnvironmentLive
+    with TriplestoreService
+    with TestClientService
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
-  type CommonR0 = ActorSystem with AppConfigurations with IIIFService with JwtService with StringFormatter
-  type CommonR =
+  type BaseR0 = ActorSystem
+    with AppConfigurations
+    with IIIFService
+    with JwtService
+    with StringFormatter
+    with TriplestoreService
+  type BaseR =
     ApiRoutes
       with AppRouter
       with Authenticator
@@ -127,12 +138,11 @@ object LayersTest {
       with StoresResponderADM
       with TestClientService
       with TriplestoreRequestMessageHandler
-      with TriplestoreService
       with UsersResponderADM
       with ValuesResponderV2
 
-  private val commonLayersForAllIntegrationTests =
-    ZLayer.makeSome[CommonR0, CommonR](
+  private val baseLayersForAllIntegrationTests =
+    ZLayer.makeSome[BaseR0, BaseR](
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
@@ -190,10 +200,22 @@ object LayersTest {
       StoresResponderADMLive.layer,
       TestClientService.layer,
       TriplestoreRequestMessageHandlerLive.layer,
-      TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
       ValuesResponderV2Live.layer
     )
+
+  type CommonR0 = ActorSystem with AppConfigurations with IIIFService with JwtService with StringFormatter
+  type CommonR  = BaseR with TriplestoreService
+
+  private val commonLayersForAllIntegrationTests =
+    ZLayer.makeSome[CommonR0, CommonR](
+      baseLayersForAllIntegrationTests,
+      TriplestoreServiceLive.layer
+    )
+
+  private val inMemoryIntegrationTestLayers =
+    ZLayer
+      .makeSome[CommonR0 with Ref[Dataset], CommonR](baseLayersForAllIntegrationTests, TriplestoreServiceInMemory.layer)
 
   private val fusekiAndSipiTestcontainers =
     ZLayer.make[
@@ -245,5 +267,15 @@ object LayersTest {
       commonLayersForAllIntegrationTests,
       fusekiAndSipiTestcontainers,
       ActorSystem.layer
+    )
+
+  val integrationTestsWithInmemoryTriplestore: URLayer[Ref[Dataset], DefaultTestEnvironmentWithInmemoryTriplestore] =
+    ZLayer.makeSome[Ref[Dataset], DefaultTestEnvironmentWithInmemoryTriplestore](
+      inMemoryIntegrationTestLayers,
+      ActorSystem.layer,
+      AppConfig.layer,
+      IIIFServiceMockImpl.layer,
+      JwtServiceLive.layer,
+      StringFormatter.test
     )
 }
