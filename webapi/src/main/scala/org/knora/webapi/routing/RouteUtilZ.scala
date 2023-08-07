@@ -89,7 +89,7 @@ object RouteUtilZ {
   def toSmartIri(s: String, errorMsg: String): ZIO[IriConverter, BadRequestException, SmartIri] =
     toSmartIri(s).orElseFail(BadRequestException(errorMsg))
 
-  def randomUuid(): UIO[UUID] = ZIO.random.flatMap(_.nextUUID)
+  def randomUuid(): UIO[UUID] = Random.nextUUID
 
   def getStringValueFromQuery(ctx: RequestContext, key: String): Option[String] = ctx.request.uri.query().get(key)
 

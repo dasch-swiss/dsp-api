@@ -76,15 +76,14 @@ final case class ValuesRouteV2()(
 
   private def createValue(): Route = path(valuesBasePath) {
     post {
-      entity(as[String]) { jsonRequest => requestContext =>
+      entity(as[String]) { jsonLdString => requestContext =>
         {
           RouteUtilV2.completeResponse(
             for {
-              requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
               requestingUser <- Authenticator.getUserADM(requestContext)
-              apiRequestID   <- RouteUtilZ.randomUuid()
-              req            <- CreateValueRequestV2.fromJsonLd(requestDoc, apiRequestID, requestingUser)
-              response       <- ValuesResponderV2.createValueV2(req.createValue, requestingUser, apiRequestID)
+              apiRequestId   <- Random.nextUUID
+              valueToCreate  <- CreateValueV2.fromJsonLd(jsonLdString, requestingUser)
+              response       <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
             } yield response,
             requestContext
           )
