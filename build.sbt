@@ -285,7 +285,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     Test / parallelExecution  := false,
     Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
     Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.webapiIntegrationTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies
   )
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(

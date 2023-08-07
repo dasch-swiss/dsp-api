@@ -119,7 +119,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
 
-  val webapiIntegrationTestDependencies = Seq(
+  val integrationTestDependencies = Seq(
     akkaHttpTestkit,
     akkaStreamTestkit,
     akkaTestkit,
