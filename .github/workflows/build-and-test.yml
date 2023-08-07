@@ -56,7 +56,7 @@ jobs:
         if: success() || failure()
         with:
           name: WebApi Integration Test Results
-          path: ./integration/target/it-reports/TEST-*.xml
+          path: ./integration/target/test-reports/TEST-*.xml
           reporter: java-junit
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
@@ -81,7 +81,7 @@ jobs:
         if: success() || failure()
         with:
           name: ZIO-Http Routes Test Report
-          path: ./integration/target/it-reports/TEST-*.xml
+          path: ./integration/target/test-reports-zio/TEST-*.xml
           reporter: java-junit
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
