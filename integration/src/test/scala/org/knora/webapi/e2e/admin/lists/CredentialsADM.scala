@@ -6,6 +6,7 @@
 package org.knora.webapi.e2e.admin.lists
 
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 /**

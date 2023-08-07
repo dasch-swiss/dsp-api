@@ -5,14 +5,15 @@
 
 package org.knora.webapi.store.triplestore.impl
 
+import zio._
+import zio.test._
+
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import zio._
-import zio.test._
 
 /**
  * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive]].

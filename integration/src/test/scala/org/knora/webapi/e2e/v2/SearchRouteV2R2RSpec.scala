@@ -6,28 +6,41 @@
 package org.knora.webapi.e2e.v2
 
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart}
-import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerV2._
-import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords, JsonLDUtil}
-import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2, ValuesRouteV2}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.{FileUtil, MutableTestIri}
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
+
+import dsp.valueobjects.Iri
+import org.knora.webapi._
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.v2.ResourcesRouteV2
+import org.knora.webapi.routing.v2.SearchRouteV2
+import org.knora.webapi.routing.v2.StandoffRouteV2
+import org.knora.webapi.routing.v2.ValuesRouteV2
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented

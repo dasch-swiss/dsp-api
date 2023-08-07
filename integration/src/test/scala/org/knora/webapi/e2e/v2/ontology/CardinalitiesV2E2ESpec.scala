@@ -5,14 +5,19 @@
 
 package org.knora.webapi.e2e.v2.ontology
 
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import org.knora.webapi.{E2ESpec, RdfMediaTypes}
+import spray.json.JsString
+
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf.{JsonLDKeywords, JsonLDUtil}
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
-import spray.json.JsString
 
 class CardinalitiesV2E2ESpec extends E2ESpec {
 

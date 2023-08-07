@@ -5,16 +5,18 @@
 
 package org.knora.webapi.store.cache.impl
 
+import zio.ZLayer
+import zio.test.Assertion._
+import zio.test._
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
-import zio.ZLayer
-import zio.test.Assertion._
-import zio.test._
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].

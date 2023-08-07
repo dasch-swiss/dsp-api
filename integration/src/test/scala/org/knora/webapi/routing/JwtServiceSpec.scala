@@ -6,9 +6,10 @@
 package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
+import spray.json.JsString
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import spray.json.JsString
 
 class JwtServiceSpec extends CoreSpec with ImplicitSender {
 

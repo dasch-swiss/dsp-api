@@ -6,6 +6,10 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import akka.testkit.ImplicitSender
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import zio.RIO
+import zio.ZIO
+
 import dsp.errors.GravsearchException
 import org.knora.webapi._
 import org.knora.webapi.core.MessageRelay
@@ -15,8 +19,6 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
-import zio.{RIO, ZIO}
 
 /**
  * Tests Gravsearch type inspection.

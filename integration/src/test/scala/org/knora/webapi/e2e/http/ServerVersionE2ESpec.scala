@@ -8,10 +8,12 @@ package org.knora.webapi.e2e.http
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
+
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.NANOSECONDS
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.version.ServerVersion
-
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-End (E2E) test specification for testing the server response.

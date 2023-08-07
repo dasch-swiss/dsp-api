@@ -6,11 +6,12 @@
 package org.knora.webapi.core
 
 import com.typesafe.scalalogging.LazyLogging
+import zio._
+
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import zio._
 
 /**
  * This trait is only used for testing. It is necessary so that E2E tests will only start

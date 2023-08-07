@@ -7,13 +7,16 @@ package org.knora.webapi.e2e
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
+
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.NANOSECONDS
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * End-to-end test specification for testing [[CORSSupport]].

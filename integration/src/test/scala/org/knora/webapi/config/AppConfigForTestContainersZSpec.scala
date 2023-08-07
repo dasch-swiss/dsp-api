@@ -5,9 +5,11 @@
 
 package org.knora.webapi.config
 
-import org.knora.webapi.testcontainers.{FusekiTestContainer, SipiTestContainer}
 import zio._
 import zio.test._
+
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testcontainers.SipiTestContainer
 
 object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
 

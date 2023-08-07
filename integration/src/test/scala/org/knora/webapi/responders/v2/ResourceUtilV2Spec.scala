@@ -5,12 +5,13 @@
 
 package org.knora.webapi.responders.v2
 
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.UnsafeZioRun
 import zio.ZIO
 
 import scala.concurrent.ExecutionContextExecutor
+
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.routing.UnsafeZioRun
 
 object ResourceUtilV2Spec {}
 

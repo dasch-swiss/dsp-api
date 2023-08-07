@@ -6,6 +6,7 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
+
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._

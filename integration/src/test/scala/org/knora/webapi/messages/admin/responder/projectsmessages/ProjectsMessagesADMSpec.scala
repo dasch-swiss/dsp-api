@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import dsp.errors.{BadRequestException, OntologyConstraintException}
+import dsp.errors.BadRequestException
+import dsp.errors.OntologyConstraintException
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter

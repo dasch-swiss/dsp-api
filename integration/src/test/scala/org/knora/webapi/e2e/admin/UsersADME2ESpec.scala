@@ -10,20 +10,27 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.knora.webapi._
-import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.sharedtestdata.{SharedTestDataADM, SharedTestDataADM2}
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import org.knora.webapi._
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.util.AkkaHttpUtils
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * End-to-End (E2E) test specification for testing users endpoint.

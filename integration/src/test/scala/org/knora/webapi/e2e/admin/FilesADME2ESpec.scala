@@ -7,15 +7,18 @@ package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
 /**
  * End-to-End (E2E) test specification for Sipi access.

@@ -6,18 +6,19 @@
 package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
-import dsp.errors.{BadCredentialsException, BadRequestException}
+import org.scalatest.PrivateMethodTester
+
+import dsp.errors.BadCredentialsException
+import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.{
-  KnoraJWTTokenCredentialsV2,
-  KnoraPasswordCredentialsV2
-}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.cache.CacheUtil
-import org.scalatest.PrivateMethodTester
 
 object AuthenticatorSpec {
   private val rootUser         = SharedTestDataADM.rootUser

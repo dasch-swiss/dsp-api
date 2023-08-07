@@ -5,18 +5,19 @@
 
 package org.knora.webapi.sharedtestdata
 
+import java.time.Instant
+
 import dsp.constants.SalsahGui
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
-
-import java.time.Instant
 
 /**
  * This object holds the same user which are loaded with 'test_data/project_data/admin-data.ttl'. Using this object

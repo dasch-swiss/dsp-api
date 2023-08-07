@@ -7,7 +7,9 @@ package org.knora.webapi.models.filemodels
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.valuemessages._
 
 object FileModelUtil {

@@ -5,9 +5,11 @@
 
 package org.knora.webapi.sharedtestdata
 
-import org.knora.webapi.{IRI, sharedtestdata}
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.sharedtestdata
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI
 
 /**

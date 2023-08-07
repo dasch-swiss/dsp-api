@@ -7,20 +7,27 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import dsp.errors.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
+
+import java.util.UUID
+import scala.collection.Map
+
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataADM2}
-
-import java.util.UUID
-import scala.collection.Map
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.

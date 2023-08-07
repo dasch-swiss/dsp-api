@@ -6,12 +6,13 @@
 package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
+
+import scala.concurrent.duration._
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
-
-import scala.concurrent.duration._
 
 class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 

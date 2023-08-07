@@ -8,15 +8,18 @@ package org.knora.webapi.e2e.v2
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
-import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.MutableTestString
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.MutableTestString
 
 /**
  * End-to-End (E2E) test specification for testing authentication.

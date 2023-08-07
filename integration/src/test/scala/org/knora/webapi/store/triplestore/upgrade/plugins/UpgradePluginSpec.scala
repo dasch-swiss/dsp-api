@@ -6,13 +6,18 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.io.{BufferedInputStream, ByteArrayInputStream, FileInputStream}
-import scala.util.{Failure, Success, Using}
+import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
+import java.io.FileInputStream
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Using
+
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf._
 
 /**
  * Provides helper methods for specs that test upgrade plugins.

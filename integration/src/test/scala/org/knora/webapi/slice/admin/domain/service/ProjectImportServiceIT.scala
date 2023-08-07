@@ -5,14 +5,16 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import dsp.valueobjects.Project.Shortcode
-import org.knora.webapi.config.{Fuseki, Triplestore}
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import zio._
 import zio.nio.file._
 import zio.test._
 
 import java.io.IOException
+
+import dsp.valueobjects.Project.Shortcode
+import org.knora.webapi.config.Fuseki
+import org.knora.webapi.config.Triplestore
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ProjectImportServiceIT extends ZIOSpecDefault {
 

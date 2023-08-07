@@ -5,16 +5,18 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import java.time.Instant
+
 import dsp.errors.BadRequestException
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.{ApiV2Complex, CoreSpec}
-
-import java.time.Instant
 
 /**
  * Tests [[InputOntologyV2]].

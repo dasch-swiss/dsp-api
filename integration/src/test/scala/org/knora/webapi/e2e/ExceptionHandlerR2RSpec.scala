@@ -8,6 +8,7 @@ package org.knora.webapi.e2e
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.http.handler

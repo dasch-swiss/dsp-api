@@ -11,13 +11,6 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
-import org.knora.sipi.MockDspApiServer.verify._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.sipimessages._
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.routing.{JwtService, JwtServiceLive}
-import org.knora.webapi.testcontainers.SipiTestContainer
 import zio._
 import zio.http._
 import zio.http.model.Status
@@ -25,7 +18,18 @@ import zio.json.DecoderOps
 import zio.json.ast.Json
 import zio.test._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import org.knora.sipi.MockDspApiServer.verify._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.testcontainers.SipiTestContainer
 
 object SipiIT extends ZIOSpecDefault {
 

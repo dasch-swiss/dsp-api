@@ -9,21 +9,8 @@ import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
-import org.knora.webapi.models.filemodels.{FileType, UploadFileRequest}
-import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
-import org.knora.webapi.util.{FileUtil, MutableTestIri}
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json._
 
@@ -31,6 +18,25 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import dsp.valueobjects.Iri
+import org.knora.webapi._
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
+import org.knora.webapi.models.filemodels.FileType
+import org.knora.webapi.models.filemodels.UploadFileRequest
+import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * Integration test specification for the standoff endpoint.

@@ -8,15 +8,19 @@ package org.knora.webapi.it.v2
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.Files
+import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.

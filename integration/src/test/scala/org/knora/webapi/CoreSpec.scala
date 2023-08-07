@@ -6,21 +6,26 @@
 package org.knora.webapi
 
 import akka.actor
-import akka.testkit.{ImplicitSender, TestKitBase}
+import akka.testkit.ImplicitSender
+import akka.testkit.TestKitBase
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
-import org.knora.webapi.core.{AppRouter, AppServer, TestStartupUtils}
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.util.LogAspect
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{FiniteDuration, SECONDS}
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.SECONDS
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppRouter
+import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
+import org.knora.webapi.core.TestStartupUtils
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.util.LogAspect
 
 abstract class CoreSpec
     extends AnyWordSpec
