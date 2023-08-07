@@ -211,7 +211,7 @@ test-all: test integration-test zio-http-test
 
 .PHONY: test
 test: ## runs all unit tests
-	sbt -v coverage test coverageAggregate
+	sbt -v coverage "webapi/test" coverageAggregate
 
 .PHONY: integration-test
 integration-test: docker-build-sipi-image ## runs all integration tests
