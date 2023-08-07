@@ -142,7 +142,7 @@ run / connectInput := true
 lazy val webApiCommonSettings = Seq(
   name := "webapi"
 )
-testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
@@ -150,7 +150,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(Test) {
       Defaults.testSettings
     },
-    Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
@@ -278,7 +278,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     ),
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
-    Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     Test / exportJars         := false,
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := false,
@@ -289,7 +289,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
   )
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
-    name := "webapi",
+    name := "integration",
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     )
