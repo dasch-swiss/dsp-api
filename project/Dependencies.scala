@@ -18,6 +18,7 @@ object Dependencies {
   val AkkaActorVersion = "2.6.20"
   val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.8.0"
+  val SttpVersion      = "3.8.16"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioHttpVersionOld           = "2.0.0-RC11"
@@ -27,6 +28,7 @@ object Dependencies {
   val ZioNioVersion               = "2.0.1"
   val ZioMetricsConnectorsVersion = "2.1.0"
   val ZioPreludeVersion           = "1.0.0-RC19"
+  val ZioProfilingVersion         = "0.2.1"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.15"
 
@@ -45,7 +47,8 @@ object Dependencies {
   val zioMetricsConnectors          = "dev.zio"                       %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion
   val zioMetricsPrometheusConnector = "dev.zio"                       %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion
   val zioPrelude                    = "dev.zio"                       %% "zio-prelude"                       % ZioPreludeVersion
-  val zioSttp                       = "com.softwaremill.sttp.client3" %% "zio"                               % "3.8.16"
+  val zioProfiling                  = "dev.zio"                       %% "zio-profiling"                     % ZioProfilingVersion
+  val zioSttp                       = "com.softwaremill.sttp.client3" %% "zio"                               % SttpVersion
 
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
@@ -143,8 +146,9 @@ object Dependencies {
     akkaHttpSprayJson,
     akkaSlf4j,
     akkaStream,
-    commonsValidator,
+    bouncyCastle,
     commonsLang3,
+    commonsValidator,
     diff,
     ehcache,
     gwtServlet,
@@ -162,7 +166,6 @@ object Dependencies {
     scallop,
     slf4jApi,
     springSecurityCore,
-    bouncyCastle,
     titaniumJSONLD,
     zio,
     zioConfig,
@@ -172,11 +175,12 @@ object Dependencies {
     zioJson,
     zioLogging,
     zioLoggingSlf4jBridge,
-    zioNio,
     zioMacros,
     zioMetricsConnectors,
     zioMetricsPrometheusConnector,
+    zioNio,
     zioPrelude,
+    zioProfiling,
     zioSttp
   )
 }

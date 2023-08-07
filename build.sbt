@@ -1,9 +1,10 @@
-import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
+import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper.*
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
+import org.knora.Dependencies.ZioProfilingVersion
 import sbt.Keys.version
-import sbt._
+import sbt.*
 
 import scala.language.postfixOps
 
@@ -157,6 +158,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   )
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
   .settings(
+    addCompilerPlugin("dev.zio" %% "zio-profiling-tagging-plugin" % ZioProfilingVersion),
     name := "webapi",
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
