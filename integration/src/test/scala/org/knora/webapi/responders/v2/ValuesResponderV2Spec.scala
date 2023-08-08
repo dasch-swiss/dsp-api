@@ -976,22 +976,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 1024
       val permissions           = "M knora-admin:Creator,V knora-admin:KnownUser"
 
-      val actual: Exit[Throwable, CreateValueResponseV2] = UnsafeZioRun.run(
-        ValuesResponderV2
-          .createValueV2(
-            CreateValueV2(
-              resourceIri = resourceIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = propertyIri,
-              valueContent = IntegerValueContentV2(
-                ontologySchema = ApiV2Complex,
-                valueHasInteger = intValue
-              ),
-              permissions = Some(permissions)
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
             ),
-            requestingUser = anythingUser1,
-            apiRequestID = randomUUID
-          )
+            permissions = Some(permissions)
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
       assertFailsWithA[BadRequestException](actual)
