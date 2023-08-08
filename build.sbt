@@ -18,7 +18,6 @@ Global / cancelable := true
 Global / scalaVersion                                   := Dependencies.ScalaVersion
 Global / semanticdbEnabled                              := true
 Global / semanticdbVersion                              := scalafixSemanticdb.revision
-Global / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
 
