@@ -345,7 +345,7 @@ final case class ValuesResponderV2Live(
         dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Create the new value.
-        unverifiedValue <-
+        created <-
           createValueV2AfterChecks(
             dataNamedGraph = dataNamedGraph,
             projectIri = resourceInfo.projectADM.id,
@@ -360,20 +360,11 @@ final case class ValuesResponderV2Live(
             requestingUser = requestingUser
           )
 
-        // Check that the value was written correctly to the triplestore.
-        verifiedValue <-
-          verifyValue(
-            resourceIri = valueToCreate.resourceIri,
-            propertyIri = submittedInternalPropertyIri,
-            unverifiedValue = unverifiedValue,
-            requestingUser = requestingUser
-          )
-
       } yield CreateValueResponseV2(
-        valueIri = verifiedValue.newValueIri,
-        valueType = verifiedValue.value.valueType,
-        valueUUID = unverifiedValue.newValueUUID,
-        valueCreationDate = unverifiedValue.creationDate,
+        valueIri = created.newValueIri,
+        valueType = created.valueContent.valueType,
+        valueUUID = created.newValueUUID,
+        valueCreationDate = created.creationDate,
         projectADM = resourceInfo.projectADM
       )
     }
