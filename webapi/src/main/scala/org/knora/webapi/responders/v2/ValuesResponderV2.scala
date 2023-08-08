@@ -89,7 +89,6 @@ final case class ValuesResponderV2Live(
    * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case req: CreateValueRequestV2                => createValueV2(req.createValue, req.requestingUser, req.apiRequestID)
     case updateValueRequest: UpdateValueRequestV2 => updateValueV2(updateValueRequest)
     case deleteValueRequest: DeleteValueRequestV2 => deleteValueV2(deleteValueRequest)
     case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 =>

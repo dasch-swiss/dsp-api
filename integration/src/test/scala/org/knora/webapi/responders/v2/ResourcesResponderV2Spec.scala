@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 
@@ -2511,23 +2512,23 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val testValue   = "a test value"
       // create new value.
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(testValue)
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(testValue)
+            ),
+            valueIri = Some(newValueIri.toSmartIri),
+            permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser")
           ),
-          valueIri = Some(newValueIri.toSmartIri),
-          permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser")
-        ),
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+          requestingUser = anythingUserProfile,
+          apiRequestID = UUID.randomUUID
+        )
       )
-
-      expectMsgType[CreateValueResponseV2](timeout)
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,

@@ -49,21 +49,7 @@ import org.knora.webapi.routing.RouteUtilZ
 sealed trait ValuesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
- * Requests the creation of a value.
- *
- * @param createValue          a [[CreateValueV2]] representing the value to be created. A successful response will be
- *                             a [[CreateValueResponseV2]].
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the API request ID.
- */
-case class CreateValueRequestV2(
-  createValue: CreateValueV2,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends ValuesResponderRequestV2
-
-/**
- * Represents a successful response to a [[CreateValueRequestV2]].
+ * Represents a successful response to a create value Request.
  *
  * @param valueIri          the IRI of the value that was created.
  * @param valueType         the type of the value that was created.
