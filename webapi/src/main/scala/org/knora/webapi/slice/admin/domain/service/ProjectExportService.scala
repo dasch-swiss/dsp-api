@@ -185,17 +185,21 @@ final case class ProjectExportServiceLive(
     TriGCombiner.combineTrigFiles(allData.map(_.dataFile), targetFile)
 
   override def exportProject(project: KnoraProject): Task[Path] = ZIO.scoped {
+    val shortcode             = project.shortcode.value
     val projectExportDir      = exportStorage.projectExportDirectory(project)
     val projectExportFilename = exportStorage.projectExportFilename(project)
     for {
-      _            <- Files.createDirectories(projectExportDir)
-      collectDir   <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
-      _            <- exportProjectTriples(project, trigExportFilePath(project, collectDir))
-      _            <- exportProjectAssets(project, collectDir)
-      zipped       <- ZipUtility.zipFolder(collectDir, projectExportDir, Some(projectExportFilename))
-      fileSize     <- Files.size(zipped)
-      absolutePath <- zipped.toAbsolutePath
-      _            <- ZIO.logInfo(s"Exported project ${project.shortname} to $absolutePath ($fileSize bytes)")
+      _          <- projectExportDir.toAbsolutePath.flatMap(p => ZIO.logInfo(s"Exporting project $shortcode to $p"))
+      _          <- Files.createDirectories(projectExportDir)
+      collectDir <- Files.createTempDirectoryScoped(Some(shortcode), fileAttributes = Nil)
+      _          <- ZIO.logInfo(s"Exporting project triples for $shortcode")
+      _          <- exportProjectTriples(project, trigExportFilePath(project, collectDir))
+      _          <- ZIO.logInfo(s"Exporting project assets for $shortcode")
+      _          <- exportProjectAssets(project, collectDir)
+      _          <- ZIO.logInfo(s"Zipping project export for $shortcode")
+      zipped     <- ZipUtility.zipFolder(collectDir, projectExportDir, Some(projectExportFilename))
+      fileSize   <- Files.size(zipped)
+      _          <- zipped.toAbsolutePath.flatMap(p => ZIO.logInfo(s"Exported project $shortcode to $p ($fileSize bytes)"))
     } yield zipped
   }
 

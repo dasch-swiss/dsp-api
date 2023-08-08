@@ -243,7 +243,7 @@ final case class ProjectsADMRestServiceLive(
     _         <- permissionService.ensureSystemAdmin(requestingUser)
     shortcode <- convertStringToShortcode(shortcodeStr)
     project   <- projectRepo.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found."))
-    _         <- projectExportService.exportProject(project).forkDaemon
+    _         <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
   private def convertStringToShortcode(shortcodeStr: String): IO[BadRequestException, Shortcode] =
