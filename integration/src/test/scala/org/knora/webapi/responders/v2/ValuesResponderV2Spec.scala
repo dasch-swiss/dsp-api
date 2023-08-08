@@ -426,25 +426,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue                                  = 4
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        intValueIri.set(createValueResponse.valueIri)
-        firstIntValueVersionIri.set(createValueResponse.valueIri)
-        integerValueUUID = createValueResponse.valueUUID
-      }
+      intValueIri.set(createValueResponse.valueIri)
+      firstIntValueVersionIri.set(createValueResponse.valueIri)
+      integerValueUUID = createValueResponse.valueUUID
 
       // Read the value back to check that it was added correctly.
 
@@ -549,25 +549,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       // Create the value.
       val intValue = 40
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri =
-            "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri =
+              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        intValueIriForFreetest.set(createValueResponse.valueIri)
-        integerValueUUID = createValueResponse.valueUUID
-      }
+      intValueIriForFreetest.set(createValueResponse.valueIri)
+      integerValueUUID = createValueResponse.valueUUID
 
       // Read the value back to check that it was added correctly.
 
@@ -877,24 +877,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
       val comment                                   = "Initial comment"
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue,
-            comment = Some(comment)
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue,
+              comment = Some(comment)
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        intValueIri.set(createValueResponse.valueIri)
-      }
+      intValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -925,24 +925,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions                               = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            permissions = Some(permissions)
           ),
-          permissions = Some(permissions)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
-      }
+      intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1029,25 +1029,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueCreationDate                         = Instant.now
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            valueUUID = Some(valueUUID),
+            valueCreationDate = Some(valueCreationDate)
           ),
-          valueUUID = Some(valueUUID),
-          valueCreationDate = Some(valueCreationDate)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        intValueForRsyncIri.set(createValueResponse.valueIri)
-      }
+      intValueForRsyncIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1226,23 +1226,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString)
+            )
+          ),
+          requestingUser = incunabulaUser,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
-      }
+      zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1290,24 +1290,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            comment = Some(valueHasComment)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              comment = Some(valueHasComment)
+            )
+          ),
+          requestingUser = incunabulaUser,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
-      }
+      zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1335,26 +1335,26 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoff,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = sampleStandoff,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          requestingUser = incunabulaUser,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
-      }
+      zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1413,23 +1413,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasDecimal                           = BigDecimal("4.3")
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = DecimalValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasDecimal = valueHasDecimal
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = DecimalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasDecimal = valueHasDecimal
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        decimalValueIri.set(createValueResponse.valueIri)
-      }
+      decimalValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1480,23 +1480,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasTimeStamp                         = Instant.parse("2019-08-28T15:59:12.725007Z")
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TimeValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasTimeStamp = valueHasTimeStamp
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = TimeValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasTimeStamp = valueHasTimeStamp
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        timeValueIri.set(createValueResponse.valueIri)
-      }
+      timeValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1531,20 +1531,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueHasEndPrecision = DatePrecisionYear
       )
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = submittedValueContent
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = submittedValueContent
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        dateValueIri.set(createValueResponse.valueIri)
-      }
+      dateValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1606,23 +1606,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasBoolean                           = true
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = BooleanValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasBoolean = valueHasBoolean
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = BooleanValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasBoolean = valueHasBoolean
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        booleanValueIri.set(createValueResponse.valueIri)
-      }
+      booleanValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1650,23 +1650,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = GeomValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasGeometry = valueHasGeometry
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = GeomValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasGeometry = valueHasGeometry
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        geometryValueIri.set(createValueResponse.valueIri)
-      }
+      geometryValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1719,24 +1719,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasIntervalEnd                       = BigDecimal("3")
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntervalValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasIntervalStart = valueHasIntervalStart,
-            valueHasIntervalEnd = valueHasIntervalEnd
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntervalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasIntervalStart = valueHasIntervalStart,
+              valueHasIntervalEnd = valueHasIntervalEnd
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        intervalValueIri.set(createValueResponse.valueIri)
-      }
+      intervalValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1792,23 +1792,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasListNode                          = "http://rdfh.ch/lists/0001/treeList03"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = HierarchicalListValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasListNode = valueHasListNode
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = HierarchicalListValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasListNode = valueHasListNode
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        listValueIri.set(createValueResponse.valueIri)
-      }
+      listValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1910,23 +1910,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasColor                             = "#ff3333"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = ColorValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasColor = valueHasColor
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = ColorValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasColor = valueHasColor
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        colorValueIri.set(createValueResponse.valueIri)
-      }
+      colorValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1979,23 +1979,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasUri                               = "https://www.knora.org"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = UriValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasUri = valueHasUri
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = UriValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasUri = valueHasUri
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        uriValueIri.set(createValueResponse.valueIri)
-      }
+      uriValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2048,23 +2048,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasGeonameCode                       = "2661604"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = GeonameValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasGeonameCode = valueHasGeonameCode
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = GeonameValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasGeonameCode = valueHasGeonameCode
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        geonameValueIri.set(createValueResponse.valueIri)
-      }
+      geonameValueIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2387,26 +2387,26 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         )
       )
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = standoff,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = standoff,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          requestingUser = incunabulaUser,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        lobComment1Iri.set(createValueResponse.valueIri)
-      }
+      lobComment1Iri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2483,26 +2483,26 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         )
       )
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = standoff,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = standoff,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          requestingUser = incunabulaUser,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        lobComment2Iri.set(createValueResponse.valueIri)
-      }
+      lobComment2Iri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3021,26 +3021,26 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoff,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = sampleStandoff,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          requestingUser = incunabulaUser,
+          apiRequestID = randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        zeitglöckleinSecondCommentWithStandoffIri.set(createValueResponse.valueIri)
-      }
+      zeitglöckleinSecondCommentWithStandoffIri.set(createValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -4605,23 +4605,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = 5,
-            comment = Some("this is the number five")
+      UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 5,
+              comment = Some("this is the number five")
+            ),
+            permissions = Some("CR knora-admin:Creator")
           ),
-          permissions = Some("CR knora-admin:Creator")
-        ),
-        requestingUser = SharedTestDataADM.rootUser,
-        apiRequestID = randomUUID
+          requestingUser = SharedTestDataADM.rootUser,
+          apiRequestID = randomUUID
+        )
       )
-
-      expectMsgClass(classOf[CreateValueResponseV2])
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
@@ -4646,23 +4646,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-          propertyIri = propertyIri,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = 5,
-            comment = Some("this is the number five")
+      UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+            propertyIri = propertyIri,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 5,
+              comment = Some("this is the number five")
+            ),
+            permissions = Some("CR knora-admin:Creator")
           ),
-          permissions = Some("CR knora-admin:Creator")
-        ),
-        requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = randomUUID
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = randomUUID
+        )
       )
-
-      expectMsgClass(classOf[CreateValueResponseV2])
     }
 
     "create and update text values with standoff links, managing value UUIDs correctly" in {
@@ -4671,26 +4671,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Create a text value with a standoff link.
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = sierraIri,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 1 for UUID checking"),
-            standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = sierraIri,
+            resourceClassIri = resourceClassIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("Comment 1 for UUID checking"),
+              standoff = sampleStandoffWithLink,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
-
-      val textValue1Iri: IRI = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        createValueResponse.valueIri
-      }
 
       val resourceVersion1: ReadResourceV2 = getResourceWithValues(
         resourceIri = sierraIri,
@@ -4703,7 +4701,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Get the UUIDs of the text value and of the standoff link value.
       val textValue1: ReadValueV2 = resourceVersion1.values(propertyIri).head
-      assert(textValue1.valueIri == textValue1Iri)
+      assert(textValue1.valueIri == createValueResponse.valueIri)
       assert(getValueUUID(textValue1.valueIri).contains(textValue1.valueHasUUID))
       val standoffLinkValueVersion1: ReadLinkValueV2 = resourceVersion1
         .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
@@ -4714,26 +4712,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Create a second text value with the same standoff link.
 
-      appActor ! CreateValueRequestV2(
-        CreateValueV2(
-          resourceIri = sierraIri,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 2 for UUID checking"),
-            standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val createValueResponse2 = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = sierraIri,
+            resourceClassIri = resourceClassIri,
+            propertyIri = propertyIri,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("Comment 2 for UUID checking"),
+              standoff = sampleStandoffWithLink,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = randomUUID
+        )
       )
-
-      val textValue2Version1Iri: IRI = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        createValueResponse.valueIri
-      }
 
       val resourceVersion2: ReadResourceV2 = getResourceWithValues(
         resourceIri = sierraIri,
@@ -4747,7 +4743,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       // Get the second text value's UUID.
       val textValue2Version1: ReadValueV2 = resourceVersion2
         .values(propertyIri)
-        .find(_.valueIri == textValue2Version1Iri)
+        .find(_.valueIri == createValueResponse2.valueIri)
         .getOrElse(throw AssertionException("Value not found"))
       assert(getValueUUID(textValue2Version1.valueIri).contains(textValue2Version1.valueHasUUID))
 
@@ -4771,7 +4767,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceIri = sierraIri,
           resourceClassIri = resourceClassIri,
           propertyIri = propertyIri,
-          valueIri = textValue2Version1Iri,
+          valueIri = createValueResponse2.valueIri,
           valueContent = TextValueContentV2(
             ontologySchema = ApiV2Complex,
             maybeValueHasString = Some("Comment 3 for UUID checking"),
