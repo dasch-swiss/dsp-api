@@ -6,26 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import dsp.errors._
-import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.models.filemodels.{ChangeFileRequest, FileType}
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.util.MutableTestIri
 import zio.Exit
 
 import java.time.Instant
@@ -33,6 +13,33 @@ import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
+
+import dsp.errors._
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.CalendarNameGregorian
+import org.knora.webapi.messages.util.DatePrecisionYear
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.models.filemodels.ChangeFileRequest
+import org.knora.webapi.models.filemodels.FileType
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.iiif.errors.SipiException
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * Tests [[ValuesResponderV2]].
