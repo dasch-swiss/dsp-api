@@ -155,7 +155,9 @@ final case class ProjectsRouteZ(
     } yield r
 
   private def postExportProject(shortcode: String, requestingUser: UserADM): Task[Response] =
-    projectsService.exportProject(shortcode, requestingUser).map(_.toJson).map(Response.json(_))
+    projectsService
+      .exportProject(shortcode, requestingUser)
+      .as(Response.text("work in progress").setStatus(Status.Accepted))
 
   private def postImportProject(shortcode: String, requestingUser: UserADM): Task[Response] =
     projectsService.importProject(shortcode, requestingUser).map(_.toJson).map(Response.json(_))

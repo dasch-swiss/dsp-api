@@ -6,6 +6,7 @@
 package org.knora.webapi.routing
 
 import akka.http.scaladsl.model.ContentTypes.`application/json`
+import akka.http.scaladsl.model.StatusCodes.Accepted
 import akka.http.scaladsl.model.StatusCodes.OK
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
@@ -142,6 +143,7 @@ object RouteUtilADM {
   def okResponse(response: KnoraResponseADM): HttpResponse                       = okResponse(response.toJsValue.asJsObject.compactPrint)
   def okResponse[A](response: A)(implicit encoder: JsonEncoder[A]): HttpResponse = okResponse(response.toJson)
   private def okResponse(body: String)                                           = HttpResponse(OK, entity = HttpEntity(`application/json`, ByteString(body)))
+  def acceptedResponse(body: String)                                             = HttpResponse(Accepted, entity = HttpEntity(`application/json`, ByteString(body)))
 
   private def completeContext(ctx: RequestContext, response: HttpResponse): Task[RouteResult] =
     ZIO.fromFuture(_ => ctx.complete(response))
