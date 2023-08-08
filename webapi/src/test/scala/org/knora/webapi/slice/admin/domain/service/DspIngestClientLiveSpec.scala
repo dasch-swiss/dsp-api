@@ -2,23 +2,35 @@ package org.knora.webapi.slice.admin.domain.service
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, postRequestedFor, urlPathEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import spray.json.JsValue
+import zio.Random
+import zio.Scope
+import zio.Task
+import zio.UIO
+import zio.ULayer
+import zio.ZIO
+import zio.ZLayer
+import zio.nio.file.Files
+import zio.test.Spec
+import zio.test.TestEnvironment
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.routing.{Jwt, JwtService}
-import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.{
-  dspIngestConfigLayer,
-  mockJwtServiceLayer,
-  testPortLayer,
-  wireMockServerLayer
-}
-import spray.json.JsValue
-import zio.nio.file.Files
-import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
-import zio.{Random, Scope, Task, UIO, ULayer, ZIO, ZLayer}
+import org.knora.webapi.routing.Jwt
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
+import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.mockJwtServiceLayer
+import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.testPortLayer
+import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.wireMockServerLayer
 
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
