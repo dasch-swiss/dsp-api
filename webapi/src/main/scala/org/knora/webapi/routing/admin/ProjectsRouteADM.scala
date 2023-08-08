@@ -309,13 +309,14 @@ final case class ProjectsRouteADM()(
       requestTask.flatMap(response => ZIO.fromFuture(_ => requestContext.complete(response)))
     }
   }
+
   private def postExportProject: Route =
     path(projectsBasePath / "iri" / Segment / "export") { projectIri =>
       post { ctx =>
         val requestTask = for {
           requestingUser <- Authenticator.getUserADM(ctx)
-          response       <- ProjectADMRestService.exportProject(projectIri, requestingUser)
-        } yield RouteUtilADM.okResponse(response)
+          _              <- ProjectADMRestService.exportProject(projectIri, requestingUser)
+        } yield RouteUtilADM.acceptedResponse("work in progress")
         RouteUtilADM.completeContext(ctx, requestTask)
       }
     }

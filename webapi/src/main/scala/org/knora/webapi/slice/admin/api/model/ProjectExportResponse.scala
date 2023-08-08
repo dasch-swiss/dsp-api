@@ -10,12 +10,6 @@ import zio.json.JsonEncoder
 
 import org.knora.webapi.slice.admin.domain.service.ProjectExportInfo
 
-case class ProjectExportResponse(file: String)
-
-object ProjectExportResponse {
-  implicit val jsonEncoder: JsonEncoder[ProjectExportResponse] = DeriveJsonEncoder.gen[ProjectExportResponse]
-}
-
 case class ProjectImportResponse(location: String)
 object ProjectImportResponse {
   implicit val jsonEncoder: JsonEncoder[ProjectImportResponse] = DeriveJsonEncoder.gen[ProjectImportResponse]
