@@ -19,7 +19,7 @@ object ProjectShortcodeSpec extends ZIOSpecDefault {
   val spec: Spec[TestEnvironment with Scope, Nothing] = suite("ProjectShortcodeSpec")(
     test("ProjectShortcode should accept any four digit hex strings") {
       check(Gen.fromZIO(randomFourDigitHexString)) { shortcode =>
-        assertTrue(ProjectShortcode.make(shortcode).map(_.toString) == Right(shortcode.toUpperCase()))
+        assertTrue(ProjectShortcode.make(shortcode).map(_.value) == Right(shortcode.toUpperCase()))
       }
     },
     test("ProjectShortcode should not accept invalid strings") {
@@ -32,5 +32,5 @@ object ProjectShortcodeSpec extends ZIOSpecDefault {
         assertTrue(ProjectShortcode.make(shortcode.toUpperCase) == ProjectShortcode.make(shortcode.toLowerCase()))
       }
     },
-  )
+  ) @@ TestAspect.withLiveRandom
 }

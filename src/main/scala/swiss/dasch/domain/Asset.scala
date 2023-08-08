@@ -16,7 +16,10 @@ object AssetId {
 
   def makeFromPath(file: Path): Option[AssetId] = {
     val filename = file.filename.toString
-    AssetId.make(filename.substring(0, filename.lastIndexOf("."))).toOption
+    filename.contains(".") match {
+      case true  => AssetId.make(filename.substring(0, filename.indexOf("."))).toOption
+      case false => None
+    }
   }
 }
 

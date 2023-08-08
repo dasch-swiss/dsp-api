@@ -12,11 +12,7 @@ import zio.schema.{ DeriveSchema, Schema }
 
 sealed trait ApiProblem
 
-case class ProjectNotFound(shortcode: String) extends ApiProblem
-
-object ProjectNotFound {
-  def make(shortcode: ProjectShortcode): ProjectNotFound = ProjectNotFound(shortcode.toString)
-}
+case class ProjectNotFound(shortcode: ProjectShortcode) extends ApiProblem
 
 case class IllegalArguments(errors: List[IllegalArgument]) extends ApiProblem
 
@@ -65,5 +61,5 @@ object ApiProblem {
     invalidHeader("Content-Type", actual.toString, s"expected '$expected'")
 
   // other
-  def projectNotFound(shortcode: ProjectShortcode): ProjectNotFound = ProjectNotFound.make(shortcode)
+  def projectNotFound(shortcode: ProjectShortcode): ProjectNotFound = ProjectNotFound(shortcode)
 }

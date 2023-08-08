@@ -10,17 +10,25 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
 import org.apache.commons.io.FileUtils
 import zio.*
+import zio.json.JsonCodec
 import zio.nio.file.Files.{ isDirectory, newDirectoryStream }
 import zio.nio.file.{ Files, Path }
+import zio.schema.Schema
 import zio.stream.ZStream
 
 import java.io.IOException
 
 opaque type ProjectShortcode = String Refined MatchesRegex["""^\p{XDigit}{4,4}$"""]
-type IiifPrefix              = ProjectShortcode
 
 object ProjectShortcode {
+
   def make(shortcode: String): Either[String, ProjectShortcode] = refineV(shortcode.toUpperCase)
+
+  extension (c: ProjectShortcode) { def value: String = c.toString }
+
+  given schema: Schema[ProjectShortcode] = Schema[String].transformOrFail(ProjectShortcode.make, id => Right(id.value))
+
+  given codec: JsonCodec[ProjectShortcode] = JsonCodec[String].transformOrFail(ProjectShortcode.make, _.value)
 }
 
 trait ProjectService {

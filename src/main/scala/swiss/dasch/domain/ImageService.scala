@@ -24,26 +24,15 @@ trait ImageService {
     *   the path to the corrected image or None if no correction was needed
     */
   def applyTopLeftCorrection(image: Path): Task[Option[Path]]
+
+  def needsTopLeftCorrection(image: Path): IO[IOException, Boolean]
 }
+
 object ImageService {
   def applyTopLeftCorrection(image: Path): ZIO[ImageService, Throwable, Option[Path]] =
     ZIO.serviceWithZIO[ImageService](_.applyTopLeftCorrection(image))
-}
-
-// see also https://exiftool.org/TagNames/EXIF.html
-object Exif {
-  object Image {
-    val Orientation = "Exif.Image.Orientation"
-
-    sealed trait OrientationValue { def value: Char }
-    object OrientationValue       {
-      // = Horizontal(normal)
-      case object Horizontal extends OrientationValue { val value = '1' }
-
-      // = Rotate 270 CW
-      case object Rotate270CW extends OrientationValue { val value = '8' }
-    }
-  }
+  def needsTopLeftCorrection(image: Path): ZIO[ImageService, IOException, Boolean]    =
+    ZIO.serviceWithZIO[ImageService](_.needsTopLeftCorrection(image))
 }
 
 final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoService) extends ImageService {
@@ -56,7 +45,7 @@ final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoS
         assetInfos.updateAssetInfoForDerivative(image).as(image)
     )
 
-  private def needsTopLeftCorrection(image: Path): IO[IOException, Boolean] =
+  override def needsTopLeftCorrection(image: Path): IO[IOException, Boolean] =
     FileFilters.isImage(image) &&
     sipiClient
       .queryImageFile(image)

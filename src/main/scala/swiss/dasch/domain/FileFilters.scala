@@ -17,7 +17,7 @@ object FileFilters {
 
   val isJpeg2000: FileFilter = hasFileExtension(Jpx.allExtensions)
 
-  val isImage: FileFilter = hasFileExtension(SipiImageFormat.allExtension)
+  val isImage: FileFilter = hasFileExtension(SipiImageFormat.allExtensions)
 
   val isNonHiddenRegularFile: FileFilter = (path: Path) => Files.isRegularFile(path) && Files.isHidden(path).negate
 

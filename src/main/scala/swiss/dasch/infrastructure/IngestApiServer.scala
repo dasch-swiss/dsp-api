@@ -20,7 +20,7 @@ object IngestApiServer {
       ImportEndpoint.app ++
       ListProjectsEndpoint.app ++
       ReportEndpoint.app ++
-      MaintenanceEndpoint.app) @@ Authenticator.middleware
+      MaintenanceEndpointRoutes.app) @@ Authenticator.middleware
   private val managementApps = HealthEndpoint.app ++ InfoEndpoint.app ++ MetricsEndpoint.app
   private val app            = ((managementApps ++ serviceApps)
     @@ HttpRoutesMiddlewares.dropTrailingSlash)

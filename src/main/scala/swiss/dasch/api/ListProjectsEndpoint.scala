@@ -15,10 +15,8 @@ import zio.http.{ App, Status }
 import zio.json.{ DeriveJsonEncoder, JsonEncoder }
 import zio.schema.{ DeriveSchema, Schema }
 object ListProjectsEndpoint {
-  final case class ProjectResponse(id: String)
+  final case class ProjectResponse(id: ProjectShortcode)
   object ProjectResponse {
-    def make(shortcode: ProjectShortcode): ProjectResponse = ProjectResponse(shortcode.toString)
-
     implicit val schema: Schema[ProjectResponse]           = DeriveSchema.gen[ProjectResponse]
     implicit val jsonEncoder: JsonEncoder[ProjectResponse] = DeriveJsonEncoder.gen[ProjectResponse]
   }
@@ -34,7 +32,7 @@ object ListProjectsEndpoint {
         .listAllProjects()
         .mapBoth(
           ApiProblem.internalError,
-          shortcodes => (EndTotal("items", 0, shortcodes.size, shortcodes.size), shortcodes.map(ProjectResponse.make)),
+          shortcodes => (EndTotal("items", 0, shortcodes.size, shortcodes.size), shortcodes.map(ProjectResponse.apply)),
         )
     )
     .toApp
