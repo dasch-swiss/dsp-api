@@ -15,9 +15,9 @@ import scala.language.postfixOps
 // use Ctrl-c to stop current task but not quit SBT
 Global / cancelable := true
 
-Global / scalaVersion                                   := Dependencies.ScalaVersion
-Global / semanticdbEnabled                              := true
-Global / semanticdbVersion                              := scalafixSemanticdb.revision
+Global / scalaVersion      := Dependencies.ScalaVersion
+Global / semanticdbEnabled := true
+Global / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
 
