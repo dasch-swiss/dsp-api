@@ -29,7 +29,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -659,19 +658,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
 
-      appActor ! DeleteValueRequestV2(
-        resourceIri = resourceIri,
-        resourceClassIri =
-          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = intValueIriForFreetest.get,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
-        requestingUser = anythingUser2,
-        apiRequestID = randomUUID
+      UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri =
+              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIriForFreetest.get,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            deleteComment = Some("this value was incorrect")
+          ),
+          anythingUser2,
+          randomUUID
+        )
       )
-
-      expectMsgType[SuccessResponseV2](timeout)
 
       checkValueIsDeleted(
         resourceIri = resourceIri,
@@ -4284,20 +4285,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val resourceIri: IRI      = aThingIri
     val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
 
-    appActor ! DeleteValueRequestV2(
-      resourceIri = resourceIri,
-      resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-      propertyIri = propertyIri,
-      valueIri = intValueIri.get,
-      valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-      deleteComment = Some("this value was incorrect"),
-      requestingUser = anythingUser2,
-      apiRequestID = randomUUID
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = intValueIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          deleteComment = Some("this value was incorrect")
+        ),
+        anythingUser2,
+        randomUUID
+      )
     )
-
-    expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-      assert(msg.cause.isInstanceOf[ForbiddenException])
-    }
+    assertFailsWithA[ForbiddenException](actual)
   }
 
   "delete an integer value" in {
@@ -4306,18 +4308,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
     val valueIri = intValueIri.get
-    appActor ! DeleteValueRequestV2(
-      resourceIri = resourceIri,
-      resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-      propertyIri = propertyIri,
-      valueIri = valueIri,
-      valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-      deleteComment = Some("this value was incorrect"),
-      requestingUser = anythingUser1,
-      apiRequestID = randomUUID
-    )
 
-    expectMsgType[SuccessResponseV2](timeout)
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = valueIri,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          deleteComment = Some("this value was incorrect")
+        ),
+        anythingUser1,
+        randomUUID
+      )
+    )
 
     checkValueIsDeleted(
       resourceIri = resourceIri,
@@ -4334,19 +4339,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val deleteDate: Instant                       = Instant.now
     val deleteComment                             = Some("this value was incorrect")
 
-    appActor ! DeleteValueRequestV2(
-      resourceIri = resourceIri,
-      resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-      propertyIri = propertyIri,
-      valueIri = intValueForRsyncIri.get,
-      valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-      deleteComment = deleteComment,
-      deleteDate = Some(deleteDate),
-      requestingUser = anythingUser1,
-      apiRequestID = randomUUID
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = intValueForRsyncIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          deleteComment = deleteComment,
+          deleteDate = Some(deleteDate)
+        ),
+        anythingUser1,
+        randomUUID
+      )
     )
-
-    expectMsgType[SuccessResponseV2](timeout)
 
     checkValueIsDeleted(
       resourceIri = resourceIri,
@@ -4359,37 +4366,40 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   }
 
   "not delete a standoff link directly" in {
-    appActor ! DeleteValueRequestV2(
-      resourceIri = zeitglöckleinIri,
-      resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-      propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-      valueIri = standoffLinkValueIri.get,
-      valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-      requestingUser = SharedTestDataADM.superUser,
-      apiRequestID = randomUUID
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = zeitglöckleinIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+          valueIri = standoffLinkValueIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+        ),
+        SharedTestDataADM.superUser,
+        randomUUID
+      )
     )
-
-    expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-      assert(msg.cause.isInstanceOf[BadRequestException])
-    }
+    assertFailsWithA[BadRequestException](actual)
   }
 
   "delete a text value with a standoff link" in {
     val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-    appActor ! DeleteValueRequestV2(
-      resourceIri = zeitglöckleinIri,
-      resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-      propertyIri = propertyIri,
-      valueIri = zeitglöckleinCommentWithStandoffIri.get,
-      valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-      deleteComment = Some("this value was incorrect"),
-      requestingUser = incunabulaUser,
-      apiRequestID = randomUUID
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = zeitglöckleinIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = zeitglöckleinCommentWithStandoffIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+          deleteComment = Some("this value was incorrect")
+        ),
+        incunabulaUser,
+        randomUUID
+      )
     )
-
-    expectMsgType[SuccessResponseV2](timeout)
 
     checkValueIsDeleted(
       resourceIri = zeitglöckleinIri,
@@ -4415,17 +4425,19 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
     val linkValueIRI                              = linkValueIri.get
 
-    appActor ! DeleteValueRequestV2(
-      resourceIri = resourceIri,
-      resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-      propertyIri = linkValuePropertyIri,
-      valueIri = linkValueIRI,
-      valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-      requestingUser = incunabulaUser,
-      apiRequestID = randomUUID
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = linkValuePropertyIri,
+          valueIri = linkValueIRI,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+        ),
+        incunabulaUser,
+        randomUUID
+      )
     )
-
-    expectMsgType[SuccessResponseV2](timeout)
 
     checkValueIsDeleted(
       resourceIri = resourceIri,
@@ -4439,19 +4451,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   "not delete a value if the property's cardinality doesn't allow it" in {
     val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri
 
-    appActor ! DeleteValueRequestV2(
-      resourceIri = zeitglöckleinIri,
-      resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-      propertyIri = propertyIri,
-      valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
-      valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-      requestingUser = incunabulaCreatorUser,
-      apiRequestID = randomUUID
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = zeitglöckleinIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri
+        ),
+        incunabulaCreatorUser,
+        randomUUID
+      )
     )
-
-    expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-      assert(msg.cause.isInstanceOf[OntologyConstraintException])
-    }
+    assertFailsWithA[OntologyConstraintException](actual)
   }
 
   "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {

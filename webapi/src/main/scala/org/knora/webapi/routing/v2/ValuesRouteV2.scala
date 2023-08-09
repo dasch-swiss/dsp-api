@@ -112,15 +112,17 @@ final case class ValuesRouteV2()(
 
   private def deleteValue(): Route = path(valuesBasePath / "delete") {
     post {
-      entity(as[String]) { jsonRequest => requestContext =>
+      entity(as[String]) { jsonLdString => requestContext =>
         {
-          val requestTask = for {
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
-            requestingUser <- Authenticator.getUserADM(requestContext)
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg            <- DeleteValueRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+          RouteUtilV2.completeResponse(
+            for {
+              requestingUser <- Authenticator.getUserADM(requestContext)
+              apiRequestId   <- RouteUtilZ.randomUuid()
+              deleteValue    <- DeleteValueV2.fromJsonLd(jsonLdString)
+              response       <- ValuesResponderV2.deleteValueV2(deleteValue, requestingUser, apiRequestId)
+            } yield response,
+            requestContext
+          )
         }
       }
     }
