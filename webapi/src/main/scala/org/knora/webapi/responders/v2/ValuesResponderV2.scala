@@ -94,6 +94,12 @@ final case class ValuesResponderV2Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
+  private def getPropertyInfo(propertyIri: SmartIri, user: UserADM) = for {
+    internalIri <- iriConverter.asInternalSmartIri(propertyIri)
+    req          = PropertiesGetRequestV2(Set(internalIri), allLanguages = false, user)
+    res         <- messageRelay.ask[ReadOntologyV2](req)
+  } yield res.properties(internalIri)
+
   /**
    * Creates a new value in an existing resource.
    *
@@ -113,25 +119,9 @@ final case class ValuesResponderV2Live(
         submittedInternalPropertyIri <-
           ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
 
-        submittedInternalValueContent: ValueContentV2 =
-          valueToCreate.valueContent
-            .toOntologySchema(InternalSchema)
+        submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
 
-        // Get ontology information about the submitted property.
-        propertyInfoRequestForSubmittedProperty =
-          PropertiesGetRequestV2(
-            propertyIris = Set(submittedInternalPropertyIri),
-            allLanguages = false,
-            requestingUser = requestingUser
-          )
-
-        propertyInfoResponseForSubmittedProperty <-
-          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
-
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-          propertyInfoResponseForSubmittedProperty.properties(
-            submittedInternalPropertyIri
-          )
+        propertyInfoForSubmittedProperty <- getPropertyInfo(submittedInternalPropertyIri, requestingUser)
 
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
@@ -919,23 +909,7 @@ final case class ValuesResponderV2Live(
       submittedExternalValueType: SmartIri
     ): Task[ResourcePropertyValue] =
       for {
-        submittedInternalPropertyIri <- ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
-
-        // Get ontology information about the submitted property.
-        propertyInfoRequestForSubmittedProperty =
-          PropertiesGetRequestV2(
-            propertyIris = Set(submittedInternalPropertyIri),
-            allLanguages = false,
-            requestingUser = requestingUser
-          )
-
-        propertyInfoResponseForSubmittedProperty <-
-          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
-
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-          propertyInfoResponseForSubmittedProperty.properties(
-            submittedInternalPropertyIri
-          )
+        propertyInfoForSubmittedProperty <- getPropertyInfo(submittedExternalPropertyIri, requestingUser)
 
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
@@ -976,6 +950,7 @@ final case class ValuesResponderV2Live(
             }
 
         // Check that the resource has the value that the user wants to update, as an object of the submitted property.
+        submittedInternalPropertyIri <- ZIO.attempt(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
         currentValue: ReadValueV2 =
           resourceInfo.values
             .get(submittedInternalPropertyIri)
@@ -1576,29 +1551,12 @@ final case class ValuesResponderV2Live(
     def deleteTask: Task[SuccessResponseV2] = {
       for {
         // Convert the submitted property IRI to the internal schema.
-        submittedInternalPropertyIri <- ZIO.attempt(deleteValue.propertyIri.toOntologySchema(InternalSchema))
-
-        // Get ontology information about the submitted property.
-
-        propertyInfoRequestForSubmittedProperty =
-          PropertiesGetRequestV2(
-            propertyIris = Set(submittedInternalPropertyIri),
-            allLanguages = false,
-            requestingUser
-          )
-
-        propertyInfoResponseForSubmittedProperty <-
-          messageRelay.ask[ReadOntologyV2](propertyInfoRequestForSubmittedProperty)
-
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-          propertyInfoResponseForSubmittedProperty.properties(
-            submittedInternalPropertyIri
-          )
+        propertyInfo <- getPropertyInfo(deleteValue.propertyIri, requestingUser)
 
         // Don't accept link properties.
-        _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
+        _ = if (propertyInfo.isLinkProp) {
               throw BadRequestException(
-                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
+                s"Invalid property <${propertyInfo.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
               )
             }
 
@@ -1614,7 +1572,7 @@ final case class ValuesResponderV2Live(
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = deleteValue.propertyIri,
             maybeSubmittedValueType = None,
-            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+            propertyInfoForSubmittedProperty = propertyInfo,
             requestingUser
           )
 
@@ -1638,7 +1596,7 @@ final case class ValuesResponderV2Live(
             }
 
         // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
-
+        submittedInternalPropertyIri <- ZIO.attempt(deleteValue.propertyIri.toOntologySchema(InternalSchema))
         maybeCurrentValue: Option[ReadValueV2] =
           resourceInfo.values
             .get(submittedInternalPropertyIri)
@@ -1967,20 +1925,7 @@ final case class ValuesResponderV2Live(
 
         case None => ()
       }
-
-      for {
-        internalLinkPropertyIri <- ZIO.attempt(submittedInternalPropertyIri.fromLinkValuePropToLinkProp)
-
-        propertyInfoRequestForLinkProperty =
-          PropertiesGetRequestV2(
-            propertyIris = Set(internalLinkPropertyIri),
-            allLanguages = false,
-            requestingUser = requestingUser
-          )
-
-        linkPropertyInfoResponse <- messageRelay.ask[ReadOntologyV2](propertyInfoRequestForLinkProperty)
-
-      } yield linkPropertyInfoResponse.properties(internalLinkPropertyIri)
+      ZIO.attempt(submittedInternalPropertyIri.fromLinkValuePropToLinkProp).flatMap(getPropertyInfo(_, requestingUser))
     } else if (propertyInfoForSubmittedProperty.isLinkProp) {
       throw BadRequestException(
         s"Invalid property for creating a link value (submit a link value property instead): $submittedPropertyIri"
