@@ -7,9 +7,9 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
 
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
-import dsp.errors.InconsistentRepositoryDataException
 
 class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
