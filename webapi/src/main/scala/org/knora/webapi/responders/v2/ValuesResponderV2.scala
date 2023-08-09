@@ -82,7 +82,6 @@ final case class ValuesResponderV2Live(
    * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case req: UpdateValueRequestV2                => updateValueV2(req.updateValue, req.requestingUser, req.apiRequestID)
     case deleteValueRequest: DeleteValueRequestV2 => deleteValueV2(deleteValueRequest)
     case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 =>
       generateSparqlToCreateMultipleValuesV2(createMultipleValuesRequest)
@@ -641,7 +640,7 @@ final case class ValuesResponderV2Live(
       // Generate SPARQL for each value.
       sparqlForPropertyValueFutures =
         createMultipleValuesRequest.values.map {
-          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) => {
+          case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
             val values = valuesToCreate.zipWithIndex.map {
               case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
                 generateInsertSparqlWithUnverifiedValue(
@@ -653,8 +652,7 @@ final case class ValuesResponderV2Live(
                   requestingUser = createMultipleValuesRequest.requestingUser
                 )
             }
-            (propertyIri -> ZIO.collectAll(values))
-          }
+            propertyIri -> ZIO.collectAll(values)
         }
 
       sparqlForPropertyValues <- ZioHelper.sequence(sparqlForPropertyValueFutures)
@@ -1993,27 +1991,17 @@ final case class ValuesResponderV2Live(
    *
    * @param requestingUser       the user making the request.
    */
-  private def checkResourceIris(
-    targetResourceIris: Set[IRI],
-    requestingUser: UserADM
-  ): Task[Unit] =
-    if (targetResourceIris.isEmpty) {
-      ZIO.unit
-    } else {
-      for {
-        resourcePreviewRequest <-
-          ZIO.succeed(
-            ResourcesPreviewGetRequestV2(
-              resourceIris = targetResourceIris.toSeq,
-              targetSchema = ApiV2Complex,
-              requestingUser = requestingUser
-            )
-          )
-
-        // If any of the resources are not found, or the user doesn't have permission to see them, this will throw an exception.
-        _ <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
-      } yield ()
-    }
+  private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Task[Unit] =
+    messageRelay
+      .ask[ReadResourcesSequenceV2](
+        ResourcesPreviewGetRequestV2(
+          resourceIris = targetResourceIris.toSeq,
+          targetSchema = ApiV2Complex,
+          requestingUser = requestingUser
+        )
+      )
+      .unless(targetResourceIris.isEmpty)
+      .unit
 
   /**
    * Returns a resource's metadata and its values, if any, for the specified property. If the property is a link property, the result
@@ -2483,7 +2471,7 @@ final case class ValuesResponderV2Live(
   /**
    * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
    */
-  lazy val standoffLinkValuePermissions: String = {
+  private lazy val standoffLinkValuePermissions: String = {
     val permissions: Set[PermissionADM] = Set(
       PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.SystemUser),
       PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)

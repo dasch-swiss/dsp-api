@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.models.filemodels.ChangeFileRequest
+import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -4116,28 +4116,27 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val fileType         = FileType.StillImageFile(dimX = 512, dimY = 256)
     val internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2"
     val valueIri         = stillImageFileValueIri.get
-
-    val updateValueRequest = ChangeFileRequest
-      .make(
-        fileType = fileType,
-        internalFilename = internalFilename,
-        resourceIri = resourceIri,
-        valueIri = valueIri,
-        ontologyName = "anything"
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri,
+          thingPictureClassIri.toSmartIri,
+          OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
+          valueIri,
+          FileModelUtil.getFileValueContent(
+            fileType,
+            internalFilename,
+            Some(mimeTypeJP2),
+            Some("test.tiff"),
+            Some(mimeTypeTIFF),
+            None
+          )
+        ),
+        anythingUser1,
+        randomUUID
       )
-      .toMessage(
-        internalMimeType = Some(mimeTypeJP2),
-        originalFilename = Some("test.tiff"),
-        originalMimeType = Some(mimeTypeTIFF),
-        resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
-        requestingUser = anythingUser1
-      )
-
-    appActor ! updateValueRequest
-
-    expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-      assert(msg.cause.isInstanceOf[DuplicateValueException])
-    }
+    )
+    assertFailsWithA[DuplicateValueException](actual)
   }
 
   "update a still image file value" in {
@@ -4164,26 +4163,28 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val originalFilename = Some("test.tiff")
     val originalMimeType = Some(mimeTypeTIFF)
 
-    val changeFileRequest = ChangeFileRequest
-      .make(
-        fileType = FileType.StillImageFile(dimX = dimX, dimY = dimY),
-        internalFilename = internalFilename,
-        resourceIri = resourceIri,
-        valueIri = stillImageFileValueIri.get,
-        ontologyName = "anything"
+    val updateValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri,
+          thingPictureClassIri.toSmartIri,
+          propertyIri,
+          stillImageFileValueIri.get,
+          FileModelUtil.getFileValueContent(
+            FileType.StillImageFile(dimX = dimX, dimY = dimY),
+            internalFilename,
+            Some(internalMimeType),
+            originalFilename,
+            originalMimeType,
+            None
+          )
+        ),
+        anythingUser1,
+        randomUUID
       )
-    val changeFileMessage = changeFileRequest
-      .toMessage(
-        resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
-        internalMimeType = Some(internalMimeType),
-        originalMimeType = originalMimeType,
-        originalFilename = originalFilename
-      )
-    appActor ! changeFileMessage
+    )
 
-    expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-      stillImageFileValueIri.set(updateValueResponse.valueIri)
-    }
+    stillImageFileValueIri.set(updateValueResponse.valueIri)
 
     // Read the value back to check that it was added correctly.
 

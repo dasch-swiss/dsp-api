@@ -12,11 +12,8 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueRequestV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 sealed abstract case class UploadFileRequest private (
@@ -222,58 +219,6 @@ sealed abstract case class ChangeFileRequest private (
        |  },
        |  $context
        |}""".stripMargin
-  }
-
-  /**
-   * @param internalMimeType     internal mimetype, as provided by SIPI. Optional.
-   * @param originalFilename     original filename before the upload. Optional.
-   * @param originalMimeType     file mimetype before the upload. Optional.
-   * @param comment              rdfs:comment to the change. Optional.
-   * @param requestingUser       the user issuing the request. Optional.
-   * @param permissions          permissions of the updated file value. Optional.
-   * @param valueCreationDate    custom creation date of the updated value. Optional.
-   * @param newValueVersionIri   custom IRI of the new version of the value. Optional.
-   * @param resourceClassIRI     the resource class IRI. Optional.
-   * @return
-   */
-  def toMessage(
-    internalMimeType: Option[String] = None,
-    originalFilename: Option[String] = None,
-    originalMimeType: Option[String] = None,
-    comment: Option[String] = None,
-    requestingUser: UserADM = SharedTestDataADM.rootUser,
-    permissions: Option[String] = None,
-    valueCreationDate: Option[Instant] = None,
-    newValueVersionIri: Option[SmartIri] = None,
-    resourceClassIRI: Option[SmartIri] = None
-  ): UpdateValueRequestV2 = {
-    val propertyIRI = FileModelUtil.getFileRepresentationPropertyIri(fileType)
-    val resourceClassIRIWithDefault = resourceClassIRI match {
-      case Some(value) => value
-      case None        => FileModelUtil.getFileValueTypeIRI(fileType)
-    }
-    val valueContent = FileModelUtil.getFileValueContent(
-      fileType = fileType,
-      internalFilename = internalFilename,
-      internalMimeType = internalMimeType,
-      originalFilename = originalFilename,
-      originalMimeType = originalMimeType,
-      comment = comment
-    )
-    UpdateValueRequestV2(
-      updateValue = UpdateValueContentV2(
-        resourceIri = resourceIRI,
-        resourceClassIri = resourceClassIRIWithDefault,
-        propertyIri = propertyIRI,
-        valueIri = valueIRI,
-        valueContent = valueContent,
-        permissions = permissions,
-        valueCreationDate = valueCreationDate,
-        newValueVersionIri = newValueVersionIri
-      ),
-      requestingUser = requestingUser,
-      apiRequestID = UUID.randomUUID
-    )
   }
 }
 

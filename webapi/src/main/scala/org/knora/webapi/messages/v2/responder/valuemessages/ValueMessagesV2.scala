@@ -99,21 +99,7 @@ case class CreateValueResponseV2(
 }
 
 /**
- * Requests an update to a value, i.e. the creation of a new version of an existing value.
- *
- * @param updateValue          an [[UpdateValueV2]] representing the new version of the value. A successful response will be
- *                             an [[UpdateValueResponseV2]].
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the API request ID.
- */
-case class UpdateValueRequestV2(
-  updateValue: UpdateValueV2,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends ValuesResponderRequestV2
-
-/**
- * Represents a successful response to an [[UpdateValueRequestV2]].
+ * Represents a successful response to an update value request.
  *
  * @param valueIri   the IRI of the value version that was created.
  * @param valueType  the type of the value that was updated.
