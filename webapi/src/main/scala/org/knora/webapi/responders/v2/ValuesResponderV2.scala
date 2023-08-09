@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.http.scaladsl.util.FastFuture
 import zio.Task
 import zio.ZIO
 import zio._
@@ -22,6 +21,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
@@ -371,9 +371,41 @@ final case class ValuesResponderV2Live(
   private def doNotAcceptHasStandoffLinkToValue(property: SmartIri, operation: String) =
     iriConverter.asExternalIri(property).flatMap { propertyIri =>
       val msg = s"Values of <$propertyIri> cannot be $operation directly"
-      ZIO.when(propertyIri == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
+      ZIO.when(propertyIri == KnoraApiV2Complex.HasStandoffLinkToValue)(
         ZIO.fail(BadRequestException(msg))
       )
+    }
+
+  /**
+   * When a property IRI is submitted for an update, makes an adjusted version of the submitted property:
+   * if it's a link value property, substitutes the corresponding link property, whose objects we will need to query.
+   *
+   * @param submittedPropertyIri    the submitted property IRI, in the API v2 complex schema.
+   * @param maybeSubmittedValueType the submitted value type, if provided, in the API v2 complex schema.
+   * @param propertyInfo            ontology information about the submitted property, in the internal schema.
+   * @param requestingUser          the requesting user.
+   * @return ontology information about the adjusted property.
+   */
+  private def getAdjustedInternalPropertyInfo(
+    submittedPropertyIri: SmartIri,
+    maybeSubmittedValueType: Option[SmartIri],
+    propertyInfo: ReadPropertyInfoV2,
+    requestingUser: UserADM
+  ): Task[ReadPropertyInfoV2] =
+    if (!propertyInfo.isLinkValueProp) {
+      ZIO.succeed(propertyInfo)
+    } else {
+      val failIfIsLinkValueType = maybeSubmittedValueType match {
+        case Some(valueType) if valueType.toString != KnoraApiV2Complex.LinkValue =>
+          val msg = s"A value of type <$valueType> cannot be an object of property <$submittedPropertyIri>"
+          ZIO.fail(BadRequestException(msg))
+        case _ => ZIO.unit
+      }
+      val getLinkPropPropertyInfo = iriConverter
+        .asInternalSmartIri(submittedPropertyIri)
+        .map(_.fromLinkValuePropToLinkProp)
+        .flatMap(getPropertyInfo(_, requestingUser))
+      failIfIsLinkValueType *> getLinkPropPropertyInfo
     }
 
   private def getClassInfo(resourceClassIri: SmartIri, user: UserADM) = for {
@@ -1866,43 +1898,6 @@ final case class ValuesResponderV2Live(
 
       _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
     } yield currentValue.valueIri
-  }
-
-  /**
-   * When a property IRI is submitted for an update, makes an adjusted version of the submitted property:
-   * if it's a link value property, substitutes the corresponding link property, whose objects we will need to query.
-   *
-   * @param submittedPropertyIri             the submitted property IRI, in the API v2 complex schema.
-   * @param maybeSubmittedValueType          the submitted value type, if provided, in the API v2 complex schema.
-   * @param propertyInfo ontology information about the submitted property, in the internal schema.
-   * @param requestingUser                   the requesting user.
-   * @return ontology information about the adjusted property.
-   */
-  private def getAdjustedInternalPropertyInfo(
-    submittedPropertyIri: SmartIri,
-    maybeSubmittedValueType: Option[SmartIri],
-    propertyInfo: ReadPropertyInfoV2,
-    requestingUser: UserADM
-  ): Task[ReadPropertyInfoV2] = {
-    val submittedInternalPropertyIri: SmartIri = submittedPropertyIri.toOntologySchema(InternalSchema)
-
-    if (propertyInfo.isLinkValueProp) {
-      maybeSubmittedValueType match {
-        case Some(submittedValueType) =>
-          if (submittedValueType.toString != OntologyConstants.KnoraApiV2Complex.LinkValue) {
-            FastFuture.failed(
-              BadRequestException(
-                s"A value of type <$submittedValueType> cannot be an object of property <$submittedPropertyIri>"
-              )
-            )
-          }
-
-        case None => ()
-      }
-      ZIO.attempt(submittedInternalPropertyIri.fromLinkValuePropToLinkProp).flatMap(getPropertyInfo(_, requestingUser))
-    } else {
-      doNotAcceptLinkProperties(propertyInfo).as(propertyInfo)
-    }
   }
 
   /**
