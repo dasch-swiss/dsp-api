@@ -1,118 +1,131 @@
-@prefix :           <http://www.knora.org/ontology/0001/sequences#> .
-@prefix xml:        <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl:        <http://www.w3.org/2002/07/owl#> .
-@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
-@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
-@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@base <http://www.knora.org/ontology/0001/sequences> .
-
-# A trivial ontology to test isSequenceOf relations
+@prefix anything:    <http://www.knora.org/ontology/0001/anything#> .
+@prefix beol:        <http://www.knora.org/ontology/0801/beol#> .
+@prefix biblio:      <http://www.knora.org/ontology/0801/biblio#> .
+@prefix bibo:        <http://purl.org/ontology/bibo/> .
+@prefix dcterms:     <http://purl.org/dc/terms/> .
+@prefix dokubib:     <http://www.knora.org/ontology/0804/dokubib#> .
+@prefix event:       <http://purl.org/NET/c4dm/event.owl#> .
+@prefix foaf:        <http://xmlns.com/foaf/0.1/> .
+@prefix freetest:    <http://www.knora.org/ontology/0001/freetest#> .
+@prefix images:      <http://www.knora.org/ontology/00FF/images#> .
+@prefix incunabula:  <http://www.knora.org/ontology/0803/incunabula#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix s:           <http://www.knora.org/ontology/0001/sequences#> .
+@prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff:    <http://www.knora.org/ontology/standoff#> .
+@prefix webern:      <http://www.knora.org/ontology/0806/webern#> .
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.knora.org/ontology/0001/sequences>
-    rdf:type                        owl:Ontology ;
-    rdfs:label                      "The sequences ontology" ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
-    knora-base:lastModificationDate "2022-07-13T16:21:34Z"^^xsd:dateTime .
+        rdf:type                      owl:Ontology;
+        rdfs:label                    "The sequences ontology";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/0001>;
+        knora-base:lastModificationDate
+                "2022-07-13T16:21:34Z"^^xsd:dateTime .
 
-:Video
-    rdf:type                owl:Class ;
-    rdfs:subClassOf         knora-base:MovingImageRepresentation,
-                            [ rdf:type            owl:Restriction ;
-                              owl:onProperty      :hasTitle ;
-                              owl:cardinality     "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger ] ;
-    rdfs:label              "Video"@en ;
-    rdfs:comment            "A video resource."@en .
+s:Video  rdf:type        owl:Class;
+        rdfs:comment     "A video resource."@en;
+        rdfs:label       "Video"@en;
+        rdfs:subClassOf  knora-base:MovingImageRepresentation;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       s:hasTitle
+                         ] .
 
-:Audio
-    rdf:type                owl:Class ;
-    rdfs:subClassOf         knora-base:AudioRepresentation,
-                            [ rdf:type            owl:Restriction ;
-                              owl:onProperty      :hasTitle ;
-                              owl:cardinality     "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger ] ;
-    rdfs:label              "Audio"@en ;
-    rdfs:comment            "An audio resource."@en .
+s:hasTitle  rdf:type        owl:ObjectProperty;
+        rdfs:comment        "has a title"@en;
+        rdfs:label          "has title"@en;
+        rdfs:subPropertyOf  knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:UnformattedTextValue;
+        knora-base:subjectClassConstraint
+                knora-base:Resource .
 
+s:Audio  rdf:type        owl:Class;
+        rdfs:comment     "An audio resource."@en;
+        rdfs:label       "Audio"@en;
+        rdfs:subClassOf  knora-base:AudioRepresentation;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       s:hasTitle
+                         ] .
 
-:VideoSequence
-    rdf:type                owl:Class ;
-    rdfs:subClassOf         knora-base:Resource,
-                            [ rdf:type             owl:Restriction ;
-                              owl:onProperty       knora-base:isSequenceOf ;
-                              owl:cardinality      "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
-                            [ rdf:type             owl:Restriction ;
-                              owl:onProperty       knora-base:isSequenceOfValue ;
-                              owl:cardinality      "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
-                            [ rdf:type             owl:Restriction ;
-                              owl:onProperty       knora-base:hasSequenceBounds ;
-                              owl:cardinality      "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ] ;
-    rdfs:label              "Sequence"@en ;
-    rdfs:comment            "Sequence of a Video."@en .
+s:VideoSequence  rdf:type  owl:Class;
+        rdfs:comment     "Sequence of a Video."@en;
+        rdfs:label       "Sequence"@en;
+        rdfs:subClassOf  knora-base:Resource;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       knora-base:hasSequenceBounds
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       knora-base:isSequenceOf
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       knora-base:isSequenceOfValue
+                         ] .
 
-:AudioSequence
-    rdf:type                owl:Class ;
-    rdfs:subClassOf         knora-base:Resource,
-                            [ rdf:type             owl:Restriction ;
-                              owl:onProperty       :isAnnotatedSequenceOfAudio ;
-                              owl:cardinality      "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
-                            [ rdf:type             owl:Restriction ;
-                              owl:onProperty       :isAnnotatedSequenceOfAudioValue ;
-                              owl:cardinality      "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
-                            [ rdf:type             owl:Restriction ;
-                              owl:onProperty       :hasCustomSequenceBounds ;
-                              owl:cardinality      "1"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ] ;
-    rdfs:label              "Sequence"@en ;
-    rdfs:comment            "Sequence of a Video."@en .
+s:AudioSequence  rdf:type  owl:Class;
+        rdfs:comment     "Sequence of a Video."@en;
+        rdfs:label       "Sequence"@en;
+        rdfs:subClassOf  knora-base:Resource;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       s:hasCustomSequenceBounds
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       s:isAnnotatedSequenceOfAudioValue
+                         ];
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger;
+                           owl:cardinality      "1"^^xsd:nonNegativeInteger;
+                           owl:onProperty       s:isAnnotatedSequenceOfAudio
+                         ] .
 
+s:isAnnotatedSequenceOfAudio
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "annotated sub-sequence of an audio resource"@en;
+        rdfs:label             "isAnnotatedSequenceOfAudio"@en;
+        rdfs:subPropertyOf     knora-base:isSequenceOf;
+        knora-base:objectClassConstraint
+                s:Audio;
+        knora-base:subjectClassConstraint
+                s:AudioSequence;
+        salsah-gui:guiElement  salsah-gui:Searchbox .
 
-:hasTitle
-    rdf:type                          owl:ObjectProperty ;
-    rdfs:label                        "has title"@en ;
-    rdfs:comment                      "has a title"@en ;
-    rdfs:subPropertyOf                knora-base:hasValue ;
-    knora-base:subjectClassConstraint knora-base:Resource ;
-    knora-base:objectClassConstraint  knora-base:TextValue ;
-    salsah-gui:guiElement             salsah-gui:SimpleText ;
-    salsah-gui:guiAttribute           "size=80",
-                                      "maxlength=255" .
+s:isAnnotatedSequenceOfAudioValue
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "annotated sub-sequence of an audio resource"@en;
+        rdfs:label             "isAnnotatedSequenceOfAudio"@en;
+        rdfs:subPropertyOf     knora-base:isSequenceOfValue;
+        knora-base:objectClassConstraint
+                knora-base:LinkValue;
+        knora-base:subjectClassConstraint
+                s:AudioSequence;
+        salsah-gui:guiElement  salsah-gui:Searchbox .
 
-
-:isAnnotatedSequenceOfAudio
-    rdf:type                          owl:ObjectProperty ;
-    rdfs:label                        "isAnnotatedSequenceOfAudio"@en ;
-    rdfs:comment                      "annotated sub-sequence of an audio resource"@en ;
-    rdfs:subPropertyOf                knora-base:isSequenceOf ;
-    knora-base:subjectClassConstraint :AudioSequence ;
-    knora-base:objectClassConstraint  :Audio ;
-    salsah-gui:guiElement             salsah-gui:Searchbox .
-
-
-:isAnnotatedSequenceOfAudioValue
-    rdf:type                          owl:ObjectProperty ;
-    rdfs:label                        "isAnnotatedSequenceOfAudio"@en ;
-    rdfs:comment                      "annotated sub-sequence of an audio resource"@en ;
-    rdfs:subPropertyOf                knora-base:isSequenceOfValue ;
-    knora-base:subjectClassConstraint :AudioSequence ;
-    knora-base:objectClassConstraint  knora-base:LinkValue ;
-    salsah-gui:guiElement             salsah-gui:Searchbox .
-
-
-:hasCustomSequenceBounds
-    rdf:type                          owl:ObjectProperty ;
-    rdfs:label                        "hasCustomSequenceBounds"@en ;
-    rdfs:comment                      "custom subclass of sequence bounds"@en ;
-    rdfs:subPropertyOf                knora-base:hasSequenceBounds ;
-    knora-base:subjectClassConstraint :AudioSequence ;
-    knora-base:objectClassConstraint  knora-base:IntervalValue ;
-    salsah-gui:guiElement             salsah-gui:Interval .
-
+s:hasCustomSequenceBounds
+        rdf:type               owl:ObjectProperty;
+        rdfs:comment           "custom subclass of sequence bounds"@en;
+        rdfs:label             "hasCustomSequenceBounds"@en;
+        rdfs:subPropertyOf     knora-base:hasSequenceBounds;
+        knora-base:objectClassConstraint
+                knora-base:IntervalValue;
+        knora-base:subjectClassConstraint
+                s:AudioSequence;
+        salsah-gui:guiElement  salsah-gui:Interval .

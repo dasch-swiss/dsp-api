@@ -1,29 +1,28 @@
-@prefix :           <http://www.knora.org/ontology/0001/minimal#> .
-@prefix xml:        <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl:        <http://www.w3.org/2002/07/owl#> .
-@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
-@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
-@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@base <http://www.knora.org/ontology/0001/minimal> .
-
-# A minimal ontology.
-
+@prefix minimal:    <http://www.knora.org/ontology/0001/minimal#> .
+@prefix dcterms:     <http://purl.org/dc/terms/> .
+@prefix event:       <http://purl.org/NET/c4dm/event.owl#> .
+@prefix foaf:        <http://xmlns.com/foaf/0.1/> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff:    <http://www.knora.org/ontology/standoff#> .
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.knora.org/ontology/0001/minimal>
-    rdf:type                        owl:Ontology ;
-    rdfs:label                      "A minimal ontology" ;
-    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
-    knora-base:lastModificationDate "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
+        rdf:type                      owl:Ontology;
+        rdfs:label                    "A minimal ontology";
+        knora-base:attachedToProject  <http://rdfh.ch/projects/0001>;
+        knora-base:lastModificationDate
+                "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
 
-:hasName
-    rdf:type                         owl:ObjectProperty ;
-    rdfs:label                       "has name"@en ;
-    rdfs:comment                     """Has name."""@en ;
-    rdfs:subPropertyOf               knora-base:hasValue ;
-    knora-base:objectClassConstraint knora-base:TextValue ;
-    salsah-gui:guiElement            salsah-gui:SimpleText ;
-    salsah-gui:guiAttribute          "size=80",
-                                     "maxlength=255" .
+minimal:hasName
+        rdf:type            owl:ObjectProperty;
+        rdfs:comment        "Has name."@en;
+        rdfs:label          "has name"@en;
+        rdfs:subPropertyOf  knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:UnformattedTextValue .
