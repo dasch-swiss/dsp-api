@@ -49,112 +49,7 @@ import org.knora.webapi.routing.RouteUtilZ
 sealed trait ValuesResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
- * Requests the creation of a value.
- *
- * @param createValue          a [[CreateValueV2]] representing the value to be created. A successful response will be
- *                             a [[CreateValueResponseV2]].
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the API request ID.
- */
-case class CreateValueRequestV2(
-  createValue: CreateValueV2,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends ValuesResponderRequestV2
-
-/**
- * Constructs [[CreateValueRequestV2]] instances based on JSON-LD input.
- */
-object CreateValueRequestV2 {
-
-  /**
-   * Converts JSON-LD input to a [[CreateValueRequestV2]].
-   *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, CreateValueRequestV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        // Get the IRI of the resource that the value is to be created in.
-        resourceIri <- ZIO
-                         .attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
-                         .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
-
-        // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
-
-        // Get the resource property and the value to be created.
-        createValue <-
-          jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue match {
-            case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
-              for {
-                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-
-                // Get and validate the custom value IRI if provided.
-                maybeCustomValueIri <- ZIO.attempt(
-                                         jsonLdObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
-                                           stringFormatter.validateCustomValueIri(
-                                             definedNewIri,
-                                             resourceIri.getProjectCode.get,
-                                             resourceIri.getResourceID.get
-                                           )
-                                         }
-                                       )
-
-                // Get the custom value UUID if provided.
-                maybeCustomUUID <- ZIO.attempt(jsonLdObject.maybeUUID(ValueHasUUID))
-
-                // Get the value's creation date.
-                // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-                maybeCreationDate <- ZIO.attempt(
-                                       jsonLdObject
-                                         .maybeDatatypeValueInObject(
-                                           key = ValueCreationDate,
-                                           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                           validationFun = (s, errorFun) =>
-                                             ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-                                         )
-                                         .orElse(
-                                           jsonLdObject
-                                             .maybeDatatypeValueInObject(
-                                               key = CreationDate,
-                                               expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                               validationFun = (s, errorFun) =>
-                                                 ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-                                             )
-                                         )
-                                     )
-
-                maybePermissions <-
-                  ZIO.attempt {
-                    val validationFun: (String, => Nothing) => String =
-                      (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                    jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
-                  }
-              } yield CreateValueV2(
-                resourceIri = resourceIri.toString,
-                resourceClassIri = resourceClassIri,
-                propertyIri = propertyIri,
-                valueContent = valueContent,
-                valueIri = maybeCustomValueIri,
-                valueUUID = maybeCustomUUID,
-                valueCreationDate = maybeCreationDate,
-                permissions = maybePermissions
-              )
-          }
-      } yield CreateValueRequestV2(createValue, requestingUser, apiRequestID)
-    }
-}
-
-/**
- * Represents a successful response to a [[CreateValueRequestV2]].
+ * Represents a successful response to a create value Request.
  *
  * @param valueIri          the IRI of the value that was created.
  * @param valueType         the type of the value that was created.
@@ -1075,6 +970,96 @@ case class CreateValueV2(
   valueCreationDate: Option[Instant] = None,
   permissions: Option[String] = None
 ) extends IOValueV2
+
+/**
+ * Constructs [[CreateValueV2]] instances based on JSON-LD input.
+ */
+object CreateValueV2 {
+
+  /**
+   * Converts JSON-LD input to a [[CreateValueV2]].
+   *
+   * @param jsonLdString  JSON-LD input as String.
+   * @param requestingUser       the user making the request.
+   * @return a case class instance representing the input.
+   */
+  def fromJsonLd(
+    jsonLdString: String,
+    requestingUser: UserADM
+  ): ZIO[StringFormatter with MessageRelay, Throwable, CreateValueV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
+      for {
+        // Get the IRI of the resource that the value is to be created in.
+        jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
+        resourceIri <- ZIO
+                         .attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
+                         .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
+
+        // Get the resource class.
+        resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
+
+        // Get the resource property and the value to be created.
+        createValue <-
+          jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue match {
+            case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
+              for {
+                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+
+                // Get and validate the custom value IRI if provided.
+                maybeCustomValueIri <- ZIO.attempt(
+                                         jsonLdObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
+                                           stringFormatter.validateCustomValueIri(
+                                             definedNewIri,
+                                             resourceIri.getProjectCode.get,
+                                             resourceIri.getResourceID.get
+                                           )
+                                         }
+                                       )
+
+                // Get the custom value UUID if provided.
+                maybeCustomUUID <- ZIO.attempt(jsonLdObject.maybeUUID(ValueHasUUID))
+
+                // Get the value's creation date.
+                // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
+                maybeCreationDate <- ZIO.attempt(
+                                       jsonLdObject
+                                         .maybeDatatypeValueInObject(
+                                           key = ValueCreationDate,
+                                           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                           validationFun = (s, errorFun) =>
+                                             ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                                         )
+                                         .orElse(
+                                           jsonLdObject
+                                             .maybeDatatypeValueInObject(
+                                               key = CreationDate,
+                                               expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                               validationFun = (s, errorFun) =>
+                                                 ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                                             )
+                                         )
+                                     )
+
+                maybePermissions <-
+                  ZIO.attempt {
+                    val validationFun: (String, => Nothing) => String =
+                      (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                    jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
+                  }
+              } yield CreateValueV2(
+                resourceIri = resourceIri.toString,
+                resourceClassIri = resourceClassIri,
+                propertyIri = propertyIri,
+                valueContent = valueContent,
+                valueIri = maybeCustomValueIri,
+                valueUUID = maybeCustomUUID,
+                valueCreationDate = maybeCreationDate,
+                permissions = maybePermissions
+              )
+          }
+      } yield createValue
+    }
+}
 
 /**
  * A trait for classes representing information to be updated in a value.

@@ -1,9 +1,9 @@
-import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
+import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper.*
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
 import sbt.Keys.version
-import sbt._
+import sbt.*
 
 import scala.language.postfixOps
 
@@ -15,10 +15,9 @@ import scala.language.postfixOps
 // use Ctrl-c to stop current task but not quit SBT
 Global / cancelable := true
 
-Global / scalaVersion                                   := Dependencies.ScalaVersion
-Global / semanticdbEnabled                              := true
-Global / semanticdbVersion                              := scalafixSemanticdb.revision
-Global / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+Global / scalaVersion      := Dependencies.ScalaVersion
+Global / semanticdbEnabled := true
+Global / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
 

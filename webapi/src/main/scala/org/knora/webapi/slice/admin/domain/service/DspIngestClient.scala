@@ -5,7 +5,15 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio._
+import sttp.capabilities.zio.ZioStreams
+import sttp.client3.UriContext
+import sttp.client3.asStreamAlways
+import sttp.client3.basicRequest
+import sttp.client3.httpclient.zio.HttpClientZioBackend
+import zio.Scope
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 import zio.http.Body
 import zio.http.Client
 import zio.http.Request
@@ -15,6 +23,8 @@ import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
 import zio.stream.ZSink
+
+import scala.concurrent.duration.DurationInt
 
 import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.DspIngestConfig
@@ -35,15 +45,18 @@ final case class DspIngestClientLive(
 
   def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
     for {
-      exportUrl <- ZIO.fromEither(URL.fromString(s"${projectsPath(shortcode)}/export"))
       token     <- jwtService.createJwtForDspIngest()
-      request = Request
-                  .post(Body.empty, exportUrl)
-                  .updateHeaders(_.addHeaders(Headers.bearerAuthorizationHeader(token.jwtString)))
-      response  <- Client.request(request).provideSomeLayer[Scope](Client.default)
       tempdir   <- Files.createTempDirectoryScoped(Some("export"), List.empty)
       exportFile = tempdir / "export.zip"
-      _         <- response.body.asStream.run(ZSink.fromFile(exportFile.toFile))
+      response <- {
+        val request = basicRequest.auth
+          .bearer(token.jwtString)
+          .post(uri"${projectsPath(shortcode)}/export")
+          .readTimeout(30.minutes)
+          .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
+        HttpClientZioBackend.scoped().flatMap(request.send(_))
+      }
+      _ <- ZIO.logInfo(s"Response from ingest :${response.code}")
     } yield exportFile
 
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
