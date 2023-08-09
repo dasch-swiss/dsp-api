@@ -22,11 +22,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -73,15 +69,6 @@ final case class ValuesResponderV2Live(
   implicit val stringFormatter: StringFormatter
 ) extends ValuesResponderV2
     with MessageHandler {
-
-  /**
-   * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
-   *
-   * @param newValueIri the IRI that was assigned to the new value.
-   * @param value       the content of the new value.
-   * @param permissions the permissions attached to the new value.
-   */
-  private case class VerifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
 
   override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[ValuesResponderRequestV2]
 
@@ -1078,32 +1065,12 @@ final case class ValuesResponderV2Live(
               newPermissions = newValuePermissionLiteral,
               currentTime = currentTime
             )
-            .toString()
-
         _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
-
-        // Check that the value was written correctly to the triplestore.
-        unverifiedValue =
-          UnverifiedValueV2(
-            newValueIri = newValueIri,
-            newValueUUID = currentValue.valueHasUUID,
-            valueContent = currentValue.valueContent,
-            permissions = newValuePermissionLiteral,
-            creationDate = currentTime
-          )
-
-        verifiedValue <-
-          verifyValue(
-            resourceIri = resourceInfo.resourceIri,
-            propertyIri = submittedInternalPropertyIri,
-            unverifiedValue = unverifiedValue,
-            requestingUser = updateValueRequest.requestingUser
-          )
       } yield UpdateValueResponseV2(
-        valueIri = verifiedValue.newValueIri,
-        valueType = unverifiedValue.valueContent.valueType,
-        valueUUID = currentValue.valueHasUUID,
-        projectADM = resourceInfo.projectADM
+        newValueIri,
+        currentValue.valueContent.valueType,
+        currentValue.valueHasUUID,
+        resourceInfo.projectADM
       )
 
     /**
@@ -1256,7 +1223,7 @@ final case class ValuesResponderV2Live(
         dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
 
         // Create the new value version.
-        unverifiedValue <-
+        newValueVersion <-
           (currentValue, submittedInternalValueContent) match {
             case (
                   currentLinkValue: ReadLinkValueV2,
@@ -1289,20 +1256,10 @@ final case class ValuesResponderV2Live(
                 requestingUser = updateValueRequest.requestingUser
               )
           }
-
-        // Check that the value was written correctly to the triplestore.
-        verifiedValue <-
-          verifyValue(
-            resourceIri = updateValueContentV2.resourceIri,
-            propertyIri = submittedInternalPropertyIri,
-            unverifiedValue = unverifiedValue,
-            requestingUser = updateValueRequest.requestingUser
-          )
-
       } yield UpdateValueResponseV2(
-        valueIri = verifiedValue.newValueIri,
-        valueType = unverifiedValue.valueContent.valueType,
-        valueUUID = unverifiedValue.newValueUUID,
+        valueIri = newValueVersion.newValueIri,
+        valueType = newValueVersion.valueContent.valueType,
+        valueUUID = newValueVersion.newValueUUID,
         projectADM = resourceInfo.projectADM
       )
     }
@@ -2113,64 +2070,6 @@ final case class ValuesResponderV2Live(
             )
           )
     } yield searchResponse.toResource(resourceIri)
-
-  /**
-   * Verifies that a value was written correctly to the triplestore.
-   *
-   * @param resourceIri          the IRI of the resource that the value belongs to.
-   * @param propertyIri          the internal IRI of the property that points to the value. If the value is a link value,
-   *                             this is the link value property.
-   * @param unverifiedValue      the value that should have been written to the triplestore.
-   *
-   * @param requestingUser       the user making the request.
-   */
-  private def verifyValue(
-    resourceIri: IRI,
-    propertyIri: SmartIri,
-    unverifiedValue: UnverifiedValueV2,
-    requestingUser: UserADM
-  ): Task[VerifiedValueV2] = {
-    val verifiedValueFuture: Task[VerifiedValueV2] = for {
-      resourcesRequest <-
-        ZIO.attempt {
-          ResourcesGetRequestV2(
-            resourceIris = Seq(resourceIri),
-            propertyIri = Some(propertyIri),
-            versionDate = Some(unverifiedValue.creationDate),
-            targetSchema = ApiV2Complex,
-            schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-            requestingUser = requestingUser
-          )
-        }
-
-      resourcesResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcesRequest)
-      resource           = resourcesResponse.toResource(resourceIri)
-
-      propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
-      valueInTriplestore: ReadValueV2 = propertyValues
-                                          .find(_.valueIri == unverifiedValue.newValueIri)
-                                          .getOrElse(throw UpdateNotPerformedException())
-
-      _ = if (
-            !(unverifiedValue.valueContent.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
-              valueInTriplestore.permissions == unverifiedValue.permissions &&
-              valueInTriplestore.attachedToUser == requestingUser.id)
-          ) {
-
-            throw AssertionException(
-              s"The value saved as ${unverifiedValue.newValueIri} is not the same as the one that was submitted"
-            )
-          }
-    } yield VerifiedValueV2(
-      newValueIri = unverifiedValue.newValueIri,
-      value = unverifiedValue.valueContent,
-      permissions = unverifiedValue.permissions
-    )
-
-    verifiedValueFuture.mapError { case _: NotFoundException =>
-      UpdateNotPerformedException(s"Resource <$resourceIri> was not found. Please report this as a possible bug.")
-    }
-  }
 
   /**
    * Checks that a link value points to a resource with the correct type for the link property's object class constraint.
