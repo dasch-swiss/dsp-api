@@ -95,18 +95,6 @@ final case class ValuesResponderV2Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
-  private def getPropertyInfo(propertyIri: SmartIri, user: UserADM) = for {
-    internalIri <- iriConverter.asInternalSmartIri(propertyIri)
-    req          = PropertiesGetRequestV2(Set(internalIri), allLanguages = false, user)
-    res         <- messageRelay.ask[ReadOntologyV2](req)
-  } yield res.properties(internalIri)
-
-  private def getClassInfo(resourceClassIri: SmartIri, user: UserADM) = for {
-    internalIri <- iriConverter.asInternalSmartIri(resourceClassIri)
-    req          = ClassesGetRequestV2(Set(internalIri), allLanguages = false, user)
-    res         <- messageRelay.ask[ReadOntologyV2](req)
-  } yield res.classes(internalIri)
-
   /**
    * Creates a new value in an existing resource.
    *
@@ -128,14 +116,8 @@ final case class ValuesResponderV2Live(
 
         submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
 
-        propertyInfoForSubmittedProperty <- getPropertyInfo(submittedInternalPropertyIri, requestingUser)
-
-        // Don't accept link properties.
-        _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-              throw BadRequestException(
-                s"Invalid property <${valueToCreate.propertyIri}>. Use a link value property to submit a link."
-              )
-            }
+        propertyInfo <- getPropertyInfo(submittedInternalPropertyIri, requestingUser)
+        _            <- doNotAcceptLinkProperties(propertyInfo)
 
         // Don't accept knora-api:hasStandoffLinkToValue.
         _ =
@@ -152,7 +134,7 @@ final case class ValuesResponderV2Live(
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = valueToCreate.propertyIri,
             maybeSubmittedValueType = Some(valueToCreate.valueContent.valueType),
-            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+            propertyInfo = propertyInfo,
             requestingUser = requestingUser
           )
 
@@ -378,6 +360,25 @@ final case class ValuesResponderV2Live(
 
     resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, requestingUser)
   }
+
+  private def getPropertyInfo(propertyIri: SmartIri, user: UserADM) = for {
+    internalIri <- iriConverter.asInternalSmartIri(propertyIri)
+    req          = PropertiesGetRequestV2(Set(internalIri), allLanguages = false, user)
+    res         <- messageRelay.ask[ReadOntologyV2](req)
+  } yield res.properties(internalIri)
+
+  private def doNotAcceptLinkProperties(info: ReadPropertyInfoV2) =
+    ZIO.when(info.isLinkProp) {
+      iriConverter.asExternalIri(info.entityInfoContent.propertyIri).flatMap { propertyIri =>
+        val msg = s"Invalid property <$propertyIri>. Use a link value property to submit a link."
+        ZIO.fail(BadRequestException(msg))
+      }
+    }
+  private def getClassInfo(resourceClassIri: SmartIri, user: UserADM) = for {
+    internalIri <- iriConverter.asInternalSmartIri(resourceClassIri)
+    req          = ClassesGetRequestV2(Set(internalIri), allLanguages = false, user)
+    res         <- messageRelay.ask[ReadOntologyV2](req)
+  } yield res.classes(internalIri)
 
   /**
    * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
@@ -908,14 +909,8 @@ final case class ValuesResponderV2Live(
       submittedExternalValueType: SmartIri
     ): Task[ResourcePropertyValue] =
       for {
-        propertyInfoForSubmittedProperty <- getPropertyInfo(submittedExternalPropertyIri, requestingUser)
-
-        // Don't accept link properties.
-        _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-              throw BadRequestException(
-                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
-              )
-            }
+        propertyInfo <- getPropertyInfo(submittedExternalPropertyIri, requestingUser)
+        _            <- doNotAcceptLinkProperties(propertyInfo)
 
         // Don't accept knora-api:hasStandoffLinkToValue.
         _ = if (submittedExternalPropertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
@@ -929,7 +924,7 @@ final case class ValuesResponderV2Live(
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = submittedExternalPropertyIri,
             maybeSubmittedValueType = Some(submittedExternalValueType),
-            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+            propertyInfo = propertyInfo,
             requestingUser = requestingUser
           )
 
@@ -1547,17 +1542,11 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM,
     apiRequestId: UUID
   ): Task[SuccessResponseV2] = {
-    def deleteTask: Task[SuccessResponseV2] = {
+    val deleteTask: Task[SuccessResponseV2] = {
       for {
         // Convert the submitted property IRI to the internal schema.
         propertyInfo <- getPropertyInfo(deleteValue.propertyIri, requestingUser)
-
-        // Don't accept link properties.
-        _ = if (propertyInfo.isLinkProp) {
-              throw BadRequestException(
-                s"Invalid property <${propertyInfo.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
-              )
-            }
+        _            <- doNotAcceptLinkProperties(propertyInfo)
 
         // Don't accept knora-api:hasStandoffLinkToValue.
         _ = if (deleteValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
@@ -1571,7 +1560,7 @@ final case class ValuesResponderV2Live(
           getAdjustedInternalPropertyInfo(
             submittedPropertyIri = deleteValue.propertyIri,
             maybeSubmittedValueType = None,
-            propertyInfoForSubmittedProperty = propertyInfo,
+            propertyInfo = propertyInfo,
             requestingUser
           )
 
@@ -1891,19 +1880,19 @@ final case class ValuesResponderV2Live(
    *
    * @param submittedPropertyIri             the submitted property IRI, in the API v2 complex schema.
    * @param maybeSubmittedValueType          the submitted value type, if provided, in the API v2 complex schema.
-   * @param propertyInfoForSubmittedProperty ontology information about the submitted property, in the internal schema.
+   * @param propertyInfo ontology information about the submitted property, in the internal schema.
    * @param requestingUser                   the requesting user.
    * @return ontology information about the adjusted property.
    */
   private def getAdjustedInternalPropertyInfo(
     submittedPropertyIri: SmartIri,
     maybeSubmittedValueType: Option[SmartIri],
-    propertyInfoForSubmittedProperty: ReadPropertyInfoV2,
+    propertyInfo: ReadPropertyInfoV2,
     requestingUser: UserADM
   ): Task[ReadPropertyInfoV2] = {
     val submittedInternalPropertyIri: SmartIri = submittedPropertyIri.toOntologySchema(InternalSchema)
 
-    if (propertyInfoForSubmittedProperty.isLinkValueProp) {
+    if (propertyInfo.isLinkValueProp) {
       maybeSubmittedValueType match {
         case Some(submittedValueType) =>
           if (submittedValueType.toString != OntologyConstants.KnoraApiV2Complex.LinkValue) {
@@ -1917,12 +1906,8 @@ final case class ValuesResponderV2Live(
         case None => ()
       }
       ZIO.attempt(submittedInternalPropertyIri.fromLinkValuePropToLinkProp).flatMap(getPropertyInfo(_, requestingUser))
-    } else if (propertyInfoForSubmittedProperty.isLinkProp) {
-      throw BadRequestException(
-        s"Invalid property for creating a link value (submit a link value property instead): $submittedPropertyIri"
-      )
     } else {
-      ZIO.succeed(propertyInfoForSubmittedProperty)
+      doNotAcceptLinkProperties(propertyInfo).as(propertyInfo)
     }
   }
 

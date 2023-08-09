@@ -24,7 +24,9 @@ trait IriConverter {
   def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
   def asInternalSmartIri(iri: SmartIri): Task[SmartIri]    = ZIO.attempt(iri.toOntologySchema(InternalSchema))
   def asExternalIri(iri: InternalIri): Task[String] =
-    asInternalSmartIri(iri.value).mapAttempt(_.toOntologySchema(ApiV2Complex)).map(_.toIri)
+    asSmartIri(iri.value).flatMap(asExternalIri)
+  def asExternalIri(iri: SmartIri): Task[String] =
+    ZIO.attempt(iri.toOntologySchema(ApiV2Complex)).map(_.toIri)
   def getOntologyIriFromClassIri(iri: InternalIri): Task[InternalIri] =
     getOntologySmartIriFromClassIri(iri).mapAttempt(_.toInternalIri)
   def getOntologySmartIriFromClassIri(iri: InternalIri): Task[SmartIri] =
