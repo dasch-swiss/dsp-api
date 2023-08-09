@@ -5410,7 +5410,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
           ),
           OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.UnformattedTextValue.toSmartIri))
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
