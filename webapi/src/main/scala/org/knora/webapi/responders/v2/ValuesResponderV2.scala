@@ -14,6 +14,7 @@ import zio.macros.accessible
 import java.time.Instant
 import java.util.UUID
 import scala.util.Success
+
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
@@ -100,6 +101,12 @@ final case class ValuesResponderV2Live(
     res         <- messageRelay.ask[ReadOntologyV2](req)
   } yield res.properties(internalIri)
 
+  private def getClassInfo(resourceClassIri: SmartIri, user: UserADM) = for {
+    internalIri <- iriConverter.asInternalSmartIri(resourceClassIri)
+    req          = ClassesGetRequestV2(Set(internalIri), allLanguages = false, user)
+    res         <- messageRelay.ask[ReadOntologyV2](req)
+  } yield res.classes(internalIri)
+
   /**
    * Creates a new value in an existing resource.
    *
@@ -179,17 +186,9 @@ final case class ValuesResponderV2Live(
           }
 
         // Get the definition of the resource class.
-        classInfoRequest =
-          ClassesGetRequestV2(
-            classIris = Set(resourceInfo.resourceClassIri),
-            allLanguages = false,
-            requestingUser = requestingUser
-          )
-
-        classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
+        classInfo <- getClassInfo(resourceInfo.resourceClassIri, requestingUser)
 
         // Check that the resource class has a cardinality for the submitted property.
-        classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
         cardinalityInfo: KnoraCardinalityInfo =
           classInfo.allCardinalities.getOrElse(
             submittedInternalPropertyIri,
@@ -1629,15 +1628,7 @@ final case class ValuesResponderV2Live(
              )
 
         // Get the definition of the resource class.
-        classInfoRequest =
-          ClassesGetRequestV2(
-            classIris = Set(resourceInfo.resourceClassIri),
-            allLanguages = false,
-            requestingUser
-          )
-
-        classInfoResponse         <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
-        classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
+        classInfo <- getClassInfo(resourceInfo.resourceClassIri, requestingUser)
 
         cardinalityInfo: KnoraCardinalityInfo =
           classInfo.allCardinalities.getOrElse(
