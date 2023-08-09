@@ -1,17 +1,17 @@
-@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+@prefix books:       <http://www.knora.org/ontology/0001/books#> .
+@prefix foaf:        <http://xmlns.com/foaf/0.1/> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl:         <http://www.w3.org/2002/07/owl#> .
-@prefix foaf:        <http://xmlns.com/foaf/0.1/> .
-@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
-@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
-@prefix books:       <http://www.knora.org/ontology/0001/books#> .
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
 
 
 <http://rdfh.ch/0001/book-instance-01/values/has-title-value-01>
-    a                            knora-base:TextValue ;
+    a                            knora-base:UnformattedTextValue ;
     knora-base:valueHasUUID      "SZyeLLmOTcCCuS3B0VksHQ"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime ;
@@ -21,7 +21,7 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/book-instance-01/values/has-title-value-02>
-    a                            knora-base:TextValue ;
+    a                            knora-base:UnformattedTextValue ;
     knora-base:valueHasUUID      "IN4R19yYR0ygi3K2VEHpUQ"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
@@ -31,7 +31,7 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/book-instance-03/values/has-title-value-03>
-    a                            knora-base:TextValue ;
+    a                            knora-base:UnformattedTextValue ;
     knora-base:valueHasUUID      "IN4R19yYR0ygi3K2VEHpUQ"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
@@ -41,7 +41,7 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/book-instance-04/values/has-title-value-04>
-    a                            knora-base:TextValue ;
+    a                            knora-base:UnformattedTextValue ;
     knora-base:valueHasUUID      "IN4R19yYR0ygi3K2VEHpUQ"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
@@ -51,7 +51,7 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/book-instance-05/values/has-title-value-05>
-    a                            knora-base:TextValue ;
+    a                            knora-base:UnformattedTextValue ;
     knora-base:valueHasUUID      "dFLLWiihTAqxJsh0iTQ1HQ"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
@@ -61,7 +61,7 @@
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/book-instance-06/values/has-title-value-06>
-    a                            knora-base:TextValue ;
+    a                            knora-base:UnformattedTextValue ;
     knora-base:valueHasUUID      "nOqm172oRbSG_gxTMku6oQ"^^xsd:string ;
     knora-base:isDeleted         false ;
     knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
