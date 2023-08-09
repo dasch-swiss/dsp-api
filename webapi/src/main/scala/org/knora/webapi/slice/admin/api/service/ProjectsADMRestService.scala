@@ -19,7 +19,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
-import org.knora.webapi.slice.admin.api.model.ProjectExportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
@@ -45,7 +44,7 @@ trait ProjectADMRestService {
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
-  def exportProject(shortcode: String, requestingUser: UserADM): Task[ProjectExportResponse]
+  def exportProject(shortcode: String, requestingUser: UserADM): Task[Unit]
   def importProject(shortcode: String, requestingUser: UserADM): Task[ProjectImportResponse]
   def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]]
   def getProjectMembers(
@@ -240,12 +239,12 @@ final case class ProjectsADMRestServiceLive(
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
-  override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[ProjectExportResponse] = for {
+  override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)
     shortcode <- convertStringToShortcode(shortcodeStr)
     project   <- projectRepo.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found."))
-    zipFile   <- projectExportService.exportProject(project)
-  } yield ProjectExportResponse(zipFile.toString)
+    _         <- projectExportService.exportProject(project).logError.forkDaemon
+  } yield ()
 
   private def convertStringToShortcode(shortcodeStr: String): IO[BadRequestException, Shortcode] =
     Shortcode.make(shortcodeStr).toZIO.mapError(err => BadRequestException(err.msg))

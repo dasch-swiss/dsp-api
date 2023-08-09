@@ -20,7 +20,7 @@ Global / semanticdbEnabled                              := true
 Global / semanticdbVersion                              := scalafixSemanticdb.revision
 Global / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
 
 lazy val buildSettings = Seq(
   organization := "org.knora",
@@ -41,7 +41,8 @@ lazy val dockerImageTag = taskKey[String]("Returns the docker image tag")
 lazy val root: Project = Project(id = "root", file("."))
   .aggregate(
     webapi,
-    sipi
+    sipi,
+    integration
   )
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
@@ -66,14 +67,14 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias(
   "headerCreateAll",
-  "; all webapi/headerCreate webapi/Test/headerCreate webapi/IntegrationTest/headerCreate"
+  "; all webapi/headerCreate webapi/Test/headerCreate integration/headerCreate"
 )
 addCommandAlias(
   "headerCheckAll",
-  "; all webapi/headerCheck webapi/Test/headerCheck webapi/IntegrationTest/headerCheck"
+  "; all webapi/headerCheck webapi/Test/headerCheck integration/headerCheck"
 )
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
-addCommandAlias("it", "IntegrationTest/test")
+addCommandAlias("it", "integration/test")
 
 lazy val customScalacOptions = Seq(
   "-feature",
@@ -141,7 +142,7 @@ run / connectInput := true
 lazy val webApiCommonSettings = Seq(
   name := "webapi"
 )
-testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
@@ -149,7 +150,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(Test) {
       Defaults.testSettings
     },
-    Test / testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := true, // run tests in parallel
     Test / parallelExecution  := true, // run tests in parallel
@@ -161,14 +162,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     resolvers ++= Seq(
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.webapiIntegrationTestDependencies
-  )
-  .configs(IntegrationTest)
-  .settings(
-    inConfig(IntegrationTest) {
-      Defaults.itSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(IntegrationTest)
-    },
-    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiIntegrationTestDependencies
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies
   )
   .settings(
     // add needed files to production jar
@@ -195,19 +189,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-Wunused:imports"
     ),
     logLevel := Level.Info,
-    javaAgents += Dependencies.aspectjweaver,
-    IntegrationTest / exportJars         := false,
-    IntegrationTest / fork               := true,  // run tests in a forked JVM
-    IntegrationTest / testForkedParallel := false, // not run forked tests in parallel
-    IntegrationTest / parallelExecution  := false, // not run non-forked tests in parallel
-    // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    // IntegrationTest / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
-    // IntegrationTest / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-    // IntegrationTest / javaOptions += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005", // starts sbt with debug port
-    IntegrationTest / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
-    IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
-    // add test framework for running zio-tests
-    IntegrationTest / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    javaAgents += Dependencies.aspectjweaver
   )
   .settings(
     // prepare for publishing
@@ -269,4 +251,46 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "fuseki"   -> Dependencies.fusekiImage
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
+  )
+
+//////////////////////////////////////
+// INTEGRATION (./integration)
+//////////////////////////////////////
+
+run / connectInput := true
+
+lazy val integration: Project = Project(id = "integration", base = file("integration"))
+  .dependsOn(webapi, sipi)
+  .settings(buildSettings)
+  .settings(
+    inConfig(Test) {
+      Defaults.testSettings ++ Defaults.testTasks ++ baseAssemblySettings ++ headerSettings(Test)
+    },
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations",
+      // silence twirl templates unused imports warnings
+      "-Wconf:src=target/.*:s",
+      "-Wunused:imports"
+    ),
+    logLevel := Level.Info,
+    javaAgents += Dependencies.aspectjweaver,
+    Test / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    Test / exportJars         := false,
+    Test / fork               := true, // run tests in a forked JVM
+    Test / testForkedParallel := false,
+    Test / parallelExecution  := false,
+    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
+    Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+    libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies
+  )
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, JavaAgent, BuildInfoPlugin, HeaderPlugin)
+  .settings(
+    name := "integration",
+    resolvers ++= Seq(
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+    )
   )
