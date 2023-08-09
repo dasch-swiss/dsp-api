@@ -14,7 +14,6 @@ import zio.macros.accessible
 import java.time.Instant
 import java.util.UUID
 import scala.util.Success
-
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
@@ -44,6 +43,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
 
@@ -74,6 +74,7 @@ trait ValuesResponderV2 {
 final case class ValuesResponderV2Live(
   appConfig: AppConfig,
   iriService: IriService,
+  iriConverter: IriConverter,
   messageRelay: MessageRelay,
   permissionUtilADM: PermissionUtilADM,
   resourceUtilV2: ResourceUtilV2,
@@ -2539,6 +2540,7 @@ object ValuesResponderV2Live {
   val layer: URLayer[
     AppConfig
       with IriService
+      with IriConverter
       with MessageRelay
       with PermissionUtilADM
       with ResourceUtilV2
@@ -2549,12 +2551,13 @@ object ValuesResponderV2Live {
     for {
       config  <- ZIO.service[AppConfig]
       is      <- ZIO.service[IriService]
+      ic      <- ZIO.service[IriConverter]
       mr      <- ZIO.service[MessageRelay]
       pu      <- ZIO.service[PermissionUtilADM]
       ru      <- ZIO.service[ResourceUtilV2]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, ts, sf))
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, ic, mr, pu, ru, ts, sf))
     } yield handler
   }
 }
