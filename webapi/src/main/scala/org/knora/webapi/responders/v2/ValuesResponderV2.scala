@@ -57,6 +57,12 @@ trait ValuesResponderV2 {
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[CreateValueResponseV2]
+
+  def updateValueV2(
+    updateValue: UpdateValueV2,
+    requestingUser: UserADM,
+    apiRequestId: UUID
+  ): Task[UpdateValueResponseV2]
 }
 
 final case class ValuesResponderV2Live(
@@ -76,7 +82,7 @@ final case class ValuesResponderV2Live(
    * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case updateValueRequest: UpdateValueRequestV2 => updateValueV2(updateValueRequest)
+    case req: UpdateValueRequestV2                => updateValueV2(req.updateValue, req.requestingUser, req.apiRequestID)
     case deleteValueRequest: DeleteValueRequestV2 => deleteValueV2(deleteValueRequest)
     case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 =>
       generateSparqlToCreateMultipleValuesV2(createMultipleValuesRequest)
@@ -861,10 +867,16 @@ final case class ValuesResponderV2Live(
   /**
    * Creates a new version of an existing value.
    *
-   * @param updateValueRequest the request to update the value.
+   * @param updateValue       the value update.
+   * @param requestingUser    the user making the request.
+   * @param apiRequestId      the ID of the API request.
    * @return a [[UpdateValueResponseV2]].
    */
-  private def updateValueV2(updateValueRequest: UpdateValueRequestV2): Task[UpdateValueResponseV2] = {
+  override def updateValueV2(
+    updateValue: UpdateValueV2,
+    requestingUser: UserADM,
+    apiRequestId: UUID
+  ): Task[UpdateValueResponseV2] = {
 
     /**
      * Information about a resource, a submitted property, and a value of the property.
@@ -910,7 +922,7 @@ final case class ValuesResponderV2Live(
           PropertiesGetRequestV2(
             propertyIris = Set(submittedInternalPropertyIri),
             allLanguages = false,
-            requestingUser = updateValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
         propertyInfoResponseForSubmittedProperty <-
@@ -941,7 +953,7 @@ final case class ValuesResponderV2Live(
             submittedPropertyIri = submittedExternalPropertyIri,
             maybeSubmittedValueType = Some(submittedExternalValueType),
             propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
-            requestingUser = updateValueRequest.requestingUser
+            requestingUser = requestingUser
           )
 
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
@@ -978,7 +990,7 @@ final case class ValuesResponderV2Live(
             }
 
         // If a custom value creation date was submitted, make sure it's later than the date of the current version.
-        _ = if (updateValueRequest.updateValue.valueCreationDate.exists(!_.isAfter(currentValue.valueCreationDate))) {
+        _ = if (updateValue.valueCreationDate.exists(!_.isAfter(currentValue.valueCreationDate))) {
               throw BadRequestException(
                 "A custom value creation date must be later than the date of the current version"
               )
@@ -1039,7 +1051,7 @@ final case class ValuesResponderV2Live(
                resourceInfo = resourceInfo,
                valueInfo = currentValue,
                permissionNeeded = ChangeRightsPermission,
-               requestingUser = updateValueRequest.requestingUser
+               requestingUser = requestingUser
              )
 
         // Do the update.
@@ -1136,7 +1148,7 @@ final case class ValuesResponderV2Live(
                resourceInfo = resourceInfo,
                valueInfo = currentValue,
                permissionNeeded = permissionNeeded,
-               requestingUser = updateValueRequest.requestingUser
+               requestingUser = requestingUser
              )
 
         // Convert the submitted value content to the internal schema.
@@ -1150,7 +1162,7 @@ final case class ValuesResponderV2Live(
         _ <- checkPropertyObjectClassConstraint(
                propertyInfo = adjustedInternalPropertyInfo,
                valueContent = submittedInternalValueContent,
-               requestingUser = updateValueRequest.requestingUser
+               requestingUser = requestingUser
              )
 
         // If it is a list value, check that it points to a real list node which is not a root node.
@@ -1205,7 +1217,7 @@ final case class ValuesResponderV2Live(
                  // and that the user has permission to see them.
                  checkResourceIris(
                    textValueContent.standoffLinkTagTargetResourceIris,
-                   updateValueRequest.requestingUser
+                   requestingUser
                  )
 
                case _: LinkValueContentV2 =>
@@ -1214,7 +1226,7 @@ final case class ValuesResponderV2Live(
                  resourceUtilV2.checkResourcePermission(
                    resourceInfo = resourceInfo,
                    permissionNeeded = ModifyPermission,
-                   requestingUser = updateValueRequest.requestingUser
+                   requestingUser = requestingUser
                  )
 
                case _ => ZIO.unit
@@ -1235,11 +1247,11 @@ final case class ValuesResponderV2Live(
                 linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
                 currentLinkValue = currentLinkValue,
                 newLinkValue = newLinkValue,
-                valueCreator = updateValueRequest.requestingUser.id,
+                valueCreator = requestingUser.id,
                 valuePermissions = newValueVersionPermissionLiteral,
                 valueCreationDate = updateValueContentV2.valueCreationDate,
                 newValueVersionIri = updateValueContentV2.newValueVersionIri,
-                requestingUser = updateValueRequest.requestingUser
+                requestingUser = requestingUser
               )
 
             case _ =>
@@ -1249,11 +1261,11 @@ final case class ValuesResponderV2Live(
                 propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
                 currentValue = currentValue,
                 newValueVersion = submittedInternalValueContent,
-                valueCreator = updateValueRequest.requestingUser.id,
+                valueCreator = requestingUser.id,
                 valuePermissions = newValueVersionPermissionLiteral,
                 valueCreationDate = updateValueContentV2.valueCreationDate,
                 newValueVersionIri = updateValueContentV2.newValueVersionIri,
-                requestingUser = updateValueRequest.requestingUser
+                requestingUser = requestingUser
               )
           }
       } yield UpdateValueResponseV2(
@@ -1264,14 +1276,14 @@ final case class ValuesResponderV2Live(
       )
     }
 
-    if (updateValueRequest.requestingUser.isAnonymousUser) {
+    if (requestingUser.isAnonymousUser) {
       ZIO.fail(ForbiddenException("Anonymous users aren't allowed to update values"))
     } else {
-      updateValueRequest.updateValue match {
+      updateValue match {
         case updateValueContentV2: UpdateValueContentV2 =>
           // This is a request to update the content of a value.
           val triplestoreUpdateFuture = IriLocker.runWithIriLock(
-            updateValueRequest.apiRequestID,
+            apiRequestId,
             updateValueContentV2.resourceIri,
             makeTaskFutureToUpdateValueContent(updateValueContentV2)
           )
@@ -1280,12 +1292,12 @@ final case class ValuesResponderV2Live(
             .filter(_.isInstanceOf[FileValueContentV2])
             .map(_.asInstanceOf[FileValueContentV2])
 
-          resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, updateValueRequest.requestingUser)
+          resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, requestingUser)
 
         case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
           // This is a request to update the permissions attached to a value.
           IriLocker.runWithIriLock(
-            updateValueRequest.apiRequestID,
+            apiRequestId,
             updateValuePermissionsV2.resourceIri,
             makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2)
           )

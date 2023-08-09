@@ -76,16 +76,16 @@ final case class ValuesRouteV2()(
 
   private def createValue(): Route = path(valuesBasePath) {
     post {
-      entity(as[String]) { jsonLdString => requestContext =>
+      entity(as[String]) { jsonLdString => ctx =>
         {
           RouteUtilV2.completeResponse(
             for {
-              requestingUser <- Authenticator.getUserADM(requestContext)
+              requestingUser <- Authenticator.getUserADM(ctx)
               apiRequestId   <- Random.nextUUID
               valueToCreate  <- CreateValueV2.fromJsonLd(jsonLdString, requestingUser)
               response       <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
             } yield response,
-            requestContext
+            ctx
           )
         }
       }
@@ -94,15 +94,17 @@ final case class ValuesRouteV2()(
 
   private def updateValue(): Route = path(valuesBasePath) {
     put {
-      entity(as[String]) { jsonRequest => requestContext =>
+      entity(as[String]) { jsonLdString => ctx =>
         {
-          val requestTask = for {
-            requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
-            requestingUser <- Authenticator.getUserADM(requestContext)
-            apiRequestId   <- RouteUtilZ.randomUuid()
-            msg            <- UpdateValueRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
-          } yield msg
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+          RouteUtilV2.completeResponse(
+            for {
+              requestingUser <- Authenticator.getUserADM(ctx)
+              apiRequestId   <- Random.nextUUID
+              updateValue    <- UpdateValueV2.fromJsonLd(jsonLdString, requestingUser)
+              response       <- ValuesResponderV2.updateValueV2(updateValue, requestingUser, apiRequestId)
+            } yield response,
+            ctx
+          )
         }
       }
     }

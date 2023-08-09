@@ -6,28 +6,14 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
-import org.xmlunit.diff.Diff
-
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-import scala.concurrent.duration._
-
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.CalendarNameGregorian
-import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -38,6 +24,13 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
+
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.UUID
+import scala.concurrent.duration._
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -2157,27 +2150,26 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       // Update the value.
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueIri = firstValueIriToErase.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("this is some other text with standoff"),
-            standoff = Vector(sampleStandoffForErasingResource.head),
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = resourceClassIri,
+            propertyIri = propertyIri,
+            valueIri = firstValueIriToErase.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("this is some other text with standoff"),
+              standoff = Vector(sampleStandoffForErasingResource.head),
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          anythingUserProfile,
+          UUID.randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        secondValueIriToErase.set(updateValueResponse.valueIri)
-      }
+      secondValueIriToErase.set(updateValueResponse.valueIri)
 
       val updatedResource                  = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
       val secondTextValue: ReadTextValueV2 = updatedResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
@@ -2473,22 +2465,22 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "update value permission to test update permission event" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+
       // Update the value permission.
-
-      appActor ! UpdateValueRequestV2(
-        UpdateValuePermissionsV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-          valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
-          valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          permissions = "CR knora-admin:Creator|V knora-admin:KnownUser"
-        ),
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
+      val updateValuePermissionResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValuePermissionsV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+            valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            permissions = "CR knora-admin:Creator|V knora-admin:KnownUser"
+          ),
+          anythingUserProfile,
+          UUID.randomUUID
+        )
       )
-
-      val updateValuePermissionResponse = expectMsgType[UpdateValueResponseV2](timeout)
 
       appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
