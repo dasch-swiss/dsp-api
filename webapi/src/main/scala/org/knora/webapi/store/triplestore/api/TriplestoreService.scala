@@ -119,6 +119,8 @@ trait TriplestoreService {
    */
   def sparqlHttpUpdate(sparqlUpdate: String): Task[SparqlUpdateResponse]
 
+  def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[SparqlUpdateResponse] = sparqlHttpUpdate(query.toString)
+
   /**
    * Performs a SPARQL ASK query.
    *

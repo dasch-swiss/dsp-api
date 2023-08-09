@@ -22,6 +22,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v2._
@@ -51,6 +52,7 @@ object ApiRoutes {
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
+      with ValuesResponderV2
       with core.State
       with routing.Authenticator,
     ApiRoutes
@@ -70,6 +72,7 @@ object ApiRoutes {
                        with RestCardinalityService
                        with RestResourceInfoService
                        with StringFormatter
+                       with ValuesResponderV2
                        with core.State
                        with routing.Authenticator
                    ]
@@ -95,6 +98,7 @@ private final case class ApiRoutesImpl(
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
+      with ValuesResponderV2
       with core.State
       with routing.Authenticator
   ],
