@@ -485,5 +485,32 @@ class UpgradePluginPR2710Spec extends UpgradePluginSpec with LazyLogging {
       val res = repo.doAsk(query)
       assert(res, "Newlines should have been converted to Standoff.")
     }
+
+    "adjust a value's previous values along with the value itself" in {
+      // run the transformation on the model
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2710/pr2710k.trig")
+      val plugin          = new UpgradePluginPR2710(log)
+      plugin.transform(model)
+      val repo = model.asRepository
+
+      // check the data
+      val query =
+        """|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |ASK
+           |FROM <http://www.knora.org/data/0001/anything>
+           |WHERE {
+           |    BIND (<http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw> as ?v1)
+           |    BIND (<http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/m5cIoEX0SAWmNYnAjusfHQ> as ?v2)
+           |    BIND (<http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/IdDLDNW9SIOmgqeZPn5ZPA> as ?v3)
+           |    ?v1 a knora-base:FormattedTextValue .
+           |    ?v2 a knora-base:FormattedTextValue .
+           |    ?v3 a knora-base:FormattedTextValue .
+           |    ?v1 knora-base:previousValue ?v2 .
+           |    ?v2 knora-base:previousValue ?v3 .
+           |}
+           |""".stripMargin
+      val res = repo.doAsk(query)
+      assert(res, "Value and previous values should have been updated.")
+    }
   }
 }

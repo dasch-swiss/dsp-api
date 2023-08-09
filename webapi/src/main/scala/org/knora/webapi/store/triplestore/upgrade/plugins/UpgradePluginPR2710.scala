@@ -454,7 +454,33 @@ class UpgradePluginPR2710(log: Logger) extends UpgradePlugin {
             mapping = row.rowMap.get("mapping")
           )
         )
-      adjustables.map(adjustable => collectDataAdjustment(model, adjustable, prop)).toSet
+      val adjustablesIncludiungPreviousValues = adjustables.flatMap { adjustable =>
+        adjustableWithPreviousValues(repo, adjustable)
+      }
+      adjustablesIncludiungPreviousValues.map(adjustable => collectDataAdjustment(model, adjustable, prop)).toSet
+    }
+  }
+
+  @tailrec
+  private def adjustableWithPreviousValues(
+    repo: RdfRepository,
+    adjustable: AdjustableData,
+    acc: Seq[AdjustableData] = Seq.empty[AdjustableData]
+  ): Seq[AdjustableData] = {
+    val query =
+      s"""|PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |SELECT ?prevVal
+          |WHERE {
+          |    GRAPH ?g {
+          |        <${adjustable.valueIri}> knora-base:previousValue ?prevVal .
+          |    }
+          |}""".stripMargin
+    val prevVal: Option[String] = repo.doSelect(query).results.bindings.headOption.flatMap(_.rowMap.get("prevVal"))
+    prevVal match {
+      case None => acc :+ adjustable
+      case Some(value) =>
+        val prevAdjustable = adjustable.copy(valueIri = value)
+        adjustableWithPreviousValues(repo, prevAdjustable, acc :+ adjustable)
     }
   }
 
