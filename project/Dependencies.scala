@@ -28,7 +28,6 @@ object Dependencies {
   val ZioNioVersion               = "2.0.1"
   val ZioMetricsConnectorsVersion = "2.1.0"
   val ZioPreludeVersion           = "1.0.0-RC19"
-  val ZioProfilingVersion         = "0.2.1"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.15"
 
@@ -47,7 +46,6 @@ object Dependencies {
   val zioMetricsConnectors          = "dev.zio"                       %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion
   val zioMetricsPrometheusConnector = "dev.zio"                       %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion
   val zioPrelude                    = "dev.zio"                       %% "zio-prelude"                       % ZioPreludeVersion
-  val zioProfiling                  = "dev.zio"                       %% "zio-profiling"                     % ZioProfilingVersion
   val zioSttp                       = "com.softwaremill.sttp.client3" %% "zio"                               % SttpVersion
 
   // zio-test and friends
@@ -180,7 +178,6 @@ object Dependencies {
     zioMetricsPrometheusConnector,
     zioNio,
     zioPrelude,
-    zioProfiling,
     zioSttp
   )
 }
