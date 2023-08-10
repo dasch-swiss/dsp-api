@@ -41,6 +41,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 
 /**
@@ -98,191 +99,7 @@ case class CreateValueResponseV2(
 }
 
 /**
- * Requests an update to a value, i.e. the creation of a new version of an existing value.
- *
- * @param updateValue          an [[UpdateValueV2]] representing the new version of the value. A successful response will be
- *                             an [[UpdateValueResponseV2]].
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the API request ID.
- */
-case class UpdateValueRequestV2(
-  updateValue: UpdateValueV2,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends ValuesResponderRequestV2
-
-/**
- * Constructs [[UpdateValueRequestV2]] instances based on JSON-LD input.
- */
-object UpdateValueRequestV2 {
-
-  /**
-   * Converts JSON-LD input to a [[CreateValueRequestV2]].
-   *
-   * @param jsonLdDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
-   * @return a case class instance representing the input.
-   */
-  def fromJsonLd(
-    jsonLdDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, UpdateValueRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit stringFormatter =>
-      def makeUpdateValueContentV2(
-        resourceIri: SmartIri,
-        resourceClassIri: SmartIri,
-        propertyIri: SmartIri,
-        jsonLDObject: JsonLDObject,
-        valueIri: SmartIri,
-        maybeValueCreationDate: Option[Instant],
-        maybeNewIri: Option[SmartIri]
-      ) = ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-        for {
-          valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser)
-          maybePermissions <-
-            ZIO.attempt {
-              val validationFun: (String, => Nothing) => String =
-                (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-              jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
-            }
-        } yield UpdateValueContentV2(
-          resourceIri = resourceIri.toString,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueIri = valueIri.toString,
-          valueContent = valueContent,
-          permissions = maybePermissions,
-          valueCreationDate = maybeValueCreationDate,
-          newValueVersionIri = maybeNewIri
-        )
-      }
-
-      def makeUpdateValuePermissionsV2(
-        resourceIri: SmartIri,
-        resourceClassIri: SmartIri,
-        propertyIri: SmartIri,
-        jsonLDObject: JsonLDObject,
-        valueIri: SmartIri,
-        maybeValueCreationDate: Option[Instant],
-        maybeNewIri: Option[SmartIri]
-      ) = ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-        // Yes. This is a request to change the value's permissions.
-        for {
-          valueType <- ZIO.attempt(
-                         jsonLDObject.requireStringWithValidation(
-                           JsonLDKeywords.TYPE,
-                           stringFormatter.toSmartIriWithErr
-                         )
-                       )
-          permissions <- ZIO.attempt {
-                           val validationFun: (String, => Nothing) => String =
-                             (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                           jsonLDObject.requireStringWithValidation(HasPermissions, validationFun)
-                         }
-        } yield UpdateValuePermissionsV2(
-          resourceIri = resourceIri.toString,
-          resourceClassIri = resourceClassIri,
-          propertyIri = propertyIri,
-          valueIri = valueIri.toString,
-          valueType = valueType,
-          permissions = permissions,
-          valueCreationDate = maybeValueCreationDate,
-          newValueVersionIri = maybeNewIri
-        )
-      }
-
-      for {
-        // Get the IRI of the resource that the value is to be created in.
-        resourceIri <- ZIO
-                         .attempt(jsonLdDocument.body.requireIDAsKnoraDataIri)
-                         .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
-        // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLdDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
-
-        // Get the resource property and the new value version.
-        updateValue <- ZIO.attempt(jsonLdDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
-                         case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                           // Get the custom value creation date, if provided.
-
-                           for {
-                             valueIri <- ZIO.attempt(jsonLDObject.requireIDAsKnoraDataIri)
-                             // Aside from the value's ID and type and the optional predicates above, does the value object just
-                             otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
-                                                                JsonLDKeywords.ID,
-                                                                JsonLDKeywords.TYPE,
-                                                                ValueCreationDate,
-                                                                NewValueVersionIri
-                                                              )
-                             maybeValueCreationDate <- ZIO.attempt(
-                                                         jsonLDObject.maybeDatatypeValueInObject(
-                                                           key = ValueCreationDate,
-                                                           expectedDatatype =
-                                                             OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                           validationFun = (s, errorFun) =>
-                                                             ValuesValidator
-                                                               .xsdDateTimeStampToInstant(s)
-                                                               .getOrElse(errorFun)
-                                                         )
-                                                       )
-                             // Get and validate the custom new value version IRI, if provided.
-
-                             maybeNewIri <-
-                               ZIO
-                                 .attempt(
-                                   jsonLDObject
-                                     .maybeIriInObject(NewValueVersionIri, stringFormatter.toSmartIriWithErr)
-                                 )
-                                 .flatMap(smartIriMaybe =>
-                                   ZIO.foreach(smartIriMaybe) { definedNewIri =>
-                                     if (definedNewIri == valueIri) {
-                                       ZIO.fail(
-                                         BadRequestException(
-                                           s"The IRI of a new value version cannot be the same as the IRI of the current version"
-                                         )
-                                       )
-                                     } else {
-                                       ZIO.attempt(
-                                         stringFormatter.validateCustomValueIri(
-                                           customValueIri = definedNewIri,
-                                           projectCode = valueIri.getProjectCode.get,
-                                           resourceID = valueIri.getResourceID.get
-                                         )
-                                       )
-                                     }
-                                   }
-                                 )
-
-                             value <- if (otherValuePredicates == Set(HasPermissions)) {
-                                        makeUpdateValuePermissionsV2(
-                                          resourceIri,
-                                          resourceClassIri,
-                                          propertyIri,
-                                          jsonLDObject,
-                                          valueIri,
-                                          maybeValueCreationDate,
-                                          maybeNewIri
-                                        )
-                                      } else {
-                                        makeUpdateValueContentV2(
-                                          resourceIri,
-                                          resourceClassIri,
-                                          propertyIri,
-                                          jsonLDObject,
-                                          valueIri,
-                                          maybeValueCreationDate,
-                                          maybeNewIri
-                                        )
-                                      }
-                           } yield value
-                       }
-      } yield UpdateValueRequestV2(updateValue, requestingUser, apiRequestID)
-  }
-}
-
-/**
- * Represents a successful response to an [[UpdateValueRequestV2]].
+ * Represents a successful response to an update value request.
  *
  * @param valueIri   the IRI of the value version that was created.
  * @param valueType  the type of the value that was updated.
@@ -329,81 +146,71 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
  * @param deleteComment        an optional comment explaining why the value is being marked as deleted.
  * @param deleteDate           an optional timestamp indicating when the value was deleted. If not supplied,
  *                             the current time will be used.
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the API request ID.
  */
-case class DeleteValueRequestV2(
+case class DeleteValueV2(
   resourceIri: IRI,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
   valueIri: IRI,
   valueTypeIri: SmartIri,
   deleteComment: Option[String] = None,
-  deleteDate: Option[Instant] = None,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends ValuesResponderRequestV2
+  deleteDate: Option[Instant] = None
+)
 
-object DeleteValueRequestV2 {
+object DeleteValueV2 {
 
   /**
    * Converts JSON-LD input into a case class instance.
    *
-   * @param jsonLDDocument       the JSON-LD input.
-   * @param apiRequestID         the UUID of the API request.
-   * @param requestingUser       the user making the request.
+   * @param jsonLdString the JSON-LD input as String.
    * @return a case class instance representing the input.
    */
-  def fromJsonLd(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): ZIO[StringFormatter, Throwable, DeleteValueRequestV2] =
+  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter, Throwable, DeleteValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      ZIO.attempt(jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
-        case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-          for {
-            resourceIri <- ZIO.attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
-            _ <- ZIO
-                   .fail(BadRequestException(s"Invalid resource IRI: <$resourceIri>"))
-                   .when(!resourceIri.isKnoraResourceIri)
-            resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
-            valueIri         <- ZIO.attempt(jsonLDObject.requireIDAsKnoraDataIri)
-            _                <- ZIO.fail(BadRequestException(s"Invalid value IRI: <$valueIri>")).when(!valueIri.isKnoraValueIri)
-            _ <- ZIO
-                   .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-                   .when(
-                     UuidUtil.hasValidLength(UuidUtil.fromIri(valueIri.toString)) &&
-                       !UuidUtil.hasSupportedVersion(valueIri.toString)
-                   )
-            valueTypeIri <- ZIO.attempt(jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri)
-            deleteComment <- ZIO.attempt {
-                               val validationFun: (String, => Nothing) => String =
-                                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                               jsonLDObject.maybeStringWithValidation(
-                                 OntologyConstants.KnoraApiV2Complex.DeleteComment,
-                                 validationFun
-                               )
-                             }
-            deleteDate <- ZIO.attempt(
-                            jsonLDObject.maybeDatatypeValueInObject(
-                              key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
-                              expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                              validationFun =
-                                (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+      RouteUtilV2.parseJsonLd(jsonLdString).flatMap { jsonLDDocument =>
+        ZIO.attempt(jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
+          case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+            for {
+              resourceIri <- ZIO.attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
+              _ <- ZIO
+                     .fail(BadRequestException(s"Invalid resource IRI: <$resourceIri>"))
+                     .when(!resourceIri.isKnoraResourceIri)
+              resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
+              valueIri         <- ZIO.attempt(jsonLDObject.requireIDAsKnoraDataIri)
+              _                <- ZIO.fail(BadRequestException(s"Invalid value IRI: <$valueIri>")).when(!valueIri.isKnoraValueIri)
+              _ <- ZIO
+                     .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
+                     .when(
+                       UuidUtil.hasValidLength(UuidUtil.fromIri(valueIri.toString)) &&
+                         !UuidUtil.hasSupportedVersion(valueIri.toString)
+                     )
+              valueTypeIri <- ZIO.attempt(jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri)
+              deleteComment <- ZIO.attempt {
+                                 val validationFun: (String, => Nothing) => String =
+                                   (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                                 jsonLDObject.maybeStringWithValidation(
+                                   OntologyConstants.KnoraApiV2Complex.DeleteComment,
+                                   validationFun
+                                 )
+                               }
+              deleteDate <- ZIO.attempt(
+                              jsonLDObject.maybeDatatypeValueInObject(
+                                key = OntologyConstants.KnoraApiV2Complex.DeleteDate,
+                                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                validationFun =
+                                  (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                              )
                             )
-                          )
-          } yield DeleteValueRequestV2(
-            resourceIri = resourceIri.toString,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            valueIri = valueIri.toString,
-            valueTypeIri = valueTypeIri,
-            deleteComment = deleteComment,
-            deleteDate = deleteDate,
-            requestingUser = requestingUser,
-            apiRequestID = apiRequestID
-          )
+            } yield DeleteValueV2(
+              resourceIri = resourceIri.toString,
+              resourceClassIri = resourceClassIri,
+              propertyIri = propertyIri,
+              valueIri = valueIri.toString,
+              valueTypeIri = valueTypeIri,
+              deleteComment = deleteComment,
+              deleteDate = deleteDate
+            )
+        }
       }
     }
 }
@@ -956,6 +763,171 @@ trait UpdateValueV2 {
    * A custom value creation date.
    */
   val valueCreationDate: Option[Instant]
+}
+object UpdateValueV2 {
+
+  /**
+   * Converts JSON-LD input to a [[UpdateValueV2]].
+   *
+   * @param jsonLdString the JSON-LD input as String.
+   * @param requestingUser the user making the request.
+   * @return a case class instance representing the input.
+   */
+  def fromJsonLd(
+    jsonLdString: String,
+    requestingUser: UserADM
+  ): ZIO[StringFormatter with MessageRelay, Throwable, UpdateValueV2] = ZIO.serviceWithZIO[StringFormatter] {
+    implicit stringFormatter =>
+      def makeUpdateValueContentV2(
+        resourceIri: SmartIri,
+        resourceClassIri: SmartIri,
+        propertyIri: SmartIri,
+        jsonLDObject: JsonLDObject,
+        valueIri: SmartIri,
+        maybeValueCreationDate: Option[Instant],
+        maybeNewIri: Option[SmartIri]
+      ) = ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
+        for {
+          valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser)
+          maybePermissions <-
+            ZIO.attempt {
+              val validationFun: (String, => Nothing) => String =
+                (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+              jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
+            }
+        } yield UpdateValueContentV2(
+          resourceIri = resourceIri.toString,
+          resourceClassIri = resourceClassIri,
+          propertyIri = propertyIri,
+          valueIri = valueIri.toString,
+          valueContent = valueContent,
+          permissions = maybePermissions,
+          valueCreationDate = maybeValueCreationDate,
+          newValueVersionIri = maybeNewIri
+        )
+      }
+
+      def makeUpdateValuePermissionsV2(
+        resourceIri: SmartIri,
+        resourceClassIri: SmartIri,
+        propertyIri: SmartIri,
+        jsonLDObject: JsonLDObject,
+        valueIri: SmartIri,
+        maybeValueCreationDate: Option[Instant],
+        maybeNewIri: Option[SmartIri]
+      ) = ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
+        // Yes. This is a request to change the value's permissions.
+        for {
+          valueType <- ZIO.attempt(
+                         jsonLDObject.requireStringWithValidation(
+                           JsonLDKeywords.TYPE,
+                           stringFormatter.toSmartIriWithErr
+                         )
+                       )
+          permissions <- ZIO.attempt {
+                           val validationFun: (String, => Nothing) => String =
+                             (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                           jsonLDObject.requireStringWithValidation(HasPermissions, validationFun)
+                         }
+        } yield UpdateValuePermissionsV2(
+          resourceIri = resourceIri.toString,
+          resourceClassIri = resourceClassIri,
+          propertyIri = propertyIri,
+          valueIri = valueIri.toString,
+          valueType = valueType,
+          permissions = permissions,
+          valueCreationDate = maybeValueCreationDate,
+          newValueVersionIri = maybeNewIri
+        )
+      }
+
+      for {
+        jsonLdDocument <- RouteUtilV2.parseJsonLd(jsonLdString)
+        // Get the IRI of the resource that the value is to be created in.
+        resourceIri <- ZIO
+                         .attempt(jsonLdDocument.body.requireIDAsKnoraDataIri)
+                         .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
+        // Get the resource class.
+        resourceClassIri <- ZIO.attempt(jsonLdDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
+
+        // Get the resource property and the new value version.
+        updateValue <- ZIO.attempt(jsonLdDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
+                         case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+                           // Get the custom value creation date, if provided.
+
+                           for {
+                             valueIri <- ZIO.attempt(jsonLDObject.requireIDAsKnoraDataIri)
+                             // Aside from the value's ID and type and the optional predicates above, does the value object just
+                             otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
+                                                                JsonLDKeywords.ID,
+                                                                JsonLDKeywords.TYPE,
+                                                                ValueCreationDate,
+                                                                NewValueVersionIri
+                                                              )
+                             maybeValueCreationDate <- ZIO.attempt(
+                                                         jsonLDObject.maybeDatatypeValueInObject(
+                                                           key = ValueCreationDate,
+                                                           expectedDatatype =
+                                                             OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                                           validationFun = (s, errorFun) =>
+                                                             ValuesValidator
+                                                               .xsdDateTimeStampToInstant(s)
+                                                               .getOrElse(errorFun)
+                                                         )
+                                                       )
+                             // Get and validate the custom new value version IRI, if provided.
+
+                             maybeNewIri <-
+                               ZIO
+                                 .attempt(
+                                   jsonLDObject
+                                     .maybeIriInObject(NewValueVersionIri, stringFormatter.toSmartIriWithErr)
+                                 )
+                                 .flatMap(smartIriMaybe =>
+                                   ZIO.foreach(smartIriMaybe) { definedNewIri =>
+                                     if (definedNewIri == valueIri) {
+                                       ZIO.fail(
+                                         BadRequestException(
+                                           s"The IRI of a new value version cannot be the same as the IRI of the current version"
+                                         )
+                                       )
+                                     } else {
+                                       ZIO.attempt(
+                                         stringFormatter.validateCustomValueIri(
+                                           customValueIri = definedNewIri,
+                                           projectCode = valueIri.getProjectCode.get,
+                                           resourceID = valueIri.getResourceID.get
+                                         )
+                                       )
+                                     }
+                                   }
+                                 )
+
+                             value <- if (otherValuePredicates == Set(HasPermissions)) {
+                                        makeUpdateValuePermissionsV2(
+                                          resourceIri,
+                                          resourceClassIri,
+                                          propertyIri,
+                                          jsonLDObject,
+                                          valueIri,
+                                          maybeValueCreationDate,
+                                          maybeNewIri
+                                        )
+                                      } else {
+                                        makeUpdateValueContentV2(
+                                          resourceIri,
+                                          resourceClassIri,
+                                          propertyIri,
+                                          jsonLDObject,
+                                          valueIri,
+                                          maybeValueCreationDate,
+                                          maybeNewIri
+                                        )
+                                      }
+                           } yield value
+                       }
+      } yield updateValue
+  }
 }
 
 /**

@@ -29,12 +29,11 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.models.filemodels.ChangeFileRequest
+import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -87,7 +86,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   )
 
   // The default timeout for receiving reply messages from actors.
-  override implicit val timeout = 30.seconds
+  override implicit val timeout: FiniteDuration = 30.seconds
 
   private val firstIntValueVersionIri                   = new MutableTestIri
   private val intValueIri                               = new MutableTestIri
@@ -499,25 +498,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val intValue = 5
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueIri.set(updateValueResponse.valueIri)
-        assert(updateValueResponse.valueUUID == integerValueUUID)
-      }
+      intValueIri.set(updateValueResponse.valueIri)
+      assert(updateValueResponse.valueUUID == integerValueUUID)
 
       // Read the value back to check that it was added correctly.
 
@@ -622,16 +621,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         )
       )
 
-      appActor ! UpdateValueRequestV2(
-        updateValueContent,
-        requestingUser = anythingUser2,
-        apiRequestID = randomUUID
-      )
+      val updateValueResponse =
+        UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser2, randomUUID))
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueIriForFreetest.set(updateValueResponse.valueIri)
-        assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
-      }
+      intValueIriForFreetest.set(updateValueResponse.valueIri)
+      assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
 
       // Read the value back to check that it was added correctly.
 
@@ -664,19 +658,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
 
-      appActor ! DeleteValueRequestV2(
-        resourceIri = resourceIri,
-        resourceClassIri =
-          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = intValueIriForFreetest.get,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
-        requestingUser = anythingUser2,
-        apiRequestID = randomUUID
+      UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.deleteValueV2(
+          DeleteValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri =
+              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIriForFreetest.get,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            deleteComment = Some("this value was incorrect")
+          ),
+          anythingUser2,
+          randomUUID
+        )
       )
-
-      expectMsgType[SuccessResponseV2](timeout)
 
       checkValueIsDeleted(
         resourceIri = resourceIri,
@@ -691,24 +687,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue              = 5
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update an integer value, adding a comment" in {
@@ -732,25 +727,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val intValue = 5
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue,
-            comment = Some(comment)
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue,
+              comment = Some(comment)
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueIri.set(updateValueResponse.valueIri)
-      }
+      intValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -784,25 +779,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 5
       val comment               = "Added a comment"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue,
-            comment = Some(comment)
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue,
+              comment = Some(comment)
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update an integer value with a comment, changing only the comment" in {
@@ -826,25 +820,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val intValue = 5
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue,
-            comment = Some(comment)
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue,
+              comment = Some(comment)
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueIri.set(updateValueResponse.valueIri)
-      }
+      intValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1079,25 +1073,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue              = 989
       val valueCreationDate     = Instant.parse("2019-11-29T10:00:00Z")
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueForRsyncIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueForRsyncIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            valueCreationDate = Some(valueCreationDate)
           ),
-          valueCreationDate = Some(valueCreationDate)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
-      }
+      assertFailsWithA[BadRequestException](actual)
     }
 
     "update an integer value with a custom creation date" in {
@@ -1110,25 +1103,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue          = 988
       val valueCreationDate = Instant.now
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueForRsyncIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueForRsyncIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            valueCreationDate = Some(valueCreationDate)
           ),
-          valueCreationDate = Some(valueCreationDate)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          anythingUser1,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueForRsyncIri.set(updateValueResponse.valueIri)
-      }
+      intValueForRsyncIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -1160,25 +1153,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val intValue                = 1000
       val newValueVersionIri: IRI = stringFormatter.makeRandomValueIri(resourceIri)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueForRsyncIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueForRsyncIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            newValueVersionIri = Some(newValueVersionIri.toSmartIri)
           ),
-          newValueVersionIri = Some(newValueVersionIri.toSmartIri)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueForRsyncIri.set(updateValueResponse.valueIri)
-      }
+      intValueForRsyncIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2535,24 +2527,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue              = 3
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = firstIntValueVersionIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = firstIntValueVersionIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[NotFoundException])
-      }
+      assertFailsWithA[NotFoundException](actual)
     }
 
     "not update a value if the user does not have modify permission on the value" in {
@@ -2560,24 +2551,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue              = 9
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[ForbiddenException])
-      }
+      assertFailsWithA[ForbiddenException](actual)
     }
 
     "update a value with custom permissions" in {
@@ -2587,25 +2577,25 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
       val intValue                                  = 6
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            permissions = Some(permissions)
           ),
-          permissions = Some(permissions)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          anythingUser1,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueIri.set(updateValueResponse.valueIri)
-      }
+      intValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2633,25 +2623,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "CR knora-admin:Creator"
       val intValue              = 10
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            permissions = Some(permissions)
           ),
-          permissions = Some(permissions)
-        ),
-        requestingUser = anythingUser2,
-        apiRequestID = randomUUID
+          anythingUser2,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[ForbiddenException])
-      }
+      assertFailsWithA[ForbiddenException](actual)
     }
 
     "not update a value with syntactically invalid custom permissions" in {
@@ -2660,25 +2649,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "M knora-admin:Creator,V knora-admin:KnownUser"
       val intValue              = 7
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            permissions = Some(permissions)
           ),
-          permissions = Some(permissions)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
-      }
+      assertFailsWithA[BadRequestException](actual)
     }
 
     "not update a value with custom permissions referring to a nonexistent group" in {
@@ -2687,25 +2675,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val permissions           = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
       val intValue              = 8
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            ),
+            permissions = Some(permissions)
           ),
-          permissions = Some(permissions)
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[NotFoundException])
-      }
+      assertFailsWithA[NotFoundException](actual)
     }
 
     "update a value, changing only its permissions" in {
@@ -2724,22 +2711,22 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         checkLastModDateChanged = false
       )
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValuePermissionsV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          permissions = permissions
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValuePermissionsV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            permissions = permissions
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intValueIri.set(updateValueResponse.valueIri)
-      }
+      intValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2761,22 +2748,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val permissions           = "CR knora-admin:Creator"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValuePermissionsV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          permissions = permissions
-        ),
-        requestingUser = anythingUser2,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValuePermissionsV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            permissions = permissions
+          ),
+          anythingUser2,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[ForbiddenException])
-      }
+      assertFailsWithA[ForbiddenException](actual)
     }
 
     "not update a value, changing only its permissions, with syntactically invalid custom permissions" in {
@@ -2784,22 +2770,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val permissions           = "M knora-admin:Creator,V knora-admin:KnownUser"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValuePermissionsV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          permissions = permissions
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValuePermissionsV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            permissions = permissions
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
-      }
+      assertFailsWithA[BadRequestException](actual)
     }
 
     "not update a value, changing only its permissions, with permissions referring to a nonexistent group" in {
@@ -2807,22 +2792,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val permissions           = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValuePermissionsV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-          permissions = permissions
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValuePermissionsV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            permissions = permissions
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[NotFoundException])
-      }
+      assertFailsWithA[NotFoundException](actual)
     }
 
     "not update an integer value, giving it the same value as another integer value of the same property" in {
@@ -2830,24 +2814,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue              = 1
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intValueIri.get,
-          valueContent = IntegerValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasInteger = intValue
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intValueIri.get,
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = intValue
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a text value (without submitting standoff)" in {
@@ -2855,24 +2838,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString)
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        zeitglöckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
-      }
+      zeitglöckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2897,27 +2879,26 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinCommentWithStandoffIri.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinCommentWithStandoffIri.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = sampleStandoffWithLink,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        zeitglöckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
-      }
+      zeitglöckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -2969,24 +2950,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasString        = "this is a text value that has a comment"
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString)
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "create a second text value with standoff" in {
@@ -3043,27 +3023,26 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinCommentWithStandoffIri.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoff,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinCommentWithStandoffIri.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = sampleStandoff,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a text value, changing only the standoff" in {
@@ -3072,27 +3051,27 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoffModified,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = sampleStandoffModified,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        zeitglöckleinSecondCommentWithStandoffIri.set(updateValueResponse.valueIri)
-      }
+      zeitglöckleinSecondCommentWithStandoffIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3121,51 +3100,49 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinCommentWithStandoffIri.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString),
-            standoff = sampleStandoffModified,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-            mapping = standardMapping
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinCommentWithStandoffIri.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString),
+              standoff = sampleStandoffModified,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "not update a text value without changing it (without submitting standoff)" in {
       val valueHasString        = "This updated comment has no standoff"
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = zeitglöckleinIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-          valueContent = TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueHasString)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = zeitglöckleinIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some(valueHasString)
+            )
+          ),
+          incunabulaUser,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a decimal value" in {
@@ -3174,24 +3151,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasDecimal                           = BigDecimal("3.1415926")
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = decimalValueIri.get,
-          valueContent = DecimalValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasDecimal = valueHasDecimal
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = decimalValueIri.get,
+            valueContent = DecimalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasDecimal = valueHasDecimal
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        decimalValueIri.set(updateValueResponse.valueIri)
-      }
+      decimalValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3215,24 +3191,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
       val valueHasDecimal       = BigDecimal("3.1415926")
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = decimalValueIri.get,
-          valueContent = DecimalValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasDecimal = valueHasDecimal
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = decimalValueIri.get,
+            valueContent = DecimalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasDecimal = valueHasDecimal
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a time value" in {
@@ -3241,24 +3216,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasTimeStamp                         = Instant.parse("2019-08-28T16:01:46.952237Z")
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = timeValueIri.get,
-          valueContent = TimeValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasTimeStamp = valueHasTimeStamp
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = timeValueIri.get,
+            valueContent = TimeValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasTimeStamp = valueHasTimeStamp
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        timeValueIri.set(updateValueResponse.valueIri)
-      }
+      timeValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3282,24 +3256,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
       val valueHasTimeStamp     = Instant.parse("2019-08-28T16:01:46.952237Z")
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = timeValueIri.get,
-          valueContent = TimeValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasTimeStamp = valueHasTimeStamp
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val value = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = timeValueIri.get,
+            valueContent = TimeValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasTimeStamp = valueHasTimeStamp
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](value)
     }
 
     "update a date value" in {
@@ -3316,21 +3289,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueHasEndPrecision = DatePrecisionYear
       )
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = dateValueIri.get,
-          valueContent = submittedValueContent
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = dateValueIri.get,
+            valueContent = submittedValueContent
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
 
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        dateValueIri.set(updateValueResponse.valueIri)
-      }
+      dateValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3368,21 +3341,20 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         valueHasEndPrecision = DatePrecisionYear
       )
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = dateValueIri.get,
-          valueContent = submittedValueContent
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = dateValueIri.get,
+            valueContent = submittedValueContent
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a boolean value" in {
@@ -3391,24 +3363,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasBoolean                           = false
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = booleanValueIri.get,
-          valueContent = BooleanValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasBoolean = valueHasBoolean
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = booleanValueIri.get,
+            valueContent = BooleanValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasBoolean = valueHasBoolean
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        booleanValueIri.set(updateValueResponse.valueIri)
-      }
+      booleanValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3432,24 +3403,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
       val valueHasBoolean       = false
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = booleanValueIri.get,
-          valueContent = BooleanValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasBoolean = valueHasBoolean
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = booleanValueIri.get,
+            valueContent = BooleanValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasBoolean = valueHasBoolean
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a geometry value" in {
@@ -3459,24 +3429,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = geometryValueIri.get,
-          valueContent = GeomValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasGeometry = valueHasGeometry
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = geometryValueIri.get,
+            valueContent = GeomValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasGeometry = valueHasGeometry
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        geometryValueIri.set(updateValueResponse.valueIri)
-      }
+      geometryValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3501,24 +3470,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasGeometry =
         """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = geometryValueIri.get,
-          valueContent = GeomValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasGeometry = valueHasGeometry
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = geometryValueIri.get,
+            valueContent = GeomValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasGeometry = valueHasGeometry
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update an interval value" in {
@@ -3528,25 +3496,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasIntervalEnd                       = BigDecimal("3.45")
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intervalValueIri.get,
-          valueContent = IntervalValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasIntervalStart = valueHasIntervalStart,
-            valueHasIntervalEnd = valueHasIntervalEnd
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intervalValueIri.get,
+            valueContent = IntervalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasIntervalStart = valueHasIntervalStart,
+              valueHasIntervalEnd = valueHasIntervalEnd
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        intervalValueIri.set(updateValueResponse.valueIri)
-      }
+      intervalValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3574,25 +3541,24 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasIntervalStart = BigDecimal("1.23")
       val valueHasIntervalEnd   = BigDecimal("3.45")
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = intervalValueIri.get,
-          valueContent = IntervalValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasIntervalStart = valueHasIntervalStart,
-            valueHasIntervalEnd = valueHasIntervalEnd
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = intervalValueIri.get,
+            valueContent = IntervalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasIntervalStart = valueHasIntervalStart,
+              valueHasIntervalEnd = valueHasIntervalEnd
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a list value" in {
@@ -3601,24 +3567,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasListNode                          = "http://rdfh.ch/lists/0001/treeList02"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = listValueIri.get,
-          valueContent = HierarchicalListValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasListNode = valueHasListNode
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = listValueIri.get,
+            valueContent = HierarchicalListValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasListNode = valueHasListNode
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        listValueIri.set(updateValueResponse.valueIri)
-      }
+      listValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3644,24 +3609,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
       val valueHasListNode      = "http://rdfh.ch/lists/0001/treeList02"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = listValueIri.get,
-          valueContent = HierarchicalListValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasListNode = valueHasListNode
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = listValueIri.get,
+            valueContent = HierarchicalListValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasListNode = valueHasListNode
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "not update a list value with the IRI of a nonexistent list node" in {
@@ -3669,24 +3633,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
       val valueHasListNode      = "http://rdfh.ch/lists/0001/nonexistent"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = listValueIri.get,
-          valueContent = HierarchicalListValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasListNode = valueHasListNode
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = listValueIri.get,
+            valueContent = HierarchicalListValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasListNode = valueHasListNode
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[NotFoundException])
-      }
+      assertFailsWithA[NotFoundException](actual)
     }
 
     "update a color value" in {
@@ -3695,24 +3658,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasColor                             = "#ff3334"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = colorValueIri.get,
-          valueContent = ColorValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasColor = valueHasColor
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = colorValueIri.get,
+            valueContent = ColorValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasColor = valueHasColor
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        colorValueIri.set(updateValueResponse.valueIri)
-      }
+      colorValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3738,24 +3700,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
       val valueHasColor         = "#ff3334"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = colorValueIri.get,
-          valueContent = ColorValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasColor = valueHasColor
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = colorValueIri.get,
+            valueContent = ColorValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasColor = valueHasColor
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a URI value" in {
@@ -3764,24 +3725,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasUri                               = "https://en.wikipedia.org"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = uriValueIri.get,
-          valueContent = UriValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasUri = valueHasUri
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = uriValueIri.get,
+            valueContent = UriValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasUri = valueHasUri
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        uriValueIri.set(updateValueResponse.valueIri)
-      }
+      uriValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3807,24 +3767,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
       val valueHasUri           = "https://en.wikipedia.org"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = uriValueIri.get,
-          valueContent = UriValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasUri = valueHasUri
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = uriValueIri.get,
+            valueContent = UriValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasUri = valueHasUri
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update a geoname value" in {
@@ -3833,24 +3792,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasGeonameCode                       = "2988507"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = geonameValueIri.get,
-          valueContent = GeonameValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasGeonameCode = valueHasGeonameCode
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+      val updateValueResponse = UnsafeZioRun.runOrThrow(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
+            resourceIri = resourceIri,
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = geonameValueIri.get,
+            valueContent = GeonameValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasGeonameCode = valueHasGeonameCode
+            )
+          ),
+          anythingUser1,
+          randomUUID
+        )
       )
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        geonameValueIri.set(updateValueResponse.valueIri)
-      }
+      geonameValueIri.set(updateValueResponse.valueIri)
 
       // Read the value back to check that it was added correctly.
 
@@ -3876,277 +3834,266 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
       val valueHasGeonameCode   = "2988507"
 
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-          propertyIri = propertyIri,
-          valueIri = geonameValueIri.get,
-          valueContent = GeonameValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasGeonameCode = valueHasGeonameCode
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
-    }
-
-    "update a link between two resources" in {
-      val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-      val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
-
-      val updateValueRequest = UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
-
-      appActor ! updateValueRequest
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        linkValueIri.set(updateValueResponse.valueIri)
-
-        // When you change a link value's target, it gets a new UUID.
-        assert(updateValueResponse.valueUUID != linkValueUUID)
-        linkValueUUID = updateValueResponse.valueUUID
-      }
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = linkPropertyIri,
-        propertyIriInResult = linkValuePropertyIri,
-        expectedValueIri = linkValueIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      valueFromTriplestore match {
-        case readLinkValueV2: ReadLinkValueV2 =>
-          readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
-          readLinkValueV2.valueHasRefCount should ===(1)
-
-        case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
-      }
-    }
-
-    "not update a link without a comment without changing it" in {
-      val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-
-      val updateValueRequest = UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
-
-      appActor ! updateValueRequest
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
-    }
-
-    "update a link, adding a comment" in {
-      val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-      val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
-      val comment: String                           = "Adding a comment"
-
-      val updateValueRequest = UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
-            comment = Some(comment)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
-
-      appActor ! updateValueRequest
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        linkValueIri.set(updateValueResponse.valueIri)
-
-        // Since we only changed metadata, the link should have the same UUID.
-        assert(updateValueResponse.valueUUID == linkValueUUID)
-      }
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = linkPropertyIri,
-        propertyIriInResult = linkValuePropertyIri,
-        expectedValueIri = linkValueIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      valueFromTriplestore match {
-        case readLinkValueV2: ReadLinkValueV2 =>
-          readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
-          readLinkValueV2.valueHasRefCount should ===(1)
-          assert(readLinkValueV2.valueContent.comment.contains(comment))
-
-        case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
-      }
-    }
-
-    "not update a link with a comment without changing it" in {
-      val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-      val comment: String                = "Adding a comment"
-
-      val updateValueRequest = UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
-            comment = Some(comment)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
-
-      appActor ! updateValueRequest
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
-    }
-
-    "update a link with a comment, changing only the comment" in {
-      val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-      val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
-      val comment                                   = "An updated comment"
-
-      val updateValueRequest = UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
-          valueIri = linkValueIri.get,
-          valueContent = LinkValueContentV2(
-            ontologySchema = ApiV2Complex,
-            referredResourceIri = generationeIri,
-            comment = Some(comment)
-          )
-        ),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
-
-      appActor ! updateValueRequest
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        linkValueIri.set(updateValueResponse.valueIri)
-
-        // Since we only changed metadata, the link should have the same UUID.
-        assert(updateValueResponse.valueUUID == linkValueUUID)
-      }
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = linkPropertyIri,
-        propertyIriInResult = linkValuePropertyIri,
-        expectedValueIri = linkValueIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      valueFromTriplestore match {
-        case readLinkValueV2: ReadLinkValueV2 =>
-          readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
-          readLinkValueV2.valueHasRefCount should ===(1)
-          assert(readLinkValueV2.valueContent.comment.contains(comment))
-
-        case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
-      }
-    }
-
-    "create a link with a comment" in {
-      val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-      val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
-      val comment                                   = "Initial comment"
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
+      val actual = UnsafeZioRun.run(
+        ValuesResponderV2.updateValueV2(
+          UpdateValueContentV2(
             resourceIri = resourceIri,
-            propertyIri = linkValuePropertyIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-            valueContent = LinkValueContentV2(
+            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+            propertyIri = propertyIri,
+            valueIri = geonameValueIri.get,
+            valueContent = GeonameValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri,
-              comment = Some(comment)
+              valueHasGeonameCode = valueHasGeonameCode
             )
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
+          anythingUser1,
+          randomUUID
         )
       )
-      linkValueIri.set(createValueResponse.valueIri)
+      assertFailsWithA[DuplicateValueException](actual)
 
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = linkPropertyIri,
-        propertyIriInResult = linkValuePropertyIri,
-        expectedValueIri = linkValueIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      valueFromTriplestore match {
-        case readLinkValueV2: ReadLinkValueV2 =>
-          readLinkValueV2.valueContent.referredResourceIri should ===(zeitglöckleinIri)
-          readLinkValueV2.valueHasRefCount should ===(1)
-          assert(readLinkValueV2.valueContent.comment.contains(comment))
-
-        case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
-      }
     }
+  }
 
-    "not update a standoff link directly" in {
-      appActor ! UpdateValueRequestV2(
+  "update a link between two resources" in {
+    val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
+    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+
+    val updateValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri = resourceIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = linkValuePropertyIri,
+          valueIri = linkValueIri.get,
+          valueContent = LinkValueContentV2(
+            ontologySchema = ApiV2Complex,
+            referredResourceIri = generationeIri
+          )
+        ),
+        incunabulaUser,
+        randomUUID
+      )
+    )
+    linkValueIri.set(updateValueResponse.valueIri)
+
+    // When you change a link value's target, it gets a new UUID.
+    assert(updateValueResponse.valueUUID != linkValueUUID)
+    linkValueUUID = updateValueResponse.valueUUID
+
+    val valueFromTriplestore = getValue(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      propertyIriForGravsearch = linkPropertyIri,
+      propertyIriInResult = linkValuePropertyIri,
+      expectedValueIri = linkValueIri.get,
+      requestingUser = incunabulaUser
+    )
+
+    valueFromTriplestore match {
+      case readLinkValueV2: ReadLinkValueV2 =>
+        readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
+        readLinkValueV2.valueHasRefCount should ===(1)
+
+      case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+    }
+  }
+
+  "not update a link without a comment without changing it" in {
+    val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
+    val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri = resourceIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = linkValuePropertyIri,
+          valueIri = linkValueIri.get,
+          valueContent = LinkValueContentV2(
+            ontologySchema = ApiV2Complex,
+            referredResourceIri = generationeIri
+          )
+        ),
+        incunabulaUser,
+        randomUUID
+      )
+    )
+    assertFailsWithA[DuplicateValueException](actual)
+  }
+
+  "update a link, adding a comment" in {
+    val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
+    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+    val comment: String                           = "Adding a comment"
+
+    val updateValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri = resourceIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = linkValuePropertyIri,
+          valueIri = linkValueIri.get,
+          valueContent = LinkValueContentV2(
+            ontologySchema = ApiV2Complex,
+            referredResourceIri = generationeIri,
+            comment = Some(comment)
+          )
+        ),
+        incunabulaUser,
+        randomUUID
+      )
+    )
+
+    linkValueIri.set(updateValueResponse.valueIri)
+
+    // Since we only changed metadata, the link should have the same UUID.
+    assert(updateValueResponse.valueUUID == linkValueUUID)
+
+    val valueFromTriplestore = getValue(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      propertyIriForGravsearch = linkPropertyIri,
+      propertyIriInResult = linkValuePropertyIri,
+      expectedValueIri = linkValueIri.get,
+      requestingUser = incunabulaUser
+    )
+
+    valueFromTriplestore match {
+      case readLinkValueV2: ReadLinkValueV2 =>
+        readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
+        readLinkValueV2.valueHasRefCount should ===(1)
+        assert(readLinkValueV2.valueContent.comment.contains(comment))
+
+      case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+    }
+  }
+
+  "not update a link with a comment without changing it" in {
+    val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
+    val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val comment: String                = "Adding a comment"
+
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri = resourceIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = linkValuePropertyIri,
+          valueIri = linkValueIri.get,
+          valueContent = LinkValueContentV2(
+            ontologySchema = ApiV2Complex,
+            referredResourceIri = generationeIri,
+            comment = Some(comment)
+          )
+        ),
+        incunabulaUser,
+        randomUUID
+      )
+    )
+    assertFailsWithA[DuplicateValueException](actual)
+  }
+
+  "update a link with a comment, changing only the comment" in {
+    val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
+    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+    val comment                                   = "An updated comment"
+
+    val updateValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri = resourceIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = linkValuePropertyIri,
+          valueIri = linkValueIri.get,
+          valueContent = LinkValueContentV2(
+            ontologySchema = ApiV2Complex,
+            referredResourceIri = generationeIri,
+            comment = Some(comment)
+          )
+        ),
+        incunabulaUser,
+        randomUUID
+      )
+    )
+
+    linkValueIri.set(updateValueResponse.valueIri)
+
+    // Since we only changed metadata, the link should have the same UUID.
+    assert(updateValueResponse.valueUUID == linkValueUUID)
+
+    val valueFromTriplestore = getValue(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      propertyIriForGravsearch = linkPropertyIri,
+      propertyIriInResult = linkValuePropertyIri,
+      expectedValueIri = linkValueIri.get,
+      requestingUser = incunabulaUser
+    )
+
+    valueFromTriplestore match {
+      case readLinkValueV2: ReadLinkValueV2 =>
+        readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
+        readLinkValueV2.valueHasRefCount should ===(1)
+        assert(readLinkValueV2.valueContent.comment.contains(comment))
+
+      case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+    }
+  }
+
+  "create a link with a comment" in {
+    val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
+    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+    val comment                                   = "Initial comment"
+
+    val createValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.createValueV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          propertyIri = linkValuePropertyIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          valueContent = LinkValueContentV2(
+            ontologySchema = ApiV2Complex,
+            referredResourceIri = zeitglöckleinIri,
+            comment = Some(comment)
+          )
+        ),
+        requestingUser = incunabulaUser,
+        apiRequestID = randomUUID
+      )
+    )
+    linkValueIri.set(createValueResponse.valueIri)
+
+    val valueFromTriplestore = getValue(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      propertyIriForGravsearch = linkPropertyIri,
+      propertyIriInResult = linkValuePropertyIri,
+      expectedValueIri = linkValueIri.get,
+      requestingUser = incunabulaUser
+    )
+
+    valueFromTriplestore match {
+      case readLinkValueV2: ReadLinkValueV2 =>
+        readLinkValueV2.valueContent.referredResourceIri should ===(zeitglöckleinIri)
+        readLinkValueV2.valueHasRefCount should ===(1)
+        assert(readLinkValueV2.valueContent.comment.contains(comment))
+
+      case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+    }
+  }
+
+  "not update a standoff link directly" in {
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.updateValueV2(
         UpdateValueContentV2(
           resourceIri = zeitglöckleinIri,
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
@@ -4157,582 +4104,592 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             referredResourceIri = generationeIri
           )
         ),
-        requestingUser = SharedTestDataADM.superUser,
-        apiRequestID = randomUUID
+        SharedTestDataADM.superUser,
+        randomUUID
       )
+    )
+    assertFailsWithA[BadRequestException](actual)
+  }
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
-      }
+  "not update a still image file value without changing it" in {
+    val resourceIri: IRI = aThingPictureIri
+    stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q")
+    val fileType         = FileType.StillImageFile(dimX = 512, dimY = 256)
+    val internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2"
+    val valueIri         = stillImageFileValueIri.get
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri,
+          thingPictureClassIri.toSmartIri,
+          OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
+          valueIri,
+          FileModelUtil.getFileValueContent(
+            fileType,
+            internalFilename,
+            Some(mimeTypeJP2),
+            Some("test.tiff"),
+            Some(mimeTypeTIFF),
+            None
+          )
+        ),
+        anythingUser1,
+        randomUUID
+      )
+    )
+    assertFailsWithA[DuplicateValueException](actual)
+  }
+
+  "update a still image file value" in {
+    val resourceIri: IRI                          = aThingPictureIri
+    val propertyIri: SmartIri                     = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+    // Get the value before update.
+    val previousValueFromTriplestore: ReadValueV2 = getValue(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      propertyIriForGravsearch = propertyIri,
+      propertyIriInResult = propertyIri,
+      expectedValueIri = stillImageFileValueIri.get,
+      requestingUser = anythingUser1,
+      checkLastModDateChanged = false
+    )
+
+    // Update the value.
+    val dimX             = 512
+    val dimY             = 256
+    val internalFilename = "updated-filename.jp2"
+    val internalMimeType = mimeTypeJP2
+    val originalFilename = Some("test.tiff")
+    val originalMimeType = Some(mimeTypeTIFF)
+
+    val updateValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri,
+          thingPictureClassIri.toSmartIri,
+          propertyIri,
+          stillImageFileValueIri.get,
+          FileModelUtil.getFileValueContent(
+            FileType.StillImageFile(dimX = dimX, dimY = dimY),
+            internalFilename,
+            Some(internalMimeType),
+            originalFilename,
+            originalMimeType,
+            None
+          )
+        ),
+        anythingUser1,
+        randomUUID
+      )
+    )
+
+    stillImageFileValueIri.set(updateValueResponse.valueIri)
+
+    // Read the value back to check that it was added correctly.
+
+    val updatedValueFromTriplestore = getValue(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      propertyIriForGravsearch = propertyIri,
+      propertyIriInResult = propertyIri,
+      expectedValueIri = stillImageFileValueIri.get,
+      requestingUser = anythingUser1
+    )
+
+    updatedValueFromTriplestore.valueIri should equal(stillImageFileValueIri.get)
+    updatedValueFromTriplestore.valueContent match {
+      case savedValue: StillImageFileValueContentV2 =>
+        savedValue.comment should be(None)
+        savedValue.dimX should equal(dimX)
+        savedValue.dimY should equal(dimY)
+        savedValue.fileValue.internalFilename should equal(internalFilename)
+        savedValue.fileValue.internalMimeType should equal(internalMimeType)
+        savedValue.fileValue.originalMimeType should equal(originalMimeType)
+        savedValue.fileValue.originalFilename should equal(originalFilename)
+
+      case _ => throw AssertionException(s"Expected still image file value, got $updatedValueFromTriplestore")
     }
+    updatedValueFromTriplestore.permissions should equal(previousValueFromTriplestore.permissions)
 
-    "not update a still image file value without changing it" in {
-      val resourceIri: IRI = aThingPictureIri
-      stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q")
-      val fileType         = FileType.StillImageFile(dimX = 512, dimY = 256)
-      val internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2"
-      val valueIri         = stillImageFileValueIri.get
+  }
 
-      val updateValueRequest = ChangeFileRequest
-        .make(
-          fileType = fileType,
-          internalFilename = internalFilename,
+  "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
+    val resourceIri: IRI      = aThingPictureIri
+    val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+
+    val valueContent = StillImageFileValueContentV2(
+      ontologySchema = ApiV2Complex,
+      fileValue = FileValueV2(
+        internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
+        internalMimeType = mimeTypeJP2,
+        originalFilename = Some("test.tiff"),
+        originalMimeType = Some(mimeTypeTIFF)
+      ),
+      dimX = 512,
+      dimY = 256
+    )
+
+    // Knora will reject this request.
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
           resourceIri = resourceIri,
+          resourceClassIri = thingPictureClassIri.toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = stillImageFileValueIri.get,
+          valueContent = valueContent
+        ),
+        incunabulaUser, // this user doesn't have the necessary permission
+        randomUUID
+      )
+    )
+    assertFailsWithA[ForbiddenException](actual)
+  }
+
+  "return a Sipi error if Sipi fails to move a file to permanent storage" in {
+    val resourceIri: IRI      = aThingPictureIri
+    val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+
+    val valueContent = StillImageFileValueContentV2(
+      ontologySchema = ApiV2Complex,
+      fileValue = FileValueV2(
+        internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
+        internalMimeType = mimeTypeJP2,
+        originalFilename = Some("test.tiff"),
+        originalMimeType = Some(mimeTypeTIFF)
+      ),
+      dimX = 512,
+      dimY = 256
+    )
+
+    // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.updateValueV2(
+        UpdateValueContentV2(
+          resourceIri = resourceIri,
+          resourceClassIri = thingPictureClassIri.toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = stillImageFileValueIri.get,
+          valueContent = valueContent
+        ),
+        anythingUser1,
+        randomUUID
+      )
+    )
+    assertFailsWithA[SipiException](actual)
+  }
+
+  "not delete a value if the requesting user does not have DeletePermission on the value" in {
+    val resourceIri: IRI      = aThingIri
+    val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = intValueIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          deleteComment = Some("this value was incorrect")
+        ),
+        anythingUser2,
+        randomUUID
+      )
+    )
+    assertFailsWithA[ForbiddenException](actual)
+  }
+
+  "delete an integer value" in {
+    val resourceIri: IRI                          = aThingIri
+    val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+    val valueIri = intValueIri.get
+
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          propertyIri = propertyIri,
           valueIri = valueIri,
-          ontologyName = "anything"
-        )
-        .toMessage(
-          internalMimeType = Some(mimeTypeJP2),
-          originalFilename = Some("test.tiff"),
-          originalMimeType = Some(mimeTypeTIFF),
-          resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
-          requestingUser = anythingUser1
-        )
-
-      appActor ! updateValueRequest
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
-    }
-
-    "update a still image file value" in {
-      val resourceIri: IRI                          = aThingPictureIri
-      val propertyIri: SmartIri                     = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      // Get the value before update.
-      val previousValueFromTriplestore: ReadValueV2 = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = stillImageFileValueIri.get,
-        requestingUser = anythingUser1,
-        checkLastModDateChanged = false
-      )
-
-      // Update the value.
-      val dimX             = 512
-      val dimY             = 256
-      val internalFilename = "updated-filename.jp2"
-      val internalMimeType = mimeTypeJP2
-      val originalFilename = Some("test.tiff")
-      val originalMimeType = Some(mimeTypeTIFF)
-
-      val changeFileRequest = ChangeFileRequest
-        .make(
-          fileType = FileType.StillImageFile(dimX = dimX, dimY = dimY),
-          internalFilename = internalFilename,
-          resourceIri = resourceIri,
-          valueIri = stillImageFileValueIri.get,
-          ontologyName = "anything"
-        )
-      val changeFileMessage = changeFileRequest
-        .toMessage(
-          resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
-          internalMimeType = Some(internalMimeType),
-          originalMimeType = originalMimeType,
-          originalFilename = originalFilename
-        )
-      appActor ! changeFileMessage
-
-      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        stillImageFileValueIri.set(updateValueResponse.valueIri)
-      }
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = stillImageFileValueIri.get,
-        requestingUser = anythingUser1
-      )
-
-      updatedValueFromTriplestore.valueIri should equal(stillImageFileValueIri.get)
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: StillImageFileValueContentV2 =>
-          savedValue.comment should be(None)
-          savedValue.dimX should equal(dimX)
-          savedValue.dimY should equal(dimY)
-          savedValue.fileValue.internalFilename should equal(internalFilename)
-          savedValue.fileValue.internalMimeType should equal(internalMimeType)
-          savedValue.fileValue.originalMimeType should equal(originalMimeType)
-          savedValue.fileValue.originalFilename should equal(originalFilename)
-
-        case _ => throw AssertionException(s"Expected still image file value, got $updatedValueFromTriplestore")
-      }
-      updatedValueFromTriplestore.permissions should equal(previousValueFromTriplestore.permissions)
-
-    }
-
-    "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
-      val resourceIri: IRI      = aThingPictureIri
-      val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
-
-      val valueContent = StillImageFileValueContentV2(
-        ontologySchema = ApiV2Complex,
-        fileValue = FileValueV2(
-          internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
-          internalMimeType = mimeTypeJP2,
-          originalFilename = Some("test.tiff"),
-          originalMimeType = Some(mimeTypeTIFF)
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          deleteComment = Some("this value was incorrect")
         ),
-        dimX = 512,
-        dimY = 256
+        anythingUser1,
+        randomUUID
       )
+    )
 
-      // Knora will reject this request.
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
+    checkValueIsDeleted(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      valueIri = intValueIri.get,
+      requestingUser = anythingUser1
+    )
+  }
+
+  "delete an integer value, specifying a custom delete date" in {
+    val resourceIri: IRI                          = aThingIri
+    val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+    val deleteDate: Instant                       = Instant.now
+    val deleteComment                             = Some("this value was incorrect")
+
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
           resourceIri = resourceIri,
-          resourceClassIri = thingPictureClassIri.toSmartIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           propertyIri = propertyIri,
-          valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
+          valueIri = intValueForRsyncIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          deleteComment = deleteComment,
+          deleteDate = Some(deleteDate)
         ),
-        requestingUser = incunabulaUser, // this user doesn't have the necessary permission
-        apiRequestID = randomUUID
+        anythingUser1,
+        randomUUID
       )
+    )
 
-      expectMsgPF(3.seconds) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[ForbiddenException])
-      }
-    }
+    checkValueIsDeleted(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      valueIri = intValueForRsyncIri.get,
+      customDeleteDate = Some(deleteDate),
+      deleteComment = deleteComment,
+      requestingUser = anythingUser1
+    )
+  }
 
-    "return a Sipi error if Sipi fails to move a file to permanent storage" in {
-      val resourceIri: IRI      = aThingPictureIri
-      val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
-
-      val valueContent = StillImageFileValueContentV2(
-        ontologySchema = ApiV2Complex,
-        fileValue = FileValueV2(
-          internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
-          internalMimeType = mimeTypeJP2,
-          originalFilename = Some("test.tiff"),
-          originalMimeType = Some(mimeTypeTIFF)
+  "not delete a standoff link directly" in {
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = zeitglöckleinIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+          valueIri = standoffLinkValueIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
         ),
-        dimX = 512,
-        dimY = 256
+        SharedTestDataADM.superUser,
+        randomUUID
       )
+    )
+    assertFailsWithA[BadRequestException](actual)
+  }
 
-      // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
-      appActor ! UpdateValueRequestV2(
-        UpdateValueContentV2(
-          resourceIri = resourceIri,
-          resourceClassIri = thingPictureClassIri.toSmartIri,
+  "delete a text value with a standoff link" in {
+    val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = zeitglöckleinIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           propertyIri = propertyIri,
-          valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
+          valueIri = zeitglöckleinCommentWithStandoffIri.get,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+          deleteComment = Some("this value was incorrect")
+        ),
+        incunabulaUser,
+        randomUUID
+      )
+    )
+
+    checkValueIsDeleted(
+      resourceIri = zeitglöckleinIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      valueIri = zeitglöckleinCommentWithStandoffIri.get,
+      requestingUser = incunabulaUser
+    )
+
+    // There should be no standoff link values left in the resource.
+
+    val resource = getResourceWithValues(
+      resourceIri = zeitglöckleinIri,
+      propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
+      requestingUser = incunabulaUser
+    )
+
+    assert(!resource.values.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
+  }
+
+  "delete a link between two resources" in {
+    val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
+    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+    val linkValueIRI                              = linkValueIri.get
+
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = linkValuePropertyIri,
+          valueIri = linkValueIRI,
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+        ),
+        incunabulaUser,
+        randomUUID
+      )
+    )
+
+    checkValueIsDeleted(
+      resourceIri = resourceIri,
+      maybePreviousLastModDate = maybeResourceLastModDate,
+      valueIri = linkValueIRI,
+      requestingUser = anythingUser1,
+      isLinkValue = true
+    )
+  }
+
+  "not delete a value if the property's cardinality doesn't allow it" in {
+    val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri
+
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.deleteValueV2(
+        DeleteValueV2(
+          resourceIri = zeitglöckleinIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri
+        ),
+        incunabulaCreatorUser,
+        randomUUID
+      )
+    )
+    assertFailsWithA[OntologyConstraintException](actual)
+  }
+
+  "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
+    val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+    val inputResource = CreateResourceV2(
+      resourceIri = Some(resourceIri.toSmartIri),
+      resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+      label = "test bildformat",
+      values = Map.empty,
+      projectADM = SharedTestDataADM.imagesProject,
+      permissions = Some("M knora-admin:ProjectMember")
+    )
+
+    appActor ! CreateResourceRequestV2(
+      createResource = inputResource,
+      requestingUser = SharedTestDataADM.imagesUser01,
+      apiRequestID = randomUUID
+    )
+
+    expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+    val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+    val actual = UnsafeZioRun.run(
+      ValuesResponderV2.createValueV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+          propertyIri = propertyIri,
+          valueContent = IntegerValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasInteger = 5,
+            comment = Some("this is the number five")
+          ),
+          permissions = Some("CR knora-admin:Creator")
+        ),
+        requestingUser = SharedTestDataADM.imagesReviewerUser,
+        apiRequestID = randomUUID
+      )
+    )
+    assertFailsWithA[ForbiddenException](actual)
+  }
+
+  "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
+    val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+    val inputResource = CreateResourceV2(
+      resourceIri = Some(resourceIri.toSmartIri),
+      resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+      label = "test bildformat",
+      values = Map.empty,
+      projectADM = SharedTestDataADM.imagesProject,
+      permissions = Some("M knora-admin:ProjectMember")
+    )
+
+    appActor ! CreateResourceRequestV2(
+      createResource = inputResource,
+      requestingUser = SharedTestDataADM.imagesUser01,
+      apiRequestID = randomUUID
+    )
+
+    expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+    val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.createValueV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+          propertyIri = propertyIri,
+          valueContent = IntegerValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasInteger = 5,
+            comment = Some("this is the number five")
+          ),
+          permissions = Some("CR knora-admin:Creator")
+        ),
+        requestingUser = SharedTestDataADM.rootUser,
+        apiRequestID = randomUUID
+      )
+    )
+  }
+
+  "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
+    val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+    val inputResource = CreateResourceV2(
+      resourceIri = Some(resourceIri.toSmartIri),
+      resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+      label = "test bildformat",
+      values = Map.empty,
+      projectADM = SharedTestDataADM.imagesProject,
+      permissions = Some("M knora-admin:ProjectMember")
+    )
+
+    appActor ! CreateResourceRequestV2(
+      createResource = inputResource,
+      requestingUser = SharedTestDataADM.imagesUser01,
+      apiRequestID = randomUUID
+    )
+
+    expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+    val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+    UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.createValueV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+          propertyIri = propertyIri,
+          valueContent = IntegerValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasInteger = 5,
+            comment = Some("this is the number five")
+          ),
+          permissions = Some("CR knora-admin:Creator")
+        ),
+        requestingUser = SharedTestDataADM.imagesUser01,
+        apiRequestID = randomUUID
+      )
+    )
+  }
+
+  "create and update text values with standoff links, managing value UUIDs correctly" in {
+    val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+    val propertyIri: SmartIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
+
+    // Create a text value with a standoff link.
+
+    val createValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.createValueV2(
+        CreateValueV2(
+          resourceIri = sierraIri,
+          resourceClassIri = resourceClassIri,
+          propertyIri = propertyIri,
+          valueContent = TextValueContentV2(
+            ontologySchema = ApiV2Complex,
+            maybeValueHasString = Some("Comment 1 for UUID checking"),
+            standoff = sampleStandoffWithLink,
+            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+            mapping = standardMapping
+          )
         ),
         requestingUser = anythingUser1,
         apiRequestID = randomUUID
       )
+    )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[SipiException])
-      }
-    }
+    val resourceVersion1: ReadResourceV2 = getResourceWithValues(
+      resourceIri = sierraIri,
+      propertyIrisForGravsearch = Seq(
+        propertyIri,
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+      ),
+      requestingUser = anythingUser1
+    )
 
-    "not delete a value if the requesting user does not have DeletePermission on the value" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+    // Get the UUIDs of the text value and of the standoff link value.
+    val textValue1: ReadValueV2 = resourceVersion1.values(propertyIri).head
+    assert(textValue1.valueIri == createValueResponse.valueIri)
+    assert(getValueUUID(textValue1.valueIri).contains(textValue1.valueHasUUID))
+    val standoffLinkValueVersion1: ReadLinkValueV2 = resourceVersion1
+      .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
+      .head
+      .asInstanceOf[ReadLinkValueV2]
+    assert(getValueUUID(standoffLinkValueVersion1.valueIri).contains(standoffLinkValueVersion1.valueHasUUID))
+    assert(standoffLinkValueVersion1.valueHasRefCount == 1)
 
-      appActor ! DeleteValueRequestV2(
-        resourceIri = resourceIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = intValueIri.get,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
-        requestingUser = anythingUser2,
-        apiRequestID = randomUUID
-      )
+    // Create a second text value with the same standoff link.
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[ForbiddenException])
-      }
-    }
-
-    "delete an integer value" in {
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      val valueIri = intValueIri.get
-      appActor ! DeleteValueRequestV2(
-        resourceIri = resourceIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = valueIri,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgType[SuccessResponseV2](timeout)
-
-      checkValueIsDeleted(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        valueIri = intValueIri.get,
-        requestingUser = anythingUser1
-      )
-    }
-
-    "delete an integer value, specifying a custom delete date" in {
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-      val deleteDate: Instant                       = Instant.now
-      val deleteComment                             = Some("this value was incorrect")
-
-      appActor ! DeleteValueRequestV2(
-        resourceIri = resourceIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = intValueForRsyncIri.get,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = deleteComment,
-        deleteDate = Some(deleteDate),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgType[SuccessResponseV2](timeout)
-
-      checkValueIsDeleted(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        valueIri = intValueForRsyncIri.get,
-        customDeleteDate = Some(deleteDate),
-        deleteComment = deleteComment,
-        requestingUser = anythingUser1
-      )
-    }
-
-    "not delete a standoff link directly" in {
-      appActor ! DeleteValueRequestV2(
-        resourceIri = zeitglöckleinIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
-        valueIri = standoffLinkValueIri.get,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-        requestingUser = SharedTestDataADM.superUser,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
-      }
-    }
-
-    "delete a text value with a standoff link" in {
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
-
-      appActor ! DeleteValueRequestV2(
-        resourceIri = zeitglöckleinIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = zeitglöckleinCommentWithStandoffIri.get,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgType[SuccessResponseV2](timeout)
-
-      checkValueIsDeleted(
-        resourceIri = zeitglöckleinIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        valueIri = zeitglöckleinCommentWithStandoffIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      // There should be no standoff link values left in the resource.
-
-      val resource = getResourceWithValues(
-        resourceIri = zeitglöckleinIri,
-        propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
-        requestingUser = incunabulaUser
-      )
-
-      assert(!resource.values.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
-    }
-
-    "delete a link between two resources" in {
-      val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-      val linkValueIRI                              = linkValueIri.get
-
-      appActor ! DeleteValueRequestV2(
-        resourceIri = resourceIri,
-        resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-        propertyIri = linkValuePropertyIri,
-        valueIri = linkValueIRI,
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-        requestingUser = incunabulaUser,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgType[SuccessResponseV2](timeout)
-
-      checkValueIsDeleted(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        valueIri = linkValueIRI,
-        requestingUser = anythingUser1,
-        isLinkValue = true
-      )
-    }
-
-    "not delete a value if the property's cardinality doesn't allow it" in {
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri
-
-      appActor ! DeleteValueRequestV2(
-        resourceIri = zeitglöckleinIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
-        valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-        requestingUser = incunabulaCreatorUser,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[OntologyConstraintException])
-      }
-    }
-
-    "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-        label = "test bildformat",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.imagesProject,
-        permissions = Some("M knora-admin:ProjectMember")
-      )
-
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
-
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = 5,
-              comment = Some("this is the number five")
-            ),
-            permissions = Some("CR knora-admin:Creator")
-          ),
-          requestingUser = SharedTestDataADM.imagesReviewerUser,
-          apiRequestID = randomUUID
-        )
-      )
-      assertFailsWithA[ForbiddenException](actual)
-    }
-
-    "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-        label = "test bildformat",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.imagesProject,
-        permissions = Some("M knora-admin:ProjectMember")
-      )
-
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
-
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
-
-      UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = 5,
-              comment = Some("this is the number five")
-            ),
-            permissions = Some("CR knora-admin:Creator")
-          ),
-          requestingUser = SharedTestDataADM.rootUser,
-          apiRequestID = randomUUID
-        )
-      )
-    }
-
-    "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-        label = "test bildformat",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.imagesProject,
-        permissions = Some("M knora-admin:ProjectMember")
-      )
-
-      appActor ! CreateResourceRequestV2(
-        createResource = inputResource,
-        requestingUser = SharedTestDataADM.imagesUser01,
-        apiRequestID = randomUUID
-      )
-
-      expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
-
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
-
-      UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = 5,
-              comment = Some("this is the number five")
-            ),
-            permissions = Some("CR knora-admin:Creator")
-          ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = randomUUID
-        )
-      )
-    }
-
-    "create and update text values with standoff links, managing value UUIDs correctly" in {
-      val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
-      val propertyIri: SmartIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
-
-      // Create a text value with a standoff link.
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = sierraIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("Comment 1 for UUID checking"),
-              standoff = sampleStandoffWithLink,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      val resourceVersion1: ReadResourceV2 = getResourceWithValues(
-        resourceIri = sierraIri,
-        propertyIrisForGravsearch = Seq(
-          propertyIri,
-          OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+    val createValueResponse2 = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.createValueV2(
+        CreateValueV2(
+          resourceIri = sierraIri,
+          resourceClassIri = resourceClassIri,
+          propertyIri = propertyIri,
+          valueContent = TextValueContentV2(
+            ontologySchema = ApiV2Complex,
+            maybeValueHasString = Some("Comment 2 for UUID checking"),
+            standoff = sampleStandoffWithLink,
+            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+            mapping = standardMapping
+          )
         ),
-        requestingUser = anythingUser1
+        requestingUser = anythingUser1,
+        apiRequestID = randomUUID
       )
+    )
 
-      // Get the UUIDs of the text value and of the standoff link value.
-      val textValue1: ReadValueV2 = resourceVersion1.values(propertyIri).head
-      assert(textValue1.valueIri == createValueResponse.valueIri)
-      assert(getValueUUID(textValue1.valueIri).contains(textValue1.valueHasUUID))
-      val standoffLinkValueVersion1: ReadLinkValueV2 = resourceVersion1
-        .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
-        .head
-        .asInstanceOf[ReadLinkValueV2]
-      assert(getValueUUID(standoffLinkValueVersion1.valueIri).contains(standoffLinkValueVersion1.valueHasUUID))
-      assert(standoffLinkValueVersion1.valueHasRefCount == 1)
+    val resourceVersion2: ReadResourceV2 = getResourceWithValues(
+      resourceIri = sierraIri,
+      propertyIrisForGravsearch = Seq(
+        propertyIri,
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+      ),
+      requestingUser = anythingUser1
+    )
 
-      // Create a second text value with the same standoff link.
+    // Get the second text value's UUID.
+    val textValue2Version1: ReadValueV2 = resourceVersion2
+      .values(propertyIri)
+      .find(_.valueIri == createValueResponse2.valueIri)
+      .getOrElse(throw AssertionException("Value not found"))
+    assert(getValueUUID(textValue2Version1.valueIri).contains(textValue2Version1.valueHasUUID))
 
-      val createValueResponse2 = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = sierraIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("Comment 2 for UUID checking"),
-              standoff = sampleStandoffWithLink,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
+    // We should have a new version of the standoff link value, containing the UUID that was in the previous version.
+    val standoffLinkValueVersion2: ReadLinkValueV2 = resourceVersion2
+      .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
+      .head
+      .asInstanceOf[ReadLinkValueV2]
+    assert(standoffLinkValueVersion2.previousValueIri.contains(standoffLinkValueVersion1.valueIri))
+    assert(standoffLinkValueVersion2.valueHasUUID == standoffLinkValueVersion1.valueHasUUID)
+    assert(getValueUUID(standoffLinkValueVersion2.valueIri).contains(standoffLinkValueVersion2.valueHasUUID))
+    assert(standoffLinkValueVersion2.valueHasRefCount == 2)
 
-      val resourceVersion2: ReadResourceV2 = getResourceWithValues(
-        resourceIri = sierraIri,
-        propertyIrisForGravsearch = Seq(
-          propertyIri,
-          OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
-        ),
-        requestingUser = anythingUser1
-      )
+    // The previous version of the standoff link value should have no UUID.
+    assert(getValueUUID(standoffLinkValueVersion1.valueIri).isEmpty)
 
-      // Get the second text value's UUID.
-      val textValue2Version1: ReadValueV2 = resourceVersion2
-        .values(propertyIri)
-        .find(_.valueIri == createValueResponse2.valueIri)
-        .getOrElse(throw AssertionException("Value not found"))
-      assert(getValueUUID(textValue2Version1.valueIri).contains(textValue2Version1.valueHasUUID))
+    // Update the second text value.
 
-      // We should have a new version of the standoff link value, containing the UUID that was in the previous version.
-      val standoffLinkValueVersion2: ReadLinkValueV2 = resourceVersion2
-        .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
-        .head
-        .asInstanceOf[ReadLinkValueV2]
-      assert(standoffLinkValueVersion2.previousValueIri.contains(standoffLinkValueVersion1.valueIri))
-      assert(standoffLinkValueVersion2.valueHasUUID == standoffLinkValueVersion1.valueHasUUID)
-      assert(getValueUUID(standoffLinkValueVersion2.valueIri).contains(standoffLinkValueVersion2.valueHasUUID))
-      assert(standoffLinkValueVersion2.valueHasRefCount == 2)
-
-      // The previous version of the standoff link value should have no UUID.
-      assert(getValueUUID(standoffLinkValueVersion1.valueIri).isEmpty)
-
-      // Update the second text value.
-
-      appActor ! UpdateValueRequestV2(
+    val updateValueResponse = UnsafeZioRun.runOrThrow(
+      ValuesResponderV2.updateValueV2(
         UpdateValueContentV2(
           resourceIri = sierraIri,
           resourceClassIri = resourceClassIri,
@@ -4746,41 +4703,37 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        requestingUser = anythingUser1,
-        apiRequestID = randomUUID
+        anythingUser1,
+        randomUUID
       )
+    )
 
-      val textValue2Version2Iri = expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
-        updateValueResponse.valueIri
-      }
+    val resourceVersion3: ReadResourceV2 = getResourceWithValues(
+      resourceIri = sierraIri,
+      propertyIrisForGravsearch = Seq(
+        propertyIri,
+        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+      ),
+      requestingUser = anythingUser1
+    )
 
-      val resourceVersion3: ReadResourceV2 = getResourceWithValues(
-        resourceIri = sierraIri,
-        propertyIrisForGravsearch = Seq(
-          propertyIri,
-          OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
-        ),
-        requestingUser = anythingUser1
-      )
+    // We should now have a new version of the second text value, containing the UUID that was in the previous version.
+    val textValue2Version2: ReadValueV2 = resourceVersion3
+      .values(propertyIri)
+      .find(_.valueIri == updateValueResponse.valueIri)
+      .getOrElse(throw AssertionException("Value not found"))
+    assert(getValueUUID(textValue2Version2.valueIri).contains(textValue2Version2.valueHasUUID))
+    assert(textValue2Version2.previousValueIri.contains(textValue2Version1.valueIri))
 
-      // We should now have a new version of the second text value, containing the UUID that was in the previous version.
-      val textValue2Version2: ReadValueV2 = resourceVersion3
-        .values(propertyIri)
-        .find(_.valueIri == textValue2Version2Iri)
-        .getOrElse(throw AssertionException("Value not found"))
-      assert(getValueUUID(textValue2Version2.valueIri).contains(textValue2Version2.valueHasUUID))
-      assert(textValue2Version2.previousValueIri.contains(textValue2Version1.valueIri))
+    // The previous version of the second text value should have no UUID.
+    assert(getValueUUID(textValue2Version1.valueIri).isEmpty)
 
-      // The previous version of the second text value should have no UUID.
-      assert(getValueUUID(textValue2Version1.valueIri).isEmpty)
-
-      // We should not have a new version of the standoff link value.
-      assert(
-        resourceVersion3
-          .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
-          .head
-          .valueIri == standoffLinkValueVersion2.valueIri
-      )
-    }
+    // We should not have a new version of the standoff link value.
+    assert(
+      resourceVersion3
+        .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
+        .head
+        .valueIri == standoffLinkValueVersion2.valueIri
+    )
   }
 }
