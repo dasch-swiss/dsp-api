@@ -1952,11 +1952,9 @@ final case class ValuesResponderV2Live(
 
       // If the property points to a text value, also query the resource's standoff links.
       maybeStandoffLinkToPropertyIri: Option[SmartIri] =
-        if (objectClassConstraint.toString == OntologyConstants.KnoraBase.TextValue) {
-          Some(OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri)
-        } else {
-          None
-        }
+        Option(objectClassConstraint)
+          .filter(_.toString == OntologyConstants.KnoraBase.TextValue)
+          .map(_ => OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri)
 
       // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
       propertyIrisForGravsearchQuery: Seq[SmartIri] =

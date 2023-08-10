@@ -65,35 +65,6 @@ object ActorUtil {
     }
       .map(_.toMap)
 
-  /**
-   * Converts a [[Map]] containing sequences of futures into a future containing a [[Map]] containing sequences.
-   *
-   * @param mapToSequence the [[Map]] to be converted.
-   * @return a future that will provide the results of the futures that were in the [[Map]].
-   */
-  def sequenceSeqFuturesInMap[KeyT: ClassTag, ElemT](
-    mapToSequence: Map[KeyT, Seq[Future[ElemT]]]
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, Seq[ElemT]]] = {
-    val transformedMap: Map[KeyT, Future[Seq[ElemT]]] = mapToSequence.map {
-      case (key: KeyT, seqFuture: Seq[Future[ElemT]]) => key -> Future.sequence(seqFuture)
-    }
-
-    sequenceFutureSeqsInMap(transformedMap)
-  }
-
-  /**
-   * Converts an option containing a future to a future containing an option.
-   *
-   * @param optionFuture an option containing a future.
-   * @return a future containing an option.
-   */
-  def optionFuture2FutureOption[A](
-    optionFuture: Option[Future[A]]
-  )(implicit executionContext: ExecutionContext): Future[Option[A]] =
-    optionFuture match {
-      case Some(f) => f.map(Some(_))
-      case None    => Future.successful(None)
-    }
 }
 
 /**
