@@ -280,9 +280,9 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
       // "-deprecation",
       "-Yresolve-term-conflict:package",
       "-Ymacro-annotations",
+      "-Wunused:imports",
       // silence twirl templates unused imports warnings
-      "-Wconf:src=target/.*:s",
-      "-Wunused:imports"
+      "-Wconf:src=target/.*:s"
     ),
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,
