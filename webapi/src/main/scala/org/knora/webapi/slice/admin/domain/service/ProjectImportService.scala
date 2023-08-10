@@ -100,24 +100,28 @@ final case class ProjectImportServiceLive(
     val trigFile = path / exportStorage.trigFilename(shortcode)
     for {
       trigFileAbsolutePath <- trigFile.toAbsolutePath
-      _                    <- ZIO.logInfo(s"Importing triples from $trigFileAbsolutePath")
+      _                    <- ZIO.logInfo(s"Importing triples for ${shortcode.value} from $trigFileAbsolutePath")
       _ <- ZIO
              .fail(new IllegalStateException(s"trig file does not exist in export ${path.toAbsolutePath}"))
              .whenZIO(Files.notExists(trigFile))
       _ <- importTrigFile(trigFile)
-      _ <- ZIO.logInfo(s"Imported triples from $trigFileAbsolutePath")
+      _ <- ZIO.logInfo(s"Imported triples for ${shortcode.value}")
     } yield ()
   }
 
   private def importAssets(unzipped: Path, project: Shortcode) = ZIO.scoped {
     val assetsDir = unzipped / ProjectExportStorageService.assetsDirectoryInExport
     (for {
-      tempDir <- Files.createTempDirectoryScoped(Some("assets-import"), fileAttributes = Nil)
-      zipFile <- ZipUtility.zipFolder(assetsDir, tempDir)
+      unzippedAbsPath <- unzipped.toAbsolutePath
+      _               <- ZIO.logInfo(s"Importing assets for ${project.value} from $unzippedAbsPath")
+      tempDir         <- Files.createTempDirectoryScoped(Some("assets-import"), fileAttributes = Nil)
+      zipFile         <- ZipUtility.zipFolder(assetsDir, tempDir)
+      _               <- ZIO.logInfo(s"Sending asset data for ${project.value} to ingest service")
       _ <- dspIngestClient
              .importProject(project, zipFile)
              .tapError(err => ZIO.logError(s"Error importing assets: ${err.getMessage}"))
-    } yield ()).whenZIO(Files.isDirectory(assetsDir)) orElse ZIO.logWarning(s"No assets to import $project")
+      _ <- ZIO.logInfo(s"Imported assets for ${project.value}")
+    } yield ()).whenZIO(Files.isDirectory(assetsDir)) orElse ZIO.logWarning(s"No assets to import ${project.value}")
   }
 }
 
