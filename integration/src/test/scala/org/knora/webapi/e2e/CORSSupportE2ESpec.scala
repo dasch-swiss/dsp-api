@@ -23,7 +23,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
  */
 class CORSSupportE2ESpec extends E2ESpec {
 
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
     FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
   )
 

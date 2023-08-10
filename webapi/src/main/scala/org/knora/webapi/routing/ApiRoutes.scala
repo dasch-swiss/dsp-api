@@ -112,9 +112,9 @@ private final case class ApiRoutesImpl(
   val routes: Route =
     logDuration {
       ServerVersion.addServerHeader {
-        DSPApiDirectives.handleErrors(routeData.system, appConfig) {
+        DSPApiDirectives.handleErrors(appConfig) {
           CorsDirectives.cors(CorsSettings(routeData.system)) {
-            DSPApiDirectives.handleErrors(routeData.system, appConfig) {
+            DSPApiDirectives.handleErrors(appConfig) {
               HealthRoute().makeRoute ~
                 VersionRoute().makeRoute ~
                 RejectingRoute(appConfig, runtime).makeRoute ~
