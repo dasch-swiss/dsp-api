@@ -183,19 +183,19 @@ abstract class E2ESpec
    * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
    * @return the expected response.
    */
-  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String =
+  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String = {
+    val adjustedFile = Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
     if (writeFile) {
-      val testOutputDir = Paths.get("..", "test_data", "ontologyR2RV2")
-      val newOutputFile = testOutputDir.resolve(file)
-      Files.createDirectories(newOutputFile.getParent)
+      Files.createDirectories(adjustedFile.getParent)
       FileUtil.writeTextFile(
-        newOutputFile,
+        adjustedFile,
         responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
       )
       responseAsString
     } else {
-      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
+      FileUtil.readTextFile(adjustedFile).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
     }
+  }
 
   private def createTmpFileDir(): Unit = {
     // check if tmp datadir exists and create it if not
