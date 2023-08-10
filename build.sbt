@@ -183,9 +183,18 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-deprecation",
       "-Yresolve-term-conflict:package",
       "-Ymacro-annotations",
+      "-Wunused:imports",
+      "-Wunused:privates",
+      "-Wunused:locals",
+      "-Wunused:explicits",
+      "-Wunused:implicits",
+      "-Wunused:params",
+      "-Wunused:patvars",
+      "-Wdead-code",
+      "-Wvalue-discard",
+      "-Xlint:doc-detached",
       // silence twirl templates unused imports warnings
-      "-Wconf:src=target/.*:s",
-      "-Wunused:imports"
+      "-Wconf:src=target/.*:s"
     ),
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver
@@ -268,7 +277,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     scalacOptions ++= Seq(
       "-feature",
       "-unchecked",
-      "-deprecation",
+      // "-deprecation",
       "-Yresolve-term-conflict:package",
       "-Ymacro-annotations",
       // silence twirl templates unused imports warnings
