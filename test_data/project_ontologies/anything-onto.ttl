@@ -75,6 +75,11 @@ anything:Thing  rdf:type         owl:Class;
         rdfs:subClassOf          [ rdf:type             owl:Restriction;
                                    salsah-gui:guiOrder  "2"^^xsd:nonNegativeInteger;
                                    owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                                   owl:onProperty       anything:hasUnformattedText
+                                 ];
+        rdfs:subClassOf          [ rdf:type             owl:Restriction;
+                                   salsah-gui:guiOrder  "2"^^xsd:nonNegativeInteger;
+                                   owl:minCardinality   "0"^^xsd:nonNegativeInteger;
                                    owl:onProperty       anything:hasText
                                  ];
         rdfs:subClassOf          [ rdf:type             owl:Restriction;
@@ -184,6 +189,14 @@ anything:hasOtherThingValue
         knora-base:subjectClassConstraint
                 anything:Thing;
         salsah-gui:guiElement  salsah-gui:Searchbox .
+
+anything:hasUnformattedText  rdf:type  owl:ObjectProperty;
+        rdfs:label          "Text"@de , "Texte"@fr , "Testo"@it , "Text"@en;
+        rdfs:subPropertyOf  knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:UnformattedTextValue;
+        knora-base:subjectClassConstraint
+                anything:Thing .
 
 anything:hasText  rdf:type  owl:ObjectProperty;
         rdfs:label          "Text"@de , "Texte"@fr , "Testo"@it , "Text"@en;
