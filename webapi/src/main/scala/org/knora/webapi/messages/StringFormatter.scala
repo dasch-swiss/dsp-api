@@ -1710,15 +1710,6 @@ class StringFormatter private (
     s"http://$IriDomain/$projectShortcode/$knoraResourceID"
   }
 
-  /**
-   * Creates a new value IRI based on a UUID.
-   *
-   * @param resourceIri the IRI of the resource that will contain the value.
-   * @param givenUUID   the optional given UUID of the value. If not provided, create a random one.
-   * @return a new value IRI.
-   */
-  def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI =
-    makeValueIri(resourceIri, givenUUID.getOrElse(UUID.randomUUID))
   def makeNewValueIri(resourceIri: IRI): IRI          = makeValueIri(resourceIri, UUID.randomUUID)
   def makeValueIri(resourceIri: IRI, uuid: UUID): IRI = s"$resourceIri/values/${UuidUtil.base64Encode(uuid)}"
 
