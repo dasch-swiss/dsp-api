@@ -423,7 +423,7 @@ final case class ValuesResponderV2Live(
    *
    * @param dataNamedGraph    the named graph in which the value is to be created.
    * @param projectIri        the IRI of the project in which to create the value.
-   * @param resourceInfo      information about the the resource in which to create the value.
+   * @param resourceIri       the resource IRI for which to create the value.
    * @param propertyIri       the IRI of the property that will point from the resource to the value, or, if
    *                          the value is a link value, the IRI of the link property.
    * @param value             the value to create.
@@ -511,11 +511,7 @@ final case class ValuesResponderV2Live(
       newValueUUID <- ZIO.succeed(makeNewValueUUID(maybeValueIri, maybeValueUUID))
 
       // Make an IRI for the new value.
-      newValueIri <-
-        iriService.checkOrCreateEntityIri(
-          maybeValueIri,
-          sf.makeRandomValueIri(resourceIri, Some(newValueUUID))
-        )
+      newValueIri <- iriService.checkOrCreateEntityIri(maybeValueIri, sf.makeValueIri(resourceIri, newValueUUID))
 
       // Make a creation date for the new value
       creationDate: Instant = maybeValueCreationDate match {
@@ -736,10 +732,7 @@ final case class ValuesResponderV2Live(
         )
 
       newValueIri <-
-        iriService.checkOrCreateEntityIri(
-          valueToCreate.customValueIri,
-          sf.makeRandomValueIri(resourceIri, Some(newValueUUID))
-        )
+        iriService.checkOrCreateEntityIri(valueToCreate.customValueIri, sf.makeValueIri(resourceIri, newValueUUID))
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
@@ -1065,7 +1058,7 @@ final case class ValuesResponderV2Live(
         newValueIri <-
           iriService.checkOrCreateEntityIri(
             updateValuePermissionsV2.newValueVersionIri,
-            sf.makeRandomValueIri(resourceInfo.resourceIri)
+            sf.makeNewValueIri(resourceInfo.resourceIri)
           )
 
         currentTime: Instant =
@@ -1339,11 +1332,7 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM
   ): Task[UnverifiedValueV2] =
     for {
-      newValueIri <-
-        iriService.checkOrCreateEntityIri(
-          newValueVersionIri,
-          sf.makeRandomValueIri(resourceInfo.resourceIri)
-        )
+      newValueIri <- iriService.checkOrCreateEntityIri(newValueVersionIri, sf.makeNewValueIri(resourceInfo.resourceIri))
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates <-
@@ -2068,11 +2057,11 @@ final case class ValuesResponderV2Live(
         subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
 
         // If it isn't, throw an exception.
-        _ = if (!subClassResponse.isSubClass) {
-              throw OntologyConstraintException(
-                s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
-              )
-            }
+        _ <- ZIO.when(!subClassResponse.isSubClass) {
+               val msg =
+                 s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
+               ZIO.fail(OntologyConstraintException(msg))
+             }
 
       } yield ()
     }
@@ -2376,7 +2365,7 @@ final case class ValuesResponderV2Live(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(sf.makeRandomValueIri(resourceIri))
+    iriService.makeUnusedIri(sf.makeNewValueIri(resourceIri))
 
   /**
    * Make a new value UUID considering optional custom value UUID and custom value IRI.

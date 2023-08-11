@@ -1152,7 +1152,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       // Update the value.
 
       val intValue                = 1000
-      val newValueVersionIri: IRI = stringFormatter.makeRandomValueIri(resourceIri)
+      val newValueVersionIri: IRI = stringFormatter.makeNewValueIri(resourceIri)
 
       val updateValueResponse = UnsafeZioRun.runOrThrow(
         ValuesResponderV2.updateValueV2(
