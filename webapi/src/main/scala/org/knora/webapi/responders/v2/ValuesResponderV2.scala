@@ -2132,30 +2132,6 @@ final case class ValuesResponderV2Live(
     } yield result
 
   /**
-   * Given a [[ReadResourceV2]], finds a link that uses the specified property and points to the specified target
-   * resource.
-   *
-   * @param sourceResourceInfo a [[ReadResourceV2]] describing the source of the link.
-   * @param linkPropertyIri    the IRI of the link property.
-   * @param targetResourceIri  the IRI of the target resource.
-   * @return a [[ReadLinkValueV2]] describing the link value, if found.
-   */
-  private def findLinkValue(
-    sourceResourceInfo: ReadResourceV2,
-    linkPropertyIri: SmartIri,
-    targetResourceIri: IRI
-  ): Option[ReadLinkValueV2] = {
-    val linkValueProperty = linkPropertyIri.fromLinkPropToLinkValueProp
-
-    sourceResourceInfo.values.get(linkValueProperty).flatMap { linkValueInfos: Seq[ReadValueV2] =>
-      linkValueInfos.collectFirst {
-        case linkValueInfo: ReadLinkValueV2 if linkValueInfo.valueContent.referredResourceIri == targetResourceIri =>
-          linkValueInfo
-      }
-    }
-  }
-
-  /**
    * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to create a `LinkValue` or to
    * increment the reference count of an existing `LinkValue`. This happens in two cases:
    *
@@ -2186,61 +2162,70 @@ final case class ValuesResponderV2Live(
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Task[SparqlTemplateLinkUpdate] = {
-    // Check whether a LinkValue already exists for this link.
-    val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
-      sourceResourceInfo = sourceResourceInfo,
-      linkPropertyIri = linkPropertyIri,
-      targetResourceIri = targetResourceIri
-    )
-
+  ): Task[SparqlTemplateLinkUpdate] =
     for {
       // Make an IRI for the new LinkValue.
       newLinkValueIri <-
         iriService.checkOrCreateEntityIri(
           customNewLinkValueIri,
-          stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
+          stringFormatter.makeNewValueIri(sourceResourceInfo.resourceIri)
         )
 
+      refCount    = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
+      refCountInc = refCount + 1
       linkUpdate =
-        maybeLinkValueInfo match {
-          case Some(linkValueInfo) =>
-            // There's already a LinkValue for links between these two resources. Increment
-            // its reference count.
-            SparqlTemplateLinkUpdate(
-              linkPropertyIri = linkPropertyIri,
-              directLinkExists = true,
-              insertDirectLink = false,
-              deleteDirectLink = false,
-              linkValueExists = true,
-              linkTargetExists = true,
-              newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri,
-              currentReferenceCount = linkValueInfo.valueHasRefCount,
-              newReferenceCount = linkValueInfo.valueHasRefCount + 1,
-              newLinkValueCreator = valueCreator,
-              newLinkValuePermissions = valuePermissions
-            )
-
-          case None =>
-            // There's no LinkValue for links between these two resources, so create one, and give it
-            // a reference count of 1.
-            SparqlTemplateLinkUpdate(
-              linkPropertyIri = linkPropertyIri,
-              directLinkExists = false,
-              insertDirectLink = true,
-              deleteDirectLink = false,
-              linkValueExists = false,
-              linkTargetExists = true,
-              newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri,
-              currentReferenceCount = 0,
-              newReferenceCount = 1,
-              newLinkValueCreator = valueCreator,
-              newLinkValuePermissions = valuePermissions
-            )
+        if (refCount > 0) {
+          // There's already a LinkValue for links between these two resources. Increment
+          SparqlTemplateLinkUpdate(
+            linkPropertyIri = linkPropertyIri,
+            directLinkExists = true,
+            insertDirectLink = false,
+            deleteDirectLink = false,
+            linkValueExists = true,
+            linkTargetExists = true,
+            newLinkValueIri = newLinkValueIri,
+            linkTargetIri = targetResourceIri,
+            currentReferenceCount = refCount,
+            newReferenceCount = refCountInc,
+            newLinkValueCreator = valueCreator,
+            newLinkValuePermissions = valuePermissions
+          )
+        } else {
+          // There's no LinkValue for links between these two resources, so create one, and give it
+          // a reference count of 1.
+          SparqlTemplateLinkUpdate(
+            linkPropertyIri = linkPropertyIri,
+            directLinkExists = false,
+            insertDirectLink = true,
+            deleteDirectLink = false,
+            linkValueExists = false,
+            linkTargetExists = true,
+            newLinkValueIri = newLinkValueIri,
+            linkTargetIri = targetResourceIri,
+            currentReferenceCount = refCount,
+            newReferenceCount = refCountInc,
+            newLinkValueCreator = valueCreator,
+            newLinkValuePermissions = valuePermissions
+          )
         }
     } yield linkUpdate
+
+  /**
+   * given a [[readresourcev2]], finds a linkvalue that uses the property
+   * and points to the specified target resource
+   * and returns its reference count.
+   *
+   * @param subjectInfo     A [[ReadResourceV2]] describing the source of the link.
+   * @param linkPropertyIri The IRI of the link property.
+   * @param objectIri       The IRI of the target resource.
+   * @return The reference count or zero if the link doesn't exist.
+   */
+  private def getRefCount(subjectInfo: ReadResourceV2, linkPropertyIri: SmartIri, objectIri: IRI) = {
+    val linkValueProperty = linkPropertyIri.fromLinkPropToLinkValueProp
+    val linkValueMaybe = subjectInfo.values.get(linkValueProperty).flatMap { values =>
+      values.collectFirst { case v: ReadLinkValueV2 if v.valueContent.referredResourceIri == objectIri => v }
+    }
+    linkValueMaybe.map(_.valueHasRefCount).getOrElse(0)
   }
 
   /**
@@ -2271,49 +2256,41 @@ final case class ValuesResponderV2Live(
     valuePermissions: String,
     requestingUser: UserADM
   ): Task[SparqlTemplateLinkUpdate] = {
-
     // Check whether a LinkValue already exists for this link.
-    val maybeLinkValueInfo = findLinkValue(
-      sourceResourceInfo = sourceResourceInfo,
-      linkPropertyIri = linkPropertyIri,
-      targetResourceIri = targetResourceIri
-    )
+    val refCount = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
 
-    // Did we find it?
-    maybeLinkValueInfo match {
-      case Some(linkValueInfo) =>
-        // Yes. Make a SparqlTemplateLinkUpdate.
+    if (refCount > 0) {
+      // Decrement the LinkValue's reference count.
+      val newReferenceCount = refCount - 1
 
-        // Decrement the LinkValue's reference count.
-        val newReferenceCount = linkValueInfo.valueHasRefCount - 1
+      // If the new reference count is 0, specify that the direct link between the source and target
+      // resources should be removed.
+      val deleteDirectLink = newReferenceCount == 0
 
-        // If the new reference count is 0, specify that the direct link between the source and target
-        // resources should be removed.
-        val deleteDirectLink = newReferenceCount == 0
-
-        for {
-          // Generate an IRI for the new LinkValue.
-          newLinkValueIri <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
-        } yield SparqlTemplateLinkUpdate(
-          linkPropertyIri = linkPropertyIri,
-          directLinkExists = true,
-          insertDirectLink = false,
-          deleteDirectLink = deleteDirectLink,
-          linkValueExists = true,
-          linkTargetExists = true,
-          newLinkValueIri = newLinkValueIri,
-          linkTargetIri = targetResourceIri,
-          currentReferenceCount = linkValueInfo.valueHasRefCount,
-          newReferenceCount = newReferenceCount,
-          newLinkValueCreator = valueCreator,
-          newLinkValuePermissions = valuePermissions
-        )
-
-      case None =>
-        // We didn't find the LinkValue. This shouldn't happen.
-        throw InconsistentRepositoryDataException(
+      for {
+        // Generate an IRI for the new LinkValue.
+        newLinkValueIri <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
+      } yield SparqlTemplateLinkUpdate(
+        linkPropertyIri = linkPropertyIri,
+        directLinkExists = true,
+        insertDirectLink = false,
+        deleteDirectLink = deleteDirectLink,
+        linkValueExists = true,
+        linkTargetExists = true,
+        newLinkValueIri = newLinkValueIri,
+        linkTargetIri = targetResourceIri,
+        currentReferenceCount = refCount,
+        newReferenceCount = newReferenceCount,
+        newLinkValueCreator = valueCreator,
+        newLinkValuePermissions = valuePermissions
+      )
+    } else {
+      // We didn't find the LinkValue. This shouldn't happen.
+      ZIO.fail(
+        InconsistentRepositoryDataException(
           s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
         )
+      )
     }
   }
 
@@ -2341,45 +2318,37 @@ final case class ValuesResponderV2Live(
   ): Task[SparqlTemplateLinkUpdate] = {
 
     // Check whether a LinkValue already exists for this link.
-    val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
-      sourceResourceInfo = sourceResourceInfo,
-      linkPropertyIri = linkPropertyIri,
-      targetResourceIri = targetResourceIri
-    )
-
-    // Did we find it?
-    maybeLinkValueInfo match {
-      case Some(linkValueInfo) =>
-        // Yes. Make a SparqlTemplateLinkUpdate.
-
-        for {
-          // If no custom IRI was provided, generate an IRI for the new LinkValue.
-          newLinkValueIri <-
-            iriService.checkOrCreateEntityIri(
-              customNewLinkValueIri,
-              stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
-            )
-
-        } yield SparqlTemplateLinkUpdate(
-          linkPropertyIri = linkPropertyIri,
-          directLinkExists = true,
-          insertDirectLink = false,
-          deleteDirectLink = false,
-          linkValueExists = true,
-          linkTargetExists = true,
-          newLinkValueIri = newLinkValueIri,
-          linkTargetIri = targetResourceIri,
-          currentReferenceCount = linkValueInfo.valueHasRefCount,
-          newReferenceCount = linkValueInfo.valueHasRefCount,
-          newLinkValueCreator = valueCreator,
-          newLinkValuePermissions = valuePermissions
-        )
-
-      case None =>
-        // We didn't find the LinkValue. This shouldn't happen.
-        throw InconsistentRepositoryDataException(
+    val refCount =
+      getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
+    if (refCount > 0) {
+      for {
+        // If no custom IRI was provided, generate an IRI for the new LinkValue.
+        newLinkValueIri <-
+          iriService.checkOrCreateEntityIri(
+            customNewLinkValueIri,
+            stringFormatter.makeNewValueIri(sourceResourceInfo.resourceIri)
+          )
+      } yield SparqlTemplateLinkUpdate(
+        linkPropertyIri = linkPropertyIri,
+        directLinkExists = true,
+        insertDirectLink = false,
+        deleteDirectLink = false,
+        linkValueExists = true,
+        linkTargetExists = true,
+        newLinkValueIri = newLinkValueIri,
+        linkTargetIri = targetResourceIri,
+        currentReferenceCount = refCount,
+        newReferenceCount = refCount,
+        newLinkValueCreator = valueCreator,
+        newLinkValuePermissions = valuePermissions
+      )
+    } else {
+      // We didn't find the LinkValue. This shouldn't happen.
+      ZIO.fail(
+        InconsistentRepositoryDataException(
           s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
         )
+      )
     }
   }
 

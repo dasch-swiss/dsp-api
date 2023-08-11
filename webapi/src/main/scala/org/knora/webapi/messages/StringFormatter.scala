@@ -1717,13 +1717,10 @@ class StringFormatter private (
    * @param givenUUID   the optional given UUID of the value. If not provided, create a random one.
    * @return a new value IRI.
    */
-  def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI = {
-    val valueUUID = givenUUID match {
-      case Some(uuid: UUID) => UuidUtil.base64Encode(uuid)
-      case _                => UuidUtil.makeRandomBase64EncodedUuid
-    }
-    s"$resourceIri/values/$valueUUID"
-  }
+  def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI =
+    makeValueIri(resourceIri, givenUUID.getOrElse(UUID.randomUUID))
+  def makeNewValueIri(resourceIri: IRI): IRI          = makeValueIri(resourceIri, UUID.randomUUID)
+  def makeValueIri(resourceIri: IRI, uuid: UUID): IRI = s"$resourceIri/values/${UuidUtil.base64Encode(uuid)}"
 
   /**
    * Creates a mapping IRI based on a project IRI and a mapping name.
