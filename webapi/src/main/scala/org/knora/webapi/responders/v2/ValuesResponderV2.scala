@@ -141,6 +141,9 @@ final case class ValuesResponderV2Live(
             propertyInfo = adjustedInternalPropertyInfo,
             requestingUser = KnoraSystemInstances.Users.SystemUser
           )
+        resourceIri      = resourceInfo.resourceIri
+        resourceClassIri = resourceInfo.resourceClassIri
+        resourceProject  = resourceInfo.projectADM
 
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
@@ -152,7 +155,7 @@ final case class ValuesResponderV2Live(
         // Check that the resource has the rdf:type that the client thinks it has.
         _ =
           if (
-            resourceInfo.resourceClassIri != valueToCreate.resourceClassIri
+            resourceClassIri != valueToCreate.resourceClassIri
               .toOntologySchema(InternalSchema)
           ) {
             throw BadRequestException(
@@ -161,14 +164,14 @@ final case class ValuesResponderV2Live(
           }
 
         // Get the definition of the resource class.
-        classInfo <- getClassInfo(resourceInfo.resourceClassIri, requestingUser)
+        classInfo <- getClassInfo(resourceClassIri, requestingUser)
 
         // Check that the resource class has a cardinality for the submitted property.
         cardinalityInfo: KnoraCardinalityInfo =
           classInfo.allCardinalities.getOrElse(
             submittedInternalPropertyIri,
             throw BadRequestException(
-              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceClassIri
                   .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>"
             )
           )
@@ -217,7 +220,7 @@ final case class ValuesResponderV2Live(
             (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty
           ) {
             throw InconsistentRepositoryDataException(
-              s"Resource class <${resourceInfo.resourceClassIri
+              s"Resource class <${resourceClassIri
                   .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property"
             )
           }
@@ -227,7 +230,7 @@ final case class ValuesResponderV2Live(
             cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty)
           ) {
             throw OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri
+              s"Resource class <${resourceClassIri
                   .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>"
             )
           }
@@ -258,8 +261,8 @@ final case class ValuesResponderV2Live(
         // Get the default permissions for the new value.
         defaultValuePermissions <-
           resourceUtilV2.getDefaultValuePermissions(
-            projectIri = resourceInfo.projectADM.id,
-            resourceClassIri = resourceInfo.resourceClassIri,
+            projectIri = resourceProject.id,
+            resourceClassIri = resourceClassIri,
             propertyIri = submittedInternalPropertyIri,
             requestingUser = requestingUser
           )
@@ -284,7 +287,7 @@ final case class ValuesResponderV2Live(
                       val permissionComparisonResult: PermissionComparisonResult =
                         PermissionUtilADM.comparePermissionsADM(
                           entityCreator = requestingUser.id,
-                          entityProject = resourceInfo.projectADM.id,
+                          entityProject = resourceProject.id,
                           permissionLiteralA = validatedCustomPermissions,
                           permissionLiteralB = defaultValuePermissions,
                           requestingUser = requestingUser
@@ -303,14 +306,14 @@ final case class ValuesResponderV2Live(
               ZIO.succeed(defaultValuePermissions)
           }
 
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
+        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceProject).value
 
         // Create the new value.
         created <-
           createValueV2AfterChecks(
             dataNamedGraph = dataNamedGraph,
-            projectIri = resourceInfo.projectADM.id,
-            resourceIri = resourceInfo.resourceIri,
+            projectIri = resourceProject.id,
+            resourceIri = resourceIri,
             propertyIri = adjustedInternalPropertyIri,
             value = submittedInternalValueContent,
             valueIri = valueToCreate.valueIri,
@@ -326,7 +329,7 @@ final case class ValuesResponderV2Live(
         valueType = created.valueContent.valueType,
         valueUUID = created.newValueUUID,
         valueCreationDate = created.creationDate,
-        projectADM = resourceInfo.projectADM
+        projectADM = resourceProject
       )
     }
 
