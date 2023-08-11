@@ -2040,31 +2040,24 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM
   ): Task[Unit] =
     // Is the value type the same as the property's object class constraint?
-    if (objectClassConstraint == valueContent.valueType) {
-      // Yes. Nothing more to do here.
-      ZIO.unit
-    } else {
-      // No. Ask the ontology responder whether it's a subclass of the property's object class constraint.
-      for {
-        subClassRequest <- ZIO.succeed(
-                             CheckSubClassRequestV2(
-                               subClassIri = valueContent.valueType,
-                               superClassIri = objectClassConstraint,
-                               requestingUser = requestingUser
-                             )
-                           )
-
-        subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
-
-        // If it isn't, throw an exception.
-        _ <- ZIO.when(!subClassResponse.isSubClass) {
-               val msg =
-                 s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
-               ZIO.fail(OntologyConstraintException(msg))
-             }
-
-      } yield ()
-    }
+    ZIO
+      .unless(objectClassConstraint == valueContent.valueType) {
+        val req = CheckSubClassRequestV2(
+          subClassIri = valueContent.valueType,
+          superClassIri = objectClassConstraint,
+          requestingUser = requestingUser
+        )
+        messageRelay
+          .ask[CheckSubClassResponseV2](req)
+          .tap(subClassResponse =>
+            ZIO.when(!subClassResponse.isSubClass) {
+              val msg =
+                s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
+              ZIO.fail(OntologyConstraintException(msg))
+            }
+          )
+      }
+      .unit
 
   /**
    * Checks that a value to be updated has the correct type for the `knora-base:objectClassConstraint` of
