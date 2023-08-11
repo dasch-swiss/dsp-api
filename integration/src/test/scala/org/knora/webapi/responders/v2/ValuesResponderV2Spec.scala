@@ -13,12 +13,12 @@ import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
-
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -666,7 +666,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
               "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
             propertyIri = propertyIri,
             valueIri = intValueIriForFreetest.get,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueTypeIri = KnoraApiV2Complex.IntValue.toSmartIri,
             deleteComment = Some("this value was incorrect")
           ),
           anythingUser2,
@@ -2093,8 +2093,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a link between two resources" in {
       val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-      val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+      val linkPropertyIri: SmartIri                 = KnoraApiV2Complex.HasLinkTo.toSmartIri
+      val linkValuePropertyIri: SmartIri            = KnoraApiV2Complex.HasLinkToValue.toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
       val createValueResponse = UnsafeZioRun.runOrThrow(
@@ -2102,7 +2102,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueV2(
             resourceIri = resourceIri,
             propertyIri = linkValuePropertyIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
               referredResourceIri = zeitglöckleinIri
@@ -2135,13 +2135,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not create a duplicate link" in {
       val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+      val linkValuePropertyIri: SmartIri = KnoraApiV2Complex.HasLinkToValue.toSmartIri
 
       val actual = UnsafeZioRun.run(
         ValuesResponderV2.createValueV2(
           CreateValueV2(
             resourceIri = resourceIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
             propertyIri = linkValuePropertyIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
@@ -2157,13 +2157,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "not accept a link property in a request to create a link between two resources" in {
       val resourceIri: IRI          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
+      val linkPropertyIri: SmartIri = KnoraApiV2Complex.HasLinkTo.toSmartIri
 
       val actual = UnsafeZioRun.run(
         ValuesResponderV2.createValueV2(
           CreateValueV2(
             resourceIri = resourceIri,
-            resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+            resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
             propertyIri = linkPropertyIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
@@ -2183,7 +2183,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueV2(
             resourceIri = zeitglöckleinIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+            propertyIri = KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
               referredResourceIri = generationeIri
@@ -2378,7 +2378,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val updatedResource = getResourceWithValues(
         resourceIri = resourceIri,
-        propertyIrisForGravsearch = Seq(propertyIri, OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
+        propertyIrisForGravsearch = Seq(propertyIri, KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
         requestingUser = incunabulaUser
       )
 
@@ -2409,7 +2409,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val linkValuesFromTripletore: Seq[ReadValueV2] = getValuesFromResource(
         resource = updatedResource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        propertyIriInResult = KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
       )
 
       assert(linkValuesFromTripletore.size == 1)
@@ -2474,7 +2474,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val updatedResource = getResourceWithValues(
         resourceIri = resourceIri,
-        propertyIrisForGravsearch = Seq(propertyIri, OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
+        propertyIrisForGravsearch = Seq(propertyIri, KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
         requestingUser = incunabulaUser
       )
 
@@ -2506,7 +2506,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val linkValuesFromTripletore: Seq[ReadValueV2] = getValuesFromResource(
         resource = updatedResource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        propertyIriInResult = KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
       )
 
       assert(linkValuesFromTripletore.size == 1)
@@ -2718,7 +2718,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueType = KnoraApiV2Complex.IntValue.toSmartIri,
             permissions = permissions
           ),
           anythingUser1,
@@ -2755,7 +2755,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueType = KnoraApiV2Complex.IntValue.toSmartIri,
             permissions = permissions
           ),
           anythingUser2,
@@ -2777,7 +2777,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueType = KnoraApiV2Complex.IntValue.toSmartIri,
             permissions = permissions
           ),
           anythingUser1,
@@ -2799,7 +2799,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
             propertyIri = propertyIri,
             valueIri = intValueIri.get,
-            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueType = KnoraApiV2Complex.IntValue.toSmartIri,
             permissions = permissions
           ),
           anythingUser1,
@@ -2925,13 +2925,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       val resource = getResourceWithValues(
         resourceIri = zeitglöckleinIri,
-        propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
+        propertyIrisForGravsearch = Seq(KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
         requestingUser = incunabulaUser
       )
 
       val standoffLinkValues: Seq[ReadValueV2] = getValuesFromResource(
         resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
+        propertyIriInResult = KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
       )
 
       assert(standoffLinkValues.size == 1)
@@ -3857,15 +3857,15 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "update a link between two resources" in {
     val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val linkPropertyIri: SmartIri                 = KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = KnoraApiV2Complex.HasLinkToValue.toSmartIri
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
     val updateValueResponse = UnsafeZioRun.runOrThrow(
       ValuesResponderV2.updateValueV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
           propertyIri = linkValuePropertyIri,
           valueIri = linkValueIri.get,
           valueContent = LinkValueContentV2(
@@ -3903,13 +3903,13 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "not update a link without a comment without changing it" in {
     val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
-    val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val linkValuePropertyIri: SmartIri = KnoraApiV2Complex.HasLinkToValue.toSmartIri
 
     val actual = UnsafeZioRun.run(
       ValuesResponderV2.updateValueV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
           propertyIri = linkValuePropertyIri,
           valueIri = linkValueIri.get,
           valueContent = LinkValueContentV2(
@@ -3926,8 +3926,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "update a link, adding a comment" in {
     val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val linkPropertyIri: SmartIri                 = KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = KnoraApiV2Complex.HasLinkToValue.toSmartIri
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
     val comment: String                           = "Adding a comment"
 
@@ -3935,7 +3935,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ValuesResponderV2.updateValueV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
           propertyIri = linkValuePropertyIri,
           valueIri = linkValueIri.get,
           valueContent = LinkValueContentV2(
@@ -3975,14 +3975,14 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "not update a link with a comment without changing it" in {
     val resourceIri: IRI               = "http://rdfh.ch/0803/cb1a74e3e2f6"
-    val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val linkValuePropertyIri: SmartIri = KnoraApiV2Complex.HasLinkToValue.toSmartIri
     val comment: String                = "Adding a comment"
 
     val actual = UnsafeZioRun.run(
       ValuesResponderV2.updateValueV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
           propertyIri = linkValuePropertyIri,
           valueIri = linkValueIri.get,
           valueContent = LinkValueContentV2(
@@ -4000,8 +4000,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "update a link with a comment, changing only the comment" in {
     val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val linkPropertyIri: SmartIri                 = KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = KnoraApiV2Complex.HasLinkToValue.toSmartIri
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
     val comment                                   = "An updated comment"
 
@@ -4009,7 +4009,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ValuesResponderV2.updateValueV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
           propertyIri = linkValuePropertyIri,
           valueIri = linkValueIri.get,
           valueContent = LinkValueContentV2(
@@ -4049,8 +4049,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "create a link with a comment" in {
     val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-    val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+    val linkPropertyIri: SmartIri                 = KnoraApiV2Complex.HasLinkTo.toSmartIri
+    val linkValuePropertyIri: SmartIri            = KnoraApiV2Complex.HasLinkToValue.toSmartIri
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
     val comment                                   = "Initial comment"
 
@@ -4059,7 +4059,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         CreateValueV2(
           resourceIri = resourceIri,
           propertyIri = linkValuePropertyIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+          resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
             referredResourceIri = zeitglöckleinIri,
@@ -4097,7 +4097,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         UpdateValueContentV2(
           resourceIri = zeitglöckleinIri,
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+          propertyIri = KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
           valueIri = zeitglöckleinCommentWithStandoffIri.get,
           valueContent = LinkValueContentV2(
             ontologySchema = ApiV2Complex,
@@ -4122,7 +4122,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         UpdateValueContentV2(
           resourceIri,
           thingPictureClassIri.toSmartIri,
-          OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
+          KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
           valueIri,
           FileModelUtil.getFileValueContent(
             fileType,
@@ -4142,7 +4142,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "update a still image file value" in {
     val resourceIri: IRI                          = aThingPictureIri
-    val propertyIri: SmartIri                     = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    val propertyIri: SmartIri                     = KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
     // Get the value before update.
@@ -4217,7 +4217,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
     val resourceIri: IRI      = aThingPictureIri
-    val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    val propertyIri: SmartIri = KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
 
     val valueContent = StillImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
@@ -4250,7 +4250,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "return a Sipi error if Sipi fails to move a file to permanent storage" in {
     val resourceIri: IRI      = aThingPictureIri
-    val propertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    val propertyIri: SmartIri = KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
 
     val valueContent = StillImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
@@ -4292,7 +4292,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           propertyIri = propertyIri,
           valueIri = intValueIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          valueTypeIri = KnoraApiV2Complex.IntValue.toSmartIri,
           deleteComment = Some("this value was incorrect")
         ),
         anythingUser2,
@@ -4316,7 +4316,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           propertyIri = propertyIri,
           valueIri = valueIri,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          valueTypeIri = KnoraApiV2Complex.IntValue.toSmartIri,
           deleteComment = Some("this value was incorrect")
         ),
         anythingUser1,
@@ -4346,7 +4346,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           propertyIri = propertyIri,
           valueIri = intValueForRsyncIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          valueTypeIri = KnoraApiV2Complex.IntValue.toSmartIri,
           deleteComment = deleteComment,
           deleteDate = Some(deleteDate)
         ),
@@ -4371,9 +4371,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
         DeleteValueV2(
           resourceIri = zeitglöckleinIri,
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
+          propertyIri = KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
           valueIri = standoffLinkValueIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+          valueTypeIri = KnoraApiV2Complex.LinkValue.toSmartIri
         ),
         SharedTestDataADM.superUser,
         randomUUID
@@ -4393,7 +4393,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           propertyIri = propertyIri,
           valueIri = zeitglöckleinCommentWithStandoffIri.get,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+          valueTypeIri = KnoraApiV2Complex.TextValue.toSmartIri,
           deleteComment = Some("this value was incorrect")
         ),
         incunabulaUser,
@@ -4412,16 +4412,15 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     val resource = getResourceWithValues(
       resourceIri = zeitglöckleinIri,
-      propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
+      propertyIrisForGravsearch = Seq(KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri),
       requestingUser = incunabulaUser
     )
 
-    assert(!resource.values.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
+    assert(!resource.values.contains(KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
   }
 
   "delete a link between two resources" in {
     val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-    val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
     val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
     val linkValueIRI                              = linkValueIri.get
 
@@ -4429,10 +4428,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       ValuesResponderV2.deleteValueV2(
         DeleteValueV2(
           resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
-          propertyIri = linkValuePropertyIri,
+          resourceClassIri = KnoraApiV2Complex.LinkObj.toSmartIri,
+          propertyIri = KnoraApiV2Complex.HasLinkToValue.toSmartIri,
           valueIri = linkValueIRI,
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri
+          valueTypeIri = KnoraApiV2Complex.LinkValue.toSmartIri
         ),
         incunabulaUser,
         randomUUID
@@ -4458,7 +4457,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           propertyIri = propertyIri,
           valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
-          valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri
+          valueTypeIri = KnoraApiV2Complex.TextValue.toSmartIri
         ),
         incunabulaCreatorUser,
         randomUUID
@@ -4620,7 +4619,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       resourceIri = sierraIri,
       propertyIrisForGravsearch = Seq(
         propertyIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+        KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
       ),
       requestingUser = anythingUser1
     )
@@ -4630,7 +4629,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     assert(textValue1.valueIri == createValueResponse.valueIri)
     assert(getValueUUID(textValue1.valueIri).contains(textValue1.valueHasUUID))
     val standoffLinkValueVersion1: ReadLinkValueV2 = resourceVersion1
-      .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
+      .values(KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
       .head
       .asInstanceOf[ReadLinkValueV2]
     assert(getValueUUID(standoffLinkValueVersion1.valueIri).contains(standoffLinkValueVersion1.valueHasUUID))
@@ -4661,7 +4660,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       resourceIri = sierraIri,
       propertyIrisForGravsearch = Seq(
         propertyIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+        KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
       ),
       requestingUser = anythingUser1
     )
@@ -4675,7 +4674,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     // We should have a new version of the standoff link value, containing the UUID that was in the previous version.
     val standoffLinkValueVersion2: ReadLinkValueV2 = resourceVersion2
-      .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
+      .values(KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
       .head
       .asInstanceOf[ReadLinkValueV2]
     assert(standoffLinkValueVersion2.previousValueIri.contains(standoffLinkValueVersion1.valueIri))
@@ -4712,7 +4711,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       resourceIri = sierraIri,
       propertyIrisForGravsearch = Seq(
         propertyIri,
-        OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+        KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
       ),
       requestingUser = anythingUser1
     )
@@ -4731,7 +4730,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     // We should not have a new version of the standoff link value.
     assert(
       resourceVersion3
-        .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
+        .values(KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
         .head
         .valueIri == standoffLinkValueVersion2.valueIri
     )

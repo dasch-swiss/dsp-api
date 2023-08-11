@@ -528,9 +528,9 @@ final case class ValuesResponderV2Live(
             val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
                 incrementLinkValueRefCount(
-                  sourceResourceInfo = resourceInfo,
+                  linkSubjectIri = resourceInfo.resourceIri,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                  targetResourceIri = targetResourceIri,
+                  linkObjectIri = targetResourceIri,
                   valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                   valuePermissions = standoffLinkValuePermissions,
                   requestingUser = requestingUser
@@ -602,9 +602,9 @@ final case class ValuesResponderV2Live(
     for {
       sparqlTemplateLinkUpdate <-
         incrementLinkValueRefCount(
-          sourceResourceInfo = resourceInfo,
+          linkSubjectIri = resourceInfo.resourceIri,
           linkPropertyIri = linkPropertyIri,
-          targetResourceIri = linkValueContent.referredResourceIri,
+          linkObjectIri = linkValueContent.referredResourceIri,
           customNewLinkValueIri = maybeValueIri,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
@@ -1360,9 +1360,9 @@ final case class ValuesResponderV2Live(
             val standoffLinkUpdatesForAddedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               addedResourceRefs.toVector.map { targetResourceIri =>
                 incrementLinkValueRefCount(
-                  sourceResourceInfo = resourceInfo,
+                  linkSubjectIri = resourceInfo.resourceIri,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                  targetResourceIri = targetResourceIri,
+                  linkObjectIri = targetResourceIri,
                   valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                   valuePermissions = standoffLinkValuePermissions,
                   requestingUser = requestingUser
@@ -1376,7 +1376,7 @@ final case class ValuesResponderV2Live(
             val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               removedResourceRefs.toVector.map { removedTargetResource =>
                 decrementLinkValueRefCount(
-                  sourceResourceInfo = resourceInfo,
+                  linkObjectIri = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = removedTargetResource,
                   valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
@@ -1469,7 +1469,7 @@ final case class ValuesResponderV2Live(
         // Yes. Delete the existing link and decrement its LinkValue's reference count.
         sparqlTemplateLinkUpdateForCurrentLink <-
           decrementLinkValueRefCount(
-            sourceResourceInfo = resourceInfo,
+            linkObjectIri = resourceInfo,
             linkPropertyIri = linkPropertyIri,
             targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
             valueCreator = valueCreator,
@@ -1480,9 +1480,9 @@ final case class ValuesResponderV2Live(
         // Create a new link, and create a new LinkValue for it.
         sparqlTemplateLinkUpdateForNewLink <-
           incrementLinkValueRefCount(
-            sourceResourceInfo = resourceInfo,
+            linkSubjectIri = resourceInfo.resourceIri,
             linkPropertyIri = linkPropertyIri,
-            targetResourceIri = newLinkValue.referredResourceIri,
+            linkObjectIri = newLinkValue.referredResourceIri,
             customNewLinkValueIri = newValueVersionIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
@@ -1526,9 +1526,9 @@ final case class ValuesResponderV2Live(
         // We're not changing the link target, just the metadata on the LinkValue.
         sparqlTemplateLinkUpdate <-
           changeLinkValueMetadata(
-            sourceResourceInfo = resourceInfo,
+            linkSubjectIri = resourceInfo.resourceIri,
             linkPropertyIri = linkPropertyIri,
-            targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+            linkObjectIri = currentLinkValue.valueContent.referredResourceIri,
             customNewLinkValueIri = newValueVersionIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
@@ -1808,7 +1808,7 @@ final case class ValuesResponderV2Live(
       // Delete the existing link and decrement its LinkValue's reference count.
       sparqlTemplateLinkUpdate <-
         decrementLinkValueRefCount(
-          sourceResourceInfo = resourceInfo,
+          linkObjectIri = resourceInfo,
           linkPropertyIri = propertyIri,
           targetResourceIri = currentLinkValueContent.referredResourceIri,
           valueCreator = currentValue.attachedToUser,
@@ -1861,7 +1861,7 @@ final case class ValuesResponderV2Live(
       case textValue: TextValueContentV2 =>
         textValue.standoffLinkTagTargetResourceIris.toVector.map { removedTargetResource =>
           decrementLinkValueRefCount(
-            sourceResourceInfo = resourceInfo,
+            linkObjectIri = resourceInfo,
             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
             targetResourceIri = removedTargetResource,
             valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
@@ -2147,7 +2147,7 @@ final case class ValuesResponderV2Live(
    *
    * @param sourceResourceInfo    information about the source resource.
    * @param linkPropertyIri       the IRI of the property that links the source resource to the target resource.
-   * @param targetResourceIri     the IRI of the target resource.
+   * @param linkObjectIri     the IRI of the target resource.
    * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
    * @param valueCreator          the IRI of the new link value's owner.
    * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
@@ -2155,9 +2155,9 @@ final case class ValuesResponderV2Live(
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
   private def incrementLinkValueRefCount(
-    sourceResourceInfo: ReadResourceV2,
+    linkSubjectIri: IRI,
     linkPropertyIri: SmartIri,
-    targetResourceIri: IRI,
+    linkObjectIri: IRI,
     customNewLinkValueIri: Option[SmartIri] = None,
     valueCreator: IRI,
     valuePermissions: String,
@@ -2168,10 +2168,10 @@ final case class ValuesResponderV2Live(
       newLinkValueIri <-
         iriService.checkOrCreateEntityIri(
           customNewLinkValueIri,
-          sf.makeNewValueIri(sourceResourceInfo.resourceIri)
+          sf.makeNewValueIri(linkSubjectIri)
         )
 
-      refCount    = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
+      refCount   <- getRefCount(linkSubjectIri, linkPropertyIri, linkObjectIri)
       refCountInc = refCount + 1
       linkUpdate =
         if (refCount > 0) {
@@ -2184,7 +2184,7 @@ final case class ValuesResponderV2Live(
             linkValueExists = true,
             linkTargetExists = true,
             newLinkValueIri = newLinkValueIri,
-            linkTargetIri = targetResourceIri,
+            linkTargetIri = linkObjectIri,
             currentReferenceCount = refCount,
             newReferenceCount = refCountInc,
             newLinkValueCreator = valueCreator,
@@ -2201,7 +2201,7 @@ final case class ValuesResponderV2Live(
             linkValueExists = false,
             linkTargetExists = true,
             newLinkValueIri = newLinkValueIri,
-            linkTargetIri = targetResourceIri,
+            linkTargetIri = linkObjectIri,
             currentReferenceCount = 0,
             newReferenceCount = 1,
             newLinkValueCreator = valueCreator,
@@ -2211,21 +2211,34 @@ final case class ValuesResponderV2Live(
     } yield linkUpdate
 
   /**
-   * given a [[readresourcev2]], finds a linkvalue that uses the property
-   * and points to the specified target resource
-   * and returns its reference count.
+   * Given a link with subject, property and object return its reference count.
    *
-   * @param subjectInfo     A [[ReadResourceV2]] describing the source of the link.
+   * @param linkSubjectIri  The IRI of the link subject.
    * @param linkPropertyIri The IRI of the link property.
-   * @param objectIri       The IRI of the target resource.
+   * @param linkObjectIri   The IRI of the link object.
    * @return The reference count or zero if the link doesn't exist.
    */
-  private def getRefCount(subjectInfo: ReadResourceV2, linkPropertyIri: SmartIri, objectIri: IRI) = {
-    val linkValueProperty = linkPropertyIri.fromLinkPropToLinkValueProp
-    val linkValueMaybe = subjectInfo.values.get(linkValueProperty).flatMap { values =>
-      values.collectFirst { case v: ReadLinkValueV2 if v.valueContent.referredResourceIri == objectIri => v }
-    }
-    linkValueMaybe.map(_.valueHasRefCount).getOrElse(0)
+  private def getRefCount(linkSubjectIri: IRI, linkPropertyIri: SmartIri, linkObjectIri: IRI): Task[Int] = {
+    val linkValuePropertyIri = linkPropertyIri.fromLinkPropToLinkValueProp.toIri
+    val query = s"""
+                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |SELECT * WHERE {
+                   |  BIND(<$linkSubjectIri> AS ?linkSubjectIri)
+                   |  BIND(<$linkValuePropertyIri> AS ?linkValuePropertyIri)
+                   |  BIND(<$linkObjectIri> AS ?linkObjectIri)
+                   |  ?linkSubjectIri  ?linkValuePropertyIri      ?linkValue .
+                   |  ?linkSubjectIri knora-base:isDeleted        false .
+                   |  ?linkValue   rdf:object                  ?linkObjectIri .
+                   |  ?linkValue   rdf:subject                 ?linkSubjectIri .
+                   |  ?linkValue   knora-base:isDeleted        false .
+                   |  ?linkValue   knora-base:valueHasRefCount ?refCount .
+                   |}""".stripMargin
+    triplestoreService
+      .sparqlHttpSelect(query)
+      .map(_.results.bindings.headOption.flatMap(_.rowMap.get("refCount").flatMap(_.toIntOption)).getOrElse(0))
+      .logError
   }
 
   /**
@@ -2240,7 +2253,7 @@ final case class ValuesResponderV2Live(
    * made, with a decremented reference count. If the new reference count is 0, the link will be removed and the
    * `LinkValue` will be marked as deleted.
    *
-   * @param sourceResourceInfo information about the source resource.
+   * @param linkObjectIri information about the source resource.
    * @param linkPropertyIri    the IRI of the property that links the source resource to the target resource.
    * @param targetResourceIri  the IRI of the target resource.
    * @param valueCreator       the IRI of the new link value's owner.
@@ -2249,56 +2262,51 @@ final case class ValuesResponderV2Live(
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
   private def decrementLinkValueRefCount(
-    sourceResourceInfo: ReadResourceV2,
+    linkObjectIri: ReadResourceV2,
     linkPropertyIri: SmartIri,
     targetResourceIri: IRI,
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Task[SparqlTemplateLinkUpdate] = {
-    val refCount = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
-    ZIO
-      .when(refCount > 0) {
-        // If the new reference count is 0,
-        // it means that the direct link between the source and target resources should be removed.
-        val deleteDirectLink = refCount - 1 == 0
-
-        makeUnusedValueIri(sourceResourceInfo.resourceIri)
-          .map(newLinkValueIri =>
-            SparqlTemplateLinkUpdate(
-              linkPropertyIri = linkPropertyIri,
-              directLinkExists = true,
-              insertDirectLink = false,
-              deleteDirectLink = deleteDirectLink,
-              linkValueExists = true,
-              linkTargetExists = true,
-              newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri,
-              currentReferenceCount = refCount,
-              newReferenceCount = refCount - 1,
-              newLinkValueCreator = valueCreator,
-              newLinkValuePermissions = valuePermissions
-            )
+  ): Task[SparqlTemplateLinkUpdate] =
+    getRefCount(linkObjectIri.resourceIri, linkPropertyIri, targetResourceIri).flatMap(refCount =>
+      if (refCount > 0) {
+        makeUnusedValueIri(linkObjectIri.resourceIri).map { newLinkValueIri =>
+          val newRefCount = refCount - 1
+          SparqlTemplateLinkUpdate(
+            linkPropertyIri = linkPropertyIri,
+            directLinkExists = true,
+            insertDirectLink = false,
+            // If the new reference count is 0, then direct link between the source and target resources must be removed.
+            deleteDirectLink = newRefCount == 0,
+            linkValueExists = true,
+            linkTargetExists = true,
+            newLinkValueIri = newLinkValueIri,
+            linkTargetIri = targetResourceIri,
+            currentReferenceCount = refCount,
+            newReferenceCount = newRefCount,
+            newLinkValueCreator = valueCreator,
+            newLinkValuePermissions = valuePermissions
           )
-      }
-      .some
-      .orDieWith(_ =>
-        InconsistentRepositoryDataException(
-          s"""
-             |There should be a knora-base:LinkValue describing a direct link 
-             |from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> 
-             |using property <$linkPropertyIri>, but it seems to be missing""".stripMargin
+        }
+      } else {
+        ZIO.die(
+          InconsistentRepositoryDataException(
+            s""" |There should be a knora-base:LinkValue describing a direct link 
+               |from resource <${linkObjectIri.resourceIri}> to resource <$targetResourceIri> 
+               |using property <$linkPropertyIri>, but it seems to be missing""".stripMargin
+          )
         )
-      )
-  }
+      }
+    )
 
   /**
    * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to change the metadata
    * on a `LinkValue`.
    *
-   * @param sourceResourceInfo    information about the source resource.
+   * @param linkSubjectIri    information about the source resource.
    * @param linkPropertyIri       the IRI of the property that links the source resource to the target resource.
-   * @param targetResourceIri     the IRI of the target resource.
+   * @param linkObjectIri     the IRI of the target resource.
    * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
    * @param valueCreator          the IRI of the new link value's owner.
    * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
@@ -2306,19 +2314,18 @@ final case class ValuesResponderV2Live(
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
   private def changeLinkValueMetadata(
-    sourceResourceInfo: ReadResourceV2,
+    linkSubjectIri: IRI,
     linkPropertyIri: SmartIri,
-    targetResourceIri: IRI,
+    linkObjectIri: IRI,
     customNewLinkValueIri: Option[SmartIri] = None,
     valueCreator: IRI,
     valuePermissions: String,
     requestingUser: UserADM
-  ): Task[SparqlTemplateLinkUpdate] = {
-    val refCount = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
-    ZIO
-      .when(refCount > 0) {
+  ): Task[SparqlTemplateLinkUpdate] =
+    getRefCount(linkSubjectIri, linkPropertyIri, linkObjectIri).flatMap { refCount =>
+      if (refCount > 0) {
         iriService
-          .checkOrCreateEntityIri(customNewLinkValueIri, sf.makeNewValueIri(sourceResourceInfo.resourceIri))
+          .checkOrCreateEntityIri(customNewLinkValueIri, sf.makeNewValueIri(linkSubjectIri))
           .map(newLinkValueIri =>
             SparqlTemplateLinkUpdate(
               linkPropertyIri = linkPropertyIri,
@@ -2328,24 +2335,24 @@ final case class ValuesResponderV2Live(
               linkValueExists = true,
               linkTargetExists = true,
               newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri,
+              linkTargetIri = linkObjectIri,
               currentReferenceCount = refCount,
               newReferenceCount = refCount,
               newLinkValueCreator = valueCreator,
               newLinkValuePermissions = valuePermissions
             )
           )
-      }
-      .some
-      .orDieWith(_ =>
-        InconsistentRepositoryDataException(
-          s"""There should be a knora-base:LinkValue describing a direct link 
-             |from resource <${sourceResourceInfo.resourceIri}> 
-             |to resource <$targetResourceIri> using property <$linkPropertyIri>, 
-             |but it seems to be missing""".stripMargin
+      } else {
+        ZIO.die(
+          InconsistentRepositoryDataException(
+            s"""There should be a knora-base:LinkValue describing a direct link
+               |from resource <$linkSubjectIri>
+               |to resource <$linkObjectIri> using property <$linkPropertyIri>,
+               |but it seems to be missing""".stripMargin
+          )
         )
-      )
-  }
+      }
+    }
 
   /**
    * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
