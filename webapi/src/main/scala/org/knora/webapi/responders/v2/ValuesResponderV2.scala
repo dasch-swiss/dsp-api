@@ -310,7 +310,7 @@ final case class ValuesResponderV2Live(
           createValueV2AfterChecks(
             dataNamedGraph = dataNamedGraph,
             projectIri = resourceInfo.projectADM.id,
-            resourceInfo = resourceInfo,
+            resourceIri = resourceInfo.resourceIri,
             propertyIri = adjustedInternalPropertyIri,
             value = submittedInternalValueContent,
             valueIri = valueToCreate.valueIri,
@@ -436,7 +436,7 @@ final case class ValuesResponderV2Live(
   private def createValueV2AfterChecks(
     dataNamedGraph: IRI,
     projectIri: IRI,
-    resourceInfo: ReadResourceV2,
+    resourceIri: IRI,
     propertyIri: SmartIri,
     value: ValueContentV2,
     valueIri: Option[SmartIri],
@@ -450,7 +450,7 @@ final case class ValuesResponderV2Live(
       case linkValueContent: LinkValueContentV2 =>
         createLinkValueV2AfterChecks(
           dataNamedGraph = dataNamedGraph,
-          resourceInfo = resourceInfo,
+          resourceIri = resourceIri,
           linkPropertyIri = propertyIri,
           linkValueContent = linkValueContent,
           maybeValueIri = valueIri,
@@ -464,7 +464,7 @@ final case class ValuesResponderV2Live(
       case ordinaryValueContent =>
         createOrdinaryValueV2AfterChecks(
           dataNamedGraph = dataNamedGraph,
-          resourceInfo = resourceInfo,
+          resourceIri = resourceIri,
           propertyIri = propertyIri,
           value = ordinaryValueContent,
           maybeValueIri = valueIri,
@@ -479,7 +479,7 @@ final case class ValuesResponderV2Live(
   /**
    * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
    *
-   * @param resourceInfo           information about the the resource in which to create the value.
+   * @param resourceIri           information about the the resource in which to create the value.
    * @param propertyIri            the property that should point to the value.
    * @param value                  an [[ValueContentV2]] describing the value.
    * @param maybeValueIri          the optional custom IRI supplied for the value.
@@ -492,7 +492,7 @@ final case class ValuesResponderV2Live(
    */
   private def createOrdinaryValueV2AfterChecks(
     dataNamedGraph: IRI,
-    resourceInfo: ReadResourceV2,
+    resourceIri: IRI,
     propertyIri: SmartIri,
     value: ValueContentV2,
     maybeValueIri: Option[SmartIri],
@@ -511,7 +511,7 @@ final case class ValuesResponderV2Live(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           maybeValueIri,
-          sf.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
+          sf.makeRandomValueIri(resourceIri, Some(newValueUUID))
         )
 
       // Make a creation date for the new value
@@ -528,7 +528,7 @@ final case class ValuesResponderV2Live(
             val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
                 incrementLinkValueRefCount(
-                  linkSubjectIri = resourceInfo.resourceIri,
+                  linkSubjectIri = resourceIri,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   linkObjectIri = targetResourceIri,
                   valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
@@ -547,7 +547,7 @@ final case class ValuesResponderV2Live(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .createValue(
             dataNamedGraph = dataNamedGraph,
-            resourceIri = resourceInfo.resourceIri,
+            resourceIri = resourceIri,
             propertyIri = propertyIri,
             newValueIri = newValueIri,
             newValueUUID = newValueUUID,
@@ -574,7 +574,7 @@ final case class ValuesResponderV2Live(
    * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
    *
    * @param dataNamedGraph   the named graph in which the link is to be created.
-   * @param resourceInfo     information about the the resource in which to create the value.
+   * @param resourceIri     information about the the resource in which to create the value.
    * @param linkPropertyIri  the link property.
    * @param linkValueContent a [[LinkValueContentV2]] specifying the target resource.
    * @param maybeValueIri    the optional custom IRI supplied for the value.
@@ -586,7 +586,7 @@ final case class ValuesResponderV2Live(
    */
   private def createLinkValueV2AfterChecks(
     dataNamedGraph: IRI,
-    resourceInfo: ReadResourceV2,
+    resourceIri: IRI,
     linkPropertyIri: SmartIri,
     linkValueContent: LinkValueContentV2,
     maybeValueIri: Option[SmartIri],
@@ -602,7 +602,7 @@ final case class ValuesResponderV2Live(
     for {
       sparqlTemplateLinkUpdate <-
         incrementLinkValueRefCount(
-          linkSubjectIri = resourceInfo.resourceIri,
+          linkSubjectIri = resourceIri,
           linkPropertyIri = linkPropertyIri,
           linkObjectIri = linkValueContent.referredResourceIri,
           customNewLinkValueIri = maybeValueIri,
@@ -622,7 +622,7 @@ final case class ValuesResponderV2Live(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .createLink(
             dataNamedGraph = dataNamedGraph,
-            resourceIri = resourceInfo.resourceIri,
+            resourceIri = resourceIri,
             linkUpdate = sparqlTemplateLinkUpdate,
             newValueUUID = newValueUUID,
             creationDate = creationDate,
@@ -2145,13 +2145,13 @@ final case class ValuesResponderV2Live(
    *    - If that link and `LinkValue` don't yet exist, they will be created, and the `LinkValue` will be given
    * a reference count of 1.
    *
-   * @param sourceResourceInfo    information about the source resource.
-   * @param linkPropertyIri       the IRI of the property that links the source resource to the target resource.
-   * @param linkObjectIri     the IRI of the target resource.
-   * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
-   * @param valueCreator          the IRI of the new link value's owner.
-   * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param requestingUser        the user making the request.
+   * @param linkSubjectIri        The IRI of the link subject.
+   * @param linkPropertyIri       The IRI of the property that links the source resource to the target resource.
+   * @param linkObjectIri         The IRI of the link object.
+   * @param customNewLinkValueIri The optional custom IRI supplied for the link value.
+   * @param valueCreator          The IRI of the new link value's owner.
+   * @param valuePermissions      The literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+   * @param requestingUser        The user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
   private def incrementLinkValueRefCount(
