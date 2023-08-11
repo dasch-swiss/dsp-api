@@ -80,7 +80,7 @@ final case class ValuesResponderV2Live(
   permissionUtilADM: PermissionUtilADM,
   resourceUtilV2: ResourceUtilV2,
   triplestoreService: TriplestoreService,
-  implicit val stringFormatter: StringFormatter
+  implicit val sf: StringFormatter
 ) extends ValuesResponderV2
     with MessageHandler {
 
@@ -511,7 +511,7 @@ final case class ValuesResponderV2Live(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           maybeValueIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
+          sf.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID))
         )
 
       // Make a creation date for the new value
@@ -527,7 +527,7 @@ final case class ValuesResponderV2Live(
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
             val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
-                incrementLinkValue(
+                incrementLinkValueRefCount(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = targetResourceIri,
@@ -556,7 +556,7 @@ final case class ValuesResponderV2Live(
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
             creationDate = creationDate,
-            stringFormatter = stringFormatter
+            stringFormatter = sf
           )
           .toString()
 
@@ -601,7 +601,7 @@ final case class ValuesResponderV2Live(
 
     for {
       sparqlTemplateLinkUpdate <-
-        incrementLinkValue(
+        incrementLinkValueRefCount(
           sourceResourceInfo = resourceInfo,
           linkPropertyIri = linkPropertyIri,
           targetResourceIri = linkValueContent.referredResourceIri,
@@ -627,7 +627,7 @@ final case class ValuesResponderV2Live(
             newValueUUID = newValueUUID,
             creationDate = creationDate,
             maybeComment = linkValueContent.comment,
-            stringFormatter = stringFormatter
+            stringFormatter = sf
           )
           .toString()
 
@@ -735,7 +735,7 @@ final case class ValuesResponderV2Live(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           valueToCreate.customValueIri,
-          stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
+          sf.makeRandomValueIri(resourceIri, Some(newValueUUID))
         )
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
@@ -1062,7 +1062,7 @@ final case class ValuesResponderV2Live(
         newValueIri <-
           iriService.checkOrCreateEntityIri(
             updateValuePermissionsV2.newValueVersionIri,
-            stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+            sf.makeRandomValueIri(resourceInfo.resourceIri)
           )
 
         currentTime: Instant =
@@ -1339,7 +1339,7 @@ final case class ValuesResponderV2Live(
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           newValueVersionIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+          sf.makeRandomValueIri(resourceInfo.resourceIri)
         )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
@@ -1359,7 +1359,7 @@ final case class ValuesResponderV2Live(
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
             val standoffLinkUpdatesForAddedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               addedResourceRefs.toVector.map { targetResourceIri =>
-                incrementLinkValue(
+                incrementLinkValueRefCount(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = targetResourceIri,
@@ -1375,7 +1375,7 @@ final case class ValuesResponderV2Live(
             // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
             val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               removedResourceRefs.toVector.map { removedTargetResource =>
-                decrementLinkValue(
+                decrementLinkValueRefCount(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = removedTargetResource,
@@ -1468,7 +1468,7 @@ final case class ValuesResponderV2Live(
       for {
         // Yes. Delete the existing link and decrement its LinkValue's reference count.
         sparqlTemplateLinkUpdateForCurrentLink <-
-          decrementLinkValue(
+          decrementLinkValueRefCount(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
             targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
@@ -1479,7 +1479,7 @@ final case class ValuesResponderV2Live(
 
         // Create a new link, and create a new LinkValue for it.
         sparqlTemplateLinkUpdateForNewLink <-
-          incrementLinkValue(
+          incrementLinkValueRefCount(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = linkPropertyIri,
             targetResourceIri = newLinkValue.referredResourceIri,
@@ -1807,7 +1807,7 @@ final case class ValuesResponderV2Live(
     for {
       // Delete the existing link and decrement its LinkValue's reference count.
       sparqlTemplateLinkUpdate <-
-        decrementLinkValue(
+        decrementLinkValueRefCount(
           sourceResourceInfo = resourceInfo,
           linkPropertyIri = propertyIri,
           targetResourceIri = currentLinkValueContent.referredResourceIri,
@@ -1860,7 +1860,7 @@ final case class ValuesResponderV2Live(
     val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] = currentValue.valueContent match {
       case textValue: TextValueContentV2 =>
         textValue.standoffLinkTagTargetResourceIris.toVector.map { removedTargetResource =>
-          decrementLinkValue(
+          decrementLinkValueRefCount(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
             targetResourceIri = removedTargetResource,
@@ -2154,7 +2154,7 @@ final case class ValuesResponderV2Live(
    * @param requestingUser        the user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
-  private def incrementLinkValue(
+  private def incrementLinkValueRefCount(
     sourceResourceInfo: ReadResourceV2,
     linkPropertyIri: SmartIri,
     targetResourceIri: IRI,
@@ -2168,7 +2168,7 @@ final case class ValuesResponderV2Live(
       newLinkValueIri <-
         iriService.checkOrCreateEntityIri(
           customNewLinkValueIri,
-          stringFormatter.makeNewValueIri(sourceResourceInfo.resourceIri)
+          sf.makeNewValueIri(sourceResourceInfo.resourceIri)
         )
 
       refCount    = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
@@ -2202,8 +2202,8 @@ final case class ValuesResponderV2Live(
             linkTargetExists = true,
             newLinkValueIri = newLinkValueIri,
             linkTargetIri = targetResourceIri,
-            currentReferenceCount = refCount,
-            newReferenceCount = refCountInc,
+            currentReferenceCount = 0,
+            newReferenceCount = 1,
             newLinkValueCreator = valueCreator,
             newLinkValuePermissions = valuePermissions
           )
@@ -2248,7 +2248,7 @@ final case class ValuesResponderV2Live(
    * @param requestingUser     the user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
-  private def decrementLinkValue(
+  private def decrementLinkValueRefCount(
     sourceResourceInfo: ReadResourceV2,
     linkPropertyIri: SmartIri,
     targetResourceIri: IRI,
@@ -2256,42 +2256,40 @@ final case class ValuesResponderV2Live(
     valuePermissions: String,
     requestingUser: UserADM
   ): Task[SparqlTemplateLinkUpdate] = {
-    // Check whether a LinkValue already exists for this link.
     val refCount = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
+    ZIO
+      .when(refCount > 0) {
+        // If the new reference count is 0,
+        // it means that the direct link between the source and target resources should be removed.
+        val deleteDirectLink = refCount - 1 == 0
 
-    if (refCount > 0) {
-      // Decrement the LinkValue's reference count.
-      val newReferenceCount = refCount - 1
-
-      // If the new reference count is 0, specify that the direct link between the source and target
-      // resources should be removed.
-      val deleteDirectLink = newReferenceCount == 0
-
-      for {
-        // Generate an IRI for the new LinkValue.
-        newLinkValueIri <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
-      } yield SparqlTemplateLinkUpdate(
-        linkPropertyIri = linkPropertyIri,
-        directLinkExists = true,
-        insertDirectLink = false,
-        deleteDirectLink = deleteDirectLink,
-        linkValueExists = true,
-        linkTargetExists = true,
-        newLinkValueIri = newLinkValueIri,
-        linkTargetIri = targetResourceIri,
-        currentReferenceCount = refCount,
-        newReferenceCount = newReferenceCount,
-        newLinkValueCreator = valueCreator,
-        newLinkValuePermissions = valuePermissions
-      )
-    } else {
-      // We didn't find the LinkValue. This shouldn't happen.
-      ZIO.fail(
+        makeUnusedValueIri(sourceResourceInfo.resourceIri)
+          .map(newLinkValueIri =>
+            SparqlTemplateLinkUpdate(
+              linkPropertyIri = linkPropertyIri,
+              directLinkExists = true,
+              insertDirectLink = false,
+              deleteDirectLink = deleteDirectLink,
+              linkValueExists = true,
+              linkTargetExists = true,
+              newLinkValueIri = newLinkValueIri,
+              linkTargetIri = targetResourceIri,
+              currentReferenceCount = refCount,
+              newReferenceCount = refCount - 1,
+              newLinkValueCreator = valueCreator,
+              newLinkValuePermissions = valuePermissions
+            )
+          )
+      }
+      .some
+      .orDieWith(_ =>
         InconsistentRepositoryDataException(
-          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+          s"""
+             |There should be a knora-base:LinkValue describing a direct link 
+             |from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> 
+             |using property <$linkPropertyIri>, but it seems to be missing""".stripMargin
         )
       )
-    }
   }
 
   /**
@@ -2316,40 +2314,37 @@ final case class ValuesResponderV2Live(
     valuePermissions: String,
     requestingUser: UserADM
   ): Task[SparqlTemplateLinkUpdate] = {
-
-    // Check whether a LinkValue already exists for this link.
-    val refCount =
-      getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
-    if (refCount > 0) {
-      for {
-        // If no custom IRI was provided, generate an IRI for the new LinkValue.
-        newLinkValueIri <-
-          iriService.checkOrCreateEntityIri(
-            customNewLinkValueIri,
-            stringFormatter.makeNewValueIri(sourceResourceInfo.resourceIri)
+    val refCount = getRefCount(sourceResourceInfo, linkPropertyIri, targetResourceIri)
+    ZIO
+      .when(refCount > 0) {
+        iriService
+          .checkOrCreateEntityIri(customNewLinkValueIri, sf.makeNewValueIri(sourceResourceInfo.resourceIri))
+          .map(newLinkValueIri =>
+            SparqlTemplateLinkUpdate(
+              linkPropertyIri = linkPropertyIri,
+              directLinkExists = true,
+              insertDirectLink = false,
+              deleteDirectLink = false,
+              linkValueExists = true,
+              linkTargetExists = true,
+              newLinkValueIri = newLinkValueIri,
+              linkTargetIri = targetResourceIri,
+              currentReferenceCount = refCount,
+              newReferenceCount = refCount,
+              newLinkValueCreator = valueCreator,
+              newLinkValuePermissions = valuePermissions
+            )
           )
-      } yield SparqlTemplateLinkUpdate(
-        linkPropertyIri = linkPropertyIri,
-        directLinkExists = true,
-        insertDirectLink = false,
-        deleteDirectLink = false,
-        linkValueExists = true,
-        linkTargetExists = true,
-        newLinkValueIri = newLinkValueIri,
-        linkTargetIri = targetResourceIri,
-        currentReferenceCount = refCount,
-        newReferenceCount = refCount,
-        newLinkValueCreator = valueCreator,
-        newLinkValuePermissions = valuePermissions
-      )
-    } else {
-      // We didn't find the LinkValue. This shouldn't happen.
-      ZIO.fail(
+      }
+      .some
+      .orDieWith(_ =>
         InconsistentRepositoryDataException(
-          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+          s"""There should be a knora-base:LinkValue describing a direct link 
+             |from resource <${sourceResourceInfo.resourceIri}> 
+             |to resource <$targetResourceIri> using property <$linkPropertyIri>, 
+             |but it seems to be missing""".stripMargin
         )
       )
-    }
   }
 
   /**
@@ -2371,7 +2366,7 @@ final case class ValuesResponderV2Live(
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Task[IRI] =
-    iriService.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri))
+    iriService.makeUnusedIri(sf.makeRandomValueIri(resourceIri))
 
   /**
    * Make a new value UUID considering optional custom value UUID and custom value IRI.
