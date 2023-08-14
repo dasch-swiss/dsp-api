@@ -14,7 +14,7 @@ security (see [The Enduring Myth of the SPARQL
 Endpoint](https://daverog.wordpress.com/2013/06/04/the-enduring-myth-of-the-sparql-endpoint/)).
 It also has the benefit of enabling clients to work with a simpler RDF
 data model than the one the API actually uses to store data in the
-triplestore, and makes it possible to provide better error-checking.
+triplestore and makes it possible to provide better error-checking.
 
 Rather than being processed directly by the triplestore, a Gravsearch query
 is interpreted by the API, which enforces certain
@@ -101,7 +101,7 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 ```
 
-In the simple schema, DSP-API values are represented as literals, which can be used `FILTER` expressions
+In the simple schema, DSP-API values are represented as literals, which can be used in `FILTER` expressions
 (see [Filtering on Values in the Simple Schema](#filtering-on-values-in-the-simple-schema)).
 
 ### Using the Complex Schema
@@ -158,7 +158,7 @@ Instead, B has a virtual property `knora-api:hasIncomingLink` containing A's lin
 ```
 
 Note that the virtually inserted link value inverts the relation by using `knora-api:linkValueHasSource`.
-The source of the link is A and its target B is only represented by an Iri (`knora-api:linkValueHasTargetIri`)
+The source of the link is A and its target B is only represented by an IRI (`knora-api:linkValueHasTargetIri`)
 since B is the main resource.
 
 ## Graph Patterns and Result Graphs
@@ -278,7 +278,7 @@ The following value types can be compared with literals in `FILTER`
 expressions in the simple schema:
 
 - Text values (`xsd:string`)
-- Uri values (`xsd:anyURI`)
+- URI values (`xsd:anyURI`)
 - Integer values (`xsd:integer`)
 - Decimal values (`xsd:decimal`)
 - Boolean values (`xsd:boolean`)
@@ -372,7 +372,7 @@ era is provided the default era `AD` will be considered. Era can be given as `GR
 #### Searching for Matching Words
 
 The function `knora-api:matchText` searches for matching words anywhere in a
-text value, and is implemented using a full-text search index if available.
+text value and is implemented using a full-text search index if available.
 The first argument must represent a text value (a `knore-api:TextValue` in
 the complex schema, or an `xsd:string` in the simple schema). The second
 argument is a string literal containing the words to be matched, separated by spaces.
@@ -843,7 +843,7 @@ will not be included in the response.
 
 ### Requesting a Graph Starting with a Known Resource
 
-Here the IRI of the main resource is already known, and we want specific information
+Here the IRI of the main resource is already known and we want specific information
 about it, as well as about related resources. In this case, the IRI of the main
 resource must be assigned to a variable using `BIND`:
 
@@ -880,7 +880,7 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 
 ### Searching for a List Value Referring to a Particular List Node
 
-Since list nodes are represented by their Iri in the complex schema,
+Since list nodes are represented by their IRI in the complex schema,
 uniqueness is guranteed (as opposed to the simple schema).
 Also all the subnodes of the given list node are considered a match.
 
