@@ -145,10 +145,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
        |    }
        |}""".stripMargin
 
-  private val testDataFolder = Paths.get("resourcesR2RV2")
-
   private def testData(contents: String, fileName: String): String =
-    readOrWriteTextFile(contents, testDataFolder.resolve(fileName), writeTestDataFiles)
+    readOrWriteTextFile(contents, Paths.get("resourcesR2RV2", fileName), writeTestDataFiles)
 
   "The resources v2 endpoint" should {
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
