@@ -362,7 +362,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
       |}
         """.stripMargin
 
-  private val ParsedQueryWithUnionInOptional: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithUnionInOptional = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -580,7 +580,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
       |    } ORDER BY ?date
         """.stripMargin
 
-  private val ParsedQueryWithFilterInOptional: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithFilterInOptional = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -861,7 +861,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQuery: ConstructQuery = ConstructQuery(
+  private val ParsedQuery = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1111,7 +1111,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithBind: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithBind = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1190,7 +1190,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryForAThingRelatingToAnotherThing: ConstructQuery = ConstructQuery(
+  private val ParsedQueryForAThingRelatingToAnotherThing = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1299,7 +1299,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithFilterNotExists: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithFilterNotExists = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1364,7 +1364,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithMinus: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithMinus = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1429,7 +1429,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithOffset: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithOffset = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1482,7 +1482,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithFilterContainingRegex: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithFilterContainingRegex = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1611,7 +1611,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithMatchFunction: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithMatchFunction = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1692,7 +1692,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithMatchTextFunction: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithMatchTextFunction = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1773,7 +1773,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithLangFunction: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithLangFunction = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -1849,7 +1849,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
     )
   )
 
-  private val ParsedQueryWithNestedOptional: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithNestedOptional = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -2009,7 +2009,7 @@ object GravsearchParserSpec extends ZIOSpecDefault {
       |}
         """.stripMargin
 
-  private val ParsedQueryWithIriArgInFunction: ConstructQuery = ConstructQuery(
+  private val ParsedQueryWithIriArgInFunction = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
         StatementPattern(
@@ -2133,38 +2133,38 @@ object GravsearchParserSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Nothing] = suite("The GravsearchParser object")(
     test("parse a Gravsearch query") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(Query)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(Query)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQuery, reparsed == parsed)
     },
     test("parse a Gravsearch query with a BIND") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithBind)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(QueryWithBind)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryWithBind, reparsed == parsed)
     },
     test("parse a Gravsearch query with a FILTER containing a Boolean operator") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryForAThingRelatingToAnotherThing)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(QueryForAThingRelatingToAnotherThing)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryForAThingRelatingToAnotherThing, reparsed == parsed)
     },
     test("parse a Gravsearch query with FILTER NOT EXISTS") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithFilterNotExists)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(QueryWithFilterNotExists)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryWithFilterNotExists, reparsed == parsed)
     },
     test("parse a Gravsearch query with MINUS") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMinus)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(QueryWithMinus)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryWithMinus, reparsed == parsed)
     },
     test("parse a Gravsearch query with OFFSET") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithOffset)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(QueryWithOffset)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryWithOffset, reparsed == parsed)
     },
@@ -2175,14 +2175,14 @@ object GravsearchParserSpec extends ZIOSpecDefault {
       assertTrue(parsed == ParsedQueryWithFilterContainingRegex, reparsed == parsed)
     },
     test("accept a custom 'match' function in a FILTER") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMatchFunction)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(QueryWithMatchFunction)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryWithMatchFunction, reparsed == parsed)
     },
     test("accept a custom 'matchText' function in a FILTER") {
-      val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMatchTextFunction)
-      val reparsed               = GravsearchParser.parseQuery(parsed.toSparql)
+      val parsed   = GravsearchParser.parseQuery(QueryWithMatchTextFunction)
+      val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
 
       assertTrue(parsed == ParsedQueryWithMatchTextFunction, reparsed == parsed)
     },
