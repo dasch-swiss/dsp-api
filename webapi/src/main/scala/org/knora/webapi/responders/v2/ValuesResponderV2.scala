@@ -16,9 +16,9 @@ import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -31,8 +31,8 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.{AtLeastOne, Exa
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
-import zio.{Task, ZIO, _}
 import zio.macros.accessible
+import zio.{Task, ZIO, _}
 
 import java.time.Instant
 import java.util.UUID
@@ -197,37 +197,34 @@ final case class ValuesResponderV2Live(
 
         // Check that the resource class's cardinality for the submitted property allows another value to be added
         // for that property.
-        currentValuesForProp = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+        existingValues = resourceInfo.values
+                           .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+                           .map(_.valueContent)
 
-        newCount = currentValuesForProp.size + 1
-        _ <- ZIO.when(!cardinality.isCountIncluded(newCount))(
-               ZIO.fail {
-                 val msg =
-                   s"""The cardinality $cardinality of the property does not allow another value to be added.
-                      |Resource <${valueToCreate.resourceIri}> would have $newCount properties.""".stripMargin
-                 OntologyConstraintException(msg)
-               }
-             )
+        _ <- {
+          val newCount = existingValues.size + 1
+          ZIO.when(!cardinality.isCountIncluded(newCount))(
+            ZIO.fail {
+              val msg =
+                s"""The cardinality ${cardinality.getClass.getSimpleName} ($cardinality) of the property
+                   |does not allow another value to be added. Resource <${valueToCreate.resourceIri}>
+                   |would have $newCount properties.""".stripMargin
+              OntologyConstraintException(msg)
+            }
+          )
+        }
 
         // Check that the new value would not duplicate an existing value.
-        unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
 
-        _ <- ZIO.when(
-               currentValuesForProp.exists(current =>
-                 unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(current.valueContent)
-               )
+        _ <- ZIO.whenZIO(
+               ZIO.attempt(existingValues.exists(submittedInternalValueContent.unescape.wouldDuplicateOtherValue(_)))
              )(ZIO.fail(DuplicateValueException()))
 
         // If this is a text value, check that the resources pointed to by any standoff link tags exist
         // and that the user has permission to see them.
         _ <- submittedInternalValueContent match {
-               case textValueContent: TextValueContentV2 =>
-                 checkResourceIris(
-                   targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
-                   requestingUser = requestingUser
-                 )
-
-               case _ => ZIO.unit
+               case t: TextValueContentV2 => checkResourceIris(t.standoffLinkTagTargetResourceIris, requestingUser)
+               case _                     => ZIO.unit
              }
 
         // Get the default permissions for the new value.
