@@ -153,28 +153,25 @@ final case class ValuesResponderV2Live(
              )
 
         // Check that the resource has the rdf:type that the client thinks it has.
-        _ =
-          if (
-            resourceClassIri != valueToCreate.resourceClassIri
-              .toOntologySchema(InternalSchema)
-          ) {
-            throw BadRequestException(
-              s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>"
-            )
-          }
+        _ <- ZIO.when(resourceClassIri != valueToCreate.resourceClassIri.toOntologySchema(InternalSchema)) {
+               val msg =
+                 s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // Get the definition of the resource class.
         classInfo <- getClassInfo(resourceClassIri, requestingUser)
 
         // Check that the resource class has a cardinality for the submitted property.
-        cardinalityInfo: KnoraCardinalityInfo =
-          classInfo.allCardinalities.getOrElse(
-            submittedInternalPropertyIri,
-            throw BadRequestException(
-              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>"
-            )
-          )
+        cardinalityInfo <- ZIO
+                             .fromOption(classInfo.allCardinalities.get(submittedInternalPropertyIri))
+                             .orElseFail {
+                               val msg =
+                                 s"""Resource <${valueToCreate.resourceIri}> belongs to class 
+                                    |<${resourceClassIri.toOntologySchema(ApiV2Complex)}>, which has no cardinality 
+                                    |for property <${valueToCreate.propertyIri}>""".stripMargin
+                               BadRequestException(msg)
+                             }
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -190,21 +187,18 @@ final case class ValuesResponderV2Live(
                  for {
                    checkNode <-
                      resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
-
-                   _ = checkNode match {
-                         // it doesn't have isRootNode property - it's a child node
-                         case Right(false) => ()
-                         // it does have isRootNode property - it's a root node
-                         case Right(true) =>
-                           throw BadRequestException(
-                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
-                           )
-                         // it deosn't exists or isn't valid list
-                         case Left(_) =>
-                           throw NotFoundException(
-                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
-                           )
-                       }
+                   _ <- checkNode match {
+                          // it doesn't have isRootNode property - it's a child node
+                          case Right(false) => ZIO.unit
+                          // it does have isRootNode property - it's a root node
+                          case Right(true) =>
+                            val msg =
+                              s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                            ZIO.fail(BadRequestException(msg))
+                          case Left(_) =>
+                            val msg = s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                            ZIO.fail(NotFoundException(msg))
+                        }
                  } yield ()
 
                case _ => ZIO.unit
@@ -215,36 +209,33 @@ final case class ValuesResponderV2Live(
         currentValuesForProp: Seq[ReadValueV2] =
           resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
-        _ =
-          if (
-            (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty
-          ) {
-            throw InconsistentRepositoryDataException(
-              s"Resource class <${resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property"
-            )
+        cardinality = cardinalityInfo.cardinality
+        _ <-
+          ZIO.when((cardinality == ExactlyOne || cardinality == AtLeastOne) && currentValuesForProp.isEmpty) {
+            val msg =
+              s"""Resource class <${resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of 
+                 |$cardinality on property <${valueToCreate.propertyIri}>, 
+                 |but resource <${valueToCreate.resourceIri}> has no value for that property""".stripMargin
+            ZIO.fail(InconsistentRepositoryDataException(msg))
           }
 
-        _ =
-          if (
-            cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty)
-          ) {
-            throw OntologyConstraintException(
-              s"Resource class <${resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>"
-            )
-          }
+        _ <- ZIO.when(cardinality == ExactlyOne || (cardinality == ZeroOrOne && currentValuesForProp.nonEmpty)) {
+               val msg =
+                 s"""Resource class <${resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of 
+                    |$cardinality on property <${valueToCreate.propertyIri}>, 
+                    |and this does not allow a value to be added for that property 
+                    |to resource <${valueToCreate.resourceIri}>""".stripMargin
+               ZIO.fail(OntologyConstraintException(msg))
+             }
 
         // Check that the new value would not duplicate an existing value.
         unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
 
-        _ = if (
-              currentValuesForProp.exists(currentVal =>
-                unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent)
-              )
-            ) {
-              throw DuplicateValueException()
-            }
+        _ <- ZIO.when(
+               currentValuesForProp.exists(current =>
+                 unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(current.valueContent)
+               )
+             )(ZIO.fail(DuplicateValueException()))
 
         // If this is a text value, check that the resources pointed to by any standoff link tags exist
         // and that the user has permission to see them.
@@ -276,29 +267,26 @@ final case class ValuesResponderV2Live(
                 validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
 
                 // Is the requesting user a system admin, or an admin of this project?
-                _ = if (
-                      !(requestingUser.permissions.isProjectAdmin(
-                        requestingUser.id
-                      ) || requestingUser.permissions.isSystemAdmin)
-                    ) {
+                userPermissions = requestingUser.permissions
+                _ <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
 
-                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
-                      val permissionComparisonResult: PermissionComparisonResult =
-                        PermissionUtilADM.comparePermissionsADM(
-                          entityCreator = requestingUser.id,
-                          entityProject = resourceProject.id,
-                          permissionLiteralA = validatedCustomPermissions,
-                          permissionLiteralB = defaultValuePermissions,
-                          requestingUser = requestingUser
-                        )
+                       val permissionComparisonResult: PermissionComparisonResult =
+                         PermissionUtilADM.comparePermissionsADM(
+                           entityCreator = requestingUser.id,
+                           entityProject = resourceProject.id,
+                           permissionLiteralA = validatedCustomPermissions,
+                           permissionLiteralB = defaultValuePermissions,
+                           requestingUser = requestingUser
+                         )
 
-                      if (permissionComparisonResult == AGreaterThanB) {
-                        throw ForbiddenException(
-                          s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                        )
-                      }
-                    }
+                       ZIO.when(permissionComparisonResult == AGreaterThanB) {
+                         val msg = s"""The specified value permissions would give a value's creator 
+                                      |a higher permission on the value than the default permissions""".stripMargin
+                         ZIO.fail(ForbiddenException(msg))
+                       }
+                     }
               } yield validatedCustomPermissions
 
             case None =>
@@ -336,12 +324,8 @@ final case class ValuesResponderV2Live(
     val triplestoreUpdateFuture: Task[CreateValueResponseV2] = for {
 
       // Don't allow anonymous users to create values.
-      _ <- ZIO.attempt {
-             if (requestingUser.isAnonymousUser) {
-               throw ForbiddenException("Anonymous users aren't allowed to create values")
-             } else {
-               requestingUser.id
-             }
+      _ <- ZIO.when(requestingUser.isAnonymousUser) {
+             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create values"))
            }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
