@@ -51,9 +51,9 @@ object HttpServerZ {
     @tailrec
     def replaceSlugs(seg: List[Path.Segment], acc: Path): Path =
       seg match {
-        case head :: slug :: next if slugs.contains(head.text) => replaceSlugs(next, acc / head.text / s":${head.text}")
-        case head :: next                                      => replaceSlugs(next, acc / head.text)
-        case Nil                                               => acc
+        case head :: _ :: next if slugs.contains(head.text) => replaceSlugs(next, acc / head.text / s":${head.text}")
+        case head :: next                                   => replaceSlugs(next, acc / head.text)
+        case Nil                                            => acc
       }
     Middleware.metrics(
       pathLabelMapper = { case request: Request => replaceSlugs(request.path.segments.toList, Path.empty).toString },

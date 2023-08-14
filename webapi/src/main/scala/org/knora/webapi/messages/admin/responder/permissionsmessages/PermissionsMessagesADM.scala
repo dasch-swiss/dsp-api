@@ -144,7 +144,6 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
  * @param forGroup the new group IRI.
  */
 case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends PermissionsADMJsonProtocol {
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   if (forGroup.isEmpty) {
     throw BadRequestException(s"IRI of new group cannot be empty.")
@@ -180,7 +179,6 @@ case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) ext
   if (forResourceClass.isEmpty) {
     throw BadRequestException(s"Resource class IRI cannot be empty.")
   }
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
   Iri
     .validateAndEscapeIri(forResourceClass)
     .getOrElse(
