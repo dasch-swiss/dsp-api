@@ -64,9 +64,9 @@ class OntologyV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val ontologiesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(OntologiesRouteV2().makeRoute)
+    DSPApiDirectives.handleErrors(appConfig)(OntologiesRouteV2().makeRoute)
   private val resourcesPath =
-    DSPApiDirectives.handleErrors(system, appConfig)(ResourcesRouteV2(appConfig).makeRoute)
+    DSPApiDirectives.handleErrors(appConfig)(ResourcesRouteV2(appConfig).makeRoute)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
