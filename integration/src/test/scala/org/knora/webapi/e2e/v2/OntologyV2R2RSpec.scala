@@ -133,10 +133,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     maybeClientTestDataBasename: Option[String] = None,
     disableWrite: Boolean = false
   ) {
-    def makeFile(mediaType: MediaType.NonBinary): Path = {
-      val fileSuffix = mediaType.fileExtensions.head
-      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
-    }
+    private def makeFile(suffix: String): Path =
+      Paths.get("..", "test_data", "generated_test_data", "ontologyR2RV2", s"$fileBasename.$suffix")
 
     /**
      * Writes the expected response file.
@@ -146,8 +144,7 @@ class OntologyV2R2RSpec extends R2RSpec {
      */
     def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit =
       if (!disableWrite) {
-        val fileSuffix    = mediaType.fileExtensions.head
-        val newOutputFile = Paths.get("..", "test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
+        val newOutputFile = makeFile(mediaType.fileExtensions.head)
 
         Files.createDirectories(newOutputFile.getParent)
         FileUtil.writeTextFile(newOutputFile, responseStr)
@@ -171,7 +168,7 @@ class OntologyV2R2RSpec extends R2RSpec {
      * @return the contents of the file.
      */
     def readFile(mediaType: MediaType.NonBinary): String =
-      FileUtil.readTextFile(makeFile(mediaType))
+      FileUtil.readTextFile(makeFile(mediaType.fileExtensions.head))
   }
 
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
@@ -412,21 +409,10 @@ class OntologyV2R2RSpec extends R2RSpec {
 
               mediaType match {
                 case RdfMediaTypes.`application/rdf+xml` =>
-                  val existingFile: Path = httpGetTest.makeFile(mediaType)
-
-                  if (Files.exists(existingFile)) {
-                    val parsedResponse: RdfModel     = parseRdfXml(responseStr)
-                    val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
-
-                    if (parsedResponse != parsedExistingFile) {
-                      httpGetTest.writeFile(responseStr, mediaType)
-                    }
-                  } else {
-                    httpGetTest.writeFile(responseStr, mediaType)
-                  }
-
-                case _ =>
-                  httpGetTest.writeFile(responseStr, mediaType)
+                  val parsedResponse: RdfModel     = parseRdfXml(responseStr)
+                  val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
+                  if (parsedResponse != parsedExistingFile) httpGetTest.writeFile(responseStr, mediaType)
+                case _ => httpGetTest.writeFile(responseStr, mediaType)
               }
             } else {
               // No. Compare the received response with the expected response.
