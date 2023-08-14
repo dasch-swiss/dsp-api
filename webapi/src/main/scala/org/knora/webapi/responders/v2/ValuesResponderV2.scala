@@ -5,30 +5,18 @@
 
 package org.knora.webapi.responders.v2
 
-import zio.Task
-import zio.ZIO
-import zio._
-import zio.macros.accessible
-
-import java.time.Instant
-import java.util.UUID
-import scala.util.Success
-
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -37,16 +25,18 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.{IriLocker, IriService, Responder}
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.{AtLeastOne, ExactlyOne}
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ZioHelper
+import zio.{Task, ZIO, _}
+import zio.macros.accessible
+
+import java.time.Instant
+import java.util.UUID
+import scala.util.Success
 
 /**
  * Handles requests to read and write Knora values.
@@ -163,15 +153,16 @@ final case class ValuesResponderV2Live(
         classInfo <- getClassInfo(resourceClassIri, requestingUser)
 
         // Check that the resource class has a cardinality for the submitted property.
-        cardinalityInfo <- ZIO
-                             .fromOption(classInfo.allCardinalities.get(submittedInternalPropertyIri))
-                             .orElseFail {
-                               val msg =
-                                 s"""Resource <${valueToCreate.resourceIri}> belongs to class 
-                                    |<${resourceClassIri.toOntologySchema(ApiV2Complex)}>, which has no cardinality 
-                                    |for property <${valueToCreate.propertyIri}>""".stripMargin
-                               BadRequestException(msg)
-                             }
+        cardinality <-
+          ZIO
+            .fromOption(classInfo.allCardinalities.get(submittedInternalPropertyIri).map(_.cardinality))
+            .orElseFail {
+              val msg =
+                s"""Resource <${valueToCreate.resourceIri}> belongs to class 
+                   |<${resourceClassIri.toOntologySchema(ApiV2Complex)}>, which has no cardinality 
+                   |for property <${valueToCreate.propertyIri}>""".stripMargin
+              BadRequestException(msg)
+            }
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -206,27 +197,17 @@ final case class ValuesResponderV2Live(
 
         // Check that the resource class's cardinality for the submitted property allows another value to be added
         // for that property.
-        currentValuesForProp: Seq[ReadValueV2] =
-          resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+        currentValuesForProp = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
-        cardinality = cardinalityInfo.cardinality
-        _ <-
-          ZIO.when((cardinality == ExactlyOne || cardinality == AtLeastOne) && currentValuesForProp.isEmpty) {
-            val msg =
-              s"""Resource class <${resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of 
-                 |$cardinality on property <${valueToCreate.propertyIri}>, 
-                 |but resource <${valueToCreate.resourceIri}> has no value for that property""".stripMargin
-            ZIO.fail(InconsistentRepositoryDataException(msg))
-          }
-
-        _ <- ZIO.when(cardinality == ExactlyOne || (cardinality == ZeroOrOne && currentValuesForProp.nonEmpty)) {
-               val msg =
-                 s"""Resource class <${resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of 
-                    |$cardinality on property <${valueToCreate.propertyIri}>, 
-                    |and this does not allow a value to be added for that property 
-                    |to resource <${valueToCreate.resourceIri}>""".stripMargin
-               ZIO.fail(OntologyConstraintException(msg))
-             }
+        newCount = currentValuesForProp.size + 1
+        _ <- ZIO.when(!cardinality.isCountIncluded(newCount))(
+               ZIO.fail {
+                 val msg =
+                   s"""The cardinality $cardinality of the property does not allow another value to be added.
+                      |Resource <${valueToCreate.resourceIri}> would have $newCount properties.""".stripMargin
+                 OntologyConstraintException(msg)
+               }
+             )
 
         // Check that the new value would not duplicate an existing value.
         unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
