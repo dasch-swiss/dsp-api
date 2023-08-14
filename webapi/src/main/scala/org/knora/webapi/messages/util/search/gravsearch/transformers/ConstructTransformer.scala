@@ -69,7 +69,7 @@ final case class ConstructTransformer(
     inner: Seq[QueryPattern],
     limit: Option[Set[SmartIri]],
     outer: Seq[QueryPattern] => Outer
-  ): Task[Seq[QueryPattern]] =
+  ): Task[Seq[Outer]] =
     ZIO.foreach(inner)(transformPattern(_, limit)).map(t => Seq(outer.apply(t.flatten)))
 
 }
