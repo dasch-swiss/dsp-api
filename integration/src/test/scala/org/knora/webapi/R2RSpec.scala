@@ -142,29 +142,6 @@ abstract class R2RSpec
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
   }
 
-  /**
-   * Reads or writes a test data file.
-   *
-   * @param responseAsString the API response received from Knora.
-   * @param file             the file in which the expected API response is stored.
-   * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-   * @return the expected response.
-   */
-  @deprecated("Use readTestData() and writeTestData() instead")
-  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String = {
-    val adjustedFile = adjustFilePath(file)
-    if (writeFile) {
-      Files.createDirectories(adjustedFile.getParent)
-      FileUtil.writeTextFile(
-        adjustedFile,
-        responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
-      )
-      responseAsString
-    } else {
-      FileUtil.readTextFile(adjustedFile).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
-    }
-  }
-
   private def adjustFilePath(file: Path): Path =
     Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
 
