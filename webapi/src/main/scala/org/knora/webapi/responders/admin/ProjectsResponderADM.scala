@@ -110,7 +110,7 @@ trait ProjectsResponderADM {
   /**
    * Get project's restricted view settings.
    *
-   * @param id the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id the project's identifier (IRI / shortcode / shortname)
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
   def projectRestrictedViewSettingsGetADM(id: ProjectIdentifierADM): Task[Option[ProjectRestrictedViewSettingsADM]]
@@ -118,12 +118,23 @@ trait ProjectsResponderADM {
   /**
    * Get project's restricted view settings.
    *
-   * @param id the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id the project's identifier (IRI / shortcode / shortname)
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   def projectRestrictedViewSettingsGetRequestADM(
     id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+
+  /**
+   * Sets project's restricted view settings.
+   *
+   * @param id the project's identifier (IRI / shortcode / shortname)
+   */
+  def setProjectRestrictedViewSettings(
+    id: Iri.ProjectIri,
+    size: Option[String],
+    watermark: Option[String]
+  ): Task[Unit]
 
   /**
    * Creates a project.
@@ -200,6 +211,8 @@ final case class ProjectsResponderADMLive(
       projectRestrictedViewSettingsGetADM(identifier)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
       projectRestrictedViewSettingsGetRequestADM(identifier)
+    case ProjectRestrictedViewSettingsSetRequestADM(identifier, size, watermark) =>
+      setProjectRestrictedViewSettings(identifier, size, watermark)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -447,6 +460,20 @@ final case class ProjectsResponderADMLive(
         _ => NotFoundException(s"Project '${getId(id)}' not found."),
         ProjectRestrictedViewSettingsGetResponseADM
       )
+
+  override def setProjectRestrictedViewSettings(
+    iri: Iri.ProjectIri,
+    size: Option[String] = None,
+    watermark: Option[String] = None
+  ): Task[Unit] = {
+    val defaultViewSetting: String = size.getOrElse("pc:1")
+    val query = twirl.queries.sparql.admin.txt
+      .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, watermark)
+
+    for {
+      _ <- triplestoreService.sparqlHttpUpdate(query.toString)
+    } yield ()
+  }
 
   /**
    * Update project's basic information.
@@ -826,6 +853,7 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
+        _ <- setProjectRestrictedViewSettings(id.value)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 

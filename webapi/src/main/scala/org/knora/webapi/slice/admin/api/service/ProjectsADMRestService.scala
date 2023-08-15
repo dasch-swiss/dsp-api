@@ -10,6 +10,7 @@ import zio.macros.accessible
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
@@ -62,6 +63,11 @@ trait ProjectADMRestService {
   def getProjectRestrictedViewSettings(
     identifier: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+  def setProjectRestrictedViewSettings(
+    id: Iri.ProjectIri,
+    size: Option[String],
+    watermark: Option[String]
+  ): Task[Unit]
 }
 
 final case class ProjectsADMRestServiceLive(
@@ -268,6 +274,12 @@ final case class ProjectsADMRestServiceLive(
     _       <- permissionService.ensureSystemAdmin(requestingUser)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports
+
+  override def setProjectRestrictedViewSettings(
+    id: Iri.ProjectIri,
+    size: Option[String],
+    watermark: Option[String]
+  ): Task[Unit] = responder.setProjectRestrictedViewSettings(id, size, watermark)
 }
 
 object ProjectsADMRestServiceLive {

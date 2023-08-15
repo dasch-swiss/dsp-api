@@ -97,6 +97,17 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
+
+        /**
+         * Sets project's restricted view settings.
+         *
+         * @param id the project's identifier (IRI / shortcode / shortname)
+         */
+        override def setProjectRestrictedViewSettings(
+          id: Iri.ProjectIri,
+          size: Option[String],
+          watermark: Option[String]
+        ): Task[Unit] = ???
       }
     }
 }

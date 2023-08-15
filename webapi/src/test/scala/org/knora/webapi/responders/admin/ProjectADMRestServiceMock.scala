@@ -97,6 +97,12 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         override def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse] = ???
 
         override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = ???
+
+        override def setProjectRestrictedViewSettings(
+          id: ProjectIri,
+          size: Option[IRI],
+          watermark: Option[IRI]
+        ): Task[Unit] = ???
       }
     }
 }
