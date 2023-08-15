@@ -57,14 +57,20 @@ final case class ConstructTransformer(
           simulateInference = true,
           limitInferenceToOntologies = limit
         )
-      case FilterNotExistsPattern(patterns) =>
-        ZIO.foreach(patterns)(transformPattern(_, limit).map(FilterNotExistsPattern))
-      case MinusPattern(patterns)    => ZIO.foreach(patterns)(transformPattern(_, limit).map(MinusPattern))
-      case OptionalPattern(patterns) => ZIO.foreach(patterns)(transformPattern(_, limit).map(OptionalPattern))
+      case FilterNotExistsPattern(patterns) => transformInner(patterns, limit, FilterNotExistsPattern.apply)
+      case MinusPattern(patterns)           => transformInner(patterns, limit, MinusPattern.apply)
+      case OptionalPattern(patterns)        => transformInner(patterns, limit, OptionalPattern.apply)
       case UnionPattern(blocks) =>
         ZIO.foreach(blocks)(optimizeAndTransformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
       case pattern: QueryPattern => ZIO.succeed(Seq(pattern))
     }
+
+  private def transformInner[Outer <: QueryPattern](
+    inner: Seq[QueryPattern],
+    limit: Option[Set[SmartIri]],
+    outer: Seq[QueryPattern] => Outer
+  ): Task[Seq[Outer]] =
+    ZIO.foreach(inner)(transformPattern(_, limit)).map(t => Seq(outer.apply(t.flatten)))
 
 }
 
