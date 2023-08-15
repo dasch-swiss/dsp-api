@@ -38,5 +38,5 @@
 
     <http://rdfh.ch/0001/2tk24CSISgemApos3pH26Q/values/daD7_XLfTw24Wq7Y3fe5Uw>
         a                         knora-base:TextValue ;
-        knora-base:valueHasString "a text value \nwithout markup     \n     but with linebreaks in it" .
+        knora-base:valueHasString "a text value \nwithout markup     \n     but with\n\nlinebreaks  \n    \n    \n    in it" .
 }
