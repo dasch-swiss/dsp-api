@@ -18,16 +18,15 @@ object Dependencies {
   val AkkaActorVersion = "2.6.20"
   val AkkaHttpVersion  = "10.2.10"
   val JenaVersion      = "4.8.0"
-  val SttpVersion      = "3.8.16"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
   val ZioJsonVersion              = "0.6.0"
-  val ZioLoggingVersion           = "2.1.13"
+  val ZioLoggingVersion           = "2.1.14"
   val ZioNioVersion               = "2.0.1"
   val ZioMetricsConnectorsVersion = "2.1.0"
-  val ZioPreludeVersion           = "1.0.0-RC19"
+  val ZioPreludeVersion           = "1.0.0-RC20"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.15"
 
@@ -46,7 +45,7 @@ object Dependencies {
   val zioMetricsConnectors          = "dev.zio"                       %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion
   val zioMetricsPrometheusConnector = "dev.zio"                       %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion
   val zioPrelude                    = "dev.zio"                       %% "zio-prelude"                       % ZioPreludeVersion
-  val zioSttp                       = "com.softwaremill.sttp.client3" %% "zio"                               % SttpVersion
+  val zioSttp                       = "com.softwaremill.sttp.client3" %% "zio"                               % "3.9.0"
 
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
@@ -96,11 +95,11 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.4"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.4"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.5"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.5"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.3"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
-  val scallop        = "org.rogach"       %% "scallop"          % "4.1.0"  // Scala 3 compatible
+  val scallop        = "org.rogach"       %% "scallop"          % "5.0.0"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.2"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
