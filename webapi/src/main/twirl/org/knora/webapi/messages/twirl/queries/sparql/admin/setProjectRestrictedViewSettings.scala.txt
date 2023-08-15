@@ -1,0 +1,32 @@
+@*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+
+@*
+ * Sets project restricted view settings.
+ *
+ * @param size project's restricted view size.
+ * @param watermark project's watermark.
+ * @param projectIri project's IRI.
+ *
+ *@
+@(size: Option[String],
+  watermark: Option[String] = None,
+  projectIri: IRI)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+
+INSERT DATA {
+  GRAPH <http://www.knora.org/data/admin> {
+  	@projectIri knora-admin:projectRestrictedViewSize """@size"""^^xsd:string .
+
+  	@if(watermark.noneEmpty) {
+  	    @projectIri knora-admin:projectRestrictedViewWatermark """@watermark"""^^xsd:string .
+  	}
+  }
+}
