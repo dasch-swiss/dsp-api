@@ -57,9 +57,9 @@ final case class ConstructTransformer(
           simulateInference = true,
           limitInferenceToOntologies = limit
         )
-      case FilterNotExistsPattern(p) => transformInner(p, limit, FilterNotExistsPattern.apply)
-      case MinusPattern(p)           => transformInner(p, limit, MinusPattern.apply)
-      case OptionalPattern(p)        => transformInner(p, limit, OptionalPattern.apply)
+      case FilterNotExistsPattern(patterns) => transformInner(patterns, limit, FilterNotExistsPattern.apply)
+      case MinusPattern(patterns)           => transformInner(patterns, limit, MinusPattern.apply)
+      case OptionalPattern(patterns)        => transformInner(patterns, limit, OptionalPattern.apply)
       case UnionPattern(blocks) =>
         ZIO.foreach(blocks)(optimizeAndTransformPatterns(_, limit)).map(block => Seq(UnionPattern(block)))
       case pattern: QueryPattern => ZIO.succeed(Seq(pattern))
