@@ -14,12 +14,14 @@ import zio.stream.ZStream
 import java.nio.file.Files
 
 import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRestrictedViewSettingsPayload
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.RouteUtilZ
@@ -84,6 +86,11 @@ final case class ProjectsRouteZ(
           getRestrictedViewSettingsByShortname(shortname)
         case (Method.GET -> !! / "admin" / "projects" / "shortcode" / shortcode / "RestrictedViewSettings", _) =>
           getRestrictedViewSettingsByShortcode(shortcode)
+        case (
+              request @ Method.POST -> !! / "admin" / "projects" / "iri" / iri / "RestrictedViewSettings",
+              requestingUser
+            ) =>
+          setProjectRestrictedViewSettings(iri, request.body, requestingUser)
       }
       .catchAll(ExceptionHandlerZ.exceptionToJsonHttpResponseZ(_, appConfig))
 
@@ -233,6 +240,23 @@ final case class ProjectsRouteZ(
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
       r                   <- projectsService.getProjectRestrictedViewSettings(shortcodeIdentifier)
     } yield Response.json(r.toJsValue.toString)
+
+  private def setProjectRestrictedViewSettings(
+    iri: String,
+    body: Body,
+    user: UserADM
+  ): Task[Response] =
+    for {
+      iriDecoded     <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
+      isSystemAdmin  <- ZIO.succeed(user.permissions.isSystemAdmin)
+      isProjectAdmin <- ZIO.succeed(user.permissions.isProjectAdmin(iri))
+      _              <- ZIO.fail(ForbiddenException("User is not system or project admin.")).when(!isSystemAdmin && !isProjectAdmin)
+      id             <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      body           <- body.asString
+      payload <-
+        ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSettingsPayload]).mapError(e => BadRequestException(e))
+      _ <- projectsService.setProjectRestrictedViewSettings(id.value, payload.size, payload.watermark)
+    } yield Response.status(Status.Ok)
 
 }
 
