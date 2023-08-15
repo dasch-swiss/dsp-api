@@ -41,14 +41,14 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
   "The JSON-LD processor" should {
     "expand prefixes (on the client side)" in {
       // JSON-LD with prefixes and context object
-      val jsonldWithPrefixes = readTestData("", Paths.get("resourcesR2RV2/NarrenschiffFirstPage.jsonld"))
+      val jsonldWithPrefixes = readTestData(Paths.get("resourcesR2RV2/NarrenschiffFirstPage.jsonld"))
 
       // expand JSON-LD with JSON-LD processor
       val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
 
       // expected result after expansion
       val expectedJsonldExpandedParsed =
-        JsonLDUtil.parseJsonLD(readTestData("", Paths.get("resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld")))
+        JsonLDUtil.parseJsonLD(readTestData(Paths.get("resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld")))
 
       compareParsedJSONLDForResourcesResponse(
         expectedResponse = expectedJsonldExpandedParsed,
@@ -65,7 +65,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
         val receivedJson: JsObject = JsonParser(responseAs[String]).asJsObject
 
         val expectedJson: JsObject =
-          JsonParser(readTestData("", Paths.get("resourcesR2RV2/NarrenschiffFirstPage.jsonld"))).asJsObject
+          JsonParser(readTestData(Paths.get("resourcesR2RV2/NarrenschiffFirstPage.jsonld"))).asJsObject
 
         assert(receivedJson.fields("@context") == expectedJson.fields("@context"), "@context incorrect")
       }

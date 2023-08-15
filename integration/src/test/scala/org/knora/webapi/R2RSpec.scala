@@ -145,7 +145,7 @@ abstract class R2RSpec
   private def adjustFilePath(file: Path): Path =
     Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
 
-  protected def readTestData(responseAsString: String, file: Path): String =
+  protected def readTestData(file: Path): String =
     FileUtil.readTextFile(adjustFilePath(file)).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
 
   protected def writeTestData(responseAsString: String, file: Path): String = {
