@@ -109,8 +109,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     )
   )
 
-  private def testData(contents: String, fileName: String): String =
-    readOrWriteTextFile(contents, Paths.get("searchR2RV2", fileName), writeTestDataFiles)
+  private def testData(contents: String, fileName: String): String = {
+    val path = Paths.get("searchR2RV2", fileName)
+    if (writeTestDataFiles) writeTestData(contents, path)
+    else readTestData(contents, path)
+  }
 
   "The Search v2 Endpoint" should {
     "perform a fulltext search for 'Narr'" in {
