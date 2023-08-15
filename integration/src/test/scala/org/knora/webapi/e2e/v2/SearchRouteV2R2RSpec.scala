@@ -785,7 +785,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnumOffset.jsonld")
+        val expectedAnswerJSONLD = testData(responseAs[String], "PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
       }
     }
@@ -1955,7 +1955,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           .encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithRichtextWithTermTextInItalic.jsonld")
+        // FIXME: file name evidently wrong
+        val expectedAnswerJSONLD = testData(responseAs[String], "ThingWithRichtextWithTermTextInParagraph.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
       }
     }
@@ -2677,7 +2678,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersWithPersonWithName2.jsonld")
+        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 1)
       }
@@ -2714,7 +2715,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersWithPersonWithName2.jsonld")
+        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 1)
       }
@@ -2749,7 +2750,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersWithPersonWithName2.jsonld")
+        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 1)
       }
@@ -2783,7 +2784,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersWithPersonWithName2.jsonld")
+        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 1)
       }
@@ -2817,7 +2818,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersWithPersonWithName2.jsonld")
+        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithName2.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 1)
       }
@@ -2848,7 +2849,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
-        val expectedAnswerJSONLD = testData(responseAs[String], "lettersWithPersonWithoutName.jsonld")
+        val expectedAnswerJSONLD = testData(responseAs[String], "letterWithPersonWithoutName.jsonld")
         compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
         checkSearchResponseNumberOfResults(responseAs[String], 1)
       }
