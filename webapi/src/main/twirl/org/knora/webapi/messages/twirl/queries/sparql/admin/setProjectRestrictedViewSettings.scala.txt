@@ -21,12 +21,28 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
-INSERT DATA {
-  GRAPH <http://www.knora.org/data/admin> {
-  	<@iri> knora-admin:projectRestrictedViewSize "@size"^^xsd:string .
+WITH <http://www.knora.org/data/admin>
+DELETE {
+	<@iri> knora-admin:projectRestrictedViewSize ?prevSize .
 
-  	@if(watermark.nonEmpty) {
-  	    <@iri> knora-admin:projectRestrictedViewWatermark "@watermark"^^xsd:string .
-  	}
-  }
+    @if(watermark.nonEmpty) {
+        <@iri> knora-admin:projectRestrictedViewWatermark ?prevWatermark .
+    }
+}
+INSERT {
+	<@iri> knora-admin:projectRestrictedViewSize "@size"^^xsd:string .
+
+    @if(watermark.nonEmpty) {
+        <@iri> knora-admin:projectRestrictedViewWatermark "@watermark"^^xsd:string .
+    }
+}
+WHERE {
+    <@iri> a knora-admin:knoraProject .
+    OPTIONAL {
+        <@iri> knora-admin:projectRestrictedViewSize ?prevSize .
+
+        @if(watermark.nonEmpty) {
+            <@iri> knora-admin:projectRestrictedViewWatermark ?prevWatermark .
+        }
+    }
 }
