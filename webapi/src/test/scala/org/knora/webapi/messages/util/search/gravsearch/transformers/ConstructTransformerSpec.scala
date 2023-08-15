@@ -25,7 +25,7 @@ object ConstructTransformerSpec extends ZIOSpecDefault {
 
   val spec = suite("ConstructTransformerLive")(
     test(
-      """Given an optional pattern in the Where clause it should transform the inner but not split the pattern"""
+      "Given an optional pattern in the Where clause it should transform the inner but not split the pattern"
     ) {
       val query = ConstructQuery(
         constructClause = ConstructClause(
