@@ -65,14 +65,6 @@ final case class HealthRouteZ() {
     )
 
   /**
-   * Returns a string representation "healthy" or "unhealthy" from a boolean.
-   *
-   * @param s a boolean from which to derive the state
-   * @return either "healthy" or "unhealthy"
-   */
-  private def status(s: Boolean): String = if (s) "healthy" else "unhealthy"
-
-  /**
    * Returns the HTTP status according to the input boolean.
    *
    * @param s a boolean from which to derive the HTTP status

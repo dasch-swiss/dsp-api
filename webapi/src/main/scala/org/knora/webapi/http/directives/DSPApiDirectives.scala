@@ -5,7 +5,6 @@
 
 package org.knora.webapi.http.directives
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives.handleExceptions
 import akka.http.scaladsl.server.Directives.handleRejections
@@ -26,9 +25,9 @@ object DSPApiDirectives {
   def rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler.withFallback(RejectionHandler.default)
 
   // Our exception handler
-  def exceptionHandler(system: ActorSystem, appConfig: AppConfig): ExceptionHandler = KnoraExceptionHandler(appConfig)
+  def exceptionHandler(appConfig: AppConfig): ExceptionHandler = KnoraExceptionHandler(appConfig)
 
   // Combining the two handlers for convenience
-  def handleErrors(system: ActorSystem, appConfig: AppConfig): server.Directive[Unit] =
-    handleRejections(rejectionHandler) & handleExceptions(exceptionHandler(system, appConfig))
+  def handleErrors(appConfig: AppConfig): server.Directive[Unit] =
+    handleRejections(rejectionHandler) & handleExceptions(exceptionHandler(appConfig))
 }
