@@ -485,6 +485,7 @@ case class ReadTextValueV2(
   valueCreationDate: Instant,
   valueHasUUID: UUID,
   valueContent: TextValueContentV2,
+  valueHasMaxStandoffStartIndex: Option[Int],
   previousValueIri: Option[IRI],
   deletionInfo: Option[DeletionInfo]
 ) extends ReadValueV2

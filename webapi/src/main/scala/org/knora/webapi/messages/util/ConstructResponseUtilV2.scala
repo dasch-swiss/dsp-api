@@ -1529,6 +1529,9 @@ final case class ConstructResponseUtilV2Live(
                 )
 
               case textValueContentV2: TextValueContentV2 =>
+                val maybeValueHasMaxStandoffStartIndex: Option[Int] =
+                  valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
+
                 ReadTextValueV2(
                   valueIri = valObj.subjectIri,
                   attachedToUser = attachedToUser,
@@ -1537,6 +1540,7 @@ final case class ConstructResponseUtilV2Live(
                   valueCreationDate = valueCreationDate,
                   valueHasUUID = valueHasUUID,
                   valueContent = textValueContentV2,
+                  valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
                   previousValueIri = previousValueIri,
                   deletionInfo = valueDeletionInfo
                 )
