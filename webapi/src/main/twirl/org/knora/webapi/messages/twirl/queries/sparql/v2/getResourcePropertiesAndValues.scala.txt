@@ -13,22 +13,16 @@
 @*
  * Gets the values of all the Knora properties of one or more resources, using SPARQL w/o inference.
  *
- * @param resourceIris               the IRIs of the requested resources.
- * @param preview                    indicates if the request should only return preview information.
- * @param withDeleted                indicates if the deleted resources and values should be returned or not.
- * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
- *                                   Cannot be used in conjunction with preview.
- * @param maybeValueUuid             if defined, requests only the value with the specified UUID.
- * @param maybeVersionDate           if defined, requests the state of the resources at the specified
- *                                   time in the past. Cannot be used in conjunction with preview.
- * @param maybeValueIri              if defined, the specified value will be the only value returned.
- * @param queryAllNonStandoff        if true, knora-base:valueHasString and other non-standoff content will be returned.
- * @param maybeStandoffMinStartIndex if defined, the minimum knora-base:standoffTagHasStartIndex to be returned.
- *                                   Requires maybeStandoffMaxStartIndex. If undefined, standoff will
- *                                   not be returned.
- * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
- *                                   Requires maybeStandoffMinStartIndex. If undefined, standoff will
- *                                   not be returned.
+ * @param resourceIris        the IRIs of the requested resources.
+ * @param preview             indicates if the request should only return preview information.
+ * @param withDeleted         indicates if the deleted resources and values should be returned or not.
+ * @param maybePropertyIri    if defined, only returns values of the specified explicit property.
+ *                            Cannot be used in conjunction with preview.
+ * @param maybeValueUuid      if defined, requests only the value with the specified UUID.
+ * @param maybeVersionDate    if defined, requests the state of the resources at the specified
+ *                            time in the past. Cannot be used in conjunction with preview.
+ * @param maybeValueIri       if defined, the specified value will be the only value returned.
+ * @param queryAllNonStandoff if true, knora-base:valueHasString and other non-standoff content will be returned.
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
@@ -37,9 +31,7 @@
   maybePropertyIri: Option[SmartIri] = None,
   maybeValueUuid: Option[UUID] = None,
   maybeVersionDate: Option[Instant] = None,
-  maybeValueIri: Option[IRI] = None,
-  maybeStandoffMinStartIndex: Option[Int] = None,
-  maybeStandoffMaxStartIndex: Option[Int] = None)
+  maybeValueIri: Option[IRI] = None)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -74,12 +66,6 @@ CONSTRUCT {
     ?valueObject ?valueObjectProperty ?valueObjectValue ;
         knora-base:valueHasUUID ?currentValueUUID ;
         knora-base:hasPermissions ?currentValuePermissions .
-
-    @if(maybeStandoffMinStartIndex.nonEmpty) {
-        ?valueObject knora-base:valueHasStandoff ?standoffNode .
-        ?standoffNode ?standoffProperty ?standoffValue  ;
-            knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
-    }
 
     @if(queryAllNonStandoff) {
         @* include this inferred information in the results, needed to identify linking properties *@
@@ -245,29 +231,6 @@ CONSTRUCT {
                 @if(!queryAllNonStandoff) {
                     FILTER(?valueObjectProperty != knora-base:valueHasString)
                 }
-            }
-            @* Query standoff if requested. *@
-            @maybeStandoffMinStartIndex match {
-                case Some(standoffMinStartIndex) => {
-                    @if(maybeStandoffMaxStartIndex.isEmpty) {
-                        @{throw SparqlGenerationException("maybeStandoffMaxStartIndex must be defined if maybeStandoffMinStartIndex is defined"); ()}
-                    }
-
-                    UNION {
-                        ?valueObject knora-base:valueHasStandoff ?standoffNode .
-                        ?standoffNode ?standoffProperty ?standoffValue ;
-                            knora-base:standoffTagHasStartIndex ?startIndex .
-
-                        OPTIONAL {
-                            ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
-                            ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
-                        }
-
-                        FILTER(?startIndex >= @standoffMinStartIndex && ?startIndex <= @{maybeStandoffMaxStartIndex.get})
-                    }
-                }
-
-                case None => {}
             }
             @if(queryAllNonStandoff) {
                 UNION {
