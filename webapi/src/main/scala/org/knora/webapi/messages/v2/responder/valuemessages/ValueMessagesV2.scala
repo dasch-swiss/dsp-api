@@ -485,7 +485,6 @@ case class ReadTextValueV2(
   valueCreationDate: Instant,
   valueHasUUID: UUID,
   valueContent: TextValueContentV2,
-  valueHasMaxStandoffStartIndex: Option[Int],
   previousValueIri: Option[IRI],
   deletionInfo: Option[DeletionInfo]
 ) extends ReadValueV2
@@ -498,51 +497,6 @@ case class ReadTextValueV2(
    */
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadTextValueV2 =
     copy(valueContent = valueContent.toOntologySchema(targetSchema))
-
-  override def toJsonLD(
-    targetSchema: ApiV2Schema,
-    projectADM: ProjectADM,
-    appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
-  ): JsonLDValue = {
-    val valueAsJsonLDValue: JsonLDValue = super.toJsonLD(
-      targetSchema = targetSchema,
-      projectADM = projectADM,
-      appConfig = appConfig,
-      schemaOptions = schemaOptions
-    )
-
-    // If this is the complex schema and separate standoff has been requested, and the text value has
-    // valueHasMaxStandoffStartIndex, add it along with textValueHasMarkup to the metadata returned with the value.
-    targetSchema match {
-      case ApiV2Complex =>
-        if (SchemaOptions.renderMarkupAsStandoff(targetSchema = ApiV2Complex, schemaOptions = schemaOptions)) {
-          valueHasMaxStandoffStartIndex match {
-            case Some(maxStartIndex) =>
-              val valueAsJsonLDObject: JsonLDObject = valueAsJsonLDValue match {
-                case jsonLDObject: JsonLDObject => jsonLDObject
-                case other =>
-                  throw AssertionException(
-                    s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other"
-                  )
-              }
-
-              JsonLDObject(
-                valueAsJsonLDObject.value ++ Map(
-                  TextValueHasMarkup                -> JsonLDBoolean(true),
-                  TextValueHasMaxStandoffStartIndex -> JsonLDInt(maxStartIndex)
-                )
-              )
-
-            case None => valueAsJsonLDValue
-          }
-        } else {
-          valueAsJsonLDValue
-        }
-
-      case ApiV2Simple => valueAsJsonLDValue
-    }
-  }
 }
 
 /**

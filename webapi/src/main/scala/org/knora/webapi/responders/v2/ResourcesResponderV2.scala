@@ -1460,14 +1460,6 @@ final case class ResourcesResponderV2Live(
     // eliminate duplicate Iris
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
-    // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
-    // pages, if any, will be queried separately.)
-    val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
-      StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
-        queryStandoff = queryStandoff,
-        appConfig = appConfig
-      )
-
     for {
       resourceRequestSparql <- ZIO.attempt(
                                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -1478,9 +1470,7 @@ final case class ResourcesResponderV2Live(
                                      maybePropertyIri = propertyIri,
                                      maybeValueUuid = valueUuid,
                                      maybeVersionDate = versionDate,
-                                     queryAllNonStandoff = true,
-                                     maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                                     maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
+                                     queryAllNonStandoff = true
                                    )
                                    .toString()
                                )

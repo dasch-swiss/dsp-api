@@ -90,9 +90,7 @@ final case class StandoffResponderV2Live(
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
-    case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 =>
-      getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
+    case getStandoffPageRequestV2: GetStandoffRequestV2 => getStandoffV2(getStandoffPageRequestV2)
     case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) =>
       createMappingV2(
         xml.xml,
@@ -109,9 +107,7 @@ final case class StandoffResponderV2Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
-  private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Task[GetStandoffResponseV2] = {
-    val requestMaxStartIndex = getStandoffRequestV2.offset + appConfig.standoffPerPage - 1
-
+  private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Task[GetStandoffResponseV2] =
     for {
       resourceRequestSparql <-
         ZIO.attempt(
@@ -123,9 +119,7 @@ final case class StandoffResponderV2Live(
               maybePropertyIri = None,
               maybeVersionDate = None,
               queryAllNonStandoff = false,
-              maybeValueIri = Some(getStandoffRequestV2.valueIri),
-              maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
-              maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
+              maybeValueIri = Some(getStandoffRequestV2.valueIri)
             )
             .toString()
         )
@@ -172,23 +166,10 @@ final case class StandoffResponderV2Live(
             )
         }
 
-      nextOffset: Option[Int] =
-        textValueObj.valueHasMaxStandoffStartIndex match {
-          case Some(definedMaxIndex) =>
-            if (requestMaxStartIndex >= definedMaxIndex) {
-              None
-            } else {
-              Some(requestMaxStartIndex + 1)
-            }
-
-          case None => None
-        }
     } yield GetStandoffResponseV2(
       valueIri = textValueObj.valueIri,
-      standoff = textValueObj.valueContent.standoff,
-      nextOffset = nextOffset
+      standoff = textValueObj.valueContent.standoff
     )
-  }
 
   /**
    * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
@@ -1117,102 +1098,6 @@ final case class StandoffResponderV2Live(
     } yield StandoffEntityInfoGetResponseV2(
       standoffClassInfoMap = standoffClassEntities.standoffClassInfoMap,
       standoffPropertyInfoMap = standoffPropertyEntities.standoffPropertyInfoMap
-    )
-  }
-
-  /**
-   * A [[ResultAndNext]] containing a page of standoff queried from a text value.
-   *
-   * @param result the standoff result.
-   * @param next the next task/step, or `None` if there is no more standoff to query in the text value.
-   */
-  private case class StandoffTaskResult(
-    override val result: StandoffTaskUnderlyingResult,
-    override val next: Option[GetStandoffTask]
-  ) extends ResultAndNext[StandoffTaskUnderlyingResult]
-
-  /**
-   * The underlying result type contained in a [[StandoffTaskResult]].
-   *
-   * @param standoff the standoff that was queried.
-   */
-  case class StandoffTaskUnderlyingResult(standoff: Vector[StandoffTagV2])
-
-  /**
-   * A task that gets a page of standoff from a text value.
-   *
-   * @param resourceIri          the IRI of the resource containing the value.
-   * @param valueIri             the IRI of the value.
-   * @param offset               the start index of the first standoff tag to be returned.
-   * @param requestingUser       the user making the request.
-   */
-  case class GetStandoffTask(
-    resourceIri: IRI,
-    valueIri: IRI,
-    offset: Int,
-    requestingUser: UserADM
-  ) extends NextExecutionStep[StandoffTaskUnderlyingResult] {
-    override def run(
-      previousResult: Option[ResultAndNext[StandoffTaskUnderlyingResult]]
-    ): Task[ResultAndNext[StandoffTaskUnderlyingResult]] =
-      for {
-        // Get a page of standoff.
-        standoffResponse <-
-          getStandoffV2(
-            GetStandoffPageRequestV2(
-              resourceIri = resourceIri,
-              valueIri = valueIri,
-              offset = offset,
-              targetSchema = ApiV2Complex,
-              requestingUser = requestingUser
-            )
-          )
-
-        // Add it to the standoff that has already been collected.
-        collectedStandoff =
-          previousResult match {
-            case Some(definedPreviousResult) =>
-              definedPreviousResult.result.standoff ++ standoffResponse.standoff
-            case None => standoffResponse.standoff.toVector
-          }
-      } yield standoffResponse.nextOffset match {
-        case Some(definedNextOffset) =>
-          // There is more standoff to query. Return the collected standoff and the next task.
-          StandoffTaskResult(
-            StandoffTaskUnderlyingResult(collectedStandoff),
-            Some(copy(offset = definedNextOffset))
-          )
-        case None =>
-          // There is no more standoff to query. Just return the collected standoff.
-          StandoffTaskResult(
-            StandoffTaskUnderlyingResult(collectedStandoff),
-            None
-          )
-      }
-  }
-
-  /**
-   * Returns all pages of standoff markup from a text value, except for the first page.
-   *
-   * @param getRemainingStandoffFromTextValueRequestV2 the request message.
-   * @return the text value's standoff markup.
-   */
-  private def getRemainingStandoffFromTextValueV2(
-    getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2
-  ): Task[GetStandoffResponseV2] = {
-    val firstTask = GetStandoffTask(
-      resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
-      valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      offset = appConfig.standoffPerPage, // the offset of the second page
-      requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
-    )
-
-    for {
-      result <- NextExecutionStep.runSteps(firstTask)
-    } yield GetStandoffResponseV2(
-      valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      standoff = result.result.standoff,
-      nextOffset = None
     )
   }
 }
