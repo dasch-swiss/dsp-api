@@ -13,7 +13,7 @@ Both, the migrated version of the file and the original are kept.
 The following table shows the accepted file formats:
 
 | Category              | Accepted format                        | Converted during ingest?                                                   |
-| --------------------- |----------------------------------------| -------------------------------------------------------------------------- |
+| --------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
 | Text, XML<sup>1</sup> | ODD, RNG, TXT, XML, XSD, XSL           | No                                                                         |
 | Tables                | CSV, XLS, XLSX                         | No                                                                         |
 | 2D Images             | JPG, JPEG, JP2, PNG, TIF, TIFF         | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dasch-swiss/sipi) |
@@ -24,4 +24,4 @@ The following table shows the accepted file formats:
 
 
 1: If your XML files represent text with markup (e.g. [TEI/XML](http://www.tei-c.org/)),
-the recommended approach is to allow Knora to store it as [Standoff/RDF](standoff-rdf.md).
+it is possible to store it as [Standoff/RDF](standoff-rdf.md).

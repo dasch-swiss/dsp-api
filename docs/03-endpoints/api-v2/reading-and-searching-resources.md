@@ -45,18 +45,9 @@ See the interfaces `Resource` and `ResourcesSequence` in module
 `ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and
 `ApiV2WithValueObjects`).
 
-### Text Markup Options
+### Requesting Text Markup as XML
 
-Text markup can be returned in one of two ways:
-
-- As XML embedded in the response, using an [XML to Standoff Mapping](xml-to-standoff-mapping.md).
-- As [standoff/RDF](../../02-dsp-ontologies/knora-base.md#text-with-standoff-markup), which is DSP-API's internal markup representation.
-
-Embedded XML is the default.
-
-#### Requesting Text Markup as XML
-
-When requesting a text value with standoff mark up, there are three possibilities:
+When requesting a text value with standoff markup, there are three possibilities:
 
 1. The text value uses standard mapping.
 2. The text value uses a custom mapping which *does not* specify an XSL transformation.
@@ -93,115 +84,6 @@ the order of the attributes in one element may vary from the original.
 In the third case, when a transformation is specified, both `kb:textValueAsXml` and `kb:textValueAsHtml` will be returned.
 `kb:textValueAsHtml` is the result of the XSL transformation applied to `kb:textValueAsXml`.
 The HTML representation is intended to display the text value in a human readable and properly styled way, while the XML representation can be used to update the text value.
-
-#### Requesting Text Markup as Standoff
-
-Implementation of support for standoff/RDF in API v2 is in its early stages; its use is currently discouraged. The basic
-procedure works like this:
-
-First, request a resource in the [complex schema](introduction.md#api-schema), using any relevant
-API v2 route, submitting the string `standoff` as the value of either:
-
-  - the HTTP header `X-Knora-Accept-Markup`
-
-  - the URL parameter `markup`
-
-If a text value in the resource contains markup, the text value will look something like this:
-
-```json
-{
-  "@id" : "http://rdfh.ch/0001/LK-wKXDNQJaRHOf0F0aJ2g/values/1Er1OpVwQR2u6peTwyNpJw",
-  "@type" : "knora-api:TextValue",
-  "knora-api:attachedToUser" : {
-    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-  },
-  "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser",
-  "knora-api:textValueHasMarkup" : true,
-  "knora-api:textValueHasMaxStandoffStartIndex" : 6737,
-  "knora-api:userHasPermission" : "CR",
-  "knora-api:valueAsString" : "\nHamlet\nACT I\nSCENE I. Elsinore. A platform before the castle...",
-  "knora-api:valueCreationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "2019-05-08T17:08:32.158401Z"
-  }
-}
-```
-
-The object `knora-api:valueAsString` contains the text without markup. The predicate
-`knora-api:textValueHasMarkup` indicates that the text value has markup,
-and the value of the predicate `knora-api:textValueHasMaxStandoffStartIndex` gives the start
-index of the last standoff tag; this gives the client some idea of how much markup there is.
-
-You can then request the text value's standoff/RDF, which is returned in pages of a limited
-size. To get each page:
-
-```
-HTTP GET to http://host/v2/standoff/RESOURCE_IRI/TEXT_VALUE_IRI/OFFSET
-```
-
-Both `RESOURCE_IRI` and `TEXT_VALUE_IRI` must be URL-encoded. The offset is an integer whose
-initial value is 0. The response will look like this:
-
-```json
-{
-  "@graph" : [ {
-    "@type" : "http://api.knora.org/ontology/standoff/v2#StandoffRootTag",
-    "knora-api:standoffTagHasEnd" : 184716,
-    "knora-api:standoffTagHasStart" : 0,
-    "knora-api:standoffTagHasStartIndex" : 0,
-    "knora-api:standoffTagHasUUID" : "sbBzeAaNTzaUXl90UtlYzw"
-  }, {
-    "@type" : "http://api.knora.org/ontology/standoff/v2#StandoffHeader1Tag",
-    "knora-api:standoffTagHasEnd" : 7,
-    "knora-api:standoffTagHasStart" : 1,
-    "knora-api:standoffTagHasStartIndex" : 1,
-    "knora-api:standoffTagHasStartParentIndex" : 0,
-    "knora-api:standoffTagHasUUID" : "HhXjcdSTS_G6eSQ0apdjUw"
-  }, {
-    "@type" : "http://api.knora.org/ontology/standoff/v2#StandoffHeader3Tag",
-    "knora-api:standoffTagHasEnd" : 14,
-    "knora-api:standoffTagHasStart" : 9,
-    "knora-api:standoffTagHasStartIndex" : 2,
-    "knora-api:standoffTagHasStartParentIndex" : 0,
-    "knora-api:standoffTagHasUUID" : "Ymr2aDUqTx6nMwGZGiqduA"
-  }, {
-    "@type" : "http://api.knora.org/ontology/standoff/v2#StandoffHeader3Tag",
-    "knora-api:standoffTagHasEnd" : 64,
-    "knora-api:standoffTagHasStart" : 16,
-    "knora-api:standoffTagHasStartIndex" : 3,
-    "knora-api:standoffTagHasStartParentIndex" : 0,
-    "knora-api:standoffTagHasUUID" : "_Zk0B1edRK6mgdtokmosXg"
-  }, {
-    "@type" : "http://api.knora.org/ontology/standoff/v2#StandoffBlockquoteTag",
-    "knora-api:standoffTagHasEnd" : 112,
-    "knora-api:standoffTagHasStart" : 66,
-    "knora-api:standoffTagHasStartIndex" : 4,
-    "knora-api:standoffTagHasStartParentIndex" : 0,
-    "knora-api:standoffTagHasUUID" : "1DLdI0LJTCy07w6ZsOM_Sg"
-  }, {
-    "@type" : "http://api.knora.org/ontology/standoff/v2#StandoffItalicTag",
-    "knora-api:standoffTagHasEnd" : 111,
-    "knora-api:standoffTagHasStart" : 67,
-    "knora-api:standoffTagHasStartIndex" : 5,
-    "knora-api:standoffTagHasStartParentIndex" : 4,
-    "knora-api:standoffTagHasUUID" : "XJ6GVO1VQSqrTyLHGnHqcA"
-  } ],
-  "knora-api:nextStandoffStartIndex" : 100,
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
-  }
-}
-```
-
-See [Text with Standoff Markup](../../02-dsp-ontologies/knora-base.md#text-with-standoff-markup)
-for details of the predicates in each standoff tag.
-
-If there are more pages of standoff to be requested, the response will contain `knora-api:nextStandoffStartIndex`,
-whose object should be submitted as the next `OFFSET` to the same route. This continues until
-you receive a response without `knora-api:nextStandoffStartIndex`.
 
 ## Get the Representation of a Resource by IRI
 
@@ -569,7 +451,7 @@ called [Gravsearch: Virtual Graph Search](query-language.md)).
 
 ### Support of TEI/XML
 
-To convert standoff markup to TEI/XML, see [TEI/XML](tei-xml.md).
+To convert standoff markup to TEI/XML, see [TEI/XML](text/tei-xml.md).
 
 ### IIIF Manifests
 

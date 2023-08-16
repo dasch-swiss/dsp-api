@@ -3,84 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-# XML to Standoff Mapping in API v1
-
-## The Knora Standard Mapping
-
-### Description
-
-A mapping allows for the conversion of XML to standoff representation in
-RDF and back. In order to create a `TextValue` with markup, the text has
-to be provided in XML format, along with the IRI of the mapping that
-will be used to convert the markup to standoff. However, a mapping is
-only needed if a TextValue with markup should be created. If a text has
-no markup, it is submitted as a mere sequence of characters.
-
-The two cases are described in the TypeScript interfaces `simpletext`
-and `richtext` in module `basicMessageComponents`.
-
-Knora offers a standard mapping with the IRI
-`http://rdfh.ch/standoff/mappings/StandardMapping`. The
-standard mapping covers the HTML elements and attributes supported by
-the GUI's text editor, [CKEditor](https://ckeditor.com/). (Please note that the HTML has to be
-encoded in strict XML syntax. CKeditor offers the possibility to define filter rules.
-They should reflect the elements supported by the mapping; see `jquery.htmleditor.js`.)
-The standard mapping contains the following elements and attributes that are mapped to standoff classes
-and properties defined in the ontology:
-
-- `<text>` → `standoff:StandoffRootTag`
-- `<p>` → `standoff:StandoffParagraphTag`
-- `<em>` → `standoff:StandoffItalicTag`
-- `<strong>` → `standoff:StandoffBoldTag`
-- `<u>` → `standoff:StandoffUnderlineTag`
-- `<sub>` → `standoff:StandoffSubscriptTag`
-- `<sup>` → `standoff:StandoffSuperscriptTag`
-- `<strike>` → `standoff:StandoffStrikeTag`
-- `<a href="URL">` → `knora-base:StandoffUriTag`
-- `<a class="salsah-link" href="Knora IRI">` → `knora-base:StandoffLinkTag`
-- `<a class="internal-link" href="#fragment">` → `knora-base:StandoffInternalReferenceTag`
-- `<h1>` to `<h6>` → `standoff:StandoffHeader1Tag` to `standoff:StandoffHeader6Tag`
-- `<ol>` → `standoff:StandoffOrderedListTag`
-- `<ul>` → `standoff:StandoffUnrderedListTag`
-- `<li>` → `standoff:StandoffListElementTag`
-- `<tbody>` → `standoff:StandoffTableBodyTag`
-- `<table>` → `standoff:StandoffTableTag`
-- `<tr>` → `standoff:StandoffTableRowTag`
-- `<td>` → `standoff:StandoffTableCellTag`
-- `<br>` → `standoff:StandoffBrTag`
-- `<hr>` → `standoff:StandoffLineTag`
-- `<pre>` → `standoff:StandoffPreTag`
-- `<cite>` → `standoff:StandoffCiteTag`
-- `<blockquote>` → `standoff:StandoffBlockquoteTag`
-- `<code>` → `standoff:StandoffCodeTag`
-
-The HTML produced by CKEditor is wrapped in an XML doctype and a pair of
-root tags `<text>...</text>` and then sent to Knora. The XML sent to the
-GUI by Knora is unwrapped accordingly (see `jquery.htmleditor.js`).
-Although the GUI supports HTML5, it is treated as if it was XHTML in
-strict XML notation.
-
-### Maintenance
-
-The standard mapping definition can be found at
-`test_data/test_route/texts/mappingForStandardHTML.xml`. It was
-used to generate the default mapping, distributed as
-`knora-ontologies/standoff-data.ttl` and that is loaded at a Knora
-installation. It should be used to re-generate it, whenever we want to
-amend or extend it.
-
-Note: once the mapping has been generated, one has to rework the
-resources' UUID in order to maintain backward compatibility.
+# XML to Standoff Mapping in API v2
 
 ## Creating a custom Mapping
 
-The Knora standard mapping only supports a few HTML tags. In order to
-submit more complex XML markup to Knora, a custom mapping has to be
-created first. Basically, a mapping expresses the relations between XML
+The DSP-API's standard standoff mapping only supports a few HTML tags. In order to
+submit more complex XML markup, a custom mapping has to be
+created first. A mapping expresses the relations between XML
 elements and attributes and their corresponding standoff classes and
 properties. The relations expressed in a mapping are one-to-one
 relations, so the XML can be recreated from the data in RDF. However,
-since HTML offers a very limited set of elements, Knora mappings support
+since HTML offers a very limited set of elements, custom mappings support
 the combination of element names and classes. In this way, the same
 element can be used several times in combination with another classname
 (please note that `<a>` without a class is a mere hyperlink whereas `<a class="salsah-link">` is an internal link/standoff link).
@@ -99,7 +32,7 @@ structure (the indentation corresponds to the nesting in XML):
 
   - `<defaultXSLTransformation> (optional)`: the Iri of the
     default XSL transformation to be applied to the XML when
-    reading it back from Knora. The XSL transformation is
+    reading it back from DSP-API. The XSL transformation is
     expected to produce HTML. If given, the Iri has to refer to
     a resource of type `knora-base:XSLTransformation`.
 
@@ -165,7 +98,7 @@ structure (the indentation corresponds to the nesting in XML):
           standoff class
         - `<attributeName>`: the name of the
           attribute holding the typed value in
-          the expected Knora standard format
+          the expected standard format
 
 XML structure of a mapping:
 
@@ -233,12 +166,13 @@ sense to make the corresponding standoff property required
 (`owl:cardinality` of one) in the ontology or optional
 (`owl:maxCardinality` of one), but not allowing it more than once.
 
+
 ### Standoff Data Types
 
 DSP-API allows the use of all its value types as standoff data types
 (defined in `knora-base.ttl`):
 
-- `knora-base:StandoffLinkTag`: Represents a reference to a Knora
+- `knora-base:StandoffLinkTag`: Represents a reference to a 
   resource (the IRI of the target resource must be submitted in the
   data type attribute).
 - `knora-base:StandoffInternalReferenceTag`: Represents an internal
@@ -248,7 +182,7 @@ DSP-API allows the use of all its value types as standoff data types
 - `knora-base:StandoffUriTag`: Represents a reference to a URI (the
   URI of the target resource must be submitted in the data type
   attribute).
-- `knora-base:StandoffDateTag`: Represents a date (a Knora date
+- `knora-base:StandoffDateTag`: Represents a date (a date
   string must be submitted in the data type attribute, e.g.
   `GREGORIAN:2017-01-27`).
 - `knora-base:StandoffColorTag`: Represents a color (a hexadecimal
@@ -268,7 +202,7 @@ DSP-API allows the use of all its value types as standoff data types
   must be submitted in the data type attribute).
 
 The basic idea is that parts of a text can be marked up in a way that
-allows using built-in data types. In order to do so, the typed
+allows using DSP-API's built-in data types. In order to do so, the typed
 values have to be provided in a standardized way in an attribute that
 has to be defined in the mapping.
 
@@ -361,8 +295,12 @@ sent to DSP-API and converted to standoff:
 </text>
 ```
 
-The attribute holds the date in the format of a date string, like: `GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]`.
-This allows for different formats as well as for imprecision and periods. Intervals
+The attribute holds the date in the format of a DSP-API date string (the
+format is also documented in the typescript type alias `dateString` in
+module `basicMessageComponents`. There you will also find documentation
+about the other types like color etc.). DSP-API date strings have this
+format: `GREGORIAN|JULIAN):YYYY[-MM[-DD]][:YYYY[-MM[-DD]]]`. This allows
+for different formats as well as for imprecision and periods. Intervals
 are submitted as one attribute in the following format:
 `interval-attribute="1.0,2.0"` (two decimal numbers separated with a
 comma).
@@ -372,7 +310,7 @@ file in the the test data:
 `test_data/test_route/texts/mappingForHTML.xml` and
 `test_data/test_route/texts/HTML.xml`.
 
-#### Internal References in an XML Document
+### Internal References in an XML Document
 
 Internal references inside an XML document can be represented using the
 data type standoff class `knora-base:StandoffInternalReferenceTag` or a
@@ -513,17 +451,18 @@ using the data type standoff class `knora-base:StandoffLinkTag`,
 internal links using the data type standoff class
 `knora-base:StandoffInternalReferenceTag`.
 
-### Validating a Mapping and sending it to DSP-API
 
-A mapping can be validated before sending it to the DSP-API with the following
+## Validating a Mapping and sending it to DSP-API
+
+A mapping can be validated before sending it to DSP-API with the following
 XML Schema file: `webapi/src/resources/mappingXMLToStandoff.xsd`. Any
 mapping that does not conform to this XML Schema file will be rejected
-by the DSP-API.
+by DSP-API.
 
 The mapping has to be sent as a multipart request to the standoff route
 using the path segment `mapping`:
 
-    HTTP POST http://host/v1/mapping
+    HTTP POST http://host/v2/mapping
 
 The multipart request consists of two named parts:
 
@@ -531,9 +470,13 @@ The multipart request consists of two named parts:
 "json":
 
   {
-    "project_id": "projectIRI",
-    "label": "my mapping",
-    "mappingName": "MappingNameSegment"
+      "knora-api:mappingHasName": "My Mapping",
+      "knora-api:attachedToProject": "projectIRI",
+      "rdfs:label": "MappingNameSegment",
+      "@context": {
+          "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+      }
   }
 
 "xml":
@@ -546,8 +489,8 @@ The multipart request consists of two named parts:
 
 A successful response returns the Iri of the mapping. However, the Iri
 of a mapping is predictable: it consists of the project Iri followed by
-`/mappings/` and the `mappingName` submitted in the JSON (if the name
+`/mappings/` and the `knora-api:mappingHasName` submitted in the JSON-LD (if the name
 already exists, the request will be rejected). Once created, a mapping
-can be used to create TextValues in DSP-API. The formats are documented in
-the typescript interfaces `addMappingRequest` and `addMappingResponse`
-in module `mappingFormats`
+can be used to create TextValues in Knora. The formats are documented in
+the v2 typescript interfaces `AddMappingRequest` and `AddMappingResponse`
+in module `MappingFormats`
