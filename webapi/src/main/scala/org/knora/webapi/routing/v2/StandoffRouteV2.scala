@@ -19,16 +19,13 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import dsp.errors.BadRequestException
-import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffPageRequestV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
@@ -46,28 +43,7 @@ final case class StandoffRouteV2()(
   private implicit val ec: ExecutionContext = system.dispatcher
 
   def makeRoute: Route =
-    path("v2" / "standoff" / Segment / Segment / Segment) {
-      (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>
-        get { requestContext =>
-          val requestTask = for {
-            resourceIri <-
-              RouteUtilZ
-                .toSmartIri(resourceIriStr, s"Invalid resource IRI: $resourceIriStr")
-                .filterOrFail(_.isKnoraResourceIri)(BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
-            valueIri <-
-              RouteUtilZ
-                .toSmartIri(valueIriStr, s"Invalid value IRI: $valueIriStr")
-                .filterOrFail(_.isKnoraValueIri)(BadRequestException(s"Invalid value IRI: $valueIriStr"))
-            offset <- ZIO
-                        .fromOption(ValuesValidator.validateInt(offsetStr))
-                        .orElseFail(BadRequestException(s"Invalid offset: $offsetStr"))
-            targetSchema <- RouteUtilV2.getOntologySchema(requestContext)
-            user         <- Authenticator.getUserADM(requestContext)
-          } yield GetStandoffPageRequestV2(resourceIri.toString, valueIri.toString, offset, targetSchema, user)
-          val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext, schemaOptionsOption = ZIO.succeed(Some(schemaOptions)))
-        }
-    } ~ path("v2" / "mapping") {
+    path("v2" / "mapping") {
       post {
         entity(as[Multipart.FormData]) { formData: Multipart.FormData => requestContext =>
           val jsonPartKey = "json"
