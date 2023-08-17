@@ -780,6 +780,7 @@ final case class SearchResponderV2Live(
                     preview = false,
                     withDeleted = false,
                     queryAllNonStandoff = true,
+                    queryStandoff = queryStandoff,
                     maybePropertyIri = None,
                     maybeVersionDate = None
                   )

@@ -119,6 +119,7 @@ final case class StandoffResponderV2Live(
               maybePropertyIri = None,
               maybeVersionDate = None,
               queryAllNonStandoff = false,
+              queryStandoff = true,
               maybeValueIri = Some(getStandoffRequestV2.valueIri)
             )
             .toString()

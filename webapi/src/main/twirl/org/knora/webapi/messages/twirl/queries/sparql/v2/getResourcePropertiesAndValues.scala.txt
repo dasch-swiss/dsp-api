@@ -23,11 +23,13 @@
  *                            time in the past. Cannot be used in conjunction with preview.
  * @param maybeValueIri       if defined, the specified value will be the only value returned.
  * @param queryAllNonStandoff if true, knora-base:valueHasString and other non-standoff content will be returned.
+ * @param queryStandoff       if true, include standoff
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
   withDeleted: Boolean,
   queryAllNonStandoff: Boolean,
+  queryStandoff: Boolean,
   maybePropertyIri: Option[SmartIri] = None,
   maybeValueUuid: Option[UUID] = None,
   maybeVersionDate: Option[Instant] = None,
@@ -66,6 +68,12 @@ CONSTRUCT {
     ?valueObject ?valueObjectProperty ?valueObjectValue ;
         knora-base:valueHasUUID ?currentValueUUID ;
         knora-base:hasPermissions ?currentValuePermissions .
+
+    @if(queryStandoff) {
+        ?valueObject knora-base:valueHasStandoff ?standoffNode .
+        ?standoffNode ?standoffProperty ?standoffValue  ;
+            knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
+    }
 
     @if(queryAllNonStandoff) {
         @* include this inferred information in the results, needed to identify linking properties *@
@@ -230,6 +238,20 @@ CONSTRUCT {
 
                 @if(!queryAllNonStandoff) {
                     FILTER(?valueObjectProperty != knora-base:valueHasString)
+                }
+            }
+            @if(queryStandoff) {
+                UNION {
+                    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                    ?standoffNode ?standoffProperty ?standoffValue ;
+                        knora-base:standoffTagHasStartIndex ?startIndex .
+
+                    OPTIONAL {
+                        ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                        ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+                    }
+
+                    FILTER(?startIndex >= 0)
                 }
             }
             @if(queryAllNonStandoff) {

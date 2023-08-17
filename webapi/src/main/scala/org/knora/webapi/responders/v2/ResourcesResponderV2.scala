@@ -1415,7 +1415,6 @@ final case class ResourcesResponderV2Live(
                     savedValue.permissions == expectedValue.permissions &&
                     savedValue.attachedToUser == requestingUser.id)
                 ) {
-                  // println(s"========== Expected ==========\n${MessageUtil.toSource(expectedValue.valueContent)}\n========== Saved ==========\n${MessageUtil.toSource(savedValue.valueContent)}")
                   throw AssertionException(
                     s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
                   )
@@ -1470,7 +1469,8 @@ final case class ResourcesResponderV2Live(
                                      maybePropertyIri = propertyIri,
                                      maybeValueUuid = valueUuid,
                                      maybeVersionDate = versionDate,
-                                     queryAllNonStandoff = true
+                                     queryAllNonStandoff = true,
+                                     queryStandoff = queryStandoff
                                    )
                                    .toString()
                                )
@@ -1513,6 +1513,7 @@ final case class ResourcesResponderV2Live(
     // ConstructResponseUtilV2.makeTextValueContentV2.
     val queryStandoff: Boolean =
       SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+    println(s"queryStandoff: $queryStandoff")
 
     for {
 
@@ -1527,8 +1528,23 @@ final case class ResourcesResponderV2Live(
           queryStandoff = queryStandoff,
           requestingUser = requestingUser
         )
+      _ = {
+        // val y = mainResourcesAndValueRdfData.resources.head._2.assertions.view.filterKeys { key =>
+        //   key.toString.contains("hasRichtext")
+        // }.toMap
+        // println(y)
+        val x = mainResourcesAndValueRdfData.resources.head._2.valuePropertyAssertions.filter { case (key, _) =>
+          key.toString.contains("hasRichtext")
+        }.values.head.head.standoff
+        println(x)
+      }
 
-      // If we're querying standoff, get XML-to standoff mappings.
+      // // x = y.values.filter { case (valueIri, _) =>
+      // //       valueIri.contains("hasRichtext")
+      // //     }
+      // // _ = println(s"mainResourcesAndValueRdfData: $x")
+
+      // // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
           constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
