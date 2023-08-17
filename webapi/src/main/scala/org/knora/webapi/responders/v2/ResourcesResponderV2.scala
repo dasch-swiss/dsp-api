@@ -1528,23 +1528,6 @@ final case class ResourcesResponderV2Live(
           queryStandoff = queryStandoff,
           requestingUser = requestingUser
         )
-      _ = {
-        // val y = mainResourcesAndValueRdfData.resources.head._2.assertions.view.filterKeys { key =>
-        //   key.toString.contains("hasRichtext")
-        // }.toMap
-        // println(y)
-        val x = mainResourcesAndValueRdfData.resources.head._2.valuePropertyAssertions.filter { case (key, _) =>
-          key.toString.contains("hasRichtext")
-        }.values.head.head.standoff
-        println(x)
-      }
-
-      // // x = y.values.filter { case (valueIri, _) =>
-      // //       valueIri.contains("hasRichtext")
-      // //     }
-      // // _ = println(s"mainResourcesAndValueRdfData: $x")
-
-      // // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
           constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
