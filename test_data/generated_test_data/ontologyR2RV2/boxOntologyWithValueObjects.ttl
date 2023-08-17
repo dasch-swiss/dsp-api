@@ -12,8 +12,33 @@ example-box:Box  rdf:type            owl:Class ;
         rdfs:subClassOf              knora-api:Resource ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
+                                       owl:onProperty         knora-api:creationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -23,17 +48,7 @@ example-box:Box  rdf:type            owl:Class ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:maxCardinality   1 ;
-                                       owl:onProperty       example-box:hasName
+                                       owl:onProperty         knora-api:attachedToUser
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -42,48 +57,13 @@ example-box:Box  rdf:type            owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
                                        owl:onProperty         rdfs:label
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:userHasPermission
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -93,12 +73,32 @@ example-box:Box  rdf:type            owl:Class ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
+                                       owl:onProperty         knora-api:hasPermissions
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:maxCardinality   1 ;
+                                       owl:onProperty       example-box:hasName
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true ;
@@ -110,9 +110,7 @@ example-box:hasName  rdf:type         owl:ObjectProperty ;
         rdfs:subPropertyOf            knora-api:hasValue ;
         knora-api:isEditable          true ;
         knora-api:isResourceProperty  true ;
-        knora-api:objectType          knora-api:TextValue ;
-        salsah-gui:guiAttribute       "maxlength=255" , "size=80" ;
-        salsah-gui:guiElement         salsah-gui:SimpleText .
+        knora-api:objectType          knora-api:UnformattedTextValue .
 
 <http://api.knora.org/ontology/shared/example-box/v2>
         rdf:type                        owl:Ontology ;

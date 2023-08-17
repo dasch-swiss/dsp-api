@@ -18,6 +18,4 @@ minimal:hasName  rdf:type             owl:ObjectProperty ;
         rdfs:subPropertyOf            knora-api:hasValue ;
         knora-api:isEditable          true ;
         knora-api:isResourceProperty  true ;
-        knora-api:objectType          knora-api:TextValue ;
-        salsah-gui:guiAttribute       "maxlength=255" , "size=80" ;
-        salsah-gui:guiElement         salsah-gui:SimpleText .
+        knora-api:objectType          knora-api:UnformattedTextValue .

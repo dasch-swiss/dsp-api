@@ -1,27 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns:minimal="http://0.0.0.0:3333/ontology/0001/minimal/v2#"
-	xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
-	xmlns:owl="http://www.w3.org/2002/07/owl#"
-	xmlns:salsah-gui="http://api.knora.org/ontology/salsah-gui/v2#"
-	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-<owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0001/minimal/v2">
-	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0001"/>
-	<knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2019-09-10T08:57:46.633162Z</knora-api:lastModificationDate>
-	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A minimal ontology</rdfs:label>
-</owl:Ontology>
-<owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/minimal/v2#hasName">
-	<knora-api:isEditable rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isEditable>
-	<knora-api:isResourceProperty rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isResourceProperty>
-	<knora-api:objectType rdf:resource="http://api.knora.org/ontology/knora-api/v2#TextValue"/>
-	<salsah-gui:guiAttribute rdf:datatype="http://www.w3.org/2001/XMLSchema#string">maxlength=255</salsah-gui:guiAttribute>
-	<salsah-gui:guiAttribute rdf:datatype="http://www.w3.org/2001/XMLSchema#string">size=80</salsah-gui:guiAttribute>
-	<salsah-gui:guiElement rdf:resource="http://api.knora.org/ontology/salsah-gui/v2#SimpleText"/>
-	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Has name.</rdfs:comment>
-	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has name</rdfs:label>
-	<rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasValue"/>
-</owl:ObjectProperty>
-
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:salsah-gui="http://api.knora.org/ontology/salsah-gui/v2#"
+    xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:minimal="http://0.0.0.0:3333/ontology/0001/minimal/v2#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0001/minimal/v2">
+    <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0001"/>
+    <rdfs:label>A minimal ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2019-09-10T08:57:46.633162Z</knora-api:lastModificationDate>
+  </owl:Ontology>
+  <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/minimal/v2#hasName">
+    <knora-api:objectType rdf:resource="http://api.knora.org/ontology/knora-api/v2#UnformattedTextValue"/>
+    <rdfs:comment>Has name.</rdfs:comment>
+    <knora-api:isResourceProperty rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceProperty>
+    <knora-api:isEditable rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isEditable>
+    <rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasValue"/>
+    <rdfs:label>has name</rdfs:label>
+  </owl:ObjectProperty>
 </rdf:RDF>

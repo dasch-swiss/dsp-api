@@ -440,16 +440,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "rows=7",
-                "width=95%",
-                "wrap=soft"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Textarea"
+                "@id": "knora-api:FormattedTextValue"
             },
             "@id": "incunabula:book_comment",
             "knora-api:subjectType": {
@@ -465,16 +457,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "cols=60",
-                "rows=3",
-                "wrap=soft"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Textarea"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:citation",
             "knora-api:subjectType": {
@@ -496,10 +480,7 @@
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Richtext"
+                "@id": "knora-api:FormattedTextValue"
             },
             "@id": "incunabula:description",
             "knora-api:subjectType": {
@@ -520,15 +501,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=255",
-                "size=60"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:hasAuthor",
             "knora-api:subjectType": {
@@ -630,16 +604,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "cols=60",
-                "rows=4",
-                "wrap=soft"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Textarea"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:location",
             "knora-api:subjectType": {
@@ -914,16 +880,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "cols=60",
-                "rows=3",
-                "wrap=soft"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Textarea"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:note",
             "knora-api:subjectType": {
@@ -939,15 +897,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=128",
-                "size=54"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:origname",
             "knora-api:subjectType": {
@@ -1225,16 +1176,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "rows=7",
-                "width=95%",
-                "wrap=soft"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Textarea"
+                "@id": "knora-api:FormattedTextValue"
             },
             "@id": "incunabula:page_comment",
             "knora-api:subjectType": {
@@ -1250,15 +1193,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=8",
-                "size=8"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:pagenum",
             "knora-api:subjectType": {
@@ -1316,16 +1252,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "cols=60",
-                "rows=3",
-                "wrap=soft"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Textarea"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:physical_desc",
             "knora-api:subjectType": {
@@ -1371,15 +1299,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=255",
-                "size=60"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:publisher",
             "knora-api:subjectType": {
@@ -1395,15 +1316,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=100",
-                "size=60"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:publoc",
             "knora-api:subjectType": {
@@ -1427,15 +1341,8 @@
                 "@id": "incunabula:Sideband"
             },
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=255",
-                "size=80"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:sbTitle"
         },
@@ -1472,10 +1379,7 @@
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Richtext"
+                "@id": "knora-api:FormattedTextValue"
             },
             "@id": "incunabula:sideband_comment",
             "knora-api:subjectType": {
@@ -1496,15 +1400,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=255",
-                "size=80"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:title",
             "knora-api:subjectType": {
@@ -1521,10 +1418,7 @@
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:Richtext"
+                "@id": "knora-api:FormattedTextValue"
             },
             "@id": "incunabula:transcription",
             "knora-api:subjectType": {
@@ -1540,15 +1434,8 @@
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": [
-                "maxlength=200",
-                "size=60"
-            ],
             "knora-api:objectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "salsah-gui:guiElement": {
-                "@id": "salsah-gui:SimpleText"
+                "@id": "knora-api:UnformattedTextValue"
             },
             "@id": "incunabula:url",
             "knora-api:subjectType": {
