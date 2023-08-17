@@ -61,8 +61,6 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.NextExecutionStep
-import org.knora.webapi.util.ResultAndNext
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
