@@ -21,11 +21,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
@@ -36,19 +32,12 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
 import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.JsonLDArray
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDInt
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.rdf.JsonLDObject
-import org.knora.webapi.messages.util.rdf.JsonLDString
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -56,12 +45,10 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -77,17 +64,7 @@ import org.knora.webapi.util.ZioHelper
 
 trait ResourcesResponderV2
 
-final case class ResourcesResponderV2Live(
-  appConfig: AppConfig,
-  iriService: IriService,
-  messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
-  constructResponseUtilV2: ConstructResponseUtilV2,
-  standoffTagUtilV2: StandoffTagUtilV2,
-  resourceUtilV2: ResourceUtilV2,
-  permissionUtilADM: PermissionUtilADM,
-  implicit val stringFormatter: StringFormatter
-) extends ResourcesResponderV2
+final case class ResourcesResponderV2Live(appConfig: AppConfig, iriService: IriService, messageRelay: MessageRelay, triplestoreService: TriplestoreService, constructResponseUtilV2: ConstructResponseUtilV2, standoffTagUtilV2: StandoffTagUtilV2, resourceUtilV2: ResourceUtilV2, permissionUtilADM: PermissionUtilADM, searchResponder: SearchResponderV2, implicit val stringFormatter: StringFormatter) extends ResourcesResponderV2
     with MessageHandler
     with LazyLogging {
 
@@ -1870,15 +1847,12 @@ final case class ResourcesResponderV2Live(
 
             // do a request to the SearchResponder
             gravSearchResponse <-
-              messageRelay
-                .ask[ReadResourcesSequenceV2](
-                  GravsearchRequestV2(
-                    constructQuery = constructQuery,
-                    targetSchema = ApiV2Complex,
-                    schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                    requestingUser = requestingUser
-                  )
-                )
+              searchResponder.gravsearchRequestV2(
+                constructQuery,
+                ApiV2Complex,
+                SchemaOptions.ForStandoffWithTextValues,
+                requestingUser
+              )
           } yield gravSearchResponse.toResource(resourceIri)
 
         } else {
@@ -2420,15 +2394,12 @@ final case class ResourcesResponderV2Live(
       // Run the query.
 
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse <- messageRelay
-                          .ask[ReadResourcesSequenceV2](
-                            GravsearchRequestV2(
-                              constructQuery = parsedGravsearchQuery,
-                              targetSchema = ApiV2Complex,
-                              schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
-                              requestingUser = request.requestingUser
-                            )
-                          )
+      searchResponse <- searchResponder.gravsearchRequestV2(
+                          parsedGravsearchQuery,
+                          ApiV2Complex,
+                          SchemaOptions.ForStandoffSeparateFromTextValues,
+                          request.requestingUser
+                        )
 
       resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
 
@@ -3049,7 +3020,8 @@ object ResourcesResponderV2Live {
       with TriplestoreService
       with MessageRelay
       with IriService
-      with AppConfig,
+      with AppConfig
+      with SearchResponderV2,
     ResourcesResponderV2
   ] = ZLayer.fromZIO {
     for {
@@ -3061,8 +3033,9 @@ object ResourcesResponderV2Live {
       su      <- ZIO.service[StandoffTagUtilV2]
       ru      <- ZIO.service[ResourceUtilV2]
       pu      <- ZIO.service[PermissionUtilADM]
+      sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, sf))
+      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, sr, sf))
     } yield handler
   }
 }

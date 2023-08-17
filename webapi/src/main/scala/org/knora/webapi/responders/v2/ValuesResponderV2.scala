@@ -35,7 +35,6 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -78,6 +77,7 @@ final case class ValuesResponderV2Live(
   permissionUtilADM: PermissionUtilADM,
   resourceUtilV2: ResourceUtilV2,
   triplestoreService: TriplestoreService,
+  searchResponder: SearchResponderV2,
   implicit val stringFormatter: StringFormatter
 ) extends ValuesResponderV2
     with MessageHandler {
@@ -2065,16 +2065,12 @@ final case class ValuesResponderV2Live(
 
       // Run the query.
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <-
-        messageRelay
-          .ask[ReadResourcesSequenceV2](
-            GravsearchRequestV2(
-              constructQuery = parsedGravsearchQuery,
-              targetSchema = ApiV2Complex,
-              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-              requestingUser = requestingUser
-            )
-          )
+      searchResponse <- searchResponder.gravsearchRequestV2(
+                          parsedGravsearchQuery,
+                          ApiV2Complex,
+                          SchemaOptions.ForStandoffWithTextValues,
+                          requestingUser
+                        )
     } yield searchResponse.toResource(resourceIri)
 
   /**
@@ -2543,6 +2539,7 @@ object ValuesResponderV2Live {
       with PermissionUtilADM
       with ResourceUtilV2
       with TriplestoreService
+      with SearchResponderV2
       with StringFormatter,
     ValuesResponderV2
   ] = ZLayer.fromZIO {
@@ -2553,8 +2550,9 @@ object ValuesResponderV2Live {
       pu      <- ZIO.service[PermissionUtilADM]
       ru      <- ZIO.service[ResourceUtilV2]
       ts      <- ZIO.service[TriplestoreService]
+      sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, ts, sf))
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, ts, sr, sf))
     } yield handler
   }
 }

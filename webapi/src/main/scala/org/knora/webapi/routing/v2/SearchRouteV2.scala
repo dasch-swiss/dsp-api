@@ -22,8 +22,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -33,7 +33,9 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
  * Provides a function for API routes that deal with search.
  */
 final case class SearchRouteV2(searchValueMinLength: Int)(
-  private implicit val runtime: Runtime[AppConfig with Authenticator with IriConverter with MessageRelay]
+  private implicit val runtime: Runtime[
+    AppConfig with Authenticator with IriConverter with MessageRelay with SearchResponderV2
+  ]
 ) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"
@@ -255,11 +257,11 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       targetSchema   <- targetSchemaTask
       requestingUser <- Authenticator.getUserADM(requestContext)
       schemaOptions  <- schemaOptionsTask
-      request         = GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      response <- MessageRelay.ask[KnoraResponseV2](request).tapError {
-                    case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
-                    case _                              => ZIO.unit @@ gravsearchFailCounter
-                  } @@ gravsearchDuration.trackDuration
+      response <-
+        SearchResponderV2.gravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser).tapError {
+          case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
+          case _                              => ZIO.unit @@ gravsearchFailCounter
+        } @@ gravsearchDuration.trackDuration
       _ <- Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
     } yield response
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))

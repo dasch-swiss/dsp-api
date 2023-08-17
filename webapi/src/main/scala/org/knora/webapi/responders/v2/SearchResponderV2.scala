@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+import zio.macros.accessible
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -58,6 +59,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.ApacheLuceneSupport._
 
+@accessible
 trait SearchResponderV2 {
 
   /**
@@ -69,7 +71,7 @@ trait SearchResponderV2 {
    * @param user    the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
-  def gravsearchV2(
+  def gravsearchRequestV2(
     query: ConstructQuery,
     schema: ApiV2Schema,
     options: Set[SchemaOption],
@@ -138,14 +140,6 @@ final case class SearchResponderV2Live(
       gravsearchCountV2(
         inputQuery = query,
         requestingUser = requestingUser
-      )
-
-    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) =>
-      gravsearchV2(
-        query = query,
-        apiSchema = targetSchema,
-        options = schemaOptions,
-        user = requestingUser
       )
 
     case SearchResourceByLabelCountRequestV2(
@@ -456,7 +450,7 @@ final case class SearchResponderV2Live(
    * @param user       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
-  override def gravsearchV2(
+  override def gravsearchRequestV2(
     query: ConstructQuery,
     apiSchema: ApiV2Schema,
     options: Set[SchemaOption],

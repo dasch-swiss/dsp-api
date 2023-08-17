@@ -1,7 +1,9 @@
 package org.knora.webapi.responders.v2
 
-import org.scalatest.{Assertion, Assertions}
-import org.scalatest.matchers.should.Matchers.{a, convertToAnyShouldWrapper}
+import org.scalatest.Assertion
+import org.scalatest.Assertions
+import org.scalatest.matchers.should.Matchers.a
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import zio.Exit
 
 import scala.reflect.ClassTag

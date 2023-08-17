@@ -19,6 +19,7 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
@@ -134,39 +135,31 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
-
-      appActor ! GravsearchRequestV2(
-        constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val actual = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchRequestV2(
+          searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
+          ApiV2Complex,
+          SchemaOptions.ForStandoffWithTextValues,
+          SharedTestDataADM.anonymousUser
+        )
       )
 
-      // extended search sort by resource Iri by default if no order criterion is indicated
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse,
-          received = response
-        )
-      }
-
+      compareReadResourcesSequenceV2Response(
+        expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse,
+        received = actual
+      )
     }
 
     "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
-
-      appActor ! GravsearchRequestV2(
-        constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val actual = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchRequestV2(
+          searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
+          ApiV2Complex,
+          SchemaOptions.ForStandoffWithTextValues,
+          SharedTestDataADM.anonymousUser
+        )
       )
-
-      // extended search sort by resource Iri by default if no order criterion is indicated
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        // TODO: do better testing once JSON-LD can be converted back into case classes
-        assert(response.resources.size == 18)
-      }
-
+      assert(actual.resources.size == 18)
     }
 
     "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
@@ -295,18 +288,16 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "perform an extended search for a particular compound object (book)" in {
 
-      val query = searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject
-
-      appActor ! GravsearchRequestV2(
-        constructQuery = query,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val actual = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchRequestV2(
+          searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject,
+          ApiV2Complex,
+          SchemaOptions.ForStandoffWithTextValues,
+          SharedTestDataADM.anonymousUser
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        response.resources.length should equal(25)
-      }
+      actual.resources.length should equal(25)
     }
 
   }
