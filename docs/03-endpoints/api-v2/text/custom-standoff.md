@@ -10,7 +10,7 @@
 The DSP-API's standard standoff mapping only supports a few HTML tags. In order to
 submit more complex XML markup, a custom mapping has to be
 created first. A mapping expresses the relations between XML
-elements and attributes and their corresponding standoff classes and
+elements and attributes, and their corresponding standoff classes and
 properties. The relations expressed in a mapping are one-to-one
 relations, so the XML can be recreated from the data in RDF. However,
 since HTML offers a very limited set of elements, custom mappings support
@@ -257,7 +257,7 @@ The following simple mapping illustrates this principle:
 </mapping>
 ```
 
-`<datatype>` **must** hold the Iri of a standoff data type class (see
+`<datatype>` **must** hold the IRI of a standoff data type class (see
 list above). The `<classIri>` must be a subclass of this type or this
 type itself (the latter is probably not recommendable since semantics
 are missing: what is the meaning of the date?). In the example above,
