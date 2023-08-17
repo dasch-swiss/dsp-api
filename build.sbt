@@ -21,10 +21,11 @@ val zioHttpVersion              = "3.0.0-RC2"
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
 
-ThisBuild / organization := "dasch.swiss"
-ThisBuild / version      := gitVersion
-ThisBuild / scalaVersion := "3.3.0"
-ThisBuild / fork         := true
+ThisBuild / organization      := "dasch.swiss"
+ThisBuild / version           := gitVersion
+ThisBuild / scalaVersion      := "3.3.0"
+ThisBuild / fork              := true
+ThisBuild / semanticdbEnabled := true
 
 scalacOptions ++= Seq("-old-syntax", "-rewrite")
 
