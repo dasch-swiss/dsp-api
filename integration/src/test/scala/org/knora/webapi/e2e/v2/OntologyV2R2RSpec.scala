@@ -1020,10 +1020,7 @@ class OntologyV2R2RSpec extends R2RSpec {
              |         },
              |         "@type": "owl:ObjectProperty",
              |         "knora-api:objectType": {
-             |            "@id": "knora-api:TextValue"
-             |         },
-             |         "salsah-gui:guiElement": {
-             |            "@id": "salsah-gui:SimpleText"
+             |            "@id": "knora-api:UnformattedTextValue"
              |         },
              |         "@id": "freetest:hasPropertyWithComment2"
              |      }
