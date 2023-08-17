@@ -1,11 +1,11 @@
 # Overview
 
-DSP API supports various ways of handling textual data:
+DSP-API supports various ways of handling textual data:
 
 
 ## Text in RDF
 
-Textual data can be included directly in the data stored in DSP API. 
+Textual data can be included directly in the data stored in DSP-API. 
 This is the default way of handling text in the DSP. 
 There are three ways of representing textual data in DSP-API,
 two of which are fully supported by DSP-APP and DSP-TOOLS.

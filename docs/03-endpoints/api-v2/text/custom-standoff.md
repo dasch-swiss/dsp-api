@@ -16,7 +16,7 @@ relations, so the XML can be recreated from the data in RDF. However,
 since HTML offers a very limited set of elements, custom mappings support
 the combination of element names and classes. In this way, the same
 element can be used several times in combination with another classname
-(please note that `<a>` without a class is a mere hyperlink whereas `<a class="salsah-link">` is an internal link/standoff link).
+(please note that `<a>` without a class is a hyperlink whereas `<a class="salsah-link">` is an internal link/standoff link).
 
 With a mapping, a default XSL transformation may be provided to
 transform the XML to HTML before sending it back to the client. This is
@@ -30,10 +30,10 @@ structure (the indentation corresponds to the nesting in XML):
 
 - `<mapping>`: the root element
 
-  - `<defaultXSLTransformation> (optional)`: the Iri of the
+  - `<defaultXSLTransformation> (optional)`: the IRI of the
     default XSL transformation to be applied to the XML when
     reading it back from DSP-API. The XSL transformation is
-    expected to produce HTML. If given, the Iri has to refer to
+    expected to produce HTML. If given, the IRI has to refer to
     a resource of type `knora-base:XSLTransformation`.
 
   - `<mappingElement>`: an element of the mapping (at least
@@ -68,7 +68,7 @@ structure (the indentation corresponds to the nesting in XML):
     - `<standoffClass>`: information about the
       standoff class the XML element is mapped to
 
-      - `<classIri>`: Iri of the standoff class the
+      - `<classIri>`: IRI of the standoff class the
         XML element is mapped to
 
       - `<attributes>`: XML attributes to be
@@ -87,14 +87,14 @@ structure (the indentation corresponds to the nesting in XML):
             not belong to a namespace,
             the keyword `noNamespace`
             has to be used.
-          - `<propertyIri>`: the Iri of
+          - `<propertyIri>`: the IRI of
             the standoff property the
             XML attribute is mapped to.
 
       - `<datatype>`: the data type of the
         standoff class, if any.
 
-        - `<type>`: the Iri of the data type
+        - `<type>`: the IRI of the data type
           standoff class
         - `<attributeName>`: the name of the
           attribute holding the typed value in
@@ -136,9 +136,9 @@ XML structure of a mapping:
 
 Please note that the absence of an XML namespace and/or a class have to
 be explicitly stated using the keywords `noNamespace` and
-`noClass`. (This is because we use XML Schema validation to ensure the one-to-one
+`noClass`. This is because we use XML Schema validation to ensure the one-to-one
 relations between XML elements and standoff classes. XML Schema validation's unique checks
-do not support optional values.)
+do not support optional values.
 
 ### `id` and `class` Attributes
 
@@ -487,7 +487,7 @@ The multipart request consists of two named parts:
   </mapping>
 ```
 
-A successful response returns the Iri of the mapping. However, the Iri
+A successful response returns the IRI of the mapping. However, the IRI
 of a mapping is predictable: it consists of the project Iri followed by
 `/mappings/` and the `knora-api:mappingHasName` submitted in the JSON-LD (if the name
 already exists, the request will be rejected). Once created, a mapping
