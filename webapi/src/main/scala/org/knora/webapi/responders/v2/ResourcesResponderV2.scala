@@ -1513,7 +1513,6 @@ final case class ResourcesResponderV2Live(
     // ConstructResponseUtilV2.makeTextValueContentV2.
     val queryStandoff: Boolean =
       SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
-    println(s"queryStandoff: $queryStandoff")
 
     for {
 
