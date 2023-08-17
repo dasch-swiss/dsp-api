@@ -699,11 +699,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     val responseStr            = responseToString(response)
     assert(response.status == StatusCodes.OK, responseStr)
     val expectedResponseStr =
-      readOrWriteTextFile(
-        responseStr,
-        Paths.get("..", s"test_data/generated_test_data/valuesE2EV2/$fileBasename.jsonld"),
-        writeTestDataFiles
-      )
+      if (writeTestDataFiles) writeTestData(responseStr, Paths.get(s"valuesE2EV2/$fileBasename.jsonld"))
+      else readTestData(Paths.get(s"valuesE2EV2/$fileBasename.jsonld"))
     compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
 
     clientTestDataCollector.addFile(
