@@ -1106,11 +1106,19 @@ final case class ConstructResponseUtilV2Live(
       valueHasString <-
         ZIO
           .fromOption(valueObjectValueHasString)
-          .orElseFail(BadRequestException(s"FormattedTextValue $resourceIri has no knora-base:valueHasString"))
+          .orElseFail(
+            BadRequestException(
+              s"FormattedTextValue $resourceIri has no knora-base:valueHasString for ${valueObject.subjectIri}."
+            )
+          )
       mappingIri <-
         ZIO
           .fromOption(valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri))
-          .orElseFail(BadRequestException(s"FormattedTextValue $resourceIri has no mapping defined."))
+          .orElseFail(
+            BadRequestException(
+              s"FormattedTextValue $resourceIri has no mapping defined for ${valueObject.subjectIri}."
+            )
+          )
       mappingAndXsltTransformation = mappings.get(mappingIri)
       standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
                     standoffAssertions = valueObject.standoff,
@@ -1154,15 +1162,27 @@ final case class ConstructResponseUtilV2Live(
       valueHasString <-
         ZIO
           .fromOption(valueObjectValueHasString)
-          .orElseFail(BadRequestException(s"CustomFormattedTextValue $resourceIri has no knora-base:valueHasString"))
+          .orElseFail(
+            BadRequestException(
+              s"CustomFormattedTextValue $resourceIri has no knora-base:valueHasString for ${valueObject.subjectIri}."
+            )
+          )
       _ <-
         ZIO
-          .fail(BadRequestException(s"CustomFormattedTextValue $resourceIri has no mapping defined."))
+          .fail(
+            BadRequestException(
+              s"CustomFormattedTextValue $resourceIri has no mapping defined for ${valueObject.subjectIri}."
+            )
+          )
           .when(valueObject.standoff.isEmpty)
       mappingIri <-
         ZIO
           .fromOption(valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri))
-          .orElseFail(BadRequestException(s"CustomFormattedTextValue $resourceIri has no mapping defined."))
+          .orElseFail(
+            BadRequestException(
+              s"CustomFormattedTextValue $resourceIri has no mapping defined for ${valueObject.subjectIri}."
+            )
+          )
       mappingAndXsltTransformation <-
         ZIO.fromOption(mappings.get(mappingIri)).orElseFail(BadRequestException(s"Mapping $mappingIri not found"))
       standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
