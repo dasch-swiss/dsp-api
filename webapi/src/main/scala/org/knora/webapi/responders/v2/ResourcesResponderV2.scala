@@ -64,7 +64,18 @@ import org.knora.webapi.util.ZioHelper
 
 trait ResourcesResponderV2
 
-final case class ResourcesResponderV2Live(appConfig: AppConfig, iriService: IriService, messageRelay: MessageRelay, triplestoreService: TriplestoreService, constructResponseUtilV2: ConstructResponseUtilV2, standoffTagUtilV2: StandoffTagUtilV2, resourceUtilV2: ResourceUtilV2, permissionUtilADM: PermissionUtilADM, searchResponder: SearchResponderV2, implicit val stringFormatter: StringFormatter) extends ResourcesResponderV2
+final case class ResourcesResponderV2Live(
+  appConfig: AppConfig,
+  iriService: IriService,
+  messageRelay: MessageRelay,
+  triplestoreService: TriplestoreService,
+  constructResponseUtilV2: ConstructResponseUtilV2,
+  standoffTagUtilV2: StandoffTagUtilV2,
+  resourceUtilV2: ResourceUtilV2,
+  permissionUtilADM: PermissionUtilADM,
+  searchResponder: SearchResponderV2,
+  implicit val stringFormatter: StringFormatter
+) extends ResourcesResponderV2
     with MessageHandler
     with LazyLogging {
 
