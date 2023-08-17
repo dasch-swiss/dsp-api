@@ -249,20 +249,20 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   private val gravsearchTimeoutCounter = Metric.counter("gravsearch_timeout").fromConst(1)
 
   private def gravsearch(query: String, requestContext: RequestContext) = {
-    val constructQuery    = GravsearchParser.parseQuery(query)
     val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
     val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
     val task = for {
       start          <- Clock.instant.map(_.toEpochMilli).map(_.toDouble)
+      constructQuery <- GravsearchParser.parseQueryZ(query)
       targetSchema   <- targetSchemaTask
-      requestingUser <- Authenticator.getUserADM(requestContext)
       schemaOptions  <- schemaOptionsTask
+      requestingUser <- Authenticator.getUserADM(requestContext)
       response <-
         SearchResponderV2.gravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser).tapError {
           case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
           case _                              => ZIO.unit @@ gravsearchFailCounter
         } @@ gravsearchDuration.trackDuration
-      _ <- Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
+      _ <- Clock.instant.map(_.toEpochMilli).map(_ - start) @@ gravsearchDurationSummary
     } yield response
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
