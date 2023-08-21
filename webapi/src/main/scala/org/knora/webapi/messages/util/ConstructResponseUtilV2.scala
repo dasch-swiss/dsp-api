@@ -52,8 +52,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetRemainingStandoffFromTextValueRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
@@ -1012,12 +1010,10 @@ final case class ConstructResponseUtilV2Live(
    * @return a [[TextValueContentV2]].
    */
   private def makeTextValueContentV2(
-    resourceIri: IRI,
     valueObject: ValueRdfData,
     valueObjectValueHasString: Option[String],
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
-    queryStandoff: Boolean,
     requestingUser: UserADM
   ): Task[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
@@ -1025,10 +1021,6 @@ final case class ConstructResponseUtilV2Live(
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
 
     if (valueObject.standoff.nonEmpty) {
-      // The query included a page of standoff markup. This is either because we've queried the text value
-      // and got the first page of its standoff along with it, or because we're querying a subsequent page
-      // of standoff for a text value.
-
       val mappingIri: Option[IRI] = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
       val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] =
         mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
@@ -1038,40 +1030,11 @@ final case class ConstructResponseUtilV2Live(
                       standoffAssertions = valueObject.standoff,
                       requestingUser = requestingUser
                     )
-
-        valueHasMaxStandoffStartIndex: Int = valueObject.requireIntObject(
-                                               OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri
-                                             )
-        lastStartIndexQueried = standoff.last.startIndex
-
-        // Should we get more the rest of the standoff for the same text value?
-        standoffToReturn <-
-          if (queryStandoff && lastStartIndexQueried < valueHasMaxStandoffStartIndex) {
-            // We're supposed to get all the standoff for the text value. Ask the standoff responder for the rest of it.
-            // Each page of markup will be also be processed by this method. The resulting pages will be
-            // concatenated together and returned in a GetStandoffResponseV2.
-
-            for {
-              standoffResponse <-
-                messageRelay
-                  .ask[GetStandoffResponseV2](
-                    GetRemainingStandoffFromTextValueRequestV2(
-                      resourceIri = resourceIri,
-                      valueIri = valueObject.subjectIri,
-                      requestingUser = requestingUser
-                    )
-                  )
-            } yield standoff ++ standoffResponse.standoff
-          } else {
-            // We're not supposed to get any more standoff here, either because we have all of it already,
-            // or because we're just supposed to return one page.
-            ZIO.succeed(standoff)
-          }
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
         maybeValueHasString = valueObjectValueHasString,
         valueHasLanguage = valueLanguageOption,
-        standoff = standoffToReturn,
+        standoff = standoff,
         mappingIri = mappingIri,
         mapping = mappingAndXsltTransformation.map(_.mapping),
         xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
@@ -1471,12 +1434,10 @@ final case class ConstructResponseUtilV2Live(
     valueTypeStr match {
       case OntologyConstants.KnoraBase.TextValue =>
         makeTextValueContentV2(
-          resourceIri = resourceIri,
           valueObject = valueObject,
           valueObjectValueHasString = valueObjectValueHasString,
           valueCommentOption = valueCommentOption,
           mappings = mappings,
-          queryStandoff = queryStandoff,
           requestingUser = requestingUser
         )
       case OntologyConstants.KnoraBase.UnformattedTextValue =>

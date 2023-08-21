@@ -35,7 +35,6 @@ final case class AppConfig(
   tmpDatadir: String,
   datadir: String,
   maxResultsPerSearchResultPage: Int,
-  standoffPerPage: Int,
   v2: V2,
   gui: Gui,
   routesToReject: List[String],

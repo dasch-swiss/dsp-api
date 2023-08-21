@@ -766,15 +766,6 @@ final case class SearchResponderV2Live(
                                  schemaOptions = resourcesInProjectGetRequestV2.schemaOptions
                                )
 
-      // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
-      // pages, if any, will be queried separately.)
-      (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
-        StandoffTagUtilV2
-          .getStandoffMinAndMaxStartIndexesForTextValueQuery(
-            queryStandoff = queryStandoff,
-            appConfig = appConfig
-          )
-
       // Are there any matching resources?
       apiResponse <-
         if (mainResourceIris.nonEmpty) {
@@ -789,10 +780,9 @@ final case class SearchResponderV2Live(
                     preview = false,
                     withDeleted = false,
                     queryAllNonStandoff = true,
+                    queryStandoff = queryStandoff,
                     maybePropertyIri = None,
-                    maybeVersionDate = None,
-                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
+                    maybeVersionDate = None
                   )
                   .toString()
               )
@@ -822,7 +812,7 @@ final case class SearchResponderV2Live(
                                        orderByResourceIri = mainResourceIris,
                                        pageSizeBeforeFiltering = mainResourceIris.size,
                                        mappings = mappings,
-                                       queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
+                                       queryStandoff = queryStandoff,
                                        versionDate = None,
                                        calculateMayHaveMoreResults = true,
                                        targetSchema = resourcesInProjectGetRequestV2.targetSchema,
