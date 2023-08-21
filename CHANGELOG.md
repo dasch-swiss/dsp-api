@@ -1,5 +1,29 @@
 # Changelog
 
+## [29.1.3](https://github.com/dasch-swiss/dsp-api/compare/v29.1.2...v29.1.3) (2023-08-16)
+
+
+### Bug Fixes
+
+* query-patterns-should-not-be-separated DEV-2473 ([#2786](https://github.com/dasch-swiss/dsp-api/issues/2786)) ([0aae817](https://github.com/dasch-swiss/dsp-api/commit/0aae8173ae6c2cf4a9cfa24728bab11e8c687ec4))
+
+
+### Maintenance
+
+* improve compiler warnings (DEV-1611) ([#2784](https://github.com/dasch-swiss/dsp-api/issues/2784)) ([00379ce](https://github.com/dasch-swiss/dsp-api/commit/00379ce69372dd9a482870ac96d6f242b4e22bc8))
+* improve file path resolving logic for generated test data files ([#2783](https://github.com/dasch-swiss/dsp-api/issues/2783)) ([c2d6451](https://github.com/dasch-swiss/dsp-api/commit/c2d6451d9731cf55a6c81d49d56058b91798cfae))
+* move integration tests to separate SBT project ([#2772](https://github.com/dasch-swiss/dsp-api/issues/2772)) ([321e2dc](https://github.com/dasch-swiss/dsp-api/commit/321e2dc3fe86bde7aebf5d35c53a1bdd84615534))
+* **ProjectImportService:** improve logging ([#2781](https://github.com/dasch-swiss/dsp-api/issues/2781)) ([35ce421](https://github.com/dasch-swiss/dsp-api/commit/35ce42101eb44cffddc410adb87ae06c257a6b1a))
+* Remove ValueUpdateRequestV2 and DeleteValueRequestV2 NO-TICKET ([#2779](https://github.com/dasch-swiss/dsp-api/issues/2779)) ([577e4ec](https://github.com/dasch-swiss/dsp-api/commit/577e4eccc66a9fb1e11d738b4126ba2e3a515e99))
+* Speed up value creation and update DEV-2473 ([#2778](https://github.com/dasch-swiss/dsp-api/issues/2778)) ([5e5a3ea](https://github.com/dasch-swiss/dsp-api/commit/5e5a3ea4739d29a5cd5a30b36dad98d13dd95d57))
+* update dependencies ([#2793](https://github.com/dasch-swiss/dsp-api/issues/2793)) ([eb85ba5](https://github.com/dasch-swiss/dsp-api/commit/eb85ba5ab02fd04398a455897dd52a31cd95d4ed))
+* Use sttp client for dsp-ingest download ([#2777](https://github.com/dasch-swiss/dsp-api/issues/2777)) ([c431ccf](https://github.com/dasch-swiss/dsp-api/commit/c431ccf122b5dc4e740c7dc3721730ceebad8b71))
+
+
+### Documentation
+
+* minor Gravsearch docs fixes ([#2782](https://github.com/dasch-swiss/dsp-api/issues/2782)) ([35c87f4](https://github.com/dasch-swiss/dsp-api/commit/35c87f45d5c4638466606e97abf4b86ed8790e3d))
+
 ## [29.1.2](https://github.com/dasch-swiss/dsp-api/compare/v29.1.1...v29.1.2) (2023-08-02)
 
 
