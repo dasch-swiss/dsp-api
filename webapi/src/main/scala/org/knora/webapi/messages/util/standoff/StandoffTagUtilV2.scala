@@ -16,7 +16,6 @@ import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -1674,25 +1673,4 @@ object StandoffTagUtilV2 {
       .map { case (_, standoffForIndex: Set[StandoffTagV2]) =>
         standoffForIndex
       }
-
-  /**
-   * If standoff is supposed to be queried with text values, returns the minimum and maximum start indexes
-   * for the first page of standoff in a text value. Otherwise, returns `(None, None)`.
-   *
-   * @param queryStandoff `true` if standoff should be queried.
-   * @param appConfig      the application configuration.
-   * @return a tuple containing the minimum start index and maximum start index, or `(None, None)` if standoff
-   *         is not being queried with text values.
-   */
-  def getStandoffMinAndMaxStartIndexesForTextValueQuery(
-    queryStandoff: Boolean,
-    appConfig: AppConfig
-  ): (Option[Int], Option[Int]) =
-    if (queryStandoff) {
-      // Yes. Get the first page of standoff with each text value.
-      (Some(0), Some(appConfig.standoffPerPage - 1))
-    } else {
-      // No.
-      (None, None)
-    }
 }

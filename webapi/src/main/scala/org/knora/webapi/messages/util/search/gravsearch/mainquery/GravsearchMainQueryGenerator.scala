@@ -397,20 +397,10 @@ object GravsearchMainQueryGenerator {
             )
           ),
           FilterPattern(
-            AndExpression(
-              leftArg = CompareExpression(
-                leftArg = standoffStartIndexVar,
-                operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
-                rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
-              ),
-              rightArg = CompareExpression(
-                leftArg = standoffStartIndexVar,
-                operator = CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
-                rightArg = XsdLiteral(
-                  value = (appConfig.standoffPerPage - 1).toString,
-                  datatype = OntologyConstants.Xsd.Integer.toSmartIri
-                )
-              )
+            CompareExpression(
+              leftArg = standoffStartIndexVar,
+              operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
+              rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
             )
           )
         )

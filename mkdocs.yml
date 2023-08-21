@@ -11,31 +11,23 @@ nav:
       - The Knora Base Ontology: 02-dsp-ontologies/knora-base.md
       - The SALSAH GUI Ontology: 02-dsp-ontologies/salsah-gui.md
   - DSP-API Endpoints:
-#      - DSP-API V1:
-#          - Introduction: 03-endpoints/api-v1/introduction.md
-#          - Authentication: 03-endpoints/api-v1/authentication.md
-#          - Reading and Searching Resources: 03-endpoints/api-v1/reading-and-searching-resources.md
-#          - XML to Standoff Mapping: 03-endpoints/api-v1/xml-to-standoff-mapping.md
-#          - Adding Resources: 03-endpoints/api-v1/adding-resources.md
-#          - Reading and Searching Resources: 03-endpoints/api-v1/reading-and-searching-resources.md
-#          - Reading Values: 03-endpoints/api-v1/reading-values.md
-#          - Adding Values: 03-endpoints/api-v1/adding-values.md
-#          - Changing Values: 03-endpoints/api-v1/changing-values.md
-#          - Deleting Resources and Values: 03-endpoints/api-v1/delete-resources-and-values.md
       - DSP-API V2:
           - Introduction: 03-endpoints/api-v2/introduction.md
           - Authentication: 03-endpoints/api-v2/authentication.md
-          - Knora IRIs: 03-endpoints/api-v2/knora-iris.md
           - Reading and Searching Resources: 03-endpoints/api-v2/reading-and-searching-resources.md
           - Reading the User's Permissions on Resources and Values: 03-endpoints/api-v2/reading-user-permissions.md
           - Getting Lists: 03-endpoints/api-v2/getting-lists.md
-          - XML to Standoff Mapping: 03-endpoints/api-v2/xml-to-standoff-mapping.md
           - Gravsearch - Virtual Graph Search: 03-endpoints/api-v2/query-language.md
           - Creating and Editing Resources: 03-endpoints/api-v2/editing-resources.md
           - Creating and Editing Values: 03-endpoints/api-v2/editing-values.md
           - Querying, Creating, and Updating Ontologies: 03-endpoints/api-v2/ontology-information.md
-          - TEI/XML: 03-endpoints/api-v2/tei-xml.md
+          - Textual Data in DSP-API:
+              - Overview: 03-endpoints/api-v2/text/overview.md
+              - Standard Standoff Markup: 03-endpoints/api-v2/text/standard-standoff.md
+              - Custom Standoff Mapping: 03-endpoints/api-v2/text/custom-standoff.md
+              - TEI XML: 03-endpoints/api-v2/text/tei-xml.md
           - Permalinks: 03-endpoints/api-v2/permalinks.md
+          - IRIs: 03-endpoints/api-v2/knora-iris.md
       - Admin API:
           - Introduction: 03-endpoints/api-admin/introduction.md
           - Overview: 03-endpoints/api-admin/overview.md

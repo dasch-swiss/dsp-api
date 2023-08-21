@@ -47,7 +47,7 @@ falls within a certain [date range](../03-endpoints/api-v2/query-language.md#mat
 
 DSP-API supports automatic conversion between XML and Standoff/RDF. To make this work,
 Standoff/RDF stores the order of tags and their hierarchical relationships. You must define an
-[XML-to-Standoff Mapping](../03-endpoints/api-v2/xml-to-standoff-mapping.md) for your standoff tag classes and properties.
+[XML-to-Standoff Mapping](../03-endpoints/api-v2/text/custom-standoff.md) for your standoff tag classes and properties.
 Then you can import an XML document into DSP-API, which will store it as Standoff/RDF. The text and markup
 can then be searched using Gravsearch. When you retrieve the document, DSP-API converts it back to the
 original XML.
