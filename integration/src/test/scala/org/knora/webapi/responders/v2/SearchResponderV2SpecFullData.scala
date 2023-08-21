@@ -417,4 +417,46 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     querySchema = Some(ApiV2Simple)
   )
 
+  val constructQuerySortByLabel: ConstructQuery = ConstructQuery(
+    constructClause = ConstructClause(
+      Vector(
+        StatementPattern(
+          QueryVariable("r"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
+        )
+      ),
+      querySchema = Some(ApiV2Simple)
+    ),
+    whereClause = WhereClause(
+      Vector(
+        StatementPattern(
+          QueryVariable("r"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri, None)
+        ),
+        StatementPattern(
+          QueryVariable("r"),
+          IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
+          QueryVariable("l")
+        )
+      ),
+      Set(
+        QueryVariable("r"),
+        QueryVariable("l"),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+        IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+        IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri, None),
+        IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None)
+      ),
+      querySchema = Some(ApiV2Simple)
+    ),
+    orderBy = Vector(OrderCriterion(QueryVariable("l"), true)),
+    querySchema = Some(ApiV2Simple)
+  )
+
+  val constructQuerySortByLabelDesc: ConstructQuery = constructQuerySortByLabel.copy(
+    orderBy = Vector(OrderCriterion(QueryVariable("l"), false))
+  )
+
 }
