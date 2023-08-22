@@ -1125,13 +1125,13 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
   val TypeInferenceResult6: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
+        objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#FormattedTextValue".toSmartIri,
         objectIsResourceType = false,
         objectIsValueType = true,
         objectIsStandoffTagType = false
       ),
       TypeableVariable(variableName = "text") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
+        typeIri = "http://api.knora.org/ontology/knora-api/v2#FormattedTextValue".toSmartIri,
         isResourceType = false,
         isValueType = true,
         isStandoffTagType = false
@@ -1166,7 +1166,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec with ImplicitSender {
     entitiesInferredFromProperties = Map(
       TypeableVariable(variableName = "text") -> Set(
         NonPropertyTypeInfo(
-          typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
+          typeIri = "http://api.knora.org/ontology/knora-api/v2#FormattedTextValue".toSmartIri,
           isResourceType = false,
           isValueType = true,
           isStandoffTagType = false
