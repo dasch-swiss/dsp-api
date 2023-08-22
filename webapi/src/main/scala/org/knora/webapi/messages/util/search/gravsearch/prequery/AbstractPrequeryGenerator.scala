@@ -1671,9 +1671,12 @@ abstract class AbstractPrequeryGenerator(
       case Some(nonPropInfo: NonPropertyTypeInfo) =>
         nonPropInfo.typeIri.toString match {
 
-          case OntologyConstants.KnoraApiV2Complex.TextValue => ()
+          case OntologyConstants.KnoraApiV2Complex.TextValue                => ()
+          case OntologyConstants.KnoraApiV2Complex.UnformattedTextValue     => ()
+          case OntologyConstants.KnoraApiV2Complex.FormattedTextValue       => ()
+          case OntologyConstants.KnoraApiV2Complex.CustomFormattedTextValue => ()
 
-          case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a knora-api:TextValue")
+          case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a a kind of Text Value")
         }
 
       case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a knora-api:TextValue")
