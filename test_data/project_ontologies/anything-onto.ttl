@@ -80,6 +80,11 @@ anything:Thing  rdf:type         owl:Class;
         rdfs:subClassOf          [ rdf:type             owl:Restriction;
                                    salsah-gui:guiOrder  "2"^^xsd:nonNegativeInteger;
                                    owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                                   owl:onProperty       anything:hasCustomFormattedText
+                                 ];
+        rdfs:subClassOf          [ rdf:type             owl:Restriction;
+                                   salsah-gui:guiOrder  "2"^^xsd:nonNegativeInteger;
+                                   owl:minCardinality   "0"^^xsd:nonNegativeInteger;
                                    owl:onProperty       anything:hasText
                                  ];
         rdfs:subClassOf          [ rdf:type             owl:Restriction;
@@ -211,6 +216,14 @@ anything:hasRichtext  rdf:type  owl:ObjectProperty;
         rdfs:subPropertyOf  knora-base:hasValue;
         knora-base:objectClassConstraint
                 knora-base:FormattedTextValue;
+        knora-base:subjectClassConstraint
+                anything:Thing .
+
+anything:hasCustomFormattedText  rdf:type  owl:ObjectProperty;
+        rdfs:label          "Text"@de , "Texte"@fr , "Testo"@it , "Text"@en;
+        rdfs:subPropertyOf  knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:CustomFormattedTextValue;
         knora-base:subjectClassConstraint
                 anything:Thing .
 
