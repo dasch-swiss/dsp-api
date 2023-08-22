@@ -96,15 +96,45 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     singleAwaitingRequest(mappingRequest)
   }
 
-  def createResourceWithTextValue(xmlContent: String, mappingIRI: String): HttpResponse = {
+  def createResourceWithFormattedTextValue(xmlContent: String): HttpResponse = {
     val jsonLDEntity = Map(
-      "@type" -> "freetest:FreeTest".toJson,
+      "@type" -> "freetest:FreetestWithFormattedTextValue".toJson,
       "knora-api:attachedToProject" -> Map(
         "@id" -> "http://rdfh.ch/projects/0001".toJson
       ).toJson,
       "rdfs:label" -> "obj_inst1".toJson,
-      "freetest:hasText" -> Map(
-        "@type"                    -> "knora-api:TextValue".toJson,
+      "freetest:hasFormattedText" -> Map(
+        "@type"                    -> "knora-api:FormattedTextValue".toJson,
+        "knora-api:textValueAsXml" -> xmlContent.toJson,
+        "knora-api:textValueHasMapping" -> Map(
+          "@id" -> "http://rdfh.ch/standoff/mappings/StandardMapping".toJson
+        ).toJson
+      ).toJson,
+      "@context" -> Map(
+        "anything"  -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
+        "freetest"  -> freetestOntologyIRI.toJson,
+        "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
+        "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
+        "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson
+      ).toJson
+    ).toJson.prettyPrint
+
+    val resourceRequest = Post(
+      s"$baseApiUrl/v2/resources",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+    singleAwaitingRequest(resourceRequest)
+  }
+
+  def createResourceWithCustomFormattedTextValue(xmlContent: String, mappingIRI: String): HttpResponse = {
+    val jsonLDEntity = Map(
+      "@type" -> "freetest:FreetestWithCustomFormattedTextValue".toJson,
+      "knora-api:attachedToProject" -> Map(
+        "@id" -> "http://rdfh.ch/projects/0001".toJson
+      ).toJson,
+      "rdfs:label" -> "obj_inst1".toJson,
+      "freetest:hasCustomFormattedText" -> Map(
+        "@type"                    -> "knora-api:CustomFormattedTextValue".toJson,
         "knora-api:textValueAsXml" -> xmlContent.toJson,
         "knora-api:textValueHasMapping" -> Map(
           "@id" -> mappingIRI.toJson
@@ -136,10 +166,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
   "The Standoff v2 Endpoint" should {
     "create a text value with standard mapping" in {
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
-      val response = createResourceWithTextValue(
-        xmlContent = xmlContent,
-        mappingIRI = OntologyConstants.KnoraBase.StandardMapping
-      )
+      val response   = createResourceWithFormattedTextValue(xmlContent)
       assert(response.status == StatusCodes.OK, responseToString(response))
       val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
       freetestTextValueIRI.set(
@@ -155,8 +182,10 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
-      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
+      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasFormattedText")
+      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(
+        OntologyConstants.KnoraApiV2Complex.FormattedTextValue
+      )
       textValueObject
         .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
         .requireString(JsonLDKeywords.ID) should equal(OntologyConstants.KnoraBase.StandardMapping)
@@ -237,7 +266,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     "create a text value with the freetext custom mapping" in {
       // create a resource with a TextValue with custom mapping
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-      val response = createResourceWithTextValue(
+      val response = createResourceWithCustomFormattedTextValue(
         xmlContent = xmlContent,
         mappingIRI = freetestCustomMappingIRI
       )
@@ -256,8 +285,10 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
-      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
+      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasCustomFormattedText")
+      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(
+        OntologyConstants.KnoraApiV2Complex.CustomFormattedTextValue
+      )
       textValueObject
         .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
         .requireString(JsonLDKeywords.ID) should equal(freetestCustomMappingIRI)
@@ -323,7 +354,7 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
     "create a text value with the freetext custom mapping and transformation" in {
       // create a resource with a TextValue with custom mapping
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-      val response = createResourceWithTextValue(
+      val response = createResourceWithCustomFormattedTextValue(
         xmlContent = xmlContent,
         mappingIRI = freetestCustomMappingWithTranformationIRI
       )
@@ -343,8 +374,10 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
-      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
+      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasCustomFormattedText")
+      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(
+        OntologyConstants.KnoraApiV2Complex.CustomFormattedTextValue
+      )
       textValueObject
         .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
         .requireString(JsonLDKeywords.ID) should equal(freetestCustomMappingWithTranformationIRI)

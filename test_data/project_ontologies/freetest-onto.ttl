@@ -489,3 +489,23 @@ freetest:FreetestWithNewTextValues
                            owl:minCardinality   "0"^^xsd:nonNegativeInteger;
                            owl:onProperty       freetest:hasProperlyUnformattedText
                          ] .
+
+freetest:FreetestWithFormattedTextValue
+        rdf:type         owl:Class;
+        rdfs:label       "resource with text values according to the new model"@en;
+        rdfs:subClassOf  knora-base:Resource;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "1"^^xsd:nonNegativeInteger;
+                           owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                           owl:onProperty       freetest:hasFormattedText
+                         ] .
+
+freetest:FreetestWithCustomFormattedTextValue
+        rdf:type         owl:Class;
+        rdfs:label       "resource with text values according to the new model"@en;
+        rdfs:subClassOf  knora-base:Resource;
+        rdfs:subClassOf  [ rdf:type             owl:Restriction;
+                           salsah-gui:guiOrder  "1"^^xsd:nonNegativeInteger;
+                           owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                           owl:onProperty       freetest:hasCustomFormattedText
+                         ] .
