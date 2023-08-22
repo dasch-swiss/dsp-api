@@ -1674,7 +1674,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithEscapeIri.set(valueIri)
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = AThing.iri,
@@ -1757,7 +1757,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-      textValueWithStandoffIri.set(valueIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3518,14 +3517,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update a text value with standoff" in {
       val resourceIri: IRI = AThing.iri
 
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity =
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
-           |  "anything:hasFormattedText" : {
+           |  "anything:hasRichtext" : {
            |    "@id" : "${textValueWithStandoffIri.get}",
            |    "@type" : "knora-api:FormattedTextValue",
            |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(

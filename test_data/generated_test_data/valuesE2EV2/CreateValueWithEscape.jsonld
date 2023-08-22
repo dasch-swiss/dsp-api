@@ -1,7 +1,7 @@
 {
   "@id": "http://rdfh.ch/0001/a-thing",
   "@type": "anything:Thing",
-  "anything:hasText": {
+  "anything:hasRichtext": {
     "@type": "knora-api:FormattedTextValue",
     "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><text><p>\n test</p></text>",
     "knora-api:textValueHasMapping": {
