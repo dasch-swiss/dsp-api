@@ -3525,9 +3525,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
-           |  "anything:hasText" : {
+           |  "anything:hasFormattedText" : {
            |    "@id" : "${textValueWithStandoffIri.get}",
-           |    "@type" : "knora-api:TextValue",
+           |    "@type" : "knora-api:FormattedTextValue",
            |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(
             textValue2AsXmlWithStandardMapping
           )},
@@ -3564,7 +3564,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(OntologyConstants.KnoraApiV2Complex.FormattedTextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3596,7 +3596,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithEscapeIri.set(valueIri)
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3614,49 +3614,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           | test update</p>""".stripMargin
 
       assert(savedTextValueAsXml.contains(expectedText))
-    }
-
-    "update a text value with a comment" in {
-      val resourceIri: IRI                          = AThing.iri
-      val valueAsString: String                     = "this is a text value that has an updated comment"
-      val valueHasComment: String                   = "this is an updated comment"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-
-      val jsonLDEntity = updateTextValueWithCommentRequest(
-        resourceIri = resourceIri,
-        valueIri = textValueWithoutStandoffIri.get,
-        valueAsString = valueAsString,
-        valueHasComment = valueHasComment
-      )
-
-      val request =
-        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-          BasicHttpCredentials(anythingUserEmail, password)
-        )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, responseToString(response))
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueIri: IRI =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
-      textValueWithoutStandoffIri.set(valueIri)
-      val valueType: SmartIri =
-        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
-
-      val savedValue: JsonLDObject = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = textValueWithoutStandoffIri.get,
-        userEmail = anythingUserEmail
-      )
-
-      val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
-      savedValueAsString should ===(valueAsString)
-      val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
-      savedValueHasComment should ===(valueHasComment)
     }
 
     "update a date value representing a range with day precision" in {
