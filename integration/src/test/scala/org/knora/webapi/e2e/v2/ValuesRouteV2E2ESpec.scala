@@ -279,8 +279,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     s"""{
        |  "@id" : "$resourceIri",
        |  "@type" : "anything:Thing",
-       |  "anything:hasText" : {
-       |    "@type" : "knora-api:TextValue",
+       |  "anything:hasUnformattedText" : {
+       |    "@type" : "knora-api:UnformattedTextValue",
        |    "knora-api:valueAsString" : "$valueAsString"
        |  },
        |  "@context" : {
@@ -444,9 +444,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     s"""{
        |  "@id" : "$resourceIri",
        |  "@type" : "anything:Thing",
-       |  "anything:hasText" : {
+       |  "anything:hasUnformattedText" : {
        |    "@id" : "$valueIri",
-       |    "@type" : "knora-api:TextValue",
+       |    "@type" : "knora-api:UnformattedTextValue",
        |    "knora-api:valueAsString" : "$valueAsString"
        |  },
        |  "@context" : {
@@ -914,7 +914,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
 
       val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
       val invalidIri: Boolean  = errorMessage.contains(s"IRI: '$customValueIri' already exists, try another one.")
@@ -996,7 +996,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
     }
 
     "create an integer value with a custom creation date" in {
@@ -1200,9 +1200,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "create a text value without standoff and without a comment" in {
-      val resourceIri: IRI                          = AThing.iri
-      val valueAsString: String                     = "text without standoff"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val resourceIri: IRI      = AThing.iri
+      val valueAsString: String = "text without standoff"
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUnformattedText".toSmartIri
+
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity: String = createTextValueWithoutStandoffRequest(
@@ -1232,7 +1233,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(OntologyConstants.KnoraApiV2Complex.UnformattedTextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1262,7 +1263,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
     }
 
     "not update a text value so it's empty" in {
@@ -1280,13 +1281,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
     }
 
     "update a text value without standoff" in {
       val resourceIri: IRI                          = AThing.iri
       val valueAsString: String                     = "text without standoff updated"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUnformattedText".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity = updateTextValueWithoutStandoffRequest(
@@ -1317,7 +1318,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(OntologyConstants.KnoraApiV2Complex.UnformattedTextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1335,7 +1336,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update a text value without standoff, adding a comment" in {
       val resourceIri: IRI                          = AThing.iri
       val valueAsString: String                     = "text without standoff updated"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUnformattedText".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity = updateTextValueWithCommentRequest(
@@ -1367,7 +1368,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(OntologyConstants.KnoraApiV2Complex.UnformattedTextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1398,7 +1399,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
     }
 
     "update a text value without standoff, changing only the a comment" in {
@@ -1778,7 +1779,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
     }
 
     "create a decimal value" in {
@@ -4667,7 +4668,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
     }
 
     "update a link between two resources, adding a comment" in {
@@ -4789,7 +4790,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.BadRequest, response.toString)
+      assert(response.status == StatusCodes.BadRequest, responseToString(response))
     }
 
     "create a link between two resources, with a comment" in {
