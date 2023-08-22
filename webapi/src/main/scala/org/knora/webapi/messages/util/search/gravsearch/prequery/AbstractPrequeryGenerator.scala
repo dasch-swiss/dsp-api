@@ -107,6 +107,9 @@ abstract class AbstractPrequeryGenerator(
   private var valueVariablesAutomaticallyGenerated: List[Map[QueryVariable, Set[GeneratedQueryVariable]]] =
     List(Map.empty[QueryVariable, Set[GeneratedQueryVariable]])
 
+  // Variables that point to actual literals; the only case currently would be rdfs:label
+  private var literalVariables: Set[QueryVariable] = Set.empty
+
   // Variables mentioned in the UNION block that is currently being processed, so we can ensure that a variable
   // is bound before it is used in a FILTER. This is a stack of sets, with one element per level of union blocks.
   private var variablesInUnionBlocks: List[Set[QueryVariable]] = List.empty
@@ -252,7 +255,7 @@ abstract class AbstractPrequeryGenerator(
 
         generatedVarsForOrderBy.headOption
 
-      case None => None
+      case None => if (literalVariables.contains(valueVar)) Some(valueVar) else None
     }
 
   // Generated statements for date literals, so we don't generate the same statements twice.
@@ -676,6 +679,13 @@ abstract class AbstractPrequeryGenerator(
     }
   }
 
+  private def recordLiteralVariables(statementPattern: StatementPattern): Unit =
+    statementPattern match {
+      case StatementPattern(_, IriRef(pred, None), obj: QueryVariable) if pred.toIri == OntologyConstants.Rdfs.Label =>
+        literalVariables += obj
+      case _ => ()
+    }
+
   protected def processStatementPatternFromWhereClause(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
@@ -718,6 +728,8 @@ abstract class AbstractPrequeryGenerator(
         // If we're in a UNION block, record any variables that are used in the statement,
         // so we can make sure that they're defined before they're used in a FILTER pattern.
         recordVariablesInUnionBlock(statementPattern)
+
+        recordLiteralVariables(statementPattern)
 
         additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
     }

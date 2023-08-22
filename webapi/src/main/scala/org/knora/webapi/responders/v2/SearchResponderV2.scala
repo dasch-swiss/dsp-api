@@ -460,7 +460,7 @@ final case class SearchResponderV2Live(
 
       // Create a Select prequery
       querySchema <-
-        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
+        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"InputQuery has no querySchema"))
       gravsearchToPrequeryTransformer: GravsearchToPrequeryTransformer =
         new GravsearchToPrequeryTransformer(
           constructClause = inputQuery.constructClause,
