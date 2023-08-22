@@ -510,6 +510,15 @@
                     "salsah-gui:guiOrder": 2,
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
+                        "@id": "anything:hasCustomFormattedText"
+                    }
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 2,
+                    "knora-api:isInherited": true,
+                    "owl:onProperty": {
                         "@id": "anything:hasRichtext"
                     }
                 },
@@ -1043,6 +1052,14 @@
                     },
                     "owl:minCardinality": 0,
                     "salsah-gui:guiOrder": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasCustomFormattedText"
+                    },
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 2
                 },
                 {
                     "@type": "owl:Restriction",
@@ -2043,6 +2060,15 @@
                     "salsah-gui:guiOrder": 2,
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
+                        "@id": "anything:hasCustomFormattedText"
+                    }
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:minCardinality": 0,
+                    "salsah-gui:guiOrder": 2,
+                    "knora-api:isInherited": true,
+                    "owl:onProperty": {
                         "@id": "anything:hasRichtext"
                     }
                 },
@@ -2782,6 +2808,22 @@
                 "@id": "salsah-gui:Colorpicker"
             },
             "@id": "anything:hasColor"
+        },
+        {
+            "rdfs:label": "Text",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "knora-api:subjectType": {
+                "@id": "anything:Thing"
+            },
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:CustomFormattedTextValue"
+            },
+            "@id": "anything:hasCustomFormattedText"
         },
         {
             "rdfs:label": "Date",
