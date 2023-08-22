@@ -3,6 +3,24 @@
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0",
         "@type": "xsd:anyURI"
     },
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0.20110302T150510Z",
+        "@type": "xsd:anyURI"
+    },
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
+    },
+    "knora-api:userHasPermission": "CR",
+    "knora-api:creationDate": {
+        "@value": "2011-03-02T15:05:10Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "knora-api:attachedToUser": {
+        "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+    },
+    "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser",
+    "@type": "anything:ThingPicture",
+    "@id": "http://rdfh.ch/0001/a-thing-picture",
     "rdfs:label": "A thing with a picture",
     "knora-api:hasStillImageFileValue": {
         "knora-api:arkUrl": {
@@ -23,38 +41,20 @@
             "@id": "http://rdfh.ch/users/91e19f1e01"
         },
         "knora-api:valueHasUUID": "goZ7JFRNSeqF-dNxsqAS7Q",
+        "knora-api:stillImageFileValueHasDimY": 256,
+        "knora-api:stillImageFileValueHasIIIFBaseUrl": {
+            "@value": "IIIF_BASE_URL/0001",
+            "@type": "xsd:anyURI"
+        },
+        "@id": "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q",
         "knora-api:fileValueAsUrl": {
             "@value": "IIIF_BASE_URL/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/512,256/0/default.jpg",
             "@type": "xsd:anyURI"
         },
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser",
         "@type": "knora-api:StillImageFileValue",
-        "knora-api:fileValueHasFilename": "B1D0OkEgfFp-Cew2Seur7Wi.jp2",
-        "knora-api:stillImageFileValueHasDimY": 256,
-        "knora-api:stillImageFileValueHasIIIFBaseUrl": {
-            "@value": "IIIF_BASE_URL/0001",
-            "@type": "xsd:anyURI"
-        },
-        "@id": "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q"
+        "knora-api:fileValueHasFilename": "B1D0OkEgfFp-Cew2Seur7Wi.jp2"
     },
-    "knora-api:versionArkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0.20110302T150510Z",
-        "@type": "xsd:anyURI"
-    },
-    "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0001"
-    },
-    "knora-api:userHasPermission": "CR",
-    "knora-api:creationDate": {
-        "@value": "2011-03-02T15:05:10Z",
-        "@type": "xsd:dateTimeStamp"
-    },
-    "knora-api:attachedToUser": {
-        "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-    },
-    "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser",
-    "@type": "anything:ThingPicture",
-    "@id": "http://rdfh.ch/0001/a-thing-picture",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/v2#",

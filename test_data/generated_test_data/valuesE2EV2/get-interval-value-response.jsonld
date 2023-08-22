@@ -35,13 +35,6 @@
             "@value": "2018-05-28T15:52:03.897Z",
             "@type": "xsd:dateTimeStamp"
         },
-        "knora-api:intervalValueHasStart": {
-            "@value": "0",
-            "@type": "xsd:decimal"
-        },
-        "knora-api:attachedToUser": {
-            "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
-        },
         "knora-api:valueHasUUID": "RbDKPKHWTC-0lkRKae-E6A",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:IntervalValue",
@@ -49,7 +42,14 @@
             "@value": "216000",
             "@type": "xsd:decimal"
         },
-        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A"
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A",
+        "knora-api:intervalValueHasStart": {
+            "@value": "0",
+            "@type": "xsd:decimal"
+        },
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        }
     },
     "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
     "@context": {

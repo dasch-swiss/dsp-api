@@ -26,13 +26,6 @@
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/XAhEeE3kSVqM4JPGdLt4Ewo",
             "@type": "xsd:anyURI"
         },
-        "knora-api:listValueAsListNode": {
-            "@id": "http://rdfh.ch/lists/0001/treeList01"
-        },
-        "knora-api:versionArkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/XAhEeE3kSVqM4JPGdLt4Ewo.20180528T155203897Z",
-            "@type": "xsd:anyURI"
-        },
         "knora-api:userHasPermission": "M",
         "knora-api:valueCreationDate": {
             "@value": "2018-05-28T15:52:03.897Z",
@@ -44,7 +37,14 @@
         "knora-api:valueHasUUID": "XAhEeE3kSVqM4JPGdLt4Ew",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:ListValue",
-        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/XAhEeE3kSVqM4JPGdLt4Ew"
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/XAhEeE3kSVqM4JPGdLt4Ew",
+        "knora-api:listValueAsListNode": {
+            "@id": "http://rdfh.ch/lists/0001/treeList01"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/XAhEeE3kSVqM4JPGdLt4Ewo.20180528T155203897Z",
+            "@type": "xsd:anyURI"
+        }
     },
     "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
     "@context": {

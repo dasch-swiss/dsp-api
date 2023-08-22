@@ -22,18 +22,18 @@
             "@type": "xsd:anyURI"
         },
         "knora-api:userHasPermission": "M",
-        "knora-api:booleanValueAsBoolean": true,
-        "knora-api:valueCreationDate": {
-            "@value": "2018-05-28T15:52:03.897Z",
-            "@type": "xsd:dateTimeStamp"
-        },
         "knora-api:attachedToUser": {
             "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
         },
         "knora-api:valueHasUUID": "IN4R19yYR0ygi3K2VEHpUQ",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:BooleanValue",
-        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ"
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ",
+        "knora-api:booleanValueAsBoolean": true,
+        "knora-api:valueCreationDate": {
+            "@value": "2018-05-28T15:52:03.897Z",
+            "@type": "xsd:dateTimeStamp"
+        }
     },
     "knora-api:creationDate": {
         "@value": "2018-05-28T15:52:03.897Z",

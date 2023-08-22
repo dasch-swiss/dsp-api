@@ -22,6 +22,13 @@
             "@type": "xsd:anyURI"
         },
         "knora-api:userHasPermission": "M",
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        },
+        "knora-api:valueHasUUID": "bXMwnrHvQH2DMjOFrGmNzg",
+        "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "@type": "knora-api:DecimalValue",
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg",
         "knora-api:valueCreationDate": {
             "@value": "2018-05-28T15:52:03.897Z",
             "@type": "xsd:dateTimeStamp"
@@ -29,14 +36,7 @@
         "knora-api:decimalValueAsDecimal": {
             "@value": "1.5",
             "@type": "xsd:decimal"
-        },
-        "knora-api:attachedToUser": {
-            "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
-        },
-        "knora-api:valueHasUUID": "bXMwnrHvQH2DMjOFrGmNzg",
-        "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        "@type": "knora-api:DecimalValue",
-        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg"
+        }
     },
     "knora-api:creationDate": {
         "@value": "2018-05-28T15:52:03.897Z",
