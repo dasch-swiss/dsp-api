@@ -21,7 +21,9 @@
     },
     "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "anything:hasText": {
-        "knora-api:valueAsString": "Bonjour",
+        "knora-api:textValueHasMapping": {
+            "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+        },
         "knora-api:arkUrl": {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valueslanguageX/000000000000000000000ws",
             "@type": "xsd:anyURI"
@@ -41,8 +43,9 @@
         },
         "knora-api:valueHasUUID": "000000000000000000000w",
         "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-        "@type": "knora-api:TextValue",
-        "@id": "http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1"
+        "@id": "http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1",
+        "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Bonjour</p></text>",
+        "@type": "knora-api:FormattedTextValue"
     },
     "@type": "anything:Thing",
     "@id": "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
