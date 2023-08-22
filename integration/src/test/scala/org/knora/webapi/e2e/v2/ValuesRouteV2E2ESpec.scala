@@ -167,7 +167,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
     ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, response.toString)
+    assert(response.status == StatusCodes.OK, responseToString(response))
     responseToJsonLDDocument(response)
   }
 
@@ -220,7 +220,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       baseApiUrl + s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
     ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, response.toString)
+    assert(response.status == StatusCodes.OK, responseToString(response))
     val resource: JsonLDDocument = responseToJsonLDDocument(response)
     parseResourceLastModificationDate(resource)
   }
@@ -761,7 +761,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
       val value: JsonLDObject = getValueFromResource(
@@ -883,7 +883,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
@@ -959,7 +959,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueUUID: String               = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
       assert(valueUUID == intValueCustomUUID)
@@ -1039,7 +1039,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
       val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -1098,7 +1098,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
@@ -1176,7 +1176,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       intValueWithCustomPermissionsIri.set(valueIri)
@@ -1226,7 +1226,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
@@ -1311,7 +1311,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
@@ -1361,7 +1361,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
@@ -1419,7 +1419,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
@@ -1478,7 +1478,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithoutStandoffIri.set(valueIri)
@@ -1583,7 +1583,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithStandoffIri.set(valueIri)
@@ -1632,7 +1632,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       val valueType: SmartIri =
@@ -1662,7 +1662,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithEscapeIri.set(valueIri)
@@ -1746,7 +1746,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       textValueWithStandoffIri.set(valueIri)
@@ -1821,7 +1821,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       decimalValueIri.set(valueIri)
@@ -1890,7 +1890,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -1966,7 +1966,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -2038,7 +2038,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -2101,7 +2101,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -2161,7 +2161,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -2218,7 +2218,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       dateValueIri.set(valueIri)
@@ -2276,7 +2276,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2336,7 +2336,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2406,7 +2406,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2464,7 +2464,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2532,7 +2532,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2607,7 +2607,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2673,7 +2673,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2736,7 +2736,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2798,7 +2798,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2862,7 +2862,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2924,7 +2924,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
       val valueIri: IRI =
@@ -2998,7 +2998,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3135,7 +3135,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3185,7 +3185,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3356,7 +3356,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3417,7 +3417,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3480,7 +3480,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3549,7 +3549,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3583,7 +3583,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3627,7 +3627,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3695,7 +3695,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3773,7 +3773,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3847,7 +3847,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3912,7 +3912,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -3974,7 +3974,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4033,7 +4033,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4104,7 +4104,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4163,7 +4163,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4232,7 +4232,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4308,7 +4308,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4375,7 +4375,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4439,7 +4439,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4502,7 +4502,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4567,7 +4567,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -4619,7 +4619,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
       val valueIri: IRI =
@@ -4690,7 +4690,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
       val valueIri: IRI =
@@ -4741,7 +4741,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
           BasicHttpCredentials(anythingUserEmail, password)
         )
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
       val valueIri: IRI =
@@ -4822,7 +4822,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
 
       val valueIri: IRI =
@@ -4872,7 +4872,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
     }
 
     "delete an integer value, supplying a custom delete date" in {
@@ -4913,7 +4913,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
     }
 
     "not delete an integer value if the simple schema is submitted" in {
@@ -4998,7 +4998,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
     }
   }
 
