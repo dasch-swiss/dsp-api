@@ -133,19 +133,22 @@ final case class ValuesResponderV2Live(
           )
 
         // Don't accept link properties.
-        _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-              throw BadRequestException(
-                s"Invalid property <${valueToCreate.propertyIri}>. Use a link value property to submit a link."
-              )
-            }
+        _ <- ZIO.when(propertyInfoForSubmittedProperty.isLinkProp)(
+               ZIO.fail(
+                 BadRequestException(
+                   s"Invalid property <${valueToCreate.propertyIri}>. Use a link value property to submit a link."
+                 )
+               )
+             )
 
         // Don't accept knora-api:hasStandoffLinkToValue.
-        _ =
-          if (valueToCreate.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
-            throw BadRequestException(
-              s"Values of <${valueToCreate.propertyIri}> cannot be created directly"
-            )
-          }
+        _ <- ZIO.when(valueToCreate.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
+               ZIO.fail(
+                 BadRequestException(
+                   s"Values of <${valueToCreate.propertyIri}> cannot be created directly"
+                 )
+               )
+             )
 
         // Make an adjusted version of the submitted property: if it's a link value property, substitute the
         // corresponding link property, whose objects we will need to query. Get ontology information about the
@@ -177,15 +180,13 @@ final case class ValuesResponderV2Live(
              )
 
         // Check that the resource has the rdf:type that the client thinks it has.
-        _ =
-          if (
-            resourceInfo.resourceClassIri != valueToCreate.resourceClassIri
-              .toOntologySchema(InternalSchema)
-          ) {
-            throw BadRequestException(
-              s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>"
-            )
-          }
+        _ <- ZIO.when(resourceInfo.resourceClassIri != valueToCreate.resourceClassIri.toOntologySchema(InternalSchema))(
+               ZIO.fail(
+                 BadRequestException(
+                   s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>"
+                 )
+               )
+             )
 
         // Get the definition of the resource class.
         classInfoRequest =
@@ -198,15 +199,20 @@ final case class ValuesResponderV2Live(
         classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
 
         // Check that the resource class has a cardinality for the submitted property.
-        classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-        cardinalityInfo: KnoraCardinalityInfo =
-          classInfo.allCardinalities.getOrElse(
-            submittedInternalPropertyIri,
-            throw BadRequestException(
-              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>"
+        cardinalityInfo <-
+          ZIO
+            .fromOption(
+              for {
+                classInfo       <- classInfoResponse.classes.get(resourceInfo.resourceClassIri)
+                cardinalityInfo <- classInfo.allCardinalities.get(submittedInternalPropertyIri)
+              } yield cardinalityInfo
             )
-          )
+            .orElseFail(
+              BadRequestException(
+                s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                    .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>"
+              )
+            )
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -223,20 +229,24 @@ final case class ValuesResponderV2Live(
                    checkNode <-
                      resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
 
-                   _ = checkNode match {
-                         // it doesn't have isRootNode property - it's a child node
-                         case Right(false) => ()
-                         // it does have isRootNode property - it's a root node
-                         case Right(true) =>
-                           throw BadRequestException(
-                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
-                           )
-                         // it deosn't exists or isn't valid list
-                         case Left(_) =>
-                           throw NotFoundException(
-                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
-                           )
-                       }
+                   _ <- checkNode match {
+                          // it doesn't have isRootNode property - it's a child node
+                          case Right(false) => ZIO.unit
+                          // it does have isRootNode property - it's a root node
+                          case Right(true) =>
+                            ZIO.fail(
+                              BadRequestException(
+                                s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                              )
+                            )
+                          // it doesn't exists or isn't valid list
+                          case Left(_) =>
+                            ZIO.fail(
+                              NotFoundException(
+                                s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                              )
+                            )
+                        }
                  } yield ()
 
                case _ => ZIO.unit
@@ -247,36 +257,38 @@ final case class ValuesResponderV2Live(
         currentValuesForProp: Seq[ReadValueV2] =
           resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty
-          ) {
-            throw InconsistentRepositoryDataException(
-              s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property"
+          )(
+            ZIO.fail(
+              InconsistentRepositoryDataException(
+                s"Resource class <${resourceInfo.resourceClassIri
+                    .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property"
+              )
             )
-          }
+          )
 
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty)
-          ) {
-            throw OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>"
+          )(
+            ZIO.fail(
+              OntologyConstraintException(
+                s"Resource class <${resourceInfo.resourceClassIri
+                    .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>"
+              )
             )
-          }
+          )
 
         // Check that the new value would not duplicate an existing value.
         unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
 
-        _ = if (
-              currentValuesForProp.exists(currentVal =>
-                unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent)
-              )
-            ) {
-              throw DuplicateValueException()
-            }
+        _ <- ZIO.when(
+               currentValuesForProp.exists(currentVal =>
+                 unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent)
+               )
+             )(ZIO.fail(DuplicateValueException()))
 
         // If this is a text value, check that the resources pointed to by any standoff link tags exist
         // and that the user has permission to see them.
@@ -308,29 +320,27 @@ final case class ValuesResponderV2Live(
                 validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
 
                 // Is the requesting user a system admin, or an admin of this project?
-                _ = if (
-                      !(requestingUser.permissions.isProjectAdmin(
-                        requestingUser.id
-                      ) || requestingUser.permissions.isSystemAdmin)
-                    ) {
+                userPermissions = requestingUser.permissions
+                _ <- ZIO.when(!(userPermissions.isProjectAdmin(requestingUser.id) || userPermissions.isSystemAdmin)) {
 
-                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                       // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                       val permissionComparisonResult: PermissionComparisonResult =
+                         PermissionUtilADM.comparePermissionsADM(
+                           entityCreator = requestingUser.id,
+                           entityProject = resourceInfo.projectADM.id,
+                           permissionLiteralA = validatedCustomPermissions,
+                           permissionLiteralB = defaultValuePermissions,
+                           requestingUser = requestingUser
+                         )
 
-                      val permissionComparisonResult: PermissionComparisonResult =
-                        PermissionUtilADM.comparePermissionsADM(
-                          entityCreator = requestingUser.id,
-                          entityProject = resourceInfo.projectADM.id,
-                          permissionLiteralA = validatedCustomPermissions,
-                          permissionLiteralB = defaultValuePermissions,
-                          requestingUser = requestingUser
-                        )
-
-                      if (permissionComparisonResult == AGreaterThanB) {
-                        throw ForbiddenException(
-                          s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                        )
-                      }
-                    }
+                       ZIO.when(permissionComparisonResult == AGreaterThanB)(
+                         ZIO.fail(
+                           ForbiddenException(
+                             s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
+                           )
+                         )
+                       )
+                     }
               } yield validatedCustomPermissions
 
             case None =>
@@ -344,7 +354,6 @@ final case class ValuesResponderV2Live(
         created <-
           createValueV2AfterChecks(
             dataNamedGraph = dataNamedGraph,
-            projectIri = resourceInfo.projectADM.id,
             resourceInfo = resourceInfo,
             propertyIri = adjustedInternalPropertyIri,
             value = submittedInternalValueContent,
@@ -352,8 +361,7 @@ final case class ValuesResponderV2Live(
             valueUUID = valueToCreate.valueUUID,
             valueCreationDate = valueToCreate.valueCreationDate,
             valueCreator = requestingUser.id,
-            valuePermissions = newValuePermissionLiteral,
-            requestingUser = requestingUser
+            valuePermissions = newValuePermissionLiteral
           )
 
       } yield CreateValueResponseV2(
@@ -366,16 +374,10 @@ final case class ValuesResponderV2Live(
     }
 
     val triplestoreUpdateFuture: Task[CreateValueResponseV2] = for {
-
       // Don't allow anonymous users to create values.
-      _ <- ZIO.attempt {
-             if (requestingUser.isAnonymousUser) {
-               throw ForbiddenException("Anonymous users aren't allowed to create values")
-             } else {
-               requestingUser.id
-             }
-           }
-
+      _ <- ZIO.when(requestingUser.isAnonymousUser)(
+             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create values"))
+           )
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri, taskZio)
     } yield taskResult
@@ -394,7 +396,6 @@ final case class ValuesResponderV2Live(
    * pre-update checks have already been done.
    *
    * @param dataNamedGraph    the named graph in which the value is to be created.
-   * @param projectIri        the IRI of the project in which to create the value.
    * @param resourceInfo      information about the the resource in which to create the value.
    * @param propertyIri       the IRI of the property that will point from the resource to the value, or, if
    *                          the value is a link value, the IRI of the link property.
@@ -405,12 +406,10 @@ final case class ValuesResponderV2Live(
    * @param valueCreator      the IRI of the new value's owner.
    * @param valuePermissions  the literal that should be used as the object of the new value's
    *                          `knora-base:hasPermissions` predicate.
-   * @param requestingUser    the user making the request.
    * @return an [[UnverifiedValueV2]].
    */
   private def createValueV2AfterChecks(
     dataNamedGraph: IRI,
-    projectIri: IRI,
     resourceInfo: ReadResourceV2,
     propertyIri: SmartIri,
     value: ValueContentV2,
@@ -418,9 +417,8 @@ final case class ValuesResponderV2Live(
     valueUUID: Option[UUID],
     valueCreationDate: Option[Instant],
     valueCreator: IRI,
-    valuePermissions: String,
-    requestingUser: UserADM
-  ): Task[UnverifiedValueV2] =
+    valuePermissions: IRI
+  ): ZIO[Any, Throwable, UnverifiedValueV2] =
     value match {
       case linkValueContent: LinkValueContentV2 =>
         createLinkValueV2AfterChecks(
@@ -432,8 +430,7 @@ final case class ValuesResponderV2Live(
           maybeValueUUID = valueUUID,
           maybeCreationDate = valueCreationDate,
           valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
-          requestingUser = requestingUser
+          valuePermissions = valuePermissions
         )
 
       case ordinaryValueContent =>
@@ -446,8 +443,7 @@ final case class ValuesResponderV2Live(
           maybeValueUUID = valueUUID,
           maybeValueCreationDate = valueCreationDate,
           valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
-          requestingUser = requestingUser
+          valuePermissions = valuePermissions
         )
     }
 
@@ -462,7 +458,6 @@ final case class ValuesResponderV2Live(
    * @param maybeValueCreationDate the optional custom creation date supplied for the value.
    * @param valueCreator           the IRI of the new value's owner.
    * @param valuePermissions       the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-   * @param requestingUser         the user making the request.
    * @return an [[UnverifiedValueV2]].
    */
   private def createOrdinaryValueV2AfterChecks(
@@ -474,9 +469,8 @@ final case class ValuesResponderV2Live(
     maybeValueUUID: Option[UUID],
     maybeValueCreationDate: Option[Instant],
     valueCreator: IRI,
-    valuePermissions: String,
-    requestingUser: UserADM
-  ): Task[UnverifiedValueV2] =
+    valuePermissions: IRI
+  ) =
     for {
 
       // Make a new value UUID.
@@ -507,8 +501,7 @@ final case class ValuesResponderV2Live(
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = targetResourceIri,
                   valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                  valuePermissions = standoffLinkValuePermissions,
-                  requestingUser = requestingUser
+                  valuePermissions = standoffLinkValuePermissions
                 )
               }.toVector
 
@@ -556,7 +549,6 @@ final case class ValuesResponderV2Live(
    * @param maybeValueUUID   the optional custom UUID supplied for the value.
    * @param valueCreator     the IRI of the new link value's owner.
    * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param requestingUser   the user making the request.
    * @return an [[UnverifiedValueV2]].
    */
   private def createLinkValueV2AfterChecks(
@@ -568,9 +560,8 @@ final case class ValuesResponderV2Live(
     maybeValueUUID: Option[UUID],
     maybeCreationDate: Option[Instant],
     valueCreator: IRI,
-    valuePermissions: String,
-    requestingUser: UserADM
-  ): Task[UnverifiedValueV2] = {
+    valuePermissions: IRI
+  ) = {
     // Make a new value UUID.
     val newValueUUID: UUID = makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
@@ -582,8 +573,7 @@ final case class ValuesResponderV2Live(
           targetResourceIri = linkValueContent.referredResourceIri,
           customNewLinkValueIri = maybeValueIri,
           valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
-          requestingUser = requestingUser
+          valuePermissions = valuePermissions
         )
 
       creationDate: Instant =
@@ -937,16 +927,19 @@ final case class ValuesResponderV2Live(
           )
 
         // Don't accept link properties.
-        _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-              throw BadRequestException(
+        _ <-
+          ZIO.when(propertyInfoForSubmittedProperty.isLinkProp)(
+            ZIO.fail(
+              BadRequestException(
                 s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
               )
-            }
+            )
+          )
 
         // Don't accept knora-api:hasStandoffLinkToValue.
-        _ = if (submittedExternalPropertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
-              throw BadRequestException(s"Values of <$submittedExternalPropertyIri> cannot be updated directly")
-            }
+        _ <- ZIO.when(
+               submittedExternalPropertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue
+             )(ZIO.fail(BadRequestException(s"Values of <$submittedExternalPropertyIri> cannot be updated directly")))
 
         // Make an adjusted version of the submitted property: if it's a link value property, substitute the
         // corresponding link property, whose objects we will need to query. Get ontology information about the
@@ -968,41 +961,50 @@ final case class ValuesResponderV2Live(
             requestingUser = KnoraSystemInstances.Users.SystemUser
           )
 
-        _ = if (resourceInfo.resourceClassIri != submittedExternalResourceClassIri.toOntologySchema(InternalSchema)) {
-              throw BadRequestException(
+        _ <-
+          ZIO.when(resourceInfo.resourceClassIri != submittedExternalResourceClassIri.toOntologySchema(InternalSchema))(
+            ZIO.fail(
+              BadRequestException(
                 s"The rdf:type of resource <$resourceIri> is not <$submittedExternalResourceClassIri>"
               )
-            }
+            )
+          )
 
         // Check that the resource has the value that the user wants to update, as an object of the submitted property.
-        currentValue: ReadValueV2 =
-          resourceInfo.values
-            .get(submittedInternalPropertyIri)
-            .flatMap(_.find(_.valueIri == valueIri))
-            .getOrElse {
-              throw NotFoundException(
+        currentValue <-
+          ZIO
+            .fromOption(for {
+              values <- resourceInfo.values.get(submittedInternalPropertyIri)
+              curVal <- values.find(_.valueIri == valueIri)
+            } yield curVal)
+            .orElseFail(
+              NotFoundException(
                 s"Resource <$resourceIri> does not have value <$valueIri> as an object of property <$submittedExternalPropertyIri>"
               )
-            }
-
+            )
         // Check that the current value has the submitted value type.
-        _ = if (currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema)) {
-              throw BadRequestException(
+        _ <-
+          ZIO.when(currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema))(
+            ZIO.fail(
+              BadRequestException(
                 s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>"
               )
-            }
+            )
+          )
 
         // If a custom value creation date was submitted, make sure it's later than the date of the current version.
-        _ = if (updateValue.valueCreationDate.exists(!_.isAfter(currentValue.valueCreationDate))) {
-              throw BadRequestException(
-                "A custom value creation date must be later than the date of the current version"
-              )
-            }
+        _ <- ZIO.when(updateValue.valueCreationDate.exists(!_.isAfter(currentValue.valueCreationDate)))(
+               ZIO.fail(
+                 BadRequestException(
+                   "A custom value creation date must be later than the date of the current version"
+                 )
+               )
+             )
       } yield ResourcePropertyValue(
-        resource = resourceInfo,
-        submittedInternalPropertyIri = submittedInternalPropertyIri,
-        adjustedInternalPropertyInfo = adjustedInternalPropertyInfo,
-        value = currentValue
+        resourceInfo,
+        submittedInternalPropertyIri,
+        adjustedInternalPropertyInfo,
+        currentValue
       )
 
     /**
@@ -1046,9 +1048,9 @@ final case class ValuesResponderV2Live(
             }
           )
 
-        _ = if (newPermissionsParsed == currentPermissionsParsed) {
-              throw BadRequestException(s"The submitted permissions are the same as the current ones")
-            }
+        _ <- ZIO.when(newPermissionsParsed == currentPermissionsParsed)(
+               ZIO.fail(BadRequestException(s"The submitted permissions are the same as the current ones"))
+             )
 
         _ <- resourceUtilV2.checkValuePermission(
                resourceInfo = resourceInfo,
@@ -1182,7 +1184,7 @@ final case class ValuesResponderV2Live(
                            throw BadRequestException(
                              s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
                            )
-                         // it deosn't exists or isn't valid list
+                         // it doesn't exists or isn't valid list
                          case Left(_) =>
                            throw NotFoundException(
                              s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
@@ -1364,8 +1366,7 @@ final case class ValuesResponderV2Live(
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = targetResourceIri,
                   valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                  valuePermissions = standoffLinkValuePermissions,
-                  requestingUser = requestingUser
+                  valuePermissions = standoffLinkValuePermissions
                 )
               }
 
@@ -1380,8 +1381,7 @@ final case class ValuesResponderV2Live(
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                   targetResourceIri = removedTargetResource,
                   valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                  valuePermissions = standoffLinkValuePermissions,
-                  requestingUser = requestingUser
+                  valuePermissions = standoffLinkValuePermissions
                 )
               }
 
@@ -1473,8 +1473,7 @@ final case class ValuesResponderV2Live(
             linkPropertyIri = linkPropertyIri,
             targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
             valueCreator = valueCreator,
-            valuePermissions = valuePermissions,
-            requestingUser = requestingUser
+            valuePermissions = valuePermissions
           )
 
         // Create a new link, and create a new LinkValue for it.
@@ -1485,8 +1484,7 @@ final case class ValuesResponderV2Live(
             targetResourceIri = newLinkValue.referredResourceIri,
             customNewLinkValueIri = newValueVersionIri,
             valueCreator = valueCreator,
-            valuePermissions = valuePermissions,
-            requestingUser = requestingUser
+            valuePermissions = valuePermissions
           )
 
         // If no custom value creation date was provided, make a timestamp to indicate when the link value
@@ -1531,8 +1529,7 @@ final case class ValuesResponderV2Live(
             targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
             customNewLinkValueIri = newValueVersionIri,
             valueCreator = valueCreator,
-            valuePermissions = valuePermissions,
-            requestingUser = requestingUser
+            valuePermissions = valuePermissions
           )
 
         // Make a timestamp to indicate when the link value was updated.
@@ -1572,7 +1569,7 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM,
     apiRequestId: UUID
   ): Task[SuccessResponseV2] = {
-    def deleteTask: Task[SuccessResponseV2] = {
+    def deleteTask(): Task[SuccessResponseV2] = {
       for {
         // Convert the submitted property IRI to the internal schema.
         submittedInternalPropertyIri <- ZIO.attempt(deleteValue.propertyIri.toOntologySchema(InternalSchema))
@@ -1756,7 +1753,7 @@ final case class ValuesResponderV2Live(
            }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(apiRequestId, deleteValue.resourceIri, deleteTask)
+      taskResult <- IriLocker.runWithIriLock(apiRequestId, deleteValue.resourceIri, deleteTask())
     } yield taskResult
   }
 
@@ -1847,8 +1844,7 @@ final case class ValuesResponderV2Live(
           linkPropertyIri = propertyIri,
           targetResourceIri = currentLinkValueContent.referredResourceIri,
           valueCreator = currentValue.attachedToUser,
-          valuePermissions = currentValue.permissions,
-          requestingUser = requestingUser
+          valuePermissions = currentValue.permissions
         )
 
       sparqlUpdate =
@@ -1900,8 +1896,7 @@ final case class ValuesResponderV2Live(
             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
             targetResourceIri = removedTargetResource,
             valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-            valuePermissions = standoffLinkValuePermissions,
-            requestingUser = requestingUser
+            valuePermissions = standoffLinkValuePermissions
           )
         }
 
@@ -2139,31 +2134,31 @@ final case class ValuesResponderV2Live(
     requestingUser: UserADM
   ): Task[Unit] =
     // Is the value type the same as the property's object class constraint?
-    if (objectClassConstraint == valueContent.valueType) {
-      // Yes. Nothing more to do here.
-      ZIO.unit
-    } else {
-      // No. Ask the ontology responder whether it's a subclass of the property's object class constraint.
-      for {
-        subClassRequest <- ZIO.succeed(
-                             CheckSubClassRequestV2(
-                               subClassIri = valueContent.valueType,
-                               superClassIri = objectClassConstraint,
-                               requestingUser = requestingUser
+    ZIO
+      .unless(objectClassConstraint == valueContent.valueType) {
+        for {
+          subClassRequest <- ZIO.succeed(
+                               CheckSubClassRequestV2(
+                                 subClassIri = valueContent.valueType,
+                                 superClassIri = objectClassConstraint,
+                                 requestingUser = requestingUser
+                               )
                              )
-                           )
 
-        subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
+          subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
 
-        // If it isn't, throw an exception.
-        _ = if (!subClassResponse.isSubClass) {
-              throw OntologyConstraintException(
-                s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
-              )
-            }
+          // If it isn't, throw an exception.
+          _ <- ZIO.when(!subClassResponse.isSubClass) {
+                 ZIO.fail(
+                   OntologyConstraintException(
+                     s"A value of type <${valueContent.valueType}> cannot be the target of property <$propertyIri>, because it is not a member of class <$objectClassConstraint>"
+                   )
+                 )
+               }
 
-      } yield ()
-    }
+        } yield ()
+      }
+      .unit
 
   /**
    * Checks that a value to be updated has the correct type for the `knora-base:objectClassConstraint` of
@@ -2266,7 +2261,6 @@ final case class ValuesResponderV2Live(
    * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
    * @param valueCreator          the IRI of the new link value's owner.
    * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param requestingUser        the user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
   private def incrementLinkValue(
@@ -2275,9 +2269,8 @@ final case class ValuesResponderV2Live(
     targetResourceIri: IRI,
     customNewLinkValueIri: Option[SmartIri] = None,
     valueCreator: IRI,
-    valuePermissions: String,
-    requestingUser: UserADM
-  ): Task[SparqlTemplateLinkUpdate] = {
+    valuePermissions: IRI
+  ) = {
     // Check whether a LinkValue already exists for this link.
     val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
       sourceResourceInfo = sourceResourceInfo,
@@ -2351,7 +2344,6 @@ final case class ValuesResponderV2Live(
    * @param targetResourceIri  the IRI of the target resource.
    * @param valueCreator       the IRI of the new link value's owner.
    * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param requestingUser     the user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
   private def decrementLinkValue(
@@ -2359,9 +2351,8 @@ final case class ValuesResponderV2Live(
     linkPropertyIri: SmartIri,
     targetResourceIri: IRI,
     valueCreator: IRI,
-    valuePermissions: String,
-    requestingUser: UserADM
-  ): Task[SparqlTemplateLinkUpdate] = {
+    valuePermissions: IRI
+  ) = {
 
     // Check whether a LinkValue already exists for this link.
     val maybeLinkValueInfo = findLinkValue(
@@ -2418,18 +2409,16 @@ final case class ValuesResponderV2Live(
    * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
    * @param valueCreator          the IRI of the new link value's owner.
    * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param requestingUser        the user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
   private def changeLinkValueMetadata(
     sourceResourceInfo: ReadResourceV2,
     linkPropertyIri: SmartIri,
     targetResourceIri: IRI,
-    customNewLinkValueIri: Option[SmartIri] = None,
+    customNewLinkValueIri: Option[SmartIri],
     valueCreator: IRI,
-    valuePermissions: String,
-    requestingUser: UserADM
-  ): Task[SparqlTemplateLinkUpdate] = {
+    valuePermissions: IRI
+  ) = {
 
     // Check whether a LinkValue already exists for this link.
     val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
