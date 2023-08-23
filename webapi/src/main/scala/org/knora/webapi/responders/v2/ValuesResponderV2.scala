@@ -1121,11 +1121,7 @@ final case class ValuesResponderV2Live(
 
         // Check that the user has permission to do the update. If they want to change the permissions
         // on the value, they need ChangeRightsPermission, otherwise they need ModifyPermission.
-        currentPermissionsParsed: Map[EntityPermission, Set[IRI]] =
-          PermissionUtilADM.parsePermissions(
-            currentValue.permissions
-          )
-
+        currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
         newPermissionsParsed <- ZIO.attempt(
                                   PermissionUtilADM.parsePermissions(
                                     newValueVersionPermissionLiteral,
