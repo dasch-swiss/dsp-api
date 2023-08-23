@@ -1201,9 +1201,9 @@ final case class ValuesResponderV2Live(
         // Check that the updated value would not duplicate the current value version.
         unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
 
-        _ = if (unescapedSubmittedInternalValueContent.wouldDuplicateCurrentVersion(currentValue.valueContent)) {
-              throw DuplicateValueException("The submitted value is the same as the current version")
-            }
+        _ <- ZIO.when(unescapedSubmittedInternalValueContent.wouldDuplicateCurrentVersion(currentValue.valueContent))(
+               ZIO.fail(DuplicateValueException("The submitted value is the same as the current version"))
+             )
 
         // Check that the updated value would not duplicate another existing value of the resource.
         currentValuesForProp: Seq[ReadValueV2] =
@@ -1211,13 +1211,11 @@ final case class ValuesResponderV2Live(
             .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
             .filter(_.valueIri != updateValueContentV2.valueIri)
 
-        _ = if (
-              currentValuesForProp.exists(currentVal =>
-                unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent)
-              )
-            ) {
-              throw DuplicateValueException()
-            }
+        _ <- ZIO.when(
+               currentValuesForProp.exists(currentVal =>
+                 unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent)
+               )
+             )(ZIO.fail(DuplicateValueException()))
 
         _ <- submittedInternalValueContent match {
                case textValueContent: TextValueContentV2 =>
