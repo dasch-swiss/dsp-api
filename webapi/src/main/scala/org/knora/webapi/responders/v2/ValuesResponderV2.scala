@@ -473,7 +473,7 @@ final case class ValuesResponderV2Live(
     for {
 
       // Make a new value UUID.
-      newValueUUID <- ZIO.succeed(makeNewValueUUID(maybeValueIri, maybeValueUUID))
+      newValueUUID <- makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
       // Make an IRI for the new value.
       newValueIri <-
@@ -560,11 +560,11 @@ final case class ValuesResponderV2Live(
     maybeCreationDate: Option[Instant],
     valueCreator: IRI,
     valuePermissions: IRI
-  ) = {
+  ) =
     // Make a new value UUID.
-    val newValueUUID: UUID = makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
     for {
+      newValueUUID <- makeNewValueUUID(maybeValueIri, maybeValueUUID)
       sparqlTemplateLinkUpdate <-
         incrementLinkValue(
           sourceResourceInfo = resourceInfo,
@@ -604,7 +604,6 @@ final case class ValuesResponderV2Live(
       permissions = valuePermissions,
       creationDate = creationDate
     )
-  }
 
   /**
    * Represents SPARQL generated to create one of multiple values in a new resource.
@@ -691,11 +690,7 @@ final case class ValuesResponderV2Live(
   ): Task[InsertSparqlWithUnverifiedValue] =
     for {
       // Make new value UUID.
-      newValueUUID <-
-        ZIO.succeed(
-          makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
-        )
-
+      newValueUUID <- makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID)
       newValueIri <-
         iriService.checkOrCreateEntityIri(
           valueToCreate.customValueIri,
@@ -1654,8 +1649,10 @@ final case class ValuesResponderV2Live(
         // Check that the value is of the type that the client submitted.
         _ <-
           ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
-            throw BadRequestException(
-              s"Value <${deleteValue.valueIri}> in resource <${deleteValue.resourceIri}> is not of type <${deleteValue.valueTypeIri}>"
+            ZIO.fail(
+              BadRequestException(
+                s"Value <${deleteValue.valueIri}> in resource <${deleteValue.resourceIri}> is not of type <${deleteValue.valueTypeIri}>"
+              )
             )
           )
 
@@ -1695,19 +1692,22 @@ final case class ValuesResponderV2Live(
         currentValuesForProp: Seq[ReadValueV2] =
           resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.size == 1
-          ) {
-            throw OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValue.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValue.resourceIri}>"
+          )(
+            ZIO.fail(
+              OntologyConstraintException(
+                s"Resource class <${resourceInfo.resourceClassIri
+                    .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValue.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValue.resourceIri}>"
+              )
             )
-          }
+          )
 
         // If a custom delete date was submitted, make sure it's later than the date of the current version.
-        _ = if (deleteValue.deleteDate.exists(!_.isAfter(currentValue.valueCreationDate))) {
-              throw BadRequestException("A custom delete date must be later than the value's creation date")
-            }
+        _ <- ZIO.when(deleteValue.deleteDate.exists(!_.isAfter(currentValue.valueCreationDate)))(
+               ZIO.fail(BadRequestException("A custom delete date must be later than the value's creation date"))
+             )
 
         // Get information about the project that the resource is in, so we know which named graph to do the update in.
         dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resourceInfo.projectADM).value
@@ -1735,27 +1735,24 @@ final case class ValuesResponderV2Live(
         sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
         rows                  = sparqlSelectResponse.results.bindings
 
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false)
-          ) {
-            throw UpdateNotPerformedException(
-              s"The request to mark value <${deleteValue.valueIri}> (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
+          )(
+            ZIO.fail(
+              UpdateNotPerformedException(
+                s"The request to mark value <${deleteValue.valueIri}> (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
+              )
             )
-          }
+          )
       } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
     }
 
     for {
       // Don't allow anonymous users to create values.
-      _ <- ZIO.attempt {
-             if (requestingUser.isAnonymousUser) {
-               throw ForbiddenException("Anonymous users aren't allowed to update values")
-             } else {
-               requestingUser.id
-             }
-           }
-
+      _ <- ZIO.when(requestingUser.isAnonymousUser)(
+             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to update values"))
+           )
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(apiRequestId, deleteValue.resourceIri, deleteTask())
     } yield taskResult
@@ -1827,20 +1824,20 @@ final case class ValuesResponderV2Live(
     deleteComment: Option[String],
     deleteDate: Option[Instant],
     requestingUser: UserADM
-  ): Task[IRI] = {
+  ): Task[IRI] =
     // Make a new version of of the LinkValue with a reference count of 0, and mark the new
     // version as deleted. Give the new version the same permissions as the previous version.
 
-    val currentLinkValueContent: LinkValueContentV2 = currentValue.valueContent match {
-      case linkValueContent: LinkValueContentV2 => linkValueContent
-      case _                                    => throw AssertionException("Unreachable code")
-    }
-
-    // If no custom delete date was provided, make a timestamp to indicate when the link value was
-    // marked as deleted.
-    val currentTime: Instant = deleteDate.getOrElse(Instant.now)
-
     for {
+      currentLinkValueContent <- currentValue.valueContent match {
+                                   case linkValueContent: LinkValueContentV2 => ZIO.succeed(linkValueContent)
+                                   case _                                    => ZIO.fail(AssertionException("Unreachable code"))
+                                 }
+
+      // If no custom delete date was provided, make a timestamp to indicate when the link value was
+      // marked as deleted.
+      currentTime: Instant = deleteDate.getOrElse(Instant.now)
+
       // Delete the existing link and decrement its LinkValue's reference count.
       sparqlTemplateLinkUpdate <-
         decrementLinkValue(
@@ -1865,7 +1862,6 @@ final case class ValuesResponderV2Live(
 
       _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
     } yield sparqlTemplateLinkUpdate.newLinkValueIri
-  }
 
   /**
    * Deletes an ordinary value after checks.
@@ -1980,8 +1976,10 @@ final case class ValuesResponderV2Live(
 
       } yield linkPropertyInfoResponse.properties(internalLinkPropertyIri)
     } else if (propertyInfoForSubmittedProperty.isLinkProp) {
-      throw BadRequestException(
-        s"Invalid property for creating a link value (submit a link value property instead): $submittedPropertyIri"
+      ZIO.fail(
+        BadRequestException(
+          s"Invalid property for creating a link value (submit a link value property instead): $submittedPropertyIri"
+        )
       )
     } else {
       ZIO.succeed(propertyInfoForSubmittedProperty)
@@ -1990,7 +1988,7 @@ final case class ValuesResponderV2Live(
 
   /**
    * Given a set of resource IRIs, checks that they point to Knora resources.
-   * If not, throws an exception.
+   * If not, fails with an exception.
    *
    * @param targetResourceIris   the IRIs to be checked.
    *
@@ -2115,12 +2113,15 @@ final case class ValuesResponderV2Live(
 
       subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
 
-      // If it isn't, throw an exception.
-      _ = if (!subClassResponse.isSubClass) {
-            throw OntologyConstraintException(
+      // If it isn't, fail with an exception.
+      _ <-
+        ZIO.when(!subClassResponse.isSubClass)(
+          ZIO.fail(
+            OntologyConstraintException(
               s"Resource <${linkValueContent.referredResourceIri}> cannot be the target of property <$linkPropertyIri>, because it is not a member of class <$objectClassConstraint>"
             )
-          }
+          )
+        )
     } yield ()
 
   /**
@@ -2151,7 +2152,7 @@ final case class ValuesResponderV2Live(
 
           subClassResponse <- messageRelay.ask[CheckSubClassResponseV2](subClassRequest)
 
-          // If it isn't, throw an exception.
+          // If it isn't, fail with an exception.
           _ <- ZIO.when(!subClassResponse.isSubClass) {
                  ZIO.fail(
                    OntologyConstraintException(
@@ -2177,49 +2178,42 @@ final case class ValuesResponderV2Live(
     propertyInfo: ReadPropertyInfoV2,
     valueContent: ValueContentV2,
     requestingUser: UserADM
-  ): Task[Unit] =
+  ): Task[Unit] = {
+    val propertyIri = propertyInfo.entityInfoContent.propertyIri
     for {
       objectClassConstraint <-
         ZIO.attempt(
           propertyInfo.entityInfoContent.requireIriObject(
             OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
             throw InconsistentRepositoryDataException(
-              s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint"
+              s"Property $propertyIri has no knora-base:objectClassConstraint"
             )
           )
         )
 
       result <-
         valueContent match {
+          // We're creating a link.
           case linkValueContent: LinkValueContentV2 =>
-            // We're creating a link.
-
-            // Check that the property whose object class constraint is to be checked is actually a link property.
-            if (!propertyInfo.isLinkProp) {
-              throw BadRequestException(
-                s"Property <${propertyInfo.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}> is not a link property"
+            ZIO.when(!propertyInfo.isLinkProp)(
+              ZIO.fail(
+                BadRequestException(s"Property <${propertyIri.toOntologySchema(ApiV2Complex)}> is not a link property")
               )
-            }
-
-            // Check that the user has permission to view the target resource, and that the target resource has the correct type.
-            checkLinkPropertyObjectClassConstraint(
-              linkPropertyIri = propertyInfo.entityInfoContent.propertyIri,
-              objectClassConstraint = objectClassConstraint,
-              linkValueContent = linkValueContent,
-              requestingUser = requestingUser
+              // Check that the property whose object class constraint is to be checked is actually a link property.
+            ) *> checkLinkPropertyObjectClassConstraint(
+              propertyIri,
+              objectClassConstraint,
+              linkValueContent,
+              requestingUser
             )
 
+          // We're creating an ordinary value.
           case otherValue =>
-            // We're creating an ordinary value. Check that its type is valid for the property's object class constraint.
-            checkNonLinkPropertyObjectClassConstraint(
-              propertyIri = propertyInfo.entityInfoContent.propertyIri,
-              objectClassConstraint = objectClassConstraint,
-              valueContent = otherValue,
-              requestingUser = requestingUser
-            )
-
+            // Check that its type is valid for the property's object class constraint.
+            checkNonLinkPropertyObjectClassConstraint(propertyIri, objectClassConstraint, otherValue, requestingUser)
         }
     } yield result
+  }
 
   /**
    * Given a [[ReadResourceV2]], finds a link that uses the specified property and points to the specified target
@@ -2377,28 +2371,30 @@ final case class ValuesResponderV2Live(
         // resources should be removed.
         val deleteDirectLink = newReferenceCount == 0
 
-        for {
-          // Generate an IRI for the new LinkValue.
-          newLinkValueIri <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
-        } yield SparqlTemplateLinkUpdate(
-          linkPropertyIri = linkPropertyIri,
-          directLinkExists = true,
-          insertDirectLink = false,
-          deleteDirectLink = deleteDirectLink,
-          linkValueExists = true,
-          linkTargetExists = true,
-          newLinkValueIri = newLinkValueIri,
-          linkTargetIri = targetResourceIri,
-          currentReferenceCount = linkValueInfo.valueHasRefCount,
-          newReferenceCount = newReferenceCount,
-          newLinkValueCreator = valueCreator,
-          newLinkValuePermissions = valuePermissions
-        )
+        makeUnusedValueIri(sourceResourceInfo.resourceIri)
+          .map(newLinkValueIri =>
+            SparqlTemplateLinkUpdate(
+              linkPropertyIri = linkPropertyIri,
+              directLinkExists = true,
+              insertDirectLink = false,
+              deleteDirectLink = deleteDirectLink,
+              linkValueExists = true,
+              linkTargetExists = true,
+              newLinkValueIri = newLinkValueIri,
+              linkTargetIri = targetResourceIri,
+              currentReferenceCount = linkValueInfo.valueHasRefCount,
+              newReferenceCount = newReferenceCount,
+              newLinkValueCreator = valueCreator,
+              newLinkValuePermissions = valuePermissions
+            )
+          )
 
       case None =>
         // We didn't find the LinkValue. This shouldn't happen.
-        throw InconsistentRepositoryDataException(
-          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+        ZIO.die(
+          InconsistentRepositoryDataException(
+            s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+          )
         )
     }
   }
@@ -2461,8 +2457,10 @@ final case class ValuesResponderV2Live(
 
       case None =>
         // We didn't find the LinkValue. This shouldn't happen.
-        throw InconsistentRepositoryDataException(
-          s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+        ZIO.die(
+          InconsistentRepositoryDataException(
+            s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing"
+          )
         )
     }
   }
@@ -2498,32 +2496,36 @@ final case class ValuesResponderV2Live(
    * @param maybeCustomUUID the optional value UUID.
    * @return the new value UUID.
    */
-  private def makeNewValueUUID(maybeCustomIri: Option[SmartIri], maybeCustomUUID: Option[UUID]): UUID =
+  private def makeNewValueUUID(
+    maybeCustomIri: Option[SmartIri],
+    maybeCustomUUID: Option[UUID]
+  ): IO[BadRequestException, UUID] =
     // Is there any custom value UUID given?
     maybeCustomUUID match {
       case Some(customValueUUID) =>
-        // Yes. Check that if a custom IRI is given, it ends with the same UUID
         if (
-          maybeCustomIri.nonEmpty &&
-          UuidUtil.base64Decode(maybeCustomIri.get.toString.split("/").last) != Success(customValueUUID)
+          maybeCustomIri.isEmpty || UuidUtil
+            .base64Decode(maybeCustomIri.get.toString.split("/").last) == Success(customValueUUID)
         ) {
-          throw BadRequestException(
-            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${UuidUtil
-                .base64Encode(customValueUUID)}."
+          ZIO.succeed(customValueUUID)
+          // Yes. Check that if a custom IRI is given, it ends with the same UUID
+        } else {
+          ZIO.fail(
+            BadRequestException(
+              s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${UuidUtil
+                  .base64Encode(customValueUUID)}."
+            )
           )
         }
-        customValueUUID
       case None =>
         // No. Is there a custom IRI given?
         maybeCustomIri match {
           case Some(customIri: SmartIri) =>
             // Yes. Get the UUID from the given value IRI
-            val endingUUID: UUID = UuidUtil
-              .base64Decode(customIri.toString.split("/").last)
-              .toOption
-              .getOrElse(throw BadRequestException(s"Invalid UUID in IRI: $customIri"))
-            endingUUID
-          case None => UUID.randomUUID
+            ZIO
+              .fromTry(UuidUtil.base64Decode(customIri.toString.split("/").last))
+              .orElseFail(BadRequestException(s"Invalid UUID in IRI: $customIri"))
+          case None => Random.nextUUID
         }
     }
 }
