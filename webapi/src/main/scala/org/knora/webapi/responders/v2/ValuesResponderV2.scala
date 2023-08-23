@@ -1040,13 +1040,14 @@ final case class ValuesResponderV2Live(
           PermissionUtilADM.parsePermissions(
             currentValue.permissions
           )
-        newPermissionsParsed: Map[EntityPermission, Set[IRI]] =
-          PermissionUtilADM.parsePermissions(
-            updateValuePermissionsV2.permissions,
-            { permissionLiteral: String =>
-              throw AssertionException(s"Invalid permission literal: $permissionLiteral")
-            }
-          )
+        newPermissionsParsed <- ZIO.attempt(
+                                  PermissionUtilADM.parsePermissions(
+                                    updateValuePermissionsV2.permissions,
+                                    { permissionLiteral: String =>
+                                      throw AssertionException(s"Invalid permission literal: $permissionLiteral")
+                                    }
+                                  )
+                                )
 
         _ <- ZIO.when(newPermissionsParsed == currentPermissionsParsed)(
                ZIO.fail(BadRequestException(s"The submitted permissions are the same as the current ones"))
@@ -1134,20 +1135,18 @@ final case class ValuesResponderV2Live(
             currentValue.permissions
           )
 
-        newPermissionsParsed: Map[EntityPermission, Set[IRI]] =
-          PermissionUtilADM.parsePermissions(
-            newValueVersionPermissionLiteral,
-            { permissionLiteral: String =>
-              throw AssertionException(s"Invalid permission literal: $permissionLiteral")
-            }
-          )
+        newPermissionsParsed <- ZIO.attempt(
+                                  PermissionUtilADM.parsePermissions(
+                                    newValueVersionPermissionLiteral,
+                                    { permissionLiteral: String =>
+                                      throw AssertionException(s"Invalid permission literal: $permissionLiteral")
+                                    }
+                                  )
+                                )
 
         permissionNeeded =
-          if (newPermissionsParsed != currentPermissionsParsed) {
-            ChangeRightsPermission
-          } else {
-            ModifyPermission
-          }
+          if (newPermissionsParsed != currentPermissionsParsed) { ChangeRightsPermission }
+          else { ModifyPermission }
 
         _ <- resourceUtilV2.checkValuePermission(
                resourceInfo = resourceInfo,
@@ -1176,20 +1175,24 @@ final case class ValuesResponderV2Live(
                  for {
                    checkNode <- resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
 
-                   _ = checkNode match {
-                         // it doesn't have isRootNode property - it's a child node
-                         case Right(false) => ()
-                         // it does have isRootNode property - it's a root node
-                         case Right(true) =>
-                           throw BadRequestException(
-                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
-                           )
-                         // it doesn't exists or isn't valid list
-                         case Left(_) =>
-                           throw NotFoundException(
-                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
-                           )
-                       }
+                   _ <- checkNode match {
+                          // it doesn't have isRootNode property - it's a child node
+                          case Right(false) => ZIO.unit
+                          // it does have isRootNode property - it's a root node
+                          case Right(true) =>
+                            ZIO.fail(
+                              BadRequestException(
+                                s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                              )
+                            )
+                          // it doesn't exists or isn't valid list
+                          case Left(_) =>
+                            ZIO.fail(
+                              NotFoundException(
+                                s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                              )
+                            )
+                        }
                  } yield ()
 
                case _ => ZIO.unit
