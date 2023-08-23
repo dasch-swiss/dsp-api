@@ -1593,16 +1593,18 @@ final case class ValuesResponderV2Live(
           )
 
         // Don't accept link properties.
-        _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-              throw BadRequestException(
-                s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
-              )
-            }
+        _ <- ZIO.when(propertyInfoForSubmittedProperty.isLinkProp) {
+               ZIO.fail(
+                 BadRequestException(
+                   s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
+                 )
+               )
+             }
 
         // Don't accept knora-api:hasStandoffLinkToValue.
-        _ = if (deleteValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
-              throw BadRequestException(s"Values of <${deleteValue.propertyIri}> cannot be deleted directly")
-            }
+        _ <- ZIO.when(deleteValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
+               ZIO.fail(BadRequestException(s"Values of <${deleteValue.propertyIri}> cannot be deleted directly"))
+             )
 
         // Make an adjusted version of the submitted property: if it's a link value property, substitute the
         // corresponding link property, whose objects we will need to query. Get ontology information about the
@@ -1628,28 +1630,27 @@ final case class ValuesResponderV2Live(
           )
 
         // Check that the resource belongs to the class that the client submitted.
-        _ = if (resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toOntologySchema(InternalSchema)) {
-              throw BadRequestException(
-                s"Resource <${deleteValue.resourceIri}> does not belong to class <${deleteValue.resourceClassIri}>"
-              )
-            }
+        _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toOntologySchema(InternalSchema)) {
+               ZIO.fail(
+                 BadRequestException(
+                   s"Resource <${deleteValue.resourceIri}> does not belong to class <${deleteValue.resourceClassIri}>"
+                 )
+               )
+             }
 
         // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
-
-        maybeCurrentValue: Option[ReadValueV2] =
-          resourceInfo.values
-            .get(submittedInternalPropertyIri)
-            .flatMap(_.find(_.valueIri == deleteValue.valueIri))
-
         // Check that the user has permission to delete the value.
-        currentValue: ReadValueV2 =
-          maybeCurrentValue match {
-            case Some(value) => value
-            case None =>
-              throw NotFoundException(
+        currentValue <-
+          ZIO
+            .fromOption(for {
+              values <- resourceInfo.values.get(submittedInternalPropertyIri)
+              curVal <- values.find(_.valueIri == deleteValue.valueIri)
+            } yield curVal)
+            .orElseFail(
+              NotFoundException(
                 s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>"
               )
-          }
+            )
 
         // Check that the value is of the type that the client submitted.
         _ =
