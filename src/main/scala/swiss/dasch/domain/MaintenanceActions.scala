@@ -21,8 +21,8 @@ object MaintenanceActions {
       findJpeg2000Files(projectPath)
         .mapZIOPar(8)(ImageService.applyTopLeftCorrection)
         .map(_.map(_ => 1).getOrElse(0))
-        .run(ZSink.sum) <*
-      ZIO.logInfo(s"Top left corrections applied in $projectPath")
+        .run(ZSink.sum)
+        .tap(sum => ZIO.logInfo(s"Top left corrections applied for $sum files in $projectPath"))
 
   private def findJpeg2000Files(projectPath: Path) = StorageService.findInPath(projectPath, isJpeg2000)
 
