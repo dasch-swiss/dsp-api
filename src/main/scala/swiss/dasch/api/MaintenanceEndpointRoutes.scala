@@ -128,7 +128,6 @@ object MaintenanceEndpointRoutes {
     applyTopLeftCorrectionEndpoint.implement(shortcodeStr =>
       for {
         projectPath <- getProjectPath(shortcodeStr)
-        _           <- ZIO.logInfo(s"Creating originals for $projectPath")
         _           <- MaintenanceActions
                          .applyTopLeftCorrections(projectPath)
                          .tap(count => ZIO.logInfo(s"Corrected $count top left images for $projectPath"))

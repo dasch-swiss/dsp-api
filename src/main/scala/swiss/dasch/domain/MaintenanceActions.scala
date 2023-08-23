@@ -17,10 +17,12 @@ import zio.stream.{ ZSink, ZStream }
 object MaintenanceActions {
 
   def applyTopLeftCorrections(projectPath: Path): ZIO[ImageService, Throwable, Int] =
-    findJpeg2000Files(projectPath)
-      .mapZIOPar(8)(ImageService.applyTopLeftCorrection)
-      .map(_.map(_ => 1).getOrElse(0))
-      .run(ZSink.sum)
+    ZIO.logInfo(s"Starting top left corrections in $projectPath") *>
+      findJpeg2000Files(projectPath)
+        .mapZIOPar(8)(ImageService.applyTopLeftCorrection)
+        .map(_.map(_ => 1).getOrElse(0))
+        .run(ZSink.sum) <*
+      ZIO.logInfo(s"Top left corrections applied in $projectPath")
 
   private def findJpeg2000Files(projectPath: Path) = StorageService.findInPath(projectPath, isJpeg2000)
 
