@@ -32,7 +32,6 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -1653,12 +1652,12 @@ final case class ValuesResponderV2Live(
             )
 
         // Check that the value is of the type that the client submitted.
-        _ =
-          if (currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema)) {
+        _ <-
+          ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
             throw BadRequestException(
               s"Value <${deleteValue.valueIri}> in resource <${deleteValue.resourceIri}> is not of type <${deleteValue.valueTypeIri}>"
             )
-          }
+          )
 
         // Check the user's permissions on the value.
         _ <- resourceUtilV2.checkValuePermission(
@@ -1676,17 +1675,20 @@ final case class ValuesResponderV2Live(
             requestingUser
           )
 
-        classInfoResponse         <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
-        classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-
-        cardinalityInfo: KnoraCardinalityInfo =
-          classInfo.allCardinalities.getOrElse(
-            submittedInternalPropertyIri,
-            throw InconsistentRepositoryDataException(
-              s"Resource <${deleteValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValue.propertyIri}>"
+        classInfoResponse <- messageRelay.ask[ReadOntologyV2](classInfoRequest)
+        cardinalityInfo <-
+          ZIO
+            .fromOption(
+              classInfoResponse.classes
+                .get(resourceInfo.resourceClassIri)
+                .flatMap(_.allCardinalities.get(submittedInternalPropertyIri))
             )
-          )
+            .orElseFail(
+              InconsistentRepositoryDataException(
+                s"Resource <${deleteValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                    .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValue.propertyIri}>"
+              )
+            )
 
         // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
 
