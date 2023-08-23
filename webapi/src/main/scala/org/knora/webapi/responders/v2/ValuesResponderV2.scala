@@ -1030,10 +1030,9 @@ final case class ValuesResponderV2Live(
 
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
-        currentPermissionsParsed: Map[EntityPermission, Set[IRI]] =
-          PermissionUtilADM.parsePermissions(
-            currentValue.permissions
-          )
+        currentPermissionsParsed <- ZIO.attempt(
+                                      PermissionUtilADM.parsePermissions(currentValue.permissions)
+                                    )
         newPermissionsParsed <- ZIO.attempt(
                                   PermissionUtilADM.parsePermissions(
                                     updateValuePermissionsV2.permissions,
