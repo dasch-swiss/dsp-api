@@ -4,6 +4,7 @@ import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
 import sbt.Keys.version
 import sbt.*
+import sys.process.*
 
 import scala.language.postfixOps
 
@@ -13,11 +14,17 @@ import scala.language.postfixOps
 
 // when true enables run cancellation w/o exiting sbt
 // use Ctrl-c to stop current task but not quit SBT
+
 Global / cancelable := true
 
 Global / scalaVersion      := Dependencies.ScalaVersion
 Global / semanticdbEnabled := true
 Global / semanticdbVersion := scalafixSemanticdb.revision
+
+val gitCommit  = ("git rev-parse HEAD" !!).trim
+val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
+
+ThisBuild / version := gitVersion
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi, integration)
 
@@ -43,7 +50,6 @@ lazy val root: Project = Project(id = "root", file("."))
     sipi,
     integration
   )
-  .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
     // values set for all sub-projects
     // These are normal sbt settings to configure for release, skip if already defined
@@ -54,8 +60,6 @@ lazy val root: Project = Project(id = "root", file("."))
       ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git")
     ),
     Global / scalaVersion := Dependencies.ScalaVersion,
-    // use 'git describe' for deriving the version
-    git.useGitDescribe := true,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
     dockerImageTag := (ThisBuild / version).value,
@@ -230,7 +234,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / defaultLinuxInstallLocation := "/opt/docker",
     dockerLabels := Map[String, Option[String]](
       "org.opencontainers.image.version"  -> (ThisBuild / version).value.some,
-      "org.opencontainers.image.revision" -> git.gitHeadCommit.value,
+      "org.opencontainers.image.revision" -> Some(gitCommit),
       "org.opencontainers.image.source"   -> Some("github.com/dasch-swiss/dsp-api")
     ).collect { case (key, Some(value)) => (key, value) },
     dockerCommands += Cmd(
