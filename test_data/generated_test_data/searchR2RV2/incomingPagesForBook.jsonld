@@ -989,7 +989,7 @@
             },
             "knora-api:valueHasUUID": "0000000000e6d1cf0dcf0Q",
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-            "@type": "knora-api:TextValue",
+            "@type": "knora-api:UnformattedTextValue",
             "@id": "http://rdfh.ch/0803/b6b5ff1eb703/values/e6d1cf0dcf0e"
         },
         {
@@ -1012,7 +1012,7 @@
             },
             "knora-api:valueHasUUID": "0000000000a9fb2247cf0Q",
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-            "@type": "knora-api:TextValue",
+            "@type": "knora-api:UnformattedTextValue",
             "@id": "http://rdfh.ch/0803/b6b5ff1eb703/values/a9fb2247cf0e"
         }
     ],

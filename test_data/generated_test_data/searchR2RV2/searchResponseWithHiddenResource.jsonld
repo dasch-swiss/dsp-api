@@ -40,7 +40,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Text:\nEnde des 33. Kapitels. Beginn des 34. Kapitels: \"Dis vorgeschriben vn(d) sunst vil | andre ding vnd  heilige stette sint in der stat zu(o) Jherusalem (...)\". Rubrizierung in Rot.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6ad3e2c47501O/00000000002d55be9d3d2wg",
                     "@type": "xsd:anyURI"
@@ -59,8 +61,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000002d55be9d3d2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/6ad3e2c47501/values/2d55be9d3d25"
+                "@id": "http://rdfh.ch/0803/6ad3e2c47501/values/2d55be9d3d25",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Text:<br/>Ende des 33. Kapitels. Beginn des 34. Kapitels: &quot;Dis vorgeschriben vn(d) sunst vil | andre ding vnd heilige stette sint in der stat zu(o) Jherusalem (...)&quot;. Rubrizierung in Rot.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:21Z",
@@ -88,7 +91,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Zwei neue Textabschnitte: \"Das pfullment.| Hilff mir herr iesu christe/| mit andacht vnd nachuolgen | seliclich betrachten/ dine bu(o)ß|werck ...\"; \"SCho(e)ppfer der zitt/ ewi-|ger gott/ der alle ding | in geordneter zal maß | vnd wag ordnest ...\".\nInitiale \"S\" (Kolorierung in Blau und Gelb).\nBordüre mit Meerwesen, Holzschnitt.\nKolorierung: Rot, Blau, Grün, Gelb, Braun, Grau.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7e4cfc5417g/000000000016bfda32332wZ",
                     "@type": "xsd:anyURI"
@@ -107,8 +112,9 @@
                 },
                 "knora-api:valueHasUUID": "000000000016bfda32332w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/7e4cfc5417/values/16bfda323323"
+                "@id": "http://rdfh.ch/0803/7e4cfc5417/values/16bfda323323",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Zwei neue Textabschnitte: &quot;Das pfullment.| Hilff mir herr iesu christe/| mit andacht vnd nachuolgen | seliclich betrachten/ dine bu(o)ß|werck ...&quot;; &quot;SCho(e)ppfer der zitt/ ewi-|ger gott/ der alle ding | in geordneter zal maß | vnd wag ordnest ...&quot;.<br/>Initiale &quot;S&quot; (Kolorierung in Blau und Gelb).<br/>Bordüre mit Meerwesen, Holzschnitt.<br/>Kolorierung: Rot, Blau, Grün, Gelb, Braun, Grau.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:11Z",
@@ -136,7 +142,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Besitznachweis und Inhaltsangabe (Feder, dunkelbraun): \"Jn diesem bu(o)ch so den Cartusern zu(o) mind(er)n | basel gehörtt stand diß nachgeschrib(e)n ding (...)\". Die vierte Position mit einem Zettel überklebt, auf dem ein neuer Eintrag in hellerer Tinte steht. Unten späterer Besitznachweis von anderer Hand, ebenfalls in hellerer Tinte, mit zweimaliger Datierung \"1545\" und der Namensnennung \"Johannes Bachtaler von Lörach\"; darunter, in der unteren rechten Ecke ein Bibliotheksstempel (Queroval, schwarz): \"BIBL. PUBL. | BASILEENSIS.\"\n ",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ad88963d2703=/00000000009becc538942wt",
                     "@type": "xsd:anyURI"
@@ -155,8 +163,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000009becc538942w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/ad88963d2703/values/9becc5389426"
+                "@id": "http://rdfh.ch/0803/ad88963d2703/values/9becc5389426",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Besitznachweis und Inhaltsangabe (Feder, dunkelbraun): &quot;Jn diesem bu(o)ch so den Cartusern zu(o) mind(er)n | basel gehörtt stand diß nachgeschrib(e)n ding (...)&quot;. Die vierte Position mit einem Zettel überklebt, auf dem ein neuer Eintrag in hellerer Tinte steht. Unten späterer Besitznachweis von anderer Hand, ebenfalls in hellerer Tinte, mit zweimaliger Datierung &quot;1545&quot; und der Namensnennung &quot;Johannes Bachtaler von Lörach&quot;; darunter, in der unteren rechten Ecke ein Bibliotheksstempel (Queroval, schwarz): &quot;BIBL. PUBL. | BASILEENSIS.&quot;</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:39Z",
@@ -184,7 +193,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Ende des 8. Kapitels.\nBeginn des 9. Kapitels: \"Als ouch vil lute geren horten | wunderliche ding die sie nicht gesehen hand. dorumb will ich sagen ein | wunder das in der inselen ist zu(o) Langho von Ypocras tochter.(...)\".\nRubrizierung in Rot.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b603c6886d01T/000000000056665e77ef2wJ",
                     "@type": "xsd:anyURI"
@@ -203,8 +214,9 @@
                 },
                 "knora-api:valueHasUUID": "000000000056665e77ef2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/b603c6886d01/values/56665e77ef24"
+                "@id": "http://rdfh.ch/0803/b603c6886d01/values/56665e77ef24",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Ende des 8. Kapitels.<br/>Beginn des 9. Kapitels: &quot;Als ouch vil lute geren horten | wunderliche ding die sie nicht gesehen hand. dorumb will ich sagen ein | wunder das in der inselen ist zu(o) Langho von Ypocras tochter.(...)&quot;.<br/>Rubrizierung in Rot.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:21Z",

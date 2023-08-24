@@ -70,7 +70,7 @@
                 },
                 "knora-api:valueHasUUID": "7LhL_JdpTA-E0oQ1hdtPDQ",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/7LhL_JdpTA-E0oQ1hdtPDQ"
             }
         },

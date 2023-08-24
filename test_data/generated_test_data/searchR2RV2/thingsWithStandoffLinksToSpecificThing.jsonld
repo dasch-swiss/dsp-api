@@ -45,7 +45,7 @@
             "knora-api:hasPermissions": "CR knora-admin:Creator",
             "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
             "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
-            "@type": "knora-api:TextValue"
+            "@type": "knora-api:FormattedTextValue"
         },
         {
             "knora-api:textValueHasMapping": {
@@ -71,7 +71,7 @@
             "knora-api:hasPermissions": "CR knora-admin:Creator",
             "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
             "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
-            "@type": "knora-api:TextValue"
+            "@type": "knora-api:FormattedTextValue"
         }
     ],
     "@type": "anything:Thing",

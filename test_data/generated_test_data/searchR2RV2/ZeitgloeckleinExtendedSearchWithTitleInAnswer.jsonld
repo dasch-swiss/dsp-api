@@ -38,7 +38,7 @@
                 },
                 "knora-api:valueHasUUID": "00000000000000c329533w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/c5058f3a/values/c3295339"
             },
             "knora-api:attachedToUser": {
@@ -86,7 +86,7 @@
                 },
                 "knora-api:valueHasUUID": "0000000000d9a52284500w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006"
             },
             "knora-api:attachedToUser": {

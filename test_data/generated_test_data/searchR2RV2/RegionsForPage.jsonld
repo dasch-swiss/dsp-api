@@ -118,7 +118,9 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:hasComment": {
-                "knora-api:valueAsString": "Siehe Seite c5v",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/021ec18f1735T/000000008a96c30333820we",
                     "@type": "xsd:anyURI"
@@ -137,8 +139,9 @@
                 },
                 "knora-api:valueHasUUID": "000000008a96c30333820w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/021ec18f1735/values/8a96c303338201"
+                "@id": "http://rdfh.ch/0803/021ec18f1735/values/8a96c303338201",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Siehe Seite c5v</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             }
         },
         {
@@ -259,7 +262,9 @@
                 "@type": "xsd:anyURI"
             },
             "knora-api:hasComment": {
-                "knora-api:valueAsString": "Derselbe Holzschnitt wird auf Seite c5v verwendet.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b64a62b006z/00000000000752cbee0e2wd",
                     "@type": "xsd:anyURI"
@@ -278,8 +283,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000000752cbee0e2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/b6b64a62b006/values/0752cbee0e27"
+                "@id": "http://rdfh.ch/0803/b6b64a62b006/values/0752cbee0e27",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Derselbe Holzschnitt wird auf Seite c5v verwendet.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             }
         }
     ],

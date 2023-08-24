@@ -33,7 +33,7 @@
                 },
                 "knora-api:valueHasUUID": "0000000000fe5c3f85970Q",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/00505cf0a803/values/fe5c3f85970e"
             },
             "knora-api:creationDate": {
@@ -114,7 +114,7 @@
                 },
                 "knora-api:valueHasUUID": "00000000001a28bee0670Q",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/0ee0fe735d03/values/1a28bee0670d"
             },
             "knora-api:creationDate": {
@@ -195,7 +195,7 @@
                 },
                 "knora-api:valueHasUUID": "0000000000006523f0f3dw",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/6157683636/values/6523f0f3d4"
             },
             "knora-api:creationDate": {
@@ -276,7 +276,7 @@
                 },
                 "knora-api:valueHasUUID": "000000000030ee9d52b00Q",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/661e1505ee03/values/30ee9d52b00f"
             },
             "knora-api:creationDate": {
@@ -357,7 +357,7 @@
                 },
                 "knora-api:valueHasUUID": "0000000000cda9b158be0w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/672d134a3201/values/cda9b158be04"
             },
             "knora-api:creationDate": {
@@ -438,7 +438,7 @@
                 },
                 "knora-api:valueHasUUID": "00000000008413d7e5a60w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/b96e9b92eb01/values/8413d7e5a607"
             },
             "knora-api:creationDate": {
@@ -519,7 +519,7 @@
                 },
                 "knora-api:valueHasUUID": "0000000000c5eb29b69b0Q",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
+                "@type": "knora-api:UnformattedTextValue",
                 "@id": "http://rdfh.ch/0803/fb89fa64ea02/values/c5eb29b69b0b"
             },
             "knora-api:creationDate": {
