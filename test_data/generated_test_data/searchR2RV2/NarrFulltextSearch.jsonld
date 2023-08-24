@@ -15,7 +15,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 99.\nHolzschnitt zu Kap. 99: Von der Einbusse des christlichen Reiches\nAuf einem Hof kniet ein Narr vor den Vertretern der kirchlichen und weltlichen Obrigkeit, die vor ein Portal getreten sind, und bittet darum, sie mögen die Narrenkappe verschmähen. Im Hintergrund kommentieren zwei weitere Narren über die Hofmauer hinweg das Geschehen mit ungläubigen Gesten, 11.7 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/02abe871e903L/00000000001852a8aa852wu",
                     "@type": "xsd:anyURI"
@@ -34,8 +36,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000001852a8aa852w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/02abe871e903/values/1852a8aa8526"
+                "@id": "http://rdfh.ch/0803/02abe871e903/values/1852a8aa8526",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 99.<br/>Holzschnitt zu Kap. 99: Von der Einbusse des christlichen Reiches<br/>Auf einem Hof kniet ein Narr vor den Vertretern der kirchlichen und weltlichen Obrigkeit, die vor ein Portal getreten sind, und bittet darum, sie mögen die Narrenkappe verschmähen. Im Hintergrund kommentieren zwei weitere Narren über die Hofmauer hinweg das Geschehen mit ungläubigen Gesten, 11.7 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:49Z",
@@ -63,7 +66,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 109.\nHolzschnitt zu Kap. 109: Von Verachtung des Unglücks\nEin Narr hat sich in einem Boot zu weit vom Ufer entfernt. Nun birst der Schiffsrumpf, das Segel flattert haltlos umher. Der Narr hält sich an einem Seil der Takelage fest, 11.6 x 8.4 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/04416f64ef03=/00000000006ce3c0ef8b2w4",
                     "@type": "xsd:anyURI"
@@ -82,8 +87,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000006ce3c0ef8b2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/04416f64ef03/values/6ce3c0ef8b26"
+                "@id": "http://rdfh.ch/0803/04416f64ef03/values/6ce3c0ef8b26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 109.<br/>Holzschnitt zu Kap. 109: Von Verachtung des Unglücks<br/>Ein Narr hat sich in einem Boot zu weit vom Ufer entfernt. Nun birst der Schiffsrumpf, das Segel flattert haltlos umher. Der Narr hält sich an einem Seil der Takelage fest, 11.6 x 8.4 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:50Z",
@@ -111,7 +117,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 44.\nHolzschnitt zu Kap. 44: Vom Lärmen in der Kirche\nEin junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm hält, von Hunden begleitet wird, und klappernde Schuhsohlen trägt, geht auf ein Portal zu, in dem eine Frau steht und ihm schöne Augen macht.\n11.7 x 8.5 cm.\nUnkoloriert.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/04f25db73f03q/0000000000aa8971af4d2wz",
                     "@type": "xsd:anyURI"
@@ -130,8 +138,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000aa8971af4d2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/04f25db73f03/values/aa8971af4d26"
+                "@id": "http://rdfh.ch/0803/04f25db73f03/values/aa8971af4d26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 44.<br/>Holzschnitt zu Kap. 44: Vom Lärmen in der Kirche<br/>Ein junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm hält, von Hunden begleitet wird, und klappernde Schuhsohlen trägt, geht auf ein Portal zu, in dem eine Frau steht und ihm schöne Augen macht.<br/>11.7 x 8.5 cm.<br/>Unkoloriert.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:40Z",
@@ -159,7 +168,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Titelblatt (Hartl 2001: Stultitia Navis I).\nHolzschnitt: \nErsatzholzschnitt für Titelblatt, recto:\nEin Schiff voller Narren fährt nach links. Hinten auf der Brücke trinkt ein Narr aus einer Flasche, vorne prügeln sich zwei weitere narren so sehr, dass einer von ihnen über Bord zu gehen droht. Oben die Inschrift \"Nauis stultoru(m).\"; auf dem Schiffsrumpf die Datierung \"1.4.9.7.\".\n6.5 x 11.5 cm.\noben rechts die bibliographische Angabe  (Graphitstift) \"Hain 3750\"; unten rechts Bibliotheksstempel (queroval, schwarz): \"BIBL. PUBL.| BASILEENSIS\".",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/05c7acceb703v/00000000005f23f3171d2w4",
                     "@type": "xsd:anyURI"
@@ -178,8 +189,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000005f23f3171d2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/05c7acceb703/values/5f23f3171d26"
+                "@id": "http://rdfh.ch/0803/05c7acceb703/values/5f23f3171d26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Titelblatt (Hartl 2001: Stultitia Navis I).<br/>Holzschnitt:<br/>Ersatzholzschnitt für Titelblatt, recto:<br/>Ein Schiff voller Narren fährt nach links. Hinten auf der Brücke trinkt ein Narr aus einer Flasche, vorne prügeln sich zwei weitere narren so sehr, dass einer von ihnen über Bord zu gehen droht. Oben die Inschrift &quot;Nauis stultoru(m).&quot;; auf dem Schiffsrumpf die Datierung &quot;1.4.9.7.&quot;.<br/>6.5 x 11.5 cm.<br/>oben rechts die bibliographische Angabe (Graphitstift) &quot;Hain 3750&quot;; unten rechts Bibliotheksstempel (queroval, schwarz): &quot;BIBL. PUBL.| BASILEENSIS&quot;.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:47Z",
@@ -207,7 +219,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 4.\nHolzschnitt zu Kap. 4: Von neumodischen Sitten.\nEin alter Narr mit Becher hält einem jungen Mann in modischer Tracht einen Spiegel vor. Zwischen Narr und Jüngling steht der Name „.VLI.“; über den beiden schwebt eine Banderole mit der Aufschrift „vly . von . stouffen .  . frisch . vnd vngschaffen“; zwischen den Füssen des Jünglings ist die Jahreszahl „.1.4.9.4.“ zu lesen.\n11.6 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/075d33c1bd03V/000000000077718ce21e2w5",
                     "@type": "xsd:anyURI"
@@ -226,8 +240,9 @@
                 },
                 "knora-api:valueHasUUID": "000000000077718ce21e2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/075d33c1bd03/values/77718ce21e26"
+                "@id": "http://rdfh.ch/0803/075d33c1bd03/values/77718ce21e26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 4.<br/>Holzschnitt zu Kap. 4: Von neumodischen Sitten.<br/>Ein alter Narr mit Becher hält einem jungen Mann in modischer Tracht einen Spiegel vor. Zwischen Narr und Jüngling steht der Name „.VLI.“; über den beiden schwebt eine Banderole mit der Aufschrift „vly . von . stouffen . . frisch . vnd vngschaffen“; zwischen den Füssen des Jünglings ist die Jahreszahl „.1.4.9.4.“ zu lesen.<br/>11.6 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:47Z",
@@ -255,7 +270,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 29.\nHolzschnitt zu Kap. 29: Von Verkennung der Mitmenschen.\nEin Narr verspottet einen Sterbenden, neben dessen Bett eine Frau betet, während sich unter dem Narren die Hölle in Gestalt eines gefrässigen Drachenkopfs auftut, 11.7 x 8.5 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/0b8940a6c903u/0000000000f752218c3b2wr",
                     "@type": "xsd:anyURI"
@@ -274,8 +291,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000f752218c3b2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/0b8940a6c903/values/f752218c3b26"
+                "@id": "http://rdfh.ch/0803/0b8940a6c903/values/f752218c3b26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 29.<br/>Holzschnitt zu Kap. 29: Von Verkennung der Mitmenschen.<br/>Ein Narr verspottet einen Sterbenden, neben dessen Bett eine Frau betet, während sich unter dem Narren die Hölle in Gestalt eines gefrässigen Drachenkopfs auftut, 11.7 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:48Z",
@@ -303,7 +321,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 43.\nHolzschnitt zu Kap. 43: Missachten der ewigen Seligkeit\nEin Narr steht mit einer grossen Waage in einer Landschaft und wiegt das Himmelsfirmament (links) gegen eine Burg (rechts) auf. Die Zunge der Waage schlägt zugunsten der Burg aus, 11.5 x 8.4 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/0d1fc798cf03K/0000000000e75f1e764d2wl",
                     "@type": "xsd:anyURI"
@@ -322,8 +342,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000e75f1e764d2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/0d1fc798cf03/values/e75f1e764d26"
+                "@id": "http://rdfh.ch/0803/0d1fc798cf03/values/e75f1e764d26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 43.<br/>Holzschnitt zu Kap. 43: Missachten der ewigen Seligkeit<br/>Ein Narr steht mit einer grossen Waage in einer Landschaft und wiegt das Himmelsfirmament (links) gegen eine Burg (rechts) auf. Die Zunge der Waage schlägt zugunsten der Burg aus, 11.5 x 8.4 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:48Z",
@@ -351,7 +372,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 66.\nHolzschnitt zu Kap. 66: Von der Erforschung der Welt.\nEin Narr hat ein Schema des Universums auf den Boden Gezeichnet und vermisst es mit einem Zirkel. Von hinten blickt ein zweiter Narr über eine Mauer und wendet sich dem ersten mit spöttischen Gesten zu.\n11.6 x 8.4 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/0d5ac1099503s/00000000004dcdbebc712wd",
                     "@type": "xsd:anyURI"
@@ -370,8 +393,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000004dcdbebc712w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/0d5ac1099503/values/4dcdbebc7126"
+                "@id": "http://rdfh.ch/0803/0d5ac1099503/values/4dcdbebc7126",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 66.<br/>Holzschnitt zu Kap. 66: Von der Erforschung der Welt.<br/>Ein Narr hat ein Schema des Universums auf den Boden Gezeichnet und vermisst es mit einem Zirkel. Von hinten blickt ein zweiter Narr über eine Mauer und wendet sich dem ersten mit spöttischen Gesten zu.<br/>11.6 x 8.4 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:45Z",
@@ -399,7 +423,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 58.\nHolzschnitt zu Kap. 58: Sich um die Angelegenheiten anderer kümmern.\nEin Narr versucht mit einem Wassereimer den Brand im Haus des Nachbarn zu löschen und wird dabei von einem anderen Narren, der an seinem Mantel zerrt, unterbrochen, den hinter ihm steht auch sein eigenes Haus in Flammen.\n11.6 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/0fb54d8bd503g/00000000009a966e995f2wK",
                     "@type": "xsd:anyURI"
@@ -418,8 +444,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000009a966e995f2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/0fb54d8bd503/values/9a966e995f26"
+                "@id": "http://rdfh.ch/0803/0fb54d8bd503/values/9a966e995f26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 58.<br/>Holzschnitt zu Kap. 58: Sich um die Angelegenheiten anderer kümmern.<br/>Ein Narr versucht mit einem Wassereimer den Brand im Haus des Nachbarn zu löschen und wird dabei von einem anderen Narren, der an seinem Mantel zerrt, unterbrochen, den hinter ihm steht auch sein eigenes Haus in Flammen.<br/>11.6 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:48Z",
@@ -447,7 +474,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 81.\nHolzschnitt zu Kap. 81: Aus Küche und Keller.\nEin Narr führt von einem Boot aus vier Knechte am Strick, die sich in einer Küche über Spreis und Trank hermachen, während eine Frau, die am Herdfeuer sitzt, das Essen zubereitet, 11.7 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/0ff047fc9a03X/0000000000b9ac70cc792w_",
                     "@type": "xsd:anyURI"
@@ -466,8 +495,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000b9ac70cc792w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/0ff047fc9a03/values/b9ac70cc7926"
+                "@id": "http://rdfh.ch/0803/0ff047fc9a03/values/b9ac70cc7926",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 81.<br/>Holzschnitt zu Kap. 81: Aus Küche und Keller.<br/>Ein Narr führt von einem Boot aus vier Knechte am Strick, die sich in einer Küche über Spreis und Trank hermachen, während eine Frau, die am Herdfeuer sitzt, das Essen zubereitet, 11.7 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:45Z",
@@ -495,7 +525,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 23.\nHolzschnitt zu Kap. 23: Vom blinden Vertrauen auf das Glück.\nEin Narr schaut oben aus dem Fenster seines Hauses, das unten lichterloh brennt. Am Himmel erscheint die rächende Gotteshand, die mit einen Hammer auf Haus und Narr einschlägt. Auf der Fahne über dem Erker des Hauses ist der Baselstab zu erkennen.\n11.5 x 8.2 cm.\nUnkoloriert.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/14dd8cbc3403w/00000000007e39f54a372wC",
                     "@type": "xsd:anyURI"
@@ -514,8 +546,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000007e39f54a372w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/14dd8cbc3403/values/7e39f54a3726"
+                "@id": "http://rdfh.ch/0803/14dd8cbc3403/values/7e39f54a3726",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 23.<br/>Holzschnitt zu Kap. 23: Vom blinden Vertrauen auf das Glück.<br/>Ein Narr schaut oben aus dem Fenster seines Hauses, das unten lichterloh brennt. Am Himmel erscheint die rächende Gotteshand, die mit einen Hammer auf Haus und Narr einschlägt. Auf der Fahne über dem Erker des Hauses ist der Baselstab zu erkennen.<br/>11.5 x 8.2 cm.<br/>Unkoloriert.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:40Z",
@@ -543,7 +576,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 34.\nHolzschnitt zu Kap. 34: Ein Narr sein und es bleiben.\nEin Narr wird von drei Gänsen umgeben, deren eine von ihm wegfliegt.\n11.7 x 8.4 cm.\nUnkoloriert.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/167313af3a03e/00000000001ab5d9ef422w1",
                     "@type": "xsd:anyURI"
@@ -562,8 +597,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000001ab5d9ef422w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/167313af3a03/values/1ab5d9ef4226"
+                "@id": "http://rdfh.ch/0803/167313af3a03/values/1ab5d9ef4226",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 34.<br/>Holzschnitt zu Kap. 34: Ein Narr sein und es bleiben.<br/>Ein Narr wird von drei Gänsen umgeben, deren eine von ihm wegfliegt.<br/>11.7 x 8.4 cm.<br/>Unkoloriert.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:40Z",
@@ -591,7 +627,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 6.\nHolzschnitt zu Kap. 6: Von mangelhafter Erziehung der Kinder.\nZwei Jungen geraten am Spieltisch über Karten und Würfen in Streit. Während der eine einen Dolch zückt und der andere nach seinem Schwert greift, sitzt ein älterer Narr mit verbundenen Augen ahnungslos neben dem Geschehen.\n11.7 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/1b746fabbe03v/00000000008318d9c71f2wT",
                     "@type": "xsd:anyURI"
@@ -610,8 +648,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000008318d9c71f2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/1b746fabbe03/values/8318d9c71f26"
+                "@id": "http://rdfh.ch/0803/1b746fabbe03/values/8318d9c71f26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 6.<br/>Holzschnitt zu Kap. 6: Von mangelhafter Erziehung der Kinder.<br/>Zwei Jungen geraten am Spieltisch über Karten und Würfen in Streit. Während der eine einen Dolch zückt und der andere nach seinem Schwert greift, sitzt ein älterer Narr mit verbundenen Augen ahnungslos neben dem Geschehen.<br/>11.7 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:47Z",
@@ -639,7 +678,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 18.\nHolzschnitt zu Kap. 18: Vom Dienst an zwei Herren.\nEin mit Spiess bewaffneter Narr bläst in ein Horn. Sein Hund versucht derweil im Hintergrund zwei Hasen gleichzeitig zu erjagen, 11.6 x 8.4 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/1d0af69dc4039/00000000004e9dc2b5332w7",
                     "@type": "xsd:anyURI"
@@ -658,8 +699,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000004e9dc2b5332w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/1d0af69dc403/values/4e9dc2b53326"
+                "@id": "http://rdfh.ch/0803/1d0af69dc403/values/4e9dc2b53326",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 18.<br/>Holzschnitt zu Kap. 18: Vom Dienst an zwei Herren.<br/>Ein mit Spiess bewaffneter Narr bläst in ein Horn. Sein Hund versucht derweil im Hintergrund zwei Hasen gleichzeitig zu erjagen, 11.6 x 8.4 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:47Z",
@@ -687,7 +729,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 31.\nHolzschnitt zu Kap. 31: Vom Hinausschieben auf morgen.\nEin Narr steht mit ausgebreiteten Armen auf einer Strasse. Auf seinen Händen sitzen zwei Raben, die beide „Cras“ – das lateinische Wort für „morgen“ – rufen. Auf dem Kopf des Narren sitzt ein Papagei und ahmt den Ruf der Krähen nach, 11.6 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/1fa07c90ca03h/0000000000c623c1aa3c2wV",
                     "@type": "xsd:anyURI"
@@ -706,8 +750,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000c623c1aa3c2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/1fa07c90ca03/values/c623c1aa3c26"
+                "@id": "http://rdfh.ch/0803/1fa07c90ca03/values/c623c1aa3c26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 31.<br/>Holzschnitt zu Kap. 31: Vom Hinausschieben auf morgen.<br/>Ein Narr steht mit ausgebreiteten Armen auf einer Strasse. Auf seinen Händen sitzen zwei Raben, die beide „Cras“ – das lateinische Wort für „morgen“ – rufen. Auf dem Kopf des Narren sitzt ein Papagei und ahmt den Ruf der Krähen nach, 11.6 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:48Z",
@@ -735,7 +780,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 45.\nHolzschnitt zu Kap. 45: Von selbstverschuldetem Unglück.\nIn Gestalt eines Narren springt Empedokles in den lodernden Krater des Ätna. Im Vordergrund lässt sich ein anderer Narr in einen Brunnen fallen. Beide werden von drei Männern beobachtet, die das Verhalten mit „Jn geschicht recht“  kommentieren, 11.7 x 8.3 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/21360383d003A/0000000000b630be944e2wA",
                     "@type": "xsd:anyURI"
@@ -754,8 +801,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000b630be944e2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/21360383d003/values/b630be944e26"
+                "@id": "http://rdfh.ch/0803/21360383d003/values/b630be944e26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 45.<br/>Holzschnitt zu Kap. 45: Von selbstverschuldetem Unglück.<br/>In Gestalt eines Narren springt Empedokles in den lodernden Krater des Ätna. Im Vordergrund lässt sich ein anderer Narr in einen Brunnen fallen. Beide werden von drei Männern beobachtet, die das Verhalten mit „Jn geschicht recht“ kommentieren, 11.7 x 8.3 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:48Z",
@@ -783,7 +831,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 83.\nneuer Holzschitt (nicht in Lemmer 1979): Vor einer Häuserkulisse kniet ein Narr mit einem Beutel in der Linken und zwei Keulen in der Rechten vor einem Mann mit Hut und einem jüngeren Begleiter, 11.6 x 8.6 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/230784e69b03z/00000000004ba763247b2wD",
                     "@type": "xsd:anyURI"
@@ -802,8 +852,9 @@
                 },
                 "knora-api:valueHasUUID": "00000000004ba763247b2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/230784e69b03/values/4ba763247b26"
+                "@id": "http://rdfh.ch/0803/230784e69b03/values/4ba763247b26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 83.<br/>neuer Holzschitt (nicht in Lemmer 1979): Vor einer Häuserkulisse kniet ein Narr mit einem Beutel in der Linken und zwei Keulen in der Rechten vor einem Mann mit Hut und einem jüngeren Begleiter, 11.6 x 8.6 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:45Z",
@@ -831,7 +882,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 60.\nHolzschnitt zu Kap. 60: Von Selbstgefälligkeit.\nEin alter Narr steht am Ofen und rührt in einem Topf. Gleichzeitig schaut er sich dabei in einem Handspiegel an.\n11.7 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/23cc8975d603o/0000000000a63dbb7e602wT",
                     "@type": "xsd:anyURI"
@@ -850,8 +903,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000a63dbb7e602w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/23cc8975d603/values/a63dbb7e6026"
+                "@id": "http://rdfh.ch/0803/23cc8975d603/values/a63dbb7e6026",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 60.<br/>Holzschnitt zu Kap. 60: Von Selbstgefälligkeit.<br/>Ein alter Narr steht am Ofen und rührt in einem Topf. Gleichzeitig schaut er sich dabei in einem Handspiegel an.<br/>11.7 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:48Z",
@@ -879,7 +933,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 111.\nHolzschnitt zu Kap. 111: Entschuldigung des Dichters\nEin Narr hat seine Attribute – die Kappe und das Zepter - hinter sich abgelegt und kniet betend vor einem Altar. In seinen Händen hält er die Kappe des Gelehrten.  Von hinten nähert sich eine fünfköpfige Narrenschar und kommentiert das Geschehen mit erregten Gesten, 11.6 x 8.4 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2a145bb7b0036/000000000022d399f78f2wP",
                     "@type": "xsd:anyURI"
@@ -898,8 +954,9 @@
                 },
                 "knora-api:valueHasUUID": "000000000022d399f78f2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/2a145bb7b003/values/22d399f78f26"
+                "@id": "http://rdfh.ch/0803/2a145bb7b003/values/22d399f78f26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 111.<br/>Holzschnitt zu Kap. 111: Entschuldigung des Dichters<br/>Ein Narr hat seine Attribute – die Kappe und das Zepter - hinter sich abgelegt und kniet betend vor einem Altar. In seinen Händen hält er die Kappe des Gelehrten. Von hinten nähert sich eine fünfköpfige Narrenschar und kommentiert das Geschehen mit erregten Gesten, 11.6 x 8.4 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:46Z",
@@ -927,7 +984,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 5.\nHolzschnitt zu Kap. 5: Noch im Alter ein Narr sein.\nEin alter Narr, der mit einem Bein im Grab steht und dem schon das Schindmesser im Hintern steckt, geht auf Krücken weiter seines Weges. Über ihm am Himmel ist ein leerer Wappenschild und der Name „Haintz Nar“ zu sehen. 11.5 x 8.5 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2b9a982179035/0000000000d616c4c02a2wA",
                     "@type": "xsd:anyURI"
@@ -946,8 +1005,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000d616c4c02a2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/2b9a98217903/values/d616c4c02a26"
+                "@id": "http://rdfh.ch/0803/2b9a98217903/values/d616c4c02a26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 5.<br/>Holzschnitt zu Kap. 5: Noch im Alter ein Narr sein.<br/>Ein alter Narr, der mit einem Bein im Grab steht und dem schon das Schindmesser im Hintern steckt, geht auf Krücken weiter seines Weges. Über ihm am Himmel ist ein leerer Wappenschild und der Name „Haintz Nar“ zu sehen. 11.5 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:44Z",
@@ -975,7 +1035,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 47.\nHolzschnitt zu Kap. 47: Von dem Weg zur ewigen Glückseligkeit.\nEin Narr zieht auf einem beschwerlichen Weg zwei Wagen zwei Wagen bergauf.\n11.6 x 8.5 cm.\nUnkoloriert.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2c20d68b4103H/0000000000c2d70a7a4f2w4",
                     "@type": "xsd:anyURI"
@@ -994,8 +1056,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000c2d70a7a4f2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/2c20d68b4103/values/c2d70a7a4f26"
+                "@id": "http://rdfh.ch/0803/2c20d68b4103/values/c2d70a7a4f26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 47.<br/>Holzschnitt zu Kap. 47: Von dem Weg zur ewigen Glückseligkeit.<br/>Ein Narr zieht auf einem beschwerlichen Weg zwei Wagen zwei Wagen bergauf.<br/>11.6 x 8.5 cm.<br/>Unkoloriert.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:40Z",
@@ -1023,7 +1086,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 7.\nHolzschnitt zu Kap. 7: Vom Zwietracht stiften.\nEin Narr wird von zwei Mühlsteinen zerdrückt, ein zweiter hat seinen Finger in einer Türangel eingeklemmt und wird von einem dritten Narren beobachtet, der so hinter einer Wand verborgen ist, dass die Ohren seiner Narrenkappe sein Versteck verraten.\n11.7 x 8.4 cm.",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2f8bab95bf03c/0000000000096c7f3a202wO",
                     "@type": "xsd:anyURI"
@@ -1042,8 +1107,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000096c7f3a202w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/2f8bab95bf03/values/096c7f3a2026"
+                "@id": "http://rdfh.ch/0803/2f8bab95bf03/values/096c7f3a2026",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 7.<br/>Holzschnitt zu Kap. 7: Vom Zwietracht stiften.<br/>Ein Narr wird von zwei Mühlsteinen zerdrückt, ein zweiter hat seinen Finger in einer Türangel eingeklemmt und wird von einem dritten Narren beobachtet, der so hinter einer Wand verborgen ist, dass die Ohren seiner Narrenkappe sein Versteck verraten.<br/>11.7 x 8.4 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:47Z",
@@ -1071,7 +1137,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 30.\nHolzschnitt zu Kap. 30: Von Pfründenjägern.\nEin Narr lädt so viele Säcke auf seinen Esel, dass dieser unter der Last zusammenbricht. 11.5 x 8.2 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2fc6a5068503C/000000000040d01a383c2wC",
                     "@type": "xsd:anyURI"
@@ -1090,8 +1158,9 @@
                 },
                 "knora-api:valueHasUUID": "000000000040d01a383c2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/2fc6a5068503/values/40d01a383c26"
+                "@id": "http://rdfh.ch/0803/2fc6a5068503/values/40d01a383c26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 30.<br/>Holzschnitt zu Kap. 30: Von Pfründenjägern.<br/>Ein Narr lädt so viele Säcke auf seinen Esel, dass dieser unter der Last zusammenbricht. 11.5 x 8.2 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:44Z",
@@ -1119,7 +1188,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 20.\nHolzschnitt zu Kap. 20: Vom Finden fremden Eigentums.\nEin Narr streckt seine Hände nach einem Schatz im Boden aus. Von Hinten tritt der Teufel in Gestalt eines Mischwesens heran und flüstert dem Narr mit einem Blasebalg einen Gedanken ein, 11.6 x 8.5 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/31213288c503w/0000000000e097b50d352w7",
                     "@type": "xsd:anyURI"
@@ -1138,8 +1209,9 @@
                 },
                 "knora-api:valueHasUUID": "0000000000e097b50d352w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/31213288c503/values/e097b50d3526"
+                "@id": "http://rdfh.ch/0803/31213288c503/values/e097b50d3526",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 20.<br/>Holzschnitt zu Kap. 20: Vom Finden fremden Eigentums.<br/>Ein Narr streckt seine Hände nach einem Schatz im Boden aus. Von Hinten tritt der Teufel in Gestalt eines Mischwesens heran und flüstert dem Narr mit einem Blasebalg einen Gedanken ein, 11.6 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:48Z",
@@ -1167,7 +1239,9 @@
             },
             "knora-api:userHasPermission": "RV",
             "incunabula:description": {
-                "knora-api:valueAsString": "Beginn Kapitel 44.\nHolzschnitt zu Kap. 44: Vom Lärmen in der Kirche\nEin junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm hält, von Hunden begleitet wird, und klappernde Schuhsohlen trägt, geht auf ein Portal zu, in dem eine Frau steht und ihm schöne Augen macht, 11.7 x 8.5 cm.\n",
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
                 "knora-api:arkUrl": {
                     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/315c2cf98a03D/000000000030dd17224e2wL",
                     "@type": "xsd:anyURI"
@@ -1186,8 +1260,9 @@
                 },
                 "knora-api:valueHasUUID": "000000000030dd17224e2w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/315c2cf98a03/values/30dd17224e26"
+                "@id": "http://rdfh.ch/0803/315c2cf98a03/values/30dd17224e26",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>Beginn Kapitel 44.<br/>Holzschnitt zu Kap. 44: Vom Lärmen in der Kirche<br/>Ein junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm hält, von Hunden begleitet wird, und klappernde Schuhsohlen trägt, geht auf ein Portal zu, in dem eine Frau steht und ihm schöne Augen macht, 11.7 x 8.5 cm.</p></text>",
+                "@type": "knora-api:FormattedTextValue"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:45Z",
