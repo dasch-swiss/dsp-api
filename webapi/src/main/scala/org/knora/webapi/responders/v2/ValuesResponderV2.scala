@@ -2458,14 +2458,9 @@ final case class ValuesResponderV2Live(
     // Is there any custom value UUID given?
     maybeCustomUUID match {
       case Some(customValueUUID) =>
-        if (
-          maybeCustomIri
-            .flatMap(_.toString.split("/").lastOption)
-            .flatMap(UuidUtil.base64Decode(_).toOption)
-            .forall(_ == customValueUUID)
-        ) {
+        // Yes. Check that if a custom IRI is given, it ends with the same UUID
+        if (maybeCustomIri.flatMap(_.getUuid).forall(_ == customValueUUID)) {
           ZIO.succeed(customValueUUID)
-          // Yes. Check that if a custom IRI is given, it ends with the same UUID
         } else {
           ZIO.fail(
             BadRequestException(
@@ -2480,7 +2475,7 @@ final case class ValuesResponderV2Live(
           case Some(customIri: SmartIri) =>
             // Yes. Get the UUID from the given value IRI
             ZIO
-              .fromTry(UuidUtil.base64Decode(customIri.toString.split("/").last))
+              .fromOption(customIri.getUuid)
               .orElseFail(BadRequestException(s"Invalid UUID in IRI: $customIri"))
           case None => Random.nextUUID
         }

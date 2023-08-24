@@ -521,6 +521,12 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   override def hashCode: Int = toString.hashCode
 
   def compare(that: SmartIri): Int = toString.compare(that.toString)
+
+  /**
+   * Some Iri contain a UUID as last path segment, which is Base64 encoded. This method returns the UUID, if present.
+   * @return The [[UUID]], if present. [[None]] if either the id is not present or it is not a valid base 64 encoded UUID.
+   */
+  def getUuid: Option[UUID] = toString.split("/").lastOption.flatMap(UuidUtil.base64Decode(_).toOption)
 }
 
 /**
