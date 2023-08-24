@@ -769,14 +769,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
           |    }
           |  },
           |  "anything:hasRichtext" : {
-          |    "@type" : "knora-api:TextValue",
+          |    "@type" : "knora-api:FormattedTextValue",
           |    "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p><strong>this is</strong> text</p> with standoff</text>",
           |    "knora-api:textValueHasMapping" : {
           |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
           |    }
           |  },
-          |  "anything:hasText" : {
-          |    "@type" : "knora-api:TextValue",
+          |  "anything:hasUnformattedText" : {
+          |    "@type" : "knora-api:UnformattedTextValue",
           |    "knora-api:valueAsString" : "this is text without standoff"
           |  },
           |  "anything:hasUri" : {
@@ -832,6 +832,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       )
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
       val resourceSimpleGetResponseAsString       = responseToString(resourceSimpleGetResponse)
+      assert(resourceSimpleGetResponse.status == StatusCodes.OK, resourceSimpleGetResponseAsString)
 
       instanceChecker.check(
         instanceResponse = resourceSimpleGetResponseAsString,
