@@ -1403,14 +1403,19 @@ final case class ConstructResponseUtilV2Live(
           requestingUser = requestingUser
         )
       case OntologyConstants.KnoraBase.CustomFormattedTextValue =>
-        makeCustomFormattedTextValueContentV2(
-          resourceIri = resourceIri,
-          valueObject = valueObject,
-          valueObjectValueHasString = valueObjectValueHasString,
-          valueCommentOption = valueCommentOption,
-          mappings = mappings,
-          requestingUser = requestingUser
-        )
+        targetSchema match {
+          case ApiV2Complex =>
+            makeCustomFormattedTextValueContentV2(
+              resourceIri = resourceIri,
+              valueObject = valueObject,
+              valueObjectValueHasString = valueObjectValueHasString,
+              valueCommentOption = valueCommentOption,
+              mappings = mappings,
+              requestingUser = requestingUser
+            )
+          case ApiV2Simple =>
+            ZIO.fail(BadRequestException("Custom formatted text values are not supported in simple schema"))
+        }
 
       case OntologyConstants.KnoraBase.DateValue =>
         val startPrecisionStr =
@@ -1577,7 +1582,7 @@ final case class ConstructResponseUtilV2Live(
           requestingUser = requestingUser
         )
 
-      case other => throw NotImplementedException(s"Not implemented yet: $other")
+      case other => ZIO.fail(NotImplementedException(s"Not implemented yet: $other"))
     }
   }
 
