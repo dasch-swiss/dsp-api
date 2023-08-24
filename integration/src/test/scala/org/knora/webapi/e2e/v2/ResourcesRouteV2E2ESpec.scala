@@ -852,7 +852,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         """{
           |  "@type" : "freetest:FreeTestSubClassOfFoafPerson",
           |  "freetest:hasFoafName" : {
-          |    "@type" : "knora-api:TextValue",
+          |    "@type" : "knora-api:UnformattedTextValue",
           |    "knora-api:valueAsString" : "this is a foaf name"
           |  },
           |  "knora-api:attachedToProject" : {
@@ -1830,8 +1830,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity =
         """{
           |  "@type": "anything:Thing",
-          |  "anything:hasText": {
-          |    "@type": "knora-api:TextValue",
+          |  "anything:hasRichtext": {
+          |    "@type": "knora-api:FormattedTextValue",
           |    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>\n   This text links to another <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/another-thing\">resource</a>.\n</text>",
           |    "knora-api:textValueHasMapping": {
           |      "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
@@ -1882,8 +1882,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntity =
         """{
           |  "@type": "anything:Thing",
-          |  "anything:hasText": {
-          |  "@type": "knora-api:TextValue",
+          |  "anything:hasRichtext": {
+          |  "@type": "knora-api:FormattedTextValue",
           |  "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>\n   This text links to another <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/another-thing\">thing</a> and a <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/a-blue-thing\">blue thing</a>.\n</text>",
           |   "knora-api:textValueHasMapping": {
           |                  "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
