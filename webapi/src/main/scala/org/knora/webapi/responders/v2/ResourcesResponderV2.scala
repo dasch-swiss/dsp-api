@@ -1130,7 +1130,9 @@ final case class ResourcesResponderV2Live(
     val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
         valueToCreate.valueContent match {
-          case textValueContentV2: TextValueContentV2 =>
+          case textValueContentV2: FormattedTextValueContentV2 =>
+            acc ++ textValueContentV2.standoffLinkTagIriAttributes.filter(_.targetExists).map(_.value)
+          case textValueContentV2: CustomFormattedTextValueContentV2 =>
             acc ++ textValueContentV2.standoffLinkTagIriAttributes.filter(_.targetExists).map(_.value)
           case _ => acc
         }
