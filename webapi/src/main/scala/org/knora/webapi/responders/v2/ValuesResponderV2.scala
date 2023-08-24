@@ -13,7 +13,6 @@ import zio.macros.accessible
 
 import java.time.Instant
 import java.util.UUID
-import scala.util.Success
 
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
@@ -2460,8 +2459,10 @@ final case class ValuesResponderV2Live(
     maybeCustomUUID match {
       case Some(customValueUUID) =>
         if (
-          maybeCustomIri.isEmpty || UuidUtil
-            .base64Decode(maybeCustomIri.get.toString.split("/").last) == Success(customValueUUID)
+          maybeCustomIri
+            .flatMap(_.toString.split("/").lastOption)
+            .flatMap(UuidUtil.base64Decode(_).toOption)
+            .forall(_ == customValueUUID)
         ) {
           ZIO.succeed(customValueUUID)
           // Yes. Check that if a custom IRI is given, it ends with the same UUID
