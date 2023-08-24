@@ -88,7 +88,7 @@ final case class StandoffResponderV2Live(
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case getStandoffPageRequestV2: GetStandoffRequestV2 => getStandoffV2(getStandoffPageRequestV2)
+    case getStandoffRequestV2: GetStandoffRequestV2 => getStandoffV2(getStandoffRequestV2)
     case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) =>
       createMappingV2(
         xml.xml,
@@ -138,7 +138,7 @@ final case class StandoffResponderV2Live(
           orderByResourceIri = Seq(getStandoffRequestV2.resourceIri),
           pageSizeBeforeFiltering = 1, // doesn't matter because we're not doing paging
           mappings = Map.empty,
-          queryStandoff = false,
+          queryStandoff = true,
           calculateMayHaveMoreResults = false,
           versionDate = None,
           targetSchema = getStandoffRequestV2.targetSchema,

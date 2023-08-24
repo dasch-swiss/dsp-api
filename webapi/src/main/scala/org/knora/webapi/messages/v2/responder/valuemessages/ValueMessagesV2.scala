@@ -1943,6 +1943,8 @@ object UnformattedTextValueContentV2 {
 /**
  * Represents a Knora text value, or a page of standoff markup that will be included in a text value.
  *
+ * Notice that when requested in the simple schema, the mapping will be None.
+ *
  * @param valueHasString the string representation of this text value.
  * @param standoff       the standoff markup attached to the text value, if any.
  * @param mappingIri     the IRI of the [[MappingXMLtoStandoff]] used with the text value.
@@ -1955,7 +1957,7 @@ case class FormattedTextValueContentV2(
   valueHasLanguage: Option[String] = None,
   standoff: Seq[StandoffTagV2] = Vector.empty,
   mappingIri: IRI,
-  mapping: MappingXMLtoStandoff,
+  mapping: Option[MappingXMLtoStandoff],
   xslt: Option[String] = None,
   comment: Option[String] = None
 ) extends ValueContentV2 {
@@ -2030,11 +2032,13 @@ case class FormattedTextValueContentV2(
           targetSchema = targetSchema,
           schemaOptions = schemaOptions
         )
+        val definedMapping =
+          mapping.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
         val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
           val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
             utf8str = valueHasString,
             standoff = standoff,
-            mappingXMLtoStandoff = mapping
+            mappingXMLtoStandoff = definedMapping
           )
 
           // check if there is an XSL transformation
@@ -2234,7 +2238,7 @@ object FormattedTextValueContentV2 {
       valueHasLanguage = maybeValueHasLanguage,
       standoff = textWithStandoffTags.standoffTagV2,
       mappingIri = mappingResponse.mappingIri,
-      mapping = mappingResponse.mapping,
+      mapping = Some(mappingResponse.mapping),
       comment = comment
     )
 

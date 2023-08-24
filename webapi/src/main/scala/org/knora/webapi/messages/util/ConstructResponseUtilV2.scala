@@ -1107,16 +1107,11 @@ final case class ConstructResponseUtilV2Live(
         ZIO
           .fromOption(valueObjectValueHasString)
           .orElseFail(BadRequestException(s"FormattedTextValue $resourceIri has no knora-base:valueHasString"))
-      _ <-
-        ZIO
-          .fail(BadRequestException(s"FormattedTextValue $resourceIri has no mapping defined."))
-          .when(valueObject.standoff.isEmpty)
       mappingIri <-
         ZIO
           .fromOption(valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri))
           .orElseFail(BadRequestException(s"FormattedTextValue $resourceIri has no mapping defined."))
-      mappingAndXsltTransformation <-
-        ZIO.fromOption(mappings.get(mappingIri)).orElseFail(BadRequestException(s"Mapping $mappingIri not found"))
+      mappingAndXsltTransformation = mappings.get(mappingIri)
       standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
                     standoffAssertions = valueObject.standoff,
                     requestingUser = requestingUser
@@ -1127,8 +1122,8 @@ final case class ConstructResponseUtilV2Live(
       valueHasLanguage = valueLanguageOption,
       standoff = standoff,
       mappingIri = mappingIri,
-      mapping = mappingAndXsltTransformation.mapping,
-      xslt = mappingAndXsltTransformation.XSLTransformation,
+      mapping = mappingAndXsltTransformation.map(_.mapping),
+      xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
       comment = valueCommentOption
     )
   }
