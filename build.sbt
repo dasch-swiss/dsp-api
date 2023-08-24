@@ -22,7 +22,8 @@ Global / semanticdbEnabled := true
 Global / semanticdbVersion := scalafixSemanticdb.revision
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
-val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
+val gitBranch  = Option("git rev-parse --abbrev-ref HEAD" !!).map(_.trim).filter(_ != "main").map(_.replace('/', '-'))
+val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim + gitBranch.fold("")("-" + _)
 
 ThisBuild / version := gitVersion
 
