@@ -1999,7 +1999,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         """{
           |  "@type" : "freetest:NewClass",
           |  "freetest:hasName" : {
-          |    "@type" : "knora-api:TextValue",
+          |    "@type" : "knora-api:UnformattedTextValue",
           |    "knora-api:valueAsString" : "The new text value"
           |  },
           |  "knora-api:attachedToProject" : {
@@ -2021,7 +2021,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       ) ~> addCredentials(auth)
       val resourceResponse: HttpResponse = singleAwaitingRequest(resourceRequest)
 
-      assert(resourceResponse.status == StatusCodes.OK, resourceResponse.toString)
+      assert(resourceResponse.status == StatusCodes.OK, responseToString(resourceResponse))
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI =
         responseToJsonLDDocument(resourceResponse).body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -2046,7 +2046,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
            |  "@type" : "freetest:NewClass",
            |  "freetest:hasName" : {
            |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:TextValue",
+           |    "@type" : "knora-api:UnformattedTextValue",
            |    "knora-api:valueAsString" : "changed value"
            |  },
            |  "@context" : {
