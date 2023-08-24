@@ -804,7 +804,10 @@ final case class ValuesResponderV2Live(
       createMultipleValuesRequest.flatValues.foldLeft(Vector.empty[Set[IRI]]) {
         case (standoffLinkTargetsAcc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
           createValueV2.valueContent match {
-            case textValueContentV2: TextValueContentV2
+            case textValueContentV2: FormattedTextValueContentV2
+                if textValueContentV2.standoffLinkTagTargetResourceIris.nonEmpty =>
+              standoffLinkTargetsAcc :+ textValueContentV2.standoffLinkTagTargetResourceIris
+            case textValueContentV2: CustomFormattedTextValueContentV2
                 if textValueContentV2.standoffLinkTagTargetResourceIris.nonEmpty =>
               standoffLinkTargetsAcc :+ textValueContentV2.standoffLinkTagTargetResourceIris
 
