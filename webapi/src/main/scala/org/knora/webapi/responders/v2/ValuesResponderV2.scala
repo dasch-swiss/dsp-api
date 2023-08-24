@@ -221,35 +221,7 @@ final case class ValuesResponderV2Live(
                requestingUser = requestingUser
              )
 
-        // If it is a list value, check that it points to a real list node which is not a root node.
-        _ <- submittedInternalValueContent match {
-               case listValue: HierarchicalListValueContentV2 =>
-                 for {
-                   checkNode <-
-                     resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
-
-                   _ <- checkNode match {
-                          // it doesn't have isRootNode property - it's a child node
-                          case Right(false) => ZIO.unit
-                          // it does have isRootNode property - it's a root node
-                          case Right(true) =>
-                            ZIO.fail(
-                              BadRequestException(
-                                s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
-                              )
-                            )
-                          // it doesn't exists or isn't valid list
-                          case Left(_) =>
-                            ZIO.fail(
-                              NotFoundException(
-                                s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
-                              )
-                            )
-                        }
-                 } yield ()
-
-               case _ => ZIO.unit
-             }
+        _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
 
         // Check that the resource class's cardinality for the submitted property allows another value to be added
         // for that property.
@@ -389,6 +361,24 @@ final case class ValuesResponderV2Live(
 
     resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValue, requestingUser)
   }
+
+  private def ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(valueContent: ValueContentV2) =
+    valueContent match {
+      case listValue: HierarchicalListValueContentV2 =>
+        resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode).flatMap {
+          // it doesn't have isRootNode property - it's a child node
+          case Right(false) => ZIO.unit
+          // it does have isRootNode property - it's a root node
+          case Right(true) =>
+            val msg = s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+            ZIO.fail(BadRequestException(msg))
+          // it doesn't exists or isn't valid list
+          case Left(_) =>
+            val msg = s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+            ZIO.fail(NotFoundException(msg))
+        }
+      case _ => ZIO.unit
+    }
 
   /**
    * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
@@ -1156,34 +1146,7 @@ final case class ValuesResponderV2Live(
                requestingUser = requestingUser
              )
 
-        // If it is a list value, check that it points to a real list node which is not a root node.
-        _ <- submittedInternalValueContent match {
-               case listValue: HierarchicalListValueContentV2 =>
-                 for {
-                   checkNode <- resourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode)
-
-                   _ <- checkNode match {
-                          // it doesn't have isRootNode property - it's a child node
-                          case Right(false) => ZIO.unit
-                          // it does have isRootNode property - it's a root node
-                          case Right(true) =>
-                            ZIO.fail(
-                              BadRequestException(
-                                s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
-                              )
-                            )
-                          // it doesn't exists or isn't valid list
-                          case Left(_) =>
-                            ZIO.fail(
-                              NotFoundException(
-                                s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
-                              )
-                            )
-                        }
-                 } yield ()
-
-               case _ => ZIO.unit
-             }
+        _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
 
         // Check that the updated value would not duplicate the current value version.
         unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
