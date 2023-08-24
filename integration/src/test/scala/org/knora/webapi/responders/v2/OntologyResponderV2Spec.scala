@@ -106,6 +106,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
   val anythingHasOtherThingValue: IRI      = anythingOntology + "hasOtherThingValue"
   val anythingHasRichtext: IRI             = anythingOntology + "hasRichtext"
   val anythingHasText: IRI                 = anythingOntology + "hasText"
+  val anythingHasUnformattedText: IRI      = anythingOntology + "hasUnformattedText"
+  val anythingHasCustomFormattedText: IRI  = anythingOntology + "hasCustomFormattedText"
   val anythingHasThingDocument: IRI        = anythingOntology + "hasThingDocument"
   val anythingHasThingDocumentValue: IRI   = anythingOntology + "hasThingDocumentValue"
   val anythingHasThingPicture: IRI         = anythingOntology + "hasThingPicture"
@@ -2886,6 +2888,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         anythingHasOtherThingValue,
         anythingHasRichtext,
         anythingHasText,
+        anythingHasUnformattedText,
+        anythingHasCustomFormattedText,
         anythingHasThingDocument,
         anythingHasThingDocumentValue,
         anythingHasThingPicture,
@@ -2972,6 +2976,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         anythingHasOtherThingValue,
         anythingHasRichtext,
         anythingHasText,
+        anythingHasUnformattedText,
+        anythingHasCustomFormattedText,
         anythingHasThingDocument,
         anythingHasThingDocumentValue,
         anythingHasThingPicture,
@@ -3091,6 +3097,8 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         anythingHasOtherThingValue,
         anythingHasRichtext,
         anythingHasText,
+        anythingHasUnformattedText,
+        anythingHasCustomFormattedText,
         anythingHasThingDocument,
         anythingHasThingDocumentValue,
         anythingHasThingPicture,
@@ -6710,7 +6718,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a property pointing to a kb:UnformattedTextValue" in {
-      val unformattedTextValuePropertyIri = AnythingOntologyIri.makeEntityIri("hasUnformattedText")
+      val unformattedTextValuePropertyIri = AnythingOntologyIri.makeEntityIri("hasAnotherUnformattedText")
       val unformattedTextValuePropertyInfoContent = PropertyInfoContentV2(
         propertyIri = unformattedTextValuePropertyIri,
         predicates = propertyPredicates(objectType = OntologyConstants.KnoraBase.UnformattedTextValue.toSmartIri),
@@ -6758,7 +6766,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "create a property pointing to a CustomFormattedTextValue" in {
-      val customFormattedTextValuePropertyIri = AnythingOntologyIri.makeEntityIri("hasCustomFormattedText")
+      val customFormattedTextValuePropertyIri = AnythingOntologyIri.makeEntityIri("hasAnotherCustomFormattedText")
       val customFormattedTextValuePropertyInfoContent = PropertyInfoContentV2(
         propertyIri = customFormattedTextValuePropertyIri,
         predicates = propertyPredicates(objectType = OntologyConstants.KnoraBase.CustomFormattedTextValue.toSmartIri),
