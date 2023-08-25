@@ -765,27 +765,34 @@ final case class ResourcesResponderV2Live(
           .filterKeys(resourceClassInfo.knoraResourceProperties)
           .toMap
 
-      _ = internalCreateResource.values.foreach {
-            case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
-              val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
+      _ <- ZIO.foreachDiscard(internalCreateResource.values) {
+             case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
+               val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
+               for {
 
-              val cardinalityInfo = knoraPropertyCardinalities.getOrElse(
-                internalPropertyIri,
-                throw OntologyConstraintException(
-                  s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                      .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"
-                )
-              )
+                 cardinalityInfo <-
+                   ZIO
+                     .fromOption(knoraPropertyCardinalities.get(internalPropertyIri))
+                     .orElseFail(
+                       OntologyConstraintException(
+                         s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
+                             .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"
+                       )
+                     )
 
-              if (
-                (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
-              ) {
-                throw OntologyConstraintException(
-                  s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                      .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>"
-                )
-              }
-          }
+                 _ <-
+                   ZIO.when(
+                     (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
+                   ) {
+                     ZIO.fail(
+                       OntologyConstraintException(
+                         s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
+                             .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>"
+                       )
+                     )
+                   }
+               } yield ()
+           }
 
       // Check that no required values are missing.
 
@@ -795,16 +802,18 @@ final case class ResourcesResponderV2Live(
 
       internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
 
-      _ = if (!requiredProps.subsetOf(internalPropertyIris)) {
-            val missingProps =
-              (requiredProps -- internalPropertyIris)
-                .map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>")
-                .mkString(", ")
-            throw OntologyConstraintException(
-              s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}>: $missingProps"
-            )
-          }
+      _ <- ZIO.when(!requiredProps.subsetOf(internalPropertyIris)) {
+             val missingProps =
+               (requiredProps -- internalPropertyIris)
+                 .map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>")
+                 .mkString(", ")
+             ZIO.fail(
+               OntologyConstraintException(
+                 s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri
+                     .toOntologySchema(ApiV2Complex)}>: $missingProps"
+               )
+             )
+           }
 
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
