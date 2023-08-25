@@ -309,24 +309,16 @@ final case class ResourcesResponderV2Live(
 
     val triplestoreUpdateFuture: Task[ReadResourcesSequenceV2] = for {
       // Don't allow anonymous users to create resources.
-      _ <- ZIO.attempt {
-             if (createResourceRequestV2.requestingUser.isAnonymousUser) {
-               throw ForbiddenException("Anonymous users aren't allowed to create resources")
-             } else {
-               createResourceRequestV2.requestingUser.id
-             }
+      _ <- ZIO.when(createResourceRequestV2.requestingUser.isAnonymousUser) {
+             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources"))
            }
 
       // Ensure that the project isn't the system project or the shared ontologies project.
-
       projectIri = createResourceRequestV2.createResource.projectADM.id
-
-      _ =
-        if (
+      _ <-
+        ZIO.when(
           projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-        ) {
-          throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
-        }
+        )(ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")))
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
@@ -338,21 +330,22 @@ final case class ResourcesResponderV2Live(
                                       createResourceRequestV2.requestingUser
                                     )
                                   )
-      ontologyMetadata: OntologyMetadataV2 =
-        readOntologyMetadataV2.ontologies.headOption
-          .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-      ontologyProjectIri: IRI =
-        ontologyMetadata.projectIri
-          .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
-          .toString
+      ontologyMetadata <- ZIO
+                            .fromOption(readOntologyMetadataV2.ontologies.headOption)
+                            .orElseFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+      ontologyProjectIri <-
+        ZIO
+          .fromOption(ontologyMetadata.projectIri)
+          .orElseFail(InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
+          .map(_.toString())
 
-      _ =
-        if (
+      _ <-
+        ZIO.when(
           projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
         ) {
-          throw BadRequestException(
+          val msg =
             s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project"
-          )
+          ZIO.fail(BadRequestException(msg))
         }
 
       // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
@@ -361,17 +354,17 @@ final case class ResourcesResponderV2Live(
       internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri
                                              .toOntologySchema(InternalSchema)
 
-      _ = if (
-            !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
-              ResourceCreateOperation(internalResourceClassIri.toString),
-              projectIri,
-              None
-            )
-          ) {
-            throw ForbiddenException(
-              s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
-            )
-          }
+      _ <- ZIO.when(
+             !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
+               ResourceCreateOperation(internalResourceClassIri.toString),
+               projectIri,
+               None
+             )
+           ) {
+             val msg =
+               s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
+             ZIO.fail(ForbiddenException(msg))
+           }
 
       resourceIri <-
         iriService.checkOrCreateEntityIri(
@@ -419,32 +412,31 @@ final case class ResourcesResponderV2Live(
         internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        _ = if (resource.resourceClassIri != internalResourceClassIri) {
-              throw BadRequestException(
-                s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>"
-              )
-            }
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // If resource has already been modified, make sure that its lastModificationDate is given in the request body.
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             resource.lastModificationDate.nonEmpty && updateResourceMetadataRequestV2.maybeLastModificationDate.isEmpty
           ) {
-            throw EditConflictException(
+            val msg =
               s"Resource <${resource.resourceIri}> has been modified in the past. Its lastModificationDate " +
                 s"${resource.lastModificationDate.get} must be included in the request body."
-            )
+            ZIO.fail(EditConflictException(msg))
           }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (
-              updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
-              resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate
-            ) {
-              throw EditConflictException(
-                s"Resource <${resource.resourceIri}> has been modified since you last read it"
-              )
-            }
+        _ <- ZIO.when(
+               updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
+                 resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate
+             ) {
+               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
+               ZIO.fail(EditConflictException(msg))
+             }
 
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
@@ -456,21 +448,18 @@ final case class ResourcesResponderV2Live(
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
-        newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
-                                         case Some(submittedNewModificationDate) =>
-                                           if (
-                                             resource.lastModificationDate.exists(
-                                               _.isAfter(submittedNewModificationDate)
-                                             )
-                                           ) {
-                                             throw BadRequestException(
-                                               s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate"
-                                             )
-                                           } else {
-                                             submittedNewModificationDate
-                                           }
-                                         case None => Instant.now
-                                       }
+        newModificationDate <-
+          updateResourceMetadataRequestV2.maybeNewModificationDate match {
+            case Some(submittedNewModificationDate) =>
+              if (resource.lastModificationDate.exists(_.isAfter(submittedNewModificationDate))) {
+                val msg =
+                  s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate"
+                ZIO.fail(BadRequestException(msg))
+              } else {
+                ZIO.succeed(submittedNewModificationDate)
+              }
+            case None => ZIO.succeed(Instant.now)
+          }
 
         // Generate SPARQL for updating the resource.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -497,38 +486,31 @@ final case class ResourcesResponderV2Live(
             requestingUser = updateResourceMetadataRequestV2.requestingUser
           )
 
-        _ = if (updatedResourcesSeq.resources.size != 1) {
-              throw AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}")
-            }
+        _ <- ZIO.when(updatedResourcesSeq.resources.size != 1) {
+               ZIO.fail(AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}"))
+             }
 
         updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
 
-        _ = if (!updatedResource.lastModificationDate.contains(newModificationDate)) {
-              throw UpdateNotPerformedException(
-                s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newModificationDate"
-              )
-            }
+        _ <- ZIO.when(!updatedResource.lastModificationDate.contains(newModificationDate)) {
+               val msg =
+                 s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newModificationDate"
+               ZIO.fail(UpdateNotPerformedException(msg))
+             }
 
-        _ = updateResourceMetadataRequestV2.maybeLabel match {
-              case Some(newLabel) =>
-                if (!updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel))) {
-                  throw UpdateNotPerformedException()
-                }
+        _ <- updateResourceMetadataRequestV2.maybeLabel match {
+               case Some(newLabel) if (!updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel))) =>
+                 ZIO.fail(UpdateNotPerformedException())
+               case _ => ZIO.unit
+             }
 
-              case None => ()
-            }
-
-        _ = updateResourceMetadataRequestV2.maybePermissions match {
-              case Some(newPermissions) =>
-                if (
-                  PermissionUtilADM
-                    .parsePermissions(updatedResource.permissions) != PermissionUtilADM.parsePermissions(newPermissions)
-                ) {
-                  throw UpdateNotPerformedException()
-                }
-
-              case None => ()
-            }
+        _ <- updateResourceMetadataRequestV2.maybePermissions match {
+               case Some(newPermissions)
+                   if (PermissionUtilADM.parsePermissions(updatedResource.permissions) != PermissionUtilADM
+                     .parsePermissions(newPermissions)) =>
+                 ZIO.fail(UpdateNotPerformedException())
+               case _ => ZIO.unit
+             }
 
       } yield UpdateResourceMetadataResponseV2(
         resourceIri = updateResourceMetadataRequestV2.resourceIri,
@@ -570,7 +552,7 @@ final case class ResourcesResponderV2Live(
    * @param deleteResourceV2 the request message.
    */
   private def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
-    def makeTaskFuture: Task[SuccessResponseV2] =
+    def deleteTask: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewV2(
@@ -583,29 +565,28 @@ final case class ResourcesResponderV2Live(
         internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        _ = if (resource.resourceClassIri != internalResourceClassIri) {
-              throw BadRequestException(
-                s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>"
-              )
-            }
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (resource.lastModificationDate != deleteResourceV2.maybeLastModificationDate) {
-              throw EditConflictException(
-                s"Resource <${resource.resourceIri}> has been modified since you last read it"
-              )
-            }
+        _ <- ZIO.when(resource.lastModificationDate != deleteResourceV2.maybeLastModificationDate) {
+               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
+               ZIO.fail(EditConflictException(msg))
+             }
 
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
-        _ = if (
-              deleteResourceV2.maybeDeleteDate.exists(
-                !_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate))
-              )
-            ) {
-              throw BadRequestException(
-                s"A custom delete date must be later than the date when the resource was created or last modified"
-              )
-            }
+        _ <- ZIO.when(
+               deleteResourceV2.maybeDeleteDate.exists(
+                 !_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate))
+               )
+             ) {
+               val msg =
+                 s"A custom delete date must be later than the date when the resource was created or last modified"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // Check that the user has permission to mark the resource as deleted.
         _ <- resourceUtilV2.checkResourcePermission(resource, DeletePermission, deleteResourceV2.requestingUser)
@@ -639,27 +620,19 @@ final case class ResourcesResponderV2Live(
 
         rows = sparqlSelectResponse.results.bindings
 
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false)
           ) {
-            throw UpdateNotPerformedException(
+            val msg =
               s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug."
-            )
+            ZIO.fail(UpdateNotPerformedException(msg))
           }
       } yield SuccessResponseV2("Resource marked as deleted")
 
-    if (deleteResourceV2.erase) {
-      throw AssertionException(s"Request message has erase == true")
-    }
-
     for {
-      // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteResourceV2.apiRequestID,
-                      deleteResourceV2.resourceIri,
-                      makeTaskFuture
-                    )
+      _          <- ZIO.when(deleteResourceV2.erase)(ZIO.fail(AssertionException(s"Request message has erase == true")))
+      taskResult <- IriLocker.runWithIriLock(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri, deleteTask)
     } yield taskResult
   }
 
