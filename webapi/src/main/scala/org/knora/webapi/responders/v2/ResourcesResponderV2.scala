@@ -642,7 +642,7 @@ final case class ResourcesResponderV2Live(
    * @param eraseResourceV2 the request message.
    */
   private def eraseResourceV2(eraseResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
-    def makeTaskFuture: Task[SuccessResponseV2] =
+    def eraseTask: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewV2(
@@ -654,28 +654,27 @@ final case class ResourcesResponderV2Live(
         resource: ReadResourceV2 = resourcesSeq.toResource(eraseResourceV2.resourceIri)
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
-        _ = if (
-              !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id) ||
-                eraseResourceV2.requestingUser.permissions.isSystemAdmin)
-            ) {
-              throw ForbiddenException(s"Only a system admin or project admin can erase a resource")
-            }
+        _ <- ZIO.when(
+               !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id) ||
+                 eraseResourceV2.requestingUser.permissions.isSystemAdmin)
+             ) {
+               ZIO.fail(ForbiddenException(s"Only a system admin or project admin can erase a resource"))
+             }
 
         internalResourceClassIri = eraseResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        _ = if (resource.resourceClassIri != internalResourceClassIri) {
-              throw BadRequestException(
-                s"Resource <${resource.resourceIri}> is not a member of class <${eraseResourceV2.resourceClassIri}>"
-              )
-            }
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${eraseResourceV2.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (resource.lastModificationDate != eraseResourceV2.maybeLastModificationDate) {
-              throw EditConflictException(
-                s"Resource <${resource.resourceIri}> has been modified since you last read it"
-              )
-            }
+        _ <- ZIO.when(resource.lastModificationDate != eraseResourceV2.maybeLastModificationDate) {
+               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
+               ZIO.fail(EditConflictException(msg))
+             }
 
         // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
         // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
@@ -718,17 +717,9 @@ final case class ResourcesResponderV2Live(
             .whenZIO(iriService.checkIriExists(resourceSmartIri.toString))
       } yield SuccessResponseV2("Resource erased")
 
-    if (!eraseResourceV2.erase) {
-      throw AssertionException(s"Request message has erase == false")
-    }
-
     for {
-      // Do the pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(
-                      eraseResourceV2.apiRequestID,
-                      eraseResourceV2.resourceIri,
-                      makeTaskFuture
-                    )
+      _          <- ZIO.when(!eraseResourceV2.erase)(ZIO.fail(AssertionException(s"Request message has erase == false")))
+      taskResult <- IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri, eraseTask)
     } yield taskResult
   }
 
