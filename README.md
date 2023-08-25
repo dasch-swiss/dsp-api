@@ -25,3 +25,12 @@ using [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) for la
 
 Follow the installation instructions from the dsp-docs repository in order to build and serve the documentation locally.
 Once the necessary software is installed you can use `mkdocs serve` for a live preview on  http://127.0.0.1:8000/.
+
+## Contributing
+
+Our commit messages follow the [Conventional Commits Guidelines](https://www.conventionalcommits.org/en/v1.0.0/).
+
+Source code must be formatted with `sbt fmt`.
+
+Copyright headers must be added with `sbt headerCreateAll`.
+
