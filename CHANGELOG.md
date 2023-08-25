@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.0...v0.1.1) (2023-08-25)
+
+
+### Maintenance
+
+* Add Contributing section to README ([#65](https://github.com/dasch-swiss/dsp-ingest/issues/65)) ([f6539f3](https://github.com/dasch-swiss/dsp-ingest/commit/f6539f3323ca40bf4d1b32fb0585fdcba91cd791))
+* Publish docker artefact only once per release ([#66](https://github.com/dasch-swiss/dsp-ingest/issues/66)) ([4ddd67c](https://github.com/dasch-swiss/dsp-ingest/commit/4ddd67c21b792387f213c3e96d4d1eef1613369a))
+
 ## [0.1.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.0.5...v0.1.0) (2023-08-24)
 
 
