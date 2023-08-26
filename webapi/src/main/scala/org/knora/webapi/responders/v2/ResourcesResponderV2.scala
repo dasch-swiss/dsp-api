@@ -11,7 +11,6 @@ import zio._
 
 import java.time.Instant
 import java.util.UUID
-import scala.::
 import scala.concurrent.Future
 
 import dsp.errors._
@@ -22,11 +21,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
@@ -37,19 +32,12 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
 import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.JsonLDArray
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDInt
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.rdf.JsonLDObject
-import org.knora.webapi.messages.util.rdf.JsonLDString
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -61,7 +49,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequest
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -336,8 +323,10 @@ final case class ResourcesResponderV2Live(
       ontologyProjectIri <-
         ZIO
           .fromOption(ontologyMetadata.projectIri)
-          .orElseFail(InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
-          .map(_.toString())
+          .mapBoth(
+            _ => InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"),
+            _.toString()
+          )
 
       _ <-
         ZIO.when(
@@ -499,15 +488,15 @@ final case class ResourcesResponderV2Live(
              }
 
         _ <- updateResourceMetadataRequestV2.maybeLabel match {
-               case Some(newLabel) if (!updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel))) =>
+               case Some(newLabel) if !updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel)) =>
                  ZIO.fail(UpdateNotPerformedException())
                case _ => ZIO.unit
              }
 
         _ <- updateResourceMetadataRequestV2.maybePermissions match {
                case Some(newPermissions)
-                   if (PermissionUtilADM.parsePermissions(updatedResource.permissions) != PermissionUtilADM
-                     .parsePermissions(newPermissions)) =>
+                   if PermissionUtilADM.parsePermissions(updatedResource.permissions) != PermissionUtilADM
+                     .parsePermissions(newPermissions) =>
                  ZIO.fail(UpdateNotPerformedException())
                case _ => ZIO.unit
              }
@@ -552,7 +541,7 @@ final case class ResourcesResponderV2Live(
    * @param deleteResourceV2 the request message.
    */
   private def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
-    def deleteTask: Task[SuccessResponseV2] =
+    def deleteTask(): Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewV2(
@@ -630,10 +619,8 @@ final case class ResourcesResponderV2Live(
           }
       } yield SuccessResponseV2("Resource marked as deleted")
 
-    for {
-      _          <- ZIO.when(deleteResourceV2.erase)(ZIO.fail(AssertionException(s"Request message has erase == true")))
-      taskResult <- IriLocker.runWithIriLock(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri, deleteTask)
-    } yield taskResult
+    ZIO.when(deleteResourceV2.erase)(ZIO.fail(AssertionException(s"Request message has erase == true"))) *>
+      IriLocker.runWithIriLock(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri, deleteTask())
   }
 
   /**
@@ -848,11 +835,11 @@ final case class ResourcesResponderV2Live(
                          defaultResourcePermissions,
                          requestingUser
                        )
-                     if (permissionComparisonResult == AGreaterThanB) {
+                     ZIO.when(permissionComparisonResult == AGreaterThanB) {
                        val msg =
                          s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
                        ZIO.fail(ForbiddenException(msg))
-                     } else { ZIO.unit }
+                     }
                    }
             } yield validatedCustomPermissions
 
@@ -963,7 +950,7 @@ final case class ResourcesResponderV2Live(
       ZIO.foreachDiscard(valuesToCreate.combinations(2).toSeq) { valueCombination =>
         // valueCombination must have two elements.
 
-        val firstValue: ValueContentV2  = valueCombination(0).valueContent
+        val firstValue: ValueContentV2  = valueCombination.head.valueContent
         val secondValue: ValueContentV2 = valueCombination(1).valueContent
 
         ZIO.when(firstValue.wouldDuplicateOtherValue(secondValue)) {
@@ -1109,7 +1096,6 @@ final case class ResourcesResponderV2Live(
    * in list values.
    *
    * @param values         the values to be checked.
-   * @param requestingUser the user making the request.
    */
   private def checkListNodes(values: Iterable[CreateValueInNewResourceV2]): Task[Unit] = {
     val listNodesThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
@@ -1191,13 +1177,13 @@ final case class ResourcesResponderV2Live(
                              requestingUser = requestingUser
                            )
 
-                         if (permissionComparisonResult == AGreaterThanB) {
+                         ZIO.when(permissionComparisonResult == AGreaterThanB) {
                            ZIO.fail(
                              ForbiddenException(
                                s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
                              )
                            )
-                         } else { ZIO.unit }
+                         }
                        }
                 } yield GenerateSparqlForValueInNewResourceV2(
                   valueContent = valueToCreate.valueContent,
@@ -1365,7 +1351,7 @@ final case class ResourcesResponderV2Live(
                         ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values"))
                       }
 
-                 _ <- ZIO.foreach(savedValues.zip(expectedValues)) { case (savedValue, expectedValue) =>
+                 _ <- ZIO.foreachDiscard(savedValues.zip(expectedValues)) { case (savedValue, expectedValue) =>
                         ZIO.when(
                           !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
                             savedValue.permissions == expectedValue.permissions &&
@@ -1508,13 +1494,13 @@ final case class ResourcesResponderV2Live(
 
       _ <- valueUuid match {
              case Some(definedValueUuid) =>
-               if (
-                 !apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))
+               ZIO.unless(
+                 apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))
                ) {
                  val msg =
                    s"Value with UUID ${UuidUtil.base64Encode(definedValueUuid)} not found (maybe you do not have permission to see it)"
                  ZIO.fail(NotFoundException(msg))
-               } else { ZIO.unit }
+               }
              case None => ZIO.unit
            }
 
@@ -1838,10 +1824,12 @@ final case class ResourcesResponderV2Live(
                       case Some(headerIri) =>
                         messageRelay
                           .ask[GetXSLTransformationResponseV2](GetXSLTransformationRequestV2(headerIri, requestingUser))
-                          .map(resp => Some(resp.xslt))
-                          .mapError { case e: NotFoundException =>
-                            SipiException(s"TEI header XSL transformation <$headerIri> not found: ${e.message}")
-                          }
+                          .mapBoth(
+                            { case e: NotFoundException =>
+                              SipiException(s"TEI header XSL transformation <$headerIri> not found: ${e.message}")
+                            },
+                            resp => Some(resp.xslt)
+                          )
                       case _ => ZIO.none
                     }
 
@@ -1872,12 +1860,14 @@ final case class ResourcesResponderV2Live(
                             .ask[GetXSLTransformationResponseV2](
                               GetXSLTransformationRequestV2(xslTransformationIri, requestingUser)
                             )
-                            .map(_.xslt)
-                            .mapError { case notFound: NotFoundException =>
-                              val msg =
-                                s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
-                              SipiException(msg)
-                            }
+                            .mapBoth(
+                              { case notFound: NotFoundException =>
+                                val msg =
+                                  s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                                SipiException(msg)
+                              },
+                              _.xslt
+                            )
                         case None =>
                           val msg = s"Default XSL Transformation expected for mapping $otherMapping"
                           ZIO.fail(BadRequestException(msg))
@@ -2259,8 +2249,10 @@ final case class ResourcesResponderV2Live(
           val author         = row.rowMap("author")
           ZIO
             .fromOption(ValuesValidator.xsdDateTimeStampToInstant(versionDateStr))
-            .orElseFail(InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr"))
-            .map(versionDate => ResourceHistoryEntry(versionDate, author))
+            .mapBoth(
+              _ => InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr"),
+              versionDate => ResourceHistoryEntry(versionDate, author)
+            )
         }
 
       // Figure out whether to add the resource's creation to the history.
@@ -2287,7 +2279,7 @@ final case class ResourcesResponderV2Live(
       historyEntriesWithResourceCreation
     )
 
-  private def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Task[ResourceIIIFManifestGetResponseV2] = {
+  private def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Task[ResourceIIIFManifestGetResponseV2] =
     // The implementation here is experimental. If we had a way of streaming the canvas URLs to the IIIF viewer,
     // it would be better to write the Gravsearch query differently, so that ?representation was the main resource.
     // Then the Gravsearch query could return pages of results.
@@ -2327,6 +2319,7 @@ final case class ResourcesResponderV2Live(
       representations: Seq[ReadResourceV2] = incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>
                                                readLinkValueV2.valueContent.nestedResource
                                              }.flatten
+      items <- toItems(representations)
     } yield ResourceIIIFManifestGetResponseV2(
       JsonLDDocument(
         body = JsonLDObject(
@@ -2336,66 +2329,70 @@ final case class ResourcesResponderV2Live(
             "type"                 -> JsonLDString("Manifest"),
             "label"                -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(resource.label))))),
             "behavior"             -> JsonLDArray(Seq(JsonLDString("paged"))),
+            "items"                -> items
+          )
+        ),
+        keepStructure = true
+      )
+    )
+
+  private def toItems(representations: Seq[ReadResourceV2]): Task[JsonLDArray] =
+    ZIO
+      .foreach(representations) { representation: ReadResourceV2 =>
+        for {
+          imageValue <-
+            ZIO
+              .fromOption(
+                representation.values
+                  .get(OntologyConstants.KnoraBase.HasStillImageFileValue.toSmartIri)
+                  .flatMap(_.headOption)
+              )
+              .orElseFail {
+                val msg = s"Representation ${representation.resourceIri} has no still image file value"
+                InconsistentRepositoryDataException(msg)
+              }
+
+          imageValueContent <-
+            imageValue.valueContent match {
+              case s: StillImageFileValueContentV2 => ZIO.succeed(s)
+              case _                               => ZIO.fail(AssertionException("Expected a StillImageFileValueContentV2"))
+            }
+
+          fileUrl = imageValueContent.makeFileUrl(representation.projectADM, appConfig.sipi.externalBaseUrl)
+        } yield JsonLDObject(
+          Map(
+            "id"     -> JsonLDString(s"${representation.resourceIri}/canvas"),
+            "type"   -> JsonLDString("Canvas"),
+            "label"  -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(representation.label))))),
+            "height" -> JsonLDInt(imageValueContent.dimY),
+            "width"  -> JsonLDInt(imageValueContent.dimX),
             "items" -> JsonLDArray(
-              representations.map { representation: ReadResourceV2 =>
-                val imageValue: ReadValueV2 = representation.values
-                  .getOrElse(
-                    OntologyConstants.KnoraBase.HasStillImageFileValue.toSmartIri,
-                    throw InconsistentRepositoryDataException(
-                      s"Representation ${representation.resourceIri} has no still image file value"
-                    )
-                  )
-                  .head
-
-                val imageValueContent: StillImageFileValueContentV2 = imageValue.valueContent match {
-                  case stillImageFileValueContentV2: StillImageFileValueContentV2 => stillImageFileValueContentV2
-                  case _                                                          => throw AssertionException("Expected a StillImageFileValueContentV2")
-                }
-
-                val fileUrl: String =
-                  imageValueContent.makeFileUrl(
-                    projectADM = representation.projectADM,
-                    appConfig.sipi.externalBaseUrl
-                  )
-
+              Seq(
                 JsonLDObject(
                   Map(
-                    "id"     -> JsonLDString(s"${representation.resourceIri}/canvas"), // Is this IRI OK?
-                    "type"   -> JsonLDString("Canvas"),
-                    "label"  -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(representation.label))))),
-                    "height" -> JsonLDInt(imageValueContent.dimY),
-                    "width"  -> JsonLDInt(imageValueContent.dimX),
+                    "id"   -> JsonLDString(s"${imageValue.valueIri}/image"),
+                    "type" -> JsonLDString("AnnotationPage"),
                     "items" -> JsonLDArray(
                       Seq(
                         JsonLDObject(
                           Map(
-                            "id"   -> JsonLDString(s"${imageValue.valueIri}/image"), // Is this IRI OK?
-                            "type" -> JsonLDString("AnnotationPage"),
-                            "items" -> JsonLDArray(
-                              Seq(
-                                JsonLDObject(
-                                  Map(
-                                    "id"         -> JsonLDString(imageValue.valueIri),
-                                    "type"       -> JsonLDString("Annotation"),
-                                    "motivation" -> JsonLDString("painting"),
-                                    "body" -> JsonLDObject(
+                            "id"         -> JsonLDString(imageValue.valueIri),
+                            "type"       -> JsonLDString("Annotation"),
+                            "motivation" -> JsonLDString("painting"),
+                            "body" -> JsonLDObject(
+                              Map(
+                                "id"     -> JsonLDString(fileUrl),
+                                "type"   -> JsonLDString("Image"),
+                                "format" -> JsonLDString("image/jpeg"),
+                                "height" -> JsonLDInt(imageValueContent.dimY),
+                                "width"  -> JsonLDInt(imageValueContent.dimX),
+                                "service" -> JsonLDArray(
+                                  Seq(
+                                    JsonLDObject(
                                       Map(
-                                        "id"     -> JsonLDString(fileUrl),
-                                        "type"   -> JsonLDString("Image"),
-                                        "format" -> JsonLDString("image/jpeg"),
-                                        "height" -> JsonLDInt(imageValueContent.dimY),
-                                        "width"  -> JsonLDInt(imageValueContent.dimX),
-                                        "service" -> JsonLDArray(
-                                          Seq(
-                                            JsonLDObject(
-                                              Map(
-                                                "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
-                                                "type"    -> JsonLDString("ImageService3"),
-                                                "profile" -> JsonLDString("level1")
-                                              )
-                                            )
-                                          )
-                                        )
+                                        "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
+                                        "type"    -> JsonLDString("ImageService3"),
+                                        "profile" -> JsonLDString("level1")
                                       )
                                     )
                                   )
@@ -2408,14 +2405,12 @@ final case class ResourcesResponderV2Live(
                     )
                   )
                 )
-              }
+              )
             )
           )
-        ),
-        keepStructure = true
-      )
-    )
-  }
+        )
+      }
+      .map(JsonLDArray)
 
   /**
    * Returns all events describing the history of a resource ordered by version date.
