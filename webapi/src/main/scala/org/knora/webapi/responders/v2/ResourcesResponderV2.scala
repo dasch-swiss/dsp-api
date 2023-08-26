@@ -1341,21 +1341,15 @@ final case class ResourcesResponderV2Live(
       // Check that the property knora-base:hasStandoffLinkToValue was automatically added if necessary.
       expectedPropertyIris: Set[SmartIri] =
         resourceReadyToCreate.values.keySet ++ (if (resourceReadyToCreate.hasStandoffLink) {
-                                                  Some(
-                                                    OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri
-                                                  )
-                                                } else {
-                                                  None
-                                                })
+                                                  Some(OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
+                                                } else { None })
 
       _ <- ZIO.when(savedPropertyIris != expectedPropertyIris) {
-             ZIO.fail(
-               AssertionException(
-                 s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
-                     .map(_.toSparql)
-                     .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
-               )
-             )
+             val msg =
+               s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
+                   .map(_.toSparql)
+                   .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
+             ZIO.fail(AssertionException(msg))
            }
 
       // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
