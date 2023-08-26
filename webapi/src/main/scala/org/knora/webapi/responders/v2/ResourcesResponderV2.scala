@@ -1682,7 +1682,7 @@ final case class ResourcesResponderV2Live(
     } yield gravsearchUrl
 
     val recoveredGravsearchUrlTask = gravsearchUrlTask.mapError { case notFound: NotFoundException =>
-      throw BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")
+      BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")
     }
 
     for {
@@ -1790,56 +1790,41 @@ final case class ResourcesResponderV2Live(
       // get the requested resource
       resource <-
         if (gravsearchTemplateIri.nonEmpty) {
-
-          // check that there is an XSLT to create the TEI header
-          if (headerXSLTIri.isEmpty)
-            throw BadRequestException(
-              s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided."
-            )
-
           for {
+            // check that there is an XSLT to create the TEI header
+            _ <- ZIO.when(headerXSLTIri.isEmpty) {
+                   val msg = s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided."
+                   ZIO.fail(BadRequestException(msg))
+                 }
             // get the template
-            template <- getGravsearchTemplate(
-                          gravsearchTemplateIri = gravsearchTemplateIri.get,
-                          requestingUser = requestingUser
-                        )
-
-            // insert actual resource Iri, replacing the placeholder
-            gravsearchQuery = template.replace("$resourceIri", resourceIri)
-
-            // parse the Gravsearch query
-            constructQuery: ConstructQuery = GravsearchParser.parseQuery(gravsearchQuery)
+            constructQuery <- getGravsearchTemplate(gravsearchTemplateIri.get, requestingUser)
+                                .map(_.replace("$resourceIri", resourceIri))
+                                .mapAttempt(GravsearchParser.parseQuery)
 
             // do a request to the SearchResponder
-            gravSearchResponse <-
-              messageRelay
-                .ask[ReadResourcesSequenceV2](
-                  GravsearchRequestV2(
-                    constructQuery = constructQuery,
-                    targetSchema = ApiV2Complex,
-                    schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                    requestingUser = requestingUser
-                  )
-                )
-          } yield gravSearchResponse.toResource(resourceIri)
+            req =
+              GravsearchRequestV2(constructQuery, ApiV2Complex, SchemaOptions.ForStandoffWithTextValues, requestingUser)
+            resource <- messageRelay.ask[ReadResourcesSequenceV2](req).mapAttempt(_.toResource(resourceIri))
+          } yield resource
 
         } else {
           // no Gravsearch template is provided
 
-          // check that there is no XSLT for the header since there is no Gravsearch template
-          if (headerXSLTIri.nonEmpty)
-            throw BadRequestException(
-              s"When no Gravsearch template Iri is provided, no header XSLT Iri is expected to be provided either."
-            )
-
           for {
+            // check that there is no XSLT for the header since there is no Gravsearch template
+            _ <- ZIO.when(headerXSLTIri.nonEmpty) {
+                   val msg =
+                     s"When no Gravsearch template Iri is provided, no header XSLT Iri is expected to be provided either."
+                   ZIO.fail(BadRequestException(msg))
+                 }
+
             // get requested resource
             resource <- getResourcesV2(
                           resourceIris = Vector(resourceIri),
                           targetSchema = ApiV2Complex,
                           schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                           requestingUser = requestingUser
-                        ).map(_.toResource(resourceIri))
+                        ).mapAttempt(_.toResource(resourceIri))
           } yield resource
         }
 
