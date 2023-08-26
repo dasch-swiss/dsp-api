@@ -49,7 +49,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
