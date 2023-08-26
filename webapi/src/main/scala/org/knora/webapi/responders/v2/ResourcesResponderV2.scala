@@ -12,7 +12,6 @@ import zio._
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -73,6 +72,9 @@ import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.ZioHelper
+
+import scala.::
+import scala.collection.immutable
 
 trait ResourcesResponderV2
 
@@ -2535,10 +2537,12 @@ final case class ResourcesResponderV2Live(
       resourceDeleteEvent = getResourceDeletionEvents(deletionRep)
 
       // For each value version, form an event
-      valuesEvents: Seq[ResourceAndValueHistoryEvent] =
-        resourceAtValueChanges.flatMap { case (versionHist, readResource) =>
-          getValueEvents(readResource, versionHist, fullReps)
-        }
+      valuesEvents <-
+        ZIO
+          .foreach(resourceAtValueChanges) { case (versionHist, readResource) =>
+            getValueEvents(readResource, versionHist, fullReps)
+          }
+          .map(_.flatten)
 
       // Get the update resource metadata event, if there is any.
       resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryEvent] = getResourceMetadataUpdateEvent(
@@ -2647,38 +2651,31 @@ final case class ResourcesResponderV2Live(
     resourceAtGivenTime: ReadResourceV2,
     versionHist: ResourceHistoryEntry,
     allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]
-  ): Seq[ResourceAndValueHistoryEvent] = {
-    val resourceIri = resourceAtGivenTime.resourceIri
+  ): Task[Seq[ResourceAndValueHistoryEvent]] = {
 
     /** returns the values of the resource which have the given version date. */
-    def findValuesWithGivenVersionDate(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, ReadValueV2] = {
-      val valuesWithVersionDate: Map[SmartIri, ReadValueV2] = values.foldLeft(Map.empty[SmartIri, ReadValueV2]) {
-        case (acc, (propIri, readValue)) =>
-          val valuesWithGivenVersion: Seq[ReadValueV2] =
-            readValue.filter(readValue =>
-              readValue.valueCreationDate == versionHist.versionDate || readValue.deletionInfo.exists(deleteInfo =>
-                deleteInfo.deleteDate == versionHist.versionDate
-              )
+    def findValuesWithGivenVersionDate(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, ReadValueV2] =
+      values.foldLeft(Map.empty[SmartIri, ReadValueV2]) { case (acc, (propIri, readValue)) =>
+        val valuesWithGivenVersion: Seq[ReadValueV2] =
+          readValue.filter(readValue =>
+            readValue.valueCreationDate == versionHist.versionDate || readValue.deletionInfo.exists(deleteInfo =>
+              deleteInfo.deleteDate == versionHist.versionDate
             )
-          if (valuesWithGivenVersion.nonEmpty) {
-            acc + (propIri -> valuesWithGivenVersion.head)
-          } else { acc }
+          )
+        if (valuesWithGivenVersion.nonEmpty) {
+          acc + (propIri -> valuesWithGivenVersion.head)
+        } else { acc }
       }
 
-      valuesWithVersionDate
+    ZIO.foldLeft(findValuesWithGivenVersionDate(resourceAtGivenTime.values))(List.empty[ResourceAndValueHistoryEvent]) {
+      (acc, next) =>
+        val (propIri, readValue) = next
 
-    }
-
-    val valuesWithAskedVersionDate: Map[SmartIri, ReadValueV2] = findValuesWithGivenVersionDate(
-      resourceAtGivenTime.values
-    )
-    val valueEvents: Seq[ResourceAndValueHistoryEvent] = valuesWithAskedVersionDate.map { case (propIri, readValue) =>
-      val event =
         // Is the given date a deletion date?
         if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
           // Yes. Return a deleteValue event
           val deleteValueRequestBody = ValueEventBody(
-            resourceIri = resourceIri,
+            resourceIri = resourceAtGivenTime.resourceIri,
             resourceClassIri = resourceAtGivenTime.resourceClassIri,
             projectADM = resourceAtGivenTime.projectADM,
             propertyIri = propIri,
@@ -2687,18 +2684,20 @@ final case class ResourcesResponderV2Live(
             deletionInfo = readValue.deletionInfo,
             previousValueIri = readValue.previousValueIri
           )
-          ResourceAndValueHistoryEvent(
-            eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
-            versionDate = versionHist.versionDate,
-            author = versionHist.author,
-            eventBody = deleteValueRequestBody
+          ZIO.succeed(
+            acc appended ResourceAndValueHistoryEvent(
+              eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
+              versionDate = versionHist.versionDate,
+              author = versionHist.author,
+              eventBody = deleteValueRequestBody
+            )
           )
         } else {
           // No. Is the given date a creation date, i.e. value does not have a previous version?
           if (readValue.previousValueIri.isEmpty) {
             // Yes. return a createValue event with its request body
             val createValueRequestBody = ValueEventBody(
-              resourceIri = resourceIri,
+              resourceIri = resourceAtGivenTime.resourceIri,
               resourceClassIri = resourceAtGivenTime.resourceClassIri,
               projectADM = resourceAtGivenTime.projectADM,
               propertyIri = propIri,
@@ -2710,28 +2709,28 @@ final case class ResourcesResponderV2Live(
               permissions = Some(readValue.permissions),
               valueComment = readValue.valueContent.comment
             )
-            ResourceAndValueHistoryEvent(
-              eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
-              versionDate = versionHist.versionDate,
-              author = versionHist.author,
-              eventBody = createValueRequestBody
+            ZIO.succeed(
+              acc appended ResourceAndValueHistoryEvent(
+                eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
+                versionDate = versionHist.versionDate,
+                author = versionHist.author,
+                eventBody = createValueRequestBody
+              )
             )
           } else {
             // No. return updateValue event
-            val (updateEventType: String, updateEventRequestBody: ValueEventBody) =
-              getValueUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime)
-            ResourceAndValueHistoryEvent(
-              eventType = updateEventType,
-              versionDate = versionHist.versionDate,
-              author = versionHist.author,
-              eventBody = updateEventRequestBody
-            )
+            getValueUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime).map {
+              case (updateEventType, updateEventRequestBody) =>
+                acc appended ResourceAndValueHistoryEvent(
+                  eventType = updateEventType,
+                  versionDate = versionHist.versionDate,
+                  author = versionHist.author,
+                  eventBody = updateEventRequestBody
+                )
+            }
           }
         }
-      event
-    }.toSeq
-
-    valueEvents
+    }
   }
 
   /**
@@ -2750,34 +2749,37 @@ final case class ResourcesResponderV2Live(
     currentVersionOfValue: ReadValueV2,
     allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
     resourceAtGivenTime: ReadResourceV2
-  ): (String, ValueEventBody) = {
-    val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
-      throw BadRequestException("No previous value IRI found for the value, Please report this as a bug.")
-    )
+  ): Task[(String, ValueEventBody)] = for {
+    previousValueIri <-
+      ZIO
+        .fromOption(currentVersionOfValue.previousValueIri)
+        .orElseFail(BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
 
     // find the version of resource which has a value with previousValueIri
-    val (previousVersionDate, previousVersionOfResource): (ResourceHistoryEntry, ReadResourceV2) = allResourceVersions
-      .find(resourceWithHist =>
-        resourceWithHist._2.values.exists(item =>
-          item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri)
+    versionDateAndPreviousVersion <-
+      ZIO
+        .fromOption(
+          allResourceVersions.find { case (_, resource) =>
+            resource.values.exists(item =>
+              item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri)
+            )
+          }
         )
-      )
-      .getOrElse(throw NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
+        .orElseFail(NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
+    (previousVersionDate, previousVersionOfResource) = versionDateAndPreviousVersion
 
     // check that the version date of the previousValue is before the version date of the current value.
-    if (previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
-      throw ForbiddenException(
-        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI $previousValueIri " +
-          s"has a date after the current value."
-      )
-    }
+    _ <- ZIO.when(previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
+           val msg = s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI " +
+             s"$previousValueIri has a date after the current value."
+           ZIO.fail(ForbiddenException(msg))
+         }
 
     // get the previous value
-    val previousValue: ReadValueV2 =
-      previousVersionOfResource.values(propertyIri).find(value => value.valueIri == previousValueIri).get
+    previousValue: ReadValueV2 = previousVersionOfResource.values(propertyIri).find(_.valueIri == previousValueIri).get
 
-    // Is the content of previous version of value the same as content of the current version?
-    val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
+  } yield // Is the content of previous version of value the same as content of the current version?
+    if (previousValue.valueContent == currentVersionOfValue.valueContent) {
       // Yes. Permission must have been updated; return a permission update event.
       val updateValuePermissionsRequestBody = ValueEventBody(
         resourceIri = resourceAtGivenTime.resourceIri,
@@ -2807,8 +2809,6 @@ final case class ResourcesResponderV2Live(
       )
       (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentRequestBody)
     }
-    event
-  }
 
   /**
    * Returns an updateResourceMetadata event as [[ResourceAndValueHistoryEvent]] with request body of the form
