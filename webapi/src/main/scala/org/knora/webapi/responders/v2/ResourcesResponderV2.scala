@@ -680,18 +680,16 @@ final case class ResourcesResponderV2Live(
         // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
         // refers to it). Any such deleted link values will be erased along with the resource. If there
         // is a non-deleted link to the resource, the direct link (rather than the link value) will case
-        // isEntityUsed() to throw an exception.
+        // isEntityUsed() to fail with an exception.
 
         resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
-        _ <-
-          ZIO
-            .fail(
-              BadRequestException(
-                s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
-              )
-            )
-            .whenZIO(iriService.isEntityUsed(resourceSmartIri, ignoreRdfSubjectAndObject = true))
+        _ <- ZIO
+               .whenZIO(iriService.isEntityUsed(resourceSmartIri, ignoreRdfSubjectAndObject = true)) {
+                 val msg =
+                   s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
+                 ZIO.fail(BadRequestException(msg))
+               }
 
         // Get the IRI of the named graph from which the resource will be erased.
         dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
@@ -826,7 +824,7 @@ final case class ResourcesResponderV2Live(
            )
 
       // Check that the submitted values do not contain duplicates.
-      _ <- checkForDuplicateValues(internalCreateResource.values, clientResourceIDs, resourceIDForErrorMsg)
+      _ <- checkForDuplicateValues(internalCreateResource.values, resourceIDForErrorMsg)
 
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
@@ -953,29 +951,28 @@ final case class ResourcesResponderV2Live(
    * Checks that values to be created in a new resource do not contain duplicates.
    *
    * @param values                a map of property IRIs to values to be created (in the internal schema).
-   * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
    * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
    *                              resource to be created, if any.
    */
   private def checkForDuplicateValues(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-    clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
     resourceIDForErrorMsg: IRI
   ): Task[Unit] =
-    ZIO.attempt(values.foreach { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+    ZIO.foreachDiscard(values) { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       // Given the values for a property, compute all possible combinations of two of those values.
-      for (valueCombination: Seq[CreateValueInNewResourceV2] <- valuesToCreate.combinations(2)) {
+      ZIO.foreachDiscard(valuesToCreate.combinations(2).toSeq) { valueCombination =>
         // valueCombination must have two elements.
-        val firstValue: ValueContentV2  = valueCombination.head.valueContent
+
+        val firstValue: ValueContentV2  = valueCombination(0).valueContent
         val secondValue: ValueContentV2 = valueCombination(1).valueContent
 
-        if (firstValue.wouldDuplicateOtherValue(secondValue)) {
-          throw DuplicateValueException(
+        ZIO.when(firstValue.wouldDuplicateOtherValue(secondValue)) {
+          val msg =
             s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2Complex)}>"
-          )
+          ZIO.fail(DuplicateValueException(msg))
         }
       }
-    })
+    }
 
   /**
    * Checks that values to be created in a new resource are compatible with the object class constraints
