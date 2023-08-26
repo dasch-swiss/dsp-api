@@ -817,22 +817,16 @@ final case class ResourcesResponderV2Live(
 
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
-
-      _ = checkObjectClassConstraints(
-            values = internalCreateResource.values,
-            linkTargetClasses = linkTargetClasses,
-            entityInfo = entityInfo,
-            clientResourceIDs = clientResourceIDs,
-            resourceIDForErrorMsg = resourceIDForErrorMsg
-          )
+      _ <- checkObjectClassConstraints(
+             internalCreateResource.values,
+             linkTargetClasses,
+             entityInfo,
+             clientResourceIDs,
+             resourceIDForErrorMsg
+           )
 
       // Check that the submitted values do not contain duplicates.
-
-      _ = checkForDuplicateValues(
-            values = internalCreateResource.values,
-            clientResourceIDs = clientResourceIDs,
-            resourceIDForErrorMsg = resourceIDForErrorMsg
-          )
+      _ <- checkForDuplicateValues(internalCreateResource.values, clientResourceIDs, resourceIDForErrorMsg)
 
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
@@ -842,6 +836,7 @@ final case class ResourcesResponderV2Live(
           case Some(permissionStr) =>
             for {
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
+
               _ <- ZIO.when {
                      !(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id) &&
                        !requestingUser.permissions.isSystemAdmin)
@@ -966,12 +961,10 @@ final case class ResourcesResponderV2Live(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
     resourceIDForErrorMsg: IRI
-  ): Unit =
-    values.foreach { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+  ): Task[Unit] =
+    ZIO.attempt(values.foreach { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       // Given the values for a property, compute all possible combinations of two of those values.
-      val valueCombinations: Iterator[Seq[CreateValueInNewResourceV2]] = valuesToCreate.combinations(2)
-
-      for (valueCombination: Seq[CreateValueInNewResourceV2] <- valueCombinations) {
+      for (valueCombination: Seq[CreateValueInNewResourceV2] <- valuesToCreate.combinations(2)) {
         // valueCombination must have two elements.
         val firstValue: ValueContentV2  = valueCombination.head.valueContent
         val secondValue: ValueContentV2 = valueCombination(1).valueContent
@@ -982,7 +975,7 @@ final case class ResourcesResponderV2Live(
           )
         }
       }
-    }
+    })
 
   /**
    * Checks that values to be created in a new resource are compatible with the object class constraints
@@ -1000,10 +993,10 @@ final case class ResourcesResponderV2Live(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     linkTargetClasses: Map[IRI, SmartIri],
     entityInfo: EntityInfoGetResponseV2,
-    clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
+    clientResourceIDs: Map[IRI, String],
     resourceIDForErrorMsg: IRI
-  ): Unit =
-    values.foreach { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+  ): Task[Unit] = ZIO.attempt(values.foreach {
+    case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       val propertyInfo: ReadPropertyInfoV2 = entityInfo.propertyInfoMap(propertyIri)
 
       // Don't accept link properties.
@@ -1077,7 +1070,7 @@ final case class ResourcesResponderV2Live(
             }
         }
       }
-    }
+  })
 
   /**
    * Given a sequence of values to be created in a new resource, checks the targets of standoff links in text
@@ -1130,21 +1123,17 @@ final case class ResourcesResponderV2Live(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
             checkNode <- resourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri)
-
-            _ = checkNode match {
-                  // it doesn't have isRootNode property - it's a child node
-                  case Right(false) => ()
-                  // it does have isRootNode property - it's a root node
-                  case Right(true) =>
-                    throw BadRequestException(
-                      s"<$listNodeIri> is a root node. Root nodes cannot be set as values."
-                    )
-                  // it doesn't exists or isn't valid list
-                  case Left(_) =>
-                    throw NotFoundException(
-                      s"<$listNodeIri> does not exist, or is not a ListNode."
-                    )
-                }
+            _ <-
+              checkNode match {
+                // it doesn't have isRootNode property - it's a child node
+                case Right(false) => ZIO.unit
+                // it does have isRootNode property - it's a root node
+                case Right(true) =>
+                  ZIO.fail(BadRequestException(s"<$listNodeIri> is a root node. Root nodes cannot be set as values."))
+                // it doesn't exists or isn't valid list
+                case Left(_) =>
+                  ZIO.fail(NotFoundException(s"<$listNodeIri> does not exist, or is not a ListNode."))
+              }
           } yield ()
         }.toSeq
       )
@@ -1183,29 +1172,30 @@ final case class ResourcesResponderV2Live(
                   validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
 
                   // Is the requesting user a system admin, or an admin of this project?
-                  _ =
-                    if (
-                      !(requestingUser.permissions
-                        .isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)
-                    ) {
+                  _ <- ZIO.when(
+                         !(requestingUser.permissions
+                           .isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)
+                       ) {
 
-                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                         // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
-                      val permissionComparisonResult: PermissionComparisonResult =
-                        PermissionUtilADM.comparePermissionsADM(
-                          entityCreator = requestingUser.id,
-                          entityProject = project.id,
-                          permissionLiteralA = validatedCustomPermissions,
-                          permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                          requestingUser = requestingUser
-                        )
+                         val permissionComparisonResult: PermissionComparisonResult =
+                           PermissionUtilADM.comparePermissionsADM(
+                             entityCreator = requestingUser.id,
+                             entityProject = project.id,
+                             permissionLiteralA = validatedCustomPermissions,
+                             permissionLiteralB = defaultPropertyPermissions(propertyIri),
+                             requestingUser = requestingUser
+                           )
 
-                      if (permissionComparisonResult == AGreaterThanB) {
-                        throw ForbiddenException(
-                          s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                        )
-                      }
-                    }
+                         if (permissionComparisonResult == AGreaterThanB) {
+                           ZIO.fail(
+                             ForbiddenException(
+                               s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
+                             )
+                           )
+                         } else { ZIO.unit }
+                       }
                 } yield GenerateSparqlForValueInNewResourceV2(
                   valueContent = valueToCreate.valueContent,
                   customValueIri = valueToCreate.customValueIri,
@@ -1320,32 +1310,32 @@ final case class ResourcesResponderV2Live(
 
       resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
 
-      _ = if (
-            resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri
-          ) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class")
-          }
+      _ <- ZIO.when(
+             resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri
+           ) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class"))
+           }
 
-      _ = if (resource.attachedToUser != requestingUser.id) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
-          }
+      _ <- ZIO.when(resource.attachedToUser != requestingUser.id) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
+           }
 
-      _ = if (resource.projectADM.id != projectIri) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
-          }
+      _ <- ZIO.when(resource.projectADM.id != projectIri) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
+           }
 
-      _ = if (resource.permissions != resourceReadyToCreate.sparqlTemplateResourceToCreate.permissions) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions")
-          }
+      _ <- ZIO.when(resource.permissions != resourceReadyToCreate.sparqlTemplateResourceToCreate.permissions) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions"))
+           }
 
       // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
       unescapedLabel: String = Iri.fromSparqlEncodedString(
                                  resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel
                                )
 
-      _ = if (resource.label != unescapedLabel) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label")
-          }
+      _ <- ZIO.when(resource.label != unescapedLabel) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label"))
+           }
 
       savedPropertyIris: Set[SmartIri] = resource.values.keySet
 
@@ -1359,35 +1349,39 @@ final case class ResourcesResponderV2Live(
                                                   None
                                                 })
 
-      _ = if (savedPropertyIris != expectedPropertyIris) {
-            throw AssertionException(
-              s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
-                  .map(_.toSparql)
-                  .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
-            )
-          }
+      _ <- ZIO.when(savedPropertyIris != expectedPropertyIris) {
+             ZIO.fail(
+               AssertionException(
+                 s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
+                     .map(_.toSparql)
+                     .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
+               )
+             )
+           }
 
       // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
-      _ = (resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri).foreach {
-            case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
-              val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
+      _ <- ZIO.attempt {
+             (resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri).foreach {
+               case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
+                 val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
 
-              if (expectedValues.size != savedValues.size) {
-                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values")
-              }
+                 if (expectedValues.size != savedValues.size) {
+                   throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values")
+                 }
 
-              savedValues.zip(expectedValues).foreach { case (savedValue, expectedValue) =>
-                if (
-                  !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
-                    savedValue.permissions == expectedValue.permissions &&
-                    savedValue.attachedToUser == requestingUser.id)
-                ) {
-                  throw AssertionException(
-                    s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
-                  )
-                }
-              }
-          }
+                 savedValues.zip(expectedValues).foreach { case (savedValue, expectedValue) =>
+                   if (
+                     !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
+                       savedValue.permissions == expectedValue.permissions &&
+                       savedValue.attachedToUser == requestingUser.id)
+                   ) {
+                     throw AssertionException(
+                       s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
+                     )
+                   }
+                 }
+             }
+           }
     } yield ReadResourcesSequenceV2(
       resources = Seq(resource.copy(values = Map.empty))
     )
@@ -1517,21 +1511,19 @@ final case class ResourcesResponderV2Live(
           requestingUser = requestingUser
         )
 
-      _ = apiResponse.checkResourceIris(
-            targetResourceIris = resourceIris.toSet,
-            resourcesSequence = apiResponse
-          )
+      _ = apiResponse.checkResourceIris(resourceIris.toSet, apiResponse)
 
-      _ = valueUuid match {
-            case Some(definedValueUuid) =>
-              if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
-                throw NotFoundException(
-                  s"Value with UUID ${UuidUtil.base64Encode(definedValueUuid)} not found (maybe you do not have permission to see it)"
-                )
-              }
-
-            case None => ()
-          }
+      _ <- valueUuid match {
+             case Some(definedValueUuid) =>
+               if (
+                 !apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))
+               ) {
+                 val msg =
+                   s"Value with UUID ${UuidUtil.base64Encode(definedValueUuid)} not found (maybe you do not have permission to see it)"
+                 ZIO.fail(NotFoundException(msg))
+               } else { ZIO.unit }
+             case None => ZIO.unit
+           }
 
       // Check if resources are deleted, if so, replace them with DeletedResource
       responseWithDeletedResourcesReplaced = apiResponse.resources match {
@@ -1653,33 +1645,30 @@ final case class ResourcesResponderV2Live(
 
       resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
-      _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
-            throw BadRequestException(
-              s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
-            )
-          }
+      _ <- ZIO.when(resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
+             val msg = s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
+             ZIO.fail(BadRequestException(msg))
+           }
 
-      (fileValueIri: IRI, gravsearchFileValueContent: TextFileValueContentV2) =
-        resource.values.get(
-          OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri
-        ) match {
-          case Some(values: Seq[ReadValueV2]) if values.size == 1 =>
-            values.head match {
+      valueAndContent <-
+        resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+          case Some(singleValue :: Nil) =>
+            singleValue match {
               case value: ReadValueV2 =>
                 value.valueContent match {
-                  case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
+                  case textRepr: TextFileValueContentV2 => ZIO.succeed((value.valueIri, textRepr))
                   case _ =>
-                    throw InconsistentRepositoryDataException(
+                    val msg =
                       s"Resource $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}"
-                    )
+                    ZIO.fail(InconsistentRepositoryDataException(msg))
                 }
             }
 
           case _ =>
-            throw InconsistentRepositoryDataException(
-              s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
-            )
+            val msg = s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
+            ZIO.fail(InconsistentRepositoryDataException(msg))
         }
+      (fileValueIri: IRI, gravsearchFileValueContent: TextFileValueContentV2) = valueAndContent
 
       // check if gravsearchFileValueContent represents a text file
       _ = if (gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
