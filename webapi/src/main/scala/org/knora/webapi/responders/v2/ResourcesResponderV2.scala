@@ -1853,50 +1853,25 @@ final case class ResourcesResponderV2Live(
         )
 
       // get all the metadata but the text property for the TEI header
-      headerResource = resource.copy(
-                         values = convertDateToGregorian(resource.values - textProperty)
-                       )
+      headerResource = resource.copy(values = convertDateToGregorian(resource.values - textProperty))
 
       // get the XSL transformation for the TEI header
       headerXSLT <- headerXSLTIri match {
                       case Some(headerIri) =>
-                        val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
-                          xsltTextRepresentationIri = headerIri,
-                          requestingUser = requestingUser
-                        )
-
-                        val xslTransformationFuture = messageRelay
-                          .ask[GetXSLTransformationResponseV2](teiHeaderXsltRequest)
-                          .map(xslTransformation => Some(xslTransformation.xslt))
-
-                        xslTransformationFuture.mapError { case notFound: NotFoundException =>
-                          throw SipiException(
-                            s"TEI header XSL transformation <$headerIri> not found: ${notFound.message}"
-                          )
-                        }
-
-                      case None => ZIO.succeed(None)
+                        messageRelay
+                          .ask[GetXSLTransformationResponseV2](GetXSLTransformationRequestV2(headerIri, requestingUser))
+                          .map(resp => Some(resp.xslt))
+                          .mapError { case e: NotFoundException =>
+                            SipiException(s"TEI header XSL transformation <$headerIri> not found: ${e.message}")
+                          }
+                      case _ => ZIO.none
                     }
 
       // get the Iri of the mapping to convert standoff markup to TEI/XML
-      mappingToBeApplied = mappingIri match {
-                             case Some(mapping: IRI) =>
-                               // a custom mapping is provided
-                               mapping
-
-                             case None =>
-                               // no mapping is provided, assume the standard case (standard standoff entites only)
-                               OntologyConstants.KnoraBase.TEIMapping
-                           }
+      mappingToBeApplied = mappingIri.getOrElse(OntologyConstants.KnoraBase.TEIMapping)
 
       // get mapping to convert standoff markup to TEI/XML
-      teiMapping <- messageRelay
-                      .ask[GetMappingResponseV2](
-                        GetMappingRequestV2(
-                          mappingIri = mappingToBeApplied,
-                          requestingUser = requestingUser
-                        )
-                      )
+      teiMapping <- messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingToBeApplied, requestingUser))
 
       // get XSLT from mapping for the TEI body
       bodyXslt <- teiMapping.mappingIri match {
@@ -1915,24 +1890,19 @@ final case class ResourcesResponderV2Live(
 
                         case Some(xslTransformationIri) =>
                           // get XSLT for the TEI body.
-                          val teiBodyXsltRequest = GetXSLTransformationRequestV2(
-                            xsltTextRepresentationIri = xslTransformationIri,
-                            requestingUser = requestingUser
-                          )
-
-                          val xslTransformationFuture = messageRelay
-                            .ask[GetXSLTransformationResponseV2](teiBodyXsltRequest)
-                            .map(_.xslt)
-
-                          xslTransformationFuture.mapError { case notFound: NotFoundException =>
-                            throw SipiException(
-                              s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                          messageRelay
+                            .ask[GetXSLTransformationResponseV2](
+                              GetXSLTransformationRequestV2(xslTransformationIri, requestingUser)
                             )
-                          }
+                            .map(_.xslt)
+                            .mapError { case notFound: NotFoundException =>
+                              val msg =
+                                s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                              SipiException(msg)
+                            }
                         case None =>
-                          throw BadRequestException(
-                            s"Default XSL Transformation expected for mapping $otherMapping"
-                          )
+                          val msg = s"Default XSL Transformation expected for mapping $otherMapping"
+                          ZIO.fail(BadRequestException(msg))
                       }
                   }
 
@@ -2186,11 +2156,10 @@ final case class ResourcesResponderV2Live(
       response                     <- triplestoreService.sparqlHttpSelect(sparql)
       rows: Seq[VariableResultsRow] = response.results.bindings
 
-      _ = if (rows.isEmpty) {
-            throw NotFoundException(
-              s"Resource <${graphDataGetRequest.resourceIri}> not found (it may have been deleted)"
-            )
-          }
+      _ <- ZIO.when(rows.isEmpty) {
+             val msg = s"Resource <${graphDataGetRequest.resourceIri}> not found (it may have been deleted)"
+             ZIO.fail(NotFoundException(msg))
+           }
 
       firstRowMap: Map[String, String] = rows.head.rowMap
 
@@ -2204,20 +2173,20 @@ final case class ResourcesResponderV2Live(
                                    )
 
       // Make sure the user has permission to see the start node.
-      _ = if (
-            PermissionUtilADM
-              .getUserPermissionADM(
-                entityCreator = startNode.nodeCreator,
-                entityProject = startNode.nodeProject,
-                entityPermissionLiteral = startNode.nodePermissions,
-                requestingUser = graphDataGetRequest.requestingUser
-              )
-              .isEmpty
-          ) {
-            throw ForbiddenException(
-              s"User ${graphDataGetRequest.requestingUser.email} does not have permission to view resource <${graphDataGetRequest.resourceIri}>"
-            )
-          }
+      _ <- ZIO.when(
+             PermissionUtilADM
+               .getUserPermissionADM(
+                 entityCreator = startNode.nodeCreator,
+                 entityProject = startNode.nodeProject,
+                 entityPermissionLiteral = startNode.nodePermissions,
+                 requestingUser = graphDataGetRequest.requestingUser
+               )
+               .isEmpty
+           ) {
+             val msg =
+               s"User ${graphDataGetRequest.requestingUser.email} does not have permission to view resource <${graphDataGetRequest.resourceIri}>"
+             ZIO.fail(ForbiddenException(msg))
+           }
 
       // Recursively get the graph containing outbound links.
       outboundQueryResults <-
