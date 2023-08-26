@@ -991,82 +991,85 @@ final case class ResourcesResponderV2Live(
     entityInfo: EntityInfoGetResponseV2,
     clientResourceIDs: Map[IRI, String],
     resourceIDForErrorMsg: IRI
-  ): Task[Unit] = ZIO.attempt(values.foreach {
+  ): Task[Unit] = ZIO.foreachDiscard(values) {
     case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       val propertyInfo: ReadPropertyInfoV2 = entityInfo.propertyInfoMap(propertyIri)
 
-      // Don't accept link properties.
-      if (propertyInfo.isLinkProp) {
-        throw BadRequestException(
-          s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
-        )
-      }
+      for {
+        // Don't accept link properties.
+        _ <- ZIO.when(propertyInfo.isLinkProp) {
+               val msg =
+                 s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
+               ZIO.fail(BadRequestException(msg))
+             }
 
-      // Get the property's object class constraint. If this is a link value property, we want the object
-      // class constraint of the corresponding link property instead.
+        // Get the property's object class constraint. If this is a link value property, we want the object
+        // class constraint of the corresponding link property instead.
+        propertyInfoForObjectClassConstraint = if (propertyInfo.isLinkValueProp) {
+                                                 entityInfo.propertyInfoMap(propertyIri.fromLinkValuePropToLinkProp)
+                                               } else {
+                                                 propertyInfo
+                                               }
 
-      val propertyInfoForObjectClassConstraint = if (propertyInfo.isLinkValueProp) {
-        entityInfo.propertyInfoMap(propertyIri.fromLinkValuePropToLinkProp)
-      } else {
-        propertyInfo
-      }
+        propertyIriForObjectClassConstraint = propertyInfoForObjectClassConstraint.entityInfoContent.propertyIri
 
-      val propertyIriForObjectClassConstraint = propertyInfoForObjectClassConstraint.entityInfoContent.propertyIri
+        objectClassConstraint <- ZIO.attempt(
+                                   propertyInfoForObjectClassConstraint.entityInfoContent.requireIriObject(
+                                     OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
+                                     throw InconsistentRepositoryDataException(
+                                       s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"
+                                     )
+                                   )
+                                 )
 
-      val objectClassConstraint: SmartIri = propertyInfoForObjectClassConstraint.entityInfoContent.requireIriObject(
-        OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-        throw InconsistentRepositoryDataException(
-          s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"
-        )
-      )
+        // Check each value.
+        _ <- ZIO.foreachDiscard(valuesToCreate) { valueToCreate =>
+               valueToCreate.valueContent match {
+                 case linkValueContentV2: LinkValueContentV2 =>
+                   // It's a link value.
+                   for {
+                     _ <- ZIO.when(!propertyInfo.isLinkValueProp) {
+                            val msg =
+                              s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
+                                  .toOntologySchema(ApiV2Complex)}>"
+                            ZIO.fail(OntologyConstraintException(msg))
+                          }
 
-      // Check each value.
-      for (valueToCreate: CreateValueInNewResourceV2 <- valuesToCreate) {
-        valueToCreate.valueContent match {
-          case linkValueContentV2: LinkValueContentV2 =>
-            // It's a link value.
+                     // Does the resource that's the target of the link belongs to a subclass of the
+                     // link property's object class constraint?
+                     linkTargetClass     = linkTargetClasses(linkValueContentV2.referredResourceIri)
+                     linkTargetClassInfo = entityInfo.classInfoMap(linkTargetClass)
+                     _ <- ZIO.when(!linkTargetClassInfo.allBaseClasses.contains(objectClassConstraint)) {
+                            // No. If the target resource already exists, use its IRI in the error message.
+                            // Otherwise, use the client's ID for the resource.
+                            val resourceID = if (linkValueContentV2.referredResourceExists) {
+                              s"<${linkValueContentV2.referredResourceIri}>"
+                            } else {
+                              s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
+                            }
 
-            if (!propertyInfo.isLinkValueProp) {
-              throw OntologyConstraintException(
-                s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>"
-              )
-            }
+                            ZIO.fail(
+                              OntologyConstraintException(
+                                s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint
+                                    .toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint
+                                    .toOntologySchema(ApiV2Complex)}>"
+                              )
+                            )
+                          }
+                   } yield ()
 
-            // Does the resource that's the target of the link belongs to a subclass of the
-            // link property's object class constraint?
-
-            val linkTargetClass     = linkTargetClasses(linkValueContentV2.referredResourceIri)
-            val linkTargetClassInfo = entityInfo.classInfoMap(linkTargetClass)
-
-            if (!linkTargetClassInfo.allBaseClasses.contains(objectClassConstraint)) {
-              // No. If the target resource already exists, use its IRI in the error message.
-              // Otherwise, use the client's ID for the resource.
-              val resourceID = if (linkValueContentV2.referredResourceExists) {
-                s"<${linkValueContentV2.referredResourceIri}>"
-              } else {
-                s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
-              }
-
-              throw OntologyConstraintException(
-                s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>"
-              )
-            }
-
-          case otherValueContentV2: ValueContentV2 =>
-            // It's not a link value. Check that its type is equal to the property's object
-            // class constraint.
-            if (otherValueContentV2.valueType != objectClassConstraint) {
-              throw OntologyConstraintException(
-                s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>"
-              )
-            }
-        }
-      }
-  })
+                 case other: ValueContentV2 =>
+                   // It's not a link value. Check that its type is equal to the property's object class constraint.
+                   ZIO.when(other.valueType != objectClassConstraint) {
+                     val msg =
+                       s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
+                           .toOntologySchema(ApiV2Complex)}>"
+                     ZIO.fail(OntologyConstraintException(msg))
+                   }
+               }
+             }
+      } yield ()
+  }
 
   /**
    * Given a sequence of values to be created in a new resource, checks the targets of standoff links in text
