@@ -2260,17 +2260,14 @@ final case class ResourcesResponderV2Live(
 
       valueHistoryResponse <- triplestoreService.sparqlHttpSelect(historyRequestSparql)
 
-      valueHistoryEntries: Seq[ResourceHistoryEntry] =
-        valueHistoryResponse.results.bindings.map { row: VariableResultsRow =>
-          val versionDateStr: String = row.rowMap("versionDate")
-          val author: IRI            = row.rowMap("author")
-
-          ResourceHistoryEntry(
-            versionDate = ValuesValidator
-              .xsdDateTimeStampToInstant(versionDateStr)
-              .getOrElse(throw InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr")),
-            author = author
-          )
+      valueHistoryEntries <-
+        ZIO.foreach(valueHistoryResponse.results.bindings) { row =>
+          val versionDateStr = row.rowMap("versionDate")
+          val author         = row.rowMap("author")
+          ZIO
+            .fromOption(ValuesValidator.xsdDateTimeStampToInstant(versionDateStr))
+            .orElseFail(InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr"))
+            .map(versionDate => ResourceHistoryEntry(versionDate, author))
         }
 
       // Figure out whether to add the resource's creation to the history.
@@ -2344,20 +2341,8 @@ final case class ResourcesResponderV2Live(
             JsonLDKeywords.CONTEXT -> JsonLDString("http://iiif.io/api/presentation/3/context.json"),
             "id"                   -> JsonLDString(s"${request.resourceIri}/manifest"), // Is this IRI OK?
             "type"                 -> JsonLDString("Manifest"),
-            "label" -> JsonLDObject(
-              Map(
-                "en" -> JsonLDArray(
-                  Seq(
-                    JsonLDString(resource.label)
-                  )
-                )
-              )
-            ),
-            "behavior" -> JsonLDArray(
-              Seq(
-                JsonLDString("paged")
-              )
-            ),
+            "label"                -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(resource.label))))),
+            "behavior"             -> JsonLDArray(Seq(JsonLDString("paged"))),
             "items" -> JsonLDArray(
               representations.map { representation: ReadResourceV2 =>
                 val imageValue: ReadValueV2 = representation.values
@@ -2382,17 +2367,9 @@ final case class ResourcesResponderV2Live(
 
                 JsonLDObject(
                   Map(
-                    "id"   -> JsonLDString(s"${representation.resourceIri}/canvas"), // Is this IRI OK?
-                    "type" -> JsonLDString("Canvas"),
-                    "label" -> JsonLDObject(
-                      Map(
-                        "en" -> JsonLDArray(
-                          Seq(
-                            JsonLDString(representation.label)
-                          )
-                        )
-                      )
-                    ),
+                    "id"     -> JsonLDString(s"${representation.resourceIri}/canvas"), // Is this IRI OK?
+                    "type"   -> JsonLDString("Canvas"),
+                    "label"  -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(representation.label))))),
                     "height" -> JsonLDInt(imageValueContent.dimY),
                     "width"  -> JsonLDInt(imageValueContent.dimX),
                     "items" -> JsonLDArray(
@@ -2484,21 +2461,15 @@ final case class ResourcesResponderV2Live(
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse <-
-        messageRelay
-          .ask[ProjectGetResponseADM](
-            ProjectGetRequestADM(identifier =
-              IriIdentifier
-                .fromString(projectResourceHistoryEventsGetRequest.projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-          )
+      projectId <- IriIdentifier
+                     .fromString(projectResourceHistoryEventsGetRequest.projectIri)
+                     .toZIO
+                     .mapError(e => BadRequestException(e.getMessage))
+      projectInfoResponse <- messageRelay.ask[ProjectGetResponseADM](ProjectGetRequestADM(projectId))
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                   .getAllResourcesInProjectPrequery(
-                     projectIri = projectInfoResponse.project.id
-                   )
+                   .getAllResourcesInProjectPrequery(projectIri = projectInfoResponse.project.id)
                    .toString
 
       sparqlSelectResponse      <- triplestoreService.sparqlHttpSelect(prequery)
