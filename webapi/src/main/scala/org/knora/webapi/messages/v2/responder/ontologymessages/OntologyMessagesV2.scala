@@ -1818,9 +1818,12 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
    * @return the predicate's IRI object.
    */
   def requireIriObject(errorFun: => Nothing): SmartIri =
+    getIriObject().getOrElse(errorFun)
+
+  def getIriObject(): Option[SmartIri] =
     objects match {
-      case Seq(SmartIriLiteralV2(iri)) => iri
-      case _                           => errorFun
+      case Seq(SmartIriLiteralV2(iri)) => Some(iri)
+      case _                           => None
     }
 
   /**
@@ -1978,7 +1981,8 @@ sealed trait EntityInfoContentV2 {
    * @return a [[SmartIri]] representing the predicate's object.
    */
   def requireIriObject(predicateIri: SmartIri, errorFun: => Nothing): SmartIri =
-    predicates.getOrElse(predicateIri, errorFun).requireIriObject(errorFun)
+    getIriObject(predicateIri).getOrElse(errorFun)
+  def getIriObject(predicateIri: SmartIri): Option[SmartIri] = predicates.get(predicateIri).flatMap(_.getIriObject())
 
   /**
    * Checks that a predicate is present in this [[EntityInfoContentV2]] and that it at least one IRI object, and

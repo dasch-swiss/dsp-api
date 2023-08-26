@@ -11,7 +11,9 @@ import zio._
 
 import java.time.Instant
 import java.util.UUID
+import scala.::
 import scala.concurrent.Future
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -72,9 +74,6 @@ import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.ZioHelper
-
-import scala.::
-import scala.collection.immutable
 
 trait ResourcesResponderV2
 
@@ -1015,14 +1014,17 @@ final case class ResourcesResponderV2Live(
 
         propertyIriForObjectClassConstraint = propertyInfoForObjectClassConstraint.entityInfoContent.propertyIri
 
-        objectClassConstraint <- ZIO.attempt(
-                                   propertyInfoForObjectClassConstraint.entityInfoContent.requireIriObject(
-                                     OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                                     throw InconsistentRepositoryDataException(
-                                       s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"
+        objectClassConstraint <- ZIO
+                                   .fromOption(
+                                     propertyInfoForObjectClassConstraint.entityInfoContent.getIriObject(
+                                       OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
                                      )
                                    )
-                                 )
+                                   .orElseFail {
+                                     val msg =
+                                       s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"
+                                     InconsistentRepositoryDataException(msg)
+                                   }
 
         // Check each value.
         _ <- ZIO.foreachDiscard(valuesToCreate) { valueToCreate =>

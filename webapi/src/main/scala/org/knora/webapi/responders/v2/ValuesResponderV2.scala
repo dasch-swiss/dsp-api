@@ -1982,14 +1982,15 @@ final case class ValuesResponderV2Live(
     for {
       // Get the property's object class constraint.
       objectClassConstraint <-
-        ZIO.attempt(
-          propertyInfo.entityInfoContent.requireIriObject(
-            OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-            throw InconsistentRepositoryDataException(
+        ZIO
+          .fromOption(
+            propertyInfo.entityInfoContent.getIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri)
+          )
+          .orElseFail(
+            InconsistentRepositoryDataException(
               s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint"
             )
           )
-        )
 
       // If the property points to a text value, also query the resource's standoff links.
       maybeStandoffLinkToPropertyIri: Option[SmartIri] =
@@ -2137,14 +2138,13 @@ final case class ValuesResponderV2Live(
     val propertyIri = propertyInfo.entityInfoContent.propertyIri
     for {
       objectClassConstraint <-
-        ZIO.attempt(
-          propertyInfo.entityInfoContent.requireIriObject(
-            OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-            throw InconsistentRepositoryDataException(
-              s"Property $propertyIri has no knora-base:objectClassConstraint"
-            )
+        ZIO
+          .fromOption(
+            propertyInfo.entityInfoContent.getIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri)
           )
-        )
+          .orElseFail(
+            InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+          )
 
       result <-
         valueContent match {
