@@ -202,7 +202,7 @@ final case class ResourcesResponderV2Live(
                requestingUser = createResourceRequestV2.requestingUser
              )
 
-        _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
+        _ <- checkListNodes(internalCreateResource.flatValues)
 
         // Get the class IRIs of all the link targets in the request.
         linkTargetClasses <- getLinkTargetClasses(
@@ -281,7 +281,7 @@ final case class ResourcesResponderV2Live(
                                  )
 
         // Get the IRI of the named graph in which the resource will be created.
-        dataNamedGraph: IRI =
+        dataNamedGraph =
           ProjectADMService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
         // Generate SPARQL for creating the resource.
@@ -591,7 +591,7 @@ final case class ResourcesResponderV2Live(
         _ <- resourceUtilV2.checkResourcePermission(resource, DeletePermission, deleteResourceV2.requestingUser)
 
         // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
+        dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for marking the resource as deleted.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -691,7 +691,7 @@ final case class ResourcesResponderV2Live(
                }
 
         // Get the IRI of the named graph from which the resource will be erased.
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
+        dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for erasing the resource.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -1104,7 +1104,7 @@ final case class ResourcesResponderV2Live(
    * @param values         the values to be checked.
    * @param requestingUser the user making the request.
    */
-  private def checkListNodes(values: Iterable[CreateValueInNewResourceV2], requestingUser: UserADM): Task[Unit] = {
+  private def checkListNodes(values: Iterable[CreateValueInNewResourceV2]): Task[Unit] = {
     val listNodesThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
         valueToCreate.valueContent match {
@@ -1406,7 +1406,7 @@ final case class ResourcesResponderV2Live(
   private def getResourcesFromTriplestore(
     resourceIris: Seq[IRI],
     preview: Boolean,
-    withDeleted: Boolean = false,
+    withDeleted: Boolean,
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
@@ -2142,7 +2142,7 @@ final case class ResourcesResponderV2Live(
              ZIO.fail(NotFoundException(msg))
            }
 
-      firstRowMap: Map[String, String] = rows.head.rowMap
+      firstRowMap = rows.head.rowMap
 
       startNode: QueryResultNode = QueryResultNode(
                                      nodeIri = firstRowMap("node"),
@@ -2194,8 +2194,8 @@ final case class ResourcesResponderV2Live(
         }
 
       // Combine the outbound and inbound graphs into a single graph.
-      nodes: Set[QueryResultNode] = outboundQueryResults.nodes ++ inboundQueryResults.nodes + startNode
-      edges: Set[QueryResultEdge] = outboundQueryResults.edges ++ inboundQueryResults.edges
+      nodes = outboundQueryResults.nodes ++ inboundQueryResults.nodes + startNode
+      edges = outboundQueryResults.edges ++ inboundQueryResults.edges
 
       // Convert each node to a GraphNodeV2 for the API response message.
       resultNodes: Vector[GraphNodeV2] = nodes.map { node: QueryResultNode =>
@@ -2468,8 +2468,8 @@ final case class ResourcesResponderV2Live(
                    .getAllResourcesInProjectPrequery(projectIri = projectInfoResponse.project.id)
                    .toString
 
-      sparqlSelectResponse      <- triplestoreService.sparqlHttpSelect(prequery)
-      mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
+      sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(prequery)
+      mainResourceIris      = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIri =>
