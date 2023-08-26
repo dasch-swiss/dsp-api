@@ -1359,31 +1359,27 @@ final case class ResourcesResponderV2Live(
            }
 
       // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
-      _ <- ZIO.attempt {
-             (resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri).foreach {
-               case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
-                 val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
+      _ <- ZIO.foreachDiscard(resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri) {
+             case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
+               val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
+               for {
+                 _ <- ZIO.when(expectedValues.size != savedValues.size) {
+                        ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values"))
+                      }
 
-                 if (expectedValues.size != savedValues.size) {
-                   throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values")
-                 }
-
-                 savedValues.zip(expectedValues).foreach { case (savedValue, expectedValue) =>
-                   if (
-                     !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
-                       savedValue.permissions == expectedValue.permissions &&
-                       savedValue.attachedToUser == requestingUser.id)
-                   ) {
-                     throw AssertionException(
-                       s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
-                     )
-                   }
-                 }
-             }
+                 _ <- ZIO.foreach(savedValues.zip(expectedValues)) { case (savedValue, expectedValue) =>
+                        ZIO.when(
+                          !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
+                            savedValue.permissions == expectedValue.permissions &&
+                            savedValue.attachedToUser == requestingUser.id)
+                        ) {
+                          val msg = s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
+                          ZIO.fail(AssertionException(msg))
+                        }
+                      }
+               } yield ()
            }
-    } yield ReadResourcesSequenceV2(
-      resources = Seq(resource.copy(values = Map.empty))
-    )
+    } yield ReadResourcesSequenceV2(resources = Seq(resource.copy(values = Map.empty)))
 
     resourceFuture.mapError { case _: NotFoundException =>
       UpdateNotPerformedException(
