@@ -842,31 +842,25 @@ final case class ResourcesResponderV2Live(
           case Some(permissionStr) =>
             for {
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
-
-              // Is the requesting user a system admin, or an admin of this project?
-              _ = if (
-                    !(requestingUser.permissions.isProjectAdmin(
-                      internalCreateResource.projectADM.id
-                    ) || requestingUser.permissions.isSystemAdmin)
-                  ) {
-
-                    // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-
-                    val permissionComparisonResult: PermissionComparisonResult =
-                      PermissionUtilADM.comparePermissionsADM(
-                        entityCreator = requestingUser.id,
-                        entityProject = internalCreateResource.projectADM.id,
-                        permissionLiteralA = validatedCustomPermissions,
-                        permissionLiteralB = defaultResourcePermissions,
-                        requestingUser = requestingUser
-                      )
-
-                    if (permissionComparisonResult == AGreaterThanB) {
-                      throw ForbiddenException(
-                        s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
-                      )
-                    }
-                  }
+              _ <- ZIO.when {
+                     !(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id) &&
+                       !requestingUser.permissions.isSystemAdmin)
+                   } {
+                     // Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                     val permissionComparisonResult: PermissionComparisonResult =
+                       PermissionUtilADM.comparePermissionsADM(
+                         requestingUser.id,
+                         internalCreateResource.projectADM.id,
+                         validatedCustomPermissions,
+                         defaultResourcePermissions,
+                         requestingUser
+                       )
+                     if (permissionComparisonResult == AGreaterThanB) {
+                       val msg =
+                         s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
+                       ZIO.fail(ForbiddenException(msg))
+                     } else { ZIO.unit }
+                   }
             } yield validatedCustomPermissions
 
           case None => ZIO.succeed(defaultResourcePermissions)
