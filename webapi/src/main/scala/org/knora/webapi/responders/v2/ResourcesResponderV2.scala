@@ -1635,7 +1635,7 @@ final case class ResourcesResponderV2Live(
     requestingUser: UserADM
   ): Task[String] = {
 
-    val gravsearchUrlFuture = for {
+    val gravsearchUrlTask = for {
       resources <- getResourcesV2(
                      resourceIris = Vector(gravsearchTemplateIri),
                      targetSchema = ApiV2Complex,
@@ -1671,22 +1671,22 @@ final case class ResourcesResponderV2Live(
       (fileValueIri: IRI, gravsearchFileValueContent: TextFileValueContentV2) = valueAndContent
 
       // check if gravsearchFileValueContent represents a text file
-      _ = if (gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
-            throw BadRequestException(
-              s"Expected $fileValueIri to be a text file referring to a Gravsearch template, but it has MIME type ${gravsearchFileValueContent.fileValue.internalMimeType}"
-            )
-          }
+      _ <- ZIO.when(gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
+             val msg =
+               s"Expected $fileValueIri to be a text file referring to a Gravsearch template, but it has MIME type ${gravsearchFileValueContent.fileValue.internalMimeType}"
+             ZIO.fail(BadRequestException(msg))
+           }
 
       gravsearchUrl: String =
         s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
     } yield gravsearchUrl
 
-    val recoveredGravsearchUrlFuture = gravsearchUrlFuture.mapError { case notFound: NotFoundException =>
+    val recoveredGravsearchUrlTask = gravsearchUrlTask.mapError { case notFound: NotFoundException =>
       throw BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")
     }
 
     for {
-      gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
+      gravsearchTemplateUrl <- recoveredGravsearchUrlTask
       response <- messageRelay
                     .ask[SipiGetTextFileResponse](
                       SipiGetTextFileRequest(
@@ -1729,20 +1729,18 @@ final case class ResourcesResponderV2Live(
      * @param readResource the resource which is expected to hold the text value.
      * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
      */
-    def getTextValueFromReadResource(readResource: ReadResourceV2): TextValueContentV2 =
+    def getTextValueFromReadResource(readResource: ReadResourceV2): Task[TextValueContentV2] =
       readResource.values.get(textProperty) match {
         case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
           // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
           valObjs.head.valueContent match {
-            case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty => textValWithStandoff
-
+            case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty =>
+              ZIO.succeed(textValWithStandoff)
             case _ =>
-              throw BadRequestException(
-                s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)"
-              )
+              val msg = s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)"
+              ZIO.fail(BadRequestException(msg))
           }
-
-        case _ => throw BadRequestException(s"$textProperty is expected to occur once on $resourceIri")
+        case _ => ZIO.fail(BadRequestException(s"$textProperty is expected to occur once on $resourceIri"))
       }
 
     /**
@@ -1846,11 +1844,13 @@ final case class ResourcesResponderV2Live(
         }
 
       // get the value object representing the text value that is to be mapped to the body of the TEI document
-      bodyTextValue: TextValueContentV2 = getTextValueFromReadResource(resource)
+      bodyTextValue <- getTextValueFromReadResource(resource)
 
       // the ext value is expected to have standoff markup
-      _ = if (bodyTextValue.standoff.isEmpty)
-            throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
+      _ <-
+        ZIO.when(bodyTextValue.standoff.isEmpty)(
+          ZIO.fail(BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup"))
+        )
 
       // get all the metadata but the text property for the TEI header
       headerResource = resource.copy(
