@@ -1770,19 +1770,20 @@ final case class ResourcesResponderV2Live(
       resource <-
         if (gravsearchTemplateIri.nonEmpty) {
           for {
+            templateIri <-
+              ZIO.fromOption(gravsearchTemplateIri).orDieWith(_ => new Exception("cannot happen, checked nonEmpty"))
             // check that there is an XSLT to create the TEI header
             _ <- ZIO.when(headerXSLTIri.isEmpty) {
                    val msg = s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided."
                    ZIO.fail(BadRequestException(msg))
                  }
             // get the template
-            constructQuery <- getGravsearchTemplate(gravsearchTemplateIri.get, requestingUser)
-                                .map(_.replace("$resourceIri", resourceIri))
-                                .mapAttempt(GravsearchParser.parseQuery)
+            query <- getGravsearchTemplate(templateIri, requestingUser)
+                       .map(_.replace("$resourceIri", resourceIri))
+                       .mapAttempt(GravsearchParser.parseQuery)
 
             // do a request to the SearchResponder
-            req =
-              GravsearchRequestV2(constructQuery, ApiV2Complex, SchemaOptions.ForStandoffWithTextValues, requestingUser)
+            req       = GravsearchRequestV2(query, ApiV2Complex, SchemaOptions.ForStandoffWithTextValues, requestingUser)
             resource <- messageRelay.ask[ReadResourcesSequenceV2](req).mapAttempt(_.toResource(resourceIri))
           } yield resource
 
@@ -2773,7 +2774,9 @@ final case class ResourcesResponderV2Live(
          }
 
     // get the previous value
-    previousValue: ReadValueV2 = previousVersionOfResource.values(propertyIri).find(_.valueIri == previousValueIri).get
+    previousValue <- ZIO
+                       .fromOption(previousVersionOfResource.values(propertyIri).find(_.valueIri == previousValueIri))
+                       .orDieWith(_ => new Exception("cannot happen as the previous value must exist"))
 
   } yield // Is the content of previous version of value the same as content of the current version?
     if (previousValue.valueContent == currentVersionOfValue.valueContent) {
