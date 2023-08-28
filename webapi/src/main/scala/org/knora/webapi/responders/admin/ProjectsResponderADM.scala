@@ -461,11 +461,17 @@ final case class ProjectsResponderADMLive(
     iri: Iri.ProjectIri,
     size: Option[String] = None
   ): Task[Unit] = {
-    val defaultViewSetting: String = size.getOrElse("pc:1")
-    val query = twirl.queries.sparql.admin.txt
-      .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, None)
-
+    val id = ProjectIdentifierADM.IriIdentifier(iri)
     for {
+      _ <- getProjectFromCacheOrTriplestore(id)
+             .flatMap(ZIO.fromOption(_))
+             .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+
+      defaultViewSetting = size.getOrElse("pc:1")
+
+      query = twirl.queries.sparql.admin.txt
+                .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, None)
+
       _ <- triplestoreService.sparqlHttpUpdate(query.toString)
     } yield ()
   }
