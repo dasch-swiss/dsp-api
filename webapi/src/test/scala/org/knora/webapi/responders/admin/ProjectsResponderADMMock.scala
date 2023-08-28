@@ -25,7 +25,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeyword
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
@@ -45,7 +45,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object ProjectRestrictedViewSettingsGetADM
       extends Effect[ProjectIdentifierADM, Throwable, Option[ProjectRestrictedViewSettingsADM]]
   object ProjectRestrictedViewSettingsGetRequestADM
-      extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsGetResponseADM]
+      extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsResponseADM]
   object ProjectCreateRequestADM
       extends Effect[(ProjectCreatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
@@ -82,7 +82,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           proxy(ProjectRestrictedViewSettingsGetADM, id)
         override def projectRestrictedViewSettingsGetRequestADM(
           id: ProjectIdentifierADM
-        ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+        ): Task[ProjectRestrictedViewSettingsResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
         override def projectCreateRequestADM(
           createPayload: ProjectCreatePayloadADM,

@@ -119,11 +119,11 @@ trait ProjectsResponderADM {
    * Get project's restricted view settings.
    *
    * @param id the project's identifier (IRI / shortcode / shortname)
-   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
+   * @return [[ProjectRestrictedViewSettingsResponseADM]]
    */
   def projectRestrictedViewSettingsGetRequestADM(
     id: ProjectIdentifierADM
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+  ): Task[ProjectRestrictedViewSettingsResponseADM]
 
   /**
    * Sets project's restricted view settings.
@@ -133,7 +133,7 @@ trait ProjectsResponderADM {
   def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
     size: Option[String]
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+  ): Task[ProjectRestrictedViewSettingsResponseADM]
 
   /**
    * Creates a project.
@@ -448,22 +448,22 @@ final case class ProjectsResponderADMLive(
    *
    * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
    *
-   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
+   * @return [[ProjectRestrictedViewSettingsResponseADM]]
    */
   override def projectRestrictedViewSettingsGetRequestADM(
     id: ProjectIdentifierADM
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+  ): Task[ProjectRestrictedViewSettingsResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
       .flatMap(ZIO.fromOption(_))
       .mapBoth(
         _ => NotFoundException(s"Project '${getId(id)}' not found."),
-        ProjectRestrictedViewSettingsGetResponseADM
+        ProjectRestrictedViewSettingsResponseADM
       )
 
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     size: Option[String] = None
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM] = {
+  ): Task[ProjectRestrictedViewSettingsResponseADM] = {
     val id = ProjectIdentifierADM.IriIdentifier(iri)
     for {
       _ <- getProjectFromCacheOrTriplestore(id)
@@ -478,7 +478,7 @@ final case class ProjectsResponderADMLive(
       response <- triplestoreService.sparqlHttpUpdate(query.toString)
       _         = println(777, response)
       settings  = ProjectRestrictedViewSettingsADM(size)
-    } yield ProjectRestrictedViewSettingsGetResponseADM(settings)
+    } yield ProjectRestrictedViewSettingsResponseADM(settings)
   }
 
   /**

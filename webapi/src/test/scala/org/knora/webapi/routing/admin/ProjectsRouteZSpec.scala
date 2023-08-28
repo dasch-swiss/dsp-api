@@ -660,8 +660,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
           .GetRestrictedViewSettings(
             assertion = Assertion.equalTo(identifier),
-            result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
-              ProjectRestrictedViewSettingsGetResponseADM(settings)
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsResponseADM](id =>
+              ProjectRestrictedViewSettingsResponseADM(settings)
             )
           )
           .toLayer
@@ -689,8 +689,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
           .GetRestrictedViewSettings(
             assertion = Assertion.equalTo(identifier),
-            result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
-              ProjectRestrictedViewSettingsGetResponseADM(settings)
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsResponseADM](id =>
+              ProjectRestrictedViewSettingsResponseADM(settings)
             )
           )
           .toLayer
@@ -718,8 +718,8 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
           .GetRestrictedViewSettings(
             assertion = Assertion.equalTo(identifier),
-            result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsGetResponseADM](id =>
-              ProjectRestrictedViewSettingsGetResponseADM(settings)
+            result = Expectation.valueF[ProjectIdentifierADM, ProjectRestrictedViewSettingsResponseADM](id =>
+              ProjectRestrictedViewSettingsResponseADM(settings)
             )
           )
           .toLayer

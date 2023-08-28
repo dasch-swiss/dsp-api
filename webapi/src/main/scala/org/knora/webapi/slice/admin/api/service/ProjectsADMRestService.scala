@@ -62,11 +62,11 @@ trait ProjectADMRestService {
   ): Task[ProjectKeywordsGetResponseADM]
   def getProjectRestrictedViewSettings(
     identifier: ProjectIdentifierADM
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+  ): Task[ProjectRestrictedViewSettingsResponseADM]
   def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
     size: Option[String]
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+  ): Task[ProjectRestrictedViewSettingsResponseADM]
 }
 
 final case class ProjectsADMRestServiceLive(
@@ -237,11 +237,11 @@ final case class ProjectsADMRestServiceLive(
    *
    * @param id      the [[ProjectIdentifierADM]] of the project
    * @return
-   *     '''success''': the restricted view settings as [[ProjectRestrictedViewSettingsGetResponseADM]]
+   *     '''success''': the restricted view settings as [[ProjectRestrictedViewSettingsResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    */
-  def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
+  def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {
@@ -277,7 +277,7 @@ final case class ProjectsADMRestServiceLive(
   override def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
     size: Option[String]
-  ): Task[ProjectRestrictedViewSettingsGetResponseADM] = responder.setProjectRestrictedViewSettings(id, size)
+  ): Task[ProjectRestrictedViewSettingsResponseADM] = responder.setProjectRestrictedViewSettings(id, size)
 }
 
 object ProjectsADMRestServiceLive {
