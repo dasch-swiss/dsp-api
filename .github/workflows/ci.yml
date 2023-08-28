@@ -3,10 +3,10 @@ name: Continuous Integration
 on:
   pull_request:
   push:
-    tags:
-      - '*'
     branches:
       - 'main'
+  release:
+    types: [published]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
