@@ -109,3 +109,15 @@ jobs:
           curl -f -u "${JENKINS_BASIC_AUTH_USER}:${JENKINS_BASIC_AUTH_PASS}" \
                -X POST "${JENKINS_DEV_WEBHOOK}" \
                -d "Service=ingest&Version=${IMAGE_TAG}"
+ 
+  send-chat-notification:
+      name: Send google chat notification
+      needs: [publish-docker-image]
+      runs-on: ubuntu-latest
+      if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
+      steps:
+        - name: Send notification to google chat room "DSP releases"
+          uses: lakto/google-chat-action@main
+          with:
+            url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
+
