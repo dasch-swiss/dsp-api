@@ -100,8 +100,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
 
         override def setProjectRestrictedViewSettings(
           id: ProjectIri,
-          size: Option[IRI],
-          watermark: Option[IRI]
+          size: Option[IRI]
         ): Task[Unit] = ???
       }
     }

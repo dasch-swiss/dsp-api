@@ -130,11 +130,7 @@ trait ProjectsResponderADM {
    *
    * @param id the project's identifier (IRI / shortcode / shortname)
    */
-  def setProjectRestrictedViewSettings(
-    id: Iri.ProjectIri,
-    size: Option[String],
-    watermark: Option[String]
-  ): Task[Unit]
+  def setProjectRestrictedViewSettings(id: Iri.ProjectIri, size: Option[String]): Task[Unit]
 
   /**
    * Creates a project.
@@ -211,8 +207,8 @@ final case class ProjectsResponderADMLive(
       projectRestrictedViewSettingsGetADM(identifier)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
       projectRestrictedViewSettingsGetRequestADM(identifier)
-    case ProjectRestrictedViewSettingsSetRequestADM(identifier, size, watermark) =>
-      setProjectRestrictedViewSettings(identifier, size, watermark)
+    case ProjectRestrictedViewSettingsSetRequestADM(identifier, size) =>
+      setProjectRestrictedViewSettings(identifier, size)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -463,12 +459,11 @@ final case class ProjectsResponderADMLive(
 
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
-    size: Option[String] = None,
-    watermark: Option[String] = None
+    size: Option[String] = None
   ): Task[Unit] = {
     val defaultViewSetting: String = size.getOrElse("pc:1")
     val query = twirl.queries.sparql.admin.txt
-      .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, watermark)
+      .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, None)
 
     for {
       _ <- triplestoreService.sparqlHttpUpdate(query.toString)
