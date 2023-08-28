@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.1...v0.1.2) (2023-08-28)
+
+
+### Maintenance
+
+* Send google chat notification for a release ([#68](https://github.com/dasch-swiss/dsp-ingest/issues/68)) ([0c85881](https://github.com/dasch-swiss/dsp-ingest/commit/0c8588164547e3c591c675d2421f3bc45750d421))
+
 ## [0.1.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.0...v0.1.1) (2023-08-25)
 
 
