@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.2...v0.1.3) (2023-08-28)
+
+
+### Maintenance
+
+* Trigger on release not push of a tag ([61f23c4](https://github.com/dasch-swiss/dsp-ingest/commit/61f23c42795e79862fdf00e9460ea0bdd1d9d1c2))
+
 ## [0.1.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.1...v0.1.2) (2023-08-28)
 
 
