@@ -130,7 +130,10 @@ trait ProjectsResponderADM {
    *
    * @param id the project's identifier (IRI / shortcode / shortname)
    */
-  def setProjectRestrictedViewSettings(id: Iri.ProjectIri, size: Option[String]): Task[Unit]
+  def setProjectRestrictedViewSettings(
+    id: Iri.ProjectIri,
+    size: Option[String]
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 
   /**
    * Creates a project.
@@ -460,7 +463,7 @@ final case class ProjectsResponderADMLive(
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     size: Option[String] = None
-  ): Task[Unit] = {
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] = {
     val id = ProjectIdentifierADM.IriIdentifier(iri)
     for {
       _ <- getProjectFromCacheOrTriplestore(id)
@@ -472,8 +475,10 @@ final case class ProjectsResponderADMLive(
       query = twirl.queries.sparql.admin.txt
                 .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, None)
 
-      _ <- triplestoreService.sparqlHttpUpdate(query.toString)
-    } yield ()
+      response <- triplestoreService.sparqlHttpUpdate(query.toString)
+      _         = println(777, response)
+      settings  = ProjectRestrictedViewSettingsADM(size)
+    } yield ProjectRestrictedViewSettingsGetResponseADM(settings)
   }
 
   /**

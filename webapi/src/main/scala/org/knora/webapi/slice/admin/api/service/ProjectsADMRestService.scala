@@ -66,7 +66,7 @@ trait ProjectADMRestService {
   def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
     size: Option[String]
-  ): Task[Unit]
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 }
 
 final case class ProjectsADMRestServiceLive(
@@ -277,7 +277,7 @@ final case class ProjectsADMRestServiceLive(
   override def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
     size: Option[String]
-  ): Task[Unit] = responder.setProjectRestrictedViewSettings(id, size)
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] = responder.setProjectRestrictedViewSettings(id, size)
 }
 
 object ProjectsADMRestServiceLive {

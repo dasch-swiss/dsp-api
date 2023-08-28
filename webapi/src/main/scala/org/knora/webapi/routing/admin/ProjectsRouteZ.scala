@@ -250,13 +250,13 @@ final case class ProjectsRouteZ(
       iriDecoded     <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
       isSystemAdmin  <- ZIO.succeed(user.permissions.isSystemAdmin)
       isProjectAdmin <- ZIO.succeed(user.permissions.isProjectAdmin(iri))
-      _              <- ZIO.fail(ForbiddenException("User is not system or project admin.")).when(!isSystemAdmin && !isProjectAdmin)
-      id             <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      body           <- body.asString
+//      _              <- ZIO.fail(ForbiddenException("User is not system or project admin.")).when(!isSystemAdmin && !isProjectAdmin)
+      id   <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      body <- body.asString
       payload <-
         ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSettingsPayload]).mapError(e => BadRequestException(e))
-      _ <- projectsService.setProjectRestrictedViewSettings(id.value, payload.size)
-    } yield Response.status(Status.Ok)
+      response <- projectsService.setProjectRestrictedViewSettings(id.value, payload.size)
+    } yield Response.json(response.toJsValue.toString)
 
 }
 
