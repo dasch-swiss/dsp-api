@@ -225,8 +225,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         userPermission = ChangeRightsPermission,
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(
-            ReadTextValueV2(
-              valueContent = TextValueContentV2(
+            ReadFormattedTextValueV2(
+              valueContent = FormattedTextValueContentV2(
                 standoff = Vector(
                   StandoffTagV2(
                     endParentIndex = None,
@@ -264,10 +264,10 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 mapping = None,
                 valueHasLanguage = None,
                 ontologySchema = InternalSchema,
-                maybeValueHasString = Some("Ich liebe die Dinge, sie sind alles f\u00FCr mich."),
+                valueHasString = "Ich liebe die Dinge, sie sind alles f\u00FCr mich.",
                 comment = None,
                 xslt = None,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping")
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
               ),
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
               permissions = "CR knora-admin:Creator",
@@ -279,8 +279,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               userPermission = ChangeRightsPermission,
               deletionInfo = None
             ),
-            ReadTextValueV2(
-              valueContent = TextValueContentV2(
+            ReadFormattedTextValueV2(
+              valueContent = FormattedTextValueContentV2(
                 standoff = Vector(
                   StandoffTagV2(
                     endParentIndex = None,
@@ -318,10 +318,10 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 mapping = None,
                 valueHasLanguage = None,
                 ontologySchema = InternalSchema,
-                maybeValueHasString = Some("Na ja, die Dinge sind OK."),
+                valueHasString = "Na ja, die Dinge sind OK.",
                 comment = None,
                 xslt = None,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping")
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
               ),
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
               permissions = "CR knora-admin:Creator",
@@ -414,18 +414,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     userPermission = ChangeRightsPermission,
                     values = Map(
                       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
-                        ReadTextValueV2(
-                          valueContent = TextValueContentV2(
+                        ReadUnformattedTextValueV2(
+                          valueContent = UnformattedTextValueContentV2(
                             valueHasLanguage = None,
                             ontologySchema = InternalSchema,
-                            maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                            valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
                             comment = None
                           ),
                           valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
                           permissions =
                             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                          valueHasMaxStandoffStartIndex = None,
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("d9a522845006"),
@@ -507,18 +506,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     userPermission = ChangeRightsPermission,
                     values = Map(
                       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
-                        ReadTextValueV2(
-                          valueContent = TextValueContentV2(
+                        ReadUnformattedTextValueV2(
+                          valueContent = UnformattedTextValueContentV2(
                             valueHasLanguage = None,
                             ontologySchema = InternalSchema,
-                            maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                            valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
                             comment = None
                           ),
                           valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
                           permissions =
                             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                           valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                          valueHasMaxStandoffStartIndex = None,
                           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                           previousValueIri = None,
                           valueHasUUID = UuidUtil.decode("c3295339"),
@@ -587,18 +585,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         userPermission = ChangeRightsPermission,
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
-            ReadTextValueV2(
-              valueContent = TextValueContentV2(
+            ReadUnformattedTextValueV2(
+              valueContent = UnformattedTextValueContentV2(
                 valueHasLanguage = None,
                 ontologySchema = InternalSchema,
-                maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
                 comment = None
               ),
               valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
-              valueHasMaxStandoffStartIndex = None,
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("c3295339"),
@@ -702,18 +699,17 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         userPermission = ChangeRightsPermission,
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
-            ReadTextValueV2(
-              valueContent = TextValueContentV2(
+            ReadUnformattedTextValueV2(
+              valueContent = UnformattedTextValueContentV2(
                 valueHasLanguage = None,
                 ontologySchema = InternalSchema,
-                maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
                 comment = None
               ),
               valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
-              valueHasMaxStandoffStartIndex = None,
               attachedToUser = "http://rdfh.ch/users/91e19f1e01",
               previousValueIri = None,
               valueHasUUID = UuidUtil.decode("d9a522845006"),

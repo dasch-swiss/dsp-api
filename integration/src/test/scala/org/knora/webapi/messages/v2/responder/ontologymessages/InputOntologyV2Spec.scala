@@ -43,7 +43,7 @@ class InputOntologyV2Spec extends CoreSpec {
           |      "@id" : "anything:Thing"
           |    },
           |    "knora-api:objectType" : {
-          |      "@id" : "knora-api:TextValue"
+          |      "@id" : "knora-api:UnformattedTextValue"
           |    },
           |    "rdfs:comment" : [ {
           |      "@language" : "en",
@@ -198,7 +198,8 @@ object InputOntologyV2Spec {
           ),
           "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri))
+            objects =
+              Seq(SmartIriLiteralV2("http://api.knora.org/ontology/knora-api/v2#UnformattedTextValue".toSmartIri))
           ),
           "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
             predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,

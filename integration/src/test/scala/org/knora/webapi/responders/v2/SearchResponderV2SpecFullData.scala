@@ -142,14 +142,13 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
-            ReadTextValueV2(
-              valueContent = TextValueContentV2(
+            ReadUnformattedTextValueV2(
+              valueContent = UnformattedTextValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasLanguage = None,
                 comment = None,
-                maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi")
+                valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
               ),
-              valueHasMaxStandoffStartIndex = None,
               valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
               valueHasUUID = UuidUtil.decode("c3295339"),
               permissions =
@@ -178,14 +177,13 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         creationDate = Instant.parse("2016-03-02T15:05:23Z"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
-            ReadTextValueV2(
-              valueContent = TextValueContentV2(
+            ReadUnformattedTextValueV2(
+              valueContent = UnformattedTextValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasLanguage = None,
                 comment = None,
-                maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi")
+                valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
               ),
-              valueHasMaxStandoffStartIndex = None,
               valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
               valueHasUUID = UuidUtil.decode("d9a522845006"),
               permissions =

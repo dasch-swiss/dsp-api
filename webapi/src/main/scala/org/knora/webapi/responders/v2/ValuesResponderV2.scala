@@ -281,9 +281,14 @@ final case class ValuesResponderV2Live(
         // If this is a text value, check that the resources pointed to by any standoff link tags exist
         // and that the user has permission to see them.
         _ <- submittedInternalValueContent match {
-               case textValueContent: TextValueContentV2 =>
+               case textValue: CustomFormattedTextValueContentV2 =>
                  checkResourceIris(
-                   targetResourceIris = textValueContent.standoffLinkTagTargetResourceIris,
+                   targetResourceIris = textValue.standoffLinkTagTargetResourceIris,
+                   requestingUser = requestingUser
+                 )
+               case textValue: FormattedTextValueContentV2 =>
+                 checkResourceIris(
+                   targetResourceIris = textValue.standoffLinkTagTargetResourceIris,
                    requestingUser = requestingUser
                  )
 
@@ -498,7 +503,22 @@ final case class ValuesResponderV2Live(
       // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
       standoffLinkUpdates <-
         value match {
-          case textValueContent: TextValueContentV2 =>
+          case textValueContent: FormattedTextValueContentV2 =>
+            // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+            val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
+              textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
+                incrementLinkValue(
+                  sourceResourceInfo = resourceInfo,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                  targetResourceIri = targetResourceIri,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  requestingUser = requestingUser
+                )
+              }.toVector
+
+            ZIO.collectAll(linkUpdateFutures)
+          case textValueContent: CustomFormattedTextValueContentV2 =>
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
             val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
               textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
@@ -1218,7 +1238,14 @@ final case class ValuesResponderV2Live(
             }
 
         _ <- submittedInternalValueContent match {
-               case textValueContent: TextValueContentV2 =>
+               case textValueContent: FormattedTextValueContentV2 =>
+                 // This is a text value. Check that the resources pointed to by any standoff link tags exist
+                 // and that the user has permission to see them.
+                 checkResourceIris(
+                   textValueContent.standoffLinkTagTargetResourceIris,
+                   requestingUser
+                 )
+               case textValueContent: CustomFormattedTextValueContentV2 =>
                  // This is a text value. Check that the resources pointed to by any standoff link tags exist
                  // and that the user has permission to see them.
                  checkResourceIris(
@@ -1349,8 +1376,57 @@ final case class ValuesResponderV2Live(
       standoffLinkUpdates <-
         (currentValue.valueContent, newValueVersion) match {
           case (
-                currentTextValue: TextValueContentV2,
-                newTextValue: TextValueContentV2
+                currentTextValue: FormattedTextValueContentV2,
+                newTextValue: FormattedTextValueContentV2
+              ) =>
+            // Identify the resource references that have been added or removed in the new version of
+            // the value.
+            val addedResourceRefs =
+              newTextValue.standoffLinkTagTargetResourceIris -- currentTextValue.standoffLinkTagTargetResourceIris
+            val removedResourceRefs =
+              currentTextValue.standoffLinkTagTargetResourceIris -- newTextValue.standoffLinkTagTargetResourceIris
+
+            // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+            val standoffLinkUpdatesForAddedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
+              addedResourceRefs.toVector.map { targetResourceIri =>
+                incrementLinkValue(
+                  sourceResourceInfo = resourceInfo,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                  targetResourceIri = targetResourceIri,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  requestingUser = requestingUser
+                )
+              }
+
+            val standoffLinkUpdatesForAddedResourceRefsFuture: Task[Seq[SparqlTemplateLinkUpdate]] =
+              ZIO.collectAll(standoffLinkUpdatesForAddedResourceRefFutures)
+
+            // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
+            val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
+              removedResourceRefs.toVector.map { removedTargetResource =>
+                decrementLinkValue(
+                  sourceResourceInfo = resourceInfo,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                  targetResourceIri = removedTargetResource,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  requestingUser = requestingUser
+                )
+              }
+
+            val standoffLinkUpdatesForRemovedResourceRefFuture =
+              ZIO.collectAll(standoffLinkUpdatesForRemovedResourceRefFutures)
+
+            for {
+              standoffLinkUpdatesForAddedResourceRefs <-
+                standoffLinkUpdatesForAddedResourceRefsFuture
+              standoffLinkUpdatesForRemovedResourceRefs <-
+                standoffLinkUpdatesForRemovedResourceRefFuture
+            } yield standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
+          case (
+                currentTextValue: CustomFormattedTextValueContentV2,
+                newTextValue: CustomFormattedTextValueContentV2
               ) =>
             // Identify the resource references that have been added or removed in the new version of
             // the value.
@@ -1896,7 +1972,18 @@ final case class ValuesResponderV2Live(
     // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
     // links in standoff markup.
     val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] = currentValue.valueContent match {
-      case textValue: TextValueContentV2 =>
+      case textValue: FormattedTextValueContentV2 =>
+        textValue.standoffLinkTagTargetResourceIris.toVector.map { removedTargetResource =>
+          decrementLinkValue(
+            sourceResourceInfo = resourceInfo,
+            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+            targetResourceIri = removedTargetResource,
+            valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+            valuePermissions = standoffLinkValuePermissions,
+            requestingUser = requestingUser
+          )
+        }
+      case textValue: CustomFormattedTextValueContentV2 =>
         textValue.standoffLinkTagTargetResourceIris.toVector.map { removedTargetResource =>
           decrementLinkValue(
             sourceResourceInfo = resourceInfo,

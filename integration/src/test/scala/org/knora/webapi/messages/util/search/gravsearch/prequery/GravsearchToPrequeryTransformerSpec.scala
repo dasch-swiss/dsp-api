@@ -2633,7 +2633,7 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
       |} WHERE {
       |    ?resource a knora-api:Resource .
       |    ?resource ?p ?text .
-      |    ?p knora-api:objectType knora-api:TextValue .
+      |    ?p knora-api:objectType knora-api:UnformattedTextValue .
       |    FILTER knora-api:matchText(?text, "der")
       |}""".stripMargin
 

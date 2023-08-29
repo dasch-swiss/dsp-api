@@ -595,6 +595,18 @@ object OntologyConstants {
     val StandoffUnorderedListTag: IRI = StandoffPrefixExpansion + "StandoffUnorderedListTag"
     val StandoffListElementTag: IRI   = StandoffPrefixExpansion + "StandoffListElementTag"
     val StandoffStyleElementTag: IRI  = StandoffPrefixExpansion + "StandoffStyleTag"
+
+    val StandoffBlockquoteTag: IRI = StandoffPrefixExpansion + "StandoffBlockquoteTag"
+    val StandoffTableTag: IRI      = StandoffPrefixExpansion + "StandoffTableTag"
+    val StandoffTableRowTag: IRI   = StandoffPrefixExpansion + "StandoffTableRowTag"
+    val StandoffTableBodyTag: IRI  = StandoffPrefixExpansion + "StandoffTableBodyTag"
+    val StandoffTableCellTag: IRI  = StandoffPrefixExpansion + "StandoffTableCellTag"
+    val StandoffPreTag: IRI        = StandoffPrefixExpansion + "StandoffPreTag"
+    val StandoffCodeTag: IRI       = StandoffPrefixExpansion + "StandoffCodeTag"
+    val StandoffCiteTag: IRI       = StandoffPrefixExpansion + "StandoffCiteTag"
+    val StandoffLineTag: IRI       = StandoffPrefixExpansion + "StandoffLineTag"
+
+    val standoffRootTagHasDocumentType: IRI = StandoffPrefixExpansion + "standoffRootTagHasDocumentType"
   }
 
   object XPathFunctions {

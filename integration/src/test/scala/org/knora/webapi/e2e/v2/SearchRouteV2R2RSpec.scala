@@ -7189,7 +7189,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
            |  "@id" : "http://rdfh.ch/0001/a-thing",
            |  "@type" : "anything:Thing",
            |  "anything:hasText" : {
-           |    "@type" : "knora-api:TextValue",
+           |    "@type" : "knora-api:CustomFormattedTextValue",
            |    "knora-api:textValueAsXml" : $xmlForJson,
            |    "knora-api:textValueHasMapping" : {
            |      "@id": "$anythingProjectIri/mappings/HTMLMapping"
@@ -7313,7 +7313,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "anything:hasRichtext" : {
-           |    "@type" : "knora-api:TextValue",
+           |    "@type" : "knora-api:FormattedTextValue",
            |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(hamletXml)},
            |    "knora-api:textValueHasMapping" : {
            |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
@@ -7730,7 +7730,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         s"""{
            |  "@type" : "anything:Thing",
            |  "anything:hasText" : {
-           |    "@type" : "knora-api:TextValue",
+           |    "@type" : "knora-api:CustomFormattedTextValue",
            |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(xmlStr)},
            |    "knora-api:textValueHasMapping" : {
            |      "@id" : "$anythingProjectIri/mappings/HTMLMapping"

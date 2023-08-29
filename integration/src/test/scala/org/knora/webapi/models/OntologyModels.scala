@@ -91,8 +91,8 @@ sealed trait PropertyValueType {
   val value: String
 }
 object PropertyValueType {
-  case object TextValue extends PropertyValueType {
-    val value = "knora-api:TextValue"
+  case object UnformattedTextValue extends PropertyValueType {
+    val value = "knora-api:UnformattedTextValue"
   }
   case object IntValue extends PropertyValueType {
     val value = "knora-api:IntValue"

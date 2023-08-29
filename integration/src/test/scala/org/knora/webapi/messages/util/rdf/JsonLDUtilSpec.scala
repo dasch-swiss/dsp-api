@@ -34,7 +34,7 @@ class JsonLDUtilSpec() extends CoreSpec {
           |      "anything:hasName" : {
           |        "@id" : "anything:hasName",
           |        "@type" : "owl:ObjectProperty",
-          |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+          |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#UnformattedTextValue",
           |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
           |        "rdfs:comment" : [ {
           |          "@language" : "en",
@@ -76,7 +76,7 @@ class JsonLDUtilSpec() extends CoreSpec {
           |      "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName" : {
           |        "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
           |        "@type" : "http://www.w3.org/2002/07/owl#ObjectProperty",
-          |        "http://api.knora.org/ontology/knora-api/v2#objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+          |        "http://api.knora.org/ontology/knora-api/v2#objectType" : "http://api.knora.org/ontology/knora-api/v2#UnformattedTextValue",
           |        "http://api.knora.org/ontology/knora-api/v2#subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
           |        "http://www.w3.org/2000/01/rdf-schema#comment" : [ {
           |          "@language" : "en",
