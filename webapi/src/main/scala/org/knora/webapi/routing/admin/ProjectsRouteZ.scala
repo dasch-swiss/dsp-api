@@ -250,7 +250,7 @@ final case class ProjectsRouteZ(
       iriDecoded     <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
       isSystemAdmin  <- ZIO.succeed(user.permissions.isSystemAdmin)
       isProjectAdmin <- ZIO.succeed(user.permissions.isProjectAdmin(iri))
-//      _              <- ZIO.fail(ForbiddenException("User is not system or project admin.")).when(!isSystemAdmin && !isProjectAdmin)
+//      _              <- ZIO.fail(ForbiddenException("User is neither system nor project admin.")).when(!isSystemAdmin && !isProjectAdmin)
       id   <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       body <- body.asString
       payload <-

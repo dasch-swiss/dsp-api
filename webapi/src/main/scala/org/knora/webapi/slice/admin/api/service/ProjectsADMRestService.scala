@@ -244,6 +244,11 @@ final case class ProjectsADMRestServiceLive(
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
+  override def setProjectRestrictedViewSettings(
+    id: Iri.ProjectIri,
+    size: Option[String]
+  ): Task[ProjectRestrictedViewSettingsResponseADM] = responder.setProjectRestrictedViewSettings(id, size)
+
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)
     shortcode <- convertStringToShortcode(shortcodeStr)
@@ -273,11 +278,6 @@ final case class ProjectsADMRestServiceLive(
     _       <- permissionService.ensureSystemAdmin(requestingUser)
     exports <- projectExportService.listExports().map(_.map(ProjectExportInfoResponse(_)))
   } yield exports
-
-  override def setProjectRestrictedViewSettings(
-    id: Iri.ProjectIri,
-    size: Option[String]
-  ): Task[ProjectRestrictedViewSettingsResponseADM] = responder.setProjectRestrictedViewSettings(id, size)
 }
 
 object ProjectsADMRestServiceLive {

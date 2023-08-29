@@ -46,6 +46,8 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
       extends Effect[ProjectIdentifierADM, Throwable, Option[ProjectRestrictedViewSettingsADM]]
   object ProjectRestrictedViewSettingsGetRequestADM
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsResponseADM]
+  object ProjectRestrictedViewSettingSetRequestADM
+      extends Effect[(Iri.ProjectIri, Option[String]), Throwable, ProjectRestrictedViewSettingsResponseADM]
   object ProjectCreateRequestADM
       extends Effect[(ProjectCreatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
@@ -84,6 +86,11 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           id: ProjectIdentifierADM
         ): Task[ProjectRestrictedViewSettingsResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
+        override def setProjectRestrictedViewSettings(
+          id: Iri.ProjectIri,
+          size: Option[String]
+        ): Task[ProjectRestrictedViewSettingsResponseADM] =
+          proxy(ProjectRestrictedViewSettingSetRequestADM, (id, size))
         override def projectCreateRequestADM(
           createPayload: ProjectCreatePayloadADM,
           requestingUser: UserADM,
@@ -97,16 +104,6 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
-
-        /**
-         * Sets project's restricted view settings.
-         *
-         * @param id the project's identifier (IRI / shortcode / shortname)
-         */
-        override def setProjectRestrictedViewSettings(
-          id: Iri.ProjectIri,
-          size: Option[String]
-        ): Task[Unit] = ???
       }
     }
 }

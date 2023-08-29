@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import zio.URLayer
 import zio._
 import zio.mock._
-
 import dsp.valueobjects.Iri._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -32,6 +31,12 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetKeywordsByProjectIri extends Effect[ProjectIri, Throwable, ProjectKeywordsGetResponseADM]
   object GetRestrictedViewSettings
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsResponseADM]
+  object SetRestrictedViewSettings
+      extends Effect[
+        (ProjectIri, Option[String]),
+        Throwable,
+        ProjectRestrictedViewSettingsResponseADM
+      ]
 
   override val compose: URLayer[Proxy, ProjectADMRestService] =
     ZLayer {
@@ -92,16 +97,17 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         ): Task[ProjectRestrictedViewSettingsResponseADM] =
           proxy(GetRestrictedViewSettings, identifier)
 
+        def setProjectRestrictedViewSettings(
+          iri: ProjectIri,
+          size: Option[String]
+        ): Task[ProjectRestrictedViewSettingsResponseADM] =
+          proxy(SetRestrictedViewSettings, (iri, size))
+
         override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[Unit] = ???
 
         override def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse] = ???
 
         override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = ???
-
-        override def setProjectRestrictedViewSettings(
-          id: ProjectIri,
-          size: Option[IRI]
-        ): Task[Unit] = ???
       }
     }
 }

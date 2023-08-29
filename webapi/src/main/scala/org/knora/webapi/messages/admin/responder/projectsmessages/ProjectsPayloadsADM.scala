@@ -81,8 +81,7 @@ object ProjectUpdatePayloadADM {
 }
 
 final case class ProjectSetRestrictedViewSettingsPayload(
-  size: Option[String],
-  watermark: Option[String]
+  size: Option[String]
 )
 
 object ProjectSetRestrictedViewSettingsPayload {
