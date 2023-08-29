@@ -1676,6 +1676,49 @@ final case class ConstructResponseUtilV2Live(
                   deletionInfo = valueDeletionInfo
                 )
 
+              case valueContent: UnformattedTextValueContentV2 =>
+                ReadUnformattedTextValueV2(
+                  valueIri = valObj.subjectIri,
+                  attachedToUser = attachedToUser,
+                  permissions = permissions,
+                  userPermission = valObj.userPermission,
+                  valueCreationDate = valueCreationDate,
+                  valueHasUUID = valueHasUUID,
+                  valueContent = valueContent,
+                  previousValueIri = previousValueIri,
+                  deletionInfo = valueDeletionInfo
+                )
+              case valueContent: FormattedTextValueContentV2 =>
+                val maybeValueHasMaxStandoffStartIndex: Option[Int] =
+                  valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
+                ReadFormattedTextValueV2(
+                  valueIri = valObj.subjectIri,
+                  attachedToUser = attachedToUser,
+                  permissions = permissions,
+                  userPermission = valObj.userPermission,
+                  valueCreationDate = valueCreationDate,
+                  valueHasUUID = valueHasUUID,
+                  valueContent = valueContent,
+                  previousValueIri = previousValueIri,
+                  valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
+                  deletionInfo = valueDeletionInfo
+                )
+              case valueContent: CustomFormattedTextValueContentV2 =>
+                val maybeValueHasMaxStandoffStartIndex: Option[Int] =
+                  valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
+                ReadCustomFormattedTextValueV2(
+                  valueIri = valObj.subjectIri,
+                  attachedToUser = attachedToUser,
+                  permissions = permissions,
+                  userPermission = valObj.userPermission,
+                  valueCreationDate = valueCreationDate,
+                  valueHasUUID = valueHasUUID,
+                  valueContent = valueContent,
+                  previousValueIri = previousValueIri,
+                  valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
+                  deletionInfo = valueDeletionInfo
+                )
+
               case textValueContentV2: TextValueContentV2 =>
                 val maybeValueHasMaxStandoffStartIndex: Option[Int] =
                   valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
