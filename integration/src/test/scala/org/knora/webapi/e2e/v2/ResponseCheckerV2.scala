@@ -37,7 +37,7 @@ object ResponseCheckerV2 {
    * @param receivedValue received value.
    */
   private def compareValues(expectedValue: JsonLDValue, receivedValue: JsonLDValue): Unit =
-    assert(expectedValue == receivedValue, s"expected $expectedValue, received $receivedValue")
+    assert(expectedValue == receivedValue, s"\nexpected $expectedValue, \nreceived $receivedValue")
 
   // TODO: recurse over target resource if it is a LinkValue
 
