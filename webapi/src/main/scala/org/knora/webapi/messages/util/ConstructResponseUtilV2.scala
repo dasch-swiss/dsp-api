@@ -996,64 +996,6 @@ final case class ConstructResponseUtilV2Live(
         acc ++ mappings ++ mappingsFromReferredResources
     }
 
-  // /**
-  //  * Given a [[ValueRdfData]], constructs a [[TextValueContentV2]]. This method is used to process a text value
-  //  * as returned in an API response, as well as to process a page of standoff markup that is being queried
-  //  * separately from its text value.
-  //  *
-  //  * @param valueObject               the given [[ValueRdfData]].
-  //  * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
-  //  * @param valueCommentOption        the value's comment, if any.
-  //  * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-  //  * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
-  //  * @param requestingUser            the user making the request.
-  //  * @return a [[TextValueContentV2]].
-  //  */
-  // private def makeTextValueContentV2(
-  //   valueObject: ValueRdfData,
-  //   valueObjectValueHasString: Option[String],
-  //   valueCommentOption: Option[String],
-  //   mappings: Map[IRI, MappingAndXSLTransformation],
-  //   requestingUser: UserADM
-  // ): Task[TextValueContentV2] = {
-  //   // Any knora-base:TextValue may have a language
-  //   val valueLanguageOption: Option[String] =
-  //     valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
-
-  //   if (valueObject.standoff.nonEmpty) {
-  //     val mappingIri: Option[IRI] = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
-  //     val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] =
-  //       mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
-
-  //     for {
-  //       standoff <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
-  //                     standoffAssertions = valueObject.standoff,
-  //                     requestingUser = requestingUser
-  //                   )
-  //     } yield TextValueContentV2(
-  //       ontologySchema = InternalSchema,
-  //       maybeValueHasString = valueObjectValueHasString,
-  //       valueHasLanguage = valueLanguageOption,
-  //       standoff = standoff,
-  //       mappingIri = mappingIri,
-  //       mapping = mappingAndXsltTransformation.map(_.mapping),
-  //       xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
-  //       comment = valueCommentOption
-  //     )
-  //   } else {
-  //     // The query returned no standoff markup.
-
-  //     ZIO.succeed(
-  //       TextValueContentV2(
-  //         ontologySchema = InternalSchema,
-  //         maybeValueHasString = valueObjectValueHasString,
-  //         valueHasLanguage = valueLanguageOption,
-  //         comment = valueCommentOption
-  //       )
-  //     )
-  //   }
-  // }
-
   /**
    * Given a [[ValueRdfData]], constructs a [[UnformattedTextValueContentV2]]. This method is used to process a text value
    * as returned in an API response, as well as to process a page of standoff markup that is being queried
@@ -1383,14 +1325,6 @@ final case class ConstructResponseUtilV2Live(
     val valueTypeStr: IRI = valueObject.valueObjectClass.toString
 
     valueTypeStr match {
-      // case OntologyConstants.KnoraBase.TextValue =>
-      //   makeTextValueContentV2(
-      //     valueObject = valueObject,
-      //     valueObjectValueHasString = valueObjectValueHasString,
-      //     valueCommentOption = valueCommentOption,
-      //     mappings = mappings,
-      //     requestingUser = requestingUser
-      //   )
       case OntologyConstants.KnoraBase.UnformattedTextValue =>
         makeUnformattedTextValueContentV2(resourceIri, valueObjectValueHasString, valueCommentOption)
       case OntologyConstants.KnoraBase.FormattedTextValue =>
@@ -1743,23 +1677,6 @@ final case class ConstructResponseUtilV2Live(
                   valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
                   deletionInfo = valueDeletionInfo
                 )
-
-              // case textValueContentV2: TextValueContentV2 =>
-              //   val maybeValueHasMaxStandoffStartIndex: Option[Int] =
-              //     valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri)
-
-              //   ReadTextValueV2(
-              //     valueIri = valObj.subjectIri,
-              //     attachedToUser = attachedToUser,
-              //     permissions = permissions,
-              //     userPermission = valObj.userPermission,
-              //     valueCreationDate = valueCreationDate,
-              //     valueHasUUID = valueHasUUID,
-              //     valueContent = textValueContentV2,
-              //     valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
-              //     previousValueIri = previousValueIri,
-              //     deletionInfo = valueDeletionInfo
-              //   )
 
               case otherValueContentV2: ValueContentV2 =>
                 ReadOtherValueV2(

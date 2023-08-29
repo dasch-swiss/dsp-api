@@ -212,7 +212,7 @@ object SharedPermissionsTestData {
 
   val perm003_o2: oap =
     oap(
-      iri = "http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b", // knora-base:TextValue
+      iri = "http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b",
       p = ObjectAccessPermissionADM(
         forValue = Some("http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b"),
         hasPermissions = Set(

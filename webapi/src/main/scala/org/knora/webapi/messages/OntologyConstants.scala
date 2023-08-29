@@ -281,9 +281,9 @@ object OntologyConstants {
     val TimeBase: IRI     = KnoraBasePrefixExpansion + "TimeBase"
     val ColorBase: IRI    = KnoraBasePrefixExpansion + "ColorBase"
 
-    val TextValue: IRI                = KnoraBasePrefixExpansion + "TextValue"
+    val TextValue: IRI                = KnoraBasePrefixExpansion + "TextValue"         // TODO: remove
     val UnformattedTextValue: IRI     = KnoraBasePrefixExpansion + "UnformattedTextValue"
-    val StandoffTextValue: IRI        = KnoraBasePrefixExpansion + "StandoffTextValue"
+    val StandoffTextValue: IRI        = KnoraBasePrefixExpansion + "StandoffTextValue" // TODO: remove
     val FormattedTextValue: IRI       = KnoraBasePrefixExpansion + "FormattedTextValue"
     val CustomFormattedTextValue: IRI = KnoraBasePrefixExpansion + "CustomFormattedTextValue"
     val IntValue: IRI                 = KnoraBasePrefixExpansion + "IntValue"
