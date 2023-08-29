@@ -199,12 +199,9 @@ final case class CardinalityHandlerLive(
   private def getRdfTypeAndEnsureSingleCardinality(classInfo: ClassInfoContentV2): Task[SmartIri] =
     for {
       // Check that the class's rdf:type is owl:Class.
-      rdfType <- ZIO.attempt {
-                   classInfo.requireIriObject(
-                     OntologyConstants.Rdf.Type.toSmartIri,
-                     throw BadRequestException(s"No rdf:type specified")
-                   )
-                 }
+      rdfType <- ZIO
+                   .fromOption(classInfo.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
+                   .orElseFail(BadRequestException(s"No rdf:type specified"))
       _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
             throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
           }

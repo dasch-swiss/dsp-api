@@ -812,12 +812,9 @@ final case class OntologyResponderV2Live(
              )
         // Check that the class's rdf:type is owl:Class.
 
-        rdfType <- ZIO.attempt(
-                     internalClassDef.requireIriObject(
-                       OntologyConstants.Rdf.Type.toSmartIri,
-                       throw BadRequestException(s"No rdf:type specified")
-                     )
-                   )
+        rdfType <- ZIO
+                     .fromOption(internalClassDef.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
+                     .orElseFail(BadRequestException(s"No rdf:type specified"))
         _ <- ZIO.when(rdfType != OntologyConstants.Owl.Class.toSmartIri) {
                ZIO.fail(BadRequestException(s"Invalid rdf:type for property: $rdfType"))
              }
@@ -1003,12 +1000,9 @@ final case class OntologyResponderV2Live(
              )
 
         // Check that the class's rdf:type is owl:Class.
-        rdfType <- ZIO.attempt(
-                     internalClassDef.requireIriObject(
-                       OntologyConstants.Rdf.Type.toSmartIri,
-                       throw BadRequestException(s"No rdf:type specified")
-                     )
-                   )
+        rdfType <- ZIO
+                     .fromOption(internalClassDef.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
+                     .orElseFail(BadRequestException(s"No rdf:type specified"))
         _ <- ZIO.when(rdfType != OntologyConstants.Owl.Class.toSmartIri) {
                ZIO.fail(BadRequestException(s"Invalid rdf:type for property: $rdfType"))
              }
@@ -1155,12 +1149,9 @@ final case class OntologyResponderV2Live(
              )
 
         // Check that the class's rdf:type is owl:Class.
-        rdfType <- ZIO.attempt(
-                     internalClassDef.requireIriObject(
-                       OntologyConstants.Rdf.Type.toSmartIri,
-                       throw BadRequestException(s"No rdf:type specified")
-                     )
-                   )
+        rdfType <- ZIO
+                     .fromOption(internalClassDef.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
+                     .orElseFail(BadRequestException(s"No rdf:type specified"))
         _ <- ZIO.when(rdfType != OntologyConstants.Owl.Class.toSmartIri) {
                ZIO.fail(BadRequestException(s"Invalid rdf:type for property: $rdfType"))
              }
@@ -1440,12 +1431,9 @@ final case class OntologyResponderV2Live(
 
   private def checkRdfTypeOfClassIsClass(classInfo: ClassInfoContentV2): Task[ClassInfoContentV2] =
     for {
-      rdfType <- ZIO.attempt(
-                   classInfo.requireIriObject(
-                     OntologyConstants.Rdf.Type.toSmartIri,
-                     throw BadRequestException(s"No rdf:type specified")
-                   )
-                 )
+      rdfType <- ZIO
+                   .fromOption(classInfo.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
+                   .orElseFail(BadRequestException(s"No rdf:type specified"))
       _ <- ZIO.when(rdfType != OntologyConstants.Owl.Class.toSmartIri) {
              ZIO.fail(BadRequestException(s"Invalid rdf:type of property: $rdfType."))
            }
@@ -1985,12 +1973,9 @@ final case class OntologyResponderV2Live(
              )
 
         // Check that the property's rdf:type is owl:ObjectProperty.
-        rdfType <- ZIO.attempt(
-                     internalPropertyDef.requireIriObject(
-                       OntologyConstants.Rdf.Type.toSmartIri,
-                       throw BadRequestException(s"No rdf:type specified")
-                     )
-                   )
+        rdfType <- ZIO
+                     .fromOption(internalPropertyDef.getIriObject(OntologyConstants.Rdf.Type.toSmartIri))
+                     .orElseFail(BadRequestException(s"No rdf:type specified"))
         _ <- ZIO.when(rdfType != OntologyConstants.Owl.ObjectProperty.toSmartIri) {
                ZIO.fail(BadRequestException(s"Invalid rdf:type for property: $rdfType"))
              }
@@ -2099,12 +2084,10 @@ final case class OntologyResponderV2Live(
 
         // Check that the object class constraint designates an appropriate class that exists.
 
-        objectClassConstraint <- ZIO.attempt(
-                                   internalPropertyDef.requireIriObject(
-                                     OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                                     throw BadRequestException(s"No knora-api:objectType specified")
-                                   )
-                                 )
+        objectClassConstraint <-
+          ZIO
+            .fromOption(internalPropertyDef.getIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri))
+            .orElseFail(BadRequestException(s"No knora-api:objectType specified"))
 
         // If this is a value property, ensure its object class constraint is not LinkValue or a file value class.
         _ <-
