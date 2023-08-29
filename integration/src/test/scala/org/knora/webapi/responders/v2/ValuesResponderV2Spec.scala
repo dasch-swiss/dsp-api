@@ -37,10 +37,9 @@ import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataV2
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.MutableTestIri
-
-import org.knora.webapi.sharedtestdata.SharedTestDataV2
 
 /**
  * Tests [[ValuesResponderV2]].

@@ -14,9 +14,6 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
-import org.xmlunit.diff.Diff
 import spray.json.JsValue
 import spray.json.JsonParser
 import zio.durationInt
@@ -24,7 +21,6 @@ import zio.durationInt
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS

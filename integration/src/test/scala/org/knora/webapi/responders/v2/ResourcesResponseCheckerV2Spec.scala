@@ -5,19 +5,21 @@
 
 package org.knora.webapi.responders.v2
 
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.scalatest.wordspec.AnyWordSpec
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ReadOtherValueV2
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.messages.util.PermissionUtilADM
+
 import java.time.Instant
-import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
-import org.knora.webapi.InternalSchema
+
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadOtherValueV2
+import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 class ResourcesResponseCheckerV2Spec extends AnyWordSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

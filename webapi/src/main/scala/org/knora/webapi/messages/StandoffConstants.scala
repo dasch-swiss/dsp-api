@@ -6,14 +6,13 @@
 package org.knora.webapi.messages
 
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages.XMLStandoffDataTypeClass
 import org.knora.webapi.messages.v2.responder.standoffmessages.XMLTag
 import org.knora.webapi.messages.v2.responder.standoffmessages.XMLTagToStandoffClass
 
 import OntologyConstants.Standoff._
 import OntologyConstants.KnoraBase._
-import org.knora.webapi.messages.v2.responder.standoffmessages.XMLStandoffDataTypeClass
-
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 
 object StandoffConstants {
   val standardMapping: MappingXMLtoStandoff = MappingXMLtoStandoff(

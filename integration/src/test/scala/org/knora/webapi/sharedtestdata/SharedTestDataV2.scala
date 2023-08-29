@@ -8,15 +8,15 @@ package org.knora.webapi.sharedtestdata
 import java.time.Instant
 
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadOtherValueV2
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.ApiV2Complex
 
 object SharedTestDataV2 {
 
