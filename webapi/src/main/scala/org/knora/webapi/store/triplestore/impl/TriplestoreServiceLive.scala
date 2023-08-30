@@ -102,28 +102,13 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
     }
 
   /**
-   * Simulates a read timeout.
-   */
-  override def doSimulateTimeout(): Task[SparqlSelectResult] = {
-    val sparql = """SELECT ?foo WHERE {
-                   |    BIND("foo" AS ?foo)
-                   |}""".stripMargin
-    sparqlHttpSelect(sparql, simulateTimeout = true)
-  }
-
-  /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
    * @param sparql          the SPARQL SELECT query string.
-   * @param simulateTimeout if `true`, simulate a read timeout.
    * @param isGravsearch    `true` if it is a gravsearch query (relevant for timeout)
    * @return a [[SparqlSelectResult]].
    */
-  override def sparqlHttpSelect(
-    sparql: String,
-    simulateTimeout: Boolean = false,
-    isGravsearch: Boolean = false
-  ): Task[SparqlSelectResult] = {
+  override def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean = false): Task[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
@@ -131,7 +116,7 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
 
     for {
       resultStr <-
-        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout, isGravsearch = isGravsearch)
+        getSparqlHttpResponse(sparql, isUpdate = false, isGravsearch = isGravsearch)
       // Parse the response as a JSON object and generate a response message.
       responseMessage <- parseJsonResponse(sparql, resultStr)
     } yield responseMessage
@@ -527,7 +512,6 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
    * @param isUpdate       `true` if this is an update request.
    * @param isGravsearch   `true` if this is a Gravsearch query (needs a greater timeout).
    * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
-   * @param simulateTimeout if `true`, simulate a read timeout.
    * @return the triplestore's response.
    */
   private def getSparqlHttpResponse(
@@ -535,7 +519,6 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
     isUpdate: Boolean,
     isGravsearch: Boolean = false,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
-    simulateTimeout: Boolean = false
   ): Task[String] = {
     val httpPost = ZIO.attempt {
       if (isUpdate) {
@@ -566,7 +549,7 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
 
     for {
       req <- httpPost
-      res <- doHttpRequest(request = req, processResponse = returnResponseAsString, simulateTimeout = simulateTimeout)
+      res <- doHttpRequest(request = req, processResponse = returnResponseAsString)
     } yield res
   }
 
@@ -641,26 +624,13 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
    * to a function.
    *
    * @param request         the request to be sent.
-   * @param simulateTimeout if `true`, simulate a read timeout.
    * @tparam T the return type of `processError`.
    * @return the return value of `processError`.
    */
   private def doHttpRequest[T](
     request: HttpRequest,
     processResponse: CloseableHttpResponse => Task[T],
-    simulateTimeout: Boolean = false
   ): Task[T] = {
-
-    def checkSimulateTimeout(): Task[Unit] =
-      ZIO
-        .when(simulateTimeout) {
-          ZIO.fail(
-            TriplestoreTimeoutException(
-              "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-            )
-          )
-        }
-        .unit
 
     def executeQuery(): Task[CloseableHttpResponse] = makeHttpContext.flatMap { context =>
       ZIO
@@ -706,7 +676,6 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
     def getResponse = ZIO.acquireRelease(executeQuery())(response => ZIO.succeed(response.close()))
 
     ZIO.scoped(for {
-      _          <- checkSimulateTimeout()
       _          <- ZIO.logDebug("Executing query...")
       response   <- getResponse
       statusCode <- ZIO.attempt(response.getStatusLine.getStatusCode)

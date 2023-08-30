@@ -21,23 +21,13 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 trait TriplestoreService {
 
   /**
-   * Simulates a read timeout.
-   */
-  def doSimulateTimeout(): Task[SparqlSelectResult]
-
-  /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
    * @param sparql          The SPARQL SELECT query string.
-   * @param simulateTimeout If `true`, simulate a read timeout.
    * @param isGravsearch    If `true`, takes a long timeout because gravsearch queries can take a long time.
    * @return A [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(
-    sparql: String,
-    simulateTimeout: Boolean = false,
-    isGravsearch: Boolean = false
-  ): Task[SparqlSelectResult]
+  def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean = false): Task[SparqlSelectResult]
 
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].

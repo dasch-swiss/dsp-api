@@ -66,18 +66,8 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-  override def doSimulateTimeout(): Task[SparqlSelectResult] = ZIO.fail(
-    TriplestoreTimeoutException(
-      "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-    )
-  )
 
-  override def sparqlHttpSelect(
-    sparql: String,
-    simulateTimeout: Boolean,
-    isGravsearch: Boolean
-  ): Task[SparqlSelectResult] = {
-    require(!simulateTimeout, "`simulateTimeout` parameter is not supported by fake implementation yet")
+  override def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean): Task[SparqlSelectResult] = {
     require(!isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
 
     ZIO.scoped(execSelect(sparql).map(toSparqlSelectResult))
