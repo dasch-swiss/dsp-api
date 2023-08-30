@@ -108,7 +108,7 @@
   <http://www.knora.org/ontology/knora-base#valueHasString> "10";
   <http://www.knora.org/ontology/knora-base#valueHasUUID> "fae17f4f6106" .
 
-<http://rdfh.ch/0803/c5058f3a/values/c3295339> a <http://www.knora.org/ontology/knora-base#TextValue>;
+<http://rdfh.ch/0803/c5058f3a/values/c3295339> a <http://www.knora.org/ontology/knora-base#UnformattedTextValue>;
   <http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/91e19f1e01>;
   <http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   <http://www.knora.org/ontology/knora-base#isDeleted> false;
@@ -151,7 +151,7 @@
   <http://www.knora.org/ontology/knora-base#valueHasString> "10";
   <http://www.knora.org/ontology/knora-base#valueHasUUID> "53feeaf80a" .
 
-<http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006> a <http://www.knora.org/ontology/knora-base#TextValue>;
+<http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006> a <http://www.knora.org/ontology/knora-base#UnformattedTextValue>;
   <http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/91e19f1e01>;
   <http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   <http://www.knora.org/ontology/knora-base#isDeleted> false;
