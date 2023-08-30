@@ -107,6 +107,11 @@ anything:Thing  rdf:type         owl:Class;
                                    owl:onProperty       anything:hasUnformattedText
                                  ];
         rdfs:subClassOf          [ rdf:type             owl:Restriction;
+                                   salsah-gui:guiOrder  "2"^^xsd:nonNegativeInteger;
+                                   owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                                   owl:onProperty       anything:hasCustomFormattedText
+                                 ];
+        rdfs:subClassOf          [ rdf:type             owl:Restriction;
                                    salsah-gui:guiOrder  "1"^^xsd:nonNegativeInteger;
                                    owl:minCardinality   "0"^^xsd:nonNegativeInteger;
                                    owl:onProperty       anything:hasOtherThingValue
