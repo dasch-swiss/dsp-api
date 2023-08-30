@@ -2131,7 +2131,10 @@ final case class ValuesResponderV2Live(
 
       // If the property points to a text value, also query the resource's standoff links.
       maybeStandoffLinkToPropertyIri: Option[SmartIri] =
-        if (objectClassConstraint.toString == OntologyConstants.KnoraBase.TextValue) {
+        if (
+          objectClassConstraint.toString == OntologyConstants.KnoraBase.FormattedTextValue ||
+          objectClassConstraint.toString == OntologyConstants.KnoraBase.CustomFormattedTextValue
+        ) {
           Some(OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri)
         } else {
           None
