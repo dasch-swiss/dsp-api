@@ -202,14 +202,6 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "anything:hasCustomFormattedText"
-                    },
-                    "owl:minCardinality": 0,
-                    "salsah-gui:guiOrder": 2
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
                         "@id": "anything:hasRichtext"
                     },
                     "owl:minCardinality": 0,

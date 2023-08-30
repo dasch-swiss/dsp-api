@@ -510,15 +510,6 @@
                     "salsah-gui:guiOrder": 2,
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
-                        "@id": "anything:hasCustomFormattedText"
-                    }
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:minCardinality": 0,
-                    "salsah-gui:guiOrder": 2,
-                    "knora-api:isInherited": true,
-                    "owl:onProperty": {
                         "@id": "anything:hasRichtext"
                     }
                 },
@@ -1052,14 +1043,6 @@
                     },
                     "owl:minCardinality": 0,
                     "salsah-gui:guiOrder": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "anything:hasCustomFormattedText"
-                    },
-                    "owl:minCardinality": 0,
-                    "salsah-gui:guiOrder": 2
                 },
                 {
                     "@type": "owl:Restriction",
@@ -2052,15 +2035,6 @@
                     "knora-api:isInherited": true,
                     "owl:onProperty": {
                         "@id": "anything:hasOtherThingValue"
-                    }
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:minCardinality": 0,
-                    "salsah-gui:guiOrder": 2,
-                    "knora-api:isInherited": true,
-                    "owl:onProperty": {
-                        "@id": "anything:hasCustomFormattedText"
                     }
                 },
                 {
