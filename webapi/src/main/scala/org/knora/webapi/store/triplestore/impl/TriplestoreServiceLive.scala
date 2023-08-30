@@ -22,7 +22,6 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.config.SocketConfig
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.FileEntity
 import org.apache.http.entity.StringEntity
@@ -31,7 +30,6 @@ import org.apache.http.impl.client.BasicAuthCache
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
@@ -65,7 +63,6 @@ import org.knora.webapi.util.FileUtil
  */
 case class TriplestoreServiceLive(
   config: AppConfig,
-  httpClient: CloseableHttpClient,
   implicit val stringFormatter: StringFormatter
 ) extends TriplestoreService {
 
@@ -1005,71 +1002,11 @@ case class TriplestoreServiceLive(
 }
 
 object TriplestoreServiceLive {
-
-  /**
-   * Acquires a configured httpClient, backed by a connection pool,
-   * to be used in communicating with Fuseki.
-   */
-  private def acquire(config: AppConfig) = {
-    ZIO.attemptBlocking {
-
-      // timeout from config
-      val sipiTimeoutMillis: Int = config.sipi.timeout.toMillis.toInt
-
-      // Create a connection manager with custom configuration.
-      val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
-
-      // Create socket configuration
-      val socketConfig: SocketConfig = SocketConfig
-        .custom()
-        .setTcpNoDelay(true)
-        .build()
-
-      // Configure the connection manager to use socket configuration by default.
-      connManager.setDefaultSocketConfig(socketConfig)
-
-      // Validate connections after 1 sec of inactivity
-      connManager.setValidateAfterInactivity(1000)
-
-      // Configure total max or per route limits for persistent connections
-      // that can be kept in the pool or leased by the connection manager.
-      connManager.setMaxTotal(100)
-      connManager.setDefaultMaxPerRoute(15)
-
-      // Sipi custom default request config
-      val defaultRequestConfig = RequestConfig
-        .custom()
-        .setConnectTimeout(sipiTimeoutMillis)
-        .setConnectionRequestTimeout(sipiTimeoutMillis)
-        .setSocketTimeout(sipiTimeoutMillis)
-        .build()
-
-      // Create an HttpClient with the given custom dependencies and configuration.
-      val httpClient: CloseableHttpClient = HttpClients
-        .custom()
-        .setConnectionManager(connManager)
-        .setDefaultRequestConfig(defaultRequestConfig)
-        .build()
-
-      httpClient
-    }.logError.orDie
-  } <* ZIO.logInfo(">>> Acquire Triplestore Service Http Connector <<<")
-
-  /**
-   * Releases the httpClient, freeing all resources.
-   */
-  private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] = {
-    ZIO.attemptBlocking {
-      httpClient.close()
-    }.logError.ignore
-  } <* ZIO.logInfo(">>> Release Triplestore Service Http Connector <<<")
-
   val layer: ZLayer[AppConfig with StringFormatter, Nothing, TriplestoreService] =
     ZLayer.scoped {
       for {
-        sf         <- ZIO.service[StringFormatter]
-        config     <- ZIO.service[AppConfig]
-        httpClient <- ZIO.acquireRelease(acquire(config))(release)
-      } yield TriplestoreServiceLive(config, httpClient, sf)
+        sf     <- ZIO.service[StringFormatter]
+        config <- ZIO.service[AppConfig]
+      } yield TriplestoreServiceLive(config, sf)
     }
 }
