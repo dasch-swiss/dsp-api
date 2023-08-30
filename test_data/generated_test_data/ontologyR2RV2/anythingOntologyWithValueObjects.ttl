@@ -13,17 +13,8 @@ anything:ThingDocument
         rdfs:subClassOf              knora-api:DocumentRepresentation ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:minCardinality  0 ;
-                                       owl:onProperty      anything:hasDocumentTitle
+                                       owl:onProperty         knora-api:deleteComment
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -32,13 +23,8 @@ anything:ThingDocument
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
+                                       owl:onProperty         knora-api:versionArkUrl
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -52,33 +38,8 @@ anything:ThingDocument
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasDocumentFileValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -88,7 +49,12 @@ anything:ThingDocument
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -98,12 +64,46 @@ anything:ThingDocument
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
+                                       owl:minCardinality  0 ;
+                                       owl:onProperty      anything:hasDocumentTitle
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasPermissions
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:creationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
                                        owl:onProperty         knora-api:lastModificationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
+                                       owl:onProperty         knora-api:hasDocumentFileValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true ;
@@ -138,63 +138,8 @@ anything:VideoSequenceThing
         rdfs:subClassOf              knora-api:Resource ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
                                        owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       knora-api:hasSequenceBounds
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       knora-api:isSequenceOf
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       knora-api:isSequenceOfValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -204,12 +149,42 @@ anything:VideoSequenceThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:creationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
+                                       owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       knora-api:hasSequenceBounds
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:userHasPermission
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -219,7 +194,27 @@ anything:VideoSequenceThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       knora-api:isSequenceOfValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -229,12 +224,17 @@ anything:VideoSequenceThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       knora-api:isSequenceOf
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
@@ -247,34 +247,12 @@ anything:ThingWithSeqnum
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    1 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasOtherThingValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
                                        owl:onProperty         knora-api:attachedToProject
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    13 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasThingDocument
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -283,30 +261,26 @@ anything:ThingWithSeqnum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    6 ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    15 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:isPartOfOtherThingValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  100 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       knora-api:seqnum
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    12 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasGeoname
+                                       owl:onProperty         anything:hasBoolean
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    1 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasOtherThing
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    13 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasThingPictureValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -317,7 +291,7 @@ anything:ThingWithSeqnum
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
+                                       owl:onProperty         knora-api:deleteDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -326,44 +300,31 @@ anything:ThingWithSeqnum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    13 ;
+                                       salsah-gui:guiOrder    7 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasThingPictureValue
+                                       owl:onProperty         anything:hasUri
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    4 ;
+                                       salsah-gui:guiOrder    12 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasInteger
+                                       owl:onProperty         anything:hasGeoname
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:userHasPermission
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        salsah-gui:guiOrder    13 ;
                                        owl:minCardinality     0 ;
                                        owl:onProperty         anything:hasThingDocumentValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    2 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasRichtext
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    1 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasOtherThing
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    3 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -379,36 +340,14 @@ anything:ThingWithSeqnum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    7 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasUri
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
+                                       owl:onProperty         knora-api:lastModificationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    10 ;
+                                       salsah-gui:guiOrder    15 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasColor
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    0 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasListItem
+                                       owl:onProperty         anything:isPartOfOtherThingValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -418,24 +357,36 @@ anything:ThingWithSeqnum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    6 ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         anything:hasBoolean
+                                       salsah-gui:guiOrder    0 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasOtherListItem
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
+                                       owl:onProperty         knora-api:hasPermissions
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
+                                       salsah-gui:guiOrder    2 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasRichtext
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  100 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       knora-api:seqnum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    3 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -445,8 +396,57 @@ anything:ThingWithSeqnum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    0 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasListItem
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
+                                       owl:onProperty         knora-api:attachedToUser
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    4 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasInteger
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    2 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasCustomFormattedText
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:creationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    10 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasColor
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -456,21 +456,27 @@ anything:ThingWithSeqnum
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    13 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasThingDocument
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        salsah-gui:guiOrder    2 ;
                                        owl:minCardinality     0 ;
                                        owl:onProperty         anything:hasUnformattedText
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    0 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasOtherListItem
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        salsah-gui:guiOrder    15 ;
                                        owl:minCardinality     0 ;
                                        owl:onProperty         anything:isPartOfOtherThing
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    1 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasOtherThingValue
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
@@ -483,21 +489,11 @@ anything:StandoffEventTag
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:dateValueHasStartMonth
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
         rdfs:subClassOf            [ rdf:type         owl:Restriction ;
                                      owl:cardinality  1 ;
                                      owl:onProperty   anything:standoffEventTagHasDescription
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
@@ -507,27 +503,22 @@ anything:StandoffEventTag
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:dateValueHasEndEra
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:dateValueHasStartEra
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:dateValueHasEndDay
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
@@ -541,28 +532,23 @@ anything:StandoffEventTag
                                    ] ;
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:dateValueHasStartDay
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:dateValueHasEndMonth
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:dateValueHasStartMonth
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
@@ -572,12 +558,32 @@ anything:StandoffEventTag
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                     owl:onProperty         knora-api:dateValueHasEndMonth
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:dateValueHasEndEra
                                    ] ;
         rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:dateValueHasEndDay
+                                     owl:onProperty         knora-api:dateValueHasStartDay
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:dateValueHasStartEra
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
@@ -618,32 +624,25 @@ anything:BlueThing  rdf:type         owl:Class ;
         rdfs:subClassOf              anything:Thing ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    9 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasInterval
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    0 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasOtherListItem
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    11 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasGeometry
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        salsah-gui:guiOrder    13 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasThingPicture
+                                       owl:onProperty         anything:hasThingPictureValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    15 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:isPartOfOtherThingValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -654,58 +653,18 @@ anything:BlueThing  rdf:type         owl:Class ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
+                                       owl:onProperty         knora-api:userHasPermission
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    15 ;
+                                       salsah-gui:guiOrder    11 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:isPartOfOtherThing
+                                       owl:onProperty         anything:hasGeometry
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    6 ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         anything:hasBoolean
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    13 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasThingPictureValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  63 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasBlueThing
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    7 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasUri
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    10 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasColor
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  63 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasBlueThingValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    3 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasDate
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -715,14 +674,15 @@ anything:BlueThing  rdf:type         owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
+                                       salsah-gui:guiOrder    15 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:isPartOfOtherThing
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    0 ;
+                                       salsah-gui:guiOrder    7 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasListItem
+                                       owl:onProperty         anything:hasUri
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -732,19 +692,31 @@ anything:BlueThing  rdf:type         owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    4 ;
+                                       salsah-gui:guiOrder    10 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasInteger
+                                       owl:onProperty         anything:hasColor
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    2 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasCustomFormattedText
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    13 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasThingPicture
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -754,55 +726,14 @@ anything:BlueThing  rdf:type         owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    13 ;
+                                       salsah-gui:guiOrder    2 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasThingDocumentValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    15 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:isPartOfOtherThingValue
+                                       owl:onProperty         anything:hasText
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
                                        owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -812,20 +743,35 @@ anything:BlueThing  rdf:type         owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  63 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasBlueThingValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    9 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasInterval
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
                                        owl:onProperty         knora-api:isDeleted
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    2 ;
+                                       salsah-gui:guiOrder    4 ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasText
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       salsah-gui:guiOrder    2 ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         anything:hasUnformattedText
+                                       owl:onProperty         anything:hasInteger
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -835,7 +781,73 @@ anything:BlueThing  rdf:type         owl:Class ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasPermissions
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    0 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasListItem
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    2 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasUnformattedText
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    6 ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         anything:hasBoolean
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
                                        owl:onProperty         knora-api:attachedToUser
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    13 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasThingDocumentValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    3 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       salsah-gui:guiOrder    0 ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         anything:hasOtherListItem
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  63 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasBlueThing
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
@@ -906,52 +918,7 @@ anything:TrivialThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
+                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -961,17 +928,12 @@ anything:TrivialThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
+                                       owl:onProperty         knora-api:deletedBy
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToProject
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -981,12 +943,62 @@ anything:TrivialThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:creationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:minCardinality     0 ;
                                        owl:onProperty         knora-api:hasStandoffLinkToValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:userHasPermission
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToUser
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true ;
@@ -1024,23 +1036,18 @@ anything:VideoThing  rdf:type        owl:Class ;
         rdfs:subClassOf              knora-api:MovingImageRepresentation ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
+                                       owl:onProperty         knora-api:isDeleted
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1049,52 +1056,13 @@ anything:VideoThing  rdf:type        owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
+                                       owl:onProperty         knora-api:deletedBy
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasMovingImageFileValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:maxCardinality  1 ;
-                                       owl:onProperty      anything:hasTitle
+                                       owl:onProperty         knora-api:attachedToUser
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1108,13 +1076,57 @@ anything:VideoThing  rdf:type        owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
+                                       owl:maxCardinality  1 ;
+                                       owl:onProperty      anything:hasTitle
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
                                        owl:onProperty         knora-api:attachedToProject
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
+                                       owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:creationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasMovingImageFileValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
@@ -1146,26 +1158,22 @@ anything:ThingPicture
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:minCardinality  0 ;
-                                       owl:onProperty      anything:hasPictureTitle
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
+                                       owl:onProperty         knora-api:creationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
                                        owl:onProperty         knora-api:isDeleted
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasStillImageFileValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1175,32 +1183,17 @@ anything:ThingPicture
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasStillImageFileValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
                                        owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasPermissions
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1209,8 +1202,23 @@ anything:ThingPicture
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
                                        owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:userHasPermission
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1224,18 +1232,22 @@ anything:ThingPicture
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
+                                       owl:onProperty         knora-api:arkUrl
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
+                                       owl:minCardinality  0 ;
+                                       owl:onProperty      anything:hasPictureTitle
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true ;
@@ -1285,78 +1297,13 @@ anything:Thing  rdf:type             owl:Class ;
         rdfs:subClassOf              knora-api:Resource ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  13 ;
                                        owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasThingPicture
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  5 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasDecimal
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  3 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  12 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasGeoname
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  2 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasRichtext
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  9 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasInterval
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  13 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasThingDocument
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasOtherListItem
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  15 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:isPartOfOtherThingValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  11 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasGeometry
+                                       owl:onProperty       anything:hasThingPictureValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  2 ;
@@ -1365,23 +1312,13 @@ anything:Thing  rdf:type             owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
+                                       owl:onProperty         knora-api:creationDate
                                      ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  5 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasDecimal
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  7 ;
@@ -1389,34 +1326,24 @@ anything:Thing  rdf:type             owl:Class ;
                                        owl:onProperty       anything:hasUri
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  13 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasThingDocumentValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  6 ;
                                        owl:maxCardinality   1 ;
                                        owl:onProperty       anything:hasBoolean
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  1 ;
+                                       salsah-gui:guiOrder  9 ;
                                        owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasOtherThing
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  10 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasColor
+                                       owl:onProperty       anything:hasInterval
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  13 ;
                                        owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasThingDocumentValue
+                                       owl:onProperty       anything:hasThingDocument
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1425,28 +1352,13 @@ anything:Thing  rdf:type             owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  2 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasText
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasListItem
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  1 ;
@@ -1456,12 +1368,62 @@ anything:Thing  rdf:type             owl:Class ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  13 ;
+                                       salsah-gui:guiOrder  1 ;
                                        owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasThingPictureValue
+                                       owl:onProperty       anything:hasOtherThing
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasListItem
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  2 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasRichtext
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  4 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasInteger
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  11 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasGeometry
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  2 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasText
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  3 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasPermissions
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  13 ;
@@ -1471,17 +1433,72 @@ anything:Thing  rdf:type             owl:Class ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
+                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  15 ;
                                        owl:minCardinality   0 ;
                                        owl:onProperty       anything:isPartOfOtherThing
                                      ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  4 ;
+                                       salsah-gui:guiOrder  0 ;
                                        owl:minCardinality   0 ;
-                                       owl:onProperty       anything:hasInteger
+                                       owl:onProperty       anything:hasOtherListItem
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  12 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasGeoname
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToUser
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  2 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasCustomFormattedText
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  13 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasThingPicture
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  15 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:isPartOfOtherThingValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  10 ;
+                                       owl:minCardinality   0 ;
+                                       owl:onProperty       anything:hasColor
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToProject
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true ;
@@ -1511,8 +1528,13 @@ anything:AudioThing  rdf:type        owl:Class ;
         rdfs:subClassOf              knora-api:AudioRepresentation ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
+                                       owl:onProperty         knora-api:attachedToUser
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1521,8 +1543,47 @@ anything:AudioThing  rdf:type        owl:Class ;
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
+                                       owl:onProperty         knora-api:userHasPermission
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
+                                       owl:maxCardinality  1 ;
+                                       owl:onProperty      anything:hasTitle
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasAudioFileValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1532,32 +1593,7 @@ anything:AudioThing  rdf:type        owl:Class ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasAudioFileValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
+                                       owl:onProperty         knora-api:attachedToProject
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1579,29 +1615,10 @@ anything:AudioThing  rdf:type        owl:Class ;
                                        owl:minCardinality     0 ;
                                        owl:onProperty         knora-api:hasIncomingLinkValue
                                      ] ;
-        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:maxCardinality  1 ;
-                                       owl:onProperty      anything:hasTitle
-                                     ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
+                                       owl:onProperty         knora-api:versionArkUrl
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
@@ -1710,16 +1727,11 @@ anything:ThingWithRegion
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
+                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type            owl:Restriction ;
                                        owl:minCardinality  0 ;
                                        owl:onProperty      anything:thingHasRegion
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1728,57 +1740,8 @@ anything:ThingWithRegion
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:minCardinality  0 ;
-                                       owl:onProperty      anything:thingHasRegionValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:minCardinality     0 ;
                                        owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1788,7 +1751,61 @@ anything:ThingWithRegion
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:userHasPermission
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
+                                       owl:minCardinality  0 ;
+                                       owl:onProperty      anything:thingHasRegionValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
                                        owl:onProperty         knora-api:hasPermissions
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deletedBy
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1798,7 +1815,7 @@ anything:ThingWithRegion
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
+                                       owl:onProperty         knora-api:creationDate
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
@@ -1811,12 +1828,27 @@ anything:AudioSequenceThing
         rdfs:subClassOf              [ rdf:type             owl:Restriction ;
                                        salsah-gui:guiOrder  0 ;
                                        owl:cardinality      1 ;
+                                       owl:onProperty       knora-api:hasSequenceBounds
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:cardinality      1 ;
                                        owl:onProperty       knora-api:isSequenceOf
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasPermissions
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
+                                       salsah-gui:guiOrder  0 ;
+                                       owl:cardinality      1 ;
+                                       owl:onProperty       knora-api:isSequenceOfValue
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1825,8 +1857,18 @@ anything:AudioSequenceThing
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToUser
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1836,12 +1878,7 @@ anything:AudioSequenceThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToUser
+                                       owl:onProperty         knora-api:deletedBy
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1850,43 +1887,23 @@ anything:AudioSequenceThing
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       knora-api:hasSequenceBounds
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deletedBy
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:creationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type             owl:Restriction ;
-                                       salsah-gui:guiOrder  0 ;
-                                       owl:cardinality      1 ;
-                                       owl:onProperty       knora-api:isSequenceOfValue
+                                       owl:onProperty         knora-api:deleteComment
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:maxCardinality     1 ;
                                        owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkTo
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:creationDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1896,17 +1913,17 @@ anything:AudioSequenceThing
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
+                                       owl:onProperty         knora-api:attachedToProject
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
                                        owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
@@ -1919,75 +1936,7 @@ anything:ThingWithRepresentation
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasStandoffLinkToValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteComment
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:minCardinality  0 ;
-                                       owl:onProperty      knora-api:hasRepresentation
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
-                                       owl:onProperty         knora-api:hasIncomingLinkValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:deleteDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         rdfs:label
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:versionArkUrl
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:hasPermissions
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:lastModificationDate
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:attachedToProject
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:userHasPermission
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:isDeleted
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:minCardinality     0 ;
                                        owl:onProperty         knora-api:hasStandoffLinkTo
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
-                                       owl:minCardinality  0 ;
-                                       owl:onProperty      knora-api:hasRepresentationValue
-                                     ] ;
-        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
-                                       knora-api:isInherited  true ;
-                                       owl:maxCardinality     1 ;
-                                       owl:onProperty         knora-api:versionDate
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -1997,7 +1946,60 @@ anything:ThingWithRepresentation
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
-                                       owl:onProperty         knora-api:arkUrl
+                                       owl:onProperty         knora-api:userHasPermission
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
+                                       owl:minCardinality  0 ;
+                                       owl:onProperty      knora-api:hasRepresentation
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type            owl:Restriction ;
+                                       owl:minCardinality  0 ;
+                                       owl:onProperty      knora-api:hasRepresentationValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:lastModificationDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:attachedToProject
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:versionDate
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:deleteComment
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:maxCardinality     1 ;
+                                       owl:onProperty         knora-api:isDeleted
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasStandoffLinkToValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:minCardinality     0 ;
+                                       owl:onProperty         knora-api:hasIncomingLinkValue
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         rdfs:label
                                      ] ;
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
@@ -2007,7 +2009,22 @@ anything:ThingWithRepresentation
         rdfs:subClassOf              [ rdf:type               owl:Restriction ;
                                        knora-api:isInherited  true ;
                                        owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:hasPermissions
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
                                        owl:onProperty         knora-api:attachedToUser
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:arkUrl
+                                     ] ;
+        rdfs:subClassOf              [ rdf:type               owl:Restriction ;
+                                       knora-api:isInherited  true ;
+                                       owl:cardinality        1 ;
+                                       owl:onProperty         knora-api:versionArkUrl
                                      ] ;
         knora-api:canBeInstantiated  true ;
         knora-api:isResourceClass    true .
