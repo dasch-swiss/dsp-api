@@ -33,7 +33,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsResponseADM]
   object SetRestrictedViewSettings
       extends Effect[
-        (ProjectIri, Option[String]),
+        (ProjectIri, UserADM, Option[String]),
         Throwable,
         ProjectRestrictedViewSettingsResponseADM
       ]
@@ -99,9 +99,10 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
 
         def setProjectRestrictedViewSettings(
           iri: ProjectIri,
+          user: UserADM,
           size: Option[String]
         ): Task[ProjectRestrictedViewSettingsResponseADM] =
-          proxy(SetRestrictedViewSettings, (iri, size))
+          proxy(SetRestrictedViewSettings, (iri, user, size))
 
         override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[Unit] = ???
 

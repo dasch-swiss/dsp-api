@@ -247,15 +247,12 @@ final case class ProjectsRouteZ(
     user: UserADM
   ): Task[Response] =
     for {
-      iriDecoded     <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
-      isSystemAdmin  <- ZIO.succeed(user.permissions.isSystemAdmin)
-      isProjectAdmin <- ZIO.succeed(user.permissions.isProjectAdmin(iri))
-//      _              <- ZIO.fail(ForbiddenException("User is neither system nor project admin.")).when(!isSystemAdmin && !isProjectAdmin)
-      id   <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      body <- body.asString
+      iriDecoded <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
+      id         <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      body       <- body.asString
       payload <-
         ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSettingsPayload]).mapError(e => BadRequestException(e))
-      response <- projectsService.setProjectRestrictedViewSettings(id.value, payload.size)
+      response <- projectsService.setProjectRestrictedViewSettings(id.value, user, payload.size)
     } yield Response.json(response.toJsValue.toString)
 
 }

@@ -65,6 +65,7 @@ trait ProjectADMRestService {
   ): Task[ProjectRestrictedViewSettingsResponseADM]
   def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
+    user: UserADM,
     size: Option[String]
   ): Task[ProjectRestrictedViewSettingsResponseADM]
 }
@@ -246,8 +247,9 @@ final case class ProjectsADMRestServiceLive(
 
   override def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
+    user: UserADM,
     size: Option[String]
-  ): Task[ProjectRestrictedViewSettingsResponseADM] = responder.setProjectRestrictedViewSettings(id, size)
+  ): Task[ProjectRestrictedViewSettingsResponseADM] = responder.setProjectRestrictedViewSettings(id, user, size)
 
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)

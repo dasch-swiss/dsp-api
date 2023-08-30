@@ -132,6 +132,7 @@ trait ProjectsResponderADM {
    */
   def setProjectRestrictedViewSettings(
     id: Iri.ProjectIri,
+    user: UserADM,
     size: Option[String]
   ): Task[ProjectRestrictedViewSettingsResponseADM]
 
@@ -210,8 +211,8 @@ final case class ProjectsResponderADMLive(
       projectRestrictedViewSettingsGetADM(identifier)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
       projectRestrictedViewSettingsGetRequestADM(identifier)
-    case ProjectRestrictedViewSettingsSetRequestADM(identifier, size) =>
-      setProjectRestrictedViewSettings(identifier, size)
+    case ProjectRestrictedViewSettingsSetRequestADM(identifier, user, size) =>
+      setProjectRestrictedViewSettings(identifier, user, size)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -462,6 +463,7 @@ final case class ProjectsResponderADMLive(
 
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
+    user: UserADM,
     size: Option[String] = None
   ): Task[ProjectRestrictedViewSettingsResponseADM] = {
     val id = ProjectIdentifierADM.IriIdentifier(iri)
@@ -469,8 +471,11 @@ final case class ProjectsResponderADMLive(
       _ <- getProjectFromCacheOrTriplestore(id)
              .flatMap(ZIO.fromOption(_))
              .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _ <- ZIO
+             .fail(ForbiddenException("User is neither system nor project admin."))
+             .when(!user.permissions.isSystemAdmin && !user.permissions.isProjectAdmin(iri.value))
 
-      defaultViewSetting = size.getOrElse("pc:1")
+      defaultViewSetting = size.getOrElse("pct:1")
 
       query = twirl.queries.sparql.admin.txt
                 .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, None)
@@ -859,7 +864,7 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-        _ <- setProjectRestrictedViewSettings(id.value)
+        _ <- setProjectRestrictedViewSettings(id.value, requestingUser)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 

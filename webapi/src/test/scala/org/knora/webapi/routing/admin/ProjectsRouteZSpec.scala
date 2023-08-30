@@ -654,6 +654,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
   val setProjectRestrictedViewSettingsSpec: Spec[Any, Serializable] = suite("set project restricted view settings")(
     test("successfully set project restricted view") {
       val iri      = "http://rdfh.ch/projects/0001"
+      val user     = KnoraSystemInstances.Users.SystemUser
       val id       = TestDataFactory.projectIri(iri)
       val payload  = """{"size":"pct:1"}"""
       val body     = Body.fromString(payload)
@@ -665,7 +666,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
       val mockService = ProjectADMRestServiceMock
         .SetRestrictedViewSettings(
-          assertion = Assertion.equalTo((id, Some("pct:1"))),
+          assertion = Assertion.equalTo((id, user, Some("pct:1"))),
           result = expectedResult
         )
         .toLayer
