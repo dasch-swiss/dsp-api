@@ -406,15 +406,7 @@ case class TriplestoreServiceLive(
             responseHandler <- ZIO.attempt(returnInsertGraphDataResponse(graphName)(_))
           } yield (httpPost, responseHandler)
         )
-      httpContext <- makeHttpContext
-      _ <- ZIO.foreachDiscard(request)(elem =>
-             doHttpRequest(
-               client = queryHttpClient,
-               request = elem._1,
-               context = httpContext,
-               processResponse = elem._2
-             )
-           )
+      _ <- ZIO.foreachDiscard(request)(elem => doHttpRequest(request = elem._1, processResponse = elem._2))
       _ <- ZIO.logDebug("==>> Loading Data End")
     } yield InsertTriplestoreContentACK()
   }
@@ -488,14 +480,8 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      req <- httpGet
-      ctx <- makeHttpContext
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnResponseAsString
-             )
+      req    <- httpGet
+      res    <- doHttpRequest(request = req, processResponse = returnResponseAsString)
       result <- checkForExpectedDataset(res)
     } yield result
   }
@@ -524,14 +510,8 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      request     <- httpPost
-      httpContext <- makeHttpContext
-      _ <- doHttpRequest(
-             client = queryHttpClient,
-             request = request,
-             context = httpContext,
-             processResponse = returnUploadResponse
-           )
+      request <- httpPost
+      _       <- doHttpRequest(request = request, processResponse = returnUploadResponse)
     } yield ()
   }
 
@@ -568,12 +548,9 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      ctx <- makeHttpContext
       req <- httpGet
       res <- doHttpRequest(
-               client = queryHttpClient,
                request = req,
-               context = ctx,
                processResponse = writeResponseFileAsTurtleContent(
                  outputFile = outputFile,
                  graphIri = graphIri,
@@ -599,14 +576,8 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      ctx <- makeHttpContext
       req <- httpGet
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnGraphDataAsTurtle(graphIri)
-             )
+      res <- doHttpRequest(request = req, processResponse = returnGraphDataAsTurtle(graphIri))
     } yield res
   }
 
@@ -628,7 +599,6 @@ case class TriplestoreServiceLive(
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
     simulateTimeout: Boolean = false
   ): Task[String] = {
-    val httpClient = ZIO.attempt(queryHttpClient)
     val httpPost = ZIO.attempt {
       if (isUpdate) {
         // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
@@ -653,16 +623,8 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      ctx <- makeHttpContext
-      clt <- httpClient
       req <- httpPost
-      res <- doHttpRequest(
-               client = clt,
-               request = req,
-               context = ctx,
-               processResponse = returnResponseAsString,
-               simulateTimeout = simulateTimeout
-             )
+      res <- doHttpRequest(request = req, processResponse = returnResponseAsString, simulateTimeout = simulateTimeout)
     } yield res
   }
 
@@ -684,14 +646,8 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      ctx <- makeHttpContext
       req <- httpGet
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = writeResponseFileAsPlainContent(outputFile)
-             )
+      res <- doHttpRequest(request = req, processResponse = writeResponseFileAsPlainContent(outputFile))
     } yield res
   }
 
@@ -710,14 +666,8 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      ctx <- makeHttpContext
       req <- httpPost
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnUploadResponse
-             )
+      res <- doHttpRequest(request = req, processResponse = returnUploadResponse)
     } yield res
   }
 
@@ -739,14 +689,8 @@ case class TriplestoreServiceLive(
     }
 
     for {
-      ctx <- makeHttpContext
       req <- httpPut
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnInsertGraphDataResponse(graphName)
-             )
+      res <- doHttpRequest(req, processResponse = returnInsertGraphDataResponse(graphName))
     } yield res
   }
 
@@ -770,17 +714,13 @@ case class TriplestoreServiceLive(
    * Makes an HTTP connection to the triplestore, and delegates processing of the response
    * to a function.
    *
-   * @param client          the HTTP client to be used for the request.
    * @param request         the request to be sent.
-   * @param context         the request context to be used.
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @tparam T the return type of `processError`.
    * @return the return value of `processError`.
    */
   private def doHttpRequest[T](
-    client: CloseableHttpClient,
     request: HttpRequest,
-    context: HttpClientContext,
     processResponse: CloseableHttpResponse => Task[T],
     simulateTimeout: Boolean = false
   ): Task[T] = {
@@ -796,9 +736,9 @@ case class TriplestoreServiceLive(
         }
         .unit
 
-    def executeQuery(): Task[CloseableHttpResponse] = {
+    def executeQuery(): Task[CloseableHttpResponse] = makeHttpContext.flatMap { context =>
       ZIO
-        .attempt(client.execute(targetHost, request, context))
+        .attempt(queryHttpClient.execute(targetHost, request, context))
         .catchSome {
           case socketTimeoutException: java.net.SocketTimeoutException =>
             val message =
