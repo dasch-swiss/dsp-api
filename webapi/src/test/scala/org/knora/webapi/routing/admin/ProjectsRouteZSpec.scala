@@ -675,7 +675,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         body     <- response.body.asString
       } yield assertTrue(body.contains("pct:1"))
     }
-    //    test("don't set project restricted view if user is not at least project admin")
   )
 
   val getProjectRestrictedViewSettings: Spec[Any, Serializable] =

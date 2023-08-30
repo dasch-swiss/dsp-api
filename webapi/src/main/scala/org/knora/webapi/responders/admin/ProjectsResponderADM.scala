@@ -211,8 +211,8 @@ final case class ProjectsResponderADMLive(
       projectRestrictedViewSettingsGetADM(identifier)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
       projectRestrictedViewSettingsGetRequestADM(identifier)
-    case ProjectRestrictedViewSettingsSetRequestADM(identifier, user, size) =>
-      setProjectRestrictedViewSettings(identifier, user, size)
+    case ProjectRestrictedViewSettingsSetRequestADM(iri, user, size) =>
+      setProjectRestrictedViewSettings(iri, user, size)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
@@ -461,6 +461,14 @@ final case class ProjectsResponderADMLive(
         ProjectRestrictedViewSettingsResponseADM
       )
 
+  /**
+   * Sets project's restricted view settings.
+   *
+   * @param iri the project's iri,
+   * @param user  requesting user,
+   * @param size  value to be set,
+   * @return [[ProjectRestrictedViewSettingsResponseADM]].
+   */
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     user: UserADM,
@@ -480,9 +488,8 @@ final case class ProjectsResponderADMLive(
       query = twirl.queries.sparql.admin.txt
                 .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, None)
 
-      response <- triplestoreService.sparqlHttpUpdate(query.toString)
-      _         = println(777, response)
-      settings  = ProjectRestrictedViewSettingsADM(size)
+      _       <- triplestoreService.sparqlHttpUpdate(query.toString)
+      settings = ProjectRestrictedViewSettingsADM(size)
     } yield ProjectRestrictedViewSettingsResponseADM(settings)
   }
 

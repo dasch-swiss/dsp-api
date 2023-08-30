@@ -248,10 +248,12 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
 /**
  * Return project's RestrictedView settings.
  *
- * @param identifier           the identifier of the project.
+ * @param iri  the identifier of the project.
+ * @param user  requesting user.
+ * @param size  size value to be applied.
  */
 case class ProjectRestrictedViewSettingsSetRequestADM(
-  identifier: Iri.ProjectIri,
+  iri: Iri.ProjectIri,
   user: UserADM,
   size: Option[String]
 ) extends ProjectsResponderRequestADM
