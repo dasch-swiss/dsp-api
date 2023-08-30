@@ -802,7 +802,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      assert(response.status == StatusCodes.OK, response.toString)
+      assert(response.status == StatusCodes.OK, responseToString(response))
       val responseJsonDoc: JsonLDDocument               = responseToJsonLDDocument(response)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val resourceIri: IRI                              = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)

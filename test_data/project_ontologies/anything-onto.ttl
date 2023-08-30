@@ -102,6 +102,11 @@ anything:Thing  rdf:type         owl:Class;
                                    owl:onProperty       anything:hasText
                                  ];
         rdfs:subClassOf          [ rdf:type             owl:Restriction;
+                                   salsah-gui:guiOrder  "2"^^xsd:nonNegativeInteger;
+                                   owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                                   owl:onProperty       anything:hasUnformattedText
+                                 ];
+        rdfs:subClassOf          [ rdf:type             owl:Restriction;
                                    salsah-gui:guiOrder  "1"^^xsd:nonNegativeInteger;
                                    owl:minCardinality   "0"^^xsd:nonNegativeInteger;
                                    owl:onProperty       anything:hasOtherThingValue
@@ -187,11 +192,27 @@ anything:hasText  rdf:type  owl:ObjectProperty;
         knora-base:subjectClassConstraint
                 anything:Thing .
 
+anything:hasUnformattedText  rdf:type  owl:ObjectProperty;
+        rdfs:label          "Text"@de , "Texte"@fr , "Testo"@it , "Text"@en;
+        rdfs:subPropertyOf  knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:UnformattedTextValue;
+        knora-base:subjectClassConstraint
+                anything:Thing .
+
 anything:hasRichtext  rdf:type  owl:ObjectProperty;
         rdfs:label          "Text"@de , "Texte"@fr , "Testo"@it , "Text"@en;
         rdfs:subPropertyOf  knora-base:hasValue;
         knora-base:objectClassConstraint
                 knora-base:FormattedTextValue;
+        knora-base:subjectClassConstraint
+                anything:Thing .
+
+anything:hasCustomFormattedText  rdf:type  owl:ObjectProperty;
+        rdfs:label          "Text"@de , "Texte"@fr , "Testo"@it , "Text"@en;
+        rdfs:subPropertyOf  knora-base:hasValue;
+        knora-base:objectClassConstraint
+                knora-base:CustomFormattedTextValue;
         knora-base:subjectClassConstraint
                 anything:Thing .
 
