@@ -295,11 +295,6 @@ case class InsertTriplestoreContentACK()
 case class InsertGraphDataContentRequest(graphContent: String, graphName: String) extends TriplestoreRequest
 
 /**
- * Sent as a response to [[InsertGraphDataContentRequest]] if the request was processed successfully.
- */
-case class InsertGraphDataContentResponse()
-
-/**
  * Ask triplestore if it is ready
  */
 case class CheckTriplestoreRequest() extends TriplestoreRequest

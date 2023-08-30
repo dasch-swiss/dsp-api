@@ -217,7 +217,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
     "put the graph data as turtle" in {
       appActor ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
-      expectMsgType[InsertGraphDataContentResponse](10.second)
+      expectMsgType[Unit](10.second)
     }
 
     "read the graph data as turtle" in {

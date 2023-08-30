@@ -518,7 +518,7 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
     sparql: String,
     isUpdate: Boolean,
     isGravsearch: Boolean = false,
-    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
+    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson
   ): Task[String] = {
     val httpPost = ZIO.attempt {
       if (isUpdate) {
@@ -559,14 +559,14 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
    * @param outputFile           the output file.
    * @return a string containing the contents of the graph in N-Quads format.
    */
-  override def downloadRepository(outputFile: Path): Task[FileWrittenResponse] = {
+  override def downloadRepository(outputFile: Path): Task[Unit] = {
     val request = {
       val uriBuilder: URIBuilder = new URIBuilder(paths.repository)
       val httpGet                = new HttpGet(uriBuilder.build())
       httpGet.addHeader("Accept", mimeTypeApplicationNQuads)
       httpGet
     }
-    doHttpRequest(request, writeResponseFileAsPlainContent(outputFile))
+    doHttpRequest(request, writeResponseFileAsPlainContent(outputFile)).unit
   }
 
   /**
@@ -574,7 +574,7 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
    *
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
-  override def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse] = {
+  override def uploadRepository(inputFile: Path): Task[Unit] = {
     val request = {
       val httpPost: HttpPost = new HttpPost(paths.repository)
       val fileEntity         = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
@@ -582,7 +582,7 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
       httpPost
     }
 
-    doHttpRequest(request, returnUploadResponse)
+    doHttpRequest(request, returnUploadResponse).unit
   }
 
   /**
@@ -591,7 +591,7 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
    * @param graphContent a data graph in Turtle format to be inserted into the repository.
    * @param graphName    the name of the graph.
    */
-  override def insertDataGraphRequest(graphContent: String, graphName: String): Task[InsertGraphDataContentResponse] = {
+  override def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit] = {
     val request = {
       val uriBuilder = new URIBuilder(paths.data)
       uriBuilder.addParameter("graph", graphName)
@@ -629,7 +629,7 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
    */
   private def doHttpRequest[T](
     request: HttpRequest,
-    processResponse: CloseableHttpResponse => Task[T],
+    processResponse: CloseableHttpResponse => Task[T]
   ): Task[T] = {
 
     def executeQuery(): Task[CloseableHttpResponse] = makeHttpContext.flatMap { context =>
@@ -726,14 +726,14 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
     _ => ZIO.succeed(RepositoryUploadedResponse())
 
   /**
-   * Attempts to transforms a [[CloseableHttpResponse]] to a [[InsertGraphDataContentResponse]].
+   * Attempts to transforms a [[CloseableHttpResponse]] to a [[Unit]].
    */
   private def returnInsertGraphDataResponse(
     graphName: String
-  )(response: CloseableHttpResponse): Task[InsertGraphDataContentResponse] =
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case None    => ZIO.fail(TriplestoreResponseException(s"$graphName could not be inserted into Triplestore."))
-      case Some(_) => ZIO.succeed(InsertGraphDataContentResponse())
+      case Some(_) => ZIO.unit
     }
 
   /**

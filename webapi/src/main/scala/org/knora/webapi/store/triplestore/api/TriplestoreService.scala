@@ -194,18 +194,15 @@ trait TriplestoreService {
    * Dumps the whole repository in N-Quads format, saving the response in a file.
    *
    * @param outputFile           the output file.
-   * @return a string containing the contents of the graph in N-Quads format.
    */
-  def downloadRepository(
-    outputFile: Path
-  ): Task[FileWrittenResponse]
+  def downloadRepository(outputFile: Path): Task[Unit]
 
   /**
    * Uploads repository content from an N-Quads file.
    *
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
-  def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse]
+  def uploadRepository(inputFile: Path): Task[Unit]
 
   /**
    * Puts a data graph into the repository.
@@ -213,6 +210,6 @@ trait TriplestoreService {
    * @param graphContent a data graph in Turtle format to be inserted into the repository.
    * @param graphName    the name of the graph.
    */
-  def insertDataGraphRequest(graphContent: String, graphName: String): Task[InsertGraphDataContentResponse]
+  def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit]
 
 }

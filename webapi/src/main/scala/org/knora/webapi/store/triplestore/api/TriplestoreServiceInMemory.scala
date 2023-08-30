@@ -34,11 +34,9 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
 import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentResponse
 import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.RepositoryUploadedResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
@@ -272,19 +270,19 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def checkTriplestore(): Task[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
 
-  override def downloadRepository(outputFile: Path): Task[FileWrittenResponse] =
+  override def downloadRepository(outputFile: Path): Task[Unit] =
     ZIO.fail(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
 
-  override def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse] =
+  override def uploadRepository(inputFile: Path): Task[Unit] =
     ZIO.fail(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
 
-  override def insertDataGraphRequest(turtle: String, graphName: String): Task[InsertGraphDataContentResponse] =
+  override def insertDataGraphRequest(turtle: String, graphName: String): Task[Unit] =
     ZIO.scoped {
       for {
         name <- checkGraphName(graphName)
         ds   <- getDataSetWithTransaction(ReadWrite.WRITE)
         _     = ds.getNamedModel(name).read(new StringReader(turtle), null, turtle)
-      } yield InsertGraphDataContentResponse()
+      } yield ()
     }
 }
 
