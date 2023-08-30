@@ -43,7 +43,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
-import scala.collection.mutable
 
 import dsp.errors._
 import org.knora.webapi._
@@ -168,30 +167,7 @@ case class TriplestoreServiceLive(
    * @return a [[SparqlConstructResponse]]
    */
   def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): Task[SparqlConstructResponse] = {
-
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
-    def parseTurtleResponse(
-      sparql: String,
-      turtleStr: String,
-      rdfFormatUtil: RdfFormatUtil
-    ): IO[TriplestoreException, SparqlConstructResponse] =
-      ZIO.attemptBlocking {
-        val rdfModel: RdfModel                                 = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-        val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
-
-        for (st: Statement <- rdfModel) {
-          val subjectIri   = st.subj.stringValue
-          val predicateIri = st.pred.stringValue
-          val objectIri    = st.obj.stringValue
-          val currentStatementsForSubject: Seq[(IRI, String)] =
-            statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
-          statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
-        }
-
-        SparqlConstructResponse(statementMap.toMap)
-      }.orElse(processError(sparql, turtleStr))
-
     for {
       turtleStr <-
         getSparqlHttpResponse(
@@ -200,12 +176,10 @@ case class TriplestoreServiceLive(
           acceptMimeType = mimeTypeTextTurtle
         )
 
-      response <- parseTurtleResponse(
-                    sparql = sparqlConstructRequest.sparql,
-                    turtleStr = turtleStr,
-                    rdfFormatUtil = rdfFormatUtil
-                  )
-    } yield response
+      rdfModel <- ZIO
+                    .attempt(rdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
+                    .orElse(processError(sparqlConstructRequest.sparql, turtleStr))
+    } yield SparqlConstructResponse.make(rdfModel)
   }
 
   /**
@@ -801,7 +775,6 @@ case class TriplestoreServiceLive(
    * @param client          the HTTP client to be used for the request.
    * @param request         the request to be sent.
    * @param context         the request context to be used.
-   * @param processError a function that processes the HTTP response.
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @tparam T the return type of `processError`.
    * @return the return value of `processError`.
@@ -815,14 +788,15 @@ case class TriplestoreServiceLive(
   ): Task[T] = {
 
     def checkSimulateTimeout(): Task[Unit] =
-      if (simulateTimeout) {
-        ZIO.fail(
-          TriplestoreTimeoutException(
-            "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
+      ZIO
+        .when(simulateTimeout) {
+          ZIO.fail(
+            TriplestoreTimeoutException(
+              "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
+            )
           )
-        )
-      } else
-        ZIO.unit
+        }
+        .unit
 
     def executeQuery(): Task[CloseableHttpResponse] = {
       ZIO
@@ -843,27 +817,27 @@ case class TriplestoreServiceLive(
     } <* ZIO.logDebug(s"Executing Query: $request")
 
     def checkResponse(response: CloseableHttpResponse, statusCode: Int): Task[Unit] =
-      if (statusCode / 100 == 2)
-        ZIO.unit
-      else {
-        val entity =
-          Option(response.getEntity)
-            .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
+      ZIO
+        .unless(statusCode / 100 == 2) {
+          val entity =
+            Option(response.getEntity)
+              .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
 
-        val statusResponseMsg =
-          s"Triplestore responded with HTTP code $statusCode"
+          val statusResponseMsg =
+            s"Triplestore responded with HTTP code $statusCode"
 
-        (statusCode, entity) match {
-          case (404, _) => ZIO.fail(NotFoundException.notFound)
-          case (400, Some(response)) if response.contains("Text search parse error") =>
-            ZIO.fail(BadRequestException(s"$response"))
-          case (500, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
-          case (503, Some(response)) if response.contains("Query timed out") =>
-            ZIO.fail(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
-          case (503, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
-          case _        => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+          (statusCode, entity) match {
+            case (404, _) => ZIO.fail(NotFoundException.notFound)
+            case (400, Some(response)) if response.contains("Text search parse error") =>
+              ZIO.fail(BadRequestException(s"$response"))
+            case (500, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+            case (503, Some(response)) if response.contains("Query timed out") =>
+              ZIO.fail(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
+            case (503, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+            case _        => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+          }
         }
-      }
+        .unit
 
     def getResponse = ZIO.acquireRelease(executeQuery())(response => ZIO.succeed(response.close()))
 

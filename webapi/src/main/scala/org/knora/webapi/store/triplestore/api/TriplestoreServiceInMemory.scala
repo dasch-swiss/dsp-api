@@ -15,7 +15,6 @@ import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
-import zio.IO
 import zio.Ref
 import zio.Scope
 import zio.Task
@@ -28,7 +27,6 @@ import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.collection.mutable
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
@@ -53,18 +51,15 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
-import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.RdfStringSource
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
-import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
-import org.knora.webapi.store.triplestore.errors.TriplestoreException
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
@@ -137,37 +132,21 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def sparqlHttpAsk(query: String): Task[SparqlAskResponse] =
     ZIO.scoped(getReadTransactionQueryExecution(query).map(_.execAsk())).map(SparqlAskResponse)
 
-  override def sparqlHttpConstruct(request: SparqlConstructRequest): Task[SparqlConstructResponse] = {
-    def parseTurtleResponse(
-      turtleStr: String
-    ): IO[TriplestoreException, SparqlConstructResponse] =
-      ZIO.attemptBlocking {
-        val rdfModel: RdfModel                                 = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-        val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
-        for (st: Statement <- rdfModel) {
-          val subjectIri   = st.subj.stringValue
-          val predicateIri = st.pred.stringValue
-          val objectIri    = st.obj.stringValue
-          val currentStatementsForSubject: Seq[(IRI, String)] =
-            statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
-          statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
-        }
-        SparqlConstructResponse(statementMap.toMap)
-      }.foldZIO(
-        _ =>
-          if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
-            ZIO.fail(TriplestoreTimeoutException("Triplestore timed out."))
-          } else {
-            ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore."))
-          },
-        ZIO.succeed(_)
-      )
-
+  override def sparqlHttpConstruct(request: SparqlConstructRequest): Task[SparqlConstructResponse] =
     for {
-      turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle))
-      response <- parseTurtleResponse(turtle)
-    } yield response
-  }
+      turtle <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle))
+      rdfModel <- ZIO
+                    .attempt(RdfFeatureFactory.getRdfFormatUtil().parseToRdfModel(turtle, Turtle))
+                    .foldZIO(
+                      _ =>
+                        if (turtle.contains("##  Query cancelled due to timeout during execution")) {
+                          ZIO.fail(TriplestoreTimeoutException("Triplestore timed out."))
+                        } else {
+                          ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore."))
+                        },
+                      ZIO.succeed(_)
+                    )
+    } yield SparqlConstructResponse.make(rdfModel)
 
   private def execConstruct(query: String): ZIO[Any with Scope, Throwable, Model] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))

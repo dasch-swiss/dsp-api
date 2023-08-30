@@ -83,6 +83,19 @@ case class SparqlConstructFileRequest(
  * @param statements a map of subject IRIs to statements about each subject.
  */
 case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
+object SparqlConstructResponse {
+  def make(rdfModel: RdfModel): SparqlConstructResponse = {
+    val statementMap = mutable.Map.empty[IRI, Seq[(IRI, String)]]
+    for (st: Statement <- rdfModel) {
+      val subjectIri                  = st.subj.stringValue
+      val predicateIri                = st.pred.stringValue
+      val objectIri                   = st.obj.stringValue
+      val currentStatementsForSubject = statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
+      statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
+    }
+    SparqlConstructResponse(statementMap.toMap)
+  }
+}
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
