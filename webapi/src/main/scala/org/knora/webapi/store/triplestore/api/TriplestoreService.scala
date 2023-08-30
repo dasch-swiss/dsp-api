@@ -67,20 +67,16 @@ trait TriplestoreService {
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
    *
-   * @param sparqlExtendedConstructRequest the request message.
+   * @param req the request message.
    * @return a [[SparqlExtendedConstructResponse]]
    */
-  def sparqlHttpExtendedConstruct(
-    sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse]
+  def sparqlHttpExtendedConstruct(req: SparqlExtendedConstructRequest): Task[SparqlExtendedConstructResponse]
 
   def sparqlHttpExtendedConstruct(query: String, isGravsearch: Boolean = false): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(
-      SparqlExtendedConstructRequest(query, isGravsearch)
-    )
+    sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(query, isGravsearch))
 
   def sparqlHttpExtendedConstruct(query: TxtFormat.Appendable): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(query.toString, isGravsearch = false)
+    sparqlHttpExtendedConstruct(query.toString)
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -115,11 +111,11 @@ trait TriplestoreService {
    * Performs a SPARQL update operation.
    *
    * @param sparqlUpdate the SPARQL update.
-   * @return a [[SparqlUpdateResponse]].
+   * @return a [[Unit]].
    */
-  def sparqlHttpUpdate(sparqlUpdate: String): Task[SparqlUpdateResponse]
+  def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit]
 
-  def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[SparqlUpdateResponse] = sparqlHttpUpdate(query.toString)
+  def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[Unit] = sparqlHttpUpdate(query.toString)
 
   /**
    * Performs a SPARQL ASK query.
@@ -173,17 +169,17 @@ trait TriplestoreService {
   def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean = true
-  ): Task[ResetRepositoryContentACK]
+  ): Task[Unit]
 
   /**
    * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
-  def dropAllTriplestoreContent(): Task[DropAllRepositoryContentACK]
+  def dropAllTriplestoreContent(): Task[Unit]
 
   /**
    * Wipes all triplestore data out using HTTP requests.
    */
-  def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK]
+  def dropDataGraphByGraph(): Task[Unit]
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`

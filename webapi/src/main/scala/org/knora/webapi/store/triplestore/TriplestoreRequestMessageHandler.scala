@@ -16,7 +16,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.DownloadRepositoryRequest
-import org.knora.webapi.messages.store.triplestoremessages.DropAllTRepositoryContent
 import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentRequest
 import org.knora.webapi.messages.store.triplestoremessages.InsertRepositoryContent
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRequest
@@ -68,7 +67,6 @@ final case class TriplestoreRequestMessageHandlerLive(updater: RepositoryUpdater
     case SparqlAskRequest(sparql: String)     => ts.sparqlHttpAsk(sparql)
     case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) =>
       ts.resetTripleStoreContent(rdfDataObjects, prependDefaults)
-    case DropAllTRepositoryContent() => ts.dropAllTriplestoreContent()
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
       ts.insertDataIntoTriplestore(rdfDataObjects, prependDefaults = true)
     case CheckTriplestoreRequest()                   => ts.checkTriplestore()

@@ -14,7 +14,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
-class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
+class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
   override implicit val timeout: FiniteDuration = 30.seconds
 
@@ -136,7 +136,7 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {
       appActor ! ResetRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, ResetRepositoryContentACK())
+      expectMsg(5.minutes, ())
 
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
@@ -159,7 +159,7 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
       }
 
       appActor ! SparqlUpdateRequest(insertQuery)
-      expectMsg(SparqlUpdateResponse())
+      expectMsg(())
 
       appActor ! SparqlSelectRequest(checkInsertQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
@@ -180,7 +180,7 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
       }
 
       appActor ! SparqlUpdateRequest(revertInsertQuery)
-      expectMsg(SparqlUpdateResponse())
+      expectMsg(())
 
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>

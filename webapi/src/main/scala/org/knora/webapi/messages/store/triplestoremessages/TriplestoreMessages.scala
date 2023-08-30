@@ -20,11 +20,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
@@ -35,16 +31,6 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 // Messages
 
 sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
-
-/**
- * Simple message for checking the connection to the triplestore.
- */
-case class CheckConnection() extends TriplestoreRequest
-
-/**
- * Simple message for acknowledging connection check
- */
-case class CheckConnectionACK()
 
 /**
  * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResult]].
@@ -261,11 +247,6 @@ case class NamedGraphDataResponse(turtle: String)
 case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
 
 /**
- * Indicates that the requested SPARQL Update was executed and returned no errors.
- */
-case class SparqlUpdateResponse()
-
-/**
  * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
  * [[SparqlAskResponse]].
  *
@@ -294,31 +275,6 @@ case class ResetRepositoryContent(rdfDataObjects: List[RdfDataObject], prependDe
     extends TriplestoreRequest
 
 /**
- * Sent as a response to [[ResetRepositoryContent]] if the request was processed successfully.
- */
-case class ResetRepositoryContentACK()
-
-/**
- * Message for removing all content from the repository.
- */
-case class DropAllTRepositoryContent() extends TriplestoreRequest
-
-/**
- * Sent as a response to [[DropAllTRepositoryContent]] if the request was processed successfully.
- */
-case class DropAllRepositoryContentACK()
-
-/**
- * Message for removing all content from the repository.
- */
-case class DropDataGraphByGraph() extends TriplestoreRequest
-
-/**
- * Sent as a response to [[DropDataGraphByGraph]] if the request was processed successfully.
- */
-case class DropDataGraphByGraphACK()
-
-/**
  * Inserts data into the repository.
  *
  * @param rdfDataObjects contains a list of [[RdfDataObject]].
@@ -342,18 +298,6 @@ case class InsertGraphDataContentRequest(graphContent: String, graphName: String
  * Sent as a response to [[InsertGraphDataContentRequest]] if the request was processed successfully.
  */
 case class InsertGraphDataContentResponse()
-
-/**
- * Initialize the repository. This will initiate the (re)creation of the repository and adding data to it.
- *
- * @param rdfDataObject contains a list of [[RdfDataObject]].
- */
-case class InitRepository(rdfDataObject: RdfDataObject) extends TriplestoreRequest
-
-/**
- * Initialization ((re)creation of repository and loading of data) is finished successfully.
- */
-case class InitRepositoryACK()
 
 /**
  * Ask triplestore if it is ready
@@ -587,14 +531,6 @@ case class StringLiteralV2(value: String, language: Option[String] = None)
  * @param stringLiterals a sequence of [[StringLiteralV2]].
  */
 case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
-
-  /**
-   * Sort sequence of [[StringLiteralV2]] by their text value.
-   *
-   * @return a [[StringLiteralSequenceV2]] sorted by string value.
-   */
-  def sortByStringValue: StringLiteralSequenceV2 =
-    StringLiteralSequenceV2(stringLiterals.sortBy(_.value))
 
   /**
    * Sort sequence of [[StringLiteralV2]] by their language value.

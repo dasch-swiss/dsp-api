@@ -33,21 +33,17 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
-import org.knora.webapi.messages.store.triplestoremessages.DropAllRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.DropDataGraphByGraphACK
 import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse
 import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentResponse
 import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.RepositoryUploadedResponse
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
@@ -191,18 +187,13 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     } yield FileWrittenResponse()
   }
 
-  override def sparqlHttpUpdate(query: String): Task[SparqlUpdateResponse] = {
+  override def sparqlHttpUpdate(query: String): Task[Unit] = {
     def doUpdate(ds: Dataset) = ZIO.attempt {
       val update    = UpdateFactory.create(query)
       val processor = UpdateExecutionFactory.create(update, ds)
       processor.execute()
     }
-    ZIO.scoped {
-      for {
-        ds <- getDataSetWithTransaction(ReadWrite.WRITE)
-        _  <- doUpdate(ds)
-      } yield SparqlUpdateResponse()
-    }
+    ZIO.scoped(getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate)).unit
   }
 
   override def sparqlHttpGraphFile(
@@ -235,16 +226,14 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[ResetRepositoryContentACK] = for {
+  ): Task[Unit] = for {
     _ <- dropAllTriplestoreContent()
     _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
-  } yield ResetRepositoryContentACK()
+  } yield ()
 
-  override def dropAllTriplestoreContent(): Task[DropAllRepositoryContentACK] =
-    createEmptyDataset.flatMap(ds => datasetRef.set(ds)).as(DropAllRepositoryContentACK())
+  override def dropAllTriplestoreContent(): Task[Unit] = createEmptyDataset.flatMap(datasetRef.set(_)).unit
 
-  override def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK] =
-    dropAllTriplestoreContent().as(DropDataGraphByGraphACK())
+  override def dropDataGraphByGraph(): Task[Unit] = dropAllTriplestoreContent()
 
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
