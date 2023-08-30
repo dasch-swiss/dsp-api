@@ -511,8 +511,6 @@ case class TriplestoreServiceLive(
   private def initJenaFusekiTriplestore(): Task[Unit] = {
 
     val httpPost = ZIO.attemptBlocking {
-      // TODO: Needs https://github.com/scalameta/metals/issues/3623 to be resolved
-      // val configFileName = s"webapi/scripts/fuseki-repository-config.ttl.template"
       val configFileName = s"fuseki-repository-config.ttl.template"
 
       // take config from the classpath and write to triplestore
