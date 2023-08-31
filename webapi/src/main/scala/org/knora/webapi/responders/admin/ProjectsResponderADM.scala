@@ -128,10 +128,13 @@ trait ProjectsResponderADM {
   /**
    * Sets project's restricted view settings.
    *
-   * @param id the project's identifier (IRI / shortcode / shortname)
+   * @param iri  the project's iri,
+   * @param user requesting user,
+   * @param size value to be set,
+   * @return [[ProjectRestrictedViewSettingsResponseADM]].
    */
   def setProjectRestrictedViewSettings(
-    id: Iri.ProjectIri,
+    iri: Iri.ProjectIri,
     user: UserADM,
     size: Option[String]
   ): Task[ProjectRestrictedViewSettingsResponseADM]
