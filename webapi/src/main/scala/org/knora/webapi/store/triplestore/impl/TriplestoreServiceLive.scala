@@ -13,21 +13,17 @@ import org.apache.http.HttpRequest
 import org.apache.http.NameValuePair
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
-import org.apache.http.client.AuthCache
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
-import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.config.SocketConfig
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.FileEntity
 import org.apache.http.entity.StringEntity
-import org.apache.http.impl.auth.BasicScheme
-import org.apache.http.impl.client.BasicAuthCache
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
@@ -45,11 +41,10 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
-import scala.collection.mutable
 
 import dsp.errors._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -60,156 +55,56 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 
-/**
- * Implementation of the the [[TriplestoreService]] for accessing Fuseki over HTTP.
- */
 case class TriplestoreServiceLive(
-  config: AppConfig,
-  httpClient: CloseableHttpClient,
-  implicit val stringFormatter: StringFormatter
-) extends TriplestoreService {
+  triplestoreConfig: Triplestore,
+  queryHttpClient: CloseableHttpClient,
+  targetHost: HttpHost,
+  implicit val sf: StringFormatter
+) extends TriplestoreService
+    with FusekiTriplestore {
 
-  // MIME type constants.
-  private val mimeTypeApplicationJson              = "application/json"
-  private val mimeTypeApplicationSparqlResultsJson = "application/sparql-results+json"
-  private val mimeTypeTextTurtle                   = "text/turtle"
-  private val mimeTypeApplicationSparqlUpdate      = "application/sparql-update"
-  private val mimeTypeApplicationNQuads            = "application/n-quads"
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
-  private val targetHost: HttpHost = new HttpHost(config.triplestore.host, config.triplestore.fuseki.port, "http")
-
-  private val credsProvider: BasicCredentialsProvider = new BasicCredentialsProvider
-  credsProvider.setCredentials(
-    new AuthScope(targetHost.getHostName, targetHost.getPort),
-    new UsernamePasswordCredentials(config.triplestore.fuseki.username, config.triplestore.fuseki.password)
-  )
-
-  // timeouts sent to Fuseki
-  private val queryTimeoutString      = config.triplestore.queryTimeout.toSeconds.toInt.toString
-  private val gravsearchTimeoutString = config.triplestore.gravsearchTimeout.toSeconds.toInt.toString
-
-  // the client config used for queries to the triplestore. The timeout has to be larger than
-  // config.triplestore.queryTimeoutAsDuration and config.triplestore.gravsearchTimeoutAsDuration.
-  private val requestTimeoutMillis = 7200000 // 2 hours
-
-  private val queryRequestConfig = RequestConfig
-    .custom()
-    .setConnectTimeout(requestTimeoutMillis)
-    .setConnectionRequestTimeout(requestTimeoutMillis)
-    .setSocketTimeout(requestTimeoutMillis)
-    .build
-
-  private val queryHttpClient: CloseableHttpClient = HttpClients.custom
-    .setDefaultCredentialsProvider(credsProvider)
-    .setDefaultRequestConfig(queryRequestConfig)
-    .build
-
-  private val dbName                 = config.triplestore.fuseki.repositoryName
-  private val queryPath              = s"/$dbName/query"
-  private val sparqlUpdatePath       = s"/$dbName/update"
-  private val graphPath              = s"/$dbName/get"
-  private val dataInsertPath         = s"/$dbName/data"
-  private val repositoryDownloadPath = s"/$dbName"
-  private val checkRepositoryPath    = "/$/server"
-  private val repositoryUploadPath   = repositoryDownloadPath
-
-  private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] = {
-    val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
-    val message: String   = "Triplestore timed out while sending a response, after sending statuscode 200."
-
-    if (response.contains("##  Query cancelled due to timeout during execution"))
-      ZIO.logError(message) *> ZIO.fail(TriplestoreTimeoutException(message))
-    else
-      ZIO.logError(
+  private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] =
+    if (response.contains("##  Query cancelled due to timeout during execution")) {
+      val msg: String = "Triplestore timed out while sending a response, after sending statuscode 200."
+      ZIO.logError(msg) *> ZIO.fail(TriplestoreTimeoutException(msg))
+    } else {
+      val delimiter: String = "\n" + StringUtils.repeat('=', 80) + "\n"
+      val msg =
         s"Couldn't parse response from triplestore:$delimiter$response${delimiter}in response to SPARQL query:$delimiter$sparql"
-      ) *> ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
-  }
-
-  /**
-   * Simulates a read timeout.
-   */
-  def doSimulateTimeout(): Task[SparqlSelectResult] = {
-    val sparql = """SELECT ?foo WHERE {
-                   |    BIND("foo" AS ?foo)
-                   |}""".stripMargin
-
-    for {
-      result <- sparqlHttpSelect(sparql = sparql, simulateTimeout = true)
-    } yield result
-  }
+      ZIO.logError(msg) *> ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore"))
+    }
 
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
    * @param sparql          the SPARQL SELECT query string.
-   * @param simulateTimeout if `true`, simulate a read timeout.
    * @param isGravsearch    `true` if it is a gravsearch query (relevant for timeout)
    * @return a [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(
-    sparql: String,
-    simulateTimeout: Boolean = false,
-    isGravsearch: Boolean = false
-  ): Task[SparqlSelectResult] = {
+  override def sparqlHttpSelect(sparql: String, isGravsearch: Boolean = false): Task[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
         .orElse(processError(sparql, resultStr))
 
-    for {
-      resultStr <-
-        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout, isGravsearch = isGravsearch)
-      // Parse the response as a JSON object and generate a response message.
-      responseMessage <- parseJsonResponse(sparql, resultStr)
-    } yield responseMessage
+    executeSparqlQuery(sparql, isGravsearch).flatMap(parseJsonResponse(sparql, _))
   }
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
    *
-   * @param sparqlConstructRequest the request message.
+   * @param construct the request message.
    * @return a [[SparqlConstructResponse]]
    */
-  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): Task[SparqlConstructResponse] = {
-
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
-    def parseTurtleResponse(
-      sparql: String,
-      turtleStr: String,
-      rdfFormatUtil: RdfFormatUtil
-    ): IO[TriplestoreException, SparqlConstructResponse] =
-      ZIO.attemptBlocking {
-        val rdfModel: RdfModel                                 = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-        val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
-
-        for (st: Statement <- rdfModel) {
-          val subjectIri   = st.subj.stringValue
-          val predicateIri = st.pred.stringValue
-          val objectIri    = st.obj.stringValue
-          val currentStatementsForSubject: Seq[(IRI, String)] =
-            statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
-          statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
-        }
-
-        SparqlConstructResponse(statementMap.toMap)
-      }.orElse(processError(sparql, turtleStr))
-
+  override def sparqlHttpConstruct(construct: SparqlConstructRequest): Task[SparqlConstructResponse] =
     for {
-      turtleStr <-
-        getSparqlHttpResponse(
-          sparqlConstructRequest.sparql,
-          isUpdate = false,
-          acceptMimeType = mimeTypeTextTurtle
-        )
-
-      response <- parseTurtleResponse(
-                    sparql = sparqlConstructRequest.sparql,
-                    turtleStr = turtleStr,
-                    rdfFormatUtil = rdfFormatUtil
-                  )
-    } yield response
-  }
+      turtleStr <- executeSparqlQuery(construct.sparql, acceptMimeType = mimeTypeTextTurtle)
+      rdfModel <- ZIO
+                    .attempt(rdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
+                    .orElse(processError(construct.sparql, turtleStr))
+    } yield SparqlConstructResponse.make(rdfModel)
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -218,89 +113,65 @@ case class TriplestoreServiceLive(
    * @param graphIri     the named graph IRI to be used in the output file.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
-   * @return a [[FileWrittenResponse]].
+   * @return a [[Unit]].
    */
-  def sparqlHttpConstructFile(
+  override def sparqlHttpConstructFile(
     sparql: String,
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
-    for {
-      turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
-      _ <- ZIO
-             .attempt(
-               rdfFormatUtil
-                 .turtleToQuadsFile(
-                   rdfSource = RdfStringSource(turtleStr),
-                   graphIri = graphIri,
-                   outputFile = outputFile,
-                   outputFormat = outputFormat
-                 )
-             )
-
-    } yield FileWrittenResponse()
-  }
+  ): Task[Unit] =
+    executeSparqlQuery(sparql, acceptMimeType = mimeTypeTextTurtle)
+      .mapAttempt(turtle =>
+        rdfFormatUtil.turtleToQuadsFile(RdfStringSource(turtle), graphIri, outputFile, outputFormat)
+      )
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
    *
-   * @param sparqlExtendedConstructRequest the request message.
+   * @param construct the request message.
    * @return a [[SparqlExtendedConstructResponse]]
    */
-  def sparqlHttpExtendedConstruct(
-    sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
+  override def sparqlHttpExtendedConstruct(
+    construct: SparqlExtendedConstructRequest
   ): Task[SparqlExtendedConstructResponse] =
     for {
-      turtleStr <- getSparqlHttpResponse(
-                     sparqlExtendedConstructRequest.sparql,
-                     isUpdate = false,
-                     isGravsearch = sparqlExtendedConstructRequest.isGravsearch,
-                     acceptMimeType = mimeTypeTextTurtle
-                   )
-
-      response <- SparqlExtendedConstructResponse
-                    .parseTurtleResponse(turtleStr)
-                    .foldZIO(
-                      _ =>
-                        ZIO.fail(
-                          TriplestoreResponseException(
-                            s"Couldn't parse Turtle from triplestore: $sparqlExtendedConstructRequest"
-                          )
-                        ),
-                      ZIO.succeed(_)
-                    )
+      turtleStr <- executeSparqlQuery(construct.sparql, construct.isGravsearch, mimeTypeTextTurtle)
+      response <-
+        SparqlExtendedConstructResponse
+          .parseTurtleResponse(turtleStr)
+          .foldZIO(
+            _ => {
+              val msg = s"Couldn't parse Turtle from triplestore: $construct"
+              ZIO.fail(TriplestoreResponseException(msg))
+            },
+            ZIO.succeed(_)
+          )
     } yield response
 
   /**
    * Performs a SPARQL update operation.
    *
    * @param sparqlUpdate the SPARQL update.
-   * @return a [[SparqlUpdateResponse]].
+   * @return [[Unit]].
    */
-  def sparqlHttpUpdate(sparqlUpdate: String): Task[SparqlUpdateResponse] =
-    for {
-      // Send the request to the triplestore.
-      _ <- getSparqlHttpResponse(sparqlUpdate, isUpdate = true)
-    } yield SparqlUpdateResponse()
+  override def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit] = {
+    val request = new HttpPost(paths.update)
+    request.setEntity(new StringEntity(sparqlUpdate, ContentType.create(mimeTypeApplicationSparqlUpdate, Consts.UTF_8)))
+    doHttpRequest(request, returnResponseAsString).unit
+  }
 
   /**
    * Performs a SPARQL ASK query.
    *
-   * @param sparql the SPARQL ASK query.
+   * @param query the SPARQL ASK query.
    * @return a [[SparqlAskResponse]].
    */
-  def sparqlHttpAsk(sparql: String): Task[SparqlAskResponse] =
+  override def sparqlHttpAsk(query: String): Task[SparqlAskResponse] =
     for {
-      resultString <- getSparqlHttpResponse(sparql, isUpdate = false)
+      resultString <- executeSparqlQuery(query)
       _            <- ZIO.logDebug(s"sparqlHttpAsk - resultString: $resultString")
-      result <- ZIO
-                  .attemptBlocking(
-                    resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
-                  )
-
+      result       <- ZIO.attemptBlocking(resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean])
     } yield SparqlAskResponse(result)
 
   /**
@@ -313,47 +184,40 @@ case class TriplestoreServiceLive(
   def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[ResetRepositoryContentACK] =
+  ): Task[Unit] =
     for {
       _ <- ZIO.logDebug("resetTripleStoreContent")
-
-      // drop old content
       _ <- dropAllTriplestoreContent()
-
-      // insert new content
       _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
-    } yield ResetRepositoryContentACK()
+    } yield ()
 
   /**
    * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
-  def dropAllTriplestoreContent(): Task[DropAllRepositoryContentACK] = {
-    val sparqlQuery = "DROP ALL"
-
+  def dropAllTriplestoreContent(): Task[Unit] =
     for {
       _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- getSparqlHttpResponse(sparqlQuery, isUpdate = true)
+      result <- sparqlHttpUpdate("DROP ALL")
       _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
-    } yield DropAllRepositoryContentACK()
-  }
+    } yield ()
 
   /**
    * Drops all triplestore data graph by graph using "DROP GRAPH" SPARQL query.
    * This method is useful in cases with large amount of data (over 10 million statements),
    * where the method [[dropAllTriplestoreContent()]] could create timeout issues.
    */
-  def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK] =
+  def dropDataGraphByGraph(): Task[Unit] =
     for {
       _      <- ZIO.logInfo("==>> Drop All Data Start")
       graphs <- getAllGraphs
       _      <- ZIO.logInfo(s"Number of graphs found: ${graphs.length}")
       _      <- ZIO.foreachDiscard(graphs)(dropGraph)
       _      <- ZIO.logInfo("==>> Drop All Data End")
-    } yield DropDataGraphByGraphACK()
+    } yield ()
 
   private def dropGraph(graphName: String): Task[Unit] =
     ZIO.logInfo(s"==>> Dropping graph: $graphName") *>
-      getSparqlHttpResponse(s"DROP GRAPH <$graphName>", isUpdate = true) *>
+      sparqlHttpUpdate(s"DROP GRAPH <$graphName>") *>
       ZIO.logDebug("Graph dropped")
 
   /**
@@ -374,12 +238,12 @@ case class TriplestoreServiceLive(
    *
    * @param rdfDataObjects  a sequence of paths and graph names referencing data that needs to be inserted.
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
-   * @return [[InsertTriplestoreContentACK]]
+   * @return [[Unit]]
    */
   def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[InsertTriplestoreContentACK] = {
+  ): Task[Unit] = {
 
     val calculateCompleteRdfDataObjectList: Task[NonEmptyChunk[RdfDataObject]] =
       if (prependDefaults) { // prepend
@@ -412,13 +276,13 @@ case class TriplestoreServiceLive(
 
             uriBuilder <-
               ZIO.attempt {
-                val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
+                val uriBuilder: URIBuilder = new URIBuilder(paths.data)
                 uriBuilder.addParameter("graph", graphName) // Note: addParameter encodes the graphName URL
                 uriBuilder
               }
 
             httpPost <-
-              ZIO.attempt {
+              ZIO.attemptBlocking {
                 val httpPost = new HttpPost(uriBuilder.build())
                 // Add the input file to the body of the request.
                 // here we need to tweak the base directory path from "webapi"
@@ -435,17 +299,9 @@ case class TriplestoreServiceLive(
             responseHandler <- ZIO.attempt(returnInsertGraphDataResponse(graphName)(_))
           } yield (httpPost, responseHandler)
         )
-      httpContext <- makeHttpContext
-      _ <- ZIO.foreachDiscard(request)(elem =>
-             doHttpRequest(
-               client = queryHttpClient,
-               request = elem._1,
-               context = httpContext,
-               processResponse = elem._2
-             )
-           )
+      _ <- ZIO.foreachDiscard(request)(elem => doHttpRequest(request = elem._1, processResponse = elem._2))
       _ <- ZIO.logDebug("==>> Loading Data End")
-    } yield InsertTriplestoreContentACK()
+    } yield ()
   }
 
   /**
@@ -453,30 +309,26 @@ case class TriplestoreServiceLive(
    * configured, tries to automatically configure (initialize) the required dataset.
    */
   def checkTriplestore(): Task[CheckTriplestoreResponse] = {
-
-    val triplestoreAvailableResponse = ZIO.succeed(CheckTriplestoreResponse.Available)
-
     val triplestoreNotInitializedResponse =
       ZIO.succeed(
         CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.NotInitialized(
-            s"None of the active datasets meet our requirement of name: ${config.triplestore.fuseki.repositoryName}"
+          TriplestoreStatus.NotInitialized(
+            s"None of the active datasets meet our requirement of name: ${fusekiConfig.repositoryName}"
           )
         )
       )
 
-    def triplestoreUnavailableResponse(cause: String) =
-      CheckTriplestoreResponse(
-        triplestoreStatus = TriplestoreStatus.Unavailable(s"Triplestore not available: $cause")
-      )
+    def triplestoreUnavailableResponse(cause: String) = CheckTriplestoreResponse(
+      TriplestoreStatus.Unavailable(s"Triplestore not available: $cause")
+    )
 
     ZIO
       .ifZIO(checkTriplestoreInitialized())(
-        triplestoreAvailableResponse,
-        if (config.triplestore.autoInit) {
+        ZIO.succeed(CheckTriplestoreResponse.Available),
+        if (triplestoreConfig.autoInit) {
           ZIO
-            .ifZIO(attemptToInitialize())(
-              triplestoreAvailableResponse,
+            .ifZIO(initJenaFusekiTriplestore() *> checkTriplestoreInitialized())(
+              ZIO.succeed(CheckTriplestoreResponse.Available),
               triplestoreNotInitializedResponse
             )
         } else {
@@ -487,28 +339,15 @@ case class TriplestoreServiceLive(
   }
 
   /**
-   * Attempt to initialize the triplestore.
-   */
-  private def attemptToInitialize(): Task[Boolean] =
-    for {
-      _           <- initJenaFusekiTriplestore()
-      initialized <- checkTriplestoreInitialized()
-    } yield initialized
-
-  /**
    * Call an endpoint that returns all datasets and check if our required dataset is present.
    */
   private def checkTriplestoreInitialized(): Task[Boolean] = {
 
-    val httpGet = ZIO.attempt {
-      val httpGet = new HttpGet(checkRepositoryPath)
-      httpGet.addHeader("Accept", mimeTypeApplicationJson)
-      httpGet
-    }
+    val request = new HttpGet(paths.checkServer)
+    request.addHeader("Accept", mimeTypeApplicationJson)
 
     def checkForExpectedDataset(response: String) = ZIO.attempt {
-      val nameShouldBe = config.triplestore.fuseki.repositoryName
-
+      val nameShouldBe = fusekiConfig.repositoryName
       import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol._
       val fusekiServer: FusekiServer = JsonParser(response).convertTo[FusekiServer]
       val neededDataset: Option[FusekiDataset] =
@@ -516,17 +355,7 @@ case class TriplestoreServiceLive(
       neededDataset.nonEmpty
     }
 
-    for {
-      req <- httpGet
-      ctx <- makeHttpContext
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnResponseAsString
-             )
-      result <- checkForExpectedDataset(res)
-    } yield result
+    doHttpRequest(request, returnResponseAsString).flatMap(checkForExpectedDataset)
   }
 
   /**
@@ -540,30 +369,19 @@ case class TriplestoreServiceLive(
   private def initJenaFusekiTriplestore(): Task[Unit] = {
 
     val httpPost = ZIO.attemptBlocking {
-      // TODO: Needs https://github.com/scalameta/metals/issues/3623 to be resolved
-      // val configFileName = s"webapi/scripts/fuseki-repository-config.ttl.template"
       val configFileName = s"fuseki-repository-config.ttl.template"
 
       // take config from the classpath and write to triplestore
-      val triplestoreConfig: String =
-        FileUtil.readTextResource(configFileName).replace("@REPOSITORY@", config.triplestore.fuseki.repositoryName)
+      val configFile: String =
+        FileUtil.readTextResource(configFileName).replace("@REPOSITORY@", fusekiConfig.repositoryName)
 
       val httpPost: HttpPost = new HttpPost("/$/datasets")
-      val stringEntity       = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeTextTurtle))
+      val stringEntity       = new StringEntity(configFile, ContentType.create(mimeTypeTextTurtle))
       httpPost.setEntity(stringEntity)
       httpPost
     }
 
-    for {
-      request     <- httpPost
-      httpContext <- makeHttpContext
-      _ <- doHttpRequest(
-             client = queryHttpClient,
-             request = request,
-             context = httpContext,
-             processResponse = returnUploadResponse
-           )
-    } yield ()
+    httpPost.flatMap(doHttpRequest(_, _ => ZIO.unit)).unit
   }
 
   /**
@@ -573,7 +391,7 @@ case class TriplestoreServiceLive(
    * @return a triplestore-specific URI for downloading the named graph.
    */
   private def makeNamedGraphDownloadUri(graphIri: IRI): URI = {
-    val uriBuilder: URIBuilder = new URIBuilder(graphPath)
+    val uriBuilder: URIBuilder = new URIBuilder(paths.get)
     uriBuilder.setParameter("graph", s"$graphIri")
     uriBuilder.build()
   }
@@ -586,34 +404,15 @@ case class TriplestoreServiceLive(
    * @param outputFormat         the output file format.
    * @return a string containing the contents of the graph in N-Quads format.
    */
-  def sparqlHttpGraphFile(
+  override def sparqlHttpGraphFile(
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = {
-
-    val httpGet = ZIO.attempt {
-      val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
-      httpGet.addHeader("Accept", mimeTypeTextTurtle)
-      httpGet
-    }
-
-    for {
-      ctx <- makeHttpContext
-      req <- httpGet
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = writeResponseFileAsTurtleContent(
-                 outputFile = outputFile,
-                 graphIri = graphIri,
-                 quadFormat = outputFormat
-               )
-             )
-    } yield res
-
-  }
+  ): Task[Unit] = {
+    val request = new HttpGet(makeNamedGraphDownloadUri(graphIri))
+    request.addHeader("Accept", mimeTypeTextTurtle)
+    doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile, graphIri, outputFormat))
+  }.unit
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.
@@ -621,80 +420,31 @@ case class TriplestoreServiceLive(
    * @param graphIri the IRI of the named graph.
    * @return a string containing the contents of the graph in Turtle format.
    */
-  def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = {
-
-    val httpGet = ZIO.attempt {
-      val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
-      httpGet.addHeader("Accept", mimeTypeTextTurtle)
-      httpGet
-    }
-
-    for {
-      ctx <- makeHttpContext
-      req <- httpGet
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnGraphDataAsTurtle(graphIri)
-             )
-    } yield res
+  override def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = {
+    val request = new HttpGet(makeNamedGraphDownloadUri(graphIri))
+    request.addHeader("Accept", mimeTypeTextTurtle)
+    doHttpRequest(request, returnGraphDataAsTurtle(graphIri))
   }
 
-  /**
-   * Submits a SPARQL request to the triplestore and returns the response as a string.
-   *   According to the request type a different timeout are used.
-   *
-   * @param sparql         the SPARQL request to be submitted.
-   * @param isUpdate       `true` if this is an update request.
-   * @param isGravsearch   `true` if this is a Gravsearch query (needs a greater timeout).
-   * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
-   * @param simulateTimeout if `true`, simulate a read timeout.
-   * @return the triplestore's response.
-   */
-  private def getSparqlHttpResponse(
-    sparql: String,
-    isUpdate: Boolean,
+  private def executeSparqlQuery(
+    query: String,
     isGravsearch: Boolean = false,
-    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
-    simulateTimeout: Boolean = false
-  ): Task[String] = {
-    val httpClient = ZIO.attempt(queryHttpClient)
-    val httpPost = ZIO.attempt {
-      if (isUpdate) {
-        // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
-        val requestEntity  = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
-        val updateHttpPost = new HttpPost(sparqlUpdatePath)
-        updateHttpPost.setEntity(requestEntity)
-        updateHttpPost
-      } else {
-        // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2, "query via POST with URL-encoded parameters").
-        val formParams = new util.ArrayList[NameValuePair]()
-        formParams.add(new BasicNameValuePair("query", sparql))
-        // in case of a gravsearch query, a specific (longer) timeout is set
-        formParams.add(
-          new BasicNameValuePair("timeout", if (isGravsearch) gravsearchTimeoutString else queryTimeoutString)
-        )
-        val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
-        val queryHttpPost: HttpPost             = new HttpPost(queryPath)
-        queryHttpPost.setEntity(requestEntity)
-        queryHttpPost.addHeader("Accept", acceptMimeType)
-        queryHttpPost
-      }
-    }
-
-    for {
-      ctx <- makeHttpContext
-      clt <- httpClient
-      req <- httpPost
-      res <- doHttpRequest(
-               client = clt,
-               request = req,
-               context = ctx,
-               processResponse = returnResponseAsString,
-               simulateTimeout = simulateTimeout
-             )
-    } yield res
+    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson
+  ) = {
+    val formParams = new util.ArrayList[NameValuePair]()
+    formParams.add(new BasicNameValuePair("query", query))
+    // in case of a gravsearch query, a specific (longer) timeout is set
+    formParams.add(
+      new BasicNameValuePair(
+        "timeout",
+        if (isGravsearch) triplestoreConfig.gravsearchTimeout.toSeconds.toInt.toString
+        else triplestoreConfig.queryTimeout.toSeconds.toInt.toString
+      )
+    )
+    val request: HttpPost = new HttpPost(paths.query)
+    request.setEntity(new UrlEncodedFormEntity(formParams, Consts.UTF_8))
+    request.addHeader("Accept", acceptMimeType)
+    doHttpRequest(request, returnResponseAsString)
   }
 
   /**
@@ -703,27 +453,10 @@ case class TriplestoreServiceLive(
    * @param outputFile           the output file.
    * @return a string containing the contents of the graph in N-Quads format.
    */
-  def downloadRepository(
-    outputFile: Path
-  ): Task[FileWrittenResponse] = {
-
-    val httpGet = ZIO.attempt {
-      val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
-      val httpGet                = new HttpGet(uriBuilder.build())
-      httpGet.addHeader("Accept", mimeTypeApplicationNQuads)
-      httpGet
-    }
-
-    for {
-      ctx <- makeHttpContext
-      req <- httpGet
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = writeResponseFileAsPlainContent(outputFile)
-             )
-    } yield res
+  override def downloadRepository(outputFile: Path): Task[Unit] = {
+    val request = new HttpGet(paths.repository)
+    request.addHeader("Accept", mimeTypeApplicationNQuads)
+    doHttpRequest(request, writeResponseFileAsPlainContent(outputFile)).unit
   }
 
   /**
@@ -731,25 +464,11 @@ case class TriplestoreServiceLive(
    *
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
-  def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse] = {
-
-    val httpPost = ZIO.attempt {
-      val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
-      val fileEntity         = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
-      httpPost.setEntity(fileEntity)
-      httpPost
-    }
-
-    for {
-      ctx <- makeHttpContext
-      req <- httpPost
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnUploadResponse
-             )
-    } yield res
+  override def uploadRepository(inputFile: Path): Task[Unit] = {
+    val fileEntity        = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
+    val request: HttpPost = new HttpPost(paths.repository)
+    request.setEntity(fileEntity)
+    doHttpRequest(request, _ => ZIO.unit).unit
   }
 
   /**
@@ -758,78 +477,30 @@ case class TriplestoreServiceLive(
    * @param graphContent a data graph in Turtle format to be inserted into the repository.
    * @param graphName    the name of the graph.
    */
-  def insertDataGraphRequest(graphContent: String, graphName: String): Task[InsertGraphDataContentResponse] = {
-
-    val httpPut = ZIO.attempt {
-      val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
-      uriBuilder.addParameter("graph", graphName)
-      val httpPut: HttpPut = new HttpPut(uriBuilder.build())
-      val requestEntity    = new StringEntity(graphContent, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
-      httpPut.setEntity(requestEntity)
-      httpPut
-    }
-
-    for {
-      ctx <- makeHttpContext
-      req <- httpPut
-      res <- doHttpRequest(
-               client = queryHttpClient,
-               request = req,
-               context = ctx,
-               processResponse = returnInsertGraphDataResponse(graphName)
-             )
-    } yield res
-  }
-
-  /**
-   * Formulate HTTP context.
-   *
-   * @return httpContext with credentials and authorization
-   */
-  private def makeHttpContext: Task[HttpClientContext] = ZIO.attempt {
-    val authCache: AuthCache   = new BasicAuthCache
-    val basicAuth: BasicScheme = new BasicScheme
-    authCache.put(targetHost, basicAuth)
-
-    val httpContext: HttpClientContext = HttpClientContext.create
-    httpContext.setCredentialsProvider(credsProvider)
-    httpContext.setAuthCache(authCache)
-    httpContext
+  override def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit] = {
+    val uri     = new URIBuilder(paths.data).addParameter("graph", graphName).build()
+    val entity  = new StringEntity(graphContent, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
+    val request = new HttpPut(uri)
+    request.setEntity(entity)
+    doHttpRequest(request, returnInsertGraphDataResponse(graphName))
   }
 
   /**
    * Makes an HTTP connection to the triplestore, and delegates processing of the response
    * to a function.
    *
-   * @param client          the HTTP client to be used for the request.
    * @param request         the request to be sent.
-   * @param context         the request context to be used.
-   * @param processError a function that processes the HTTP response.
-   * @param simulateTimeout if `true`, simulate a read timeout.
    * @tparam T the return type of `processError`.
    * @return the return value of `processError`.
    */
   private def doHttpRequest[T](
-    client: CloseableHttpClient,
     request: HttpRequest,
-    context: HttpClientContext,
-    processResponse: CloseableHttpResponse => Task[T],
-    simulateTimeout: Boolean = false
+    processResponse: CloseableHttpResponse => Task[T]
   ): Task[T] = {
-
-    def checkSimulateTimeout(): Task[Unit] =
-      if (simulateTimeout) {
-        ZIO.fail(
-          TriplestoreTimeoutException(
-            "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-          )
-        )
-      } else
-        ZIO.unit
 
     def executeQuery(): Task[CloseableHttpResponse] = {
       ZIO
-        .attempt(client.execute(targetHost, request, context))
+        .attempt(queryHttpClient.execute(targetHost, request))
         .catchSome {
           case socketTimeoutException: java.net.SocketTimeoutException =>
             val message =
@@ -846,32 +517,31 @@ case class TriplestoreServiceLive(
     } <* ZIO.logDebug(s"Executing Query: $request")
 
     def checkResponse(response: CloseableHttpResponse, statusCode: Int): Task[Unit] =
-      if (statusCode / 100 == 2)
-        ZIO.unit
-      else {
-        val entity =
-          Option(response.getEntity)
-            .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
+      ZIO
+        .unless(statusCode / 100 == 2) {
+          val entity =
+            Option(response.getEntity)
+              .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
 
-        val statusResponseMsg =
-          s"Triplestore responded with HTTP code $statusCode"
+          val statusResponseMsg =
+            s"Triplestore responded with HTTP code $statusCode"
 
-        (statusCode, entity) match {
-          case (404, _) => ZIO.fail(NotFoundException.notFound)
-          case (400, Some(response)) if response.contains("Text search parse error") =>
-            ZIO.fail(BadRequestException(s"$response"))
-          case (500, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
-          case (503, Some(response)) if response.contains("Query timed out") =>
-            ZIO.fail(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
-          case (503, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
-          case _        => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+          (statusCode, entity) match {
+            case (404, _) => ZIO.fail(NotFoundException.notFound)
+            case (400, Some(response)) if response.contains("Text search parse error") =>
+              ZIO.fail(BadRequestException(s"$response"))
+            case (500, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+            case (503, Some(response)) if response.contains("Query timed out") =>
+              ZIO.fail(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
+            case (503, _) => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+            case _        => ZIO.fail(TriplestoreResponseException(statusResponseMsg))
+          }
         }
-      }
+        .unit
 
     def getResponse = ZIO.acquireRelease(executeQuery())(response => ZIO.succeed(response.close()))
 
     ZIO.scoped(for {
-      _          <- checkSimulateTimeout()
       _          <- ZIO.logDebug("Executing query...")
       response   <- getResponse
       statusCode <- ZIO.attempt(response.getStatusLine.getStatusCode)
@@ -893,7 +563,6 @@ case class TriplestoreServiceLive(
         ZIO
           .attempt(EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
           .tapDefect(e => ZIO.logError(s"Failed to return response as string: $e"))
-
     }
 
   /**
@@ -916,20 +585,14 @@ case class TriplestoreServiceLive(
     }
 
   /**
-   * Attempts to transforms a [[CloseableHttpResponse]] to a [[RepositoryUploadedResponse]].
-   */
-  private def returnUploadResponse: CloseableHttpResponse => Task[RepositoryUploadedResponse] =
-    _ => ZIO.succeed(RepositoryUploadedResponse())
-
-  /**
-   * Attempts to transforms a [[CloseableHttpResponse]] to a [[InsertGraphDataContentResponse]].
+   * Attempts to transforms a [[CloseableHttpResponse]] to a [[Unit]].
    */
   private def returnInsertGraphDataResponse(
     graphName: String
-  )(response: CloseableHttpResponse): Task[InsertGraphDataContentResponse] =
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case None    => ZIO.fail(TriplestoreResponseException(s"$graphName could not be inserted into Triplestore."))
-      case Some(_) => ZIO.succeed(InsertGraphDataContentResponse())
+      case Some(_) => ZIO.unit
     }
 
   /**
@@ -937,20 +600,15 @@ case class TriplestoreServiceLive(
    *
    * @param outputFile             the output file.
    * @param response               the response to be read.
-   * @return a [[FileWrittenResponse]].
+   * @return a [[Unit]].
    */
   private def writeResponseFileAsPlainContent(
     outputFile: Path
-  )(response: CloseableHttpResponse): Task[FileWrittenResponse] =
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
-        {
-          ZIO.attempt {
-            // Stream the HTTP entity directly to the output file.
-            Files.copy(responseEntity.getContent, outputFile)
-          }
-        } *> ZIO.succeed(FileWrittenResponse())
-
+        // Stream the HTTP entity directly to the output file.
+        ZIO.attempt(Files.copy(responseEntity.getContent, outputFile)).unit
       case None =>
         val error = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
         ZIO.logError(error.toString) *>
@@ -965,34 +623,29 @@ case class TriplestoreServiceLive(
    * @param graphIri           the IRI of the graph used in the output.
    * @param quadFormat         the output format.
    * @param response           the response to be read.
-   * @return a [[FileWrittenResponse]].
+   * @return a [[Unit]].
    */
   private def writeResponseFileAsTurtleContent(
     outputFile: Path,
     graphIri: IRI,
     quadFormat: QuadFormat
-  )(response: CloseableHttpResponse): Task[FileWrittenResponse] =
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
-        ZIO.attempt {
+        ZIO.attemptBlocking {
           // Yes. Stream the HTTP entity to a temporary Turtle file.
           val tempTurtleFile = Paths.get(outputFile.toString + ".ttl")
           Files.copy(responseEntity.getContent, tempTurtleFile, StandardCopyOption.REPLACE_EXISTING)
 
-          // Convert the Turtle to the output format.
-
-          val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
           rdfFormatUtil.turtleToQuadsFile(
-            rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(tempTurtleFile))),
-            graphIri = graphIri,
-            outputFile = outputFile,
-            outputFormat = quadFormat
+            RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(tempTurtleFile))),
+            graphIri,
+            outputFile,
+            quadFormat
           )
 
           Files.delete(tempTurtleFile)
-
-          FileWrittenResponse()
+          ()
         }
 
       case None =>
@@ -1001,75 +654,49 @@ case class TriplestoreServiceLive(
         ZIO.logError(error.toString) *>
           ZIO.fail(error)
     }
-
 }
 
 object TriplestoreServiceLive {
-
-  /**
-   * Acquires a configured httpClient, backed by a connection pool,
-   * to be used in communicating with Fuseki.
-   */
-  private def acquire(config: AppConfig) = {
-    ZIO.attemptBlocking {
-
-      // timeout from config
-      val sipiTimeoutMillis: Int = config.sipi.timeout.toMillis.toInt
-
-      // Create a connection manager with custom configuration.
-      val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
-
-      // Create socket configuration
-      val socketConfig: SocketConfig = SocketConfig
-        .custom()
-        .setTcpNoDelay(true)
-        .build()
-
-      // Configure the connection manager to use socket configuration by default.
-      connManager.setDefaultSocketConfig(socketConfig)
-
-      // Validate connections after 1 sec of inactivity
+  private def makeHttpClient(config: Triplestore, host: HttpHost) =
+    ZIO.acquireRelease {
+      val connManager = new PoolingHttpClientConnectionManager()
+      connManager.setDefaultSocketConfig(SocketConfig.custom().setTcpNoDelay(true).build())
       connManager.setValidateAfterInactivity(1000)
-
-      // Configure total max or per route limits for persistent connections
-      // that can be kept in the pool or leased by the connection manager.
       connManager.setMaxTotal(100)
       connManager.setDefaultMaxPerRoute(15)
 
-      // Sipi custom default request config
-      val defaultRequestConfig = RequestConfig
-        .custom()
-        .setConnectTimeout(sipiTimeoutMillis)
-        .setConnectionRequestTimeout(sipiTimeoutMillis)
-        .setSocketTimeout(sipiTimeoutMillis)
-        .build()
+      val credentialsProvider = new BasicCredentialsProvider
+      credentialsProvider.setCredentials(
+        new AuthScope(host.getHostName, host.getPort),
+        new UsernamePasswordCredentials(config.fuseki.username, config.fuseki.password)
+      )
 
-      // Create an HttpClient with the given custom dependencies and configuration.
+      // the client config used for queries to the triplestore. The timeout has to be larger than
+      // tripleStoreConfig.queryTimeoutAsDuration and tripleStoreConfig.gravsearchTimeoutAsDuration.
+      val requestTimeoutMillis = 7_200_000 // 2 hours
+      val requestConfig = RequestConfig
+        .custom()
+        .setConnectTimeout(requestTimeoutMillis)
+        .setConnectionRequestTimeout(requestTimeoutMillis)
+        .setSocketTimeout(requestTimeoutMillis)
+        .build
+
       val httpClient: CloseableHttpClient = HttpClients
         .custom()
         .setConnectionManager(connManager)
-        .setDefaultRequestConfig(defaultRequestConfig)
+        .setDefaultCredentialsProvider(credentialsProvider)
+        .setDefaultRequestConfig(requestConfig)
         .build()
+      ZIO.succeed(httpClient)
+    }(client => ZIO.attemptBlocking(client.close()).logError.ignore)
 
-      httpClient
-    }.logError.orDie
-  } <* ZIO.logInfo(">>> Acquire Triplestore Service Http Connector <<<")
-
-  /**
-   * Releases the httpClient, freeing all resources.
-   */
-  private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] = {
-    ZIO.attemptBlocking {
-      httpClient.close()
-    }.logError.ignore
-  } <* ZIO.logInfo(">>> Release Triplestore Service Http Connector <<<")
-
-  val layer: ZLayer[AppConfig with StringFormatter, Nothing, TriplestoreService] =
+  val layer: URLayer[Triplestore with StringFormatter, TriplestoreService] =
     ZLayer.scoped {
       for {
-        sf         <- ZIO.service[StringFormatter]
-        config     <- ZIO.service[AppConfig]
-        httpClient <- ZIO.acquireRelease(acquire(config))(release)
-      } yield TriplestoreServiceLive(config, httpClient, sf)
+        sf     <- ZIO.service[StringFormatter]
+        config <- ZIO.service[Triplestore]
+        host    = new HttpHost(config.host, config.fuseki.port, "http")
+        client <- makeHttpClient(config, host)
+      } yield TriplestoreServiceLive(config, client, host, sf)
     }
 }

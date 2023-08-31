@@ -567,7 +567,7 @@ object IriConversions {
  * Handles string parsing, formatting, conversion, and validation.
  */
 class StringFormatter private (
-  val maybeConfig: Option[AppConfig] = None,
+  val maybeConfig: Option[AppConfig],
   maybeKnoraHostAndPort: Option[String] = None,
   initForTest: Boolean = false
 ) {
@@ -880,19 +880,20 @@ class StringFormatter private (
             // Determine whether the ontology is shared, and get its project code, if any.
             val (sharedOntology: Boolean, projectCode: Option[String]) = if (ontologyPath.head == "shared") {
               if (ontologyPath.length == 2) {
-                (true, Some(DefaultSharedOntologiesProjectCode)) // default shared ontologies project
+                // default shared ontologies project
+                (true, Some(DefaultSharedOntologiesProjectCode))
               } else if (ontologyPath.length == 3) {
-                (true, Some(validateProjectShortcode(ontologyPath(1), errorFun))) // other shared ontologies project
+                // other shared ontologies project
+                (true, Some(validateProjectShortcode(ontologyPath(1), errorFun)))
               } else {
                 errorFun
               }
             } else if (ontologyPath.length == 2) {
-              (
-                false,
-                Some(validateProjectShortcode(ontologyPath.head, errorFun))
-              ) // non-shared ontology with project code
+              // non-shared ontology with project code
+              (false, Some(validateProjectShortcode(ontologyPath.head, errorFun)))
             } else {
-              (false, None) // built-in ontology
+              // built-in ontology
+              (false, None)
             }
 
             // Extract the ontology name.
@@ -1598,8 +1599,8 @@ class StringFormatter private (
   private def makeArkUrl(
     projectID: String,
     resourceID: String,
-    maybeValueUUID: Option[UUID] = None,
-    maybeTimestamp: Option[Instant] = None
+    maybeValueUUID: Option[UUID],
+    maybeTimestamp: Option[Instant]
   ): String = {
 
     /**

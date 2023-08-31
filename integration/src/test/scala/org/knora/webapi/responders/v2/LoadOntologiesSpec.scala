@@ -13,7 +13,6 @@ import scala.concurrent.duration._
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.UnsafeZioRun
@@ -36,7 +35,7 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
     rdfDataObjs: List[RdfDataObject]
   ): Either[Status.Failure, SuccessResponseV2] = {
     appActor ! ResetRepositoryContent(rdfDataObjs)
-    expectMsg(5.minutes, ResetRepositoryContentACK())
+    expectMsg(5.minutes, ())
 
     UnsafeZioRun
       .run(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))

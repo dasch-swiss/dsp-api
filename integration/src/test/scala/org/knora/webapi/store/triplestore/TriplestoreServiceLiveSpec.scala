@@ -12,17 +12,13 @@ import scala.concurrent.duration._
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
-class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
+class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
   override implicit val timeout: FiniteDuration = 30.seconds
 
-  override lazy val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_data/anything-data.ttl",
-      name = "http://www.knora.org/data/0001/anything"
-    )
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything")
   )
 
   val countTriplesQuery: String =
@@ -136,7 +132,7 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {
       appActor ! ResetRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, ResetRepositoryContentACK())
+      expectMsg(5.minutes, ())
 
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
@@ -159,7 +155,7 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
       }
 
       appActor ! SparqlUpdateRequest(insertQuery)
-      expectMsg(SparqlUpdateResponse())
+      expectMsg(())
 
       appActor ! SparqlSelectRequest(checkInsertQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
@@ -180,7 +176,7 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
       }
 
       appActor ! SparqlUpdateRequest(revertInsertQuery)
-      expectMsg(SparqlUpdateResponse())
+      expectMsg(())
 
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
@@ -213,29 +209,18 @@ class TriplestoreServiceManagerSpec extends CoreSpec with ImplicitSender {
 
     "insert RDF DataObjects" in {
       appActor ! InsertRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, InsertTriplestoreContentACK())
+      expectMsg(5.minutes, ())
     }
 
     "put the graph data as turtle" in {
       appActor ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
-      expectMsgType[InsertGraphDataContentResponse](10.second)
+      expectMsgType[Unit](10.second)
     }
 
     "read the graph data as turtle" in {
       appActor ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
       val response = expectMsgType[NamedGraphDataResponse](1.second)
       response.turtle.length should be > 0
-    }
-
-    "report a connection timeout with an appropriate error message" in {
-      appActor ! SimulateTimeoutRequest()
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[TriplestoreTimeoutException])
-        assert(
-          msg.cause.getMessage == "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-        )
-      }
     }
   }
 }

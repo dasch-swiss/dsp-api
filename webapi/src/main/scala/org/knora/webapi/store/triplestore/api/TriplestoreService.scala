@@ -21,23 +21,13 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 trait TriplestoreService {
 
   /**
-   * Simulates a read timeout.
-   */
-  def doSimulateTimeout(): Task[SparqlSelectResult]
-
-  /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
    * @param sparql          The SPARQL SELECT query string.
-   * @param simulateTimeout If `true`, simulate a read timeout.
    * @param isGravsearch    If `true`, takes a long timeout because gravsearch queries can take a long time.
    * @return A [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(
-    sparql: String,
-    simulateTimeout: Boolean = false,
-    isGravsearch: Boolean = false
-  ): Task[SparqlSelectResult]
+  def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean = false): Task[SparqlSelectResult]
 
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
@@ -67,20 +57,16 @@ trait TriplestoreService {
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
    *
-   * @param sparqlExtendedConstructRequest the request message.
+   * @param req the request message.
    * @return a [[SparqlExtendedConstructResponse]]
    */
-  def sparqlHttpExtendedConstruct(
-    sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse]
+  def sparqlHttpExtendedConstruct(req: SparqlExtendedConstructRequest): Task[SparqlExtendedConstructResponse]
 
   def sparqlHttpExtendedConstruct(query: String, isGravsearch: Boolean = false): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(
-      SparqlExtendedConstructRequest(query, isGravsearch)
-    )
+    sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(query, isGravsearch))
 
   def sparqlHttpExtendedConstruct(query: TxtFormat.Appendable): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(query.toString, isGravsearch = false)
+    sparqlHttpExtendedConstruct(query.toString)
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -89,37 +75,37 @@ trait TriplestoreService {
    * @param graphIri     the named graph IRI to be used in the output file.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
-   * @return a [[FileWrittenResponse]].
+   * @return  [[Unit]].
    */
   def sparqlHttpConstructFile(
     sparql: String,
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse]
+  ): Task[Unit]
 
   def sparqlHttpConstructFile(
     sparql: String,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile.toFile.toPath, outputFormat)
+  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile.toFile.toPath, outputFormat)
   def sparqlHttpConstructFile(
     sparql: String,
     graphIri: InternalIri,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
+  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
 
   /**
    * Performs a SPARQL update operation.
    *
    * @param sparqlUpdate the SPARQL update.
-   * @return a [[SparqlUpdateResponse]].
+   * @return a [[Unit]].
    */
-  def sparqlHttpUpdate(sparqlUpdate: String): Task[SparqlUpdateResponse]
+  def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit]
 
-  def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[SparqlUpdateResponse] = sparqlHttpUpdate(query.toString)
+  def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[Unit] = sparqlHttpUpdate(query.toString)
 
   /**
    * Performs a SPARQL ASK query.
@@ -136,24 +122,22 @@ trait TriplestoreService {
    * @param graphIri             the IRI of the named graph.
    * @param outputFile           the file to be written.
    * @param outputFormat         the output file format.
-   *
-   * @return a string containing the contents of the graph in N-Quads format.
    */
   def sparqlHttpGraphFile(
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse]
+  ): Task[Unit]
   def sparqlHttpGraphFile(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpGraphFile(graphIri.value, outputFile.toFile.toPath, outputFormat)
+  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile.toFile.toPath, outputFormat)
   def sparqlHttpGraphFile(
     graphIri: InternalIri,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpGraphFile(graphIri.value, outputFile, outputFormat)
+  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile, outputFormat)
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.
@@ -173,17 +157,17 @@ trait TriplestoreService {
   def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean = true
-  ): Task[ResetRepositoryContentACK]
+  ): Task[Unit]
 
   /**
    * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
    */
-  def dropAllTriplestoreContent(): Task[DropAllRepositoryContentACK]
+  def dropAllTriplestoreContent(): Task[Unit]
 
   /**
    * Wipes all triplestore data out using HTTP requests.
    */
-  def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK]
+  def dropDataGraphByGraph(): Task[Unit]
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
@@ -191,16 +175,16 @@ trait TriplestoreService {
    *
    * @param rdfDataObjects  a sequence of paths and graph names referencing data that needs to be inserted.
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
-   * @return [[InsertTriplestoreContentACK]]
+   * @return [[Unit]]
    */
   def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[InsertTriplestoreContentACK]
+  ): Task[Unit]
 
   /**
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
-   * configured, tries to automatically configure (initialize) the required dataset.
+   * configured, tries to automatically configure () the required dataset.
    */
   def checkTriplestore(): Task[CheckTriplestoreResponse]
 
@@ -208,18 +192,15 @@ trait TriplestoreService {
    * Dumps the whole repository in N-Quads format, saving the response in a file.
    *
    * @param outputFile           the output file.
-   * @return a string containing the contents of the graph in N-Quads format.
    */
-  def downloadRepository(
-    outputFile: Path
-  ): Task[FileWrittenResponse]
+  def downloadRepository(outputFile: Path): Task[Unit]
 
   /**
    * Uploads repository content from an N-Quads file.
    *
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
-  def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse]
+  def uploadRepository(inputFile: Path): Task[Unit]
 
   /**
    * Puts a data graph into the repository.
@@ -227,6 +208,6 @@ trait TriplestoreService {
    * @param graphContent a data graph in Turtle format to be inserted into the repository.
    * @param graphName    the name of the graph.
    */
-  def insertDataGraphRequest(graphContent: String, graphName: String): Task[InsertGraphDataContentResponse]
+  def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit]
 
 }
