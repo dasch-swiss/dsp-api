@@ -24,6 +24,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -35,6 +36,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 trait OntologyHelpers {
@@ -1584,7 +1586,7 @@ final case class OntologyHelpersLive(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   ontologyCache: OntologyCache,
   implicit val stringFormatter: StringFormatter
 ) extends OntologyHelpers {
@@ -1597,19 +1599,10 @@ final case class OntologyHelpersLive(
    */
   override def loadOntologyMetadata(internalOntologyIri: SmartIri): Task[Option[OntologyMetadataV2]] = {
     for {
-      _ <- ZIO.attempt {
-             if (!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
-               throw AssertionException(s"Expected an internal ontology IRI: $internalOntologyIri")
-             }
+      _ <- ZIO.when(!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
+             ZIO.fail(AssertionException(s"Expected an internal ontology IRI: $internalOntologyIri"))
            }
-
-      getOntologyInfoSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                .getOntologyInfo(
-                                  ontologyIri = internalOntologyIri
-                                )
-                                .toString()
-
-      getOntologyInfoResponse <- triplestoreService.sparqlHttpConstruct(getOntologyInfoSparql)
+      getOntologyInfoResponse <- triplestore.query(Construct(sparql.v2.txt.getOntologyInfo(internalOntologyIri)))
 
       metadata: Option[OntologyMetadataV2] =
         if (getOntologyInfoResponse.statements.isEmpty) {
@@ -1732,7 +1725,7 @@ final case class OntologyHelpersLive(
   override def getSubjectsUsingOntology(ontology: ReadOntologyV2): Task[Set[IRI]] =
     for {
       isOntologyUsedSparql <- ZIO.attempt(
-                                org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                                sparql.v2.txt
                                   .isOntologyUsed(
                                     ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
                                     classIris = ontology.classes.keySet,
@@ -1740,7 +1733,7 @@ final case class OntologyHelpersLive(
                                   )
                               )
 
-      isOntologyUsedResponse <- triplestoreService.query(Select(isOntologyUsedSparql))
+      isOntologyUsedResponse <- triplestore.query(Select(isOntologyUsedSparql))
 
       subjects = isOntologyUsedResponse.results.bindings.map(row => row.rowMap("s")).toSet
     } yield subjects
@@ -1776,14 +1769,14 @@ final case class OntologyHelpersLive(
   override def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2] =
     for {
       sparql <- ZIO.attempt(
-                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                  sparql.v2.txt
                     .getPropertyDefinition(
                       propertyIri = propertyIri
                     )
                     .toString()
                 )
 
-      constructResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparql)
+      constructResponse <- triplestore.sparqlHttpExtendedConstruct(sparql)
     } yield OntologyHelpers.constructResponseToPropertyDefinition(
       propertyIri = propertyIri,
       constructResponse = constructResponse
@@ -2056,14 +2049,14 @@ final case class OntologyHelpersLive(
   override def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2] =
     for {
       sparql <- ZIO.attempt(
-                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                  sparql.v2.txt
                     .getClassDefinition(
                       classIri = classIri
                     )
                     .toString()
                 )
 
-      constructResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparql)
+      constructResponse <- triplestore.sparqlHttpExtendedConstruct(sparql)
     } yield OntologyHelpers.constructResponseToClassDefinition(
       classIri = classIri,
       constructResponse = constructResponse

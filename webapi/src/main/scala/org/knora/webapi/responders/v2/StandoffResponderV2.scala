@@ -43,6 +43,7 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.MappingElement
 import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
 import org.knora.webapi.messages.twirl.MappingXMLAttribute
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -60,6 +61,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.cache.CacheUtil
 
@@ -71,7 +73,7 @@ trait StandoffResponderV2
 final case class StandoffResponderV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   implicit val stringFormatter: StringFormatter
@@ -109,7 +111,7 @@ final case class StandoffResponderV2Live(
     for {
       resourceRequestSparql <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          sparql.v2.txt
             .getResourcePropertiesAndValues(
               resourceIris = Seq(getStandoffRequestV2.resourceIri),
               preview = false,
@@ -123,7 +125,7 @@ final case class StandoffResponderV2Live(
             .toString()
         )
 
-      resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
+      resourceRequestResponse <- triplestore.sparqlHttpExtendedConstruct(resourceRequestSparql)
 
       // separate resources and values
       mainResourcesAndValueRdfData =
@@ -507,19 +509,15 @@ final case class StandoffResponderV2Live(
         _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
 
         // check if the mapping IRI already exists
-        getExistingMappingSparql =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .getMapping(mappingIri)
-            .toString()
-
-        existingMappingResponse <- triplestoreService.sparqlHttpConstruct(getExistingMappingSparql)
+        getExistingMappingSparql = sparql.v2.txt.getMapping(mappingIri)
+        existingMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
 
         _ = if (existingMappingResponse.statements.nonEmpty) {
               throw BadRequestException(s"mapping IRI $mappingIri already exists")
             }
 
         createNewMappingSparql =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          sparql.v2.txt
             .createNewMapping(
               dataNamedGraph = namedGraph,
               mappingIri = mappingIri,
@@ -530,10 +528,10 @@ final case class StandoffResponderV2Live(
             .toString()
 
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(createNewMappingSparql)
+        _ <- triplestore.sparqlHttpUpdate(createNewMappingSparql)
 
         // check if the mapping has been created
-        newMappingResponse <- triplestoreService.sparqlHttpConstruct(getExistingMappingSparql)
+        newMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
 
         _ = if (newMappingResponse.statements.isEmpty) {
               logger.error(
@@ -545,17 +543,8 @@ final case class StandoffResponderV2Live(
             }
 
         // get the mapping from the triplestore and cache it thereby
-        _ = getMappingFromTriplestore(
-              mappingIri = mappingIri,
-              requestingUser = requestingUser
-            )
-      } yield {
-        CreateMappingResponseV2(
-          mappingIri = mappingIri,
-          label = label,
-          projectIri = projectIri
-        )
-      }
+        _ <- getMappingFromTriplestore(mappingIri, requestingUser)
+      } yield CreateMappingResponseV2(mappingIri, label, projectIri)
 
       createMappingFuture.mapError {
         case validationException: SAXException =>
@@ -830,16 +819,9 @@ final case class StandoffResponderV2Live(
   private def getMappingFromTriplestore(
     mappingIri: IRI,
     requestingUser: UserADM
-  ): Task[MappingXMLtoStandoff] = {
-
-    val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .getMapping(
-        mappingIri = mappingIri
-      )
-      .toString()
-
+  ): Task[MappingXMLtoStandoff] =
     for {
-      mappingResponse <- triplestoreService.sparqlHttpConstruct(getMappingSparql)
+      mappingResponse <- triplestore.query(Construct(sparql.v2.txt.getMapping(mappingIri)))
 
       // if the result is empty, the mapping does not exist
       _ = if (mappingResponse.statements.isEmpty) {
@@ -938,7 +920,6 @@ final case class StandoffResponderV2Live(
       _ = CacheUtil.put(cacheName = mappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
 
     } yield mappingXMLToStandoff
-  }
 
   /**
    * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.

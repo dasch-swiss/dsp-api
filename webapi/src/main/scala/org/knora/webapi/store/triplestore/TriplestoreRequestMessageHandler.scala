@@ -26,8 +26,7 @@ final case class TriplestoreRequestMessageHandlerLive(updater: RepositoryUpdater
     message.isInstanceOf[TriplestoreRequest]
 
   override def handle(message: ResponderRequest): Task[Any] = message match {
-    case UpdateRepositoryRequest()                      => updater.maybeUpgradeRepository
-    case sparqlConstructRequest: SparqlConstructRequest => ts.sparqlHttpConstruct(sparqlConstructRequest)
+    case UpdateRepositoryRequest() => updater.maybeUpgradeRepository
     case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
       ts.sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest)
     case SparqlConstructFileRequest(

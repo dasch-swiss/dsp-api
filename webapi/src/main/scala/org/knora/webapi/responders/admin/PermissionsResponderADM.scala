@@ -40,6 +40,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
@@ -1618,34 +1619,19 @@ final case class PermissionsResponderADMLive(
     apiRequestID: UUID
   ): Task[PermissionsForProjectGetResponseADM] =
     for {
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getProjectPermissions(
-                                 projectIri = projectIRI
-                               )
-                               .toString()
-                           )
-
-      permissionsQueryResponse <- triplestore.sparqlHttpConstruct(sparqlQueryString)
-
-      /* extract response statements */
-      permissionsQueryResponseStatements: Map[IRI, Seq[(IRI, String)]] = permissionsQueryResponse.statements
-
-      permissionsInfo: Set[PermissionInfoADM] =
-        if (permissionsQueryResponseStatements.isEmpty) {
-          throw NotFoundException(s"No permission could be found for $projectIRI.")
-        } else {
-          permissionsQueryResponseStatements.map { statement =>
-            val permissionIri       = statement._1
-            val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
-            PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
-          }.toSet
-        }
-
-      /* construct response object */
-      response = permissionsmessages.PermissionsForProjectGetResponseADM(permissionsInfo)
-
-    } yield response
+      permissionsQueryResponseStatements <- triplestore
+                                              .query(Construct(sparql.admin.txt.getProjectPermissions(projectIRI)))
+                                              .map(_.statements)
+      _ <- ZIO.when(permissionsQueryResponseStatements.isEmpty) {
+             ZIO.fail(NotFoundException(s"No permission could be found for $projectIRI."))
+           }
+      permissionsInfo =
+        permissionsQueryResponseStatements.map { statement =>
+          val permissionIri       = statement._1
+          val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
+          PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
+        }.toSet
+    } yield permissionsmessages.PermissionsForProjectGetResponseADM(permissionsInfo)
 
   /**
    * Update a permission's group

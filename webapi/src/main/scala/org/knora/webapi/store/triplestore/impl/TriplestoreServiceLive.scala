@@ -41,7 +41,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.Triplestore
@@ -50,8 +49,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Select}
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
@@ -96,15 +94,15 @@ case class TriplestoreServiceLive(
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
    *
-   * @param construct the request message.
+   * @param query The SPARQL [[Construct]] query.
    * @return a [[SparqlConstructResponse]]
    */
-  override def sparqlHttpConstruct(construct: SparqlConstructRequest): Task[SparqlConstructResponse] =
+  override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtleStr <- executeSparqlQuery(construct.sparql, acceptMimeType = mimeTypeTextTurtle)
+      turtleStr <- executeSparqlQuery(query.sparql, query.isGravsearch, mimeTypeTextTurtle)
       rdfModel <- ZIO
                     .attempt(rdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
-                    .orElse(processError(construct.sparql, turtleStr))
+                    .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 
   /**

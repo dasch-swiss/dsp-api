@@ -10,14 +10,12 @@ import zio._
 import zio.macros.accessible
 
 import java.nio.file.Path
-
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Select}
 
 @accessible
 trait TriplestoreService {
@@ -41,19 +39,10 @@ trait TriplestoreService {
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
    *
-   * @param sparqlConstructRequest the query.
+   * @param sparql The SPARQL [[Construct]] query.
    * @return a [[SparqlConstructResponse]]
    */
-  def sparqlHttpConstruct(sparqlConstructRequest: String): Task[SparqlConstructResponse] =
-    sparqlHttpConstruct(SparqlConstructRequest(sparqlConstructRequest))
-
-  /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
-   *
-   * @param sparqlConstructRequest the request message.
-   * @return a [[SparqlConstructResponse]]
-   */
-  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): Task[SparqlConstructResponse]
+  def query(sparql: Construct): Task[SparqlConstructResponse]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
@@ -222,5 +211,13 @@ object TriplestoreService {
       def apply(sparql: String): Select = Select(sparql, isGravsearch = false)
     }
 
+    case class Construct(sparql: String, isGravsearch: Boolean) extends SparqlQuery
+
+    object Construct {
+      def apply(sparql: TxtFormat.Appendable, isGravSearch: Boolean = false): Construct =
+        Construct(sparql.toString, isGravSearch)
+
+      def apply(sparql: String): Construct = Construct(sparql, isGravsearch = false)
+    }
   }
 }

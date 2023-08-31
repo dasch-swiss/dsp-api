@@ -19,7 +19,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
@@ -27,6 +26,7 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
@@ -94,9 +94,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                |     a  <${Biblio.Class.Article.value}> .
                |}
                |""".stripMargin
-          val request = SparqlConstructRequest(query)
           for {
-            response <- TriplestoreService.sparqlHttpConstruct(request)
+            response <- TriplestoreService.query(Construct(query))
           } yield assertTrue(
             response == SparqlConstructResponse(
               Map(
