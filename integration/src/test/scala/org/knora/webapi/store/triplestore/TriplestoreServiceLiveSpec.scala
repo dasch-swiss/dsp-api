@@ -209,7 +209,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
     "insert RDF DataObjects" in {
       appActor ! InsertRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, InsertTriplestoreContentACK())
+      expectMsg(5.minutes, ())
     }
 
     "put the graph data as turtle" in {

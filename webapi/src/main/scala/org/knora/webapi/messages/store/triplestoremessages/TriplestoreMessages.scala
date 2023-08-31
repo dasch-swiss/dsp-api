@@ -49,7 +49,7 @@ case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
- * written to the specified file in a quad format. A successful response message will be a [[FileWrittenResponse]].
+ * written to the specified file in a quad format. A successful response message will be a [[Unit]].
  *
  * @param sparql               the SPARQL string.
  * @param graphIri             the named graph IRI to be used in the TriG file.
@@ -213,7 +213,7 @@ case class SparqlExtendedConstructResponse(
 
 /**
  * Requests a named graph, which will be written to the specified file. A successful response
- * will be a [[FileWrittenResponse]].
+ * will be a [[Unit]].
  *
  * @param graphIri             the IRI of the named graph.
  * @param outputFile           the destination file.
@@ -282,11 +282,6 @@ case class ResetRepositoryContent(rdfDataObjects: List[RdfDataObject], prependDe
 case class InsertRepositoryContent(rdfDataObjects: List[RdfDataObject]) extends TriplestoreRequest
 
 /**
- * Sent as a response to [[InsertRepositoryContent]] if the request was processed successfully.
- */
-case class InsertTriplestoreContentACK()
-
-/**
  * Inserts raw RDF data into the repository.
  *
  * @param graphContent contains graph data as turtle.
@@ -315,29 +310,19 @@ object CheckTriplestoreResponse {
 case class UpdateRepositoryRequest() extends TriplestoreRequest
 
 /**
- * Requests that the repository is downloaded to an N-Quads file. A successful response will be a [[FileWrittenResponse]].
+ * Requests that the repository is downloaded to an N-Quads file. A successful response will be a [[Unit]].
  *
  * @param outputFile           the output file.
  */
 case class DownloadRepositoryRequest(outputFile: Path) extends TriplestoreRequest
 
 /**
- * Indicates that a file was written successfully.
- */
-case class FileWrittenResponse()
-
-/**
  * Requests that repository content is uploaded from an N-Quads. A successful response will be a
- * [[RepositoryUploadedResponse]].
+ * [[Unit]].
  *
  * @param inputFile a TriG file containing the content to be uploaded to the repository.
  */
 case class UploadRepositoryRequest(inputFile: Path) extends TriplestoreRequest
-
-/**
- * Indicates that repository content was successfully uploaded.
- */
-case class RepositoryUploadedResponse()
 
 /**
  * Indicates whether the repository is up to date.

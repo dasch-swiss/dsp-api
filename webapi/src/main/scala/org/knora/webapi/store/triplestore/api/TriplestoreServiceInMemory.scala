@@ -33,8 +33,6 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
-import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
@@ -158,7 +156,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = ZIO.scoped {
+  ): Task[Unit] = ZIO.scoped {
     for {
       model  <- execConstruct(sparql)
       turtle <- modelToTurtle(model)
@@ -172,7 +170,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
                    outputFormat = outputFormat
                  )
              )
-    } yield FileWrittenResponse()
+    } yield ()
   }
 
   override def sparqlHttpUpdate(query: String): Task[Unit] = {
@@ -188,7 +186,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = ZIO.scoped {
+  ): Task[Unit] = ZIO.scoped {
     for {
       fos <- fileOutputStream(outputFile)
       ds  <- datasetRef.get
@@ -198,7 +196,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
              try { ds.getNamedModel(graphIri).write(fos, lang.getName) }
              finally { ds.end() }
            }
-    } yield FileWrittenResponse()
+    } yield ()
   }
 
   override def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = ZIO.scoped {
@@ -226,11 +224,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[InsertTriplestoreContentACK] =
-    for {
-      objects <- getListToInsert(rdfDataObjects, prependDefaults)
-      _       <- ZIO.foreachDiscard(objects)(insertRdfDataObject)
-    } yield InsertTriplestoreContentACK()
+  ): Task[Unit] =
+    getListToInsert(rdfDataObjects, prependDefaults).flatMap(ZIO.foreachDiscard(_)(insertRdfDataObject))
 
   private def getListToInsert(
     rdfDataObjects: List[RdfDataObject],

@@ -75,27 +75,27 @@ trait TriplestoreService {
    * @param graphIri     the named graph IRI to be used in the output file.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
-   * @return a [[FileWrittenResponse]].
+   * @return  [[Unit]].
    */
   def sparqlHttpConstructFile(
     sparql: String,
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse]
+  ): Task[Unit]
 
   def sparqlHttpConstructFile(
     sparql: String,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile.toFile.toPath, outputFormat)
+  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile.toFile.toPath, outputFormat)
   def sparqlHttpConstructFile(
     sparql: String,
     graphIri: InternalIri,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
+  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
 
   /**
    * Performs a SPARQL update operation.
@@ -122,24 +122,22 @@ trait TriplestoreService {
    * @param graphIri             the IRI of the named graph.
    * @param outputFile           the file to be written.
    * @param outputFormat         the output file format.
-   *
-   * @return a string containing the contents of the graph in N-Quads format.
    */
   def sparqlHttpGraphFile(
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse]
+  ): Task[Unit]
   def sparqlHttpGraphFile(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpGraphFile(graphIri.value, outputFile.toFile.toPath, outputFormat)
+  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile.toFile.toPath, outputFormat)
   def sparqlHttpGraphFile(
     graphIri: InternalIri,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = sparqlHttpGraphFile(graphIri.value, outputFile, outputFormat)
+  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile, outputFormat)
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.
@@ -177,16 +175,16 @@ trait TriplestoreService {
    *
    * @param rdfDataObjects  a sequence of paths and graph names referencing data that needs to be inserted.
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
-   * @return [[InsertTriplestoreContentACK]]
+   * @return [[Unit]]
    */
   def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[InsertTriplestoreContentACK]
+  ): Task[Unit]
 
   /**
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
-   * configured, tries to automatically configure (initialize) the required dataset.
+   * configured, tries to automatically configure () the required dataset.
    */
   def checkTriplestore(): Task[CheckTriplestoreResponse]
 

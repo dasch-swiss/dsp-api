@@ -113,18 +113,18 @@ case class TriplestoreServiceLive(
    * @param graphIri     the named graph IRI to be used in the output file.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
-   * @return a [[FileWrittenResponse]].
+   * @return a [[Unit]].
    */
   override def sparqlHttpConstructFile(
     sparql: String,
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] =
-    for {
-      turtleStr <- executeSparqlQuery(sparql, acceptMimeType = mimeTypeTextTurtle)
-      _         <- ZIO.attempt(rdfFormatUtil.turtleToQuadsFile(RdfStringSource(turtleStr), graphIri, outputFile, outputFormat))
-    } yield FileWrittenResponse()
+  ): Task[Unit] =
+    executeSparqlQuery(sparql, acceptMimeType = mimeTypeTextTurtle)
+      .mapAttempt(turtle =>
+        rdfFormatUtil.turtleToQuadsFile(RdfStringSource(turtle), graphIri, outputFile, outputFormat)
+      )
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
@@ -238,12 +238,12 @@ case class TriplestoreServiceLive(
    *
    * @param rdfDataObjects  a sequence of paths and graph names referencing data that needs to be inserted.
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
-   * @return [[InsertTriplestoreContentACK]]
+   * @return [[Unit]]
    */
   def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[InsertTriplestoreContentACK] = {
+  ): Task[Unit] = {
 
     val calculateCompleteRdfDataObjectList: Task[NonEmptyChunk[RdfDataObject]] =
       if (prependDefaults) { // prepend
@@ -301,7 +301,7 @@ case class TriplestoreServiceLive(
         )
       _ <- ZIO.foreachDiscard(request)(elem => doHttpRequest(request = elem._1, processResponse = elem._2))
       _ <- ZIO.logDebug("==>> Loading Data End")
-    } yield InsertTriplestoreContentACK()
+    } yield ()
   }
 
   /**
@@ -381,7 +381,7 @@ case class TriplestoreServiceLive(
       httpPost
     }
 
-    httpPost.flatMap(doHttpRequest(_, returnUploadResponse)).unit
+    httpPost.flatMap(doHttpRequest(_, _ => ZIO.unit)).unit
   }
 
   /**
@@ -408,11 +408,11 @@ case class TriplestoreServiceLive(
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = {
+  ): Task[Unit] = {
     val request = new HttpGet(makeNamedGraphDownloadUri(graphIri))
     request.addHeader("Accept", mimeTypeTextTurtle)
     doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile, graphIri, outputFormat))
-  }
+  }.unit
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.
@@ -468,7 +468,7 @@ case class TriplestoreServiceLive(
     val fileEntity        = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
     val request: HttpPost = new HttpPost(paths.repository)
     request.setEntity(fileEntity)
-    doHttpRequest(request, returnUploadResponse).unit
+    doHttpRequest(request, _ => ZIO.unit).unit
   }
 
   /**
@@ -585,12 +585,6 @@ case class TriplestoreServiceLive(
     }
 
   /**
-   * Attempts to transforms a [[CloseableHttpResponse]] to a [[RepositoryUploadedResponse]].
-   */
-  private def returnUploadResponse: CloseableHttpResponse => Task[RepositoryUploadedResponse] =
-    _ => ZIO.succeed(RepositoryUploadedResponse())
-
-  /**
    * Attempts to transforms a [[CloseableHttpResponse]] to a [[Unit]].
    */
   private def returnInsertGraphDataResponse(
@@ -606,20 +600,15 @@ case class TriplestoreServiceLive(
    *
    * @param outputFile             the output file.
    * @param response               the response to be read.
-   * @return a [[FileWrittenResponse]].
+   * @return a [[Unit]].
    */
   private def writeResponseFileAsPlainContent(
     outputFile: Path
-  )(response: CloseableHttpResponse): Task[FileWrittenResponse] =
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
-        {
-          ZIO.attempt {
-            // Stream the HTTP entity directly to the output file.
-            Files.copy(responseEntity.getContent, outputFile)
-          }
-        } *> ZIO.succeed(FileWrittenResponse())
-
+        // Stream the HTTP entity directly to the output file.
+        ZIO.attempt(Files.copy(responseEntity.getContent, outputFile)).unit
       case None =>
         val error = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
         ZIO.logError(error.toString) *>
@@ -634,13 +623,13 @@ case class TriplestoreServiceLive(
    * @param graphIri           the IRI of the graph used in the output.
    * @param quadFormat         the output format.
    * @param response           the response to be read.
-   * @return a [[FileWrittenResponse]].
+   * @return a [[Unit]].
    */
   private def writeResponseFileAsTurtleContent(
     outputFile: Path,
     graphIri: IRI,
     quadFormat: QuadFormat
-  )(response: CloseableHttpResponse): Task[FileWrittenResponse] =
+  )(response: CloseableHttpResponse): Task[Unit] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
         ZIO.attemptBlocking {
@@ -656,7 +645,7 @@ case class TriplestoreServiceLive(
           )
 
           Files.delete(tempTurtleFile)
-          FileWrittenResponse()
+          ()
         }
 
       case None =>
