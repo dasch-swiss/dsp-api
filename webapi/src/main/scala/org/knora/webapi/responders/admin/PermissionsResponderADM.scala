@@ -40,6 +40,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -478,18 +479,10 @@ final case class PermissionsResponderADMLive(
     apiRequestID: UUID
   ): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getAdministrativePermissionsForProject(
-                                 projectIri = projectIRI
-                               )
-                               .toString()
-                           )
-
-      permissionsQueryResponse <- triplestore.sparqlHttpSelect(sparqlQueryString)
-
-      /* extract response rows */
-      permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
+      permissionsQueryResponseRows <-
+        triplestore
+          .query(Select(sparql.admin.txt.getAdministrativePermissionsForProject(projectIRI)))
+          .map(_.results.bindings)
 
       permissionsWithProperties: Map[String, Map[String, String]] =
         permissionsQueryResponseRows
@@ -567,16 +560,8 @@ final case class PermissionsResponderADMLive(
     requestingUser: UserADM
   ): Task[Option[AdministrativePermissionADM]] =
     for {
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getAdministrativePermissionForProjectAndGroup(
-                                 projectIri = projectIri,
-                                 groupIri = groupIri
-                               )
-                               .toString()
-                           )
-
-      permissionQueryResponse <- triplestore.sparqlHttpSelect(sparqlQueryString)
+      permissionQueryResponse <-
+        triplestore.query(Select(sparql.admin.txt.getAdministrativePermissionForProjectAndGroup(projectIri, groupIri)))
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -783,16 +768,8 @@ final case class PermissionsResponderADMLive(
           ) {
             throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
           }
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getObjectAccessPermission(
-                                 resourceIri = Some(resourceIri),
-                                 valueIri = None
-                               )
-                               .toString()
-                           )
-
-      permissionQueryResponse <- triplestore.sparqlHttpSelect(sparqlQueryString)
+      permissionQueryResponse <-
+        triplestore.query(Select(sparql.admin.txt.getObjectAccessPermission(Some(resourceIri), None)))
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -833,23 +810,17 @@ final case class PermissionsResponderADMLive(
     for {
       projectIri <- getProjectOfEntity(valueIri)
       // Check user's permission for the operation
-      _ = if (
-            !requestingUser.isSystemAdmin
-            && !requestingUser.permissions.isProjectAdmin(projectIri)
-            && !requestingUser.isSystemUser
-          ) {
-            throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-          }
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getObjectAccessPermission(
-                                 resourceIri = None,
-                                 valueIri = Some(valueIri)
-                               )
-                               .toString()
-                           )
-
-      permissionQueryResponse <- triplestore.sparqlHttpSelect(sparqlQueryString)
+      _ <- ZIO.when(
+             !requestingUser.isSystemAdmin
+               && !requestingUser.permissions.isProjectAdmin(projectIri)
+               && !requestingUser.isSystemUser
+           ) {
+             ZIO.fail(ForbiddenException("Object access permissions can only be queried by system and project admin."))
+           }
+      permissionQueryResponse <-
+        triplestore.query(
+          Select(sparql.admin.txt.getObjectAccessPermission(resourceIri = None, valueIri = Some(valueIri)))
+        )
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -894,15 +865,8 @@ final case class PermissionsResponderADMLive(
     apiRequestID: UUID
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getDefaultObjectAccessPermissionsForProject(
-                                 projectIri = projectIri
-                               )
-                               .toString()
-                           )
-
-      permissionsQueryResponse <- triplestore.sparqlHttpSelect(sparqlQueryString)
+      permissionsQueryResponse <-
+        triplestore.query(Select(sparql.admin.txt.getDefaultObjectAccessPermissionsForProject(projectIri)))
 
       /* extract response rows */
       permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
@@ -990,14 +954,12 @@ final case class PermissionsResponderADMLive(
     groupIri: Option[IRI],
     resourceClassIri: Option[IRI],
     propertyIri: Option[IRI]
-  ): Task[Option[DefaultObjectAccessPermissionADM]] = {
-    val query =
-      sparql.admin.txt
-        .getDefaultObjectAccessPermission(projectIri, groupIri, resourceClassIri, propertyIri)
+  ): Task[Option[DefaultObjectAccessPermissionADM]] =
     triplestore
-      .sparqlHttpSelect(query)
+      .query(
+        Select(sparql.admin.txt.getDefaultObjectAccessPermission(projectIri, groupIri, resourceClassIri, propertyIri))
+      )
       .flatMap(toDefaultObjectAccessPermission(_, projectIri, groupIri, resourceClassIri, propertyIri))
-  }
 
   private def toDefaultObjectAccessPermission(
     result: SparqlSelectResult,
@@ -2113,14 +2075,7 @@ final case class PermissionsResponderADMLive(
   private def permissionGetADM(permissionIri: IRI, requestingUser: UserADM): Task[PermissionItemADM] =
     for {
       // SPARQL query statement to get permission by IRI.
-      sparqlQuery <- ZIO.attempt(
-                       sparql.admin.txt
-                         .getPermissionByIRI(
-                           permissionIri = permissionIri
-                         )
-                         .toString()
-                     )
-      permissionQueryResponse <- triplestore.sparqlHttpSelect(sparqlQuery)
+      permissionQueryResponse <- triplestore.query(Select(sparql.admin.txt.getPermissionByIRI(permissionIri)))
 
       /* extract response rows */
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
@@ -2263,14 +2218,7 @@ final case class PermissionsResponderADMLive(
 
   def getProjectOfEntity(entityIri: IRI): Task[IRI] =
     for {
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getProjectOfEntity(
-                                 entityIri = entityIri
-                               )
-                               .toString()
-                           )
-      response                     <- triplestore.sparqlHttpSelect(sparqlQueryString)
+      response                     <- triplestore.query(Select(sparql.admin.txt.getProjectOfEntity(entityIri)))
       rows: Seq[VariableResultsRow] = response.results.bindings
       projectIri =
         if (rows.size == 0) {

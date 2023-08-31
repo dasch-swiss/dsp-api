@@ -38,6 +38,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -290,8 +291,7 @@ final case class GroupsResponderADMLive(
                !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
              }
 
-      query                 = sparql.admin.txt.getGroupMembersByIri(groupIri)
-      groupMembersResponse <- triplestore.sparqlHttpSelect(query.toString())
+      groupMembersResponse <- triplestore.query(Select(sparql.admin.txt.getGroupMembersByIri(groupIri)))
 
       // get project member IRI from results rows
       groupMemberIris =

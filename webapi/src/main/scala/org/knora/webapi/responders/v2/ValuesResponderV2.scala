@@ -26,6 +26,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionA
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM._
@@ -43,6 +44,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -500,7 +502,7 @@ final case class ValuesResponderV2Live(
 
       // Generate a SPARQL update string.
       sparqlUpdate =
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparql.v2.txt
           .createValue(
             dataNamedGraph = dataNamedGraph,
             resourceIri = resourceInfo.resourceIri,
@@ -572,7 +574,7 @@ final case class ValuesResponderV2Live(
 
       // Generate a SPARQL update string.
       sparqlUpdate =
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparql.v2.txt
           .createLink(
             dataNamedGraph = dataNamedGraph,
             resourceIri = resourceInfo.resourceIri,
@@ -718,7 +720,7 @@ final case class ValuesResponderV2Live(
             )
 
             // Generate SPARQL for the link.
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            sparql.v2.txt
               .generateInsertStatementsForCreateLink(
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
@@ -731,7 +733,7 @@ final case class ValuesResponderV2Live(
 
           case otherValueContentV2 =>
             // We're creating an ordinary value. Generate SPARQL for it.
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            sparql.v2.txt
               .generateInsertStatementsForCreateValue(
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
@@ -827,7 +829,7 @@ final case class ValuesResponderV2Live(
         standoffLinkUpdates <- ZIO.collectAll(standoffLinkUpdatesFutures)
         // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
         sparqlInsert =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          sparql.v2.txt
             .generateInsertStatementsForStandoffLinks(
               resourceIri = createMultipleValuesRequest.resourceIri,
               linkUpdates = standoffLinkUpdates,
@@ -1052,7 +1054,7 @@ final case class ValuesResponderV2Live(
           updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
         sparqlUpdate =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          sparql.v2.txt
             .changeValuePermissions(
               dataNamedGraph = dataNamedGraph,
               resourceIri = resourceInfo.resourceIri,
@@ -1357,7 +1359,7 @@ final case class ValuesResponderV2Live(
 
       // Generate a SPARQL update.
       sparqlUpdate =
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparql.v2.txt
           .addValueVersion(
             dataNamedGraph = dataNamedGraph,
             resourceIri = resourceInfo.resourceIri,
@@ -1447,7 +1449,7 @@ final case class ValuesResponderV2Live(
         // Generate a SPARQL update string.
         sparqlUpdate <-
           ZIO.attempt(
-            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            sparql.v2.txt
               .changeLinkTarget(
                 dataNamedGraph = dataNamedGraph,
                 linkSourceIri = resourceInfo.resourceIri,
@@ -1486,7 +1488,7 @@ final case class ValuesResponderV2Live(
         currentTime: Instant = Instant.now
 
         sparqlUpdate =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          sparql.v2.txt
             .changeLinkMetadata(
               dataNamedGraph = dataNamedGraph,
               linkSourceIri = resourceInfo.resourceIri,
@@ -1680,14 +1682,7 @@ final case class ValuesResponderV2Live(
           )
 
         // Check whether the update succeeded.
-        sparqlQuery =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .checkValueDeletion(
-              valueIri = deletedValueIri
-            )
-            .toString()
-
-        sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
+        sparqlSelectResponse <- triplestoreService.query(Select(sparql.v2.txt.checkValueDeletion(deletedValueIri)))
         rows                  = sparqlSelectResponse.results.bindings
 
         _ <-
@@ -1804,7 +1799,7 @@ final case class ValuesResponderV2Live(
         )
 
       sparqlUpdate =
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparql.v2.txt
           .deleteLink(
             dataNamedGraph = dataNamedGraph,
             linkSourceIri = resourceInfo.resourceIri,
@@ -1868,7 +1863,7 @@ final case class ValuesResponderV2Live(
       linkUpdates <- linkUpdateFuture
 
       sparqlUpdate =
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparql.v2.txt
           .deleteValue(
             dataNamedGraph = dataNamedGraph,
             resourceIri = resourceInfo.resourceIri,

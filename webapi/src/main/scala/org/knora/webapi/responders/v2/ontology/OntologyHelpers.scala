@@ -35,6 +35,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 trait OntologyHelpers {
 
@@ -1737,10 +1738,9 @@ final case class OntologyHelpersLive(
                                     classIris = ontology.classes.keySet,
                                     propertyIris = ontology.properties.keySet
                                   )
-                                  .toString()
                               )
 
-      isOntologyUsedResponse <- triplestoreService.sparqlHttpSelect(isOntologyUsedSparql)
+      isOntologyUsedResponse <- triplestoreService.query(Select(isOntologyUsedSparql))
 
       subjects = isOntologyUsedResponse.results.bindings.map(row => row.rowMap("s")).toSet
     } yield subjects

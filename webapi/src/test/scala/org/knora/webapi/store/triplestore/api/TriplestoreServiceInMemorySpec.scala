@@ -27,6 +27,7 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
 object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
@@ -198,7 +199,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                            |}
                            |""".stripMargin
             for {
-              result <- TriplestoreService.sparqlHttpSelect(query)
+              result <- TriplestoreService.query(Select(query))
             } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
               hasSameElements(List("http://anArticle"))
             )
@@ -216,7 +217,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                            |}
                            |""".stripMargin
             for {
-              result <- TriplestoreService.sparqlHttpSelect(query)
+              result <- TriplestoreService.query(Select(query))
             } yield assert(result.results.bindings.flatMap(_.rowMap.get("entity")))(
               hasSameElements(List("http://anArticle", "http://aJournalArticle"))
             )
@@ -232,7 +233,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                         |}
                         |""".stripMargin
           for {
-            result <- TriplestoreService.sparqlHttpSelect(query)
+            result <- TriplestoreService.query(Select(query))
           } yield assertTrue(result.results.bindings.isEmpty)
         },
         test("find an existing thing") {
@@ -245,7 +246,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                         |}
                         |""".stripMargin
           for {
-            result <- TriplestoreService.sparqlHttpSelect(query)
+            result <- TriplestoreService.query(Select(query))
           } yield assertTrue(
             result == SparqlSelectResult(
               SparqlSelectResultHeader(List("p", "o")),

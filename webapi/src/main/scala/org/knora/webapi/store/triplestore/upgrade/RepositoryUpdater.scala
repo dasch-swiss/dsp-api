@@ -20,6 +20,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
 
@@ -134,7 +135,7 @@ object RepositoryUpdater {
      */
     private def getRepositoryVersion(): Task[Option[String]] =
       for {
-        repositoryVersionResponse <- triplestoreService.sparqlHttpSelect(knoraBaseVersionQuery)
+        repositoryVersionResponse <- triplestoreService.query(Select(knoraBaseVersionQuery, isGravsearch = false))
         bindings                  <- ZIO.succeed(repositoryVersionResponse.results.bindings)
         versionString <-
           if (bindings.nonEmpty) {

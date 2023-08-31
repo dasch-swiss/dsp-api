@@ -15,12 +15,13 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
@@ -52,9 +53,8 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
           |  ?blanknode owl:onProperty <$propertyIri>
           |}
           |""".stripMargin
-    appActor ! SparqlSelectRequest(sparqlCountQuery)
-    val sparqlCountResponseInitial = expectMsgType[SparqlSelectResult]
-    sparqlCountResponseInitial.results.bindings.head.rowMap.values.head
+    val result = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlCountQuery)))
+    result.results.bindings.head.rowMap.values.head
   }
 
   val freetestOntologyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri

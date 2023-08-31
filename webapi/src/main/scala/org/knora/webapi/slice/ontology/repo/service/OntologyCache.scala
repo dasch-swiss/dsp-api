@@ -32,6 +32,7 @@ import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheKey
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.OntologyCacheName
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.cache.CacheUtil
 
 object OntologyCache {
@@ -488,7 +489,7 @@ trait OntologyCache {
 }
 
 final case class OntologyCacheLive(
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends OntologyCache
     with LazyLogging {
@@ -512,10 +513,9 @@ final case class OntologyCacheLive(
       allOntologyMetadataSparql <- ZIO.succeed(
                                      org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                                        .getAllOntologyMetadata()
-                                       .toString()
                                    )
       _                           <- ZIO.logInfo(s"Loading ontologies into cache")
-      allOntologyMetadataResponse <- triplestoreService.sparqlHttpSelect(allOntologyMetadataSparql)
+      allOntologyMetadataResponse <- triplestore.query(Select(allOntologyMetadataSparql))
       allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
         OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
@@ -569,7 +569,7 @@ final case class OntologyCacheLive(
               )
               .toString
 
-          triplestoreService.sparqlHttpExtendedConstruct(ontologyGraphConstructQuery).map { response =>
+          triplestore.sparqlHttpExtendedConstruct(ontologyGraphConstructQuery).map { response =>
             OntologyGraph(
               ontologyIri = ontologyIri,
               constructResponse = response

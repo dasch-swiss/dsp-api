@@ -44,6 +44,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -769,17 +770,11 @@ final case class ListsResponderADMLive(
 
     // TODO: Rewrite using a construct sparql query
     for {
-      nodePathQuery <- ZIO.attempt {
-                         sparql.admin.txt
-                           .getNodePath(
-                             queryNodeIri = queryNodeIri,
-                             preferredLanguage = requestingUser.lang,
-                             fallbackLanguage = appConfig.fallbackLanguage
-                           )
-                           .toString()
-                       }
+      nodePathResponse <-
+        triplestore.query(
+          Select(sparql.admin.txt.getNodePath(queryNodeIri, requestingUser.lang, appConfig.fallbackLanguage))
+        )
 
-      nodePathResponse <- triplestore.sparqlHttpSelect(nodePathQuery)
       /*
 
             If we request the path to the node <http://rdfh.ch/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
@@ -1693,20 +1688,12 @@ final case class ListsResponderADMLive(
     iri: IRI
   ): Task[CanDeleteListResponseADM] =
     for {
-      sparqlQuery <- ZIO.attempt(
-                       sparql.admin.txt
-                         .canDeleteList(
-                           listIri = iri
-                         )
-                         .toString()
+      canDelete <- triplestore
+                     .query(Select(sparql.admin.txt.canDeleteList(iri)))
+                     .map(response =>
+                       if (response.results.bindings.isEmpty) true
+                       else false
                      )
-
-      response <- triplestore.sparqlHttpSelect(sparqlQuery)
-
-      canDelete =
-        if (response.results.bindings.isEmpty) true
-        else false
-
     } yield CanDeleteListResponseADM(iri, canDelete)
 
   /**
@@ -2127,18 +2114,8 @@ final case class ListsResponderADMLive(
    */
   protected def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Task[Unit] =
     for {
-      isNodeUsedSparql <- ZIO.attempt(
-                            sparql.admin.txt
-                              .isNodeUsed(
-                                nodeIri = nodeIri
-                              )
-                              .toString()
-                          )
-
-      isNodeUsedResponse <- triplestore.sparqlHttpSelect(isNodeUsedSparql)
-      _ = if (isNodeUsedResponse.results.bindings.nonEmpty) {
-            errorFun
-          }
+      isNodeUsedResponse <- triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri)))
+      _                  <- ZIO.when(isNodeUsedResponse.results.bindings.nonEmpty)(ZIO.attempt(errorFun))
     } yield ()
 
   /**

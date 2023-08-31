@@ -32,13 +32,6 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
 
 /**
- * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResult]].
- *
- * @param sparql the SPARQL string.
- */
-case class SparqlSelectRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
-
-/**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
  * [[SparqlConstructResponse]].
  *

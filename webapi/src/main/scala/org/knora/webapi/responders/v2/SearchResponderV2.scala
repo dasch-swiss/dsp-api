@@ -58,12 +58,13 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport._
 
 trait SearchResponderV2
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
-  private val triplestoreService: TriplestoreService,
+  private val triplestore: TriplestoreService,
   private val messageRelay: MessageRelay,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyCache: OntologyCache,
@@ -206,7 +207,7 @@ final case class SearchResponderV2Live(
                            countQuery = true // do not get the resources themselves, but the sum of results
                          )
                      )
-      bindings <- triplestoreService.sparqlHttpSelect(countSparql.toString()).map(_.results.bindings)
+      bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
       count <- // query response should contain one result with one row with the name "count"
         ZIO.fail {
           val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
@@ -264,10 +265,9 @@ final case class SearchResponderV2Live(
               offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
               countQuery = false
             )
-            .toString()
         )
 
-      prequeryResponseNotMerged <- triplestoreService.sparqlHttpSelect(searchSparql)
+      prequeryResponseNotMerged <- triplestore.query(Select(searchSparql))
 
       mainResourceVar = QueryVariable("resource")
 
@@ -314,7 +314,7 @@ final case class SearchResponderV2Live(
 
           for {
             query          <- constructTransformer.transform(mainQuery)
-            searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
+            searchResponse <- triplestore.sparqlHttpExtendedConstruct(query.toSparql)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
           } yield queryResultsSep
@@ -418,7 +418,7 @@ final case class SearchResponderV2Live(
                       ontologiesForInferenceMaybe
                     )
 
-      countResponse <- triplestoreService.sparqlHttpSelect(countQuery.toSparql, isGravsearch = true)
+      countResponse <- triplestore.query(Select(countQuery.toSparql, isGravsearch = true))
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -504,8 +504,8 @@ final case class SearchResponderV2Live(
 
       start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
-        triplestoreService
-          .sparqlHttpSelect(prequerySparql, isGravsearch = true)
+        triplestore
+          .query(Select(prequerySparql, isGravsearch = true))
           .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
 
       end     <- Clock.instant.map(_.toEpochMilli)
@@ -593,7 +593,7 @@ final case class SearchResponderV2Live(
 
             // Convert the result to a SPARQL string and send it to the triplestore.
             mainQuerySparql    = mainQuery.toSparql
-            mainQueryResponse <- triplestoreService.sparqlHttpExtendedConstruct(mainQuerySparql, isGravsearch = true)
+            mainQueryResponse <- triplestore.sparqlHttpExtendedConstruct(mainQuerySparql, isGravsearch = true)
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions =
@@ -754,9 +754,7 @@ final case class SearchResponderV2Live(
                      limit = appConfig.v2.resourcesSequence.resultsPerPage,
                      offset = resourcesInProjectGetRequestV2.page * appConfig.v2.resourcesSequence.resultsPerPage
                    )
-                   .toString
-
-      sparqlSelectResponse      <- triplestoreService.sparqlHttpSelect(prequery)
+      sparqlSelectResponse      <- triplestore.query(Select(prequery))
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -787,7 +785,7 @@ final case class SearchResponderV2Live(
                   .toString()
               )
 
-            resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
+            resourceRequestResponse <- triplestore.sparqlHttpExtendedConstruct(resourceRequestSparql)
 
             // separate resources and values
             mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
@@ -855,10 +853,9 @@ final case class SearchResponderV2Live(
               offset = 0,
               countQuery = true
             )
-            .toString()
         )
 
-      countResponse <- triplestoreService.sparqlHttpSelect(countSparql)
+      countResponse <- triplestore.query(Select(countSparql))
 
       count <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -926,7 +923,7 @@ final case class SearchResponderV2Live(
             )
         }
 
-      searchResourceByLabelResponse <- triplestoreService.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
+      searchResourceByLabelResponse <- triplestore.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
 
       // collect the IRIs of main resources returned
       mainResourceIris <- ZIO.attempt {

@@ -17,26 +17,26 @@ import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 @accessible
 trait TriplestoreService {
 
   /**
-   * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
+   * Performs a SPARQL ASK query.
    *
-   * @param sparql          The SPARQL SELECT query string.
-   * @param isGravsearch    If `true`, takes a long timeout because gravsearch queries can take a long time.
-   * @return A [[SparqlSelectResult]].
+   * @param sparql the SPARQL [[Ask]] query.
+   * @return a [[Boolean]].
    */
-  def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean = false): Task[SparqlSelectResult]
+  def query(sparql: Ask): Task[Boolean]
 
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param query The SPARQL SELECT query.
+   * @param sparql          The SPARQL [[Select]] query.
    * @return A [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(query: TxtFormat.Appendable): Task[SparqlSelectResult] = sparqlHttpSelect(query.toString)
+  def query(sparql: Select): Task[SparqlSelectResult]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
@@ -97,14 +97,6 @@ trait TriplestoreService {
     outputFile: Path,
     outputFormat: QuadFormat
   ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
-
-  /**
-   * Performs a SPARQL ASK query.
-   *
-   * @param sparql the SPARQL [[Ask]] query.
-   * @return a [[Boolean]].
-   */
-  def query(sparql: Ask): Task[Boolean]
 
   /**
    * Performs a SPARQL update operation.
@@ -214,10 +206,21 @@ trait TriplestoreService {
 
 object TriplestoreService {
   object Queries {
+
     sealed trait SparqlQuery { val sparql: String }
+
     case class Ask(sparql: String) extends SparqlQuery
     object Ask {
       def apply(sparql: TxtFormat.Appendable): Ask = Ask(sparql.toString)
     }
+
+    case class Select(sparql: String, isGravsearch: Boolean) extends SparqlQuery
+    object Select {
+      def apply(sparql: TxtFormat.Appendable, isGravSearch: Boolean = false): Select =
+        Select(sparql.toString, isGravSearch)
+
+      def apply(sparql: String): Select = Select(sparql, isGravsearch = false)
+    }
+
   }
 }

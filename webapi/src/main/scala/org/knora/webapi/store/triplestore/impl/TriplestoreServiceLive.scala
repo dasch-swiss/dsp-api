@@ -51,6 +51,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
@@ -80,17 +81,16 @@ case class TriplestoreServiceLive(
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param sparql          the SPARQL SELECT query string.
-   * @param isGravsearch    `true` if it is a gravsearch query (relevant for timeout)
+   * @param query          the SPARQL SELECT query string.
    * @return a [[SparqlSelectResult]].
    */
-  override def sparqlHttpSelect(sparql: String, isGravsearch: Boolean = false): Task[SparqlSelectResult] = {
+  override def query(query: Select): Task[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
         .orElse(processError(sparql, resultStr))
 
-    executeSparqlQuery(sparql, isGravsearch).flatMap(parseJsonResponse(sparql, _))
+    executeSparqlQuery(query.sparql, query.isGravsearch).flatMap(parseJsonResponse(query.sparql, _))
   }
 
   /**
@@ -228,7 +228,7 @@ case class TriplestoreServiceLive(
    */
   private def getAllGraphs: Task[Seq[String]] =
     for {
-      res     <- sparqlHttpSelect("select ?g {graph ?g {?s ?p ?o}} group by ?g")
+      res     <- query(Select("select ?g {graph ?g {?s ?p ?o}} group by ?g", isGravsearch = false))
       bindings = res.results.bindings
       graphs   = bindings.map(_.rowMap("g"))
     } yield graphs

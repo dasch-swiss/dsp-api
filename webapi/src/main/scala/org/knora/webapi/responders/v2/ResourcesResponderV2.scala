@@ -31,6 +31,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
@@ -59,6 +60,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.ZioHelper
 
@@ -68,7 +70,7 @@ final case class ResourcesResponderV2Live(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
@@ -273,7 +275,7 @@ final case class ResourcesResponderV2Live(
           ProjectADMService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
         // Generate SPARQL for creating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = sparql.v2.txt
                          .createNewResources(
                            dataNamedGraph = dataNamedGraph,
                            resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
@@ -283,7 +285,7 @@ final case class ResourcesResponderV2Live(
                          .toString()
 
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
 
         // Verify that the resource was created correctly.
         previewOfCreatedResource <- verifyResource(
@@ -451,7 +453,7 @@ final case class ResourcesResponderV2Live(
           }
 
         // Generate SPARQL for updating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = sparql.v2.txt
                          .changeResourceMetadata(
                            dataNamedGraph = dataNamedGraph,
                            resourceIri = updateResourceMetadataRequestV2.resourceIri,
@@ -464,7 +466,7 @@ final case class ResourcesResponderV2Live(
                          .toString()
 
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
 
         // Verify that the resource was updated correctly.
 
@@ -584,7 +586,7 @@ final case class ResourcesResponderV2Live(
         dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for marking the resource as deleted.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = sparql.v2.txt
                          .deleteResource(
                            dataNamedGraph = dataNamedGraph,
                            resourceIri = deleteResourceV2.resourceIri,
@@ -595,17 +597,11 @@ final case class ResourcesResponderV2Live(
                          .toString()
 
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
 
         // Verify that the resource was deleted correctly.
-
-        sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                        .checkResourceDeletion(
-                          resourceIri = deleteResourceV2.resourceIri
-                        )
-                        .toString()
-
-        sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
+        sparqlSelectResponse <-
+          triplestore.query(Select(sparql.v2.txt.checkResourceDeletion(deleteResourceV2.resourceIri)))
 
         rows = sparqlSelectResponse.results.bindings
 
@@ -682,7 +678,7 @@ final case class ResourcesResponderV2Live(
         dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for erasing the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = sparql.v2.txt
                          .eraseResource(
                            dataNamedGraph = dataNamedGraph,
                            resourceIri = eraseResourceV2.resourceIri
@@ -690,7 +686,7 @@ final case class ResourcesResponderV2Live(
                          .toString()
 
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
 
         _ <- // Verify that the resource was erased correctly.
           ZIO
@@ -1401,7 +1397,7 @@ final case class ResourcesResponderV2Live(
 
     for {
       resourceRequestSparql <- ZIO.attempt(
-                                 org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                                 sparql.v2.txt
                                    .getResourcePropertiesAndValues(
                                      resourceIris = resourceIrisDistinct,
                                      preview = preview,
@@ -1415,7 +1411,7 @@ final case class ResourcesResponderV2Live(
                                    .toString()
                                )
 
-      resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
+      resourceRequestResponse <- triplestore.sparqlHttpExtendedConstruct(resourceRequestSparql)
 
       // separate resources and values
     } yield constructResponseUtilV2.splitMainResourcesAndValueRdfData(resourceRequestResponse, requestingUser)
@@ -1969,21 +1965,18 @@ final case class ResourcesResponderV2Live(
     ): Task[GraphQueryResults] = {
       if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
+      val query =
+        sparql.v2.txt
+          .getGraphData(
+            startNodeIri = startNode.nodeIri,
+            startNodeOnly = false,
+            maybeExcludeLinkProperty = excludePropertyInternal,
+            outbound = outbound, // true to query outbound edges, false to query inbound edges
+            limit = appConfig.v2.graphRoute.maxGraphBreadth
+          )
       for {
         // Get the direct links from/to the start node.
-        sparql <- ZIO.attempt(
-                    org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                      .getGraphData(
-                        startNodeIri = startNode.nodeIri,
-                        startNodeOnly = false,
-                        maybeExcludeLinkProperty = excludePropertyInternal,
-                        outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = appConfig.v2.graphRoute.maxGraphBreadth
-                      )
-                      .toString()
-                  )
-
-        response                     <- triplestoreService.sparqlHttpSelect(sparql)
+        response                     <- triplestore.query(Select(query))
         rows: Seq[VariableResultsRow] = response.results.bindings
 
         // Did we get any results?
@@ -2108,21 +2101,19 @@ final case class ResourcesResponderV2Live(
       } yield recursiveResults
     }
 
-    for {
-      // Get the start node.
-      sparql <- ZIO.attempt(
-                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                    .getGraphData(
-                      startNodeIri = graphDataGetRequest.resourceIri,
-                      maybeExcludeLinkProperty = excludePropertyInternal,
-                      startNodeOnly = true,
-                      outbound = true,
-                      limit = appConfig.v2.graphRoute.maxGraphBreadth
-                    )
-                    .toString()
-                )
+    // Get the start node.
+    val query =
+      sparql.v2.txt
+        .getGraphData(
+          startNodeIri = graphDataGetRequest.resourceIri,
+          maybeExcludeLinkProperty = excludePropertyInternal,
+          startNodeOnly = true,
+          outbound = true,
+          limit = appConfig.v2.graphRoute.maxGraphBreadth
+        )
 
-      response                     <- triplestoreService.sparqlHttpSelect(sparql)
+    for {
+      response                     <- triplestore.query(Select(query))
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       _ <- ZIO.when(rows.isEmpty) {
@@ -2233,16 +2224,14 @@ final case class ResourcesResponderV2Live(
 
       // Get the version history of the resource's values.
 
-      historyRequestSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      historyRequestSparql = sparql.v2.txt
                                .getResourceValueVersionHistory(
                                  withDeletedResource = resourceHistoryRequest.withDeletedResource,
                                  resourceIri = resourceHistoryRequest.resourceIri,
                                  maybeStartDate = resourceHistoryRequest.startDate,
                                  maybeEndDate = resourceHistoryRequest.endDate
                                )
-                               .toString()
-
-      valueHistoryResponse <- triplestoreService.sparqlHttpSelect(historyRequestSparql)
+      valueHistoryResponse <- triplestore.query(Select(historyRequestSparql))
 
       valueHistoryEntries <-
         ZIO.foreach(valueHistoryResponse.results.bindings) { row =>
@@ -2457,11 +2446,9 @@ final case class ResourcesResponderV2Live(
       projectInfoResponse <- messageRelay.ask[ProjectGetResponseADM](ProjectGetRequestADM(projectId))
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
-      prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      prequery = sparql.v2.txt
                    .getAllResourcesInProjectPrequery(projectIri = projectInfoResponse.project.id)
-                   .toString
-
-      sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(prequery)
+      sparqlSelectResponse <- triplestore.query(Select(prequery))
       mainResourceIris      = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =

@@ -17,6 +17,7 @@ import org.knora.webapi.messages.StringFormatter.MAX_IRI_ATTEMPTS
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
@@ -54,10 +55,8 @@ final case class IriService(
    * @param classIri  the IRI of the class.
    * @return `true` if the class is used.
    */
-  def isClassUsedInData(classIri: SmartIri): Task[Boolean] = {
-    val query = sparql.v2.txt.isClassUsedInData(classIri).toString()
-    triplestore.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
-  }
+  def isClassUsedInData(classIri: SmartIri): Task[Boolean] =
+    triplestore.query(Select(sparql.v2.txt.isClassUsedInData(classIri))).map(_.results.bindings.nonEmpty)
 
   /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.

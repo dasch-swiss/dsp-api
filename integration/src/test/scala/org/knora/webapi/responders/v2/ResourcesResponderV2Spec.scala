@@ -29,7 +29,6 @@ import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -40,6 +39,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util._
 
 object ResourcesResponderV2Spec {
@@ -522,19 +522,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   }
 
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
-    val sparqlQuery = sparql.v2.txt
-      .getStandoffTagByUUID(
-        uuid = uuid
-      )
-      .toString()
-
-    appActor ! SparqlSelectRequest(sparqlQuery)
-
-    expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
-      sparqlSelectResponse.results.bindings.map { row =>
-        row.rowMap("standoffTag")
-      }.toSet
-    }
+    val actual = UnsafeZioRun.runOrThrow(
+      TriplestoreService.query(Select(sparql.v2.txt.getStandoffTagByUUID(uuid)))
+    )
+    actual.results.bindings.map(_.rowMap("standoffTag")).toSet
   }
 
   // The default timeout for receiving reply messages from actors.

@@ -46,6 +46,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -882,15 +883,7 @@ final case class UsersResponderADMLive(
     // ToDo: only allow system user
     // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
     for {
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getUserByIri(
-                                 userIri = userIri
-                               )
-                               .toString()
-                           )
-
-      userDataQueryResponse <- triplestore.sparqlHttpSelect(sparqlQueryString)
+      userDataQueryResponse <- triplestore.query(Select(sparql.admin.txt.getUserByIri(userIri)))
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))

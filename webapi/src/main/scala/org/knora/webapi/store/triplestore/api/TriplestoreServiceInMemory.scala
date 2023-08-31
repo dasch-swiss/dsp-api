@@ -50,6 +50,7 @@ import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -63,10 +64,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
-  override def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean): Task[SparqlSelectResult] = {
-    require(!isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
-
-    ZIO.scoped(execSelect(sparql).map(toSparqlSelectResult))
+  override def query(query: Select): Task[SparqlSelectResult] = {
+    require(!query.isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
+    ZIO.scoped(execSelect(query.sparql).map(toSparqlSelectResult))
   }
 
   private def execSelect(query: String): ZIO[Any with Scope, Throwable, ResultSet] = {

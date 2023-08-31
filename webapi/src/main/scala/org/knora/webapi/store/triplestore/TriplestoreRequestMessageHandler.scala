@@ -14,22 +14,7 @@ import org.knora.webapi._
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreRequest
-import org.knora.webapi.messages.store.triplestoremessages.DownloadRepositoryRequest
-import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentRequest
-import org.knora.webapi.messages.store.triplestoremessages.InsertRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRequest
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphFileRequest
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructFileRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
-import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
-import org.knora.webapi.messages.store.triplestoremessages.UploadRepositoryRequest
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -41,9 +26,7 @@ final case class TriplestoreRequestMessageHandlerLive(updater: RepositoryUpdater
     message.isInstanceOf[TriplestoreRequest]
 
   override def handle(message: ResponderRequest): Task[Any] = message match {
-    case UpdateRepositoryRequest() => updater.maybeUpgradeRepository
-    case SparqlSelectRequest(sparql: String, isGravsearch: Boolean) =>
-      ts.sparqlHttpSelect(sparql = sparql, isGravsearch = isGravsearch)
+    case UpdateRepositoryRequest()                      => updater.maybeUpgradeRepository
     case sparqlConstructRequest: SparqlConstructRequest => ts.sparqlHttpConstruct(sparqlConstructRequest)
     case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
       ts.sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest)
