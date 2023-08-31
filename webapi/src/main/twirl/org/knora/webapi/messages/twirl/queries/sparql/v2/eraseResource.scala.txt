@@ -52,7 +52,13 @@ DELETE {
         @* Collect all statements whose subject is a standoff tag attached to a value of the resource. *@
 
         <@resourceIri> ?valueProp ?currentTextValue .
-        ?currentTextValue a knora-base:TextValue ;
+        ?currentTextValue a knora-base:FormattedTextValue ;
+            knora-base:previousValue* ?textValue .
+        ?textValue knora-base:valueHasStandoff ?standoff .
+        ?standoff ?standoffPred ?standoffObj .
+    } UNION {
+        <@resourceIri> ?valueProp ?currentTextValue .
+        ?currentTextValue a knora-base:CustomFormattedTextValue ;
             knora-base:previousValue* ?textValue .
         ?textValue knora-base:valueHasStandoff ?standoff .
         ?standoff ?standoffPred ?standoffObj .

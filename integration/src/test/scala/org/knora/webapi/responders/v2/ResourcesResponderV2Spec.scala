@@ -2534,7 +2534,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         .valueContent
       assert(createValuePayloadContent.isDefined)
       val payloadContent = createValuePayloadContent.get
-      assert(payloadContent.valueType == OntologyConstants.KnoraBase.TextValue.toSmartIri)
+      assert(payloadContent.valueType == OntologyConstants.KnoraBase.UnformattedTextValue.toSmartIri)
       assert(payloadContent.valueHasString == testValue)
     }
 
@@ -2549,9 +2549,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           DeleteValueV2(
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
+            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUnformattedText".toSmartIri,
             valueIri = valueToDelete,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.UnformattedTextValue.toSmartIri,
             deleteComment = Some(deleteComment)
           ),
           anythingUserProfile,
