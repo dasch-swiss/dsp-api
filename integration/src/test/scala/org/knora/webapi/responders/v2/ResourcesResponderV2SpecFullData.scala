@@ -19,6 +19,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.messages.OntologyConstants
 
 // FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
@@ -804,13 +805,44 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         creationDate = Instant.parse("2019-02-08T15:05:10Z"),
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(
-            ReadUnformattedTextValueV2(
-              valueContent = UnformattedTextValueContentV2(
+            ReadFormattedTextValueV2(
+              valueContent = FormattedTextValueContentV2(
                 valueHasLanguage = None,
                 ontologySchema = InternalSchema,
                 comment = None,
-                valueHasString = "two"
+                valueHasString = "two",
+                mappingIri = OntologyConstants.KnoraBase.StandardMapping,
+                mapping = Some(StandoffConstants.standardMapping),
+                standoff = Vector(
+                  StandoffTagV2(
+                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri,
+                    dataType = None,
+                    uuid = UuidUtil.decode("qQlZfmYlQgi8hh29zaTSZw"),
+                    originalXMLID = None,
+                    startPosition = 0,
+                    endPosition = 4,
+                    startIndex = 0,
+                    endIndex = None,
+                    startParentIndex = None,
+                    endParentIndex = None,
+                    attributes = Seq.empty
+                  ),
+                  StandoffTagV2(
+                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri,
+                    dataType = None,
+                    uuid = UuidUtil.decode("qQlZfmYlQgi8hh29zaTSZw"),
+                    originalXMLID = None,
+                    startPosition = 0,
+                    endPosition = 3,
+                    startIndex = 1,
+                    endIndex = None,
+                    startParentIndex = Some(0),
+                    endParentIndex = None,
+                    attributes = Seq.empty
+                  )
+                )
               ),
+              valueHasMaxStandoffStartIndex = Some(1),
               valueIri = "http://rdfh.ch/0001/thing-with-history/values/2b",
               valueHasUUID = UuidUtil.decode("W5fm67e0QDWxRZumcXcs6g"),
               permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
