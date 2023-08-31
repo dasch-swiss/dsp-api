@@ -13,23 +13,21 @@ import org.apache.http.HttpRequest
 import org.apache.http.NameValuePair
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
-import org.apache.http.client.AuthCache
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
-import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
+import org.apache.http.config.SocketConfig
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.FileEntity
 import org.apache.http.entity.StringEntity
-import org.apache.http.impl.auth.BasicScheme
-import org.apache.http.impl.client.BasicAuthCache
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
@@ -57,37 +55,15 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 
-case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val sf: StringFormatter)
-    extends TriplestoreService
+case class TriplestoreServiceLive(
+  triplestoreConfig: Triplestore,
+  queryHttpClient: CloseableHttpClient,
+  targetHost: HttpHost,
+  implicit val sf: StringFormatter
+) extends TriplestoreService
     with FusekiTriplestore {
 
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-  private val targetHost                   = new HttpHost(triplestoreConfig.host, fusekiConfig.port, "http")
-
-  private val credsProvider: BasicCredentialsProvider = {
-    val p = new BasicCredentialsProvider
-    p.setCredentials(
-      new AuthScope(targetHost.getHostName, targetHost.getPort),
-      new UsernamePasswordCredentials(fusekiConfig.username, fusekiConfig.password)
-    )
-    p
-  }
-
-  // the client config used for queries to the triplestore. The timeout has to be larger than
-  // tripleStoreConfig.queryTimeoutAsDuration and tripleStoreConfig.gravsearchTimeoutAsDuration.
-  private val requestTimeoutMillis = 7_200_000 // 2 hours
-
-  private val queryRequestConfig = RequestConfig
-    .custom()
-    .setConnectTimeout(requestTimeoutMillis)
-    .setConnectionRequestTimeout(requestTimeoutMillis)
-    .setSocketTimeout(requestTimeoutMillis)
-    .build
-
-  private val queryHttpClient: CloseableHttpClient = HttpClients.custom
-    .setDefaultCredentialsProvider(credsProvider)
-    .setDefaultRequestConfig(queryRequestConfig)
-    .build
 
   private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] =
     if (response.contains("##  Query cancelled due to timeout during execution")) {
@@ -510,22 +486,6 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
   }
 
   /**
-   * Formulate HTTP context.
-   *
-   * @return httpContext with credentials and authorization
-   */
-  private def makeHttpContext: Task[HttpClientContext] = ZIO.attempt {
-    val authCache: AuthCache   = new BasicAuthCache
-    val basicAuth: BasicScheme = new BasicScheme
-    authCache.put(targetHost, basicAuth)
-
-    val httpContext: HttpClientContext = HttpClientContext.create
-    httpContext.setCredentialsProvider(credsProvider)
-    httpContext.setAuthCache(authCache)
-    httpContext
-  }
-
-  /**
    * Makes an HTTP connection to the triplestore, and delegates processing of the response
    * to a function.
    *
@@ -538,9 +498,9 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
     processResponse: CloseableHttpResponse => Task[T]
   ): Task[T] = {
 
-    def executeQuery(): Task[CloseableHttpResponse] = makeHttpContext.flatMap { context =>
+    def executeQuery(): Task[CloseableHttpResponse] = {
       ZIO
-        .attempt(queryHttpClient.execute(targetHost, request, context))
+        .attempt(queryHttpClient.execute(targetHost, request))
         .catchSome {
           case socketTimeoutException: java.net.SocketTimeoutException =>
             val message =
@@ -708,11 +668,46 @@ case class TriplestoreServiceLive(triplestoreConfig: Triplestore, implicit val s
 }
 
 object TriplestoreServiceLive {
+  private def makeHttpClient(config: Triplestore, host: HttpHost) =
+    ZIO.acquireRelease {
+      val connManager = new PoolingHttpClientConnectionManager()
+      connManager.setDefaultSocketConfig(SocketConfig.custom().setTcpNoDelay(true).build())
+      connManager.setValidateAfterInactivity(1000)
+      connManager.setMaxTotal(100)
+      connManager.setDefaultMaxPerRoute(15)
+
+      val credentialsProvider = new BasicCredentialsProvider
+      credentialsProvider.setCredentials(
+        new AuthScope(host.getHostName, host.getPort),
+        new UsernamePasswordCredentials(config.fuseki.username, config.fuseki.password)
+      )
+
+      // the client config used for queries to the triplestore. The timeout has to be larger than
+      // tripleStoreConfig.queryTimeoutAsDuration and tripleStoreConfig.gravsearchTimeoutAsDuration.
+      val requestTimeoutMillis = 7_200_000 // 2 hours
+      val requestConfig = RequestConfig
+        .custom()
+        .setConnectTimeout(requestTimeoutMillis)
+        .setConnectionRequestTimeout(requestTimeoutMillis)
+        .setSocketTimeout(requestTimeoutMillis)
+        .build
+
+      val httpClient: CloseableHttpClient = HttpClients
+        .custom()
+        .setConnectionManager(connManager)
+        .setDefaultCredentialsProvider(credentialsProvider)
+        .setDefaultRequestConfig(requestConfig)
+        .build()
+      ZIO.succeed(httpClient)
+    }(client => ZIO.attemptBlocking(client.close()).logError.ignore)
+
   val layer: URLayer[Triplestore with StringFormatter, TriplestoreService] =
     ZLayer.scoped {
       for {
         sf     <- ZIO.service[StringFormatter]
         config <- ZIO.service[Triplestore]
-      } yield TriplestoreServiceLive(config, sf)
+        host    = new HttpHost(config.host, config.fuseki.port, "http")
+        client <- makeHttpClient(config, host)
+      } yield TriplestoreServiceLive(config, client, host, sf)
     }
 }
