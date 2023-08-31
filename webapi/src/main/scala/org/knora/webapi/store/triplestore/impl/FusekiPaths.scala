@@ -1,6 +1,7 @@
 package org.knora.webapi.store.triplestore.impl
 
 import org.knora.webapi.config.Fuseki
+import org.knora.webapi.config.Triplestore
 
 trait FusekiTriplestore {
   val mimeTypeApplicationJson              = "application/json"
@@ -8,7 +9,10 @@ trait FusekiTriplestore {
   val mimeTypeTextTurtle                   = "text/turtle"
   val mimeTypeApplicationSparqlUpdate      = "application/sparql-update"
   val mimeTypeApplicationNQuads            = "application/n-quads"
-  def paths(config: Fuseki): FusekiPaths   = FusekiPaths(config)
+
+  val triplestoreConfig: Triplestore
+  val fusekiConfig: Fuseki = triplestoreConfig.fuseki
+  val paths: FusekiPaths   = FusekiPaths(fusekiConfig)
 }
 
 case class FusekiPaths(config: Fuseki) {
