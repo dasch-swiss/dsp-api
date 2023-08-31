@@ -484,7 +484,7 @@ final case class ProjectsResponderADMLive(
              .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _ <- ZIO
              .fail(ForbiddenException("User is neither system nor project admin."))
-             .when(!user.permissions.isSystemAdmin && !user.permissions.isProjectAdmin(iri.value))
+             .unless(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(iri.value))
 
       defaultViewSetting = size.getOrElse("pct:1")
 

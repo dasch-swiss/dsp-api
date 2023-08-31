@@ -774,7 +774,7 @@ Example response:
 
 ```
 
-### Restricted View Settings
+### Get Restricted View Settings
 
 Permissions: ProjectAdmin
 
@@ -798,8 +798,39 @@ curl --request GET 'http://0.0.0.0:3333/admin/projects/shortname/anything/Restri
 ```
 
 ```bash
-curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/RestrictedViewSettings'
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/RestrictedViewSettings' \
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0'
+```
+
+Example response:
+
+```jsonc
+{
+    "settings": {
+        "size": "!512,512",
+        "watermark": "path_to_image"
+    }
+}
+```
+
+### Set Restricted View Settings
+
+Permissions: ProjectAdmin/SystemAdmin
+
+Request definition:
+- `POST /admin/projects/iri/{iri}/RestrictedViewSettings`
+
+Description: Set the project's restricted view
+
+Required payload:
+- `size`
+
+Example request:
+
+```bash
+curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/RestrictedViewSettings' \
+--header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
+--data '{"size": "222"}
 ```
 
 Example response:
