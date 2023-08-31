@@ -22,7 +22,7 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 class ResourcesResponseCheckerV2Spec extends AnyWordSpec {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getInitializedTestInstance
 
   val value1 = ReadOtherValueV2(
     valueIri = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/c8zmKe-eRjWMOGIOw-5GyA",
@@ -65,7 +65,7 @@ class ResourcesResponseCheckerV2Spec extends AnyWordSpec {
   val resource2                  = resource.copy()
   val resourceSequence           = ReadResourcesSequenceV2(Seq(resource))
   val resourceSequenceIdentical  = ReadResourcesSequenceV2(Seq(resource.copy()))
-  val resourceSequenceDifferent  = ReadResourcesSequenceV2(Seq(resource2))
+  val resourceSequenceDifferent  = ReadResourcesSequenceV2(Seq(resource, resource2))
   val resourceSequencePreview    = ReadResourcesSequenceV2(Seq(resource.copy(values = Map.empty)))
   val resourceSequenceMoreValues = ReadResourcesSequenceV2(Seq(resource.copy(values = values2)))
 
