@@ -1057,6 +1057,18 @@ final case class InferringGravsearchTypeInspector(
   ): IntermediateTypeInspectionResult = {
 
     /**
+     * Checks if all the types are text value types, i.e. kbora-base:TextValue or a subclass thereoff.
+     *
+     * @param values a set of [[GravsearchEntityTypeInfo]].
+     * @return true if all the types are text value types.
+     */
+    def allTextValues(values: Set[GravsearchEntityTypeInfo]): Boolean =
+      values.map {
+        case pt: PropertyTypeInfo     => pt.objectTypeIri.toOntologySchema(InternalSchema).toIri
+        case npt: NonPropertyTypeInfo => npt.typeIri.toOntologySchema(InternalSchema).toIri
+      }.forall(OntologyConstants.KnoraBase.TextValueClasses.contains)
+
+    /**
      * Given a set of classes, this method finds a common base class.
      *
      * @param typesToBeChecked a set of classes.
@@ -1185,6 +1197,21 @@ final case class InferringGravsearchTypeInspector(
         val commonBaseClassIri: SmartIri =
           findCommonBaseClass(typesToBeChecked, OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)
         val newObjectType = PropertyTypeInfo(commonBaseClassIri, objectIsStandoffTagType = true)
+        replaceInconsistentTypes(
+          acc = acc,
+          typedEntity = typedEntity,
+          typesToBeChecked = typesToBeChecked,
+          newType = newObjectType
+        )
+      } else if (allTextValues(typesToBeChecked)) {
+        val commonBaseClassIri: SmartIri =
+          findCommonBaseClass(typesToBeChecked, OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+        val newObjectType = typesToBeChecked.head match {
+          case propertyTypeInfo: PropertyTypeInfo =>
+            propertyTypeInfo.copy(objectTypeIri = commonBaseClassIri)
+          case nonPropertyTypeInfo: NonPropertyTypeInfo =>
+            nonPropertyTypeInfo.copy(typeIri = commonBaseClassIri)
+        }
         replaceInconsistentTypes(
           acc = acc,
           typedEntity = typedEntity,

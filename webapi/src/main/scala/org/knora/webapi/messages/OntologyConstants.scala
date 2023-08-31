@@ -318,6 +318,14 @@ object OntologyConstants {
       ArchiveFileValue
     )
 
+    val TextValueClasses: Set[IRI] = Set(
+      TextValue,
+      UnformattedTextValue,
+      StandoffTextValue,
+      FormattedTextValue,
+      CustomFormattedTextValue
+    )
+
     val ValueClasses: Set[IRI] = Set(
       TextValue,
       UnformattedTextValue,
