@@ -14,7 +14,6 @@ import zio.stream.ZStream
 import java.nio.file.Files
 
 import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
 import dsp.valueobjects.Iri._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
