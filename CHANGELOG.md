@@ -1,5 +1,26 @@
 # Changelog
 
+## [30.0.0](https://github.com/dasch-swiss/dsp-api/compare/v29.1.3...v30.0.0) (2023-08-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove experimental standoff route (DEV-2549) ([#2795](https://github.com/dasch-swiss/dsp-api/issues/2795))
+
+### Bug Fixes
+
+* allow ordering by label in Gravsearch (DEV-2546) ([#2798](https://github.com/dasch-swiss/dsp-api/issues/2798)) ([ca4553e](https://github.com/dasch-swiss/dsp-api/commit/ca4553e097e30cabdd250021ee14aa789d44ae47))
+
+
+### Maintenance
+
+* Cleanup TriplestoreService code ([#2804](https://github.com/dasch-swiss/dsp-api/issues/2804)) ([6278fba](https://github.com/dasch-swiss/dsp-api/commit/6278fba558fd03d4c44df374777230159ffa4a8b))
+* Derive version from git tag DEV-2575 ([#2800](https://github.com/dasch-swiss/dsp-api/issues/2800)) ([5f612a8](https://github.com/dasch-swiss/dsp-api/commit/5f612a89cea59edec74e68bc7c9992c28ad4a5ee))
+* remove experimental standoff route (DEV-2549) ([#2795](https://github.com/dasch-swiss/dsp-api/issues/2795)) ([246f1da](https://github.com/dasch-swiss/dsp-api/commit/246f1da04f372a2a1d7798ad3bc67c651ca270fd))
+* Remove throws from OntologyResponderV2 DEV-2579  ([#2801](https://github.com/dasch-swiss/dsp-api/issues/2801)) ([b0694ad](https://github.com/dasch-swiss/dsp-api/commit/b0694ad082fd82bcd6e05c236f07cb999186891e))
+* Remove throws from ResourceResponderV2 DEV-2580 ([#2802](https://github.com/dasch-swiss/dsp-api/issues/2802)) ([55d362d](https://github.com/dasch-swiss/dsp-api/commit/55d362d9f2900fb8dd9c16eaf1d678592e47df85))
+* remove throws from values responder DEV-2568 ([#2799](https://github.com/dasch-swiss/dsp-api/issues/2799)) ([42ee838](https://github.com/dasch-swiss/dsp-api/commit/42ee83816eaae731bc8adfcbd444e4edb61f6206))
+
 ## [29.1.3](https://github.com/dasch-swiss/dsp-api/compare/v29.1.2...v29.1.3) (2023-08-16)
 
 
