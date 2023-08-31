@@ -38,12 +38,14 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserA
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -55,7 +57,7 @@ final case class UsersResponderADMLive(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends UsersResponderADM
     with MessageHandler
@@ -178,7 +180,7 @@ final case class UsersResponderADMLive(
            )
 
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                             sparql.admin.txt
                                .getUsers(
                                  maybeIri = None,
                                  maybeUsername = None,
@@ -187,7 +189,7 @@ final case class UsersResponderADMLive(
                                .toString()
                            )
 
-      usersResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
+      usersResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQueryString)
 
       statements = usersResponse.statements.toList
 
@@ -881,14 +883,14 @@ final case class UsersResponderADMLive(
     // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                             sparql.admin.txt
                                .getUserByIri(
                                  userIri = userIri
                                )
                                .toString()
                            )
 
-      userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
+      userDataQueryResponse <- triplestore.sparqlHttpSelect(sparqlQueryString)
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -1443,7 +1445,7 @@ final case class UsersResponderADMLive(
                                   case None              => None
                                 }
       updateUserSparqlString <- ZIO.attempt(
-                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                  sparql.admin.txt
                                     .updateUser(
                                       AdminConstants.adminDataNamedGraph.value,
                                       userIri = userIri,
@@ -1465,7 +1467,7 @@ final case class UsersResponderADMLive(
       _ <- invalidateCachedUserADM(maybeCurrentUser)
 
       // write the updated user to the triplestore
-      _ <- triplestoreService.sparqlHttpUpdate(updateUserSparqlString)
+      _ <- triplestore.sparqlHttpUpdate(updateUserSparqlString)
 
       /* Verify that the user was updated */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1599,7 +1601,7 @@ final case class UsersResponderADMLive(
 
       // update the password
       updateUserSparqlString <- ZIO.attempt(
-                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                  sparql.admin.txt
                                     .updateUserPassword(
                                       AdminConstants.adminDataNamedGraph.value,
                                       userIri = userIri,
@@ -1608,7 +1610,7 @@ final case class UsersResponderADMLive(
                                     .toString
                                 )
 
-      updateResult <- triplestoreService.sparqlHttpUpdate(updateUserSparqlString)
+      updateResult <- triplestore.sparqlHttpUpdate(updateUserSparqlString)
 
       /* Verify that the password was updated. */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1680,7 +1682,7 @@ final case class UsersResponderADMLive(
         hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.
-        createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        createNewUserSparqlString = sparql.admin.txt
                                       .createNewUser(
                                         AdminConstants.adminDataNamedGraph.value,
                                         userIri = userIri,
@@ -1728,7 +1730,7 @@ final case class UsersResponderADMLive(
 
         _ = logger.debug(s"createNewUser: $createNewUserSparqlString")
 
-        _ <- triplestoreService.sparqlHttpUpdate(createNewUserSparqlString)
+        _ <- triplestore.sparqlHttpUpdate(createNewUserSparqlString)
 
         // try to retrieve newly created user (will also add to cache)
         maybeNewUserADM <- getSingleUserADM(
@@ -1809,7 +1811,7 @@ final case class UsersResponderADMLive(
   ): Task[Option[UserADM]] =
     for {
       sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                             sparql.admin.txt
                                .getUsers(
                                  maybeIri = identifier.toIriOption,
                                  maybeUsername = identifier.toUsernameOption,
@@ -1818,7 +1820,7 @@ final case class UsersResponderADMLive(
                                .toString()
                            )
 
-      userQueryResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
+      userQueryResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQueryString)
 
       maybeUserADM <-
         if (userQueryResponse.statements.nonEmpty) {
@@ -1977,13 +1979,7 @@ final case class UsersResponderADMLive(
    * @return a [[Boolean]].
    */
   private def userExists(userIri: IRI): Task[Boolean] =
-    for {
-      askString <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString
-        )
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-    } yield checkUserExistsResponse.result
+    triplestore.query(Ask(sparql.admin.txt.checkUserExists(userIri)))
 
   /**
    * Helper method for checking if an username is already registered.
@@ -2000,14 +1996,7 @@ final case class UsersResponderADMLive(
       case Some(username) =>
         if (maybeCurrent.contains(username.value)) ZIO.succeed(true)
         else
-          for {
-            askString <- ZIO.attempt(
-                           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                             .checkUserExistsByUsername(username = username.value)
-                             .toString
-                         )
-            checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-          } yield checkUserExistsResponse.result
+          triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value)))
 
       case None => ZIO.succeed(false)
     }
@@ -2029,15 +2018,8 @@ final case class UsersResponderADMLive(
             _ <- ZIO
                    .fromOption(stringFormatter.validateEmail(email.value))
                    .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
-
-            askString <- ZIO.attempt(
-                           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                             .checkUserExistsByEmail(email = email.value)
-                             .toString
-                         )
-
-            checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-          } yield checkUserExistsResponse.result
+            userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
+          } yield userExists
         }
 
       case None => ZIO.succeed(false)
@@ -2050,17 +2032,7 @@ final case class UsersResponderADMLive(
    * @return a [[Boolean]].
    */
   private def projectExists(projectIri: IRI): Task[Boolean] =
-    for {
-      askString <- ZIO.attempt(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByIri(projectIri = projectIri)
-                       .toString
-                   )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
+    triplestore.query(Ask(sparql.admin.txt.checkProjectExistsByIri(projectIri)))
 
   /**
    * Helper method for checking if a group exists.
@@ -2069,16 +2041,7 @@ final case class UsersResponderADMLive(
    * @return a [[Boolean]].
    */
   private def groupExists(groupIri: IRI): Task[Boolean] =
-    for {
-      askString <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
-        )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
+    triplestore.query(Ask(sparql.admin.txt.checkGroupExistsByIri(groupIri)))
 
   /**
    * Tries to retrieve a [[UserADM]] from the cache.
@@ -2103,12 +2066,10 @@ final case class UsersResponderADMLive(
    *
    * @param user a [[UserADM]].
    * @return Unit
-   * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
-  private def writeUserADMToCache(user: UserADM): Task[Unit] = for {
-    _ <- messageRelay.ask[Any](CacheServicePutUserADM(user))
-    _ <- ZIO.attempt(logger.debug(s"writeUserADMToCache done - user: ${user.id}"))
-  } yield ()
+  private def writeUserADMToCache(user: UserADM): Task[Unit] =
+    messageRelay.ask[Any](CacheServicePutUserADM(user)) *>
+      ZIO.logDebug(s"writeUserADMToCache done - user: ${user.id}")
 
   /**
    * Removes the user from cache.

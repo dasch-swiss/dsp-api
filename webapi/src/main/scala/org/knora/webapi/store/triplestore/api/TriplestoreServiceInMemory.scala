@@ -35,7 +35,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
@@ -50,6 +49,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -111,8 +111,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     VariableResultsRow(keyValueMap)
   }
 
-  override def sparqlHttpAsk(query: String): Task[SparqlAskResponse] =
-    ZIO.scoped(getReadTransactionQueryExecution(query).map(_.execAsk())).map(SparqlAskResponse)
+  override def query(query: Ask): Task[Boolean] =
+    ZIO.scoped(getReadTransactionQueryExecution(query.sparql).map(_.execAsk()))
 
   override def sparqlHttpConstruct(request: SparqlConstructRequest): Task[SparqlConstructResponse] =
     for {

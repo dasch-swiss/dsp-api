@@ -30,6 +30,7 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -38,6 +39,7 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -166,7 +168,7 @@ trait ProjectsResponderADM {
 }
 
 final case class ProjectsResponderADMLive(
-  private val triplestoreService: TriplestoreService,
+  private val triplestore: TriplestoreService,
   private val messageRelay: MessageRelay,
   private val iriService: IriService,
   private val projectService: ProjectADMService,
@@ -278,14 +280,14 @@ final case class ProjectsResponderADMLive(
                !user.isSystemUser
              }
 
-      query = twirl.queries.sparql.admin.txt
+      query = sparql.admin.txt
                 .getProjectMembers(
                   maybeIri = id.asIriIdentifierOption,
                   maybeShortname = id.asShortnameIdentifierOption,
                   maybeShortcode = id.asShortcodeIdentifierOption
                 )
 
-      projectMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
+      projectMembersResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString())
       statements              = projectMembersResponse.statements.toList
 
       // get project member IRI from results rows
@@ -336,14 +338,14 @@ final case class ProjectsResponderADMLive(
                !user.permissions.isProjectAdmin(project.id)
              }
 
-      query = twirl.queries.sparql.admin.txt
+      query = sparql.admin.txt
                 .getProjectAdminMembers(
                   maybeIri = id.asIriIdentifierOption,
                   maybeShortname = id.asShortnameIdentifierOption,
                   maybeShortcode = id.asShortcodeIdentifierOption
                 )
 
-      projectAdminMembersResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
+      projectAdminMembersResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString())
 
       statements = projectAdminMembersResponse.statements.toList
 
@@ -403,14 +405,14 @@ final case class ProjectsResponderADMLive(
   override def projectRestrictedViewSettingsGetADM(
     id: ProjectIdentifierADM
   ): Task[Option[ProjectRestrictedViewSettingsADM]] = {
-    val query = twirl.queries.sparql.admin.txt
+    val query = sparql.admin.txt
       .getProjects(
         maybeIri = id.asIriIdentifierOption,
         maybeShortname = id.asShortnameIdentifierOption,
         maybeShortcode = id.asShortcodeIdentifierOption
       )
     for {
-      projectResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString)
+      projectResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString)
       restrictedViewSettings =
         if (projectResponse.statements.nonEmpty) {
 
@@ -528,7 +530,7 @@ final case class ProjectsResponderADMLive(
         _ <- messageRelay.ask[Any](CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
 
         /* Update project */
-        updateQuery = twirl.queries.sparql.admin.txt
+        updateQuery = sparql.admin.txt
                         .updateProject(
                           adminNamedGraphIri = "http://www.knora.org/data/admin",
                           projectIri = projectIri.value,
@@ -541,7 +543,7 @@ final case class ProjectsResponderADMLive(
                           maybeSelfjoin = projectUpdatePayload.selfjoin.map(_.value)
                         )
 
-        _ <- triplestoreService.sparqlHttpUpdate(updateQuery.toString)
+        _ <- triplestore.sparqlHttpUpdate(updateQuery.toString)
 
         /* Verify that the project was updated. */
         updatedProject <-
@@ -790,7 +792,7 @@ final case class ProjectsResponderADMLive(
         maybeLongname                      = createProjectRequest.longname.map(_.value)
         maybeLogo                          = createProjectRequest.logo.map(_.value)
 
-        createNewProjectSparqlString = twirl.queries.sparql.admin.txt
+        createNewProjectSparqlString = sparql.admin.txt
                                          .createNewProject(
                                            AdminConstants.adminDataNamedGraph.value,
                                            projectIri = newProjectIRI,
@@ -810,7 +812,7 @@ final case class ProjectsResponderADMLive(
                                          )
                                          .toString
 
-        _ <- triplestoreService.sparqlHttpUpdate(createNewProjectSparqlString)
+        _ <- triplestore.sparqlHttpUpdate(createNewProjectSparqlString)
 
         // try to retrieve newly created project (will also add to cache)
         id <- IriIdentifier.fromString(newProjectIRI).toZIO.mapError(e => BadRequestException(e.getMessage))
@@ -880,10 +882,8 @@ final case class ProjectsResponderADMLive(
    * @param shortname the shortname of the project.
    * @return a [[Boolean]].
    */
-  private def projectByShortnameExists(shortname: String): Task[Boolean] = {
-    val query = twirl.queries.sparql.admin.txt.checkProjectExistsByShortname(shortname)
-    triplestoreService.sparqlHttpAsk(query.toString()).map(_.result)
-  }
+  private def projectByShortnameExists(shortname: String): Task[Boolean] =
+    triplestore.query(Ask(sparql.admin.txt.checkProjectExistsByShortname(shortname)))
 
   /**
    * Helper method for checking if a project identified by shortcode exists.
@@ -891,10 +891,8 @@ final case class ProjectsResponderADMLive(
    * @param shortcode the shortcode of the project.
    * @return a [[Boolean]].
    */
-  private def projectByShortcodeExists(shortcode: String): Task[Boolean] = {
-    val query = twirl.queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode)
-    triplestoreService.sparqlHttpAsk(query.toString()).map(_.result)
-  }
+  private def projectByShortcodeExists(shortcode: String): Task[Boolean] =
+    triplestore.query(Ask(sparql.admin.txt.checkProjectExistsByShortcode(shortcode)))
 
   private def getProjectFromCache(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     messageRelay.ask[Option[ProjectADM]](CacheServiceGetProjectADM(identifier)).map(_.map(_.unescape))

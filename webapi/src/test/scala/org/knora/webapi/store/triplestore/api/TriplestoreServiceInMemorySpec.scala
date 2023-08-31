@@ -26,6 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
 object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
@@ -63,8 +64,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                        |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                        |}
                        |""".stripMargin
-            result <- TriplestoreService.sparqlHttpAsk(query)
-          } yield assertTrue(!result.result)
+            result <- TriplestoreService.query(Ask(query))
+          } yield assertTrue(!result)
         },
         test("dropDataGraphByGraph") {
           for {
@@ -76,8 +77,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                        |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                        |}
                        |""".stripMargin
-            result <- TriplestoreService.sparqlHttpAsk(query)
-          } yield assertTrue(!result.result)
+            result <- TriplestoreService.query(Ask(query))
+          } yield assertTrue(!result)
         }
       ),
       suite("CONSTRUCT")(
@@ -152,8 +153,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                           |""".stripMargin
         for {
           _      <- TriplestoreService.sparqlHttpUpdate(updateQuery)
-          result <- TriplestoreService.sparqlHttpAsk(askQuery)
-        } yield assertTrue(result.result)
+          result <- TriplestoreService.query(Ask(askQuery))
+        } yield assertTrue(result)
       }),
       suite("ASK")(
         test("should return true if anArticle exists") {
@@ -164,9 +165,9 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                          |  <http://anArticle> a <${Biblio.Class.Article.value}> .
                          |}
                          |""".stripMargin
-          for {
-            result <- TriplestoreService.sparqlHttpAsk(query)
-          } yield assertTrue(result.result)
+          TriplestoreService
+            .query(Ask(query))
+            .map(result => assertTrue(result))
         },
         test("should return false if thing does not exist") {
           val query = """
@@ -178,8 +179,8 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                         |}
                         |""".stripMargin
           for {
-            result <- TriplestoreService.sparqlHttpAsk(query)
-          } yield assertTrue(!result.result)
+            result <- TriplestoreService.query(Ask(query)).negate
+          } yield assertTrue(result)
         }
       ),
       suite("SELECT")(

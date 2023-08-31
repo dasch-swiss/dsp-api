@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 
 @accessible
 trait TriplestoreService {
@@ -98,6 +99,14 @@ trait TriplestoreService {
   ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
 
   /**
+   * Performs a SPARQL ASK query.
+   *
+   * @param sparql the SPARQL [[Ask]] query.
+   * @return a [[Boolean]].
+   */
+  def query(sparql: Ask): Task[Boolean]
+
+  /**
    * Performs a SPARQL update operation.
    *
    * @param sparqlUpdate the SPARQL update.
@@ -106,15 +115,6 @@ trait TriplestoreService {
   def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit]
 
   def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[Unit] = sparqlHttpUpdate(query.toString)
-
-  /**
-   * Performs a SPARQL ASK query.
-   *
-   * @param sparql the SPARQL ASK query.
-   * @return a [[SparqlAskResponse]].
-   */
-  def sparqlHttpAsk(sparql: String): Task[SparqlAskResponse]
-  def sparqlHttpAsk(query: TxtFormat.Appendable): Task[SparqlAskResponse] = sparqlHttpAsk(query.toString)
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
@@ -210,4 +210,14 @@ trait TriplestoreService {
    */
   def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit]
 
+}
+
+object TriplestoreService {
+  object Queries {
+    sealed trait SparqlQuery { val sparql: String }
+    case class Ask(sparql: String) extends SparqlQuery
+    object Ask {
+      def apply(sparql: TxtFormat.Appendable): Ask = Ask(sparql.toString)
+    }
+  }
 }

@@ -1631,7 +1631,7 @@ final case class OntologyResponderV2Live(
 
       userCanUpdateOntology <-
         ontologyHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteClassRequest.requestingUser)
-      classIsUsed <- iriService.isEntityUsed(entityIri = internalClassIri)
+      classIsUsed <- iriService.isEntityUsed(internalClassIri)
     } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
   }
 

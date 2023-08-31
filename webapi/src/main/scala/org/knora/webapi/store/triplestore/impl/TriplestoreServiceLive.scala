@@ -50,6 +50,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
@@ -164,15 +165,15 @@ case class TriplestoreServiceLive(
   /**
    * Performs a SPARQL ASK query.
    *
-   * @param query the SPARQL ASK query.
-   * @return a [[SparqlAskResponse]].
+   * @param query the SPARQL [[Ask]] query.
+   * @return a [[Boolean]].
    */
-  override def sparqlHttpAsk(query: String): Task[SparqlAskResponse] =
+  override def query(query: Ask): Task[Boolean] =
     for {
-      resultString <- executeSparqlQuery(query)
+      resultString <- executeSparqlQuery(query.sparql)
       _            <- ZIO.logDebug(s"sparqlHttpAsk - resultString: $resultString")
       result       <- ZIO.attemptBlocking(resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean])
-    } yield SparqlAskResponse(result)
+    } yield result
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.

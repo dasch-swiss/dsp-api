@@ -24,6 +24,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -37,6 +38,8 @@ import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util._
 
 object ResourcesResponderV2Spec {
@@ -519,7 +522,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
   }
 
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
-    val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+    val sparqlQuery = sparql.v2.txt
       .getStandoffTagByUUID(
         uuid = uuid
       )
@@ -2311,29 +2314,14 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       ).map(_.toSmartIri)
 
       for (erasedIriToCheck <- erasedIrisToCheck) {
-        val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .checkIriExists(
-            iri = erasedIriToCheck.toString
-          )
-          .toString()
-
-        appActor ! SparqlAskRequest(sparqlQuery)
-
-        expectMsgPF(timeout) { case entityExistsResponse: SparqlAskResponse =>
-          entityExistsResponse.result should be(false)
-        }
+        val query = sparql.admin.txt.checkIriExists(erasedIriToCheck.toString)
+        UnsafeZioRun.runOrThrow(TriplestoreService.query(Ask(query))) should be(false)
       }
 
       // Check that the deleted link value that pointed to the resource has also been erased.
-      val isEntityUsedQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-        .isEntityUsed(
-          entityIri = resourceIriToErase.get.toSmartIri.toInternalIri,
-          ignoreKnoraConstraints = true
-        )
-
-      appActor ! SparqlAskRequest(isEntityUsedQuery)
-
-      expectMsgPF(timeout) { case SparqlAskResponse(isUsed) => assert(!isUsed, s"Link value was not erased") }
+      val query =
+        sparql.v2.txt.isEntityUsed(resourceIriToErase.get.toSmartIri.toInternalIri, ignoreKnoraConstraints = true)
+      UnsafeZioRun.runOrThrow(TriplestoreService.query(Ask(query))) should be(false)
     }
   }
   "When given a custom IRI" should {

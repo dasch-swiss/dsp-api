@@ -36,12 +36,14 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -52,7 +54,7 @@ final case class ListsResponderADMLive(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends ListsResponderADM
     with MessageHandler
@@ -130,13 +132,13 @@ final case class ListsResponderADMLive(
     for {
       sparqlQuery <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          sparql.admin.txt
             .getLists(
               maybeProjectIri = projectIri
             )
             .toString()
         )
-      listsResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQuery)
+      listsResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQuery)
 
       // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
       statements = listsResponse.statements.toList
@@ -322,14 +324,14 @@ final case class ListsResponderADMLive(
   ): Task[Option[ListNodeInfoADM]] = {
     for {
       sparqlQuery <- ZIO.attempt(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       sparql.admin.txt
                          .getListNode(
                            nodeIri = nodeIri
                          )
                          .toString()
                      )
 
-      listNodeResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQuery)
+      listNodeResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQuery)
 
       statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
 
@@ -477,14 +479,14 @@ final case class ListsResponderADMLive(
       // this query will give us only the information about the root node.
       sparqlQuery <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          sparql.admin.txt
             .getListNode(
               nodeIri = nodeIri
             )
             .toString()
         )
 
-      listInfoResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQuery)
+      listInfoResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQuery)
 
       maybeListNode <-
         if (listInfoResponse.statements.nonEmpty) {
@@ -682,14 +684,14 @@ final case class ListsResponderADMLive(
 
     for {
       nodeChildrenQuery <- ZIO.attempt {
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                             sparql.admin.txt
                                .getListNodeWithChildren(
                                  startNodeIri = ofNodeIri
                                )
                                .toString()
                            }
 
-      nodeWithChildrenResponse <- triplestoreService.sparqlHttpExtendedConstruct(nodeChildrenQuery)
+      nodeWithChildrenResponse <- triplestore.sparqlHttpExtendedConstruct(nodeChildrenQuery)
 
       statements: Seq[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
 
@@ -768,7 +770,7 @@ final case class ListsResponderADMLive(
     // TODO: Rewrite using a construct sparql query
     for {
       nodePathQuery <- ZIO.attempt {
-                         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         sparql.admin.txt
                            .getNodePath(
                              queryNodeIri = queryNodeIri,
                              preferredLanguage = requestingUser.lang,
@@ -777,7 +779,7 @@ final case class ListsResponderADMLive(
                            .toString()
                        }
 
-      nodePathResponse <- triplestoreService.sparqlHttpSelect(nodePathQuery)
+      nodePathResponse <- triplestore.sparqlHttpSelect(nodePathQuery)
       /*
 
             If we request the path to the node <http://rdfh.ch/lists/c7f07a3fc1> ("Heidi Film"), the response has the following format:
@@ -965,7 +967,7 @@ final case class ListsResponderADMLive(
                                                   labels,
                                                   comments
                                                 ) =>
-                                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                              sparql.admin.txt
                                                 .createNewListNode(
                                                   dataNamedGraph = dataNamedGraph,
                                                   listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -988,7 +990,7 @@ final case class ListsResponderADMLive(
                                                   labels,
                                                   comments
                                                 ) =>
-                                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                              sparql.admin.txt
                                                 .createNewListNode(
                                                   dataNamedGraph = dataNamedGraph,
                                                   listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -1004,7 +1006,7 @@ final case class ListsResponderADMLive(
                                                 .toString
                                           }
 
-      _ <- triplestoreService.sparqlHttpUpdate(createNewListSparqlString)
+      _ <- triplestore.sparqlHttpUpdate(createNewListSparqlString)
     } yield newListNodeIri
   }
 
@@ -1086,7 +1088,7 @@ final case class ListsResponderADMLive(
              )
 
         changeNodeInfoSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeRequest)
-        _                          <- triplestoreService.sparqlHttpUpdate(changeNodeInfoSparqlString)
+        _                          <- triplestore.sparqlHttpUpdate(changeNodeInfoSparqlString)
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1204,7 +1206,7 @@ final case class ListsResponderADMLive(
             )
           )
 
-        _ <- triplestoreService.sparqlHttpUpdate(changeNodeNameSparqlString)
+        _ <- triplestore.sparqlHttpUpdate(changeNodeNameSparqlString)
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1271,7 +1273,7 @@ final case class ListsResponderADMLive(
                                             labels = Some(changeNodeLabelsRequest.labels)
                                           )
                                         )
-        _ <- triplestoreService.sparqlHttpUpdate(changeNodeLabelsSparqlString)
+        _ <- triplestore.sparqlHttpUpdate(changeNodeLabelsSparqlString)
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1339,7 +1341,7 @@ final case class ListsResponderADMLive(
                                               comments = Some(changeNodeCommentsRequest.comments)
                                             )
                                           )
-        _ <- triplestoreService.sparqlHttpUpdate(changeNodeCommentsSparqlString)
+        _ <- triplestore.sparqlHttpUpdate(changeNodeCommentsSparqlString)
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1692,14 +1694,14 @@ final case class ListsResponderADMLive(
   ): Task[CanDeleteListResponseADM] =
     for {
       sparqlQuery <- ZIO.attempt(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       sparql.admin.txt
                          .canDeleteList(
                            listIri = iri
                          )
                          .toString()
                      )
 
-      response <- triplestoreService.sparqlHttpSelect(sparqlQuery)
+      response <- triplestore.sparqlHttpSelect(sparqlQuery)
 
       canDelete =
         if (response.results.bindings.isEmpty) true
@@ -1742,7 +1744,7 @@ final case class ListsResponderADMLive(
 
       sparqlQuery <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          sparql.admin.txt
             .deleteListNodeComments(
               namedGraph = namedGraph,
               nodeIri = iri,
@@ -1751,7 +1753,7 @@ final case class ListsResponderADMLive(
             .toString()
         )
 
-      _ <- triplestoreService.sparqlHttpUpdate(sparqlQuery)
+      _ <- triplestore.sparqlHttpUpdate(sparqlQuery)
 
     } yield ListNodeCommentsDeleteResponseADM(iri, !isRootNode)
 
@@ -1993,14 +1995,7 @@ final case class ListsResponderADMLive(
    * @return a [[Boolean]].
    */
   private def rootNodeByIriExists(rootNodeIri: IRI): Task[Boolean] =
-    for {
-      askString <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString
-        )
-      askResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result       = askResponse.result
-    } yield result
+    triplestore.query(Ask(sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri)))
 
   /**
    * Helper method for checking if a node identified by IRI exists.
@@ -2009,14 +2004,7 @@ final case class ListsResponderADMLive(
    * @return a [[Boolean]].
    */
   private def nodeByIriExists(nodeIri: IRI): Task[Boolean] =
-    for {
-      askString <- ZIO.attempt(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString
-                   )
-      askResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result       = askResponse.result
-
-    } yield result
+    triplestore.query(Ask(sparql.admin.txt.checkListNodeExistsByIri(nodeIri)))
 
   /**
    * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
@@ -2029,19 +2017,7 @@ final case class ListsResponderADMLive(
   private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[ListName]): Task[Boolean] =
     listNodeName match {
       case Some(name) =>
-        for {
-          askString <- ZIO.attempt(
-                         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                           .checkListNodeNameIsProjectUnique(
-                             projectIri,
-                             listNodeName = name.value
-                           )
-                           .toString
-                       )
-          askResponse <- triplestoreService.sparqlHttpAsk(askString)
-          result       = askResponse.result
-
-        } yield !result
+        triplestore.query(Ask(sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri, name.value))).negate
 
       case None => ZIO.succeed(true)
     }
@@ -2090,7 +2066,7 @@ final case class ListsResponderADMLive(
       hasOldName: Boolean = node.getName.nonEmpty
 
       // Update the list
-      changeNodeInfoSparqlString: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+      changeNodeInfoSparqlString: String = sparql.admin.txt
                                              .updateListInfo(
                                                dataNamedGraph = dataNamedGraph,
                                                nodeIri = changeNodeInfoRequest.listIri.value,
@@ -2152,14 +2128,14 @@ final case class ListsResponderADMLive(
   protected def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Task[Unit] =
     for {
       isNodeUsedSparql <- ZIO.attempt(
-                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                            sparql.admin.txt
                               .isNodeUsed(
                                 nodeIri = nodeIri
                               )
                               .toString()
                           )
 
-      isNodeUsedResponse <- triplestoreService.sparqlHttpSelect(isNodeUsedSparql)
+      isNodeUsedResponse <- triplestore.sparqlHttpSelect(isNodeUsedSparql)
       _ = if (isNodeUsedResponse.results.bindings.nonEmpty) {
             errorFun
           }
@@ -2202,14 +2178,14 @@ final case class ListsResponderADMLive(
     for {
       // query statement
       getParentNodeSparqlString <- ZIO.attempt(
-                                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                     sparql.admin.txt
                                        .getParentNode(
                                          nodeIri = nodeIri
                                        )
                                        .toString
                                    )
 
-      parentNodeResponse <- triplestoreService.sparqlHttpExtendedConstruct(getParentNodeSparqlString)
+      parentNodeResponse <- triplestore.sparqlHttpExtendedConstruct(getParentNodeSparqlString)
 
       parentStatements = parentNodeResponse.statements.headOption.getOrElse(
                            throw BadRequestException(s"The parent node for $nodeIri not found, report this as a bug.")
@@ -2232,7 +2208,7 @@ final case class ListsResponderADMLive(
       // Generate SPARQL for erasing a node.
       sparqlDeleteNode <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          sparql.admin.txt
             .deleteNode(
               dataNamedGraph = dataNamedGraph,
               nodeIri = nodeIri,
@@ -2242,7 +2218,7 @@ final case class ListsResponderADMLive(
         )
 
       // Do the update.
-      _ <- triplestoreService.sparqlHttpUpdate(sparqlDeleteNode)
+      _ <- triplestore.sparqlHttpUpdate(sparqlDeleteNode)
 
       // Verify that the node was deleted correctly.
       nodeStillExists <- nodeByIriExists(nodeIri)
@@ -2270,7 +2246,7 @@ final case class ListsResponderADMLive(
       // Generate SPARQL for erasing a node.
       sparqlUpdateNodePosition <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          sparql.admin.txt
             .updateNodePosition(
               dataNamedGraph = dataNamedGraph,
               nodeIri = nodeIri,
@@ -2279,7 +2255,7 @@ final case class ListsResponderADMLive(
             .toString()
         )
 
-      _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdateNodePosition)
+      _ <- triplestore.sparqlHttpUpdate(sparqlUpdateNodePosition)
 
       /* Verify that the node info was updated */
       maybeNode <- listNodeGetADM(
@@ -2360,7 +2336,7 @@ final case class ListsResponderADMLive(
       // Generate SPARQL for changing the parent node of the node.
       sparqlChangeParentNode <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          sparql.admin.txt
             .changeParentNode(
               dataNamedGraph = dataNamedGraph,
               nodeIri = nodeIri,
@@ -2370,7 +2346,7 @@ final case class ListsResponderADMLive(
             .toString()
         )
 
-      _ <- triplestoreService.sparqlHttpUpdate(sparqlChangeParentNode)
+      _ <- triplestore.sparqlHttpUpdate(sparqlChangeParentNode)
 
       /* verify that parents were updated */
       // get old parent node with its immediate children

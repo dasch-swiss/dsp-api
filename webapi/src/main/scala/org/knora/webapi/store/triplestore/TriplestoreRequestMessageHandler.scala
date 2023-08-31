@@ -22,7 +22,6 @@ import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRequest
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphFileRequest
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructFileRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
@@ -63,7 +62,6 @@ final case class TriplestoreRequestMessageHandlerLive(updater: RepositoryUpdater
       ts.sparqlHttpGraphFile(graphIri, outputFile, outputFormat)
     case NamedGraphDataRequest(graphIri: IRI) => ts.sparqlHttpGraphData(graphIri)
     case SparqlUpdateRequest(sparql: String)  => ts.sparqlHttpUpdate(sparql)
-    case SparqlAskRequest(sparql: String)     => ts.sparqlHttpAsk(sparql)
     case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) =>
       ts.resetTripleStoreContent(rdfDataObjects, prependDefaults)
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>

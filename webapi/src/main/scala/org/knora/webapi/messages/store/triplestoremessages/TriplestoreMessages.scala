@@ -7,7 +7,6 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
-import play.twirl.api.TxtFormat
 import spray.json._
 import zio._
 
@@ -245,24 +244,6 @@ case class NamedGraphDataResponse(turtle: String)
  * @param sparql the SPARQL string.
  */
 case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
-
-/**
- * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
- * [[SparqlAskResponse]].
- *
- * @param sparql the SPARQL string.
- */
-case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
-object SparqlAskRequest {
-  def apply(query: TxtFormat.Appendable): SparqlAskRequest = SparqlAskRequest(query.toString)
-}
-
-/**
- * Represents a response to a SPARQL ASK query, containing the result.
- *
- * @param result of the query.
- */
-case class SparqlAskResponse(result: Boolean)
 
 /**
  * Message for resetting the contents of the repository and loading a fresh set of data. The data needs to be
