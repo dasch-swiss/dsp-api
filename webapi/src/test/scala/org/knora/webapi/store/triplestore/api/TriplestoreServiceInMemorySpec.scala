@@ -21,6 +21,7 @@ import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -289,7 +290,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
       suite("sparqlHttpGraphFile")(test("sparqlHttpGraphFile should create the file") {
         val tempDir = Files.createTempDirectory(UUID.randomUUID().toString)
         tempDir.toFile.deleteOnExit()
-        val testFile = tempDir.toAbsolutePath.resolve("test.ttl")
+        val testFile = zio.nio.file.Path.fromJava(tempDir.toAbsolutePath.resolve("test.ttl"))
         ZIO.scoped {
           for {
             _ <- TriplestoreService.insertDataIntoTriplestore(
@@ -301,8 +302,12 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    ),
                    prependDefaults = false
                  )
-            _ <- TriplestoreService.sparqlHttpGraphFile("http://www.knora.org/ontology/knora-base", testFile, TriG)
-          } yield assertTrue({ val fileExists = Files.exists(testFile); fileExists })
+            _ <- TriplestoreService.sparqlHttpGraphFile(
+                   InternalIri("http://www.knora.org/ontology/knora-base"),
+                   testFile,
+                   TriG
+                 )
+          } yield assertTrue({ val fileExists = Files.exists(testFile.toFile.toPath); fileExists })
         }
       })
     ).provide(TriplestoreServiceInMemory.layer, datasetLayerFromTurtle(testDataSet), StringFormatter.test)

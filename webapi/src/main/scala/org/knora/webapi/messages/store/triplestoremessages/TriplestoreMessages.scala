@@ -9,26 +9,18 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 import zio._
 
-import java.nio.file.Path
 import java.time.Instant
 import scala.collection.mutable
 
 import dsp.errors._
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
-import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.domain
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -151,62 +143,9 @@ object SparqlExtendedConstructResponse {
 }
 
 /**
- * Requests a named graph, which will be written to the specified file. A successful response
- * will be a [[Unit]].
- *
- * @param graphIri             the IRI of the named graph.
- * @param outputFile           the destination file.
- * @param outputFormat         the output file format.
- */
-case class NamedGraphFileRequest(
-  graphIri: IRI,
-  outputFile: Path,
-  outputFormat: QuadFormat
-) extends TriplestoreRequest
-    with ResponderRequest
-
-/**
- * Requests a named graph, which will be returned as Turtle. A successful response
- * will be a [[NamedGraphDataResponse]].
- *
- * @param graphIri the IRI of the named graph.
- */
-case class NamedGraphDataRequest(graphIri: IRI) extends TriplestoreRequest
-
-/**
  * A graph of triples in Turtle format.
  */
 case class NamedGraphDataResponse(turtle: String)
-
-/**
- * Message for resetting the contents of the repository and loading a fresh set of data. The data needs to be
- * stored in an accessible path and supplied via the [[RdfDataObject]].
- *
- * @param rdfDataObjects  contains a list of [[RdfDataObject]].
- * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
- */
-case class ResetRepositoryContent(rdfDataObjects: List[RdfDataObject], prependDefaults: Boolean = true)
-    extends TriplestoreRequest
-
-/**
- * Inserts data into the repository.
- *
- * @param rdfDataObjects contains a list of [[RdfDataObject]].
- */
-case class InsertRepositoryContent(rdfDataObjects: List[RdfDataObject]) extends TriplestoreRequest
-
-/**
- * Inserts raw RDF data into the repository.
- *
- * @param graphContent contains graph data as turtle.
- * @param graphName    the name of the graph.
- */
-case class InsertGraphDataContentRequest(graphContent: String, graphName: String) extends TriplestoreRequest
-
-/**
- * Ask triplestore if it is ready
- */
-case class CheckTriplestoreRequest() extends TriplestoreRequest
 
 /**
  * Response indicating whether the triplestore has finished initialization and is ready for processing messages
@@ -219,31 +158,11 @@ object CheckTriplestoreResponse {
 }
 
 /**
- * Requests that the repository is updated to be compatible with the running version of Knora.
- */
-case class UpdateRepositoryRequest() extends TriplestoreRequest
-
-/**
- * Requests that the repository is downloaded to an N-Quads file. A successful response will be a [[Unit]].
- *
- * @param outputFile           the output file.
- */
-case class DownloadRepositoryRequest(outputFile: Path) extends TriplestoreRequest
-
-/**
- * Requests that repository content is uploaded from an N-Quads. A successful response will be a
- * [[Unit]].
- *
- * @param inputFile a TriG file containing the content to be uploaded to the repository.
- */
-case class UploadRepositoryRequest(inputFile: Path) extends TriplestoreRequest
-
-/**
  * Indicates whether the repository is up to date.
  *
  * @param message a message providing details of what was done.
  */
-case class RepositoryUpdatedResponse(message: String) extends TriplestoreRequest
+case class RepositoryUpdatedResponse(message: String)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -688,8 +607,4 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   }
 
   implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
-  implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetRepositoryContent] = jsonFormat2(
-    ResetRepositoryContent
-  )
-
 }

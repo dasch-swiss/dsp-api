@@ -134,8 +134,11 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
   "The TriplestoreService" should {
 
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {
-      appActor ! ResetRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, ())
+      UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .resetTripleStoreContent(rdfDataObjects)
+          .timeout(java.time.Duration.ofMinutes(5))
+      )
 
       val msg = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(countTriplesQuery)))
       afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
@@ -219,19 +222,16 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       }
     }
 
-    "insert RDF DataObjects" in {
-      appActor ! InsertRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, ())
-    }
-
     "put the graph data as turtle" in {
-      appActor ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
-      expectMsgType[Unit](10.second)
+      UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .insertDataGraphRequest(graphContent = graphDataContent, "http://jedi.org/graph")
+          .timeout(java.time.Duration.ofSeconds(10))
+      )
     }
 
     "read the graph data as turtle" in {
-      appActor ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
-      val response = expectMsgType[NamedGraphDataResponse](1.second)
+      val response = UnsafeZioRun.runOrThrow(TriplestoreService.sparqlHttpGraphData("http://jedi.org/graph"))
       response.turtle.length should be > 0
     }
   }

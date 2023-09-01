@@ -82,21 +82,7 @@ trait TriplestoreService {
    * @param outputFile           the file to be written.
    * @param outputFormat         the output file format.
    */
-  def sparqlHttpGraphFile(
-    graphIri: IRI,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit]
-  def sparqlHttpGraphFile(
-    graphIri: InternalIri,
-    outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile.toFile.toPath, outputFormat)
-  def sparqlHttpGraphFile(
-    graphIri: InternalIri,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile, outputFormat)
+  def sparqlHttpGraphFile(graphIri: InternalIri, outputFile: zio.nio.file.Path, outputFormat: QuadFormat): Task[Unit]
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.

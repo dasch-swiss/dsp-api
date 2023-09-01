@@ -220,7 +220,7 @@ case class TriplestoreServiceLive(
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
    * @return [[Unit]]
    */
-  def insertDataIntoTriplestore(
+  override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
   ): Task[Unit] = {
@@ -385,13 +385,13 @@ case class TriplestoreServiceLive(
    * @return a string containing the contents of the graph in N-Quads format.
    */
   override def sparqlHttpGraphFile(
-    graphIri: IRI,
-    outputFile: Path,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] = {
-    val request = new HttpGet(makeNamedGraphDownloadUri(graphIri))
+    val request = new HttpGet(makeNamedGraphDownloadUri(graphIri.value))
     request.addHeader("Accept", mimeTypeTextTurtle)
-    doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile, graphIri, outputFormat))
+    doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile.toFile.toPath, graphIri.value, outputFormat))
   }.unit
 
   /**

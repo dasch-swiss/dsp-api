@@ -166,8 +166,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   }
 
   override def sparqlHttpGraphFile(
-    graphIri: IRI,
-    outputFile: Path,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] = ZIO.scoped {
     for {
@@ -176,7 +176,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       lang = JenaFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
       _ <- ZIO.attemptBlocking {
              ds.begin(ReadWrite.READ)
-             try { ds.getNamedModel(graphIri).write(fos, lang.getName) }
+             try { ds.getNamedModel(graphIri.value).write(fos, lang.getName) }
              finally { ds.end() }
            }
     } yield ()
