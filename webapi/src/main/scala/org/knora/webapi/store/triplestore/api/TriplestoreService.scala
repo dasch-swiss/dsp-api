@@ -15,7 +15,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -40,8 +39,6 @@ trait TriplestoreService {
    * @return a [[SparqlConstructResponse]]
    */
   def query(sparql: Construct): Task[SparqlConstructResponse]
-  def query(sparql: ConstructQuery): Task[SparqlConstructResponse] =
-    query(Construct(sparql.toSparql, isGravsearch = true))
 
   /**
    * Performs a SPARQL SELECT query.

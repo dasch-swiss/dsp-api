@@ -315,8 +315,8 @@ final case class SearchResponderV2Live(
           )
 
           for {
-            query          <- constructTransformer.transform(mainQuery)
-            searchResponse <- triplestore.query(query).flatMap(_.asExtended)
+            query          <- constructTransformer.transform(mainQuery).map(_.toSparql)
+            searchResponse <- triplestore.query(Construct(query, isGravsearch = true)).flatMap(_.asExtended)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
           } yield queryResultsSep
@@ -590,8 +590,8 @@ final case class SearchResponderV2Live(
           )
 
           for {
-            mainQuery         <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe)
-            mainQueryResponse <- triplestore.query(mainQuery).flatMap(_.asExtended)
+            mainQuery         <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe).map(_.toSparql)
+            mainQueryResponse <- triplestore.query(Construct(mainQuery, isGravsearch = true)).flatMap(_.asExtended)
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions =
