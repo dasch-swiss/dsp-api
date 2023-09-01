@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.3...v0.1.4) (2023-08-29)
+
+
+### Maintenance
+
+* Add name to publish-docker-image job ([#71](https://github.com/dasch-swiss/dsp-ingest/issues/71)) ([9bad079](https://github.com/dasch-swiss/dsp-ingest/commit/9bad079efd6c940110990ec7d75d462add932c79))
+
 ## [0.1.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.2...v0.1.3) (2023-08-28)
 
 
