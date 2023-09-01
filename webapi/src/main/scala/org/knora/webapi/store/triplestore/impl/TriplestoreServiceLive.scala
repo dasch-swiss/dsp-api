@@ -41,6 +41,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
+
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.Triplestore
@@ -48,8 +49,11 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Select}
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
@@ -108,45 +112,21 @@ case class TriplestoreServiceLive(
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
    *
-   * @param sparql       the SPARQL CONSTRUCT query string.
+   * @param query       the SPARQL CONSTRUCT query string.
    * @param graphIri     the named graph IRI to be used in the output file.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
    * @return a [[Unit]].
    */
-  override def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: IRI,
-    outputFile: Path,
+  override def queryToFile(
+    query: Construct,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] =
-    executeSparqlQuery(sparql, acceptMimeType = mimeTypeTextTurtle)
-      .mapAttempt(turtle =>
-        rdfFormatUtil.turtleToQuadsFile(RdfStringSource(turtle), graphIri, outputFile, outputFormat)
-      )
-
-  /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
-   *
-   * @param construct the request message.
-   * @return a [[SparqlExtendedConstructResponse]]
-   */
-  override def sparqlHttpExtendedConstruct(
-    construct: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse] =
-    for {
-      turtleStr <- executeSparqlQuery(construct.sparql, construct.isGravsearch, mimeTypeTextTurtle)
-      response <-
-        SparqlExtendedConstructResponse
-          .parseTurtleResponse(turtleStr)
-          .foldZIO(
-            _ => {
-              val msg = s"Couldn't parse Turtle from triplestore: $construct"
-              ZIO.fail(TriplestoreResponseException(msg))
-            },
-            ZIO.succeed(_)
-          )
-    } yield response
+    executeSparqlQuery(query.sparql, query.isGravsearch, acceptMimeType = mimeTypeTextTurtle)
+      .map(RdfStringSource)
+      .mapAttempt(rdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
 
   /**
    * Performs a SPARQL update operation.

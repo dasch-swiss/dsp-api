@@ -44,6 +44,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
@@ -131,18 +132,10 @@ final case class ListsResponderADMLive(
     requestingUser: UserADM
   ): Task[ListsGetResponseADM] =
     for {
-      sparqlQuery <-
-        ZIO.attempt(
-          sparql.admin.txt
-            .getLists(
-              maybeProjectIri = projectIri
-            )
-            .toString()
-        )
-      listsResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQuery)
-
-      // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
-      statements = listsResponse.statements.toList
+      statements <- triplestore
+                      .query(Construct(sparql.admin.txt.getLists(projectIri)))
+                      .flatMap(_.asExtended)
+                      .map(_.statements.toList)
 
       lists: Seq[ListNodeInfoADM] =
         statements.map { case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
@@ -324,17 +317,10 @@ final case class ListsResponderADMLive(
     requestingUser: UserADM
   ): Task[Option[ListNodeInfoADM]] = {
     for {
-      sparqlQuery <- ZIO.attempt(
-                       sparql.admin.txt
-                         .getListNode(
-                           nodeIri = nodeIri
-                         )
-                         .toString()
-                     )
-
-      listNodeResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQuery)
-
-      statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
+      statements <- triplestore
+                      .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
+                      .flatMap(_.asExtended)
+                      .map(_.statements)
 
       maybeListNodeInfo =
         if (statements.nonEmpty) {
@@ -478,19 +464,13 @@ final case class ListsResponderADMLive(
   ): Task[Option[ListNodeADM]] = {
     for {
       // this query will give us only the information about the root node.
-      sparqlQuery <-
-        ZIO.attempt(
-          sparql.admin.txt
-            .getListNode(
-              nodeIri = nodeIri
-            )
-            .toString()
-        )
-
-      listInfoResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQuery)
+      statements <- triplestore
+                      .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
+                      .flatMap(_.asExtended)
+                      .map(_.statements)
 
       maybeListNode <-
-        if (listInfoResponse.statements.nonEmpty) {
+        if (statements.nonEmpty) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
             children <-
@@ -499,9 +479,6 @@ final case class ListsResponderADMLive(
                 shallow = shallow,
                 requestingUser = requestingUser
               )
-
-            // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
-            statements = listInfoResponse.statements
 
             node: ListNodeADM = statements.head match {
                                   case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
@@ -684,17 +661,10 @@ final case class ListsResponderADMLive(
     }
 
     for {
-      nodeChildrenQuery <- ZIO.attempt {
-                             sparql.admin.txt
-                               .getListNodeWithChildren(
-                                 startNodeIri = ofNodeIri
-                               )
-                               .toString()
-                           }
-
-      nodeWithChildrenResponse <- triplestore.sparqlHttpExtendedConstruct(nodeChildrenQuery)
-
-      statements: Seq[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
+      statements <- triplestore
+                      .query(Construct(sparql.admin.txt.getListNodeWithChildren(ofNodeIri)))
+                      .flatMap(_.asExtended)
+                      .map(_.statements.toList)
 
       startNodePropsMap: Map[SmartIri, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
 
@@ -2152,24 +2122,11 @@ final case class ListsResponderADMLive(
    * @return a [[ListNodeADM]].
    */
   protected def getParentNodeIRI(nodeIri: IRI): Task[IRI] =
-    for {
-      // query statement
-      getParentNodeSparqlString <- ZIO.attempt(
-                                     sparql.admin.txt
-                                       .getParentNode(
-                                         nodeIri = nodeIri
-                                       )
-                                       .toString
-                                   )
-
-      parentNodeResponse <- triplestore.sparqlHttpExtendedConstruct(getParentNodeSparqlString)
-
-      parentStatements = parentNodeResponse.statements.headOption.getOrElse(
-                           throw BadRequestException(s"The parent node for $nodeIri not found, report this as a bug.")
-                         )
-
-      parentNodeIri = parentStatements._1.toString
-    } yield parentNodeIri
+    triplestore
+      .query(Construct(sparql.admin.txt.getParentNode(nodeIri)))
+      .map(_.statements.keys.headOption)
+      .some
+      .orElseFail(BadRequestException(s"The parent node for $nodeIri not found, report this as a bug."))
 
   /**
    * Helper method to delete a node.

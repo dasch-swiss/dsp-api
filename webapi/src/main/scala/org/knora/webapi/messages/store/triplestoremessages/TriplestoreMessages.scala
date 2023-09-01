@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.apache.commons.lang3.StringUtils
 import spray.json._
 import zio._
 
@@ -32,27 +31,14 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
 
 /**
- * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
- * written to the specified file in a quad format. A successful response message will be a [[Unit]].
- *
- * @param sparql               the SPARQL string.
- * @param graphIri             the named graph IRI to be used in the TriG file.
- * @param outputFile           the file to be written.
- * @param outputFormat         the output file format.
- */
-case class SparqlConstructFileRequest(
-  sparql: String,
-  graphIri: IRI,
-  outputFile: Path,
-  outputFormat: QuadFormat
-) extends TriplestoreRequest
-
-/**
  * A response to a [[SparqlConstructRequest]].
  *
  * @param statements a map of subject IRIs to statements about each subject.
  */
-case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
+case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]], rdfModel: RdfModel) {
+  def asExtended(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
+    SparqlExtendedConstructResponse.make(rdfModel)
+}
 object SparqlConstructResponse {
   def make(rdfModel: RdfModel): SparqlConstructResponse = {
     val statementMap = mutable.Map.empty[IRI, Seq[(IRI, String)]]
@@ -63,21 +49,13 @@ object SparqlConstructResponse {
       val currentStatementsForSubject = statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
       statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
     }
-    SparqlConstructResponse(statementMap.toMap)
+    SparqlConstructResponse(statementMap.toMap, rdfModel)
   }
 }
 
-/**
- * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
- * [[SparqlExtendedConstructResponse]].
- *
- * @param sparql               the SPARQL string.
- */
-case class SparqlExtendedConstructRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
-
-/**
- * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
- */
+case class SparqlExtendedConstructResponse(
+  statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects]
+)
 object SparqlExtendedConstructResponse {
 
   /**
@@ -85,25 +63,16 @@ object SparqlExtendedConstructResponse {
    */
   type ConstructPredicateObjects = Map[SmartIri, Seq[LiteralV2]]
 
-  private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
+  def make(turtle: String)(implicit
+    stringFormatter: StringFormatter
+  ): IO[DataConversionException, SparqlExtendedConstructResponse] =
+    make(RdfFeatureFactory.getRdfFormatUtil().parseToRdfModel(turtle, Turtle))
 
-  /**
-   * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
-   *
-   * @param turtleStr     the Turtle document.
-   * @return a [[SparqlExtendedConstructResponse]] representing the document.
-   */
-  def parseTurtleResponse(
-    turtleStr: String
-  )(implicit stringFormatter: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] = {
-
-    val rdfFormatUtil: RdfFormatUtil =
-      RdfFeatureFactory.getRdfFormatUtil()
-
-    ZIO.attemptBlocking {
-
-      val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
-      val rdfModel: RdfModel                                              = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+  def make(
+    rdfModel: RdfModel
+  )(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
+    ZIO.attempt {
+      val statementMap = mutable.Map.empty[SubjectV2, ConstructPredicateObjects]
 
       for (st: Statement <- rdfModel) {
         val subject: SubjectV2 = st.subj match {
@@ -165,10 +134,8 @@ object SparqlExtendedConstructResponse {
             }
         }
 
-        val currentStatementsForSubject: Map[SmartIri, Seq[LiteralV2]] =
-          statementMap.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
-        val currentStatementsForPredicate: Seq[LiteralV2] =
-          currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
+        val currentStatementsForSubject   = statementMap.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
+        val currentStatementsForPredicate = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
 
         val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
         val updatedSubjectStatements   = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
@@ -178,22 +145,10 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      e =>
-        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter : ${e.getMessage}") *>
-          ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
+      _ => ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)
     )
-  }
 }
-
-/**
- * A response to a [[SparqlExtendedConstructRequest]].
- *
- * @param statements a map of subjects to statements about each subject.
- */
-case class SparqlExtendedConstructResponse(
-  statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects]
-)
 
 /**
  * Requests a named graph, which will be written to the specified file. A successful response

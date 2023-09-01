@@ -718,12 +718,7 @@ object OntologyHelpers {
     classIris: Set[SmartIri],
     constructResponse: SparqlExtendedConstructResponse
   )(implicit stringFormatter: StringFormatter): Map[SmartIri, ClassInfoContentV2] =
-    classIris.map { classIri =>
-      classIri -> constructResponseToClassDefinition(
-        classIri = classIri,
-        constructResponse = constructResponse
-      )
-    }.toMap
+    classIris.map(classIri => classIri -> constructResponseToClassDefinition(classIri, constructResponse)).toMap
 
   /**
    * Given a list of ontology graphs, finds the IRIs of all subjects whose `rdf:type` is contained in a given set of types.
@@ -1767,20 +1762,10 @@ final case class OntologyHelpersLive(
    * @return a [[PropertyInfoContentV2]] representing the property definition.
    */
   override def loadPropertyDefinition(propertyIri: SmartIri): Task[PropertyInfoContentV2] =
-    for {
-      sparql <- ZIO.attempt(
-                  sparql.v2.txt
-                    .getPropertyDefinition(
-                      propertyIri = propertyIri
-                    )
-                    .toString()
-                )
-
-      constructResponse <- triplestore.sparqlHttpExtendedConstruct(sparql)
-    } yield OntologyHelpers.constructResponseToPropertyDefinition(
-      propertyIri = propertyIri,
-      constructResponse = constructResponse
-    )
+    triplestore
+      .query(Construct(sparql.v2.txt.getPropertyDefinition(propertyIri)))
+      .flatMap(_.asExtended)
+      .map(constructResponse => OntologyHelpers.constructResponseToPropertyDefinition(propertyIri, constructResponse))
 
   /**
    * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
@@ -2047,20 +2032,10 @@ final case class OntologyHelpersLive(
    * @return a [[ClassInfoContentV2]] representing the class definition.
    */
   override def loadClassDefinition(classIri: SmartIri): Task[ClassInfoContentV2] =
-    for {
-      sparql <- ZIO.attempt(
-                  sparql.v2.txt
-                    .getClassDefinition(
-                      classIri = classIri
-                    )
-                    .toString()
-                )
-
-      constructResponse <- triplestore.sparqlHttpExtendedConstruct(sparql)
-    } yield OntologyHelpers.constructResponseToClassDefinition(
-      classIri = classIri,
-      constructResponse = constructResponse
-    )
+    triplestore
+      .query(Construct(sparql.v2.txt.getClassDefinition(classIri)))
+      .flatMap(_.asExtended)
+      .map(OntologyHelpers.constructResponseToClassDefinition(classIri, _))
 
   /**
    * Checks that the last modification date of an ontology is the same as the one we expect it to be. If not, return

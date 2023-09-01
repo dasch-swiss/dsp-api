@@ -107,25 +107,23 @@ final case class StandoffResponderV2Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
-  private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Task[GetStandoffResponseV2] =
-    for {
-      resourceRequestSparql <-
-        ZIO.attempt(
-          sparql.v2.txt
-            .getResourcePropertiesAndValues(
-              resourceIris = Seq(getStandoffRequestV2.resourceIri),
-              preview = false,
-              withDeleted = false,
-              maybePropertyIri = None,
-              maybeVersionDate = None,
-              queryAllNonStandoff = false,
-              queryStandoff = true,
-              maybeValueIri = Some(getStandoffRequestV2.valueIri)
-            )
-            .toString()
+  private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Task[GetStandoffResponseV2] = {
+    val resourceRequestSparql =
+      Construct(
+        sparql.v2.txt.getResourcePropertiesAndValues(
+          resourceIris = Seq(getStandoffRequestV2.resourceIri),
+          preview = false,
+          withDeleted = false,
+          maybePropertyIri = None,
+          maybeVersionDate = None,
+          queryAllNonStandoff = false,
+          queryStandoff = true,
+          maybeValueIri = Some(getStandoffRequestV2.valueIri)
         )
+      )
 
-      resourceRequestResponse <- triplestore.sparqlHttpExtendedConstruct(resourceRequestSparql)
+    for {
+      resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
 
       // separate resources and values
       mainResourcesAndValueRdfData =
@@ -171,6 +169,7 @@ final case class StandoffResponderV2Live(
       valueIri = textValueObj.valueIri,
       standoff = textValueObj.valueContent.standoff
     )
+  }
 
   /**
    * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.

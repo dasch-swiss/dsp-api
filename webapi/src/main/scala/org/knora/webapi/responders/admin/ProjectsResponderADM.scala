@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -280,15 +281,19 @@ final case class ProjectsResponderADMLive(
                !user.isSystemUser
              }
 
-      query = sparql.admin.txt
-                .getProjectMembers(
-                  maybeIri = id.asIriIdentifierOption,
-                  maybeShortname = id.asShortnameIdentifierOption,
-                  maybeShortcode = id.asShortcodeIdentifierOption
-                )
+      query = Construct(
+                sparql.admin.txt
+                  .getProjectMembers(
+                    maybeIri = id.asIriIdentifierOption,
+                    maybeShortname = id.asShortnameIdentifierOption,
+                    maybeShortcode = id.asShortcodeIdentifierOption
+                  )
+              )
 
-      projectMembersResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString())
-      statements              = projectMembersResponse.statements.toList
+      statements <- triplestore
+                      .query(query)
+                      .flatMap(_.asExtended)
+                      .map(_.statements.toList)
 
       // get project member IRI from results rows
       userIris: Seq[IRI] =
@@ -338,16 +343,16 @@ final case class ProjectsResponderADMLive(
                !user.permissions.isProjectAdmin(project.id)
              }
 
-      query = sparql.admin.txt
-                .getProjectAdminMembers(
-                  maybeIri = id.asIriIdentifierOption,
-                  maybeShortname = id.asShortnameIdentifierOption,
-                  maybeShortcode = id.asShortcodeIdentifierOption
-                )
+      query = Construct(
+                sparql.admin.txt
+                  .getProjectAdminMembers(
+                    maybeIri = id.asIriIdentifierOption,
+                    maybeShortname = id.asShortnameIdentifierOption,
+                    maybeShortcode = id.asShortcodeIdentifierOption
+                  )
+              )
 
-      projectAdminMembersResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString())
-
-      statements = projectAdminMembersResponse.statements.toList
+      statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.toList)
 
       // get project member IRI from results rows
       userIris: Seq[IRI] =
@@ -405,14 +410,16 @@ final case class ProjectsResponderADMLive(
   override def projectRestrictedViewSettingsGetADM(
     id: ProjectIdentifierADM
   ): Task[Option[ProjectRestrictedViewSettingsADM]] = {
-    val query = sparql.admin.txt
-      .getProjects(
-        maybeIri = id.asIriIdentifierOption,
-        maybeShortname = id.asShortnameIdentifierOption,
-        maybeShortcode = id.asShortcodeIdentifierOption
-      )
+    val query = Construct(
+      sparql.admin.txt
+        .getProjects(
+          maybeIri = id.asIriIdentifierOption,
+          maybeShortname = id.asShortnameIdentifierOption,
+          maybeShortcode = id.asShortcodeIdentifierOption
+        )
+    )
     for {
-      projectResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString)
+      projectResponse <- triplestore.query(query).flatMap(_.asExtended)
       restrictedViewSettings =
         if (projectResponse.statements.nonEmpty) {
 

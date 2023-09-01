@@ -60,6 +60,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.ZioHelper
@@ -1392,29 +1393,25 @@ final case class ResourcesResponderV2Live(
     queryStandoff: Boolean,
     requestingUser: UserADM
   ): Task[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
-    // eliminate duplicate Iris
-    val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
+    val query =
+      Construct(
+        sparql.v2.txt
+          .getResourcePropertiesAndValues(
+            resourceIris = resourceIris.distinct,
+            preview = preview,
+            withDeleted = withDeleted,
+            maybePropertyIri = propertyIri,
+            maybeValueUuid = valueUuid,
+            maybeVersionDate = versionDate,
+            queryAllNonStandoff = true,
+            queryStandoff = queryStandoff
+          )
+      )
 
-    for {
-      resourceRequestSparql <- ZIO.attempt(
-                                 sparql.v2.txt
-                                   .getResourcePropertiesAndValues(
-                                     resourceIris = resourceIrisDistinct,
-                                     preview = preview,
-                                     withDeleted = withDeleted,
-                                     maybePropertyIri = propertyIri,
-                                     maybeValueUuid = valueUuid,
-                                     maybeVersionDate = versionDate,
-                                     queryAllNonStandoff = true,
-                                     queryStandoff = queryStandoff
-                                   )
-                                   .toString()
-                               )
-
-      resourceRequestResponse <- triplestore.sparqlHttpExtendedConstruct(resourceRequestSparql)
-
-      // separate resources and values
-    } yield constructResponseUtilV2.splitMainResourcesAndValueRdfData(resourceRequestResponse, requestingUser)
+    triplestore
+      .query(query)
+      .flatMap(_.asExtended)
+      .map(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
   }
 
   /**

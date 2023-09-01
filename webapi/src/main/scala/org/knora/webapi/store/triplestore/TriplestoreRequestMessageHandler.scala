@@ -27,15 +27,6 @@ final case class TriplestoreRequestMessageHandlerLive(updater: RepositoryUpdater
 
   override def handle(message: ResponderRequest): Task[Any] = message match {
     case UpdateRepositoryRequest() => updater.maybeUpgradeRepository
-    case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
-      ts.sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest)
-    case SparqlConstructFileRequest(
-          sparql: String,
-          graphIri: IRI,
-          outputFile: Path,
-          outputFormat: QuadFormat
-        ) =>
-      ts.sparqlHttpConstructFile(sparql, graphIri, outputFile, outputFormat)
     case NamedGraphFileRequest(
           graphIri: IRI,
           outputFile: Path,

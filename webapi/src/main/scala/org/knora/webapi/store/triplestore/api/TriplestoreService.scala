@@ -10,12 +10,16 @@ import zio._
 import zio.macros.accessible
 
 import java.nio.file.Path
+
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Select}
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 @accessible
 trait TriplestoreService {
@@ -43,20 +47,8 @@ trait TriplestoreService {
    * @return a [[SparqlConstructResponse]]
    */
   def query(sparql: Construct): Task[SparqlConstructResponse]
-
-  /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
-   *
-   * @param req the request message.
-   * @return a [[SparqlExtendedConstructResponse]]
-   */
-  def sparqlHttpExtendedConstruct(req: SparqlExtendedConstructRequest): Task[SparqlExtendedConstructResponse]
-
-  def sparqlHttpExtendedConstruct(query: String, isGravsearch: Boolean = false): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(query, isGravsearch))
-
-  def sparqlHttpExtendedConstruct(query: TxtFormat.Appendable): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(query.toString)
+  def query(sparql: ConstructQuery): Task[SparqlConstructResponse] =
+    query(Construct(sparql.toSparql, isGravsearch = true))
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -67,25 +59,12 @@ trait TriplestoreService {
    * @param outputFormat the output file format.
    * @return  [[Unit]].
    */
-  def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: IRI,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit]
-
-  def sparqlHttpConstructFile(
-    sparql: String,
+  def queryToFile(
+    sparql: Construct,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile.toFile.toPath, outputFormat)
-  def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: InternalIri,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
+  ): Task[Unit]
 
   /**
    * Performs a SPARQL update operation.

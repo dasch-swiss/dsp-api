@@ -38,6 +38,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
@@ -180,9 +181,9 @@ final case class GroupsResponderADMLive(
    * @return all the groups as a sequence of [[GroupADM]].
    */
   override def groupsGetADM: Task[Seq[GroupADM]] = {
-    val query = sparql.admin.txt.getGroups(None)
+    val query = Construct(sparql.admin.txt.getGroups(None))
     for {
-      groupsResponse <- triplestore.sparqlHttpExtendedConstruct(query.toString())
+      groupsResponse <- triplestore.query(query).flatMap(_.asExtended)
       groups          = groupsResponse.statements.map(convertStatementsToGroupADM)
       result         <- ZioHelper.sequence(groups.toSeq)
     } yield result.sorted
@@ -239,9 +240,9 @@ final case class GroupsResponderADMLive(
    * @return information about the group as a [[GroupADM]]
    */
   override def groupGetADM(groupIri: IRI): Task[Option[GroupADM]] = {
-    val query = sparql.admin.txt.getGroups(maybeIri = Some(groupIri))
+    val query = Construct(sparql.admin.txt.getGroups(maybeIri = Some(groupIri)))
     for {
-      statements <- triplestore.sparqlHttpExtendedConstruct(query.toString()).map(_.statements.headOption)
+      statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.headOption)
       maybeGroup <- statements.map(convertStatementsToGroupADM).map(_.map(Some(_))).getOrElse(ZIO.succeed(None))
     } yield maybeGroup
   }

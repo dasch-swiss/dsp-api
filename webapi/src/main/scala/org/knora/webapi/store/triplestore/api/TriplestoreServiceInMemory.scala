@@ -36,8 +36,6 @@ import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreRespo
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
@@ -48,6 +46,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -143,33 +142,16 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       turtle = os.toString(StandardCharsets.UTF_8)
     } yield turtle
 
-  override def sparqlHttpExtendedConstruct(
-    request: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse] =
-    for {
-      turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle))
-      response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtle)
-    } yield response
-
-  override def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: IRI,
-    outputFile: Path,
+  override def queryToFile(
+    query: Construct,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] = ZIO.scoped {
     for {
-      model  <- execConstruct(sparql)
-      turtle <- modelToTurtle(model)
-      _ <- ZIO
-             .attempt(
-               rdfFormatUtil
-                 .turtleToQuadsFile(
-                   rdfSource = RdfStringSource(turtle),
-                   graphIri = graphIri,
-                   outputFile = outputFile,
-                   outputFormat = outputFormat
-                 )
-             )
+      model  <- execConstruct(query.sparql)
+      source <- modelToTurtle(model).map(RdfStringSource)
+      _      <- ZIO.attempt(rdfFormatUtil.turtleToQuadsFile(source, graphIri.value, outputFile.toFile.toPath, outputFormat))
     } yield ()
   }
 

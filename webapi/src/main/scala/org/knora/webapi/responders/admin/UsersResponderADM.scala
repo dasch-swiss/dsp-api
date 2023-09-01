@@ -46,6 +46,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ZioHelper
 
@@ -180,19 +181,12 @@ final case class UsersResponderADMLive(
              }
            )
 
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getUsers(
-                                 maybeIri = None,
-                                 maybeUsername = None,
-                                 maybeEmail = None
-                               )
-                               .toString()
-                           )
+      query = Construct(sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None))
 
-      usersResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQueryString)
-
-      statements = usersResponse.statements.toList
+      statements <- triplestore
+                      .query(query)
+                      .flatMap(_.asExtended)
+                      .map(_.statements.toList)
 
       users: Seq[UserADM] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
                               UserADM(
@@ -1801,31 +1795,20 @@ final case class UsersResponderADMLive(
    */
   private def getUserFromTriplestore(
     identifier: UserIdentifierADM
-  ): Task[Option[UserADM]] =
-    for {
-      sparqlQueryString <- ZIO.attempt(
-                             sparql.admin.txt
-                               .getUsers(
-                                 maybeIri = identifier.toIriOption,
-                                 maybeUsername = identifier.toUsernameOption,
-                                 maybeEmail = identifier.toEmailOption
-                               )
-                               .toString()
-                           )
-
-      userQueryResponse <- triplestore.sparqlHttpExtendedConstruct(sparqlQueryString)
-
-      maybeUserADM <-
-        if (userQueryResponse.statements.nonEmpty) {
-          logger.debug("getUserFromTriplestore - triplestore hit for: {}", identifier)
-          statements2UserADM(
-            statements = userQueryResponse.statements.head
-          )
-        } else {
-          logger.debug("getUserFromTriplestore - no triplestore hit for: {}", identifier)
-          ZIO.succeed(None)
-        }
-    } yield maybeUserADM
+  ): Task[Option[UserADM]] = {
+    val query = Construct(
+      sparql.admin.txt.getUsers(
+        maybeIri = identifier.toIriOption,
+        maybeUsername = identifier.toUsernameOption,
+        maybeEmail = identifier.toEmailOption
+      )
+    )
+    triplestore
+      .query(query)
+      .flatMap(_.asExtended)
+      .map(_.statements.headOption)
+      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
+  }
 
   /**
    * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.

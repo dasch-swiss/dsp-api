@@ -19,9 +19,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.Biblio
 import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTurtle
@@ -97,7 +95,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
           for {
             response <- TriplestoreService.query(Construct(query))
           } yield assertTrue(
-            response == SparqlConstructResponse(
+            response.statements ==
               Map(
                 "http://anArticle" -> Seq(
                   (
@@ -106,7 +104,6 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                   )
                 )
               )
-            )
           )
         },
         test("sparqlHttpExtendedConstruct should return some values") {
@@ -120,21 +117,21 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                |     a  <${Biblio.Class.Article.value}> .
                |}
                |""".stripMargin
-          val request = SparqlExtendedConstructRequest(query)
           for {
-            stringFormatter <- ZIO.service[StringFormatter]
-            response        <- TriplestoreService.sparqlHttpExtendedConstruct(request)
-          } yield assertTrue(
-            response == SparqlExtendedConstructResponse(
-              statements = Map(
-                IriSubjectV2(value = "http://anArticle") -> Map(
-                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri(stringFormatter) -> List(
+            sf       <- ZIO.service[StringFormatter]
+            response <- TriplestoreService.query(Construct(query)).flatMap(_.asExtended(sf))
+          } yield {
+            val subject: SubjectV2 = IriSubjectV2(value = "http://anArticle")
+            assertTrue(
+              response.statements == Map(
+                subject -> Map(
+                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri(sf) -> Seq(
                     IriLiteralV2(value = "http://www.knora.org/ontology/0801/biblio#Article")
                   )
                 )
               )
             )
-          )
+          }
         }
       ),
       suite("UPDATE")(test("update") {

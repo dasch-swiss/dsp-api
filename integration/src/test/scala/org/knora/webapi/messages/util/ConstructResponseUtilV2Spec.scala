@@ -48,7 +48,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr)
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -100,7 +100,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr)
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -153,7 +153,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr)
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -206,7 +206,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr)
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -259,7 +259,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr)
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -312,7 +312,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr)
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -394,7 +394,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
         Unsafe.unsafe { implicit u =>
           runtime.unsafe
             .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
+              SparqlExtendedConstructResponse.make(turtleStr)
             )
             .getOrElse(c => throw FiberFailure(c))
         }
@@ -473,25 +473,11 @@ class ConstructResponseUtilV2Spec extends CoreSpec with ImplicitSender {
       val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/ff17e5ef9601")
       val turtleStr: String =
         FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/constructResponseUtilV2/mainQuery2.ttl"))
-      val resourceRequestResponse: SparqlExtendedConstructResponse =
-        Unsafe.unsafe { implicit u =>
-          runtime.unsafe
-            .run(
-              SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr)
-            )
-            .getOrElse(c => throw FiberFailure(c))
-        }
-
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
         UnsafeZioRun.runOrThrow(
-          ZIO
-            .service[ConstructResponseUtilV2]
-            .map(
-              _.splitMainResourcesAndValueRdfData(
-                constructQueryResults = resourceRequestResponse,
-                requestingUser = incunabulaUser
-              )
-            )
+          SparqlExtendedConstructResponse.make(turtleStr).flatMap { resp =>
+            ZIO.serviceWith[ConstructResponseUtilV2](_.splitMainResourcesAndValueRdfData(resp, incunabulaUser))
+          }
         )
 
       val apiResponseFuture: Future[ReadResourcesSequenceV2] = UnsafeZioRun.runToFuture(
