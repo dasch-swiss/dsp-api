@@ -95,8 +95,8 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.5"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.5"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.6"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.6"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.3"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "5.0.0"  // Scala 3 compatible
