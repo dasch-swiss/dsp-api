@@ -32,6 +32,7 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json._
 import zio._
+import zio.metrics.Metric
 
 import java.io.BufferedInputStream
 import java.net.URI
@@ -40,6 +41,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.time.temporal.ChronoUnit
 import java.util
 
 import dsp.errors._
@@ -54,6 +56,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.SparqlQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
@@ -69,7 +72,7 @@ case class TriplestoreServiceLive(
     with FusekiTriplestore {
 
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
+  private val requestTimer                 = Metric.timer("fuseki_request_duration", ChronoUnit.MILLIS)
   private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] =
     if (response.contains("##  Query cancelled due to timeout during execution")) {
       val msg: String = "Triplestore timed out while sending a response, after sending statuscode 200."
@@ -93,7 +96,7 @@ case class TriplestoreServiceLive(
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
         .orElse(processError(sparql, resultStr))
 
-    executeSparqlQuery(query.sparql, query.isGravsearch).flatMap(parseJsonResponse(query.sparql, _))
+    executeSparqlQuery(query).flatMap(parseJsonResponse(query.sparql, _))
   }
 
   /**
@@ -104,7 +107,7 @@ case class TriplestoreServiceLive(
    */
   override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtleStr <- executeSparqlQuery(query.sparql, query.isGravsearch, mimeTypeTextTurtle)
+      turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
       rdfModel <- ZIO
                     .attempt(rdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
                     .orElse(processError(query.sparql, turtleStr))
@@ -125,7 +128,7 @@ case class TriplestoreServiceLive(
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] =
-    executeSparqlQuery(query.sparql, query.isGravsearch, acceptMimeType = mimeTypeTextTurtle)
+    executeSparqlQuery(query, acceptMimeType = mimeTypeTextTurtle)
       .map(RdfStringSource)
       .mapAttempt(rdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
 
@@ -149,7 +152,7 @@ case class TriplestoreServiceLive(
    */
   override def query(query: Ask): Task[Boolean] =
     for {
-      resultString <- executeSparqlQuery(query.sparql)
+      resultString <- executeSparqlQuery(query)
       _            <- ZIO.logDebug(s"sparqlHttpAsk - resultString: $resultString")
       result       <- ZIO.attemptBlocking(resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean])
     } yield result
@@ -407,24 +410,42 @@ case class TriplestoreServiceLive(
   }
 
   private def executeSparqlQuery(
-    query: String,
-    isGravsearch: Boolean = false,
+    query: SparqlQuery,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson
   ) = {
+    // in case of a gravsearch query, a longer timeout is set
+    val timeout =
+      if (query.isGravsearch) triplestoreConfig.gravsearchTimeout.toSeconds.toInt.toString
+      else triplestoreConfig.queryTimeout.toSeconds.toInt.toString
+
     val formParams = new util.ArrayList[NameValuePair]()
-    formParams.add(new BasicNameValuePair("query", query))
-    // in case of a gravsearch query, a specific (longer) timeout is set
-    formParams.add(
-      new BasicNameValuePair(
-        "timeout",
-        if (isGravsearch) triplestoreConfig.gravsearchTimeout.toSeconds.toInt.toString
-        else triplestoreConfig.queryTimeout.toSeconds.toInt.toString
-      )
-    )
+    formParams.add(new BasicNameValuePair("query", query.sparql))
+    formParams.add(new BasicNameValuePair("timeout", timeout))
+
     val request: HttpPost = new HttpPost(paths.query)
     request.setEntity(new UrlEncodedFormEntity(formParams, Consts.UTF_8))
     request.addHeader("Accept", acceptMimeType)
-    doHttpRequest(request, returnResponseAsString)
+    trackQueryDuration(query, doHttpRequest(request, returnResponseAsString))
+  }
+
+  private def trackQueryDuration[T](query: SparqlQuery, reqTask: Task[T]): Task[T] = {
+    val trackingThreshold = 500.millis
+    val startTime         = java.lang.System.nanoTime()
+    for {
+      result <- reqTask @@ requestTimer
+                  .tagged("type", query.getClass.getSimpleName)
+                  .tagged("isGravsearch", query.isGravsearch.toString)
+                  .trackDuration
+      _ <- {
+             val endTime  = java.lang.System.nanoTime()
+             val duration = Duration.fromNanos(endTime - startTime)
+             ZIO.when(duration >= trackingThreshold) {
+               ZIO.logInfo(
+                 s"Fuseki request took $duration, which is longer than $trackingThreshold, isGravSearch=${query.isGravsearch}\n ${query.sparql}"
+               )
+             }
+           }.ignore
+    } yield result
   }
 
   /**

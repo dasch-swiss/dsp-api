@@ -157,9 +157,14 @@ trait TriplestoreService {
 object TriplestoreService {
   object Queries {
 
-    sealed trait SparqlQuery { val sparql: String }
+    sealed trait SparqlQuery {
+      val sparql: String
+      val isGravsearch: Boolean
+    }
 
-    case class Ask(sparql: String) extends SparqlQuery
+    case class Ask(sparql: String) extends SparqlQuery {
+      override val isGravsearch: Boolean = false
+    }
     object Ask {
       def apply(sparql: TxtFormat.Appendable): Ask = Ask(sparql.toString)
     }
@@ -180,7 +185,9 @@ object TriplestoreService {
       def apply(sparql: String): Construct = Construct(sparql, isGravsearch = false)
     }
 
-    case class Update(sparql: String) extends SparqlQuery
+    case class Update(sparql: String) extends SparqlQuery {
+      override val isGravsearch: Boolean = false
+    }
     object Update {
       def apply(sparql: TxtFormat.Appendable): Update = Update(sparql.toString())
     }
