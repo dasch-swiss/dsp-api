@@ -114,7 +114,7 @@ object Dependencies {
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.10"
-  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.3"
+  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.19.0"
   val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
 
   // found/added by the plugin but deleted anyway
