@@ -115,7 +115,7 @@ object Dependencies {
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.10"
   val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.3"
-  val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
+  val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "3.0.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
