@@ -25,6 +25,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Contains methods used for dealing with cardinalities on a class
@@ -361,18 +362,16 @@ final case class CardinalityHandlerLive(
 
       currentTime: Instant = Instant.now
 
-      updateSparql = sparql.v2.txt
-                       .replaceClassCardinalities(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         classIri = internalClassIri,
-                         newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
-                         lastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-                         currentTime = currentTime
-                       )
-                       .toString()
+      updateSparql = sparql.v2.txt.replaceClassCardinalities(
+                       ontologyNamedGraphIri = internalOntologyIri,
+                       ontologyIri = internalOntologyIri,
+                       classIri = internalClassIri,
+                       newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
+                       lastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
+                       currentTime = currentTime
+                     )
 
-      _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+      _ <- triplestoreService.query(Update(updateSparql))
 
       // Check that the ontology's last modification date was updated.
       _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)

@@ -14,6 +14,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
@@ -154,8 +155,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       )
       countTriplesBefore should ===(afterLoadCount)
 
-      appActor ! SparqlUpdateRequest(insertQuery)
-      expectMsg(())
+      UnsafeZioRun.runOrThrow(TriplestoreService.query(Update(insertQuery)))
 
       val checkInsertActual = UnsafeZioRun.runOrThrow(
         TriplestoreService
@@ -180,8 +180,7 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
       )
       countTriplesBefore should ===(afterChangeCount)
 
-      appActor ! SparqlUpdateRequest(revertInsertQuery)
-      expectMsg(())
+      UnsafeZioRun.runOrThrow(TriplestoreService.query(Update(revertInsertQuery)))
 
       val countTriplesQueryActual = UnsafeZioRun.runOrThrow(
         TriplestoreService

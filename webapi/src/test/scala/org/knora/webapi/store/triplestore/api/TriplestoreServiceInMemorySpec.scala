@@ -26,6 +26,7 @@ import org.knora.webapi.store.triplestore.TestDatasetBuilder.datasetLayerFromTur
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
 object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
@@ -149,7 +150,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                           |}
                           |""".stripMargin
         for {
-          _      <- TriplestoreService.sparqlHttpUpdate(updateQuery)
+          _      <- TriplestoreService.query(Update(updateQuery))
           result <- TriplestoreService.query(Ask(askQuery))
         } yield assertTrue(result)
       }),

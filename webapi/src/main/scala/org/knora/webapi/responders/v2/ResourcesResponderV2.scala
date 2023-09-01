@@ -62,6 +62,7 @@ import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.ZioHelper
 
@@ -276,17 +277,14 @@ final case class ResourcesResponderV2Live(
           ProjectADMService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
         // Generate SPARQL for creating the resource.
-        sparqlUpdate = sparql.v2.txt
-                         .createNewResources(
-                           dataNamedGraph = dataNamedGraph,
-                           resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
-                           projectIri = createResourceRequestV2.createResource.projectADM.id,
-                           creatorIri = createResourceRequestV2.requestingUser.id
-                         )
-                         .toString()
-
+        sparqlUpdate = sparql.v2.txt.createNewResources(
+                         dataNamedGraph = dataNamedGraph,
+                         resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+                         projectIri = createResourceRequestV2.createResource.projectADM.id,
+                         creatorIri = createResourceRequestV2.requestingUser.id
+                       )
         // Do the update.
-        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was created correctly.
         previewOfCreatedResource <- verifyResource(
@@ -454,20 +452,17 @@ final case class ResourcesResponderV2Live(
           }
 
         // Generate SPARQL for updating the resource.
-        sparqlUpdate = sparql.v2.txt
-                         .changeResourceMetadata(
-                           dataNamedGraph = dataNamedGraph,
-                           resourceIri = updateResourceMetadataRequestV2.resourceIri,
-                           resourceClassIri = internalResourceClassIri,
-                           maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
-                           newModificationDate = newModificationDate,
-                           maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
-                           maybePermissions = updateResourceMetadataRequestV2.maybePermissions
-                         )
-                         .toString()
-
+        sparqlUpdate = sparql.v2.txt.changeResourceMetadata(
+                         dataNamedGraph = dataNamedGraph,
+                         resourceIri = updateResourceMetadataRequestV2.resourceIri,
+                         resourceClassIri = internalResourceClassIri,
+                         maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
+                         newModificationDate = newModificationDate,
+                         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
+                         maybePermissions = updateResourceMetadataRequestV2.maybePermissions
+                       )
         // Do the update.
-        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was updated correctly.
 
@@ -587,18 +582,15 @@ final case class ResourcesResponderV2Live(
         dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for marking the resource as deleted.
-        sparqlUpdate = sparql.v2.txt
-                         .deleteResource(
-                           dataNamedGraph = dataNamedGraph,
-                           resourceIri = deleteResourceV2.resourceIri,
-                           maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
-                           currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
-                           requestingUser = deleteResourceV2.requestingUser.id
-                         )
-                         .toString()
-
+        sparqlUpdate = sparql.v2.txt.deleteResource(
+                         dataNamedGraph = dataNamedGraph,
+                         resourceIri = deleteResourceV2.resourceIri,
+                         maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
+                         currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
+                         requestingUser = deleteResourceV2.requestingUser.id
+                       )
         // Do the update.
-        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was deleted correctly.
         sparqlSelectResponse <-
@@ -678,16 +670,8 @@ final case class ResourcesResponderV2Live(
         // Get the IRI of the named graph from which the resource will be erased.
         dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
-        // Generate SPARQL for erasing the resource.
-        sparqlUpdate = sparql.v2.txt
-                         .eraseResource(
-                           dataNamedGraph = dataNamedGraph,
-                           resourceIri = eraseResourceV2.resourceIri
-                         )
-                         .toString()
-
         // Do the update.
-        _ <- triplestore.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparql.v2.txt.eraseResource(dataNamedGraph, eraseResourceV2.resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO

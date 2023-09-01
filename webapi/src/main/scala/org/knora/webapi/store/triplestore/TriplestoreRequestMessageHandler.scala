@@ -34,7 +34,6 @@ final case class TriplestoreRequestMessageHandlerLive(updater: RepositoryUpdater
         ) =>
       ts.sparqlHttpGraphFile(graphIri, outputFile, outputFormat)
     case NamedGraphDataRequest(graphIri: IRI) => ts.sparqlHttpGraphData(graphIri)
-    case SparqlUpdateRequest(sparql: String)  => ts.sparqlHttpUpdate(sparql)
     case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) =>
       ts.resetTripleStoreContent(rdfDataObjects, prependDefaults)
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>

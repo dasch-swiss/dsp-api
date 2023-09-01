@@ -20,6 +20,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 @accessible
 trait TriplestoreService {
@@ -33,15 +34,7 @@ trait TriplestoreService {
   def query(sparql: Ask): Task[Boolean]
 
   /**
-   * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
-   *
-   * @param sparql          The SPARQL [[Select]] query.
-   * @return A [[SparqlSelectResult]].
-   */
-  def query(sparql: Select): Task[SparqlSelectResult]
-
-  /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
+   *  Performs a SPARQL CONSTRUCT query.
    *
    * @param sparql The SPARQL [[Construct]] query.
    * @return a [[SparqlConstructResponse]]
@@ -49,6 +42,22 @@ trait TriplestoreService {
   def query(sparql: Construct): Task[SparqlConstructResponse]
   def query(sparql: ConstructQuery): Task[SparqlConstructResponse] =
     query(Construct(sparql.toSparql, isGravsearch = true))
+
+  /**
+   * Performs a SPARQL SELECT query.
+   *
+   * @param sparql          The SPARQL [[Select]] query.
+   * @return A [[SparqlSelectResult]].
+   */
+  def query(sparql: Select): Task[SparqlSelectResult]
+
+  /**
+   * Performs a SPARQL update operation, i.e. an INSERT or DELETE query.
+   *
+   * @param sparql the SPARQL [[Update]] query.
+   * @return a [[Unit]].
+   */
+  def query(sparql: Update): Task[Unit]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -65,16 +74,6 @@ trait TriplestoreService {
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit]
-
-  /**
-   * Performs a SPARQL update operation.
-   *
-   * @param sparqlUpdate the SPARQL update.
-   * @return a [[Unit]].
-   */
-  def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit]
-
-  def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[Unit] = sparqlHttpUpdate(query.toString)
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
@@ -191,12 +190,16 @@ object TriplestoreService {
     }
 
     case class Construct(sparql: String, isGravsearch: Boolean) extends SparqlQuery
-
     object Construct {
       def apply(sparql: TxtFormat.Appendable, isGravSearch: Boolean = false): Construct =
         Construct(sparql.toString, isGravSearch)
 
       def apply(sparql: String): Construct = Construct(sparql, isGravsearch = false)
+    }
+
+    case class Update(sparql: String) extends SparqlQuery
+    object Update {
+      def apply(sparql: TxtFormat.Appendable): Update = Update(sparql.toString())
     }
   }
 }

@@ -48,6 +48,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -1431,30 +1432,25 @@ final case class UsersResponderADMLive(
                                   case Some(systemAdmin) => Some(systemAdmin.value)
                                   case None              => None
                                 }
-      updateUserSparqlString <- ZIO.attempt(
-                                  sparql.admin.txt
-                                    .updateUser(
-                                      AdminConstants.adminDataNamedGraph.value,
-                                      userIri = userIri,
-                                      maybeUsername = maybeChangedUsername,
-                                      maybeEmail = maybeChangedEmail,
-                                      maybeGivenName = maybeChangedGivenName,
-                                      maybeFamilyName = maybeChangedFamilyName,
-                                      maybeStatus = maybeChangedStatus,
-                                      maybeLang = maybeChangedLang,
-                                      maybeProjects = maybeChangedProjects,
-                                      maybeProjectsAdmin = maybeChangedProjectsAdmin,
-                                      maybeGroups = maybeChangedGroups,
-                                      maybeSystemAdmin = maybeChangedSystemAdmin
-                                    )
-                                    .toString
-                                )
 
-      // we are changing the user, so lets get rid of the cached copy
-      _ <- invalidateCachedUserADM(maybeCurrentUser)
+      updateUserSparql = sparql.admin.txt.updateUser(
+                           AdminConstants.adminDataNamedGraph.value,
+                           userIri = userIri,
+                           maybeUsername = maybeChangedUsername,
+                           maybeEmail = maybeChangedEmail,
+                           maybeGivenName = maybeChangedGivenName,
+                           maybeFamilyName = maybeChangedFamilyName,
+                           maybeStatus = maybeChangedStatus,
+                           maybeLang = maybeChangedLang,
+                           maybeProjects = maybeChangedProjects,
+                           maybeProjectsAdmin = maybeChangedProjectsAdmin,
+                           maybeGroups = maybeChangedGroups,
+                           maybeSystemAdmin = maybeChangedSystemAdmin
+                         )
 
-      // write the updated user to the triplestore
-      _ <- triplestore.sparqlHttpUpdate(updateUserSparqlString)
+      // we are changing the user, so lets invalidate the cached copy
+      // and write the updated user to the triplestore
+      _ <- invalidateCachedUserADM(maybeCurrentUser) *> triplestore.query(Update(updateUserSparql))
 
       /* Verify that the user was updated */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1587,17 +1583,9 @@ final case class UsersResponderADMLive(
       _ <- invalidateCachedUserADM(maybeCurrentUser)
 
       // update the password
-      updateUserSparqlString <- ZIO.attempt(
-                                  sparql.admin.txt
-                                    .updateUserPassword(
-                                      AdminConstants.adminDataNamedGraph.value,
-                                      userIri = userIri,
-                                      newPassword = password.value
-                                    )
-                                    .toString
-                                )
-
-      updateResult <- triplestore.sparqlHttpUpdate(updateUserSparqlString)
+      updateUserSparql =
+        sparql.admin.txt.updateUserPassword(AdminConstants.adminDataNamedGraph.value, userIri, password.value)
+      _ <- triplestore.query(Update(updateUserSparql))
 
       /* Verify that the password was updated. */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1669,55 +1657,50 @@ final case class UsersResponderADMLive(
         hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.
-        createNewUserSparqlString = sparql.admin.txt
-                                      .createNewUser(
-                                        AdminConstants.adminDataNamedGraph.value,
-                                        userIri = userIri,
-                                        userClassIri = OntologyConstants.KnoraAdmin.User,
-                                        username = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.username.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
-                                            )
-                                          ),
-                                        email = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.email.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
-                                            )
-                                          ),
-                                        password = hashedPassword,
-                                        givenName = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
-                                            )
-                                          ),
-                                        familyName = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
-                                            )
-                                          ),
-                                        status = userCreatePayloadADM.status.value,
-                                        preferredLanguage = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.lang.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
-                                            )
-                                          ),
-                                        systemAdmin = userCreatePayloadADM.systemAdmin.value
-                                      )
-                                      .toString
-
-        _ = logger.debug(s"createNewUser: $createNewUserSparqlString")
-
-        _ <- triplestore.sparqlHttpUpdate(createNewUserSparqlString)
+        createNewUserSparql = sparql.admin.txt.createNewUser(
+                                AdminConstants.adminDataNamedGraph.value,
+                                userIri = userIri,
+                                userClassIri = OntologyConstants.KnoraAdmin.User,
+                                username = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.username.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
+                                    )
+                                  ),
+                                email = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.email.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
+                                    )
+                                  ),
+                                password = hashedPassword,
+                                givenName = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
+                                    )
+                                  ),
+                                familyName = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
+                                    )
+                                  ),
+                                status = userCreatePayloadADM.status.value,
+                                preferredLanguage = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.lang.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
+                                    )
+                                  ),
+                                systemAdmin = userCreatePayloadADM.systemAdmin.value
+                              )
+        _ <- triplestore.query(Update(createNewUserSparql))
 
         // try to retrieve newly created user (will also add to cache)
         maybeNewUserADM <- getSingleUserADM(

@@ -50,6 +50,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -155,9 +156,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     } yield ()
   }
 
-  override def sparqlHttpUpdate(query: String): Task[Unit] = {
+  override def query(query: Update): Task[Unit] = {
     def doUpdate(ds: Dataset) = ZIO.attempt {
-      val update    = UpdateFactory.create(query)
+      val update    = UpdateFactory.create(query.sparql)
       val processor = UpdateExecutionFactory.create(update, ds)
       processor.execute()
     }

@@ -54,6 +54,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
@@ -131,12 +132,12 @@ case class TriplestoreServiceLive(
   /**
    * Performs a SPARQL update operation.
    *
-   * @param sparqlUpdate the SPARQL update.
+   * @param query the SPARQL [[Update]] query.
    * @return [[Unit]].
    */
-  override def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit] = {
+  override def query(query: Update): Task[Unit] = {
     val request = new HttpPost(paths.update)
-    request.setEntity(new StringEntity(sparqlUpdate, ContentType.create(mimeTypeApplicationSparqlUpdate, Consts.UTF_8)))
+    request.setEntity(new StringEntity(query.sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, Consts.UTF_8)))
     doHttpRequest(request, returnResponseAsString).unit
   }
 
@@ -176,7 +177,7 @@ case class TriplestoreServiceLive(
   def dropAllTriplestoreContent(): Task[Unit] =
     for {
       _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- sparqlHttpUpdate("DROP ALL")
+      result <- query(Update("DROP ALL"))
       _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
     } yield ()
 
@@ -196,7 +197,7 @@ case class TriplestoreServiceLive(
 
   private def dropGraph(graphName: String): Task[Unit] =
     ZIO.logInfo(s"==>> Dropping graph: $graphName") *>
-      sparqlHttpUpdate(s"DROP GRAPH <$graphName>") *>
+      query(Update(s"DROP GRAPH <$graphName>")) *>
       ZIO.logDebug("Graph dropped")
 
   /**

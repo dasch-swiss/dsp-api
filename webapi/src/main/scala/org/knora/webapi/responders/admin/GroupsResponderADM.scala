@@ -40,6 +40,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -391,7 +392,7 @@ final case class GroupsResponderADMLive(
               hasSelfJoinEnabled = createRequest.selfjoin.value
             )
 
-        _ <- triplestore.sparqlHttpUpdate(createNewGroupSparqlString.toString())
+        _ <- triplestore.query(Update(createNewGroupSparqlString))
 
         /* Verify that the group was created and updated  */
         createdGroup <-
@@ -579,7 +580,7 @@ final case class GroupsResponderADMLive(
                                     maybeStatus = groupUpdatePayload.status.map(_.value),
                                     maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
                                   )
-      _ <- triplestore.sparqlHttpUpdate(updateGroupSparqlString.toString())
+      _ <- triplestore.query(Update(updateGroupSparqlString))
 
       /* Verify that the project was updated. */
       updatedGroup <-

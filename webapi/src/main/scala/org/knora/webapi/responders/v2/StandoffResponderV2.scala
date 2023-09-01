@@ -62,6 +62,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.cache.CacheUtil
 
@@ -515,19 +516,14 @@ final case class StandoffResponderV2Live(
               throw BadRequestException(s"mapping IRI $mappingIri already exists")
             }
 
-        createNewMappingSparql =
-          sparql.v2.txt
-            .createNewMapping(
-              dataNamedGraph = namedGraph,
-              mappingIri = mappingIri,
-              label = label,
-              defaultXSLTransformation = defaultXSLTransformation,
-              mappingElements = mappingElements
-            )
-            .toString()
-
-        // Do the update.
-        _ <- triplestore.sparqlHttpUpdate(createNewMappingSparql)
+        createNewMappingSparql = sparql.v2.txt.createNewMapping(
+                                   dataNamedGraph = namedGraph,
+                                   mappingIri = mappingIri,
+                                   label = label,
+                                   defaultXSLTransformation = defaultXSLTransformation,
+                                   mappingElements = mappingElements
+                                 )
+        _ <- triplestore.query(Update(createNewMappingSparql))
 
         // check if the mapping has been created
         newMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))

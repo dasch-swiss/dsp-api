@@ -41,6 +41,7 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -537,20 +538,18 @@ final case class ProjectsResponderADMLive(
         _ <- messageRelay.ask[Any](CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
 
         /* Update project */
-        updateQuery = sparql.admin.txt
-                        .updateProject(
-                          adminNamedGraphIri = "http://www.knora.org/data/admin",
-                          projectIri = projectIri.value,
-                          maybeShortname = projectUpdatePayload.shortname.map(_.value),
-                          maybeLongname = projectUpdatePayload.longname.map(_.value),
-                          maybeDescriptions = projectUpdatePayload.description.map(_.value),
-                          maybeKeywords = projectUpdatePayload.keywords.map(_.value),
-                          maybeLogo = projectUpdatePayload.logo.map(_.value),
-                          maybeStatus = projectUpdatePayload.status.map(_.value),
-                          maybeSelfjoin = projectUpdatePayload.selfjoin.map(_.value)
-                        )
-
-        _ <- triplestore.sparqlHttpUpdate(updateQuery.toString)
+        updateQuery = sparql.admin.txt.updateProject(
+                        adminNamedGraphIri = "http://www.knora.org/data/admin",
+                        projectIri = projectIri.value,
+                        maybeShortname = projectUpdatePayload.shortname.map(_.value),
+                        maybeLongname = projectUpdatePayload.longname.map(_.value),
+                        maybeDescriptions = projectUpdatePayload.description.map(_.value),
+                        maybeKeywords = projectUpdatePayload.keywords.map(_.value),
+                        maybeLogo = projectUpdatePayload.logo.map(_.value),
+                        maybeStatus = projectUpdatePayload.status.map(_.value),
+                        maybeSelfjoin = projectUpdatePayload.selfjoin.map(_.value)
+                      )
+        _ <- triplestore.query(Update(updateQuery))
 
         /* Verify that the project was updated. */
         updatedProject <-
@@ -799,27 +798,25 @@ final case class ProjectsResponderADMLive(
         maybeLongname                      = createProjectRequest.longname.map(_.value)
         maybeLogo                          = createProjectRequest.logo.map(_.value)
 
-        createNewProjectSparqlString = sparql.admin.txt
-                                         .createNewProject(
-                                           AdminConstants.adminDataNamedGraph.value,
-                                           projectIri = newProjectIRI,
-                                           projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
-                                           shortname = createProjectRequest.shortname.value,
-                                           shortcode = createProjectRequest.shortcode.value,
-                                           maybeLongname = maybeLongname,
-                                           maybeDescriptions = if (createProjectRequest.description.value.nonEmpty) {
-                                             Some(createProjectRequest.description.value)
-                                           } else None,
-                                           maybeKeywords = if (createProjectRequest.keywords.value.nonEmpty) {
-                                             Some(createProjectRequest.keywords.value)
-                                           } else None,
-                                           maybeLogo = maybeLogo,
-                                           status = createProjectRequest.status.value,
-                                           hasSelfJoinEnabled = createProjectRequest.selfjoin.value
-                                         )
-                                         .toString
-
-        _ <- triplestore.sparqlHttpUpdate(createNewProjectSparqlString)
+        createNewProjectSparql = sparql.admin.txt
+                                   .createNewProject(
+                                     AdminConstants.adminDataNamedGraph.value,
+                                     projectIri = newProjectIRI,
+                                     projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
+                                     shortname = createProjectRequest.shortname.value,
+                                     shortcode = createProjectRequest.shortcode.value,
+                                     maybeLongname = maybeLongname,
+                                     maybeDescriptions = if (createProjectRequest.description.value.nonEmpty) {
+                                       Some(createProjectRequest.description.value)
+                                     } else None,
+                                     maybeKeywords = if (createProjectRequest.keywords.value.nonEmpty) {
+                                       Some(createProjectRequest.keywords.value)
+                                     } else None,
+                                     maybeLogo = maybeLogo,
+                                     status = createProjectRequest.status.value,
+                                     hasSelfJoinEnabled = createProjectRequest.selfjoin.value
+                                   )
+        _ <- triplestore.query(Update(createNewProjectSparql))
 
         // try to retrieve newly created project (will also add to cache)
         id <- IriIdentifier.fromString(newProjectIRI).toZIO.mapError(e => BadRequestException(e.getMessage))

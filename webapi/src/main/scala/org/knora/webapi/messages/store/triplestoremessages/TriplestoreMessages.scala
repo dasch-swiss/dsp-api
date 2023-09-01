@@ -31,7 +31,7 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
 
 /**
- * A response to a [[SparqlConstructRequest]].
+ * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
  *
  * @param statements a map of subject IRIs to statements about each subject.
  */
@@ -177,13 +177,6 @@ case class NamedGraphDataRequest(graphIri: IRI) extends TriplestoreRequest
  * A graph of triples in Turtle format.
  */
 case class NamedGraphDataResponse(turtle: String)
-
-/**
- * Represents a SPARQL Update operation to be performed.
- *
- * @param sparql the SPARQL string.
- */
-case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Message for resetting the contents of the repository and loading a fresh set of data. The data needs to be
