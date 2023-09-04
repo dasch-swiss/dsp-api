@@ -79,7 +79,7 @@ trait TriplestoreService {
    * @param outputFile           the file to be written.
    * @param outputFormat         the output file format.
    */
-  def sparqlHttpGraphFile(graphIri: InternalIri, outputFile: zio.nio.file.Path, outputFormat: QuadFormat): Task[Unit]
+  def downloadGraph(graphIri: InternalIri, outputFile: zio.nio.file.Path, outputFormat: QuadFormat): Task[Unit]
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.

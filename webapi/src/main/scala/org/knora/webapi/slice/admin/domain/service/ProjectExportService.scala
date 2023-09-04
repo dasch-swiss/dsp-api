@@ -149,7 +149,7 @@ final case class ProjectExportServiceLive(
     allGraphsTrigFile <-
       projectService.getNamedGraphsForProject(project).map(_.map(NamedGraphTrigFile(_, tempDir)))
     files <- ZIO.foreach(allGraphsTrigFile)(file =>
-               triplestore.sparqlHttpGraphFile(file.graphIri, file.dataFile, TriG).as(file)
+               triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file)
              )
   } yield files
 

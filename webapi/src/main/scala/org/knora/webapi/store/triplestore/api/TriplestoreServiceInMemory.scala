@@ -164,7 +164,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     ZIO.scoped(getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate)).unit
   }
 
-  override def sparqlHttpGraphFile(
+  override def downloadGraph(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat

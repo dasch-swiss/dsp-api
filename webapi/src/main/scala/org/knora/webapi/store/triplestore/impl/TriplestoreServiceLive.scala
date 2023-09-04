@@ -370,7 +370,7 @@ case class TriplestoreServiceLive(
    * @param outputFormat         the output file format.
    * @return a string containing the contents of the graph in N-Quads format.
    */
-  override def sparqlHttpGraphFile(
+  override def downloadGraph(
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
