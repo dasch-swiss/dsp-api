@@ -55,19 +55,6 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
   val spec: Spec[Any, Throwable] =
     suite("TriplestoreServiceFake")(
       suite("DROP")(
-        test("dropAllTriplestoreContent") {
-          for {
-            _ <- TriplestoreService.dropAllTriplestoreContent()
-            query = s"""
-                       |PREFIX rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                       |
-                       |ASK WHERE {
-                       |  <http://anArticle> a <${Biblio.Class.Article.value}> .
-                       |}
-                       |""".stripMargin
-            result <- TriplestoreService.query(Ask(query))
-          } yield assertTrue(!result)
-        },
         test("dropDataGraphByGraph") {
           for {
             _ <- TriplestoreService.dropDataGraphByGraph()

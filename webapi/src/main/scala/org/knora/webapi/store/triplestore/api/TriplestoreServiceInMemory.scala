@@ -184,13 +184,11 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
   ): Task[Unit] = for {
-    _ <- dropAllTriplestoreContent()
+    _ <- dropDataGraphByGraph()
     _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
   } yield ()
 
-  override def dropAllTriplestoreContent(): Task[Unit] = createEmptyDataset.flatMap(datasetRef.set(_)).unit
-
-  override def dropDataGraphByGraph(): Task[Unit] = dropAllTriplestoreContent()
+  override def dropDataGraphByGraph(): Task[Unit] = createEmptyDataset.flatMap(datasetRef.set(_)).unit
 
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
