@@ -312,7 +312,7 @@ case class ListItemDeleteRequestADM(
 case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
- * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteADM]]
+ * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteResponseADM]]
  *
  * @param iri                  the IRI of the list node (root or child).
  * @param requestingUser       the user making the request.
@@ -358,14 +358,14 @@ case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraRespons
   def toJsValue: JsValue = listsGetResponseADMFormat.write(this)
 }
 
-abstract class ListItemGetResponseADM(listItem: ListItemADM) extends KnoraResponseADM with ListADMJsonProtocol
+abstract class ListItemGetResponseADM() extends KnoraResponseADM with ListADMJsonProtocol
 
 /**
  * Provides completes information about the list. The basic information (rood node) and all the child nodes.
  *
  * @param list the complete list.
  */
-case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list) {
+case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM() {
 
   def toJsValue: JsValue = listGetResponseADMFormat.write(this)
 }
@@ -375,7 +375,7 @@ case class ListGetResponseADM(list: ListADM) extends ListItemGetResponseADM(list
  *
  * @param node the node.
  */
-case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(node) {
+case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM() {
 
   def toJsValue: JsValue = listNodeGetResponseADMFormat.write(this)
 }
@@ -452,36 +452,26 @@ case class NodePositionChangeResponseADM(node: ListNodeADM) extends KnoraRespons
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
-abstract class ListItemADM(info: ListNodeInfoADM, children: Seq[ListChildNodeADM])
+abstract class ListItemADM()
 
-case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM])
-    extends ListItemADM(listinfo, children) {
+case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM]) extends ListItemADM() {
 
   /**
    * Sorts the whole hierarchy.
    *
    * @return a sorted [[List]].
    */
-  def sorted: ListADM =
-    ListADM(
-      listinfo = listinfo,
-      children = children.sortBy(_.position).map(_.sorted)
-    )
+  def sorted: ListADM = this.copy(children = children.sortBy(_.position).map(_.sorted))
 }
 
-case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeADM])
-    extends ListItemADM(nodeinfo, children) {
+case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeADM]) extends ListItemADM() {
 
   /**
    * Sorts the whole hierarchy.
    *
    * @return a sorted [[List]].
    */
-  def sorted: NodeADM =
-    NodeADM(
-      nodeinfo = nodeinfo,
-      children = children.sortBy(_.position).map(_.sorted)
-    )
+  def sorted: NodeADM = this.copy(children = children.sortBy(_.position).map(_.sorted))
 }
 
 /**
@@ -507,8 +497,6 @@ abstract class ListNodeInfoADM(
   def sorted: ListNodeInfoADM
 
   def getName: Option[String] = name
-
-  def getLabels: StringLiteralSequenceV2 = labels
 
   def getComments: StringLiteralSequenceV2 = comments
 
@@ -682,8 +670,6 @@ abstract class ListNodeADM(
   def sorted: ListNodeADM
 
   def getName: Option[String] = name
-
-  def getLabels: StringLiteralSequenceV2 = labels
 
   def getComments: StringLiteralSequenceV2 = comments
 

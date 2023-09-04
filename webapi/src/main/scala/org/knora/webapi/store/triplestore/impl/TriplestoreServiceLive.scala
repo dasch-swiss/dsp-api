@@ -169,18 +169,8 @@ case class TriplestoreServiceLive(
   ): Task[Unit] =
     for {
       _ <- ZIO.logDebug("resetTripleStoreContent")
-      _ <- dropAllTriplestoreContent()
+      _ <- dropDataGraphByGraph()
       _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
-    } yield ()
-
-  /**
-   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
-   */
-  def dropAllTriplestoreContent(): Task[Unit] =
-    for {
-      _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- query(Update("DROP ALL"))
-      _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
     } yield ()
 
   /**
