@@ -18,7 +18,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.config.SocketConfig
 import org.apache.http.entity.ContentType
@@ -397,18 +396,6 @@ case class TriplestoreServiceLive(
     doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile.toFile.toPath, graphIri.value, outputFormat))
   }.unit
 
-  /**
-   * Requests the contents of a named graph, returning the response as Turtle.
-   *
-   * @param graphIri the IRI of the named graph.
-   * @return a string containing the contents of the graph in Turtle format.
-   */
-  override def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = {
-    val request = new HttpGet(makeNamedGraphDownloadUri(graphIri))
-    request.addHeader("Accept", mimeTypeTextTurtle)
-    doHttpRequest(request, returnGraphDataAsTurtle(graphIri))
-  }
-
   private def executeSparqlQuery(
     query: SparqlQuery,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson
@@ -470,20 +457,6 @@ case class TriplestoreServiceLive(
     val request: HttpPost = new HttpPost(paths.repository)
     request.setEntity(fileEntity)
     doHttpRequest(request, _ => ZIO.unit).unit
-  }
-
-  /**
-   * Puts a data graph into the repository.
-   *
-   * @param graphContent a data graph in Turtle format to be inserted into the repository.
-   * @param graphName    the name of the graph.
-   */
-  override def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit] = {
-    val uri     = new URIBuilder(paths.data).addParameter("graph", graphName).build()
-    val entity  = new StringEntity(graphContent, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
-    val request = new HttpPut(uri)
-    request.setEntity(entity)
-    doHttpRequest(request, returnInsertGraphDataResponse(graphName))
   }
 
   /**
@@ -564,25 +537,6 @@ case class TriplestoreServiceLive(
         ZIO
           .attempt(EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
           .tapDefect(e => ZIO.logError(s"Failed to return response as string: $e"))
-    }
-
-  /**
-   * Attempts to transforms a [[CloseableHttpResponse]] to a [[NamedGraphDataResponse]].
-   */
-  private def returnGraphDataAsTurtle(graphIri: IRI)(response: CloseableHttpResponse): Task[NamedGraphDataResponse] =
-    Option(response.getEntity) match {
-      case None => ZIO.fail(TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri"))
-      case Some(responseEntity: HttpEntity) =>
-        ZIO
-          .attempt(EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
-          .flatMap(entity =>
-            ZIO.succeed(
-              NamedGraphDataResponse(
-                turtle = entity
-              )
-            )
-          )
-
     }
 
   /**

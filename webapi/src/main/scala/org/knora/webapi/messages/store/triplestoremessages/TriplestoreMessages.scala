@@ -143,11 +143,6 @@ object SparqlExtendedConstructResponse {
 }
 
 /**
- * A graph of triples in Turtle format.
- */
-case class NamedGraphDataResponse(turtle: String)
-
-/**
  * Response indicating whether the triplestore has finished initialization and is ready for processing messages
  *
  * @param triplestoreStatus the state of the triplestore.

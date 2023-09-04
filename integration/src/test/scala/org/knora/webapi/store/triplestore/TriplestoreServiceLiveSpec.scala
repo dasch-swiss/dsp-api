@@ -221,18 +221,5 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
         actual should ===(1)
       }
     }
-
-    "put the graph data as turtle" in {
-      UnsafeZioRun.runOrThrow(
-        TriplestoreService
-          .insertDataGraphRequest(graphContent = graphDataContent, "http://jedi.org/graph")
-          .timeout(java.time.Duration.ofSeconds(10))
-      )
-    }
-
-    "read the graph data as turtle" in {
-      val response = UnsafeZioRun.runOrThrow(TriplestoreService.sparqlHttpGraphData("http://jedi.org/graph"))
-      response.turtle.length should be > 0
-    }
   }
 }
