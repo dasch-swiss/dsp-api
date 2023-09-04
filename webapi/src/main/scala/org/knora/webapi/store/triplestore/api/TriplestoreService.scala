@@ -11,7 +11,6 @@ import zio.macros.accessible
 
 import java.nio.file.Path
 
-import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -81,13 +80,6 @@ trait TriplestoreService {
    */
   def sparqlHttpGraphFile(graphIri: InternalIri, outputFile: zio.nio.file.Path, outputFormat: QuadFormat): Task[Unit]
 
-  /**
-   * Requests the contents of a named graph, returning the response as Turtle.
-   *
-   * @param graphIri the IRI of the named graph.
-   * @return a string containing the contents of the graph in Turtle format.
-   */
-  def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse]
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.
@@ -143,15 +135,6 @@ trait TriplestoreService {
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
   def uploadRepository(inputFile: Path): Task[Unit]
-
-  /**
-   * Puts a data graph into the repository.
-   *
-   * @param graphContent a data graph in Turtle format to be inserted into the repository.
-   * @param graphName    the name of the graph.
-   */
-  def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit]
-
 }
 
 object TriplestoreService {
