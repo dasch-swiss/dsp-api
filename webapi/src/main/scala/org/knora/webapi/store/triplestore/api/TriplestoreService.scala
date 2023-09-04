@@ -166,16 +166,16 @@ object TriplestoreService {
 
     case class Select(sparql: String, isGravsearch: Boolean) extends SparqlQuery
     object Select {
-      def apply(sparql: TxtFormat.Appendable, isGravSearch: Boolean = false): Select =
-        Select(sparql.toString, isGravSearch)
+      def apply(sparql: TxtFormat.Appendable, isGravsearch: Boolean = false): Select =
+        Select(sparql.toString, isGravsearch)
 
       def apply(sparql: String): Select = Select(sparql, isGravsearch = false)
     }
 
     case class Construct(sparql: String, isGravsearch: Boolean) extends SparqlQuery
     object Construct {
-      def apply(sparql: TxtFormat.Appendable, isGravSearch: Boolean = false): Construct =
-        Construct(sparql.toString, isGravSearch)
+      def apply(sparql: TxtFormat.Appendable, isGravsearch: Boolean = false): Construct =
+        Construct(sparql.toString, isGravsearch)
 
       def apply(sparql: String): Construct = Construct(sparql, isGravsearch = false)
     }
