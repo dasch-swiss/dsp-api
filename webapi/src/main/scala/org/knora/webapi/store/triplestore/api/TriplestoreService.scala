@@ -10,6 +10,7 @@ import zio._
 import zio.macros.accessible
 
 import java.nio.file.Path
+
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -79,7 +80,6 @@ trait TriplestoreService {
    * @param outputFormat         the output file format.
    */
   def sparqlHttpGraphFile(graphIri: InternalIri, outputFile: zio.nio.file.Path, outputFormat: QuadFormat): Task[Unit]
-
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.

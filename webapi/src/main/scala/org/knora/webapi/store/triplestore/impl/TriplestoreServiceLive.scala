@@ -40,6 +40,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
+
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.Triplestore
@@ -55,7 +56,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.{Available, NotInitialized, Unavailable}
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.NotInitialized
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Unavailable
 import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 

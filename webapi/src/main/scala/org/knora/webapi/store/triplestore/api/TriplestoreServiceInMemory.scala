@@ -28,6 +28,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
