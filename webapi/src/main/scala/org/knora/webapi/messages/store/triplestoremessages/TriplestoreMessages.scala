@@ -143,16 +143,6 @@ object SparqlExtendedConstructResponse {
 }
 
 /**
- * Response indicating whether the triplestore has finished initialization and is ready for processing messages
- *
- * @param triplestoreStatus the state of the triplestore.
- */
-case class CheckTriplestoreResponse(triplestoreStatus: domain.TriplestoreStatus)
-object CheckTriplestoreResponse {
-  val Available: CheckTriplestoreResponse = CheckTriplestoreResponse(TriplestoreStatus.Available)
-}
-
-/**
  * Indicates whether the repository is up to date.
  *
  * @param message a message providing details of what was done.

@@ -40,7 +40,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.Triplestore
@@ -56,6 +55,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.{Available, NotInitialized, Unavailable}
 import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 
@@ -277,34 +277,27 @@ case class TriplestoreServiceLive(
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure (initialize) the required dataset.
    */
-  def checkTriplestore(): Task[CheckTriplestoreResponse] = {
-    val triplestoreNotInitializedResponse =
-      ZIO.succeed(
-        CheckTriplestoreResponse(
-          TriplestoreStatus.NotInitialized(
-            s"None of the active datasets meet our requirement of name: ${fusekiConfig.repositoryName}"
-          )
-        )
-      )
+  def checkTriplestore(): Task[TriplestoreStatus] = {
+    val notInitialized =
+      NotInitialized(s"None of the active datasets meet our requirement of name: ${fusekiConfig.repositoryName}")
 
-    def triplestoreUnavailableResponse(cause: String) = CheckTriplestoreResponse(
-      TriplestoreStatus.Unavailable(s"Triplestore not available: $cause")
-    )
+    def unavailable(cause: String) =
+      Unavailable(s"Triplestore not available: $cause")
 
     ZIO
       .ifZIO(checkTriplestoreInitialized())(
-        ZIO.succeed(CheckTriplestoreResponse.Available),
+        ZIO.succeed(Available),
         if (triplestoreConfig.autoInit) {
           ZIO
             .ifZIO(initJenaFusekiTriplestore() *> checkTriplestoreInitialized())(
-              ZIO.succeed(CheckTriplestoreResponse.Available),
-              triplestoreNotInitializedResponse
+              ZIO.succeed(Available),
+              ZIO.succeed(notInitialized)
             )
         } else {
-          triplestoreNotInitializedResponse
+          ZIO.succeed(notInitialized)
         }
       )
-      .catchAll(ex => ZIO.succeed(triplestoreUnavailableResponse(ex.getMessage)))
+      .catchAll(ex => ZIO.succeed(unavailable(ex.getMessage)))
   }
 
   /**

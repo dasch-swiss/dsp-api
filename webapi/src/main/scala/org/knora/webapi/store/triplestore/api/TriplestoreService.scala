@@ -10,7 +10,6 @@ import zio._
 import zio.macros.accessible
 
 import java.nio.file.Path
-
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -19,6 +18,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 
 @accessible
 trait TriplestoreService {
@@ -115,7 +115,7 @@ trait TriplestoreService {
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure () the required dataset.
    */
-  def checkTriplestore(): Task[CheckTriplestoreResponse]
+  def checkTriplestore(): Task[TriplestoreStatus]
 
   /**
    * Dumps the whole repository in N-Quads format, saving the response in a file.
