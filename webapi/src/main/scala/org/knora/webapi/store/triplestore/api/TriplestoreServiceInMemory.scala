@@ -35,11 +35,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
@@ -50,6 +46,11 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
@@ -63,10 +64,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
-  override def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean): Task[SparqlSelectResult] = {
-    require(!isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
-
-    ZIO.scoped(execSelect(sparql).map(toSparqlSelectResult))
+  override def query(query: Select): Task[SparqlSelectResult] = {
+    require(!query.isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
+    ZIO.scoped(execSelect(query.sparql).map(toSparqlSelectResult))
   }
 
   private def execSelect(query: String): ZIO[Any with Scope, Throwable, ResultSet] = {
@@ -111,12 +111,12 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     VariableResultsRow(keyValueMap)
   }
 
-  override def sparqlHttpAsk(query: String): Task[SparqlAskResponse] =
-    ZIO.scoped(getReadTransactionQueryExecution(query).map(_.execAsk())).map(SparqlAskResponse)
+  override def query(query: Ask): Task[Boolean] =
+    ZIO.scoped(getReadTransactionQueryExecution(query.sparql).map(_.execAsk()))
 
-  override def sparqlHttpConstruct(request: SparqlConstructRequest): Task[SparqlConstructResponse] =
+  override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtle <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle))
+      turtle <- ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
       rdfModel <- ZIO
                     .attempt(RdfFeatureFactory.getRdfFormatUtil().parseToRdfModel(turtle, Turtle))
                     .foldZIO(
@@ -143,39 +143,22 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       turtle = os.toString(StandardCharsets.UTF_8)
     } yield turtle
 
-  override def sparqlHttpExtendedConstruct(
-    request: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse] =
-    for {
-      turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle))
-      response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtle)
-    } yield response
-
-  override def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: IRI,
-    outputFile: Path,
+  override def queryToFile(
+    query: Construct,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] = ZIO.scoped {
     for {
-      model  <- execConstruct(sparql)
-      turtle <- modelToTurtle(model)
-      _ <- ZIO
-             .attempt(
-               rdfFormatUtil
-                 .turtleToQuadsFile(
-                   rdfSource = RdfStringSource(turtle),
-                   graphIri = graphIri,
-                   outputFile = outputFile,
-                   outputFormat = outputFormat
-                 )
-             )
+      model  <- execConstruct(query.sparql)
+      source <- modelToTurtle(model).map(RdfStringSource)
+      _      <- ZIO.attempt(rdfFormatUtil.turtleToQuadsFile(source, graphIri.value, outputFile.toFile.toPath, outputFormat))
     } yield ()
   }
 
-  override def sparqlHttpUpdate(query: String): Task[Unit] = {
+  override def query(query: Update): Task[Unit] = {
     def doUpdate(ds: Dataset) = ZIO.attempt {
-      val update    = UpdateFactory.create(query)
+      val update    = UpdateFactory.create(query.sparql)
       val processor = UpdateExecutionFactory.create(update, ds)
       processor.execute()
     }
@@ -183,8 +166,8 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   }
 
   override def sparqlHttpGraphFile(
-    graphIri: IRI,
-    outputFile: Path,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] = ZIO.scoped {
     for {
@@ -193,7 +176,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       lang = JenaFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
       _ <- ZIO.attemptBlocking {
              ds.begin(ReadWrite.READ)
-             try { ds.getNamedModel(graphIri).write(fos, lang.getName) }
+             try { ds.getNamedModel(graphIri.value).write(fos, lang.getName) }
              finally { ds.end() }
            }
     } yield ()

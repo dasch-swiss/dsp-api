@@ -14,7 +14,10 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.MAX_IRI_ATTEMPTS
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 /**
  * This service somewhat handles checking of ontology entities and some creation of entity IRIs.
@@ -26,28 +29,25 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
  * will be subject to further refactoring once we extract more services.
  */
 final case class IriService(
-  private val triplestoreService: TriplestoreService,
+  private val triplestore: TriplestoreService,
   private val stringFormatter: StringFormatter
 ) extends LazyLogging {
 
   /**
    * Checks whether an entity is used in the triplestore (in data or ontologies).
    *
-   * @param entityIri                 the IRI of the entity.
+   * @param iri                 the IRI of the entity.
    * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
    * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
    *
    * @return `true` if the entity is used.
    */
   def isEntityUsed(
-    entityIri: SmartIri,
+    iri: SmartIri,
     ignoreKnoraConstraints: Boolean = false,
     ignoreRdfSubjectAndObject: Boolean = false
-  ): Task[Boolean] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .isEntityUsed(entityIri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
-    triplestoreService.sparqlHttpAsk(query).map(_.result)
-  }
+  ): Task[Boolean] = triplestore
+    .query(Ask(sparql.v2.txt.isEntityUsed(iri.toInternalIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)))
 
   /**
    * Checks whether an instance of a class (or any of its sub-classes) exists.
@@ -55,10 +55,8 @@ final case class IriService(
    * @param classIri  the IRI of the class.
    * @return `true` if the class is used.
    */
-  def isClassUsedInData(classIri: SmartIri): Task[Boolean] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isClassUsedInData(classIri).toString()
-    triplestoreService.sparqlHttpSelect(query).map(_.results.bindings.nonEmpty)
-  }
+  def isClassUsedInData(classIri: SmartIri): Task[Boolean] =
+    triplestore.query(Select(sparql.v2.txt.isClassUsedInData(classIri))).map(_.results.bindings.nonEmpty)
 
   /**
    * Checks whether an entity with the provided custom IRI exists in the triplestore. If yes, throws an exception.
@@ -106,10 +104,7 @@ final case class IriService(
     makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
   }
 
-  def checkIriExists(entityIriAsString: IRI): Task[Boolean] = {
-    val query = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(entityIriAsString).toString
-    triplestoreService.sparqlHttpAsk(query).map(_.result)
-  }
+  def checkIriExists(iri: IRI): Task[Boolean] = triplestore.query(Ask(sparql.admin.txt.checkIriExists(iri)))
 }
 
 object IriService {

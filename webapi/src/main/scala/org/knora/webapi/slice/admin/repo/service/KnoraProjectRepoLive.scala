@@ -18,44 +18,50 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectLongname
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectShortcode
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectShortname
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.Status
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
-import org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getProjects
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
   private val mapper: PredicateObjectMapper
 ) extends KnoraProjectRepo {
+  implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   override def findById(id: InternalIri): Task[Option[KnoraProject]] =
-    findOneByQuery(getProjects(maybeIri = Some(id.value), None, None))
+    findOneByQuery(sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
 
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
     val maybeIri       = id.asIriIdentifierOption
     val maybeShortname = id.asShortnameIdentifierOption
     val maybeShortcode = id.asShortcodeIdentifierOption
-    findOneByQuery(getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode))
+    findOneByQuery(
+      sparql.admin.txt
+        .getProjects(maybeIri = maybeIri, maybeShortname = maybeShortname, maybeShortcode = maybeShortcode)
+    )
   }
 
   private def findOneByQuery(query: TxtFormat.Appendable): Task[Option[KnoraProject]] =
     for {
-      construct <- triplestore.sparqlHttpExtendedConstruct(query).map(_.statements.headOption)
+      construct <- triplestore.query(Construct(query)).flatMap(_.asExtended).map(_.statements.headOption)
       project   <- ZIO.foreach(construct)(toKnoraProject)
     } yield project
 
   override def findAll(): Task[List[KnoraProject]] = {
-    val query = getProjects(None, None, None)
+    val query = sparql.admin.txt.getProjects(None, None, None)
     for {
-      projectsResponse <- triplestore.sparqlHttpExtendedConstruct(query).map(_.statements.toList)
+      projectsResponse <- triplestore.query(Construct(query)).flatMap(_.asExtended).map(_.statements.toList)
       projects         <- ZIO.foreach(projectsResponse)(toKnoraProject)
     } yield projects
   }

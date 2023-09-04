@@ -49,7 +49,12 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
@@ -79,100 +84,75 @@ case class TriplestoreServiceLive(
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param sparql          the SPARQL SELECT query string.
-   * @param isGravsearch    `true` if it is a gravsearch query (relevant for timeout)
+   * @param query          the SPARQL SELECT query string.
    * @return a [[SparqlSelectResult]].
    */
-  override def sparqlHttpSelect(sparql: String, isGravsearch: Boolean = false): Task[SparqlSelectResult] = {
+  override def query(query: Select): Task[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
         .orElse(processError(sparql, resultStr))
 
-    executeSparqlQuery(sparql, isGravsearch).flatMap(parseJsonResponse(sparql, _))
+    executeSparqlQuery(query.sparql, query.isGravsearch).flatMap(parseJsonResponse(query.sparql, _))
   }
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
    *
-   * @param construct the request message.
+   * @param query The SPARQL [[Construct]] query.
    * @return a [[SparqlConstructResponse]]
    */
-  override def sparqlHttpConstruct(construct: SparqlConstructRequest): Task[SparqlConstructResponse] =
+  override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtleStr <- executeSparqlQuery(construct.sparql, acceptMimeType = mimeTypeTextTurtle)
+      turtleStr <- executeSparqlQuery(query.sparql, query.isGravsearch, mimeTypeTextTurtle)
       rdfModel <- ZIO
                     .attempt(rdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
-                    .orElse(processError(construct.sparql, turtleStr))
+                    .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
    *
-   * @param sparql       the SPARQL CONSTRUCT query string.
+   * @param query       the SPARQL CONSTRUCT query string.
    * @param graphIri     the named graph IRI to be used in the output file.
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
    * @return a [[Unit]].
    */
-  override def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: IRI,
-    outputFile: Path,
+  override def queryToFile(
+    query: Construct,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] =
-    executeSparqlQuery(sparql, acceptMimeType = mimeTypeTextTurtle)
-      .mapAttempt(turtle =>
-        rdfFormatUtil.turtleToQuadsFile(RdfStringSource(turtle), graphIri, outputFile, outputFormat)
-      )
-
-  /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
-   *
-   * @param construct the request message.
-   * @return a [[SparqlExtendedConstructResponse]]
-   */
-  override def sparqlHttpExtendedConstruct(
-    construct: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse] =
-    for {
-      turtleStr <- executeSparqlQuery(construct.sparql, construct.isGravsearch, mimeTypeTextTurtle)
-      response <-
-        SparqlExtendedConstructResponse
-          .parseTurtleResponse(turtleStr)
-          .foldZIO(
-            _ => {
-              val msg = s"Couldn't parse Turtle from triplestore: $construct"
-              ZIO.fail(TriplestoreResponseException(msg))
-            },
-            ZIO.succeed(_)
-          )
-    } yield response
+    executeSparqlQuery(query.sparql, query.isGravsearch, acceptMimeType = mimeTypeTextTurtle)
+      .map(RdfStringSource)
+      .mapAttempt(rdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
 
   /**
    * Performs a SPARQL update operation.
    *
-   * @param sparqlUpdate the SPARQL update.
+   * @param query the SPARQL [[Update]] query.
    * @return [[Unit]].
    */
-  override def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit] = {
+  override def query(query: Update): Task[Unit] = {
     val request = new HttpPost(paths.update)
-    request.setEntity(new StringEntity(sparqlUpdate, ContentType.create(mimeTypeApplicationSparqlUpdate, Consts.UTF_8)))
+    request.setEntity(new StringEntity(query.sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, Consts.UTF_8)))
     doHttpRequest(request, returnResponseAsString).unit
   }
 
   /**
    * Performs a SPARQL ASK query.
    *
-   * @param query the SPARQL ASK query.
-   * @return a [[SparqlAskResponse]].
+   * @param query the SPARQL [[Ask]] query.
+   * @return a [[Boolean]].
    */
-  override def sparqlHttpAsk(query: String): Task[SparqlAskResponse] =
+  override def query(query: Ask): Task[Boolean] =
     for {
-      resultString <- executeSparqlQuery(query)
+      resultString <- executeSparqlQuery(query.sparql)
       _            <- ZIO.logDebug(s"sparqlHttpAsk - resultString: $resultString")
       result       <- ZIO.attemptBlocking(resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean])
-    } yield SparqlAskResponse(result)
+    } yield result
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.
@@ -197,7 +177,7 @@ case class TriplestoreServiceLive(
   def dropAllTriplestoreContent(): Task[Unit] =
     for {
       _      <- ZIO.logDebug("==>> Drop All Data Start")
-      result <- sparqlHttpUpdate("DROP ALL")
+      result <- query(Update("DROP ALL"))
       _      <- ZIO.logDebug(s"==>> Drop All Data End, Result: $result")
     } yield ()
 
@@ -217,7 +197,7 @@ case class TriplestoreServiceLive(
 
   private def dropGraph(graphName: String): Task[Unit] =
     ZIO.logInfo(s"==>> Dropping graph: $graphName") *>
-      sparqlHttpUpdate(s"DROP GRAPH <$graphName>") *>
+      query(Update(s"DROP GRAPH <$graphName>")) *>
       ZIO.logDebug("Graph dropped")
 
   /**
@@ -227,7 +207,7 @@ case class TriplestoreServiceLive(
    */
   private def getAllGraphs: Task[Seq[String]] =
     for {
-      res     <- sparqlHttpSelect("select ?g {graph ?g {?s ?p ?o}} group by ?g")
+      res     <- query(Select("select ?g {graph ?g {?s ?p ?o}} group by ?g", isGravsearch = false))
       bindings = res.results.bindings
       graphs   = bindings.map(_.rowMap("g"))
     } yield graphs
@@ -240,7 +220,7 @@ case class TriplestoreServiceLive(
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
    * @return [[Unit]]
    */
-  def insertDataIntoTriplestore(
+  override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
   ): Task[Unit] = {
@@ -405,13 +385,13 @@ case class TriplestoreServiceLive(
    * @return a string containing the contents of the graph in N-Quads format.
    */
   override def sparqlHttpGraphFile(
-    graphIri: IRI,
-    outputFile: Path,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
   ): Task[Unit] = {
-    val request = new HttpGet(makeNamedGraphDownloadUri(graphIri))
+    val request = new HttpGet(makeNamedGraphDownloadUri(graphIri.value))
     request.addHeader("Accept", mimeTypeTextTurtle)
-    doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile, graphIri, outputFormat))
+    doHttpRequest(request, writeResponseFileAsTurtleContent(outputFile.toFile.toPath, graphIri.value, outputFormat))
   }.unit
 
   /**

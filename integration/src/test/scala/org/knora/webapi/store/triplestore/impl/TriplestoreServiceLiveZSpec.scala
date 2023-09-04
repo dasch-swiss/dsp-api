@@ -12,6 +12,7 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
@@ -87,7 +88,7 @@ object TriplestoreServiceLiveZSpec extends ZIOSpecDefault {
           // TODO: Need to first load testdata. Only then this query should trigger a 500 error in Fuseki.
           // _      <- TriplestoreService.sparqlHttpSelect(searchStringOfDeath, false).exit.repeatN(100)
           // _      <- Clock.ClockLive.sleep(10.seconds)
-          result <- TriplestoreService.sparqlHttpSelect(searchStringOfDeath).exit
+          result <- TriplestoreService.query(Select(searchStringOfDeath)).exit
         } yield assertTrue(result.is(_.failure) == NotFoundException("The requested data was not found"))
       }
     ).provideLayer(testLayer) @@ TestAspect.sequential
