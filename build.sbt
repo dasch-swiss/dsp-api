@@ -8,7 +8,7 @@ addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
 val zioVersion                  = "2.0.15"
-val zioJsonVersion              = "0.6.0"
+val zioJsonVersion              = "0.6.1"
 val zioConfigVersion            = "3.0.7"
 val zioLoggingVersion           = "2.1.14"
 val testContainersVersion       = "0.40.15"
@@ -58,7 +58,7 @@ lazy val root = (project in file("."))
       "dev.zio"              %% "zio-config-typesafe"               % zioConfigVersion,
       "dev.zio"              %% "zio-http"                          % zioHttpVersion,
       "dev.zio"              %% "zio-json"                          % zioJsonVersion,
-      "dev.zio"              %% "zio-json-interop-refined"          % "0.6.0",
+      "dev.zio"              %% "zio-json-interop-refined"          % "0.6.1",
       "dev.zio"              %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
       "dev.zio"              %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
       "dev.zio"              %% "zio-nio"                           % zioNioVersion,
