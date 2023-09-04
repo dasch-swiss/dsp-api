@@ -143,7 +143,7 @@ case class TriplestoreServiceLive(
   override def query(query: Update): Task[Unit] = {
     val request = new HttpPost(paths.update)
     request.setEntity(new StringEntity(query.sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, Consts.UTF_8)))
-    trackQueryDuration(query, doHttpRequest(request, returnResponseAsString)).unit
+    trackQueryDuration(query, doHttpRequest(request, _ => ZIO.unit))
   }
 
   /**
@@ -178,8 +178,6 @@ case class TriplestoreServiceLive(
 
   /**
    * Drops all triplestore data graph by graph using "DROP GRAPH" SPARQL query.
-   * This method is useful in cases with large amount of data (over 10 million statements),
-   * where the method [[dropAllTriplestoreContent()]] could create timeout issues.
    */
   def dropDataGraphByGraph(): Task[Unit] =
     for {
