@@ -43,7 +43,7 @@ final case class AppServer(
   private val checkTriplestoreService: Task[Unit] =
     for {
       _      <- state.set(AppState.WaitingForTriplestore)
-      status <- ts.checkTriplestore().map(_.triplestoreStatus)
+      status <- ts.checkTriplestore()
       _ <- status match {
              case TriplestoreStatus.Available           => ZIO.unit
              case TriplestoreStatus.NotInitialized(msg) => ZIO.die(new Exception(msg))
