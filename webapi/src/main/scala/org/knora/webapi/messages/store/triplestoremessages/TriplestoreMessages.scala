@@ -19,8 +19,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.store.triplestore.domain
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
