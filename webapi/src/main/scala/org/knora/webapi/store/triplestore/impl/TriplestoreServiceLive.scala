@@ -143,7 +143,7 @@ case class TriplestoreServiceLive(
   override def query(query: Update): Task[Unit] = {
     val request = new HttpPost(paths.update)
     request.setEntity(new StringEntity(query.sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, Consts.UTF_8)))
-    doHttpRequest(request, returnResponseAsString).unit
+    trackQueryDuration(query, doHttpRequest(request, returnResponseAsString)).unit
   }
 
   /**
