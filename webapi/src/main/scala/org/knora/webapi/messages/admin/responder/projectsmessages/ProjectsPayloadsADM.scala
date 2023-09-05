@@ -80,9 +80,7 @@ object ProjectUpdatePayloadADM {
   }
 }
 
-final case class ProjectSetRestrictedViewSettingsPayload(
-  size: Option[String]
-)
+final case class ProjectSetRestrictedViewSettingsPayload(size: String)
 
 object ProjectSetRestrictedViewSettingsPayload {
   implicit val codec: JsonCodec[ProjectSetRestrictedViewSettingsPayload] =

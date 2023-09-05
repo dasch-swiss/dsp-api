@@ -136,7 +136,7 @@ trait ProjectsResponderADM {
   def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     user: UserADM,
-    size: Option[String]
+    size: String
   ): Task[ProjectRestrictedViewSettingsResponseADM]
 
   /**
@@ -475,7 +475,7 @@ final case class ProjectsResponderADMLive(
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     user: UserADM,
-    size: Option[String] = None
+    size: String
   ): Task[ProjectRestrictedViewSettingsResponseADM] = {
     val id = ProjectIdentifierADM.IriIdentifier(iri)
     for {
@@ -486,13 +486,11 @@ final case class ProjectsResponderADMLive(
              .fail(ForbiddenException("User is neither system nor project admin."))
              .unless(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(iri.value))
 
-      defaultViewSetting = size.getOrElse("pct:1")
-
       query = twirl.queries.sparql.admin.txt
-                .setProjectRestrictedViewSettings(iri.value, defaultViewSetting, None)
+                .setProjectRestrictedViewSettings(iri.value, size, None)
 
       _       <- triplestoreService.sparqlHttpUpdate(query.toString)
-      settings = ProjectRestrictedViewSettingsADM(size)
+      settings = ProjectRestrictedViewSettingsADM(Some(size))
     } yield ProjectRestrictedViewSettingsResponseADM(settings)
   }
 
@@ -874,7 +872,9 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-        _ <- setProjectRestrictedViewSettings(id.value, requestingUser)
+//      TODO: DEV-2626 add default value here
+//        defaultSize = ""
+//        _          <- setProjectRestrictedViewSettings(id.value, requestingUser, defaultSize)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 

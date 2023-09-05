@@ -255,7 +255,7 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
 case class ProjectRestrictedViewSettingsSetRequestADM(
   iri: Iri.ProjectIri,
   user: UserADM,
-  size: Option[String]
+  size: String
 ) extends ProjectsResponderRequestADM
 
 /**
