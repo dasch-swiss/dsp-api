@@ -90,8 +90,7 @@ final case class KnoraProjectRepoLive(
     val query =
       s"""
          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-         |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
          |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>  
          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>  
          |
