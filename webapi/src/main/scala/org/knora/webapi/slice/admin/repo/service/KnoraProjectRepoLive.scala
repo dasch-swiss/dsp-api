@@ -98,7 +98,7 @@ final case class KnoraProjectRepoLive(
          |  BIND(<${project.id.value}> AS ?projectIri)
          |  ?ontologyIri a owl:Ontology .
          |  ?ontologyIri knora-base:attachedToProject ?projectIri .
-         |  ?projectIri  rdf:type knora-admin:knoraProject .
+         |  ?projectIri  a knora-admin:knoraProject .
          |} order by ?projectIri""".stripMargin
     triplestore
       .query(Select(query))
