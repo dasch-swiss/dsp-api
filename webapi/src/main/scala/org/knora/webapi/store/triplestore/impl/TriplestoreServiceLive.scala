@@ -400,7 +400,7 @@ case class TriplestoreServiceLive(
   }
 
   private def trackQueryDuration[T](query: SparqlQuery, reqTask: Task[T]): Task[T] = {
-    val trackingThreshold = 500.millis
+    val trackingThreshold = fusekiConfig.queryLoggingThreshold
     val startTime         = java.lang.System.nanoTime()
     for {
       result <- reqTask @@ requestTimer

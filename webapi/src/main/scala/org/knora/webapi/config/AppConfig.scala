@@ -185,7 +185,8 @@ final case class Fuseki(
   port: Int,
   repositoryName: String,
   username: String,
-  password: String
+  password: String,
+  queryLoggingThreshold: Duration = Duration.ofMillis(1000)
 )
 
 final case class CacheService(
