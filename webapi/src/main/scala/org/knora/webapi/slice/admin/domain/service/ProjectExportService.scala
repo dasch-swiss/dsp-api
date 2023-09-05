@@ -24,7 +24,7 @@ import zio.nio.file.Path
 import java.io.OutputStream
 import scala.collection.mutable
 
-import org.knora.webapi.messages.twirl.queries.sparql.admin.txt._
+import org.knora.webapi.messages.twirl.queries._
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
@@ -148,9 +148,8 @@ final case class ProjectExportServiceLive(
   private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
     allGraphsTrigFile <-
       projectService.getNamedGraphsForProject(project).map(_.map(NamedGraphTrigFile(_, tempDir)))
-    files <- ZIO.foreach(allGraphsTrigFile)(file =>
-               triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file)
-             )
+    files <-
+      ZIO.foreach(allGraphsTrigFile)(file => triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file))
   } yield files
 
   /**
@@ -167,14 +166,14 @@ final case class ProjectExportServiceLive(
   private def downloadProjectAdminData(project: KnoraProject, targetDir: Path): Task[NamedGraphTrigFile] = {
     val graphIri = adminDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, targetDir)
-    val query    = Construct(getProjectAdminData(project.id.value))
+    val query    = Construct(sparql.admin.txt.getProjectAdminData(project.id.value))
     triplestore.queryToFile(query, graphIri, file.dataFile, TriG).as(file)
   }
 
   private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
     val graphIri = permissionsDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, tempDir)
-    val query    = Construct(getProjectPermissions(project.id.value))
+    val query    = Construct(sparql.admin.txt.getProjectPermissions(project.id.value))
     triplestore.queryToFile(query, graphIri, file.dataFile, TriG).as(file)
   }
 

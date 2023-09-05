@@ -289,7 +289,7 @@ object TriplestoreServiceInMemorySpec extends ZIOSpecDefault {
                    ),
                    prependDefaults = false
                  )
-            _ <- TriplestoreService.sparqlHttpGraphFile(
+            _ <- TriplestoreService.downloadGraph(
                    InternalIri("http://www.knora.org/ontology/knora-base"),
                    testFile,
                    TriG
