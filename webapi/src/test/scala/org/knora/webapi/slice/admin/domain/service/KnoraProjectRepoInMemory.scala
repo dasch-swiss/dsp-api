@@ -29,6 +29,9 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
       case IriIdentifier(iri)             => _.id.value == iri.value
     })
   )
+
+  override def findOntologies(project: KnoraProject): Task[List[InternalIri]] =
+    throw new UnsupportedOperationException("not yet implemented")
 }
 
 object KnoraProjectRepoInMemory {
