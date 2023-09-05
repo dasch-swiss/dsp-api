@@ -34,7 +34,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsResponseADM]
   object SetRestrictedViewSettings
       extends Effect[
-        (ProjectIri, UserADM, Option[String]),
+        (ProjectIri, UserADM, String),
         Throwable,
         ProjectRestrictedViewSettingsResponseADM
       ]
@@ -101,7 +101,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         def setProjectRestrictedViewSettings(
           iri: ProjectIri,
           user: UserADM,
-          size: Option[String]
+          size: String
         ): Task[ProjectRestrictedViewSettingsResponseADM] =
           proxy(SetRestrictedViewSettings, (iri, user, size))
 

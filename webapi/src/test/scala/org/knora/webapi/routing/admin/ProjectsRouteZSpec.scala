@@ -675,7 +675,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
 
       val mockService = ProjectADMRestServiceMock
         .SetRestrictedViewSettings(
-          assertion = Assertion.equalTo((id, user, Some("pct:1"))),
+          assertion = Assertion.equalTo((id, user, "pct:1")),
           result = expectedResult
         )
         .toLayer
