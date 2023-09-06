@@ -1,5 +1,21 @@
 # Changelog
 
+## [30.1.0](https://github.com/dasch-swiss/dsp-api/compare/v30.0.0...v30.1.0) (2023-09-06)
+
+
+### Enhancements
+
+* Add metrics to TriplestoreService SparqlQuery execution DEV-2627 ([#2823](https://github.com/dasch-swiss/dsp-api/issues/2823)) ([8ce554b](https://github.com/dasch-swiss/dsp-api/commit/8ce554bc3051799134ac86d23ae25f2ee241ef1c))
+
+
+### Maintenance
+
+* Filter "HEAD" as branch name when building a release on a chec… ([#2817](https://github.com/dasch-swiss/dsp-api/issues/2817)) ([818fb41](https://github.com/dasch-swiss/dsp-api/commit/818fb41ea81bda03669fff86353cbdcd3a521de2))
+* Introduce typed queries Ask, Select, Construct, Update and remove TriplestoreMessageHandler ([#2816](https://github.com/dasch-swiss/dsp-api/issues/2816)) ([96c330d](https://github.com/dasch-swiss/dsp-api/commit/96c330d21d5e5bd74d7e8f50ba3515b039afa773))
+* Speedup /projects endpoint ([#2824](https://github.com/dasch-swiss/dsp-api/issues/2824)) ([22d5146](https://github.com/dasch-swiss/dsp-api/commit/22d514677e8b073e3e6f13c0cb4c4516ed9c7e99))
+* Update app in docker-compose ([#2821](https://github.com/dasch-swiss/dsp-api/issues/2821)) ([f124f85](https://github.com/dasch-swiss/dsp-api/commit/f124f855043443d355a6d07b6fb384361c7b4e24))
+* Update Dependencies ([#2822](https://github.com/dasch-swiss/dsp-api/issues/2822)) ([198d570](https://github.com/dasch-swiss/dsp-api/commit/198d57058468be1037750c493eba1c2c00a43bb2))
+
 ## [30.0.0](https://github.com/dasch-swiss/dsp-api/compare/v29.1.3...v30.0.0) (2023-08-31)
 
 
