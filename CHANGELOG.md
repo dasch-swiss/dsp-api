@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.4...v0.1.5) (2023-09-06)
+
+
+### Bug Fixes
+
+* Allow underscore in AssetIds ([#78](https://github.com/dasch-swiss/dsp-ingest/issues/78)) ([f12ad5c](https://github.com/dasch-swiss/dsp-ingest/commit/f12ad5cc0db1a384aaf12bcf58c335716377111f))
+
 ## [0.1.4](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.3...v0.1.4) (2023-08-29)
 
 
