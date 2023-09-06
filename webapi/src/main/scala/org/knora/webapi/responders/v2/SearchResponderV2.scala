@@ -28,6 +28,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
@@ -58,12 +59,14 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport._
 
 trait SearchResponderV2
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
-  private val triplestoreService: TriplestoreService,
+  private val triplestore: TriplestoreService,
   private val messageRelay: MessageRelay,
   private val constructResponseUtilV2: ConstructResponseUtilV2,
   private val ontologyCache: OntologyCache,
@@ -193,7 +196,7 @@ final case class SearchResponderV2Live(
   ): Task[ResourceCountV2] =
     for {
       countSparql <- ZIO.attempt(
-                       org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                       sparql.v2.txt
                          .searchFulltext(
                            searchTerms = LuceneQueryString(searchValue),
                            limitToProject = limitToProject,
@@ -206,7 +209,7 @@ final case class SearchResponderV2Live(
                            countQuery = true // do not get the resources themselves, but the sum of results
                          )
                      )
-      bindings <- triplestoreService.sparqlHttpSelect(countSparql.toString()).map(_.results.bindings)
+      bindings <- triplestore.query(Select(countSparql)).map(_.results.bindings)
       count <- // query response should contain one result with one row with the name "count"
         ZIO.fail {
           val msg = s"Fulltext count query is expected to return exactly one row, but ${bindings.size} given"
@@ -252,7 +255,7 @@ final case class SearchResponderV2Live(
     for {
       searchSparql <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          sparql.v2.txt
             .searchFulltext(
               searchTerms = searchTerms,
               limitToProject = limitToProject,
@@ -264,10 +267,9 @@ final case class SearchResponderV2Live(
               offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
               countQuery = false
             )
-            .toString()
         )
 
-      prequeryResponseNotMerged <- triplestoreService.sparqlHttpSelect(searchSparql)
+      prequeryResponseNotMerged <- triplestore.query(Select(searchSparql))
 
       mainResourceVar = QueryVariable("resource")
 
@@ -313,8 +315,8 @@ final case class SearchResponderV2Live(
           )
 
           for {
-            query          <- constructTransformer.transform(mainQuery)
-            searchResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toSparql)
+            query          <- constructTransformer.transform(mainQuery).map(_.toSparql)
+            searchResponse <- triplestore.query(Construct(query, isGravsearch = true)).flatMap(_.asExtended)
             // separate resources and value objects
             queryResultsSep = constructResponseUtilV2.splitMainResourcesAndValueRdfData(searchResponse, requestingUser)
           } yield queryResultsSep
@@ -418,7 +420,7 @@ final case class SearchResponderV2Live(
                       ontologiesForInferenceMaybe
                     )
 
-      countResponse <- triplestoreService.sparqlHttpSelect(countQuery.toSparql, isGravsearch = true)
+      countResponse <- triplestore.query(Select(countQuery.toSparql, isGravsearch = true))
 
       _ <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -504,8 +506,8 @@ final case class SearchResponderV2Live(
 
       start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
-        triplestoreService
-          .sparqlHttpSelect(prequerySparql, isGravsearch = true)
+        triplestore
+          .query(Select(prequerySparql, isGravsearch = true))
           .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
 
       end     <- Clock.instant.map(_.toEpochMilli)
@@ -588,12 +590,8 @@ final case class SearchResponderV2Live(
           )
 
           for {
-
-            mainQuery <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe)
-
-            // Convert the result to a SPARQL string and send it to the triplestore.
-            mainQuerySparql    = mainQuery.toSparql
-            mainQueryResponse <- triplestoreService.sparqlHttpExtendedConstruct(mainQuerySparql, isGravsearch = true)
+            mainQuery         <- constructTransformer.transform(mainQuery, ontologiesForInferenceMaybe).map(_.toSparql)
+            mainQueryResponse <- triplestore.query(Construct(mainQuery, isGravsearch = true)).flatMap(_.asExtended)
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions =
@@ -745,7 +743,7 @@ final case class SearchResponderV2Live(
                                     }
 
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
-      prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      prequery = sparql.v2.txt
                    .getResourcesByClassInProjectPrequery(
                      projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
                      resourceClassIri = internalClassIri,
@@ -754,9 +752,7 @@ final case class SearchResponderV2Live(
                      limit = appConfig.v2.resourcesSequence.resultsPerPage,
                      offset = resourcesInProjectGetRequestV2.page * appConfig.v2.resourcesSequence.resultsPerPage
                    )
-                   .toString
-
-      sparqlSelectResponse      <- triplestoreService.sparqlHttpSelect(prequery)
+      sparqlSelectResponse      <- triplestore.query(Select(prequery))
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -769,25 +765,24 @@ final case class SearchResponderV2Live(
       // Are there any matching resources?
       apiResponse <-
         if (mainResourceIris.nonEmpty) {
-          for {
-            // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
-            // at most one page of standoff per text value.
-            resourceRequestSparql <-
-              ZIO.attempt(
-                org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                  .getResourcePropertiesAndValues(
-                    resourceIris = mainResourceIris,
-                    preview = false,
-                    withDeleted = false,
-                    queryAllNonStandoff = true,
-                    queryStandoff = queryStandoff,
-                    maybePropertyIri = None,
-                    maybeVersionDate = None
-                  )
-                  .toString()
-              )
+          // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
+          // at most one page of standoff per text value.
+          val resourceRequestSparql =
+            Construct(
+              sparql.v2.txt
+                .getResourcePropertiesAndValues(
+                  resourceIris = mainResourceIris,
+                  preview = false,
+                  withDeleted = false,
+                  queryAllNonStandoff = true,
+                  queryStandoff = queryStandoff,
+                  maybePropertyIri = None,
+                  maybeVersionDate = None
+                )
+            )
 
-            resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
+          for {
+            resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
 
             // separate resources and values
             mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
@@ -846,7 +841,7 @@ final case class SearchResponderV2Live(
     for {
       countSparql <-
         ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          sparql.v2.txt
             .searchResourceByLabel(
               searchTerm = searchPhrase,
               limitToProject = limitToProject,
@@ -855,10 +850,9 @@ final case class SearchResponderV2Live(
               offset = 0,
               countQuery = true
             )
-            .toString()
         )
 
-      countResponse <- triplestoreService.sparqlHttpSelect(countSparql)
+      countResponse <- triplestore.query(Select(countSparql))
 
       count <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -893,40 +887,32 @@ final case class SearchResponderV2Live(
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
 
-    val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
+    val searchResourceByLabelSparql =
+      limitToResourceClass match {
+        case None =>
+          Construct(
+            sparql.v2.txt.searchResourceByLabel(
+              searchTerm = MatchStringWhileTyping(searchValue),
+              limitToProject = limitToProject,
+              limitToResourceClass = limitToResourceClass.map(_.toString),
+              limit = appConfig.v2.resourcesSequence.resultsPerPage,
+              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
+              countQuery = false
+            )
+          )
+        case Some(cls) =>
+          Construct(
+            sparql.v2.txt.searchResourceByLabelWithDefinedResourceClass(
+              searchTerm = MatchStringWhileTyping(searchValue),
+              limitToResourceClass = cls.toString,
+              limit = appConfig.v2.resourcesSequence.resultsPerPage,
+              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
+            )
+          )
+      }
 
     for {
-      // TODO-BL: this should be refactored and the old search-by-label code streamlined.
-      // I leave it for now, in case we have to revert, but I will create a follow-up task to refactor this.
-      searchResourceByLabelSparql <-
-        limitToResourceClass match {
-          case None =>
-            ZIO.attempt(
-              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                .searchResourceByLabel(
-                  searchTerm = searchPhrase,
-                  limitToProject = limitToProject,
-                  limitToResourceClass = limitToResourceClass.map(_.toString),
-                  limit = appConfig.v2.resourcesSequence.resultsPerPage,
-                  offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
-                  countQuery = false
-                )
-                .toString()
-            )
-          case Some(cls) =>
-            ZIO.attempt(
-              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                .searchResourceByLabelWithDefinedResourceClass(
-                  searchTerm = searchPhrase,
-                  limitToResourceClass = cls.toString,
-                  limit = appConfig.v2.resourcesSequence.resultsPerPage,
-                  offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
-                )
-                .toString()
-            )
-        }
-
-      searchResourceByLabelResponse <- triplestoreService.sparqlHttpExtendedConstruct(searchResourceByLabelSparql)
+      searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
 
       // collect the IRIs of main resources returned
       mainResourceIris <- ZIO.attempt {

@@ -15,6 +15,7 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
@@ -23,10 +24,12 @@ import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRes
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -72,22 +75,13 @@ final case class SipiResponderADMLive(
    * @param request the request.
    * @return a [[SipiFileInfoGetResponseADM]].
    */
-  override def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Task[SipiFileInfoGetResponseADM] = {
-
-    logger.debug(
-      s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}"
-    )
-
+  override def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Task[SipiFileInfoGetResponseADM] =
     for {
-      sparqlQuery <- ZIO.attempt(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getFileValue(
-                           filename = request.filename
-                         )
-                         .toString()
-                     )
 
-      queryResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQuery)
+      queryResponse <-
+        triplestoreService
+          .query(Construct(sparql.admin.txt.getFileValue(request.filename)))
+          .flatMap(_.asExtended(StringFormatter.getGeneralInstance))
 
       _ = if (queryResponse.statements.isEmpty)
             throw NotFoundException(s"No file value was found for filename ${request.filename}")
@@ -147,7 +141,6 @@ final case class SipiResponderADMLive(
 
       _ = logger.info(s"filename ${request.filename}, permission code: $permissionCode")
     } yield response
-  }
 }
 object SipiResponderADMLive {
   val layer: URLayer[TriplestoreService with MessageRelay, SipiResponderADM] = ZLayer.fromZIO {

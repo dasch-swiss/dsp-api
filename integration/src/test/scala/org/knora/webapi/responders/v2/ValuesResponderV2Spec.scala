@@ -27,7 +27,6 @@ import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -38,6 +37,8 @@ import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.errors.SipiException
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -363,20 +364,17 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |SELECT ?valueUUID WHERE {
          |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
          |}
-             """.stripMargin
+         |""".stripMargin
 
-    appActor ! SparqlSelectRequest(sparqlQuery)
+    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
 
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valueUUID")).get)
-      }
+    val rows = actual.results.bindings
+    if (rows.isEmpty) {
+      None
+    } else if (rows.size > 1) {
+      throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
+    } else {
+      Some(UuidUtil.base64Decode(rows.head.rowMap("valueUUID")).get)
     }
   }
 
@@ -387,21 +385,17 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |
          |SELECT ?valuePermissions WHERE {
          |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
-         |}
-             """.stripMargin
+         |}""".stripMargin
 
-    appActor ! SparqlSelectRequest(sparqlQuery)
+    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
 
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
-      }
+    val rows = actual.results.bindings
+    if (rows.isEmpty) {
+      None
+    } else if (rows.size > 1) {
+      throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
+    } else {
+      Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
     }
   }
 

@@ -27,6 +27,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -43,6 +44,7 @@ import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Responds to requests dealing with ontologies.
@@ -80,8 +82,7 @@ final case class OntologyResponderV2Live(
     with MessageHandler
     with LazyLogging {
 
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[OntologiesResponderRequestV2]
+  override def isResponsibleFor(message: ResponderRequest): Boolean = message.isInstanceOf[OntologiesResponderRequestV2]
 
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
@@ -152,8 +153,7 @@ final case class OntologyResponderV2Live(
     classIris: Set[SmartIri] = Set.empty[SmartIri],
     propertyIris: Set[SmartIri] = Set.empty[SmartIri],
     requestingUser: UserADM
-  ): Task[EntityInfoGetResponseV2] =
-    ontologyHelpers.getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
+  ): Task[EntityInfoGetResponseV2] = ontologyHelpers.getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
 
   /**
    * Given a list of standoff class IRIs and a list of property IRIs (ontology entities), returns an [[StandoffEntityInfoGetResponseV2]] describing both resource and property entities.
@@ -510,7 +510,7 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        createOntologySparql = twirl.queries.sparql.v2.txt
+        createOntologySparql = sparql.v2.txt
                                  .createOntology(
                                    ontologyNamedGraphIri = internalOntologyIri,
                                    ontologyIri = internalOntologyIri,
@@ -520,9 +520,7 @@ final case class OntologyResponderV2Live(
                                    ontologyComment = createOntologyRequest.comment,
                                    currentTime = currentTime
                                  )
-                                 .toString
-
-        _ <- triplestoreService.sparqlHttpUpdate(createOntologySparql)
+        _ <- triplestoreService.query(Update(createOntologySparql))
 
         // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
 
@@ -632,20 +630,17 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .changeOntologyMetadata(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           newLabel = changeOntologyMetadataRequest.label,
-                           hasOldComment = ontologyHasComment,
-                           deleteOldComment = ontologyHasComment && changeOntologyMetadataRequest.comment.nonEmpty,
-                           newComment = changeOntologyMetadataRequest.comment,
-                           lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.changeOntologyMetadata(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         newLabel = changeOntologyMetadataRequest.label,
+                         hasOldComment = ontologyHasComment,
+                         deleteOldComment = ontologyHasComment && changeOntologyMetadataRequest.comment.nonEmpty,
+                         newComment = changeOntologyMetadataRequest.comment,
+                         lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the update was successful. To do this, we have to undo the SPARQL-escaping of the input.
 
@@ -738,20 +733,17 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .changeOntologyMetadata(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           newLabel = None,
-                           hasOldComment = ontologyHasComment,
-                           deleteOldComment = true,
-                           newComment = None,
-                           lastModificationDate = deleteOntologyCommentRequestV2.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.changeOntologyMetadata(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         newLabel = None,
+                         hasOldComment = ontologyHasComment,
+                         deleteOldComment = true,
+                         newComment = None,
+                         lastModificationDate = deleteOntologyCommentRequestV2.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the update was successful.
 
@@ -917,17 +909,14 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .createClass(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classDef = internalClassDefWithLinkValueProps,
-                           lastModificationDate = createClassRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.createClass(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         classDef = internalClassDefWithLinkValueProps,
+                         lastModificationDate = createClassRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -1062,18 +1051,15 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .replaceClassCardinalities(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classIri = internalClassIri,
-                           newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
-                           lastModificationDate = changeGuiOrderRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.replaceClassCardinalities(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         classIri = internalClassIri,
+                         newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
+                         lastModificationDate = changeGuiOrderRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -1271,18 +1257,15 @@ final case class OntologyResponderV2Live(
         cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] =
           newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .addCardinalitiesToClass(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classIri = internalClassIri,
-                           cardinalitiesToAdd = cardinalitiesToAdd,
-                           lastModificationDate = addCardinalitiesRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.addCardinalitiesToClass(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         classIri = internalClassIri,
+                         cardinalitiesToAdd = cardinalitiesToAdd,
+                         lastModificationDate = addCardinalitiesRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -1496,18 +1479,16 @@ final case class OntologyResponderV2Live(
   ): Task[Unit] = {
     val classIri    = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
     val ontologyIri = classIri.getOntologyFromEntity
-    val updateSparql = twirl.queries.sparql.v2.txt
-      .replaceClassCardinalities(
-        ontologyNamedGraphIri = ontologyIri,
-        ontologyIri = ontologyIri,
-        classIri = classIri,
-        newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
-        lastModificationDate = request.lastModificationDate,
-        currentTime = timeOfUpdate
-      )
-      .toString()
+    val updateSparql = sparql.v2.txt.replaceClassCardinalities(
+      ontologyNamedGraphIri = ontologyIri,
+      ontologyIri = ontologyIri,
+      classIri = classIri,
+      newCardinalities = newReadClassInfo.entityInfoContent.directCardinalities,
+      lastModificationDate = request.lastModificationDate,
+      currentTime = timeOfUpdate
+    )
     for {
-      _              <- triplestoreService.sparqlHttpUpdate(updateSparql)
+      _              <- triplestoreService.query(Update(updateSparql))
       _              <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(ontologyIri, timeOfUpdate)
       loadedClassDef <- ontologyHelpers.loadClassDefinition(classIri)
       _ <- ZIO.when(loadedClassDef != newReadClassInfo.entityInfoContent) {
@@ -1631,7 +1612,7 @@ final case class OntologyResponderV2Live(
 
       userCanUpdateOntology <-
         ontologyHelpers.canUserUpdateOntology(internalOntologyIri, canDeleteClassRequest.requestingUser)
-      classIsUsed <- iriService.isEntityUsed(entityIri = internalClassIri)
+      classIsUsed <- iriService.isEntityUsed(internalClassIri)
     } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
   }
 
@@ -1672,17 +1653,14 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .deleteClass(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classIri = internalClassIri,
-                           lastModificationDate = deleteClassRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.deleteClass(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         classIri = internalClassIri,
+                         lastModificationDate = deleteClassRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -1823,18 +1801,15 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .deleteProperty(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           propertyIri = internalPropertyIri,
-                           maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
-                           lastModificationDate = deletePropertyRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.deleteProperty(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         propertyIri = internalPropertyIri,
+                         maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
+                         lastModificationDate = deletePropertyRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -1926,7 +1901,7 @@ final case class OntologyResponderV2Live(
              }
 
         // Delete everything in the ontology's named graph.
-        _ <- triplestoreService.sparqlHttpUpdate(twirl.queries.sparql.v2.txt.deleteOntology(internalOntologyIri))
+        _ <- triplestoreService.query(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
         // Remove the ontology from the cache.
         _ <- ontologyCache.deleteOntology(internalOntologyIri)
 
@@ -2144,18 +2119,15 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .createProperty(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           propertyDef = internalPropertyDef,
-                           maybeLinkValuePropertyDef = maybeLinkValuePropertyDef,
-                           lastModificationDate = createPropertyRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.createProperty(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         propertyDef = internalPropertyDef,
+                         maybeLinkValuePropertyDef = maybeLinkValuePropertyDef,
+                         lastModificationDate = createPropertyRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2302,21 +2274,18 @@ final case class OntologyResponderV2Live(
         newGuiAttributeIris =
           changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .changePropertyGuiElement(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           propertyIri = internalPropertyIri,
-                           maybeLinkValuePropertyIri =
-                             maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
-                           maybeNewGuiElement = newGuiElementIri,
-                           newGuiAttributes = newGuiAttributeIris,
-                           lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.changePropertyGuiElement(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         propertyIri = internalPropertyIri,
+                         maybeLinkValuePropertyIri =
+                           maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
+                         maybeNewGuiElement = newGuiElementIri,
+                         newGuiAttributes = newGuiAttributeIris,
+                         lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
 
@@ -2492,21 +2461,18 @@ final case class OntologyResponderV2Live(
         // Do the update.
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .changePropertyLabelsOrComments(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           propertyIri = internalPropertyIri,
-                           maybeLinkValuePropertyIri =
-                             maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
-                           predicateToUpdate = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
-                           newObjects = changePropertyLabelsOrCommentsRequest.newObjects,
-                           lastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.changePropertyLabelsOrComments(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         propertyIri = internalPropertyIri,
+                         maybeLinkValuePropertyIri =
+                           maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
+                         predicateToUpdate = changePropertyLabelsOrCommentsRequest.predicateToUpdate,
+                         newObjects = changePropertyLabelsOrCommentsRequest.newObjects,
+                         lastModificationDate = changePropertyLabelsOrCommentsRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2651,19 +2617,16 @@ final case class OntologyResponderV2Live(
 
         currentTime: Instant = Instant.now
 
-        updateSparql = twirl.queries.sparql.v2.txt
-                         .changeClassLabelsOrComments(
-                           ontologyNamedGraphIri = internalOntologyIri,
-                           ontologyIri = internalOntologyIri,
-                           classIri = internalClassIri,
-                           predicateToUpdate = changeClassLabelsOrCommentsRequest.predicateToUpdate,
-                           newObjects = changeClassLabelsOrCommentsRequest.newObjects,
-                           lastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate,
-                           currentTime = currentTime
-                         )
-                         .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.changeClassLabelsOrComments(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         classIri = internalClassIri,
+                         predicateToUpdate = changeClassLabelsOrCommentsRequest.predicateToUpdate,
+                         newObjects = changeClassLabelsOrCommentsRequest.newObjects,
+                         lastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2775,18 +2738,15 @@ final case class OntologyResponderV2Live(
         currentTime: Instant = Instant.now
 
         // Delete the comment
-        updateSparql: String = twirl.queries.sparql.v2.txt
-                                 .deletePropertyComment(
-                                   ontologyNamedGraphIri = internalOntologyIri,
-                                   ontologyIri = internalOntologyIri,
-                                   propertyIri = internalPropertyIri,
-                                   maybeLinkValuePropertyIri = maybeLinkValueOfPropertyToUpdateIri,
-                                   lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
-                                   currentTime = currentTime
-                                 )
-                                 .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt.deletePropertyComment(
+                         ontologyNamedGraphIri = internalOntologyIri,
+                         ontologyIri = internalOntologyIri,
+                         propertyIri = internalPropertyIri,
+                         maybeLinkValuePropertyIri = maybeLinkValueOfPropertyToUpdateIri,
+                         lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
+                         currentTime = currentTime
+                       )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -2947,17 +2907,15 @@ final case class OntologyResponderV2Live(
         currentTime: Instant = Instant.now
 
         // Delete the comment
-        updateSparql: String = twirl.queries.sparql.v2.txt
-                                 .deleteClassComment(
-                                   ontologyNamedGraphIri = internalOntologyIri,
-                                   ontologyIri = internalOntologyIri,
-                                   classIri = internalClassIri,
-                                   lastModificationDate = deleteClassCommentRequest.lastModificationDate,
-                                   currentTime = currentTime
-                                 )
-                                 .toString()
-
-        _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+        updateSparql = sparql.v2.txt
+                         .deleteClassComment(
+                           ontologyNamedGraphIri = internalOntologyIri,
+                           ontologyIri = internalOntologyIri,
+                           classIri = internalClassIri,
+                           lastModificationDate = deleteClassCommentRequest.lastModificationDate,
+                           currentTime = currentTime
+                         )
+        _ <- triplestoreService.query(Update(updateSparql))
 
         // Check that the ontology's last modification date was updated.
         _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
