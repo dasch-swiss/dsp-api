@@ -19,8 +19,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.store.triplestore.domain
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -140,21 +138,6 @@ object SparqlExtendedConstructResponse {
       _ => ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)
     )
-}
-
-/**
- * A graph of triples in Turtle format.
- */
-case class NamedGraphDataResponse(turtle: String)
-
-/**
- * Response indicating whether the triplestore has finished initialization and is ready for processing messages
- *
- * @param triplestoreStatus the state of the triplestore.
- */
-case class CheckTriplestoreResponse(triplestoreStatus: domain.TriplestoreStatus)
-object CheckTriplestoreResponse {
-  val Available: CheckTriplestoreResponse = CheckTriplestoreResponse(TriplestoreStatus.Available)
 }
 
 /**
