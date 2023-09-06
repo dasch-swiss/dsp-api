@@ -32,6 +32,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
@@ -83,6 +84,25 @@ final case class KnoraProjectRepoLive(
       status   <- mapper.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(_.value)
       selfjoin <- mapper.getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap).map(_.value)
     } yield KnoraProject(projectIri, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)
+  }
+
+  override def findOntologies(project: KnoraProject): Task[List[InternalIri]] = {
+    val query =
+      s"""
+         |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>  
+         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>  
+         |
+         |SELECT ?ontologyIri  WHERE {
+         |  BIND(<${project.id.value}> AS ?projectIri)
+         |  ?ontologyIri a owl:Ontology .
+         |  ?ontologyIri knora-base:attachedToProject ?projectIri .
+         |  ?projectIri  a knora-admin:knoraProject .
+         |} order by ?projectIri""".stripMargin
+    triplestore
+      .query(Select(query))
+      .map(_.results.bindings.flatMap(_.rowMap.get("ontologyIri")).map(InternalIri).toList)
   }
 }
 

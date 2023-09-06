@@ -15,5 +15,6 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 trait KnoraProjectRepo extends Repository[KnoraProject, InternalIri] {
   def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
-  def findByShortcode(shortcode: Shortcode) = findById(ShortcodeIdentifier(shortcode))
+  def findByShortcode(shortcode: Shortcode): Task[Option[KnoraProject]] = findById(ShortcodeIdentifier(shortcode))
+  def findOntologies(project: KnoraProject): Task[List[InternalIri]]
 }
