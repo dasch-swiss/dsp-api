@@ -10,7 +10,7 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
 import zio.nio.file.Path
 
-opaque type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-]{4,}$"]
+opaque type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-_]{4,}$"]
 object AssetId {
   def make(id: String): Either[String, AssetId] = refineV(id)
 

@@ -9,7 +9,7 @@ import zio.test.*
 
 object AssetIdSpec extends ZIOSpecDefault {
 
-  private val validCharacters = Gen.oneOf(Gen.alphaNumericChar, Gen.const('-'))
+  private val validCharacters = Gen.oneOf(Gen.alphaNumericChar, Gen.const('-'), Gen.const('_'))
 
   val spec = suite("AssetIdSpec")(
     test("AssetId should be created from a valid string") {
