@@ -2125,8 +2125,8 @@ final case class PermissionsResponderADMLive(
 
   private def getProjectOfEntity(entityIri: IRI): Task[IRI] =
     for {
-      response                     <- triplestore.query(Select(sparql.admin.txt.getProjectOfEntity(entityIri)))
-      rows: Seq[VariableResultsRow] = response.results.bindings
+      response <- triplestore.query(Select(sparql.admin.txt.getProjectOfEntity(entityIri)))
+      rows      = response.results.bindings
       projectIri =
         if (rows.isEmpty) {
           throw BadRequestException(

@@ -22,11 +22,7 @@ object LogAspect {
       override def apply[R, E, A](
         zio: ZIO[R, E, A]
       )(implicit trace: Trace): ZIO[R, E, A] =
-        correlationId(req).flatMap(id => ZIO.logAnnotate("correlation-id", id)(zio))
-
-      // TODO: get `X-Correlation-ID` header from the request (when the clients start sending it)
-      def correlationId(req: HttpRequest): UIO[String] =
-        Random.nextUUID.map(_.toString)
+        Random.nextUUID.map(_.toString).flatMap(id => ZIO.logAnnotate("correlation-id", id)(zio))
     }
 
   /**

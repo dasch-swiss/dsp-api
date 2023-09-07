@@ -224,7 +224,6 @@ object GravsearchMainQueryGenerator {
    * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
    * @param targetSchema          the target API schema.
    * @param schemaOptions         the schema options submitted with the request.
-   * @param appConfig             the application's configuration.
    * @return the main [[ConstructQuery]] query to be executed.
    */
   def createMainQuery(

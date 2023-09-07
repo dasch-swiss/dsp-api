@@ -57,8 +57,7 @@ case class TransformedOrderBy(
 )
 
 /**
- * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[ConstructToConstructTransformer]]
- * or [[AbstractPrequeryGenerator]].
+ * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[AbstractPrequeryGenerator]].
  */
 final case class QueryTraverser(
   private val messageRelay: MessageRelay,
