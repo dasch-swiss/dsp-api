@@ -85,7 +85,7 @@ final case class UsersResponderADMLive(
     case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) =>
       getSingleUserADMRequest(identifier, userInformationTypeADM, requestingUser)
     case UserCreateRequestADM(userCreatePayloadADM, requestingUser, apiRequestID) =>
-      createNewUserADM(userCreatePayloadADM, requestingUser, apiRequestID)
+      createNewUserADM(userCreatePayloadADM, apiRequestID)
     case UserChangeBasicInformationRequestADM(
           userIri,
           userUpdateBasicInformationPayload,
@@ -131,7 +131,7 @@ final case class UsersResponderADMLive(
         ) =>
       userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) =>
-      userProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
+      userProjectAdminMembershipsGetRequestADM(userIri, apiRequestID)
     case UserProjectAdminMembershipAddRequestADM(
           userIri,
           projectIri,
@@ -506,8 +506,7 @@ final case class UsersResponderADMLive(
         result <- updateUserPasswordADM(
                     userIri = userIri,
                     password = newHashedPassword,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
       } yield result
@@ -859,7 +858,6 @@ final case class UsersResponderADMLive(
    *
    * @param userIri              the user's IRI.
    * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
    * @return a list of [[ProjectADM]].
    */
   private def userProjectAdminMembershipsGetADM(
@@ -902,13 +900,11 @@ final case class UsersResponderADMLive(
    * is a member of the project admin group.
    *
    * @param userIri              the user's IRI.
-   * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
   private def userProjectAdminMembershipsGetRequestADM(
     userIri: IRI,
-    requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[UserProjectAdminMembershipsGetResponseADM] =
     // ToDo: which user is allowed to do this operation?
@@ -1105,33 +1101,14 @@ final case class UsersResponderADMLive(
    * Returns the user's group memberships as a sequence of [[GroupADM]]
    *
    * @param userIri              the IRI of the user.
-   * @param requestingUser       the requesting user.
    * @return a sequence of [[GroupADM]].
    */
-  private def userGroupMembershipsGetADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[Seq[GroupADM]] =
-    for {
-      maybeUserADM <- getSingleUserADM(
-                        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                        userInformationType = UserInformationTypeADM.Full,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser
-                      )
-
-      groups: Seq[GroupADM] = maybeUserADM match {
-                                case Some(user) =>
-                                  logger.debug(
-                                    "userGroupMembershipsGetADM - user found. Returning his groups: {}.",
-                                    user.groups
-                                  )
-                                  user.groups
-                                case None =>
-                                  logger.debug("userGroupMembershipsGetADM - user not found. Returning empty seq.")
-                                  Seq.empty[GroupADM]
-                              }
-
-    } yield groups
+  private def userGroupMembershipsGetADM(userIri: IRI) =
+    getSingleUserADM(
+      UserIdentifierADM(maybeIri = Some(userIri)),
+      UserInformationTypeADM.Full,
+      KnoraSystemInstances.Users.SystemUser
+    ).map(_.map(_.groups).getOrElse(Seq.empty))
 
   /**
    * Returns the user's group memberships as a [[UserGroupMembershipsGetResponseADM]]
@@ -1146,10 +1123,7 @@ final case class UsersResponderADMLive(
     requestingUser: UserADM
   ): Task[UserGroupMembershipsGetResponseADM] =
     for {
-      groups <- userGroupMembershipsGetADM(
-                  userIri = userIri,
-                  requestingUser = requestingUser
-                )
+      groups <- userGroupMembershipsGetADM(userIri = userIri)
     } yield UserGroupMembershipsGetResponseADM(groups = groups)
 
   /**
@@ -1539,17 +1513,11 @@ final case class UsersResponderADMLive(
    * @param userIri              the IRI of the existing user that we want to update.
    * @param password             the new password.
    * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    * @throws BadRequestException         if necessary parameters are not supplied.
    * @throws UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserPasswordADM(
-    userIri: IRI,
-    password: Password,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  private def updateUserPasswordADM(userIri: IRI, password: Password, requestingUser: UserADM) = {
 
     // check if it is a request for a built-in user
     if (
@@ -1607,13 +1575,11 @@ final case class UsersResponderADMLive(
    *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
    *
    * @param userCreatePayloadADM    a [[UserCreatePayloadADM]] object containing information about the new user to be created.
-   * @param requestingUser          a [[UserADM]] object containing information about the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
   private def createNewUserADM(
     userCreatePayloadADM: UserCreatePayloadADM,
-    requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
