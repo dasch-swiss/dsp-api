@@ -1604,11 +1604,6 @@ abstract class AbstractPrequeryGenerator(
       case _ => throw GravsearchException(s"${textValueVar.toSparql} must be an xsd:string")
     }
 
-    val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
-      base = textValueVar,
-      propertyIri = OntologyConstants.KnoraBase.ValueHasString
-    )
-
     val searchTerm: XsdLiteral =
       functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
@@ -1665,11 +1660,6 @@ abstract class AbstractPrequeryGenerator(
 
       case _ => throw GravsearchException(s"${textValueVar.toSparql} must be a knora-api:TextValue")
     }
-
-    val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
-      base = textValueVar,
-      propertyIri = OntologyConstants.KnoraBase.ValueHasString
-    )
 
     val searchTerm: XsdLiteral =
       functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
