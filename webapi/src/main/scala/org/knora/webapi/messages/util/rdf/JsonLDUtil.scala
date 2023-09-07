@@ -1041,10 +1041,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     ZIO.serviceWithZIO[IriConverter] { c =>
       val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDKeywords.ID - JsonLDKeywords.TYPE
       resourceProps match {
-        case emptyMap if resourceProps.isEmpty =>
-          ZIO.fail("No value submitted")
-        case tooMany if resourceProps.size > 1 =>
-          ZIO.fail(s"Only one value can be submitted per request using this route")
+        case _ if resourceProps.isEmpty  => ZIO.fail("No value submitted")
+        case _ if resourceProps.size > 1 => ZIO.fail(s"Only one value can be submitted per request using this route")
         case singleProp =>
           singleProp.head match {
             case (key: IRI, jsonLDValue: JsonLDValue) =>
@@ -1147,7 +1145,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
    *
    * @return a map of language keys to values.
    */
-  def toObjsWithLang()(implicit stringFormatter: StringFormatter): Seq[StringLiteralV2] =
+  def toObjsWithLang(): Seq[StringLiteralV2] =
     value.map {
       case obj: JsonLDObject =>
         val validationFun: (String, => Nothing) => String =

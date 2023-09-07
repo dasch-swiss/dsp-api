@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -64,15 +63,13 @@ object FullTextMainQueryGenerator {
    * @param valueObjectIris the IRIs of the value objects to be queried.
    * @param targetSchema    the target API schema.
    * @param schemaOptions   the schema options submitted with the request.
-   * @param appConfig       the application's configuration.
    * @return a [[ConstructQuery]].
    */
   def createMainQuery(
     resourceIris: Set[IRI],
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption],
-    appConfig: AppConfig
+    schemaOptions: Set[SchemaOption]
   ): ConstructQuery = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

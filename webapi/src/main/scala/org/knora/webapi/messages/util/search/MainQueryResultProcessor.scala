@@ -17,7 +17,6 @@ import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueR
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 
 object MainQueryResultProcessor {
 
@@ -30,7 +29,6 @@ object MainQueryResultProcessor {
    * @param allResourceVariablesFromTypeInspection  all variables representing resources.
    * @param dependentResourceIrisFromTypeInspection Iris of dependent resources used in the input query.
    * @param transformer                             the transformer that was used to turn the input query into the prequery.
-   * @param typeInspectionResult                    results of type inspection of the input query.
    * @return results with only the values the user asked for in the input query's CONSTRUCT clause.
    */
   // TODO apparently not needed, work is taken care in ConstructResponseUtilV2.nestResources
@@ -39,9 +37,7 @@ object MainQueryResultProcessor {
     valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
     allResourceVariablesFromTypeInspection: Set[QueryVariable],
     dependentResourceIrisFromTypeInspection: Set[IRI],
-    transformer: GravsearchToPrequeryTransformer,
-    typeInspectionResult: GravsearchTypeInspectionResult,
-    inputQuery: ConstructQuery
+    transformer: GravsearchToPrequeryTransformer
   ): RdfResources = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

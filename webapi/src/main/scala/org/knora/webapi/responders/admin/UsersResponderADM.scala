@@ -77,7 +77,7 @@ final case class UsersResponderADMLive(
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case UsersGetADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADM(userInformationTypeADM, requestingUser)
+      getAllUserADM(requestingUser)
     case UsersGetRequestADM(userInformationTypeADM, requestingUser) =>
       getAllUserADMRequest(userInformationTypeADM, requestingUser)
     case UserGetADM(identifier, userInformationTypeADM, requestingUser) =>
@@ -163,15 +163,10 @@ final case class UsersResponderADMLive(
   /**
    * Gets all the users and returns them as a sequence of [[UserADM]].
    *
-   * @param userInformationType  the extent of the information returned.
-   *
    * @param requestingUser       the user initiating the request.
    * @return all the users as a sequence of [[UserADM]].
    */
-  private def getAllUserADM(
-    userInformationType: UserInformationTypeADM,
-    requestingUser: UserADM
-  ): Task[Seq[UserADM]] =
+  private def getAllUserADM(requestingUser: UserADM) =
     for {
       _ <- ZIO.attempt(
              if (
@@ -268,10 +263,7 @@ final case class UsersResponderADMLive(
     requestingUser: UserADM
   ): Task[UsersGetResponseADM] =
     for {
-      maybeUsersListToReturn <- getAllUserADM(
-                                  userInformationType = userInformationType,
-                                  requestingUser = requestingUser
-                                )
+      maybeUsersListToReturn <- getAllUserADM(requestingUser = requestingUser)
 
       result = maybeUsersListToReturn match {
                  case users: Seq[UserADM] if users.nonEmpty =>

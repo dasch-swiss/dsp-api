@@ -345,9 +345,8 @@ final case class ResourcesResponderV2Live(
                                              .toOntologySchema(InternalSchema)
 
       _ <- ZIO.when(
-             !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
-               ResourceCreateOperation(internalResourceClassIri.toString),
-               projectIri)
+             !createResourceRequestV2.requestingUser.permissions
+               .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri)
            ) {
              val msg =
                s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"

@@ -822,9 +822,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(
-        ResourceCreateOperation(resourceClassIri),
-        projectIri)
+      val result =
+        SharedTestDataADM.rootUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
       result should be(true)
     }
@@ -855,9 +854,8 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val projectIri       = incunabulaProjectIri
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(
-        ResourceCreateOperation(resourceClassIri),
-        projectIri)
+      val result =
+        SharedTestDataADM.normalUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
       result should be(false)
     }
