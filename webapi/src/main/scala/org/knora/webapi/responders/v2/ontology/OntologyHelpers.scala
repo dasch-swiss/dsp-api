@@ -539,7 +539,7 @@ object OntologyHelpers {
    * @param entityDefMap a map of predicate IRIs to predicate objects.
    * @return a map of smart IRIs to [[PredicateInfoV2]] objects.
    */
-  def getEntityPredicatesFromConstructResponse(
+  private def getEntityPredicatesFromConstructResponse(
     entityDefMap: Map[SmartIri, Seq[LiteralV2]]
   )(implicit stringFormatter: StringFormatter): Map[SmartIri, PredicateInfoV2] =
     entityDefMap.map { case (predicateIri: SmartIri, predObjs: Seq[LiteralV2]) =>
@@ -937,7 +937,7 @@ object OntologyHelpers {
    * @param directCardinalities the cardinalities directly defined on the class.
    * @param allPropertyDefs     all property definitions.
    */
-  def checkForInvalidBooleanCardinalities(
+  private def checkForInvalidBooleanCardinalities(
     classIri: SmartIri,
     directCardinalities: Map[SmartIri, KnoraCardinalityInfo],
     allPropertyDefs: Map[SmartIri, PropertyInfoContentV2],
@@ -976,7 +976,7 @@ object OntologyHelpers {
    * @param subPropertyOfRelations all the subproperty relations in the triplestore.
    * @return a property and its subproperty, if found.
    */
-  def findPropertyAndSubproperty(
+  private def findPropertyAndSubproperty(
     propertyIris: Set[SmartIri],
     subPropertyOfRelations: Map[SmartIri, Set[SmartIri]]
   ): Option[(SmartIri, SmartIri)] =
@@ -1002,7 +1002,7 @@ object OntologyHelpers {
    * @param errorSchema                          the ontology schema to be used in error messages.
    * @param errorFun                             a function that throws an exception. It will be called with an error message argument if the cardinalities are invalid.
    */
-  def checkSubjectClassConstraintsViaCardinalities(
+  private def checkSubjectClassConstraintsViaCardinalities(
     internalClassDef: ClassInfoContentV2,
     allBaseClassIris: Set[SmartIri],
     allClassCardinalityKnoraPropertyDefs: Map[SmartIri, PropertyInfoContentV2],
@@ -1551,7 +1551,7 @@ object OntologyHelpers {
    * @param constructResponse the SPARQL CONSTRUCT response.
    * @return an [[IndividualInfoContentV2]] representing the named individual.
    */
-  def constructResponseToIndividual(
+  private def constructResponseToIndividual(
     individualIri: SmartIri,
     constructResponse: SparqlExtendedConstructResponse
   )(implicit stringFormatter: StringFormatter): IndividualInfoContentV2 = {
