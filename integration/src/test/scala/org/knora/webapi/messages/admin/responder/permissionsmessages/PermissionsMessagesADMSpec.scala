@@ -824,9 +824,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
       val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(
         ResourceCreateOperation(resourceClassIri),
-        projectIri,
-        None
-      )
+        projectIri)
 
       result should be(true)
     }
@@ -837,7 +835,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.incunabulaProjectAdminUser.permissions
-        .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
+        .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
       result should be(true)
     }
@@ -848,7 +846,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.incunabulaMemberUser.permissions
-        .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
+        .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri)
 
       result should be(true)
     }
@@ -859,9 +857,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
 
       val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(
         ResourceCreateOperation(resourceClassIri),
-        projectIri,
-        None
-      )
+        projectIri)
 
       result should be(false)
     }
@@ -872,11 +868,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
 
       val result1 = SharedTestDataADM.imagesReviewerUser.permissions
-        .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)
+        .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri)
       result1 should be(true)
 
       val result2 = SharedTestDataADM.imagesReviewerUser.permissions
-        .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri, None)
+        .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri)
       result2 should be(true)
     }
 
@@ -885,7 +881,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
       val result = SharedTestDataADM.imagesReviewerUser.permissions
-        .hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri, None)
+        .hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri)
       result should be(false)
     }
   }

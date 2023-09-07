@@ -897,11 +897,7 @@ case class PermissionsDataADM(
    * @param insideProject the IRI of the project inside which the operation will be performed.
    * @return a boolean value.
    */
-  def hasPermissionFor(
-    operation: OperationADM,
-    insideProject: IRI,
-    objectAccessPermissions: Option[Set[PermissionADM]]
-  ): Boolean =
+  def hasPermissionFor(operation: OperationADM, insideProject: IRI): Boolean =
     // println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
     if (this.isSystemAdmin) {
       /* A member of the SystemAdmin group is allowed to perform any operation */

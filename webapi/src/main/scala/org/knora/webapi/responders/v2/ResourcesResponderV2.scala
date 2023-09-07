@@ -347,9 +347,7 @@ final case class ResourcesResponderV2Live(
       _ <- ZIO.when(
              !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
                ResourceCreateOperation(internalResourceClassIri.toString),
-               projectIri,
-               None
-             )
+               projectIri)
            ) {
              val msg =
                s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
