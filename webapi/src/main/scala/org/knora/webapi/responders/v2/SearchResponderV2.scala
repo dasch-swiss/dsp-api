@@ -86,13 +86,7 @@ final case class SearchResponderV2Live(
           limitToStandoffClass,
           requestingUser
         ) =>
-      fulltextSearchCountV2(
-        searchValue,
-        limitToProject,
-        limitToResourceClass,
-        limitToStandoffClass,
-        requestingUser
-      )
+      fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass)
 
     case FulltextSearchRequestV2(
           searchValue,
@@ -173,16 +167,14 @@ final case class SearchResponderV2Live(
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    *
-   * @param requestingUser       the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   private def fulltextSearchCountV2(
-    searchValue: String,
+    searchValue: IRI,
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
-    limitToStandoffClass: Option[SmartIri],
-    requestingUser: UserADM
-  ): Task[ResourceCountV2] =
+    limitToStandoffClass: Option[SmartIri]
+  ) =
     for {
       countSparql <- ZIO.attempt(
                        sparql.v2.txt
