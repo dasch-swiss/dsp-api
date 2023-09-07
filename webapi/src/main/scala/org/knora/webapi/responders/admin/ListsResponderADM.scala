@@ -71,10 +71,10 @@ final case class ListsResponderADMLive(
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ListsGetRequestADM(projectIri, _)                  => listsGetRequestADM(projectIri)
-    case ListGetRequestADM(listIri, requestingUser)         => listGetRequestADM(listIri, requestingUser)
-    case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri)
-    case NodePathGetRequestADM(iri, requestingUser)         => nodePathGetAdminRequest(iri, requestingUser)
+    case ListsGetRequestADM(projectIri, _)          => listsGetRequestADM(projectIri)
+    case ListGetRequestADM(listIri, _)              => listGetRequestADM(listIri)
+    case ListNodeInfoGetRequestADM(listIri, _)      => listNodeInfoGetRequestADM(listIri)
+    case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
     case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
@@ -211,13 +211,9 @@ final case class ListsResponderADMLive(
    * If an IRI of a child node is given, the response is a node with its information and all children of the sublist.
    *
    * @param nodeIri        the Iri if the required node.
-   * @param requestingUser the user making the request.
    * @return a [[ListItemGetResponseADM]].
    */
-  private def listGetRequestADM(
-    nodeIri: IRI,
-    requestingUser: UserADM
-  ): Task[ListItemGetResponseADM] = {
+  private def listGetRequestADM(nodeIri: IRI) = {
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
@@ -391,7 +387,6 @@ final case class ListsResponderADMLive(
    * root node or child node
    *
    * @param nodeIri              the IRI of the list node to be queried.
-   * @param requestingUser       the user making the request.
    * @return a [[ChildNodeInfoGetResponseADM]].
    */
   private def listNodeInfoGetRequestADM(nodeIri: IRI) =
@@ -1289,7 +1284,7 @@ final case class ListsResponderADMLive(
      *
      * @param newPosition the new position of the node.
      * @return the updated parent node with all its children as [[ListNodeADM]]
-     * @throws UpdateNotPerformedException if some thing has gone wrong during the update.
+     *         fails with a [[UpdateNotPerformedException]] if some thing has gone wrong during the update.
      */
     def verifyParentChildrenUpdate(newPosition: Int): Task[ListNodeADM] =
       for {
@@ -1330,7 +1325,7 @@ final case class ListsResponderADMLive(
      * @param givenPosition  the new node position.
      * @param dataNamedGraph the new node position.
      * @return the new position of the node [[Int]]
-     * @throws UpdateNotPerformedException in the case the given new position is the same as current position.
+     *         fails with a [[UpdateNotPerformedException]] in the case the given new position is the same as current position.
      */
     def updatePositionWithinSameParent(
       node: ListChildNodeADM,
@@ -1856,21 +1851,13 @@ final case class ListsResponderADMLive(
                throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found.")
              )
 
-      isRootNode = maybeNode match {
-                     case Some(_: ListRootNodeADM)  => true
-                     case Some(_: ListChildNodeADM) => false
-                     case _                         => false
-                   }
-
-      hasOldName: Boolean = node.getName.nonEmpty
-
       // Update the list
       changeNodeInfoSparqlString: String = sparql.admin.txt
                                              .updateListInfo(
                                                dataNamedGraph = dataNamedGraph,
                                                nodeIri = changeNodeInfoRequest.listIri.value,
-                                               hasOldName = hasOldName,
-                                               isRootNode = isRootNode,
+                                               hasOldName = node.getName.nonEmpty,
+                                               isRootNode = maybeNode.exists(_.isInstanceOf[ListRootNodeADM]),
                                                maybeName = changeNodeInfoRequest.name.map(_.value),
                                                projectIri = changeNodeInfoRequest.projectIri.value,
                                                listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -1930,24 +1917,11 @@ final case class ListsResponderADMLive(
    */
   private def getDataNamedGraph(projectIri: IRI): Task[IRI] =
     for {
-      /* Get the project information */
-      maybeProject <-
-        messageRelay.ask[Option[ProjectADM]](
-          ProjectGetADM(
-            IriIdentifier
-              .fromString(projectIri)
-              .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-          )
-        )
-
-      project: ProjectADM = maybeProject match {
-                              case Some(project: ProjectADM) => project
-                              case None                      => throw BadRequestException(s"Project '$projectIri' not found.")
-                            }
-
-      // Get the IRI of the named graph from which the resource will be erased.
-      dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(project).value
-    } yield dataNamedGraph
+      projectId <- IriIdentifier.fromString(projectIri).toZIO.mapError(e => BadRequestException(e.getMessage))
+      project <- messageRelay
+                   .ask[Option[ProjectADM]](ProjectGetADM(projectId))
+                   .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
+    } yield ProjectADMService.projectDataNamedGraphV2(project).value
 
   /**
    * Helper method to get parent of a node.
