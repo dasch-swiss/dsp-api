@@ -9,7 +9,6 @@ import zio.Task
 import zio.ZIO
 
 import scala.collection.mutable
-
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -17,7 +16,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.{CompareExpressionOperator, _}
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
@@ -125,7 +124,7 @@ abstract class AbstractPrequeryGenerator(
    *
    * @param statementPattern           the statement to be transformed.
    * @param inputOrderBy               the ORDER BY clause in the input query.
-   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
+   * @param limitInferenceToOntologies ignored parameter in this implementation.
    * @return the result of the transformation.
    */
   override def transformStatementInWhere(
@@ -135,11 +134,7 @@ abstract class AbstractPrequeryGenerator(
   ): Task[Seq[QueryPattern]] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
-    processStatementPatternFromWhereClause(
-      statementPattern = statementPattern,
-      inputOrderBy = inputOrderBy,
-      limitInferenceToOntologies = limitInferenceToOntologies
-    )
+    processStatementPatternFromWhereClause(statementPattern = statementPattern, inputOrderBy = inputOrderBy)
 
   /**
    * Runs optimisations that take a Gravsearch query as input. An optimisation needs to be run here if
@@ -255,7 +250,7 @@ abstract class AbstractPrequeryGenerator(
 
         generatedVarsForOrderBy.headOption
 
-      case None => if (literalVariables.contains(valueVar)) Some(valueVar) else None
+      case None => Some(valueVar).filter(literalVariables.contains)
     }
 
   // Generated statements for date literals, so we don't generate the same statements twice.
@@ -686,10 +681,9 @@ abstract class AbstractPrequeryGenerator(
       case _ => ()
     }
 
-  protected def processStatementPatternFromWhereClause(
+  private def processStatementPatternFromWhereClause(
     statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    inputOrderBy: Seq[OrderCriterion]
   ): Task[Seq[QueryPattern]] = ZIO.attempt(
     // Does this statement set a Gravsearch option?
     statementPattern.subj match {
@@ -857,7 +851,7 @@ abstract class AbstractPrequeryGenerator(
    *                           only if it is the top-level expression in the FILTER.
    * @param additionalPatterns additionally created query patterns.
    */
-  protected case class TransformedFilterPattern(
+  private case class TransformedFilterPattern(
     expression: Option[Expression],
     additionalPatterns: Seq[QueryPattern] = Seq.empty[QueryPattern]
   )
@@ -868,15 +862,13 @@ abstract class AbstractPrequeryGenerator(
    * @param queryVar           the query variable to be handled.
    * @param comparisonOperator the comparison operator used in the filter pattern.
    * @param iriRef             the IRI the property query variable is restricted to.
-   * @param propInfo           information about the query variable's type.
    * @return a [[TransformedFilterPattern]].
    */
   private def handlePropertyIriQueryVar(
     queryVar: QueryVariable,
     comparisonOperator: CompareExpressionOperator.Value,
-    iriRef: IriRef,
-    propInfo: PropertyTypeInfo
-  ): TransformedFilterPattern = {
+    iriRef: IriRef
+  ) = {
     if (!iriRef.iri.isApiV2Schema(querySchema))
       throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}")
 
@@ -1269,15 +1261,14 @@ abstract class AbstractPrequeryGenerator(
       case Some(typeInfo) =>
         // Does queryVar represent a property?
         typeInfo match {
-          case propInfo: PropertyTypeInfo =>
+          case _: PropertyTypeInfo =>
             // Yes. The right argument must be an IRI restricting the property variable to a certain property.
             compareExpression.rightArg match {
               case iriRef: IriRef =>
                 handlePropertyIriQueryVar(
                   queryVar = queryVar,
                   comparisonOperator = compareExpression.operator,
-                  iriRef = iriRef,
-                  propInfo = propInfo
+                  iriRef = iriRef
                 )
 
               case other =>
@@ -1618,24 +1609,8 @@ abstract class AbstractPrequeryGenerator(
       propertyIri = OntologyConstants.KnoraBase.ValueHasString
     )
 
-    // Generate an optional statement to assign the literal to a variable, which we can pass to LuceneQueryPattern,
-    // if that statement hasn't been added already.
-    val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
-      Some(
-        StatementPattern(
-          subj = textValueVar,
-          pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
-          textValHasString
-        )
-      )
-    } else {
-      None
-    }
-
     val searchTerm: XsdLiteral =
       functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-
-    val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
@@ -1696,24 +1671,8 @@ abstract class AbstractPrequeryGenerator(
       propertyIri = OntologyConstants.KnoraBase.ValueHasString
     )
 
-    // Generate an optional statement to assign the literal to a variable, which we can pass to LuceneQueryPattern,
-    // if that statement hasn't been added already.
-    val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
-      Some(
-        StatementPattern(
-          subj = textValueVar,
-          pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
-          textValHasString
-        )
-      )
-    } else {
-      None
-    }
-
     val searchTerm: XsdLiteral =
       functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-
-    val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
     // Replace the filter with a Lucene statement.
     TransformedFilterPattern(
@@ -1953,22 +1912,8 @@ abstract class AbstractPrequeryGenerator(
     // Add an optional statement to assign the literal to a variable, which we can pass to LuceneQueryPattern,
     // if that statement hasn't been added already.
 
-    val rdfsLabelVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
-      base = resourceVar,
-      propertyIri = OntologyConstants.Rdfs.Label
-    )
-
-    val rdfsLabelStatement = if (addGeneratedVariableForValueLiteral(resourceVar, rdfsLabelVar)) {
-      Some(
-        StatementPattern(subj = resourceVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), rdfsLabelVar)
-      )
-    } else {
-      None
-    }
-
     val searchTerm: XsdLiteral =
       functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-    val luceneQueryString: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
     // Replace the filter with a Lucene search statement.
     TransformedFilterPattern(
@@ -2182,7 +2127,7 @@ abstract class AbstractPrequeryGenerator(
    * @param isTopLevel `true` if this is the top-level expression in the filter.
    * @return a [[TransformedFilterPattern]].
    */
-  protected def transformFilterPattern(
+  private def transformFilterPattern(
     filterExpression: Expression,
     typeInspectionResult: GravsearchTypeInspectionResult,
     isTopLevel: Boolean

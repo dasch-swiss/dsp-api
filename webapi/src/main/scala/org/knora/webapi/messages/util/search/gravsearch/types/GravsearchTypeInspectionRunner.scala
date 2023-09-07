@@ -34,7 +34,7 @@ final case class GravsearchTypeInspectionRunner(
     initial: IntermediateTypeInspectionResult,
     requestingUser: UserADM
   ) = for {
-    annotatedTypes <- annotationReadingInspector.inspectTypes(initial, whereClause, requestingUser)
+    annotatedTypes <- annotationReadingInspector.inspectTypes(initial, whereClause)
     inferredTypes  <- inferringInspector.inspectTypes(annotatedTypes, whereClause, requestingUser)
   } yield inferredTypes
 

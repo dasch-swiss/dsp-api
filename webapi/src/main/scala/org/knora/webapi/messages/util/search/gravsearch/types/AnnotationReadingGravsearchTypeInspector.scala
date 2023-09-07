@@ -52,13 +52,11 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
    *
    * @param previousResult the result of previous type inspection.
    * @param whereClause    the Gravsearch WHERE clause.
-   * @param requestingUser the requesting user.
    * @return the result returned by the pipeline.
    */
   def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
-    whereClause: WhereClause,
-    requestingUser: UserADM
+    whereClause: WhereClause
   ): Task[IntermediateTypeInspectionResult] =
     for {
       // Get all the type annotations.
