@@ -88,7 +88,7 @@ final case class OntologyResponderV2Live(
       getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
     case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, _) =>
       getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris)
-    case StandoffClassesWithDataTypeGetRequestV2(requestingUser) =>
+    case StandoffClassesWithDataTypeGetRequestV2(_) =>
       getStandoffStandoffClassesWithDataTypeV2
     case StandoffAllPropertyEntitiesGetRequestV2(requestingUser) => getAllStandoffPropertyEntitiesV2(requestingUser)
     case CheckSubClassRequestV2(subClassIri, superClassIri, _) =>
