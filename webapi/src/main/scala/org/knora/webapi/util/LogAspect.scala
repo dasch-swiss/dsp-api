@@ -5,7 +5,6 @@
 
 package org.knora.webapi.util
 
-import akka.http.scaladsl.model.HttpRequest
 import zio._
 
 object LogAspect {

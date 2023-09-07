@@ -6,7 +6,6 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import zio._
 
 import dsp.errors._
