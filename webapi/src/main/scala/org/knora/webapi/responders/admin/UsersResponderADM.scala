@@ -11,8 +11,6 @@ import zio._
 
 import java.util.UUID
 
-import dsp.errors.BadRequestException
-import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.User._
@@ -32,7 +30,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserChangeRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
@@ -76,15 +73,15 @@ final case class UsersResponderADMLive(
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case UsersGetADM(userInformationTypeADM, requestingUser) =>
+    case UsersGetADM(_, requestingUser) =>
       getAllUserADM(requestingUser)
-    case UsersGetRequestADM(userInformationTypeADM, requestingUser) =>
+    case UsersGetRequestADM(_, requestingUser) =>
       getAllUserADMRequest(requestingUser)
     case UserGetADM(identifier, userInformationTypeADM, requestingUser) =>
       getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
     case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) =>
       getSingleUserADMRequest(identifier, userInformationTypeADM, requestingUser)
-    case UserCreateRequestADM(userCreatePayloadADM, requestingUser, apiRequestID) =>
+    case UserCreateRequestADM(userCreatePayloadADM, _, apiRequestID) =>
       createNewUserADM(userCreatePayloadADM, apiRequestID)
     case UserChangeBasicInformationRequestADM(
           userIri,
@@ -130,8 +127,8 @@ final case class UsersResponderADMLive(
           apiRequestID
         ) =>
       userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) =>
-      userProjectAdminMembershipsGetRequestADM(userIri, apiRequestID)
+    case UserProjectAdminMembershipsGetRequestADM(userIri, _, _) =>
+      userProjectAdminMembershipsGetRequestADM(userIri)
     case UserProjectAdminMembershipAddRequestADM(
           userIri,
           projectIri,
@@ -368,8 +365,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if the necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   *               with a [[BadRequestException]] if the necessary parameters are not supplied.
+   *               with a [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
   private def changeBasicUserInformationADM(
     userIri: IRI,
@@ -386,8 +383,7 @@ final case class UsersResponderADMLive(
     def changeBasicUserDataTask(
       userIri: IRI,
       userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -434,15 +430,14 @@ final case class UsersResponderADMLive(
                       familyName = userUpdateBasicInformationPayload.familyName,
                       lang = userUpdateBasicInformationPayload.lang
                     ),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       USERS_GLOBAL_LOCK_IRI,
-      changeBasicUserDataTask(userIri, userUpdateBasicInformationPayload, requestingUser, apiRequestID)
+      changeBasicUserDataTask(userIri, userUpdateBasicInformationPayload, requestingUser)
     )
   }
 
@@ -455,10 +450,10 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
-   * @throws ForbiddenException  if the supplied old password doesn't match with the user's current password.
-   * @throws NotFoundException   if the user is not found.
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
+   *         fails with a [[ForbiddenException]] if the supplied old password doesn't match with the user's current password.
+   *         fails with a [[NotFoundException]] if the user is not found.
    */
   private def changePasswordADM(
     userIri: IRI,
@@ -473,8 +468,7 @@ final case class UsersResponderADMLive(
     def changePasswordTask(
       userIri: IRI,
       userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -509,7 +503,7 @@ final case class UsersResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      changePasswordTask(userIri, userUpdatePasswordPayload, requestingUser, apiRequestID)
+      changePasswordTask(userIri, userUpdatePasswordPayload, requestingUser)
     )
   }
 
@@ -522,8 +516,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
    */
   private def changeUserStatusADM(
     userIri: IRI,
@@ -540,8 +534,7 @@ final case class UsersResponderADMLive(
     def changeUserStatusTask(
       userIri: IRI,
       status: UserStatus,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -556,8 +549,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(status = Some(status)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
       } yield result
@@ -565,7 +557,7 @@ final case class UsersResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      changeUserStatusTask(userIri, status, requestingUser, apiRequestID)
+      changeUserStatusTask(userIri, status, requestingUser)
     )
   }
 
@@ -578,8 +570,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the user profile of the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
    */
   private def changeUserSystemAdminMembershipStatusADM(
     userIri: IRI,
@@ -594,8 +586,7 @@ final case class UsersResponderADMLive(
     def changeUserSystemAdminMembershipStatusTask(
       userIri: IRI,
       systemAdmin: SystemAdmin,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. system admin)
@@ -610,8 +601,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
       } yield result
@@ -619,7 +609,7 @@ final case class UsersResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      changeUserSystemAdminMembershipStatusTask(userIri, systemAdmin, requestingUser, apiRequestID)
+      changeUserSystemAdminMembershipStatusTask(userIri, systemAdmin, requestingUser)
     )
   }
 
@@ -640,7 +630,6 @@ final case class UsersResponderADMLive(
    * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
    *
    * @param userIri        the user's IRI.
-   * @param requestingUser the requesting user.
    * @return a [[UserProjectMembershipsGetResponseADM]].
    */
   private def userProjectMembershipsGetRequestADM(
@@ -680,8 +669,7 @@ final case class UsersResponderADMLive(
     def userProjectMembershipAddRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
@@ -724,15 +712,14 @@ final case class UsersResponderADMLive(
         updateUserResult <- updateUserADM(
                               userIri = userIri,
                               userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
-                              requestingUser = requestingUser,
-                              apiRequestID = apiRequestID
+                              requestingUser = requestingUser
                             )
       } yield updateUserResult
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser)
     )
 
   }
@@ -759,8 +746,7 @@ final case class UsersResponderADMLive(
     def userProjectMembershipRemoveRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
@@ -815,15 +801,14 @@ final case class UsersResponderADMLive(
                       projects = Some(updatedProjectMembershipIris),
                       projectsAdmin = maybeUpdatedProjectAdminMembershipIris
                     ),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser)
     )
   }
 
@@ -869,24 +854,15 @@ final case class UsersResponderADMLive(
    * is a member of the project admin group.
    *
    * @param userIri              the user's IRI.
-   * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
-  private def userProjectAdminMembershipsGetRequestADM(
-    userIri: IRI,
-    apiRequestID: UUID
-  ): Task[UserProjectAdminMembershipsGetResponseADM] =
+  private def userProjectAdminMembershipsGetRequestADM(userIri: IRI) =
     // ToDo: which user is allowed to do this operation?
     // ToDo: check permissions
     for {
-      userExists <- userExists(userIri)
-      _ = if (!userExists) {
-            throw BadRequestException(s"User $userIri does not exist.")
-          }
-
-      projects <-
-        userProjectAdminMembershipsGetADM(userIri = userIri)
-    } yield UserProjectAdminMembershipsGetResponseADM(projects = projects)
+      _        <- ZIO.whenZIO(userExists(userIri).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
+      projects <- userProjectAdminMembershipsGetADM(userIri)
+    } yield UserProjectAdminMembershipsGetResponseADM(projects)
 
   /**
    * Adds a user to the project admin group of a project.
@@ -910,8 +886,7 @@ final case class UsersResponderADMLive(
     def userProjectAdminMembershipAddRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. project admin or system admin)
@@ -965,15 +940,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectAdminMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectAdminMembershipAddRequestTask(userIri, projectIri, requestingUser)
     )
 
   }
@@ -1000,8 +974,7 @@ final case class UsersResponderADMLive(
     def userProjectAdminMembershipRemoveRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -1042,15 +1015,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, requestingUser)
     )
   }
 
@@ -1105,8 +1077,7 @@ final case class UsersResponderADMLive(
     def userGroupMembershipAddRequestTask(
       userIri: IRI,
       groupIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
@@ -1158,15 +1129,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser, apiRequestID)
+      userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser)
     )
   }
 
@@ -1192,8 +1162,7 @@ final case class UsersResponderADMLive(
     def userGroupMembershipRemoveRequestTask(
       userIri: IRI,
       groupIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
@@ -1241,15 +1210,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
-                    requestingUser = requestingUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = requestingUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userGroupMembershipRemoveRequestTask(userIri, groupIri, requestingUser, apiRequestID)
+      userGroupMembershipRemoveRequestTask(userIri, groupIri, requestingUser)
     )
   }
 
@@ -1259,17 +1227,11 @@ final case class UsersResponderADMLive(
    * @param userIri              the IRI of the existing user that we want to update.
    * @param userUpdatePayload    the updated information.
    * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
-   * @throws BadRequestException         if necessary parameters are not supplied.
-   * @throws UpdateNotPerformedException if the update was not performed.
+   *         fails with a BadRequestException         if necessary parameters are not supplied.
+   *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(
-    userIri: IRI,
-    userUpdatePayload: UserChangeRequestADM,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  private def updateUserADM(userIri: IRI, userUpdatePayload: UserChangeRequestADM, requestingUser: UserADM) = {
 
     logger.debug("updateUserADM - userUpdatePayload: {}", userUpdatePayload)
 
@@ -1468,8 +1430,8 @@ final case class UsersResponderADMLive(
    * @param password             the new password.
    * @param requestingUser       the requesting user.
    * @return a [[UserOperationResponseADM]].
-   * @throws BadRequestException         if necessary parameters are not supplied.
-   * @throws UpdateNotPerformedException if the update was not performed.
+   *         fails with a [[BadRequestException]]         if necessary parameters are not supplied.
+   *         fails with a [[UpdateNotPerformedException]] if the update was not performed.
    */
   private def updateUserPasswordADM(userIri: IRI, password: Password, requestingUser: UserADM) = {
 
