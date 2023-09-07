@@ -115,8 +115,7 @@ final case class UsersResponderADMLive(
         requestingUser,
         apiRequestID
       )
-    case UserProjectMembershipsGetRequestADM(userIri, requestingUser) =>
-      userProjectMembershipsGetRequestADM(userIri, requestingUser)
+    case UserProjectMembershipsGetRequestADM(userIri, _) => userProjectMembershipsGetRequestADM(userIri)
     case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserProjectMembershipRemoveRequestADM(
@@ -147,8 +146,8 @@ final case class UsersResponderADMLive(
         requestingUser,
         apiRequestID
       )
-    case UserGroupMembershipsGetRequestADM(userIri, requestingUser) =>
-      userGroupMembershipsGetRequestADM(userIri, requestingUser)
+    case UserGroupMembershipsGetRequestADM(userIri, _) =>
+      userGroupMembershipsGetADM(userIri).map(UserGroupMembershipsGetResponseADM)
     case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
@@ -631,17 +630,10 @@ final case class UsersResponderADMLive(
    * @param userIri        the user's IRI.
    * @return a [[UserProjectMembershipsGetResponseADM]].
    */
-  private def userProjectMembershipsGetRequestADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[UserProjectMembershipsGetResponseADM] =
+  private def userProjectMembershipsGetRequestADM(userIri: IRI) =
     for {
-      userExists <- userExists(userIri)
-      _ = if (!userExists) {
-            throw BadRequestException(s"User $userIri does not exist.")
-          }
-
-      projects <- userProjectMembershipsGetADM(userIri = userIri)
+      _        <- ZIO.whenZIO(userExists(userIri).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
+      projects <- userProjectMembershipsGetADM(userIri)
     } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
@@ -690,10 +682,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetRequestADM(
-                                       userIri = userIri,
-                                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                                     )
+        currentProjectMemberships <- userProjectMembershipsGetRequestADM(userIri = userIri)
 
         currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects.map(_.id)
 
@@ -1039,22 +1028,6 @@ final case class UsersResponderADMLive(
     ).map(_.map(_.groups).getOrElse(Seq.empty))
 
   /**
-   * Returns the user's group memberships as a [[UserGroupMembershipsGetResponseADM]]
-   *
-   * @param userIri              the IRI of the user.
-   *
-   * @param requestingUser       the requesting user.
-   * @return a [[UserGroupMembershipsGetResponseADM]].
-   */
-  private def userGroupMembershipsGetRequestADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[UserGroupMembershipsGetResponseADM] =
-    for {
-      groups <- userGroupMembershipsGetADM(userIri = userIri)
-    } yield UserGroupMembershipsGetResponseADM(groups = groups)
-
-  /**
    * Adds a user to a group.
    *
    * @param userIri              the user's IRI.
@@ -1190,10 +1163,7 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project membership list
-        currentGroupMemberships <- userGroupMembershipsGetRequestADM(
-                                     userIri = userIri,
-                                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                                   )
+        currentGroupMemberships <- userGroupMembershipsGetADM(userIri).map(UserGroupMembershipsGetResponseADM)
 
         currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups.map(_.id)
 

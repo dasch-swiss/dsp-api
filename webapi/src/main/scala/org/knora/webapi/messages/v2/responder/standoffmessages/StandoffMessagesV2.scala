@@ -139,18 +139,10 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
     Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
+      fromJsonLDSync(jsonLDDocument = jsonLDDocument)
     }
 
-  def fromJsonLDSync(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): CreateMappingRequestMetadataV2 = {
+  def fromJsonLDSync(jsonLDDocument: JsonLDDocument): CreateMappingRequestMetadataV2 = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>

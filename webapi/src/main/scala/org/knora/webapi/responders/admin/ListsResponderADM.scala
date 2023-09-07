@@ -19,7 +19,6 @@ import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List.ListName
 import dsp.valueobjects.ListErrorMessages
-import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -37,7 +36,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -73,14 +71,10 @@ final case class ListsResponderADMLive(
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case ListsGetRequestADM(projectIri, requestingUser) =>
-      listsGetRequestADM(projectIri, requestingUser)
-    case ListGetRequestADM(listIri, requestingUser) =>
-      listGetRequestADM(listIri, requestingUser)
-    case ListNodeInfoGetRequestADM(listIri, requestingUser) =>
-      listNodeInfoGetRequestADM(listIri, requestingUser)
-    case NodePathGetRequestADM(iri, requestingUser) =>
-      nodePathGetAdminRequest(iri, requestingUser)
+    case ListsGetRequestADM(projectIri, _)                  => listsGetRequestADM(projectIri)
+    case ListGetRequestADM(listIri, requestingUser)         => listGetRequestADM(listIri, requestingUser)
+    case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri)
+    case NodePathGetRequestADM(iri, requestingUser)         => nodePathGetAdminRequest(iri, requestingUser)
     case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
       listCreateRequestADM(createRootNode, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
@@ -123,13 +117,9 @@ final case class ListsResponderADMLive(
    * any children.
    *
    * @param projectIri           the IRI of the project the list belongs to.
-   * @param requestingUser       the user making the request.
    * @return a [[ListsGetResponseADM]].
    */
-  private def listsGetRequestADM(
-    projectIri: Option[IRI],
-    requestingUser: UserADM
-  ): Task[ListsGetResponseADM] =
+  private def listsGetRequestADM(projectIri: Option[IRI]) =
     for {
       statements <- triplestore
                       .query(Construct(sparql.admin.txt.getLists(projectIri)))
@@ -178,13 +168,9 @@ final case class ListsResponderADMLive(
    * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
    *
    * @param rootNodeIri          the Iri if the root node of the list to be queried.
-   * @param requestingUser       the user making the request.
    * @return a optional [[ListADM]].
    */
-  private def listGetADM(
-    rootNodeIri: IRI,
-    requestingUser: UserADM
-  ): Task[Option[ListADM]] =
+  private def listGetADM(rootNodeIri: IRI) =
     for {
       // this query will give us only the information about the root node.
       exists <- rootNodeByIriExists(rootNodeIri)
@@ -194,20 +180,13 @@ final case class ListsResponderADMLive(
           for {
             // here we know that the list exists and it is fine if children is an empty list
             children <-
-              getChildren(
-                ofNodeIri = rootNodeIri,
-                shallow = false,
-                KnoraSystemInstances.Users.SystemUser
-              )
+              getChildren(ofNodeIri = rootNodeIri, shallow = false)
 
             maybeRootNodeInfo <-
-              listNodeInfoGetADM(
-                nodeIri = rootNodeIri,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )
+              listNodeInfoGetADM(nodeIri = rootNodeIri)
 
             rootNodeInfo = maybeRootNodeInfo match {
-                             case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
+                             case Some(info: ListRootNodeInfoADM) => info
                              case Some(_: ListChildNodeInfoADM) =>
                                throw InconsistentRepositoryDataException(
                                  "A child node info was found, although we are expecting a root node info. Please report this as a possible bug."
@@ -242,10 +221,7 @@ final case class ListsResponderADMLive(
 
     def getNodeADM(childNode: ListChildNodeADM): Task[ListNodeGetResponseADM] =
       for {
-        maybeNodeInfo <- listNodeInfoGetADM(
-                           nodeIri = nodeIri,
-                           requestingUser = requestingUser
-                         )
+        maybeNodeInfo <- listNodeInfoGetADM(nodeIri = nodeIri)
 
         nodeinfo = maybeNodeInfo match {
                      case Some(childNodeInfo: ListChildNodeInfoADM) => childNodeInfo
@@ -268,10 +244,7 @@ final case class ListsResponderADMLive(
         if (exists) {
           for {
             // Yes. Get the entire list
-            maybeList <- listGetADM(
-                           rootNodeIri = nodeIri,
-                           requestingUser = requestingUser
-                         )
+            maybeList <- listGetADM(rootNodeIri = nodeIri)
 
             entireList = maybeList match {
                            case Some(list) => ListGetResponseADM(list = list)
@@ -282,11 +255,7 @@ final case class ListsResponderADMLive(
           for {
             // No. Get the node and all its sublist children.
             // First, get node itself and all children.
-            maybeNode <- listNodeGetADM(
-                           nodeIri = nodeIri,
-                           shallow = true,
-                           requestingUser = requestingUser
-                         )
+            maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
 
             entireNode <- maybeNode match {
                             // make sure that it is a child node
@@ -306,13 +275,9 @@ final case class ListsResponderADMLive(
    * lists root node or child node
    *
    * @param nodeIri              the Iri if the list node to be queried.
-   * @param requestingUser       the user making the request.
    * @return a optional [[ListNodeInfoADM]].
    */
-  private def listNodeInfoGetADM(
-    nodeIri: IRI,
-    requestingUser: UserADM
-  ): Task[Option[ListNodeInfoADM]] = {
+  private def listNodeInfoGetADM(nodeIri: IRI) = {
     for {
       statements <- triplestore
                       .query(Construct(sparql.admin.txt.getListNode(nodeIri)))
@@ -429,15 +394,9 @@ final case class ListsResponderADMLive(
    * @param requestingUser       the user making the request.
    * @return a [[ChildNodeInfoGetResponseADM]].
    */
-  private def listNodeInfoGetRequestADM(
-    nodeIri: IRI,
-    requestingUser: UserADM
-  ): Task[NodeInfoGetResponseADM] =
+  private def listNodeInfoGetRequestADM(nodeIri: IRI) =
     for {
-      maybeListNodeInfoADM <- listNodeInfoGetADM(
-                                nodeIri = nodeIri,
-                                requestingUser = requestingUser
-                              )
+      maybeListNodeInfoADM <- listNodeInfoGetADM(nodeIri = nodeIri)
 
       result = maybeListNodeInfoADM match {
                  case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
@@ -451,14 +410,9 @@ final case class ListsResponderADMLive(
    *
    * @param nodeIri              the IRI of the list node to be queried.
    * @param shallow              denotes if all children or only the immediate children will be returned.
-   * @param requestingUser       the user making the request.
    * @return a optional [[ListNodeADM]]
    */
-  private def listNodeGetADM(
-    nodeIri: IRI,
-    shallow: Boolean,
-    requestingUser: UserADM
-  ): Task[Option[ListNodeADM]] = {
+  private def listNodeGetADM(nodeIri: IRI, shallow: Boolean) = {
     for {
       // this query will give us only the information about the root node.
       statements <- triplestore
@@ -471,11 +425,7 @@ final case class ListsResponderADMLive(
           for {
             // here we know that the list exists and it is fine if children is an empty list
             children <-
-              getChildren(
-                ofNodeIri = nodeIri,
-                shallow = shallow,
-                requestingUser = requestingUser
-              )
+              getChildren(ofNodeIri = nodeIri, shallow = shallow)
 
             node: ListNodeADM = statements.head match {
                                   case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
@@ -585,14 +535,9 @@ final case class ListsResponderADMLive(
    *
    * @param ofNodeIri            the IRI of the node for which children are to be returned.
    * @param shallow              denotes if all children or only the immediate children will be returned.
-   * @param requestingUser       the user making the request.
    * @return a sequence of [[ListChildNodeADM]].
    */
-  private def getChildren(
-    ofNodeIri: IRI,
-    shallow: Boolean,
-    requestingUser: UserADM
-  ): Task[Seq[ListChildNodeADM]] = {
+  private def getChildren(ofNodeIri: IRI, shallow: Boolean) = {
 
     /**
      * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
@@ -821,24 +766,14 @@ final case class ListsResponderADMLive(
     ): Task[(Some[Int], Some[IRI])] =
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
-        maybeParentListNode <- listNodeGetADM(
-                                 nodeIri = parentNodeIri,
-                                 shallow = true,
-                                 requestingUser = KnoraSystemInstances.Users.SystemUser
-                               )
+        maybeParentListNode <- listNodeGetADM(nodeIri = parentNodeIri, shallow = true)
 
         (parentListNode: ListNodeADM, children: Seq[ListChildNodeADM]) = maybeParentListNode match {
                                                                            case Some(node: ListRootNodeADM) =>
-                                                                             (
-                                                                               node.asInstanceOf[ListRootNodeADM],
-                                                                               node.children
-                                                                             )
+                                                                             (node, node.children)
                                                                            case Some(node: ListChildNodeADM) =>
-                                                                             (
-                                                                               node.asInstanceOf[ListChildNodeADM],
-                                                                               node.children
-                                                                             )
-                                                                           case Some(_) | None =>
+                                                                             (node, node.children)
+                                                                           case _ =>
                                                                              throw BadRequestException(
                                                                                s"List node '$parentNodeIri' not found."
                                                                              )
@@ -882,7 +817,7 @@ final case class ListsResponderADMLive(
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project
-                              case None                      => throw BadRequestException(s"Project '${projectIri}' not found.")
+                              case None                      => throw BadRequestException(s"Project '$projectIri' not found.")
                             }
 
       /* verify that the list node name is unique for the project */
@@ -894,7 +829,7 @@ final case class ListsResponderADMLive(
             val escapedName   = name.get.value
             val unescapedName = Iri.fromSparqlEncodedString(escapedName)
             throw BadRequestException(
-              s"The node name ${unescapedName} is already used by a list inside the project ${projectIri.value}."
+              s"The node name $unescapedName is already used by a list inside the project ${projectIri.value}."
             )
           }
 
@@ -987,18 +922,12 @@ final case class ListsResponderADMLive(
     /**
      * The actual task run with an IRI lock.
      */
-    def listCreateTask(
-      createRootRequest: ListRootNodeCreatePayloadADM,
-      apiRequestID: UUID
-    ): Task[ListGetResponseADM] =
+    def listCreateTask(createRootRequest: ListRootNodeCreatePayloadADM): Task[ListGetResponseADM] =
       for {
         listRootIri <- createNode(createRootRequest)
 
         // Verify that the list was created.
-        maybeNewListADM <- listGetADM(
-                             rootNodeIri = listRootIri,
-                             requestingUser = KnoraSystemInstances.Users.SystemUser
-                           )
+        maybeNewListADM <- listGetADM(rootNodeIri = listRootIri)
 
         newListADM = maybeNewListADM.getOrElse(
                        throw UpdateNotPerformedException(
@@ -1011,7 +940,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       LISTS_GLOBAL_LOCK_IRI,
-      listCreateTask(createRootRequest, apiRequestID)
+      listCreateTask(createRootRequest)
     )
   }
 
@@ -1035,11 +964,7 @@ final case class ListsResponderADMLive(
     /**
      * The actual task run with an IRI lock.
      */
-    def nodeInfoChangeTask(
-      nodeIri: IRI,
-      changeNodeRequest: ListNodeChangePayloadADM,
-      apiRequestID: UUID
-    ): Task[NodeInfoGetResponseADM] =
+    def nodeInfoChangeTask(nodeIri: IRI, changeNodeRequest: ListNodeChangePayloadADM): Task[NodeInfoGetResponseADM] =
       for {
         // check if nodeIRI in path and payload match
         _ <- ZIO.attempt(
@@ -1051,10 +976,7 @@ final case class ListsResponderADMLive(
         _                    <- triplestore.query(Update(changeNodeInfoSparql))
 
         /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(
-                          nodeIri = nodeIri,
-                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                        )
+        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
 
         response = maybeNodeADM match {
                      case Some(rootNode: ListRootNodeInfoADM) => RootNodeInfoGetResponseADM(listinfo = rootNode)
@@ -1072,7 +994,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       nodeIri,
-      nodeInfoChangeTask(nodeIri, changeNodeRequest, apiRequestID)
+      nodeInfoChangeTask(nodeIri, changeNodeRequest)
     )
   }
 
@@ -1092,16 +1014,12 @@ final case class ListsResponderADMLive(
      * The actual task run with an IRI lock.
      */
     def listChildNodeCreateTask(
-      createChildNodeRequest: ListChildNodeCreatePayloadADM,
-      apiRequestID: UUID
+      createChildNodeRequest: ListChildNodeCreatePayloadADM
     ): Task[ChildNodeInfoGetResponseADM] =
       for {
         newListNodeIri <- createNode(createChildNodeRequest)
         // Verify that the list node was created.
-        maybeNewListNode <- listNodeInfoGetADM(
-                              nodeIri = newListNodeIri,
-                              KnoraSystemInstances.Users.SystemUser
-                            )
+        maybeNewListNode <- listNodeInfoGetADM(nodeIri = newListNodeIri)
         newListNode = maybeNewListNode match {
                         case Some(childNode: ListChildNodeInfoADM) => childNode
                         case Some(_: ListRootNodeInfoADM) =>
@@ -1119,7 +1037,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       LISTS_GLOBAL_LOCK_IRI,
-      listChildNodeCreateTask(createChildNodeRequest, apiRequestID)
+      listChildNodeCreateTask(createChildNodeRequest)
     )
   }
 
@@ -1146,8 +1064,7 @@ final case class ListsResponderADMLive(
     def nodeNameChangeTask(
       nodeIri: IRI,
       changeNodeNameRequest: NodeNameChangePayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1169,10 +1086,7 @@ final case class ListsResponderADMLive(
         _ <- triplestore.query(Update(changeNodeNameSparql))
 
         /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(
-                          nodeIri = nodeIri,
-                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                        )
+        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
 
         response = maybeNodeADM match {
                      case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
@@ -1187,7 +1101,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       nodeIri,
-      nodeNameChangeTask(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
+      nodeNameChangeTask(nodeIri, changeNodeNameRequest, requestingUser)
     )
   }
 
@@ -1215,8 +1129,7 @@ final case class ListsResponderADMLive(
     def nodeLabelsChangeTask(
       nodeIri: IRI,
       changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1236,10 +1149,7 @@ final case class ListsResponderADMLive(
         _ <- triplestore.query(Update(changeNodeLabelsSparql))
 
         /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(
-                          nodeIri = nodeIri,
-                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                        )
+        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
 
         response = maybeNodeADM match {
                      case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
@@ -1254,7 +1164,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       nodeIri,
-      nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID)
+      nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, requestingUser)
     )
   }
 
@@ -1282,8 +1192,7 @@ final case class ListsResponderADMLive(
     def nodeCommentsChangeTask(
       nodeIri: IRI,
       changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[NodeInfoGetResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1304,10 +1213,7 @@ final case class ListsResponderADMLive(
         _ <- triplestore.query(Update(changeNodeCommentsSparql))
 
         /* Verify that the node info was updated */
-        maybeNodeADM <- listNodeInfoGetADM(
-                          nodeIri = nodeIri,
-                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                        )
+        maybeNodeADM <- listNodeInfoGetADM(nodeIri = nodeIri)
 
         response = maybeNodeADM match {
                      case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
@@ -1322,7 +1228,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       nodeIri,
-      nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID)
+      nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, requestingUser)
     )
   }
 
@@ -1387,11 +1293,7 @@ final case class ListsResponderADMLive(
      */
     def verifyParentChildrenUpdate(newPosition: Int): Task[ListNodeADM] =
       for {
-        maybeParentNode <- listNodeGetADM(
-                             nodeIri = changeNodePositionRequest.parentIri,
-                             shallow = false,
-                             requestingUser = KnoraSystemInstances.Users.SystemUser
-                           )
+        maybeParentNode                       <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri, shallow = false)
         updatedParent                          = maybeParentNode.get
         updatedChildren: Seq[ListChildNodeADM] = updatedParent.getChildren
         (siblingsPositionedBefore: Seq[ListChildNodeADM], rest: Seq[ListChildNodeADM]) =
@@ -1438,16 +1340,12 @@ final case class ListsResponderADMLive(
     ): Task[Int] =
       for {
         // get parent node with its immediate children
-        maybeParentNode <- listNodeGetADM(
-                             nodeIri = parentIri,
-                             shallow = true,
-                             requestingUser = KnoraSystemInstances.Users.SystemUser
-                           )
+        maybeParentNode <- listNodeGetADM(nodeIri = parentIri, shallow = true)
         parentNode =
           maybeParentNode.getOrElse(
-            throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug.")
+            throw BadRequestException(s"The parent node $parentIri could node be found, report this as a bug.")
           )
-        _              = isNewPositionValid(parentNode, false)
+        _              = isNewPositionValid(parentNode, isNewParent = false)
         parentChildren = parentNode.getChildren
         currPosition   = node.position
 
@@ -1514,21 +1412,13 @@ final case class ListsResponderADMLive(
     ): Task[Int] =
       for {
         // get current parent node with its immediate children
-        maybeCurrentParentNode <- listNodeGetADM(
-                                    nodeIri = currParentIri,
-                                    shallow = true,
-                                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                                  )
-        currentSiblings = maybeCurrentParentNode.get.getChildren
+        maybeCurrentParentNode <- listNodeGetADM(nodeIri = currParentIri, shallow = true)
+        currentSiblings         = maybeCurrentParentNode.get.getChildren
         // get new parent node with its immediate children
-        maybeNewParentNode <- listNodeGetADM(
-                                nodeIri = newParentIri,
-                                shallow = true,
-                                requestingUser = KnoraSystemInstances.Users.SystemUser
-                              )
-        newParent   = maybeNewParentNode.get
-        _           = isNewPositionValid(newParent, true)
-        newSiblings = newParent.getChildren
+        maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
+        newParent           = maybeNewParentNode.get
+        _                   = isNewPositionValid(newParent, isNewParent = true)
+        newSiblings         = newParent.getChildren
 
         currentNodePosition = node.position
 
@@ -1589,8 +1479,7 @@ final case class ListsResponderADMLive(
     def nodePositionChangeTask(
       nodeIri: IRI,
       changeNodePositionRequest: ChangeNodePositionApiRequestADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[NodePositionChangeResponseADM] =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
@@ -1605,11 +1494,7 @@ final case class ListsResponderADMLive(
             }
 
         // get node in its current position
-        maybeNode <- listNodeGetADM(
-                       nodeIri = nodeIri,
-                       shallow = true,
-                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                     )
+        maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
         node = maybeNode match {
                  case Some(node: ListChildNodeADM) => node
                  case _ =>
@@ -1642,7 +1527,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       nodeIri,
-      nodePositionChangeTask(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID)
+      nodePositionChangeTask(nodeIri, changeNodePositionRequest, requestingUser)
     )
   }
 
@@ -1666,7 +1551,7 @@ final case class ListsResponderADMLive(
    */
   private def deleteListNodeCommentsADM(nodeIri: IRI): Task[ListNodeCommentsDeleteResponseADM] =
     for {
-      node <- listNodeInfoGetADM(nodeIri, KnoraSystemInstances.Users.SystemUser)
+      node <- listNodeInfoGetADM(nodeIri)
 
       doesNodeHaveComments = node.get.getComments.stringLiterals.nonEmpty
 
@@ -1781,11 +1666,7 @@ final case class ListsResponderADMLive(
       dataNamedGraph: IRI
     ): Task[ListNodeADM] =
       for {
-        maybeNode <- listNodeGetADM(
-                       nodeIri = parentNodeIri,
-                       shallow = false,
-                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                     )
+        maybeNode <- listNodeGetADM(nodeIri = parentNodeIri, shallow = false)
 
         parentNode: ListNodeADM =
           maybeNode.getOrElse(
@@ -1800,7 +1681,7 @@ final case class ListsResponderADMLive(
 
         // shift the siblings that were positioned after the deleted node, one place to left.
         updatedChildren <-
-          if (remainingChildren.size > 0) {
+          if (remainingChildren.nonEmpty) {
             for {
               shiftedChildren <- shiftNodes(
                                    startPos = positionOfDeletedNode + 1,
@@ -1842,11 +1723,7 @@ final case class ListsResponderADMLive(
     /**
      * The actual task run with an IRI lock.
      */
-    def nodeDeleteTask(
-      nodeIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
-    ): Task[ListItemDeleteResponseADM] =
+    def nodeDeleteTask(nodeIri: IRI, requestingUser: UserADM) =
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
 
@@ -1856,11 +1733,7 @@ final case class ListsResponderADMLive(
               throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
-        maybeNode <- listNodeGetADM(
-                       nodeIri = nodeIri,
-                       shallow = false,
-                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                     )
+        maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false)
 
         response <- maybeNode match {
                       case Some(rootNode: ListRootNodeADM) =>
@@ -1910,7 +1783,7 @@ final case class ListsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       nodeIri,
-      nodeDeleteTask(nodeIri, requestingUser, apiRequestID)
+      nodeDeleteTask(nodeIri, requestingUser)
     )
   }
 
@@ -1977,11 +1850,7 @@ final case class ListsResponderADMLive(
           }
 
       /* Verify that the node with Iri exists. */
-      maybeNode <- listNodeGetADM(
-                     nodeIri = changeNodeInfoRequest.listIri.value,
-                     shallow = true,
-                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                   )
+      maybeNode <- listNodeGetADM(nodeIri = changeNodeInfoRequest.listIri.value, shallow = true)
 
       node = maybeNode.getOrElse(
                throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found.")
@@ -2019,22 +1888,14 @@ final case class ListsResponderADMLive(
    */
   private def getProjectIriFromNode(nodeIri: IRI): Task[IRI] =
     for {
-      maybeNode <- listNodeGetADM(
-                     nodeIri = nodeIri,
-                     shallow = true,
-                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                   )
+      maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
 
       projectIri <- maybeNode match {
                       case Some(rootNode: ListRootNodeADM) => ZIO.attempt(rootNode.projectIri)
 
                       case Some(childNode: ListChildNodeADM) =>
                         for {
-                          maybeRoot <- listNodeGetADM(
-                                         nodeIri = childNode.hasRootNode,
-                                         shallow = true,
-                                         requestingUser = KnoraSystemInstances.Users.SystemUser
-                                       )
+                          maybeRoot <- listNodeGetADM(nodeIri = childNode.hasRootNode, shallow = true)
                           rootProjectIri = maybeRoot match {
                                              case Some(rootNode: ListRootNodeADM) => rootNode.projectIri
                                              case _ =>
@@ -2055,7 +1916,7 @@ final case class ListsResponderADMLive(
    * @param errorFun a function that throws an exception. It will be called if the node is used.
    * @return a [[Boolean]].
    */
-  protected def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Task[Unit] =
+  private def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Task[Unit] =
     for {
       isNodeUsedResponse <- triplestore.query(Select(sparql.admin.txt.isNodeUsed(nodeIri)))
       _                  <- ZIO.when(isNodeUsedResponse.results.bindings.nonEmpty)(ZIO.attempt(errorFun))
@@ -2067,7 +1928,7 @@ final case class ListsResponderADMLive(
    * @param projectIri           the IRI of the project.
    * @return an [[IRI]].
    */
-  protected def getDataNamedGraph(projectIri: IRI): Task[IRI] =
+  private def getDataNamedGraph(projectIri: IRI): Task[IRI] =
     for {
       /* Get the project information */
       maybeProject <-
@@ -2094,7 +1955,7 @@ final case class ListsResponderADMLive(
    * @param nodeIri              the IRI of the node.
    * @return a [[ListNodeADM]].
    */
-  protected def getParentNodeIRI(nodeIri: IRI): Task[IRI] =
+  private def getParentNodeIRI(nodeIri: IRI): Task[IRI] =
     triplestore
       .query(Construct(sparql.admin.txt.getParentNode(nodeIri)))
       .map(_.statements.keys.headOption)
@@ -2111,7 +1972,7 @@ final case class ListsResponderADMLive(
    *
    *         Fails with a [[UpdateNotPerformedException]] if the node could not be deleted.
    */
-  protected def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Task[Unit] =
+  private def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Task[Unit] =
     for {
       _ <- triplestore.query(Update(sparql.admin.txt.deleteNode(dataNamedGraph, nodeIri, isRootNode)))
       // Verify that the node was deleted correctly.
@@ -2131,7 +1992,7 @@ final case class ListsResponderADMLive(
    * @throws UpdateNotPerformedException if the position of the node could not be updated.
    * @return a [[ListChildNodeADM]].
    */
-  protected def updatePositionOfNode(
+  private def updatePositionOfNode(
     nodeIri: IRI,
     newPosition: Int,
     dataNamedGraph: IRI
@@ -2146,11 +2007,7 @@ final case class ListsResponderADMLive(
       _ <- triplestore.query(Update(sparqlUpdateNodePosition))
 
       /* Verify that the node info was updated */
-      maybeNode <- listNodeGetADM(
-                     nodeIri = nodeIri,
-                     shallow = false,
-                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                   )
+      maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false)
 
       childNode: ListChildNodeADM =
         maybeNode
@@ -2178,7 +2035,7 @@ final case class ListsResponderADMLive(
    * @throws UpdateNotPerformedException if the position of a node could not be updated.
    * @return a sequence of [[ListChildNodeADM]].
    */
-  protected def shiftNodes(
+  private def shiftNodes(
     startPos: Int,
     endPos: Int,
     nodes: Seq[ListChildNodeADM],
@@ -2215,7 +2072,7 @@ final case class ListsResponderADMLive(
    * @param dataNamedGraph       the data named graph of the project.
    * @throws UpdateNotPerformedException if the parent of a node could not be updated.
    */
-  protected def changeParentNode(
+  private def changeParentNode(
     nodeIri: IRI,
     oldParentIri: IRI,
     newParentIri: IRI,
@@ -2226,26 +2083,18 @@ final case class ListsResponderADMLive(
 
     /* verify that parents were updated */
     // get old parent node with its immediate children
-    maybeOldParent <- listNodeGetADM(
-                        nodeIri = oldParentIri,
-                        shallow = true,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser
-                      )
+    maybeOldParent     <- listNodeGetADM(nodeIri = oldParentIri, shallow = true)
     childrenOfOldParent = maybeOldParent.get.getChildren
     _ = if (childrenOfOldParent.exists(node => node.id == nodeIri)) {
           throw UpdateNotPerformedException(
-            s"Node ${nodeIri} is still a child of ${oldParentIri}. Report this as a bug."
+            s"Node $nodeIri is still a child of $oldParentIri. Report this as a bug."
           )
         }
     // get new parent node with its immediate children
-    maybeNewParentNode <- listNodeGetADM(
-                            nodeIri = newParentIri,
-                            shallow = true,
-                            requestingUser = KnoraSystemInstances.Users.SystemUser
-                          )
+    maybeNewParentNode <- listNodeGetADM(nodeIri = newParentIri, shallow = true)
     childrenOfNewParent = maybeNewParentNode.get.getChildren
     _ = if (!childrenOfNewParent.exists(node => node.id == nodeIri)) {
-          throw UpdateNotPerformedException(s"Node ${nodeIri} is not added to parent node ${newParentIri}. ")
+          throw UpdateNotPerformedException(s"Node $nodeIri is not added to parent node $newParentIri. ")
         }
 
   } yield ()

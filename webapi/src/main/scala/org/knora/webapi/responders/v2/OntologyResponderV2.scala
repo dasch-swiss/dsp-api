@@ -90,7 +90,7 @@ final case class OntologyResponderV2Live(
       getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris)
     case StandoffClassesWithDataTypeGetRequestV2(_) =>
       getStandoffStandoffClassesWithDataTypeV2
-    case StandoffAllPropertyEntitiesGetRequestV2(requestingUser) => getAllStandoffPropertyEntitiesV2(requestingUser)
+    case StandoffAllPropertyEntitiesGetRequestV2(_) => getAllStandoffPropertyEntitiesV2
     case CheckSubClassRequestV2(subClassIri, superClassIri, _) =>
       checkSubClassV2(subClassIri, superClassIri)
     case SubClassesGetRequestV2(resourceClassIri, requestingUser) => getSubClassesV2(resourceClassIri, requestingUser)
@@ -244,19 +244,13 @@ final case class OntologyResponderV2Live(
   /**
    * Gets all standoff property entities.
    *
-   * @param requestingUser the user making the request.
    * @return a [[StandoffAllPropertyEntitiesGetResponseV2]].
    */
-  private def getAllStandoffPropertyEntitiesV2(
-    requestingUser: UserADM
-  ): Task[StandoffAllPropertyEntitiesGetResponseV2] =
-    for {
-      cacheData <- ontologyCache.getCacheData
-    } yield StandoffAllPropertyEntitiesGetResponseV2(
-      standoffAllPropertiesEntityInfoMap = cacheData.ontologies.values.flatMap { ontology =>
-        ontology.properties.view.filterKeys(cacheData.standoffProperties)
-      }.toMap
-    )
+  private def getAllStandoffPropertyEntitiesV2: Task[StandoffAllPropertyEntitiesGetResponseV2] =
+    ontologyCache.getCacheData.map { data =>
+      val ontologies: Iterable[ReadOntologyV2] = data.ontologies.values
+      ontologies.flatMap(_.properties.view.filterKeys(data.standoffProperties)).toMap
+    }.map(StandoffAllPropertyEntitiesGetResponseV2)
 
   /**
    * Checks whether a certain Knora resource or value class is a subclass of another class.
