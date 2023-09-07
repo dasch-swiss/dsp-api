@@ -79,7 +79,7 @@ final case class UsersResponderADMLive(
     case UsersGetADM(userInformationTypeADM, requestingUser) =>
       getAllUserADM(requestingUser)
     case UsersGetRequestADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADMRequest(userInformationTypeADM, requestingUser)
+      getAllUserADMRequest(requestingUser)
     case UserGetADM(identifier, userInformationTypeADM, requestingUser) =>
       getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
     case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) =>
@@ -253,17 +253,12 @@ final case class UsersResponderADMLive(
   /**
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
    *
-   * @param userInformationType  the extent of the information returned.
-   *
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    */
-  private def getAllUserADMRequest(
-    userInformationType: UserInformationTypeADM,
-    requestingUser: UserADM
-  ): Task[UsersGetResponseADM] =
+  private def getAllUserADMRequest(requestingUser: UserADM): Task[UsersGetResponseADM] =
     for {
-      maybeUsersListToReturn <- getAllUserADM(requestingUser = requestingUser)
+      maybeUsersListToReturn <- getAllUserADM(requestingUser)
 
       result = maybeUsersListToReturn match {
                  case users: Seq[UserADM] if users.nonEmpty =>
@@ -632,26 +627,14 @@ final case class UsersResponderADMLive(
    * Returns user's project memberships as a sequence of [[ProjectADM]].
    *
    * @param userIri        the IRI of the user.
-   * @param requestingUser the requesting user.
    * @return a sequence of [[ProjectADM]]
    */
-  private def userProjectMembershipsGetADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[Seq[ProjectADM]] =
-    for {
-      maybeUser <- getSingleUserADM(
-                     identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                     userInformationType = UserInformationTypeADM.Full,
-                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                   )
-
-      result = maybeUser match {
-                 case Some(userADM) => userADM.projects
-                 case None          => Seq.empty[ProjectADM]
-               }
-
-    } yield result
+  private def userProjectMembershipsGetADM(userIri: IRI) =
+    getSingleUserADM(
+      UserIdentifierADM(maybeIri = Some(userIri)),
+      UserInformationTypeADM.Full,
+      KnoraSystemInstances.Users.SystemUser
+    ).map(_.map(_.projects).getOrElse(Seq.empty))
 
   /**
    * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
@@ -670,10 +653,7 @@ final case class UsersResponderADMLive(
             throw BadRequestException(s"User $userIri does not exist.")
           }
 
-      projects <- userProjectMembershipsGetADM(
-                    userIri = userIri,
-                    requestingUser = requestingUser
-                  )
+      projects <- userProjectMembershipsGetADM(userIri = userIri)
     } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
@@ -802,10 +782,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetADM(
-                                       userIri = userIri,
-                                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                                     )
+        currentProjectMemberships   <- userProjectMembershipsGetADM(userIri = userIri)
         currentProjectMembershipIris = currentProjectMemberships.map(_.id)
 
         // check if user is a member and if he is then remove the project from to list
@@ -819,11 +796,8 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project admin membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-                                            userIri = userIri,
-                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                            apiRequestID = apiRequestID
-                                          )
+        currentProjectAdminMemberships <-
+          userProjectAdminMembershipsGetADM(userIri = userIri)
 
         currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
 
@@ -857,14 +831,9 @@ final case class UsersResponderADMLive(
    * Returns the user's project admin group memberships as a sequence of [[IRI]]
    *
    * @param userIri              the user's IRI.
-   * @param requestingUser       the requesting user.
    * @return a list of [[ProjectADM]].
    */
-  private def userProjectAdminMembershipsGetADM(
-    userIri: IRI,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[Seq[ProjectADM]] =
+  private def userProjectAdminMembershipsGetADM(userIri: IRI): Task[Seq[ProjectADM]] =
     // ToDo: only allow system user
     // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
     for {
@@ -915,11 +884,8 @@ final case class UsersResponderADMLive(
             throw BadRequestException(s"User $userIri does not exist.")
           }
 
-      projects <- userProjectAdminMembershipsGetADM(
-                    userIri = userIri,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
-                  )
+      projects <-
+        userProjectAdminMembershipsGetADM(userIri = userIri)
     } yield UserProjectAdminMembershipsGetResponseADM(projects = projects)
 
   /**
@@ -967,10 +933,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetADM(
-                                       userIri = userIri,
-                                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                                     )
+        currentProjectMemberships <- userProjectMembershipsGetADM(userIri = userIri)
 
         currentProjectMembershipIris = currentProjectMemberships.map(_.id)
 
@@ -983,11 +946,8 @@ final case class UsersResponderADMLive(
             }
 
         // get users current project admin membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-                                            userIri = userIri,
-                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                            apiRequestID = apiRequestID
-                                          )
+        currentProjectAdminMemberships <-
+          userProjectAdminMembershipsGetADM(userIri = userIri)
 
         currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
 
@@ -1063,11 +1023,8 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-                                            userIri = userIri,
-                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                            apiRequestID = apiRequestID
-                                          )
+        currentProjectAdminMemberships <-
+          userProjectAdminMembershipsGetADM(userIri = userIri)
 
         currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
 
@@ -1471,10 +1428,7 @@ final case class UsersResponderADMLive(
 
       _ = if (userUpdatePayload.projects.isDefined) {
             for {
-              projects <- userProjectMembershipsGetADM(
-                            userIri = userIri,
-                            requestingUser = requestingUser
-                          )
+              projects <- userProjectMembershipsGetADM(userIri = userIri)
               _ =
                 if (projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
                   throw UpdateNotPerformedException(
