@@ -603,18 +603,16 @@ final case class ListsResponderADMLive(
                       .flatMap(_.asExtended)
                       .map(_.statements.toList)
 
-      startNodePropsMap: Map[SmartIri, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
+      startNodePropsMap = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
 
-      children: Seq[ListChildNodeADM] = startNodePropsMap.get(
-                                          OntologyConstants.KnoraBase.HasSubListNode.toSmartIri
-                                        ) match {
-                                          case Some(iris: Seq[LiteralV2]) =>
-                                            iris.map { iri =>
-                                              createChildNode(iri.toString, statements)
-                                            }
+      children = startNodePropsMap.get(OntologyConstants.KnoraBase.HasSubListNode.toSmartIri) match {
+                   case Some(iris: Seq[LiteralV2]) =>
+                     iris.map { iri =>
+                       createChildNode(iri.toString, statements)
+                     }
 
-                                          case None => Seq.empty[ListChildNodeADM]
-                                        }
+                   case None => Seq.empty[ListChildNodeADM]
+                 }
 
       sortedChildren = children.sortBy(_.position) map (_.sorted)
 
@@ -762,17 +760,11 @@ final case class ListsResponderADMLive(
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         maybeParentListNode <- listNodeGetADM(nodeIri = parentNodeIri, shallow = true)
-
-        (parentListNode: ListNodeADM, children: Seq[ListChildNodeADM]) = maybeParentListNode match {
-                                                                           case Some(node: ListRootNodeADM) =>
-                                                                             (node, node.children)
-                                                                           case Some(node: ListChildNodeADM) =>
-                                                                             (node, node.children)
-                                                                           case _ =>
-                                                                             throw BadRequestException(
-                                                                               s"List node '$parentNodeIri' not found."
-                                                                             )
-                                                                         }
+        (parentListNode, children) = maybeParentListNode match {
+                                       case Some(node: ListRootNodeADM)  => (node, node.children)
+                                       case Some(node: ListChildNodeADM) => (node, node.children)
+                                       case _                            => throw BadRequestException(s"List node '$parentNodeIri' not found.")
+                                     }
 
         // get position of the new child
         position = getPositionOfNewChild(children)
@@ -1288,11 +1280,10 @@ final case class ListsResponderADMLive(
      */
     def verifyParentChildrenUpdate(newPosition: Int): Task[ListNodeADM] =
       for {
-        maybeParentNode                       <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri, shallow = false)
-        updatedParent                          = maybeParentNode.get
-        updatedChildren: Seq[ListChildNodeADM] = updatedParent.getChildren
-        (siblingsPositionedBefore: Seq[ListChildNodeADM], rest: Seq[ListChildNodeADM]) =
-          updatedChildren.partition(node => node.position < newPosition)
+        maybeParentNode                 <- listNodeGetADM(nodeIri = changeNodePositionRequest.parentIri, shallow = false)
+        updatedParent                    = maybeParentNode.get
+        updatedChildren                  = updatedParent.getChildren
+        (siblingsPositionedBefore, rest) = updatedChildren.partition(_.position < newPosition)
 
         // verify that node is among children of specified parent in correct position
         updatedNode = rest.head

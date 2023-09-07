@@ -244,7 +244,7 @@ final case class PermissionsResponderADMLive(
       groups <- ZioHelper.sequence(groupFutures).map(_.toSeq)
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
-      projectMembers: Seq[(IRI, IRI)] =
+      projectMembers =
         if (projectIris.nonEmpty) {
           for {
             projectIri <- projectIris.toVector
