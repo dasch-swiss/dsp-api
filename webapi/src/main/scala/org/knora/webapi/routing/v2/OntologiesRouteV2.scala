@@ -94,11 +94,11 @@ final case class OntologiesRouteV2()(
       val ontologyIriTask = getOntologySmartIri(requestContext)
 
       val requestTask = for {
-        ontologyIri          <- ontologyIriTask
-        params: Map[IRI, IRI] = requestContext.request.uri.query().toMap
-        allLanguagesStr       = params.get(allLanguagesKey)
-        allLanguages          = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
-        user                 <- Authenticator.getUserADM(requestContext)
+        ontologyIri    <- ontologyIriTask
+        params          = requestContext.request.uri.query().toMap
+        allLanguagesStr = params.get(allLanguagesKey)
+        allLanguages    = ValuesValidator.optionStringToBoolean(allLanguagesStr, fallback = false)
+        user           <- Authenticator.getUserADM(requestContext)
       } yield OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, user)
 
       val targetSchemaTask = ontologyIriTask.flatMap(getTargetSchemaFromOntology)

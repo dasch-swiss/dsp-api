@@ -30,9 +30,8 @@ object ActorUtil {
    *
    * @param sender  the actor that made the request in the `ask` pattern.
    * @param message the message that was received.
-   * @param log     a [[Logger]].
    */
-  def handleUnexpectedMessage(sender: ActorRef, message: Any, log: Logger, who: String): Unit = {
+  def handleUnexpectedMessage(sender: ActorRef, message: Any, who: String): Unit = {
     val unexpectedMessageException = UnexpectedMessageException(
       s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
     )

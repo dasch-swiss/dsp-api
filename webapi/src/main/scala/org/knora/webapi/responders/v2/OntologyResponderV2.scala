@@ -2701,13 +2701,7 @@ final case class OntologyResponderV2Live(
   private def deletePropertyComment(
     deletePropertyCommentRequest: DeletePropertyCommentRequestV2
   ): Task[ReadOntologyV2] = {
-    def makeTaskFuture(
-      cacheData: OntologyCacheData,
-      internalPropertyIri: SmartIri,
-      internalOntologyIri: SmartIri,
-      ontology: ReadOntologyV2,
-      propertyToUpdate: ReadPropertyInfoV2
-    ): Task[ReadOntologyV2] =
+    def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri, ontology: ReadOntologyV2, propertyToUpdate: ReadPropertyInfoV2) =
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
@@ -2860,13 +2854,7 @@ final case class OntologyResponderV2Live(
           taskResult <- IriLocker.runWithIriLock(
                           deletePropertyCommentRequest.apiRequestID,
                           ONTOLOGY_CACHE_LOCK_IRI,
-                          makeTaskFuture(
-                            cacheData = cacheData,
-                            internalPropertyIri = internalPropertyIri,
-                            internalOntologyIri = internalOntologyIri,
-                            ontology = ontology,
-                            propertyToUpdate = propertyToUpdate
-                          )
+                          makeTaskFuture(internalPropertyIri = internalPropertyIri, internalOntologyIri = internalOntologyIri, ontology = ontology, propertyToUpdate = propertyToUpdate)
                         )
         } yield taskResult
         else {
@@ -2890,12 +2878,11 @@ final case class OntologyResponderV2Live(
     deleteClassCommentRequest: DeleteClassCommentRequestV2
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(
-      cacheData: OntologyCacheData,
       internalClassIri: SmartIri,
       internalOntologyIri: SmartIri,
       ontology: ReadOntologyV2,
       classToUpdate: ReadClassInfoV2
-    ): Task[ReadOntologyV2] =
+    ) =
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
@@ -2991,7 +2978,6 @@ final case class OntologyResponderV2Live(
                           deleteClassCommentRequest.apiRequestID,
                           ONTOLOGY_CACHE_LOCK_IRI,
                           makeTaskFuture(
-                            cacheData = cacheData,
                             internalClassIri = internalClassIri,
                             internalOntologyIri = internalOntologyIri,
                             ontology = ontology,

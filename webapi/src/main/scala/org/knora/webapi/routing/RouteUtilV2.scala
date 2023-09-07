@@ -155,30 +155,6 @@ object RouteUtilV2 {
     }
   }
 
-  /**
-   * Gets the type of standoff rendering that should be used when returning text with standoff.
-   * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
-   * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
-   * default of [[MarkupAsXml]] is returned.
-   *
-   * @param requestContext the akka-http [[RequestContext]].
-   * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
-   *         in the request.
-   */
-  @deprecated("Use getStandoffRendering(requestContext: RequestContext) instead")
-  private def getStandoffRenderingUnsafe(requestContext: RequestContext): Option[MarkupRendering] =
-    getStandoffRendering(requestContext).fold(
-      errors => throw errors.head,
-      markupRendering => markupRendering
-    )
-
-  @deprecated("use getJsonLDRendering() instead")
-  private def getJsonLDRenderingUnsafe(requestContext: RequestContext): Option[JsonLDRendering] =
-    getJsonLDRendering(requestContext).fold(
-      errors => throw errors.head,
-      jsonLDRendering => jsonLDRendering
-    )
-
   private def getJsonLDRendering(
     requestContext: RequestContext
   ): Validation[BadRequestException, Option[JsonLDRendering]] = {
@@ -309,7 +285,7 @@ object RouteUtilV2 {
       responseMediaType <- chooseRdfMediaTypeForResponse(requestContext)
       rdfFormat          = RdfFormat.fromMediaType(RdfMediaTypes.toMostSpecificMediaType(responseMediaType))
       contentType        = RdfMediaTypes.toUTF8ContentType(responseMediaType)
-      content: String    = knoraResponse.format(rdfFormat, targetSchema, schemaOptions, appConfig)
+      content            = knoraResponse.format(rdfFormat, targetSchema, schemaOptions, appConfig)
       response           = HttpResponse(StatusCodes.OK, entity = HttpEntity(contentType, content))
       routeResult       <- ZIO.fromFuture(_ => requestContext.complete(response))
     } yield routeResult)

@@ -11,13 +11,9 @@ import zio._
 object LogAspect {
 
   /**
-   * Extracts the correlation id from the HTTP request and adds it as a log annotation.
-   *
-   * @param req
+   * Add the correlation id from as a log annotation.
    */
-  def logAnnotateCorrelationId(
-    req: HttpRequest
-  ): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
+  def logAnnotateCorrelationId(): ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] =
     new ZIOAspect[Nothing, Any, Nothing, Any, Nothing, Any] {
       override def apply[R, E, A](
         zio: ZIO[R, E, A]

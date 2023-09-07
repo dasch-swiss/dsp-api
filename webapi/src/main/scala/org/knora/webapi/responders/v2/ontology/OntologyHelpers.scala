@@ -174,9 +174,7 @@ object OntologyHelpers {
    * triplestore.
    *
    * @param propertyDefs                 a map of property IRIs to property definitions.
-   * @param directSubPropertyOfRelations a map of property IRIs to their immediate base properties.
    * @param allSubPropertyOfRelations    a map of property IRIs to all their base properties.
-   * @param allSubClassOfRelations       a map of class IRIs to all their base classes.
    * @param allKnoraResourceProps        a set of the IRIs of all Knora resource properties.
    * @param allLinkProps                 a set of the IRIs of all link properties.
    * @param allLinkValueProps            a set of the IRIs of link value properties.
@@ -185,9 +183,7 @@ object OntologyHelpers {
    */
   def makeReadPropertyInfos(
     propertyDefs: Map[SmartIri, PropertyInfoContentV2],
-    directSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-    allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]],
     allKnoraResourceProps: Set[SmartIri],
     allLinkProps: Set[SmartIri],
     allLinkValueProps: Set[SmartIri],
@@ -272,7 +268,6 @@ object OntologyHelpers {
    * @param classCardinalitiesWithInheritance a map of the cardinalities defined directly on each class or inherited from
    *                                          base classes. Each class IRI points to a map of property IRIs to
    *                                          [[KnoraCardinalityInfo]] objects.
-   * @param directSubClassOfRelations         a map of class IRIs to their immediate base classes.
    * @param allSubClassOfRelations            a map of class IRIs to all their base classes.
    * @param allSubPropertyOfRelations         a map of property IRIs to all their base properties.
    * @param allPropertyDefs                   a map of property IRIs to property definitions.
@@ -286,7 +281,6 @@ object OntologyHelpers {
     classDefs: Map[SmartIri, ClassInfoContentV2],
     directClassCardinalities: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]],
     classCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]],
-    directSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
     allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]],
     allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     allPropertyDefs: Map[SmartIri, PropertyInfoContentV2],
@@ -1813,7 +1807,6 @@ final case class OntologyHelpersLive(
                                                             classIri.toOntologySchema(InternalSchema)
                                                           val knoraBaseClassesToRemove = OntologyTransformationRules
                                                             .getTransformationRules(
-                                                              classIri.getOntologyFromEntity,
                                                               apiV2Schema
                                                             )
                                                             .internalClassesToRemove
@@ -1864,7 +1857,6 @@ final case class OntologyHelpersLive(
                                                                  val knoraBasePropertiesToRemove =
                                                                    OntologyTransformationRules
                                                                      .getTransformationRules(
-                                                                       propertyIri.getOntologyFromEntity,
                                                                        apiV2Schema
                                                                      )
                                                                      .internalPropertiesToRemove
@@ -1935,32 +1927,27 @@ final case class OntologyHelpersLive(
           .toMap
           .values
 
-      classesAvailableFromCache: Map[SmartIri, ReadClassInfoV2] = classOntologiesForCache.flatMap { ontology =>
-                                                                    ontology.classes.view
-                                                                      .filterKeys(classIrisForCache)
-                                                                      .toMap
-                                                                  }.toMap
+      classesAvailableFromCache = classOntologiesForCache.flatMap { ontology =>
+                                    ontology.classes.view.filterKeys(classIrisForCache).toMap
+                                  }.toMap
 
-      propertiesAvailableFromCache: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologiesForCache.flatMap { ontology =>
-                                                                          ontology.properties.view
-                                                                            .filterKeys(propertyIrisForCache)
-                                                                            .toMap
-                                                                        }.toMap
+      propertiesAvailableFromCache = propertyOntologiesForCache.flatMap { ontology =>
+                                       ontology.properties.view.filterKeys(propertyIrisForCache).toMap
+                                     }.toMap
 
-      allClassesAvailable: Map[SmartIri, ReadClassInfoV2] =
-        classesAvailableFromCache ++ hardCodedExternalClassesAvailable
+      allClassesAvailable = classesAvailableFromCache ++ hardCodedExternalClassesAvailable
       allPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] =
         propertiesAvailableFromCache ++ hardCodedExternalPropertiesAvailable
 
       // See if any entities are missing.
 
-      allExternalClassIrisAvailable: Set[SmartIri] = allClassesAvailable.keySet.map { classIri =>
-                                                       if (classIri.getOntologySchema.contains(InternalSchema)) {
-                                                         internalToExternalClassIris(classIri)
-                                                       } else {
-                                                         classIri
-                                                       }
-                                                     }
+      allExternalClassIrisAvailable = allClassesAvailable.keySet.map { classIri =>
+                                        if (classIri.getOntologySchema.contains(InternalSchema)) {
+                                          internalToExternalClassIris(classIri)
+                                        } else {
+                                          classIri
+                                        }
+                                      }
 
       allExternalPropertyIrisAvailable = allPropertiesAvailable.keySet.map { propertyIri =>
                                            if (propertyIri.getOntologySchema.contains(InternalSchema)) {
