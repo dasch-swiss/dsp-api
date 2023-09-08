@@ -18,7 +18,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -35,6 +34,7 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 
@@ -234,7 +234,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       userEmail = userEmail
     )
 
-    val receivedResourceIri: IRI = resource.body.requireIDAsKnoraDataIri.toString
+    val receivedResourceIri: IRI = UnsafeZioRun.runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri).toString
 
     if (receivedResourceIri != resourceIri) {
       throw AssertionException(s"Expected resource $resourceIri, received $receivedResourceIri")

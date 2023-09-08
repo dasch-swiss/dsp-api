@@ -171,12 +171,15 @@ object DeleteValueV2 {
         ZIO.attempt(jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
           case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
             for {
-              resourceIri <- ZIO.attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
-              _ <- ZIO
-                     .fail(BadRequestException(s"Invalid resource IRI: <$resourceIri>"))
-                     .when(!resourceIri.isKnoraResourceIri)
+              resourceIri <-
+                jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
+                  .mapError(BadRequestException(_))
+                  .tap(iri =>
+                    ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>")).when(!iri.isKnoraResourceIri)
+                  )
+
               resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
-              valueIri         <- ZIO.attempt(jsonLDObject.requireIDAsKnoraDataIri)
+              valueIri         <- jsonLDObject.getRequiredIdValueAsKnoraDataIri.mapError(BadRequestException(_))
               _                <- ZIO.fail(BadRequestException(s"Invalid value IRI: <$valueIri>")).when(!valueIri.isKnoraValueIri)
               _ <- ZIO
                      .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
@@ -619,8 +622,8 @@ object CreateValueV2 {
       for {
         // Get the IRI of the resource that the value is to be created in.
         jsonLDDocument <- ZIO.attempt(JsonLDUtil.parseJsonLD(jsonLdString))
-        resourceIri <- ZIO
-                         .attempt(jsonLDDocument.body.requireIDAsKnoraDataIri)
+        resourceIri <- jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
+                         .mapError(BadRequestException(_))
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
         // Get the resource class.
@@ -801,8 +804,8 @@ object UpdateValueV2 {
       for {
         jsonLdDocument <- RouteUtilV2.parseJsonLd(jsonLdString)
         // Get the IRI of the resource that the value is to be created in.
-        resourceIri <- ZIO
-                         .attempt(jsonLdDocument.body.requireIDAsKnoraDataIri)
+        resourceIri <- jsonLdDocument.body.getRequiredIdValueAsKnoraDataIri
+                         .mapError(BadRequestException(_))
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
         // Get the resource class.
         resourceClassIri <- ZIO.attempt(jsonLdDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
@@ -813,7 +816,7 @@ object UpdateValueV2 {
                            // Get the custom value creation date, if provided.
 
                            for {
-                             valueIri <- ZIO.attempt(jsonLDObject.requireIDAsKnoraDataIri)
+                             valueIri <- jsonLDObject.getRequiredIdValueAsKnoraDataIri.mapError(BadRequestException(_))
                              // Aside from the value's ID and type and the optional predicates above, does the value object just
                              otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
                                                                 JsonLDKeywords.ID,
