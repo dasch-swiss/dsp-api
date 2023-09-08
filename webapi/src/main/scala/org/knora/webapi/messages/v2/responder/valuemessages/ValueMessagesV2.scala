@@ -741,7 +741,7 @@ object UpdateValueV2 {
         valueIri: SmartIri,
         maybeValueCreationDate: Option[Instant],
         maybeNewIri: Option[SmartIri]
-      ) = ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
+      ) =
         for {
           valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser)
           maybePermissions <-
@@ -760,7 +760,6 @@ object UpdateValueV2 {
           valueCreationDate = maybeValueCreationDate,
           newValueVersionIri = maybeNewIri
         )
-      }
 
       def makeUpdateValuePermissionsV2(
         resourceIri: SmartIri,
@@ -1049,9 +1048,9 @@ object ValueContentV2 {
           valueType.toString match {
             case TextValue                   => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
             case IntValue                    => IntegerValueContentV2.fromJsonLdObject(jsonLdObject)
-            case DecimalValue                => DecimalValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case BooleanValue                => BooleanValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
-            case KnoraApiV2Complex.DateValue => DateValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+            case DecimalValue                => DecimalValueContentV2.fromJsonLdObject(jsonLdObject)
+            case BooleanValue                => BooleanValueContentV2.fromJsonLdObject(jsonLdObject)
+            case KnoraApiV2Complex.DateValue => DateValueContentV2.fromJsonLdObject(jsonLdObject)
             case GeomValue                   => GeomValueContentV2.fromJsonLdObject(jsonLdObject)
             case IntervalValue               => IntervalValueContentV2.fromJsonLdObject(jsonLdObject)
             case TimeValue                   => TimeValueContentV2.fromJsonLdObject(jsonLdObject)
@@ -1217,13 +1216,9 @@ object DateValueContentV2 {
    * Converts a JSON-LD object to a [[DateValueContentV2]].
    *
    * @param jsonLDObject         the JSON-LD object.
-   * @param requestingUser       the user making the request.
    * @return a [[DateValueContentV2]].
    */
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject,
-    requestingUser: UserADM
-  ): ZIO[StringFormatter, Throwable, DateValueContentV2] =
+  def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, DateValueContentV2] =
     for {
       comment                     <- JsonLDUtil.getComment(jsonLDObject)
       calendarName                <- ZIO.attempt(jsonLDObject.requireStringWithValidation(DateValueHasCalendar, CalendarNameV2.parse))
@@ -1648,33 +1643,31 @@ object TextValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, TextValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
-    stringFormatter =>
-      for {
-        maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
-        maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
-        maybeTextValueAsXml   <- jsonLdObject.getString(TextValueAsXml).mapError(BadRequestException(_))
+  ): ZIO[StringFormatter with MessageRelay, Throwable, TextValueContentV2] =
+    for {
+      maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
+      maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
+      maybeTextValueAsXml   <- jsonLdObject.getString(TextValueAsXml).mapError(BadRequestException(_))
 
-        // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
-        maybeMappingResponse <-
-          getIriFromObject(jsonLdObject, TextValueHasMapping).flatMap(mappingIriOption =>
-            ZIO.foreach(mappingIriOption) { mappingIri =>
-              MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
-            }
-          )
+      // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
+      maybeMappingResponse <-
+        getIriFromObject(jsonLdObject, TextValueHasMapping).flatMap(mappingIriOption =>
+          ZIO.foreach(mappingIriOption) { mappingIri =>
+            MessageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
+          }
+        )
 
-        comment <- JsonLDUtil.getComment(jsonLdObject)
-        // Did the client submit text with or without standoff markup?
-        textValue <- getTextValue(
-                       maybeValueAsString,
-                       maybeTextValueAsXml,
-                       maybeValueHasLanguage,
-                       maybeMappingResponse,
-                       jsonLdObject
-                     )
+      _ <- JsonLDUtil.getComment(jsonLdObject)
+      // Did the client submit text with or without standoff markup?
+      textValue <- getTextValue(
+                     maybeValueAsString,
+                     maybeTextValueAsXml,
+                     maybeValueHasLanguage,
+                     maybeMappingResponse,
+                     jsonLdObject
+                   )
 
-      } yield textValue
-  }
+    } yield textValue
 }
 
 /**
@@ -1816,14 +1809,10 @@ object DecimalValueContentV2 {
    * Converts a JSON-LD object to a [[DecimalValueContentV2]].
    *
    * @param jsonLdObject     the JSON-LD object.
-   * @param requestingUser   the user making the request.
    * @return an [[DecimalValueContentV2]].
    */
-  def fromJsonLdObject(
-    jsonLdObject: JsonLDObject,
-    requestingUser: UserADM
-  ): ZIO[StringFormatter, Throwable, DecimalValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit stringFormatter =>
+  def fromJsonLdObject(jsonLdObject: JsonLDObject): ZIO[StringFormatter, Throwable, DecimalValueContentV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
         decimalValue <- ZIO.attempt(
                           jsonLdObject.requireDatatypeValueInObject(
@@ -1834,7 +1823,7 @@ object DecimalValueContentV2 {
                         )
         comment <- JsonLDUtil.getComment(jsonLdObject)
       } yield DecimalValueContentV2(ApiV2Complex, decimalValue, comment)
-  }
+    }
 }
 
 /**
@@ -1897,13 +1886,9 @@ object BooleanValueContentV2 {
    * Converts a JSON-LD object to a [[BooleanValueContentV2]].
    *
    * @param jsonLdObject     the JSON-LD object.
-   * @param requestingUser   the user making the request.
    * @return an [[BooleanValueContentV2]].
    */
-  def fromJsonLdObject(
-    jsonLdObject: JsonLDObject,
-    requestingUser: UserADM
-  ): ZIO[StringFormatter, Throwable, BooleanValueContentV2] =
+  def fromJsonLdObject(jsonLdObject: JsonLDObject): ZIO[StringFormatter, Throwable, BooleanValueContentV2] =
     for {
       booleanValue <- ZIO.attempt(jsonLdObject.requireBoolean(BooleanValueAsBoolean))
       comment      <- JsonLDUtil.getComment(jsonLdObject)
@@ -2361,16 +2346,14 @@ object ColorValueContentV2 {
    * @return a [[ColorValueContentV2]].
    */
   def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, ColorValueContentV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        colorValueAsColor <- ZIO.attempt {
-                               val validationFun: (String, => Nothing) => String =
-                                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                               jsonLDObject.requireStringWithValidation(ColorValueAsColor, validationFun)
-                             }
-        comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield ColorValueContentV2(ApiV2Complex, colorValueAsColor, comment)
-    }
+    for {
+      colorValueAsColor <- ZIO.attempt {
+                             val validationFun: (String, => Nothing) => String =
+                               (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                             jsonLDObject.requireStringWithValidation(ColorValueAsColor, validationFun)
+                           }
+      comment <- JsonLDUtil.getComment(jsonLDObject)
+    } yield ColorValueContentV2(ApiV2Complex, colorValueAsColor, comment)
 }
 
 /**
@@ -2533,19 +2516,17 @@ object GeonameValueContentV2 {
    * @return a [[GeonameValueContentV2]].
    */
   def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, GeonameValueContentV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      for {
-        geonameValueAsGeonameCode <- ZIO.attempt {
-                                       val validationFun: (String, => Nothing) => String =
-                                         (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                                       jsonLDObject.requireStringWithValidation(
-                                         GeonameValueAsGeonameCode,
-                                         validationFun
-                                       )
-                                     }
-        comment <- JsonLDUtil.getComment(jsonLDObject)
-      } yield GeonameValueContentV2(ApiV2Complex, geonameValueAsGeonameCode, comment)
-    }
+    for {
+      geonameValueAsGeonameCode <- ZIO.attempt {
+                                     val validationFun: (String, => Nothing) => String =
+                                       (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                                     jsonLDObject.requireStringWithValidation(
+                                       GeonameValueAsGeonameCode,
+                                       validationFun
+                                     )
+                                   }
+      comment <- JsonLDUtil.getComment(jsonLDObject)
+    } yield GeonameValueContentV2(ApiV2Complex, geonameValueAsGeonameCode, comment)
 }
 
 /**

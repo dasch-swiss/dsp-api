@@ -538,7 +538,7 @@ final case class StandoffResponderV2Live(
             }
 
         // get the mapping from the triplestore and cache it thereby
-        _ <- getMappingFromTriplestore(mappingIri, requestingUser)
+        _ <- getMappingFromTriplestore(mappingIri)
       } yield CreateMappingResponseV2(mappingIri, label, projectIri)
 
       createMappingFuture.mapError {
@@ -780,10 +780,7 @@ final case class StandoffResponderV2Live(
 
         case None =>
           for {
-            mapping <- getMappingFromTriplestore(
-                         mappingIri = mappingIri,
-                         requestingUser = requestingUser
-                       )
+            mapping <- getMappingFromTriplestore(mappingIri = mappingIri)
 
             entities <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
@@ -808,13 +805,9 @@ final case class StandoffResponderV2Live(
    * Gets a mapping from the triplestore.
    *
    * @param mappingIri           the IRI of the mapping to retrieve.
-   * @param requestingUser       the user making the request.
    * @return a [[MappingXMLtoStandoff]].
    */
-  private def getMappingFromTriplestore(
-    mappingIri: IRI,
-    requestingUser: UserADM
-  ): Task[MappingXMLtoStandoff] =
+  private def getMappingFromTriplestore(mappingIri: IRI) =
     for {
       mappingResponse <- triplestore.query(Construct(sparql.v2.txt.getMapping(mappingIri)))
 

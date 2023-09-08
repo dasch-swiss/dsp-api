@@ -40,7 +40,6 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
-import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -87,24 +86,24 @@ final case class OntologyResponderV2Live(
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
     case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) =>
       getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
-    case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) =>
-      getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser)
-    case StandoffClassesWithDataTypeGetRequestV2(requestingUser) =>
-      getStandoffStandoffClassesWithDataTypeV2(requestingUser)
-    case StandoffAllPropertyEntitiesGetRequestV2(requestingUser) => getAllStandoffPropertyEntitiesV2(requestingUser)
+    case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, _) =>
+      getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris)
+    case StandoffClassesWithDataTypeGetRequestV2(_) =>
+      getStandoffStandoffClassesWithDataTypeV2
+    case StandoffAllPropertyEntitiesGetRequestV2(_) => getAllStandoffPropertyEntitiesV2
     case CheckSubClassRequestV2(subClassIri, superClassIri, _) =>
       checkSubClassV2(subClassIri, superClassIri)
     case SubClassesGetRequestV2(resourceClassIri, requestingUser) => getSubClassesV2(resourceClassIri, requestingUser)
-    case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, requestingUser) =>
-      getKnoraEntityIrisInNamedGraphV2(namedGraphIri, requestingUser)
+    case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, _) =>
+      getKnoraEntityIrisInNamedGraphV2(namedGraphIri)
     case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) =>
       getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser)
     case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) =>
       ontologyHelpers.getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
     case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) =>
       getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser)
-    case OntologyMetadataGetByProjectRequestV2(projectIris, requestingUser) =>
-      getOntologyMetadataForProjectsV2(projectIris, requestingUser)
+    case OntologyMetadataGetByProjectRequestV2(projectIris, _) =>
+      getOntologyMetadataForProjectsV2(projectIris)
     case OntologyMetadataGetByIriRequestV2(ontologyIris, _) =>
       getOntologyMetadataByIriV2(ontologyIris)
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
@@ -160,13 +159,11 @@ final case class OntologyResponderV2Live(
    *
    * @param standoffClassIris    the IRIs of the resource entities to be queried.
    * @param standoffPropertyIris the IRIs of the property entities to be queried.
-   * @param requestingUser       the user making the request.
    * @return a [[StandoffEntityInfoGetResponseV2]].
    */
   private def getStandoffEntityInfoResponseV2(
     standoffClassIris: Set[SmartIri] = Set.empty[SmartIri],
-    standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
-    requestingUser: UserADM
+    standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri]
   ): Task[StandoffEntityInfoGetResponseV2] =
     for {
       cacheData <- ontologyCache.getCacheData
@@ -231,12 +228,9 @@ final case class OntologyResponderV2Live(
   /**
    * Gets information about all standoff classes that are a subclass of a data type standoff class.
    *
-   * @param requestingUser the user making the request.
    * @return a [[StandoffClassesWithDataTypeGetResponseV2]]
    */
-  private def getStandoffStandoffClassesWithDataTypeV2(
-    requestingUser: UserADM
-  ): Task[StandoffClassesWithDataTypeGetResponseV2] =
+  private def getStandoffStandoffClassesWithDataTypeV2: Task[StandoffClassesWithDataTypeGetResponseV2] =
     for {
       cacheData <- ontologyCache.getCacheData
     } yield StandoffClassesWithDataTypeGetResponseV2(
@@ -250,19 +244,13 @@ final case class OntologyResponderV2Live(
   /**
    * Gets all standoff property entities.
    *
-   * @param requestingUser the user making the request.
    * @return a [[StandoffAllPropertyEntitiesGetResponseV2]].
    */
-  private def getAllStandoffPropertyEntitiesV2(
-    requestingUser: UserADM
-  ): Task[StandoffAllPropertyEntitiesGetResponseV2] =
-    for {
-      cacheData <- ontologyCache.getCacheData
-    } yield StandoffAllPropertyEntitiesGetResponseV2(
-      standoffAllPropertiesEntityInfoMap = cacheData.ontologies.values.flatMap { ontology =>
-        ontology.properties.view.filterKeys(cacheData.standoffProperties)
-      }.toMap
-    )
+  private def getAllStandoffPropertyEntitiesV2: Task[StandoffAllPropertyEntitiesGetResponseV2] =
+    ontologyCache.getCacheData.map { data =>
+      val ontologies: Iterable[ReadOntologyV2] = data.ontologies.values
+      ontologies.flatMap(_.properties.view.filterKeys(data.standoffProperties)).toMap
+    }.map(StandoffAllPropertyEntitiesGetResponseV2)
 
   /**
    * Checks whether a certain Knora resource or value class is a subclass of another class.
@@ -310,13 +298,9 @@ final case class OntologyResponderV2Live(
    * Gets the [[OntologyKnoraEntitiesIriInfoV2]] for an ontology.
    *
    * @param ontologyIri    the IRI of the ontology to query
-   * @param requestingUser the user making the request.
    * @return an [[OntologyKnoraEntitiesIriInfoV2]].
    */
-  private def getKnoraEntityIrisInNamedGraphV2(
-    ontologyIri: SmartIri,
-    requestingUser: UserADM
-  ): Task[OntologyKnoraEntitiesIriInfoV2] =
+  private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri): Task[OntologyKnoraEntitiesIriInfoV2] =
     for {
       cacheData <- ontologyCache.getCacheData
       ontology   = cacheData.ontologies(ontologyIri)
@@ -338,13 +322,9 @@ final case class OntologyResponderV2Live(
    * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
    *
    * @param projectIris    the IRIs of the projects selected, or an empty set if all projects are selected.
-   * @param requestingUser the user making the request.
    * @return a [[ReadOntologyMetadataV2]].
    */
-  private def getOntologyMetadataForProjectsV2(
-    projectIris: Set[SmartIri],
-    requestingUser: UserADM
-  ): Task[ReadOntologyMetadataV2] =
+  private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri]): Task[ReadOntologyMetadataV2] =
     for {
       cacheData                   <- ontologyCache.getCacheData
       returnAllOntologies: Boolean = projectIris.isEmpty
@@ -367,7 +347,6 @@ final case class OntologyResponderV2Live(
    * Gets the metadata describing the specified ontologies, or all ontologies.
    *
    * @param ontologyIris   the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
-   * @param requestingUser the user making the request.
    * @return a [[ReadOntologyMetadataV2]].
    */
   private def getOntologyMetadataByIriV2(ontologyIris: Set[SmartIri]): Task[ReadOntologyMetadataV2] =
@@ -536,8 +515,7 @@ final case class OntologyResponderV2Live(
 
         _ <- maybeLoadedOntologyMetadata match {
                case Some(loadedOntologyMetadata) =>
-                 if (loadedOntologyMetadata != unescapedNewMetadata) { ZIO.fail(UpdateNotPerformedException()) }
-                 else { ZIO.unit }
+                 ZIO.unless(loadedOntologyMetadata == unescapedNewMetadata)(ZIO.fail(UpdateNotPerformedException()))
                case None => ZIO.fail(UpdateNotPerformedException())
              }
 
@@ -676,8 +654,7 @@ final case class OntologyResponderV2Live(
 
         _ <- maybeLoadedOntologyMetadata match {
                case Some(loadedOntologyMetadata) =>
-                 if (loadedOntologyMetadata != unescapedNewMetadata) { ZIO.fail(UpdateNotPerformedException()) }
-                 else { ZIO.unit }
+                 ZIO.unless(loadedOntologyMetadata == unescapedNewMetadata)(ZIO.fail(UpdateNotPerformedException()))
                case None => ZIO.fail(UpdateNotPerformedException())
              }
 
@@ -759,8 +736,7 @@ final case class OntologyResponderV2Live(
 
         _ <- maybeLoadedOntologyMetadata match {
                case Some(loadedOntologyMetadata) =>
-                 if (loadedOntologyMetadata != unescapedNewMetadata) { ZIO.fail(UpdateNotPerformedException()) }
-                 else { ZIO.unit }
+                 ZIO.unless(loadedOntologyMetadata == unescapedNewMetadata)(ZIO.fail(UpdateNotPerformedException()))
                case None => ZIO.fail(UpdateNotPerformedException())
              }
 
@@ -2156,12 +2132,10 @@ final case class OntologyResponderV2Live(
 
         _ <- (maybeLoadedLinkValuePropertyDef, maybeUnescapedNewLinkValuePropertyDef) match {
                case (Some(loadedLinkValuePropertyDef), Some(unescapedNewLinkPropertyDef)) =>
-                 if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
+                 ZIO.unless(loadedLinkValuePropertyDef == unescapedNewLinkPropertyDef) {
                    val msg =
                      s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved"
                    ZIO.fail(InconsistentRepositoryDataException(msg))
-                 } else {
-                   ZIO.unit
                  }
                case _ => ZIO.unit
              }
@@ -2702,12 +2676,11 @@ final case class OntologyResponderV2Live(
     deletePropertyCommentRequest: DeletePropertyCommentRequestV2
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(
-      cacheData: OntologyCacheData,
       internalPropertyIri: SmartIri,
       internalOntologyIri: SmartIri,
       ontology: ReadOntologyV2,
       propertyToUpdate: ReadPropertyInfoV2
-    ): Task[ReadOntologyV2] =
+    ) =
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
@@ -2861,7 +2834,6 @@ final case class OntologyResponderV2Live(
                           deletePropertyCommentRequest.apiRequestID,
                           ONTOLOGY_CACHE_LOCK_IRI,
                           makeTaskFuture(
-                            cacheData = cacheData,
                             internalPropertyIri = internalPropertyIri,
                             internalOntologyIri = internalOntologyIri,
                             ontology = ontology,
@@ -2890,12 +2862,11 @@ final case class OntologyResponderV2Live(
     deleteClassCommentRequest: DeleteClassCommentRequestV2
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(
-      cacheData: OntologyCacheData,
       internalClassIri: SmartIri,
       internalOntologyIri: SmartIri,
       ontology: ReadOntologyV2,
       classToUpdate: ReadClassInfoV2
-    ): Task[ReadOntologyV2] =
+    ) =
       for {
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
@@ -2991,7 +2962,6 @@ final case class OntologyResponderV2Live(
                           deleteClassCommentRequest.apiRequestID,
                           ONTOLOGY_CACHE_LOCK_IRI,
                           makeTaskFuture(
-                            cacheData = cacheData,
                             internalClassIri = internalClassIri,
                             internalOntologyIri = internalOntologyIri,
                             ontology = ontology,

@@ -89,7 +89,7 @@ final case class StandoffRouteV2()(
                 .mapAttempt(JsonLDUtil.parseJsonLD(_))
             apiRequestID <- RouteUtilZ.randomUuid()
             metadata <-
-              ZIO.attempt(CreateMappingRequestMetadataV2.fromJsonLDSync(jsonldDoc, apiRequestID, requestingUser))
+              ZIO.attempt(CreateMappingRequestMetadataV2.fromJsonLDSync(jsonldDoc))
             xml <-
               ZIO
                 .fromOption(allParts.get(xmlPartKey))

@@ -1320,7 +1320,7 @@ case class ReadOntologyV2(
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
     // Get rules for transforming internal entities to external entities in the target schema.
     val transformationRules =
-      OntologyTransformationRules.getTransformationRules(ontologyMetadata.ontologyIri, targetSchema)
+      OntologyTransformationRules.getTransformationRules(targetSchema)
 
     // If we're converting to the API v2 simple schema, filter out link value properties.
     val propertiesConsideringLinkValueProps = targetSchema match {
@@ -1793,7 +1793,6 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
  * @param objects      the objects of the predicate.
  */
 case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV2] = Seq.empty[OntologyLiteralV2]) {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   /**
    * Converts this [[PredicateInfoV2]] to another ontology schema.
@@ -2382,7 +2381,7 @@ case class ReadClassInfoV2(
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
     // Get rules for transforming internal entities to external entities in the target schema.
     val transformationRules =
-      OntologyTransformationRules.getTransformationRules(entityInfoContent.classIri.getOntologyFromEntity, targetSchema)
+      OntologyTransformationRules.getTransformationRules(targetSchema)
 
     // If we're converting to the simplified API v2 schema, remove references to link value properties.
 
@@ -2797,7 +2796,7 @@ case class ClassInfoContentV2(
     // Get rules for transforming internal entities to external entities in the target schema, if relevant.
     val maybeTransformationRules: Option[OntologyTransformationRules] = targetSchema match {
       case apiV2Schema: ApiV2Schema =>
-        Some(OntologyTransformationRules.getTransformationRules(classIri.getOntologyFromEntity, apiV2Schema))
+        Some(OntologyTransformationRules.getTransformationRules(apiV2Schema))
       case InternalSchema => None
     }
 
@@ -3145,7 +3144,7 @@ case class PropertyInfoContentV2(
 
     val maybeTransformationRules: Option[OntologyTransformationRules] = targetSchema match {
       case apiV2Schema: ApiV2Schema =>
-        Some(OntologyTransformationRules.getTransformationRules(propertyIri.getOntologyFromEntity, apiV2Schema))
+        Some(OntologyTransformationRules.getTransformationRules(apiV2Schema))
       case InternalSchema => None
     }
 
@@ -3403,7 +3402,7 @@ case class OntologyMetadataV2(
       targetSchema match {
         case InternalSchema => this
         case apiV2Schema: ApiV2Schema =>
-          OntologyTransformationRules.getTransformationRules(ontologyIri, apiV2Schema).ontologyMetadata
+          OntologyTransformationRules.getTransformationRules(apiV2Schema).ontologyMetadata
       }
     } else {
       copy(
@@ -3419,14 +3418,8 @@ case class OntologyMetadataV2(
    *
    * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` and `rdfs:comment` unescaped.
    */
-  def unescape: OntologyMetadataV2 = {
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    copy(
-      label = label.map(Iri.fromSparqlEncodedString),
-      comment = comment.map(Iri.fromSparqlEncodedString)
-    )
-  }
+  def unescape: OntologyMetadataV2 =
+    copy(label = label.map(Iri.fromSparqlEncodedString), comment = comment.map(Iri.fromSparqlEncodedString))
 
   def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
 

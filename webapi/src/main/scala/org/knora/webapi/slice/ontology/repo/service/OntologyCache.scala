@@ -725,7 +725,6 @@ final case class OntologyCacheLive(
       classDefs = allClassDefs,
       directClassCardinalities = directClassCardinalities,
       classCardinalitiesWithInheritance = classCardinalitiesWithInheritance,
-      directSubClassOfRelations = directSubClassOfRelations,
       allSubClassOfRelations = allSubClassOfRelations,
       allSubPropertyOfRelations = allSubPropertyOfRelations,
       allPropertyDefs = allPropertyDefs,
@@ -738,9 +737,7 @@ final case class OntologyCacheLive(
     // Construct a ReadPropertyInfoV2 for each property definition.
     val readPropertyInfos: Map[SmartIri, ReadPropertyInfoV2] = OntologyHelpers.makeReadPropertyInfos(
       propertyDefs = allPropertyDefs,
-      directSubPropertyOfRelations = directSubPropertyOfRelations,
       allSubPropertyOfRelations = allSubPropertyOfRelations,
-      allSubClassOfRelations = allSubClassOfRelations,
       allKnoraResourceProps = allKnoraResourceProps,
       allLinkProps = allLinkProps,
       allLinkValueProps = allLinkValueProps,

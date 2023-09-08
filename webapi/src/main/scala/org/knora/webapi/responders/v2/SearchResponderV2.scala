@@ -12,12 +12,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.IRI
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.SchemaOption
-import org.knora.webapi.SchemaOptions
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -45,7 +40,6 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimi
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
@@ -92,13 +86,7 @@ final case class SearchResponderV2Live(
           limitToStandoffClass,
           requestingUser
         ) =>
-      fulltextSearchCountV2(
-        searchValue,
-        limitToProject,
-        limitToResourceClass,
-        limitToStandoffClass,
-        requestingUser
-      )
+      fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass)
 
     case FulltextSearchRequestV2(
           searchValue,
@@ -144,12 +132,7 @@ final case class SearchResponderV2Live(
           limitToResourceClass,
           requestingUser
         ) =>
-      searchResourcesByLabelCountV2(
-        searchValue,
-        limitToProject,
-        limitToResourceClass,
-        requestingUser
-      )
+      searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass)
 
     case SearchResourceByLabelRequestV2(
           searchValue,
@@ -184,16 +167,14 @@ final case class SearchResponderV2Live(
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    *
-   * @param requestingUser       the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   private def fulltextSearchCountV2(
-    searchValue: String,
+    searchValue: IRI,
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
-    limitToStandoffClass: Option[SmartIri],
-    requestingUser: UserADM
-  ): Task[ResourceCountV2] =
+    limitToStandoffClass: Option[SmartIri]
+  ) =
     for {
       countSparql <- ZIO.attempt(
                        sparql.v2.txt
@@ -310,8 +291,7 @@ final case class SearchResponderV2Live(
             resourceIris = resourceIris.toSet,
             valueObjectIris = allValueObjectIris,
             targetSchema = targetSchema,
-            schemaOptions = schemaOptions,
-            appConfig = appConfig
+            schemaOptions = schemaOptions
           )
 
           for {
@@ -585,8 +565,7 @@ final case class SearchResponderV2Live(
             dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
             valueObjectIris = allValueObjectIris,
             targetSchema = targetSchema,
-            schemaOptions = schemaOptions,
-            appConfig = appConfig
+            schemaOptions = schemaOptions
           )
 
           for {
@@ -607,9 +586,7 @@ final case class SearchResponderV2Live(
                     valueObjectVarsAndIrisPerMainResource,
                     allResourceVariablesFromTypeInspection,
                     dependentResourceIrisFromTypeInspection,
-                    gravsearchToPrequeryTransformer,
-                    typeInspectionResult,
-                    inputQuery
+                    gravsearchToPrequeryTransformer
                   )
           } yield queryResultsFilteredForPermissions.copy(
             resources = queryResWithFullGraphPatternOnlyRequestedValues
@@ -827,15 +804,13 @@ final case class SearchResponderV2Live(
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    *
-   * @param requestingUser       the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   private def searchResourcesByLabelCountV2(
-    searchValue: String,
+    searchValue: IRI,
     limitToProject: Option[IRI],
-    limitToResourceClass: Option[SmartIri],
-    requestingUser: UserADM
-  ): Task[ResourceCountV2] = {
+    limitToResourceClass: Option[SmartIri]
+  ) = {
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
     for {
