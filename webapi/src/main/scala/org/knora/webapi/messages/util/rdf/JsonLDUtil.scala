@@ -932,42 +932,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case None => ZIO.fail(s"No ${JsonLDKeywords.TYPE} provided")
     }
 
-  /**
-   * When called on a JSON-LD object representing a resource, ensures that it contains a single Knora property with
-   * a single value in the Knora API v2 complex schema.
-   *
-   * @return the property IRI and the value.
-   */
-  @deprecated("use getRequiredResourcePropertyApiV2ComplexValue() instead")
-  @throws[BadRequestException]
-  def requireResourcePropertyApiV2ComplexValue: (SmartIri, JsonLDObject) = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDKeywords.ID - JsonLDKeywords.TYPE
-
-    if (resourceProps.isEmpty) {
-      throw BadRequestException("No value submitted")
-    }
-
-    if (resourceProps.size > 1) {
-      throw BadRequestException(s"Only one value can be submitted per request using this route")
-    }
-
-    resourceProps.head match {
-      case (key: IRI, jsonLDValue: JsonLDValue) =>
-        val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
-
-        if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2Complex))) {
-          throw BadRequestException(s"Invalid Knora API v2 complex property IRI: $propertyIri")
-        }
-
-        jsonLDValue match {
-          case jsonLDObject: JsonLDObject => propertyIri -> jsonLDObject
-          case _                          => throw BadRequestException(s"Invalid value for $propertyIri")
-        }
-    }
-  }
-
   def getRequiredResourcePropertyApiV2ComplexValue: ZIO[IriConverter, String, (SmartIri, JsonLDObject)] =
     ZIO.serviceWithZIO[IriConverter] { c =>
       val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDKeywords.ID - JsonLDKeywords.TYPE

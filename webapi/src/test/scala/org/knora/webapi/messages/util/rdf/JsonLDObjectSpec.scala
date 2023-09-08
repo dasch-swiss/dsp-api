@@ -616,11 +616,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         actual <- emptyJsonLdObject.getRequiredTypeAsKnoraApiV2ComplexTypeIri.exit
       } yield assertTrue(actual == Exit.fail("No @type provided"))
     },
-    test("requireResourcePropertyApiV2ComplexValue should fail with a BadRequestException") {
-      for {
-        actual <- ZIO.attempt(emptyJsonLdObject.requireResourcePropertyApiV2ComplexValue).exit
-      } yield assertTrue(actual == Exit.fail(BadRequestException("No value submitted")))
-    },
     test("getRequiredResourcePropertyApiV2ComplexValue should fail with correct message") {
       for {
         actual <- emptyJsonLdObject.getRequiredResourcePropertyApiV2ComplexValue.exit
@@ -646,11 +641,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         for {
           actual <- jsonLdObjectWithTypeIri.getRequiredTypeAsKnoraApiV2ComplexTypeIri
         } yield assertTrue(actual == smartTypeIri)
-      },
-      test("requireResourcePropertyApiV2ComplexValue should return smart iri") {
-        for {
-          actual <- ZIO.attempt(jsonLDObjectWithPropertyIri.requireResourcePropertyApiV2ComplexValue)
-        } yield assertTrue(actual == (smartPropertyIri, textJsonLdObject))
       },
       test("getRequiredResourcePropertyApiV2ComplexValue should return smart iri") {
         for {
@@ -687,12 +677,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
             JsonLDObject(Map(hasTextPropIri -> textJsonLdObject, hasCommentPropIri -> textJsonLdObject))
           val expectedError = "Only one value can be submitted per request using this route"
           suite("case more than one property")(
-            test("requireResourcePropertyApiV2ComplexValue should fail with a BadRequestException") {
-              for {
-                actual <-
-                  ZIO.attempt(jsonLDObjectWithMoreThanOnePropertyIri.requireResourcePropertyApiV2ComplexValue).exit
-              } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-            },
             test("getRequiredResourcePropertyApiV2ComplexValue should fail with correct message") {
               for {
                 actual <- jsonLDObjectWithMoreThanOnePropertyIri.getRequiredResourcePropertyApiV2ComplexValue.exit
@@ -703,12 +687,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
           val jsonLDObjectWithInvalidPropertyValue = JsonLDObject(Map(invalidPropIri -> textJsonLdObject))
           val expectedError2                       = s"Invalid Knora API v2 complex property IRI: $invalidPropIri"
           suite("case invalid property iri")(
-            test("requireResourcePropertyApiV2ComplexValue should fail with a BadRequestException") {
-              for {
-                actual <-
-                  ZIO.attempt(jsonLDObjectWithInvalidPropertyValue.requireResourcePropertyApiV2ComplexValue).exit
-              } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError2)))
-            },
             test("getRequiredResourcePropertyApiV2ComplexValue should fail with correct message") {
               for {
                 actual <- jsonLDObjectWithInvalidPropertyValue.getRequiredResourcePropertyApiV2ComplexValue.exit
