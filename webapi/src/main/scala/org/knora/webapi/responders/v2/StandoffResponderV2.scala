@@ -14,10 +14,7 @@ import java.io._
 import java.util.UUID
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.Schema
 import javax.xml.validation.SchemaFactory
-import javax.xml.validation.{Validator => JValidator}
-import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
@@ -148,7 +145,7 @@ final case class StandoffResponderV2Live(
 
       readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
 
-      valueObj: ReadValueV2 =
+      valueObj =
         readResourceV2.values.values.flatten
           .find(_.valueIri == getStandoffRequestV2.valueIri)
           .getOrElse(
@@ -157,7 +154,7 @@ final case class StandoffResponderV2Live(
             )
           )
 
-      textValueObj: ReadTextValueV2 =
+      textValueObj =
         valueObj match {
           case textVal: ReadTextValueV2 => textVal
           case _ =>
@@ -204,7 +201,7 @@ final case class StandoffResponderV2Live(
             )
           }
 
-      (fileValueIri: IRI, xsltFileValueContent: TextFileValueContentV2) =
+      (fileValueIri, xsltFileValueContent) =
         resource.values.get(
           OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri
         ) match {
@@ -300,19 +297,19 @@ final case class StandoffResponderV2Live(
         factory <- ZIO.attempt(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
 
         // get the schema the mapping has to be validated against
-        schemaFile: String = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
+        schemaFile = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
 
-        schemaSource: StreamSource = new StreamSource(new StringReader(schemaFile))
+        schemaSource = new StreamSource(new StringReader(schemaFile))
 
         // create a schema instance
-        schemaInstance: Schema = factory.newSchema(schemaSource)
-        validator: JValidator  = schemaInstance.newValidator()
+        schemaInstance = factory.newSchema(schemaSource)
+        validator      = schemaInstance.newValidator()
 
         // validate the provided mapping
         _ = validator.validate(new StreamSource(new StringReader(xml)))
 
         // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
-        mappingXML: Elem = XML.loadString(xml)
+        mappingXML = XML.loadString(xml)
 
         // get the default XSL transformation, if given (optional)
         defaultXSLTransformation <-
@@ -340,7 +337,7 @@ final case class StandoffResponderV2Live(
           }
 
         // create a collection of a all elements mappingElement
-        mappingElementsXML: NodeSeq = mappingXML \ "mappingElement"
+        mappingElementsXML = mappingXML \ "mappingElement"
 
         mappingElements: Seq[MappingElement] =
           mappingElementsXML.map { curMappingEle: Node =>
@@ -817,12 +814,12 @@ final case class StandoffResponderV2Live(
           }
 
       // separate MappingElements from other statements (attributes and datatypes)
-      (mappingElementStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) =
+      (mappingElementStatements, otherStatements) =
         mappingResponse.statements.partition { case (_: IRI, assertions: Seq[(IRI, String)]) =>
           assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.MappingElement))
         }
 
-      mappingElements: Seq[MappingElement] =
+      mappingElements =
         mappingElementStatements.map { case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
           // for convenience (works only for props with cardinality one)
           val assertionsAsMap: Map[IRI, String] = assertions.toMap
@@ -891,7 +888,7 @@ final case class StandoffResponderV2Live(
         }.toSeq
 
       // check if there is a default XSL transformation
-      defaultXSLTransformationOption: Option[IRI] =
+      defaultXSLTransformationOption =
         otherStatements(mappingIri).find { case (pred: IRI, _: String) =>
           pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
         }.map { case (_: IRI, xslTransformationIri: IRI) =>

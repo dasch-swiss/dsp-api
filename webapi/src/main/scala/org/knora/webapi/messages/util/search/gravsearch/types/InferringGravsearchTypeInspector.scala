@@ -865,25 +865,22 @@ final case class InferringGravsearchTypeInspector(
       allEntityInfo = t._2
 
       // Iterate over the inference rules until no new type information can be inferred.
-      intermediateResult: IntermediateTypeInspectionResult = doIterations(
-                                                               iterationNumber = 1,
-                                                               intermediateResult = previousResult,
-                                                               entityInfo = allEntityInfo,
-                                                               usageIndex = usageIndex
-                                                             )
+      intermediateResult = doIterations(
+                             iterationNumber = 1,
+                             intermediateResult = previousResult,
+                             entityInfo = allEntityInfo,
+                             usageIndex = usageIndex
+                           )
 
       // refine the determined types before sending to the next inspector
-      refinedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
-                                                                      intermediateResult = intermediateResult,
-                                                                      entityInfo = allEntityInfo
-                                                                    )
+      refinedIntermediateResult = refineDeterminedTypes(intermediateResult, allEntityInfo)
 
       // sanitize the inconsistent resource types inferred for an entity
-      sanitizedResults: IntermediateTypeInspectionResult = sanitizeInconsistentResourceTypes(
-                                                             refinedIntermediateResult,
-                                                             usageIndex.querySchema,
-                                                             entityInfo = allEntityInfo
-                                                           )
+      sanitizedResults = sanitizeInconsistentResourceTypes(
+                           refinedIntermediateResult,
+                           usageIndex.querySchema,
+                           entityInfo = allEntityInfo
+                         )
     } yield sanitizedResults
   }
 
@@ -970,16 +967,15 @@ final case class InferringGravsearchTypeInspector(
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
-      additionalEntityInfoInInputSchemas: EntityInfoGetResponseV2 = convertEntityInfoResponseToInputSchemas(
-                                                                      usageIndex = usageIndexWithAdditionalClasses,
-                                                                      entityInfo = additionalEntityInfo
-                                                                    )
+      additionalEntityInfoInInputSchemas = convertEntityInfoResponseToInputSchemas(
+                                             usageIndex = usageIndexWithAdditionalClasses,
+                                             entityInfo = additionalEntityInfo
+                                           )
 
       // Combine all the entity info into one object.
-      allEntityInfo: EntityInfoGetResponseV2 =
-        initialEntityInfoInInputSchemas.copy(
-          classInfoMap = initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap
-        )
+      allEntityInfo = initialEntityInfoInInputSchemas.copy(classInfoMap =
+                        initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap
+                      )
 
     } yield (usageIndexWithAdditionalClasses, allEntityInfo)
 

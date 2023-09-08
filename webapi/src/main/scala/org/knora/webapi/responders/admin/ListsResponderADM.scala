@@ -1292,14 +1292,14 @@ final case class ListsResponderADMLive(
                 s"Node is not repositioned correctly in specified parent node. Please report this as a bug."
               )
             }
-        leftPositions: Seq[Int] = siblingsPositionedBefore.map(child => child.position)
+        leftPositions = siblingsPositionedBefore.map(child => child.position)
         _ = if (leftPositions != leftPositions.sorted) {
               throw UpdateNotPerformedException(
                 s"Something has gone wrong with shifting nodes. Please report this as a bug."
               )
             }
         siblingsPositionedAfter = rest.slice(1, rest.length)
-        rightSiblings: Seq[Int] = siblingsPositionedAfter.map(child => child.position)
+        rightSiblings           = siblingsPositionedAfter.map(child => child.position)
         _ = if (rightSiblings != rightSiblings.sorted) {
               throw UpdateNotPerformedException(
                 s"Something has gone wrong with shifting nodes. Please report this as a bug."
