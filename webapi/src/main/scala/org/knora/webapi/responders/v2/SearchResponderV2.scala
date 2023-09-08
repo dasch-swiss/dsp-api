@@ -84,7 +84,7 @@ final case class SearchResponderV2Live(
           limitToProject,
           limitToResourceClass,
           limitToStandoffClass,
-          requestingUser
+          _
         ) =>
       fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass)
 
@@ -130,7 +130,7 @@ final case class SearchResponderV2Live(
           searchValue,
           limitToProject,
           limitToResourceClass,
-          requestingUser
+          _
         ) =>
       searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass)
 

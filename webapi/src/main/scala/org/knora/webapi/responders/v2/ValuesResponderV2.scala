@@ -1043,8 +1043,7 @@ final case class ValuesResponderV2Live(
             stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
           )
 
-        currentTime: Instant =
-          updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
+        currentTime = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
         sparqlUpdate = sparql.v2.txt.changeValuePermissions(
                          dataNamedGraph = dataNamedGraph,
@@ -1956,7 +1955,7 @@ final case class ValuesResponderV2Live(
           )
 
       // If the property points to a text value, also query the resource's standoff links.
-      maybeStandoffLinkToPropertyIri: Option[SmartIri] =
+      maybeStandoffLinkToPropertyIri =
         if (objectClassConstraint.toString == OntologyConstants.KnoraBase.TextValue) {
           Some(OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri)
         } else {
@@ -1964,10 +1963,8 @@ final case class ValuesResponderV2Live(
         }
 
       // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
-      propertyIrisForGravsearchQuery: Seq[SmartIri] =
-        (Seq(
-          propertyInfo.entityInfoContent.propertyIri
-        ) ++ maybeStandoffLinkToPropertyIri)
+      propertyIrisForGravsearchQuery =
+        (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri)
           .map(_.toOntologySchema(ApiV2Complex))
 
       // Make a Gravsearch query from a template.
@@ -2021,7 +2018,7 @@ final case class ValuesResponderV2Live(
       resourcePreviewResponse <- messageRelay.ask[ReadResourcesSequenceV2](resourcePreviewRequest)
 
       // If we get a resource, we know the user has permission to view it.
-      resource: ReadResourceV2 = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
+      resource = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
 
       // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
       subClassRequest = CheckSubClassRequestV2(
