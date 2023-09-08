@@ -155,10 +155,8 @@ class OntologyV2R2RSpec extends R2RSpec {
      */
     def storeClientTestData(responseStr: String): Unit =
       maybeClientTestDataBasename match {
-        case Some(clientTestDataBasename) =>
-          CollectClientTestData(clientTestDataBasename, responseStr)
-
-        case None => ()
+        case Some(clientTestDataBasename) => CollectClientTestData(clientTestDataBasename, responseStr)
+        case None                         => ()
       }
 
     /**

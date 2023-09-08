@@ -36,7 +36,7 @@ object FileUtil {
    * @param file    the destination file.
    * @param content the string to write.
    */
-  def writeTextFile(file: Path, content: String): Unit =
+  def writeTextFile(file: Path, content: String): Path =
     writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
 
   /**
@@ -93,8 +93,7 @@ object FileUtil {
    * @param file    the destination file.
    * @param content the binary data to write.
    */
-  def writeBinaryFile(file: Path, content: Array[Byte]): Unit =
-    Files.write(file, content)
+  private def writeBinaryFile(file: Path, content: Array[Byte]) = Files.write(file, content)
 
   /**
    * Generates a byte array representing a Zip file containing the specified data. The Zip file data is
