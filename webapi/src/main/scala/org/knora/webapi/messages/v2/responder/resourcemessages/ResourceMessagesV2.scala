@@ -673,13 +673,14 @@ object CreateResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit stringFormatter =>
+  ): ZIO[IriConverter with StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
         (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
       for {
         // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
+        resourceClassIri <-
+          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
 
         // Get the custom resource IRI if provided.
         maybeCustomResourceIri <- jsonLDDocument.body.getIdValueAsKnoraDataIri.mapError(BadRequestException(_))
@@ -838,7 +839,7 @@ object CreateResourceRequestV2 {
         requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
         apiRequestID = apiRequestID
       )
-  }
+    }
 }
 
 /**
@@ -1072,8 +1073,8 @@ object DeleteOrEraseResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): ZIO[StringFormatter, Throwable, DeleteOrEraseResourceRequestV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
+  ): ZIO[StringFormatter with IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
       for {
         resourceIri <-
           jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
@@ -1082,7 +1083,8 @@ object DeleteOrEraseResourceRequestV2 {
               ZIO.when(!iri.isKnoraResourceIri)(ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>")))
             )
 
-        resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
+        resourceClassIri <-
+          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
 
         maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
                                                        key = KnoraApiV2Complex.LastModificationDate,

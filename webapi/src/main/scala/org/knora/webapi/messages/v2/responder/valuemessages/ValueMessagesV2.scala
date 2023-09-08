@@ -43,6 +43,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -165,7 +166,7 @@ object DeleteValueV2 {
    * @param jsonLdString the JSON-LD input as String.
    * @return a case class instance representing the input.
    */
-  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter, Throwable, DeleteValueV2] =
+  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter with IriConverter, Throwable, DeleteValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       RouteUtilV2.parseJsonLd(jsonLdString).flatMap { jsonLDDocument =>
         ZIO.attempt(jsonLDDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
@@ -178,16 +179,17 @@ object DeleteValueV2 {
                     ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>")).when(!iri.isKnoraResourceIri)
                   )
 
-              resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
-              valueIri         <- jsonLDObject.getRequiredIdValueAsKnoraDataIri.mapError(BadRequestException(_))
-              _                <- ZIO.fail(BadRequestException(s"Invalid value IRI: <$valueIri>")).when(!valueIri.isKnoraValueIri)
+              resourceClassIri <-
+                jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
+              valueIri <- jsonLDObject.getRequiredIdValueAsKnoraDataIri.mapError(BadRequestException(_))
+              _        <- ZIO.fail(BadRequestException(s"Invalid value IRI: <$valueIri>")).when(!valueIri.isKnoraValueIri)
               _ <- ZIO
                      .fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
                      .when(
                        UuidUtil.hasValidLength(UuidUtil.fromIri(valueIri.toString)) &&
                          !UuidUtil.hasSupportedVersion(valueIri.toString)
                      )
-              valueTypeIri <- ZIO.attempt(jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri)
+              valueTypeIri <- jsonLDObject.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
               deleteComment <- ZIO.attempt {
                                  val validationFun: (String, => Nothing) => String =
                                    (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
@@ -617,7 +619,7 @@ object CreateValueV2 {
   def fromJsonLd(
     jsonLdString: String,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, CreateValueV2] =
+  ): ZIO[StringFormatter with IriConverter with MessageRelay, Throwable, CreateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
         // Get the IRI of the resource that the value is to be created in.
@@ -627,7 +629,8 @@ object CreateValueV2 {
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
         // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
+        resourceClassIri <-
+          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
 
         // Get the resource property and the value to be created.
         createValue <-
@@ -737,8 +740,8 @@ object UpdateValueV2 {
   def fromJsonLd(
     jsonLdString: String,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, UpdateValueV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit stringFormatter =>
+  ): ZIO[IriConverter with StringFormatter with MessageRelay, Throwable, UpdateValueV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       def makeUpdateValueContentV2(
         resourceIri: SmartIri,
         resourceClassIri: SmartIri,
@@ -808,7 +811,8 @@ object UpdateValueV2 {
                          .mapError(BadRequestException(_))
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
         // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLdDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
+        resourceClassIri <-
+          jsonLdDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
 
         // Get the resource property and the new value version.
         updateValue <- ZIO.attempt(jsonLdDocument.body.requireResourcePropertyApiV2ComplexValue).flatMap {
@@ -887,7 +891,7 @@ object UpdateValueV2 {
                            } yield value
                        }
       } yield updateValue
-  }
+    }
 }
 
 /**

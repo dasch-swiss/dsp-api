@@ -930,25 +930,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case None      => ZIO.none
     }
 
-  /**
-   * Validates the `@type` of a JSON-LD object as a Knora type IRI in the API v2 complex schema.
-   *
-   * @return a validated Knora type IRI.
-   */
-  @deprecated("use getRequiredTypeAsKnoraApiV2ComplexTypeIri() instead")
-  @throws[BadRequestException]
-  def requireTypeAsKnoraApiV2ComplexTypeIri: SmartIri = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val typeIri = requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-
-    if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2Complex))) {
-      throw BadRequestException(s"Invalid Knora API v2 complex type IRI: $typeIri")
-    }
-
-    typeIri
-  }
-
   def getRequiredTypeAsKnoraApiV2ComplexTypeIri: ZIO[IriConverter, String, SmartIri] =
     getString(JsonLDKeywords.TYPE).flatMap {
       case Some(str) =>

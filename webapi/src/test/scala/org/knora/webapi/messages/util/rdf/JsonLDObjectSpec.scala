@@ -624,11 +624,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   )
 
   private def smartIriValueSuiteGivenEmptyMap = suite("when given an empty map")(
-    test("requireTypeAsKnoraApiV2ComplexTypeIri should fail with a BadRequestException") {
-      for {
-        actual <- ZIO.attempt(emptyJsonLdObject.requireTypeAsKnoraApiV2ComplexTypeIri).exit
-      } yield assertTrue(actual == Exit.fail(BadRequestException("No @type provided")))
-    },
     test("getRequiredTypeAsKnoraApiV2ComplexTypeIri should fail with correct message") {
       for {
         actual <- emptyJsonLdObject.getRequiredTypeAsKnoraApiV2ComplexTypeIri.exit
@@ -660,11 +655,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val jsonLDObjectWithPropertyIri = JsonLDObject(Map(propertyIri -> textJsonLdObject))
 
     suite("when given a valid value")(
-      test("requireTypeAsKnoraApiV2ComplexTypeIri should return smart iri") {
-        for {
-          actual <- ZIO.attempt(jsonLdObjectWithTypeIri.requireTypeAsKnoraApiV2ComplexTypeIri)
-        } yield assertTrue(actual == smartTypeIri)
-      },
       test("getRequiredTypeAsKnoraApiV2ComplexTypeIri should return smart iri") {
         for {
           actual <- jsonLdObjectWithTypeIri.getRequiredTypeAsKnoraApiV2ComplexTypeIri
@@ -689,11 +679,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       val expectedError                  = s"Invalid Knora API v2 complex type IRI: $invalidTypeIri"
       val jsonLDObjectWithInvalidTypeIri = JsonLDObject(Map("@type" -> JsonLDString(invalidTypeIri)))
       suite("when given an invalid type value")(
-        test("requireTypeAsKnoraApiV2ComplexTypeIri should fail with a BadRequestException") {
-          for {
-            actual <- ZIO.attempt(jsonLDObjectWithInvalidTypeIri.requireTypeAsKnoraApiV2ComplexTypeIri).exit
-          } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-        },
         test("getRequiredTypeAsKnoraApiV2ComplexTypeIri should fail with correct message") {
           for {
             actual <- jsonLDObjectWithInvalidTypeIri.getRequiredTypeAsKnoraApiV2ComplexTypeIri.exit
