@@ -1272,7 +1272,7 @@ object DateValueContentV2 {
       dateRange = CalendarDateRangeV2(startCalendarDate, endCalendarDate)
 
       // Convert the CalendarDateRangeV2 to start and end Julian Day Numbers.
-      (startJDN: Int, endJDN: Int) = dateRange.toJulianDayRange
+      (startJDN, endJDN) = dateRange.toJulianDayRange
 
     } yield DateValueContentV2(
       ontologySchema = ApiV2Complex,

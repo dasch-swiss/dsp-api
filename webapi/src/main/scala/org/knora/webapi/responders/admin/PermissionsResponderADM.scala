@@ -255,7 +255,7 @@ final case class PermissionsResponderADMLive(
         }
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
-      projectAdmins: Seq[(IRI, IRI)] =
+      projectAdmins =
         if (projectIris.nonEmpty) {
           for {
             projectAdminForGroup <- isInProjectAdminGroups
@@ -266,7 +266,7 @@ final case class PermissionsResponderADMLive(
         }
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-      systemAdmin: Seq[(IRI, IRI)] =
+      systemAdmin =
         if (isInSystemAdminGroup) {
           Seq((OntologyConstants.KnoraAdmin.SystemProject, OntologyConstants.KnoraAdmin.SystemAdmin))
         } else {
@@ -440,7 +440,7 @@ final case class PermissionsResponderADMLive(
       allPermissions <- allPermissionsFuture
 
       // remove instances with empty PermissionADM sets
-      cleanedAllPermissions: Seq[Seq[PermissionADM]] = allPermissions.filter(_.nonEmpty)
+      cleanedAllPermissions = allPermissions.filter(_.nonEmpty)
 
       /* Combine permission sequences */
       combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionADM]) { (acc, seq) =>
@@ -466,14 +466,14 @@ final case class PermissionsResponderADMLive(
           .query(Select(sparql.admin.txt.getAdministrativePermissionsForProject(projectIRI)))
           .map(_.results.bindings)
 
-      permissionsWithProperties: Map[String, Map[String, String]] =
+      permissionsWithProperties =
         permissionsQueryResponseRows
           .groupBy(_.rowMap("s"))
           .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
             (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
           }
 
-      administrativePermissions: Seq[AdministrativePermissionADM] =
+      administrativePermissions =
         permissionsWithProperties.map { case (permissionIri: IRI, propsMap: Map[String, String]) =>
           /* parse permissions */
           val hasPermissions: Set[PermissionADM] =
@@ -535,9 +535,9 @@ final case class PermissionsResponderADMLive(
       permissionQueryResponse <-
         triplestore.query(Select(sparql.admin.txt.getAdministrativePermissionForProjectAndGroup(projectIri, groupIri)))
 
-      permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
+      permissionQueryResponseRows = permissionQueryResponse.results.bindings
 
-      permission: Option[AdministrativePermissionADM] =
+      permission =
         if (permissionQueryResponseRows.nonEmpty) {
 
           /* check if we only got one administrative permission back */
@@ -729,9 +729,9 @@ final case class PermissionsResponderADMLive(
       permissionQueryResponse <-
         triplestore.query(Select(sparql.admin.txt.getObjectAccessPermission(Some(resourceIri), None)))
 
-      permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
+      permissionQueryResponseRows = permissionQueryResponse.results.bindings
 
-      permission: Option[ObjectAccessPermissionADM] =
+      permission =
         if (permissionQueryResponseRows.nonEmpty) {
 
           val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
@@ -780,9 +780,9 @@ final case class PermissionsResponderADMLive(
           Select(sparql.admin.txt.getObjectAccessPermission(resourceIri = None, valueIri = Some(valueIri)))
         )
 
-      permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
+      permissionQueryResponseRows = permissionQueryResponse.results.bindings
 
-      permission: Option[ObjectAccessPermissionADM] =
+      permission =
         if (permissionQueryResponseRows.nonEmpty) {
 
           val groupedPermissionsQueryResponse: Map[String, Seq[String]] =
@@ -823,16 +823,16 @@ final case class PermissionsResponderADMLive(
         triplestore.query(Select(sparql.admin.txt.getDefaultObjectAccessPermissionsForProject(projectIri)))
 
       /* extract response rows */
-      permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
+      permissionsQueryResponseRows = permissionsQueryResponse.results.bindings
 
-      permissionsWithProperties: Map[String, Map[String, String]] =
+      permissionsWithProperties =
         permissionsQueryResponseRows
           .groupBy(_.rowMap("s"))
           .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
             (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
           }
 
-      permissions: Seq[DefaultObjectAccessPermissionADM] =
+      permissions =
         permissionsWithProperties.map { case (permissionIri: IRI, propsMap: Map[String, String]) =>
           /* parse permissions */
           val hasPermissions: Set[PermissionADM] =
@@ -1030,28 +1030,8 @@ final case class PermissionsResponderADMLive(
 
     } yield groupPermissions
 
-    val allPermissionsFuture: Task[Seq[Seq[PermissionADM]]] = ZioHelper.sequence(gpf)
-
     /* combines all permissions for each group and removes duplicates  */
-    val result: Task[Set[PermissionADM]] = for {
-      allPermissions <- allPermissionsFuture
-
-      // remove instances with empty PermissionADM sets
-      cleanedAllPermissions: Seq[Seq[PermissionADM]] = allPermissions.filter(_.nonEmpty)
-
-      /* Combine permission sequences */
-      combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionADM]) { (acc, seq) =>
-                   acc ++ seq
-                 }
-      /* Remove possible duplicate permissions */
-      result: Set[PermissionADM] = PermissionUtilADM.removeDuplicatePermissions(combined)
-
-      _ =
-        logger.debug(
-          s"defaultObjectAccessPermissionsForGroupsGetADM - INPUT [ projectIri: $projectIri, groups: $groups ], RESULT [ $result ]"
-        )
-    } yield result
-    result
+    ZioHelper.sequence(gpf).map(_.flatten).map(PermissionUtilADM.removeDuplicatePermissions(_))
   }
 
   /**
@@ -1148,11 +1128,8 @@ final case class PermissionsResponderADMLive(
   ) =
     for {
       /* Get the groups the user is member of. */
-      userGroupsOption <- ZIO.attempt(targetUser.permissions.groupsPerProject.get(projectIri))
-      userGroups: Seq[IRI] = userGroupsOption match {
-                               case Some(groups) => groups
-                               case None         => Seq.empty[IRI]
-                             }
+      userGroups <-
+        ZIO.attempt(targetUser.permissions.groupsPerProject.get(projectIri).map(_.toSet).getOrElse(Set.empty[IRI]))
 
       /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
       extendedUserGroups: List[IRI] =
@@ -1999,13 +1976,10 @@ final case class PermissionsResponderADMLive(
       permissionQueryResponse <- triplestore.query(Select(sparql.admin.txt.getPermissionByIRI(permissionIri)))
 
       /* extract response rows */
-      permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
-
-      groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows
-                                                                    .groupBy(_.rowMap("p"))
-                                                                    .map { case (predicate, rows) =>
-                                                                      predicate -> rows.map(_.rowMap("o"))
-                                                                    }
+      permissionQueryResponseRows = permissionQueryResponse.results.bindings
+      groupedPermissionsQueryResponse = permissionQueryResponseRows.groupBy(_.rowMap("p")).map {
+                                          case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+                                        }
 
       /* check if we have found something */
       _ = if (groupedPermissionsQueryResponse.isEmpty)
@@ -2025,12 +1999,12 @@ final case class PermissionsResponderADMLive(
             permissionIri = permissionIri
           )
 
-      permissionType: Option[String] = groupedPermissionsQueryResponse
-                                         .getOrElse(
-                                           OntologyConstants.Rdf.Type,
-                                           throw InconsistentRepositoryDataException(s"RDF type is not returned.")
-                                         )
-                                         .headOption
+      permissionType = groupedPermissionsQueryResponse
+                         .getOrElse(
+                           OntologyConstants.Rdf.Type,
+                           throw InconsistentRepositoryDataException(s"RDF type is not returned.")
+                         )
+                         .headOption
       permission = permissionType match {
                      case Some(OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission) =>
                        val hasPermissions = PermissionUtilADM.parsePermissionsWithType(

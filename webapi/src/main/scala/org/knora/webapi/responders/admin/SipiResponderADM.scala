@@ -26,7 +26,6 @@ import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -90,26 +89,26 @@ final case class SipiResponderADMLive(
               s"Filename ${request.filename} is used in more than one file value"
             )
 
-      fileValueIriSubject: IriSubjectV2 = queryResponse.statements.keys.head match {
-                                            case iriSubject: IriSubjectV2 => iriSubject
-                                            case _ =>
-                                              throw InconsistentRepositoryDataException(
-                                                s"The subject of the file value with filename ${request.filename} is not an IRI"
-                                              )
-                                          }
+      fileValueIriSubject = queryResponse.statements.keys.head match {
+                              case iriSubject: IriSubjectV2 => iriSubject
+                              case _ =>
+                                throw InconsistentRepositoryDataException(
+                                  s"The subject of the file value with filename ${request.filename} is not an IRI"
+                                )
+                            }
 
-      assertions: Seq[(String, String)] = queryResponse.statements(fileValueIriSubject).toSeq.flatMap {
-                                            case (predicate: SmartIri, values: Seq[LiteralV2]) =>
-                                              values.map { value =>
-                                                predicate.toString -> value.toString
-                                              }
-                                          }
+      assertions = queryResponse.statements(fileValueIriSubject).toSeq.flatMap {
+                     case (predicate: SmartIri, values: Seq[LiteralV2]) =>
+                       values.map { value =>
+                         predicate.toString -> value.toString
+                       }
+                   }
 
-      maybeEntityPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionFromAssertionsADM(
-                                                          entityIri = fileValueIriSubject.toString,
-                                                          assertions = assertions,
-                                                          requestingUser = request.requestingUser
-                                                        )
+      maybeEntityPermission = PermissionUtilADM.getUserPermissionFromAssertionsADM(
+                                entityIri = fileValueIriSubject.toString,
+                                assertions = assertions,
+                                requestingUser = request.requestingUser
+                              )
 
       _ =
         logger.debug(

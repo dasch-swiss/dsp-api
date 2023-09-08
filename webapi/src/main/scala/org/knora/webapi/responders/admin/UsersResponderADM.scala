@@ -682,9 +682,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetRequestADM(userIri = userIri)
-
-        currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects.map(_.id)
+        currentProjectMembershipIris <- userProjectMembershipsGetRequestADM(userIri).map(_.projects.map(_.id))
 
         // check if user is already member and if not then append to list
         updatedProjectMembershipIris =
@@ -770,17 +768,15 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project admin membership list
-        currentProjectAdminMemberships <-
-          userProjectAdminMembershipsGetADM(userIri = userIri)
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
 
         // in case the user has an admin membership for that project, remove it as well
-        maybeUpdatedProjectAdminMembershipIris = if (currentProjectAdminMembershipIris.contains(projectIri)) {
-                                                   Some(
-                                                     currentProjectAdminMembershipIris.filterNot(p => p == projectIri)
-                                                   )
-                                                 } else None
+        maybeUpdatedProjectAdminMembershipIris =
+          if (currentProjectAdminMembershipIris.contains(projectIri)) {
+            Some(currentProjectAdminMembershipIris.filterNot(p => p == projectIri))
+          } else {
+            None
+          }
 
         // create the update request by using the SystemUser
         result <- updateUserADM(
@@ -812,17 +808,17 @@ final case class UsersResponderADMLive(
     for {
       userDataQueryResponse <- triplestore.query(Select(sparql.admin.txt.getUserByIri(userIri)))
 
-      groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                                                    case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-                                                  }
+      groupedUserData = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
+                          predicate -> rows.map(_.rowMap("o"))
+                        }
 
       /* the projects the user is member of */
-      projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
-                                case Some(projects) => projects
-                                case None           => Seq.empty[IRI]
-                              }
+      projectIris = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
+                      case Some(projects) => projects
+                      case None           => Seq.empty[IRI]
+                    }
 
-      maybeProjectFutures: Seq[Task[Option[ProjectADM]]] =
+      maybeProjectFutures =
         projectIris.map { projectIri =>
           messageRelay.ask[Option[ProjectADM]](
             ProjectGetADM(
@@ -909,10 +905,7 @@ final case class UsersResponderADMLive(
             }
 
         // get users current project admin membership list
-        currentProjectAdminMemberships <-
-          userProjectAdminMembershipsGetADM(userIri = userIri)
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
 
         // check if user is already project admin and if not then append to list
         updatedProjectAdminMembershipIris =
@@ -984,10 +977,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectAdminMemberships <-
-          userProjectAdminMembershipsGetADM(userIri = userIri)
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
 
         // check if user is not already a member and if he is then remove the project from to list
         updatedProjectAdminMembershipIris =
@@ -1085,9 +1075,7 @@ final case class UsersResponderADMLive(
             }
 
         // get users current group membership list
-        currentGroupMemberships = userToChange.groups
-
-        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.map(_.id)
+        currentGroupMembershipIris = userToChange.groups.map(_.id)
 
         // check if user is already member and if not then append to list
         updatedGroupMembershipIris =
@@ -1163,9 +1151,7 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project membership list
-        currentGroupMemberships <- userGroupMembershipsGetADM(userIri).map(UserGroupMembershipsGetResponseADM)
-
-        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups.map(_.id)
+        currentGroupMembershipIris <- userGroupMembershipsGetADM(userIri).map(_.map(_.id))
 
         // check if user is not already a member and if he is then remove the project from to list
         updatedGroupMembershipIris =
@@ -1692,7 +1678,7 @@ final case class UsersResponderADMLive(
         maybeGroups          <- ZioHelper.sequence(maybeGroupFutures)
         groups: Seq[GroupADM] = maybeGroups.flatten
 
-        maybeProjectFutures: Seq[Task[Option[ProjectADM]]] =
+        maybeProjectFutures =
           projectIris.map { projectIri =>
             messageRelay
               .ask[Option[ProjectADM]](
@@ -1703,8 +1689,7 @@ final case class UsersResponderADMLive(
                 )
               )
           }
-        maybeProjects            <- ZioHelper.sequence(maybeProjectFutures)
-        projects: Seq[ProjectADM] = maybeProjects.flatten
+        projects <- ZioHelper.sequence(maybeProjectFutures).map(_.flatten)
 
         /* construct the user profile from the different parts */
         user = UserADM(
