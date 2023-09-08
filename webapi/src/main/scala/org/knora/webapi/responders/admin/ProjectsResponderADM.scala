@@ -629,7 +629,7 @@ final case class ProjectsResponderADMLive(
     }
 
     if (projectUpdatePayload.status.nonEmpty) {
-      projectUpdatePayload.status
+      val _ = projectUpdatePayload.status
         .map(_.value)
         .filter(_ == updatedProject.status)
         .getOrElse(
@@ -640,7 +640,7 @@ final case class ProjectsResponderADMLive(
     }
 
     if (projectUpdatePayload.selfjoin.nonEmpty) {
-      projectUpdatePayload.selfjoin
+      val _ = projectUpdatePayload.selfjoin
         .map(_.value)
         .filter(_ == updatedProject.selfjoin)
         .getOrElse(

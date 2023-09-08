@@ -177,8 +177,8 @@ object IriLocker {
    * @param iri          the IRI that is locked.
    * @param apiRequestID the ID of the API request that has the lock.
    */
-  private def decrementOrReleaseLock(iri: IRI, apiRequestID: UUID): Unit =
-    lockMap.compute(
+  private def decrementOrReleaseLock(iri: IRI, apiRequestID: UUID): Unit = {
+    val _ = lockMap.compute(
       iri,
       JavaUtil.biFunction({ (_, maybeCurrentLock) =>
         Option(maybeCurrentLock) match {
@@ -209,4 +209,5 @@ object IriLocker {
         }
       })
     )
+  }
 }

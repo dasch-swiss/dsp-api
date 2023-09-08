@@ -7,8 +7,8 @@ package org.knora.webapi.util
 
 import akka.actor.ActorRef
 import zio._
-
 import dsp.errors._
+import org.knora.webapi.routing.UnsafeZioRun
 
 object ActorUtil {
 
@@ -16,11 +16,9 @@ object ActorUtil {
    * _Unsafely_ runs a ZIO workflow and sends the result to the `sender` actor as a message or a failure.
    * Used mainly during the refactoring phase, to be able to return ZIO inside an Actor.
    */
-  def zio2Message[R, A](sender: ActorRef, zioTask: ZIO[R, Throwable, A])(implicit runtime: Runtime[R]): Unit =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(
-        zioTask.foldCause(cause => sender ! akka.actor.Status.Failure(cause.squash), success => sender ! success)
-      )
+  def zio2Message[R, A](sender: ActorRef, zio: ZIO[R, Throwable, A])(implicit runtime: Runtime[R]): Unit =
+    UnsafeZioRun.runOrThrow {
+      zio.foldCause(cause => sender ! akka.actor.Status.Failure(cause.squash), success => sender ! success)
     }
 
   /**

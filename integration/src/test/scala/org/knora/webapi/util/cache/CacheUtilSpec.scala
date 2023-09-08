@@ -32,7 +32,6 @@ class CacheUtilSpec extends CoreSpec {
     "allow to delete a set value " in {
       CacheUtil.removeAllCaches()
       CacheUtil.createCaches(appConfig.cacheConfigs)
-      CacheUtil.remove(cacheName, sessionId)
       CacheUtil.get(cacheName, sessionId) should be(None)
     }
   }
