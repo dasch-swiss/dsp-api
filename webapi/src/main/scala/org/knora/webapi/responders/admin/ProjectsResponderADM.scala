@@ -296,12 +296,9 @@ final case class ProjectsResponderADMLive(
                       .map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris: Seq[IRI] =
-        if (statements.nonEmpty) {
-          statements.map(_._1.toString)
-        } else {
-          Seq.empty[IRI]
-        }
+      userIris =
+        if (statements.nonEmpty) { statements.map(_._1.toString) }
+        else { Seq.empty[IRI] }
 
       maybeUserFutures: Seq[Task[Option[UserADM]]] =
         userIris.map { userIri =>
