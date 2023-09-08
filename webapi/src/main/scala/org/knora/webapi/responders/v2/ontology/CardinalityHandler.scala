@@ -123,10 +123,10 @@ final case class CardinalityHandlerLive(
 
       // Make an update class definition in which the cardinality to delete is removed
 
-      submittedPropertyToDeleteIsLinkProperty: Boolean = cacheData
-                                                           .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
-                                                           .properties(submittedPropertyToDelete)
-                                                           .isLinkProp
+      submittedPropertyToDeleteIsLinkProperty = cacheData
+                                                  .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
+                                                  .properties(submittedPropertyToDelete)
+                                                  .isLinkProp
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
@@ -142,7 +142,7 @@ final case class CardinalityHandlerLive(
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
 
-      allBaseClassIrisWithoutInternal: Seq[SmartIri] =
+      allBaseClassIrisWithoutInternal =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
           cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
@@ -150,7 +150,7 @@ final case class CardinalityHandlerLive(
           )
         }
 
-      allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
+      allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
 
       (newInternalClassDefWithLinkValueProps, _) =
         OntologyHelpers
@@ -272,10 +272,10 @@ final case class CardinalityHandlerLive(
 
       // Make an update class definition in which the cardinality to delete is removed
 
-      submittedPropertyToDeleteIsLinkProperty: Boolean = cacheData
-                                                           .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
-                                                           .properties(submittedPropertyToDelete)
-                                                           .isLinkProp
+      submittedPropertyToDeleteIsLinkProperty = cacheData
+                                                  .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
+                                                  .properties(submittedPropertyToDelete)
+                                                  .isLinkProp
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
@@ -299,7 +299,7 @@ final case class CardinalityHandlerLive(
           )
         }
 
-      allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
+      allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
 
       (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
         OntologyHelpers
@@ -333,10 +333,9 @@ final case class CardinalityHandlerLive(
 
       propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
-      inheritedCardinalities: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
-        cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-          newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-        }
+      inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
+                                 newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
+                               }
 
       readClassInfo = ReadClassInfoV2(
                         entityInfoContent = newInternalClassDefWithLinkValueProps,
