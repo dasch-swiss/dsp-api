@@ -776,9 +776,11 @@ object CreateResourceRequestV2 {
 
                   valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser)
 
-                  maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri.mapError(BadRequestException(_))
-                  maybeCustomValueUUID: Option[UUID] =
-                    valueJsonLDObject.maybeUUID(KnoraApiV2Complex.ValueHasUUID)
+                  maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
+                                           .mapError(BadRequestException(_))
+                  maybeCustomValueUUID <- valueJsonLDObject
+                                            .getUuid(KnoraApiV2Complex.ValueHasUUID)
+                                            .mapError(BadRequestException(_))
 
                   // Get the value's creation date.
                   // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.

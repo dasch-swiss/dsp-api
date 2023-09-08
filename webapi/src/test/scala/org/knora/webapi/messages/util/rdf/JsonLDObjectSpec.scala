@@ -572,10 +572,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   private def uuidValueSuiteGivenAnEmptyMap =
     suite("when given an empty map")(
-      // uuid value
-      test("maybeUUID should return None") {
-        assertTrue(emptyJsonLdObject.maybeUUID(someKey).isEmpty)
-      },
       test("getUuid should return None") {
         for {
           actual <- emptyJsonLdObject.getUuid(someKey)
@@ -587,10 +583,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val someUuid     = UUID.randomUUID()
     val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDString(UuidUtil.base64Encode(someUuid))))
     suite("when given a valid value")(
-      // uuid value
-      test("maybeUUID should return None") {
-        assertTrue(jsonLdObject.maybeUUID(someKey).contains(someUuid))
-      },
       test("getUuid should return None") {
         for {
           actual <- jsonLdObject.getUuid(someKey)
@@ -605,11 +597,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDString(invalid)))
     suite("when given an invalid value")(
       // uuid value
-      test("maybeUUID should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.maybeUUID(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-      },
       test("getUuid should fail with correct error message") {
         for {
           actual <- jsonLdObject.getUuid(someKey).exit

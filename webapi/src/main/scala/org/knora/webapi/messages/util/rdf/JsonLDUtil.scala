@@ -914,16 +914,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case None      => ZIO.fail(s"No ${JsonLDKeywords.ID} provided")
     }
 
-  /**
-   * Validates an optional Base64-encoded UUID in a JSON-LD object.
-   *
-   * @return an optional validated decoded UUID.
-   */
-  @deprecated("use getUuid(String) instead")
-  @throws[BadRequestException]
-  def maybeUUID(key: String): Option[UUID] =
-    maybeStringWithValidation(key, UuidUtil.validateBase64EncodedUuid)
-
   def getUuid(key: String): IO[String, Option[UUID]] =
     getString(key).flatMap {
       case Some(str) => ZIO.fromTry(UuidUtil.base64Decode(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))

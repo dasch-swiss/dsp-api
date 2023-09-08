@@ -654,7 +654,7 @@ object CreateValueV2 {
                                          }
 
                 // Get the custom value UUID if provided.
-                maybeCustomUUID <- ZIO.attempt(jsonLdObject.maybeUUID(ValueHasUUID))
+                maybeCustomUUID <- jsonLdObject.getUuid(ValueHasUUID).mapError(BadRequestException(_))
 
                 // Get the value's creation date.
                 // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
