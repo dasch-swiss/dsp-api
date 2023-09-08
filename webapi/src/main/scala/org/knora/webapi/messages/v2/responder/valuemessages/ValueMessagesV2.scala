@@ -634,15 +634,18 @@ object CreateValueV2 {
                 valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
 
                 // Get and validate the custom value IRI if provided.
-                maybeCustomValueIri <- ZIO.attempt(
-                                         jsonLdObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
-                                           stringFormatter.validateCustomValueIri(
-                                             definedNewIri,
-                                             resourceIri.getProjectCode.get,
-                                             resourceIri.getResourceID.get
+                maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
+                                         .mapError(BadRequestException(_))
+                                         .mapAttempt { definedNewIri =>
+                                           definedNewIri.foreach(
+                                             stringFormatter.validateCustomValueIri(
+                                               _,
+                                               resourceIri.getProjectCode.get,
+                                               resourceIri.getResourceID.get
+                                             )
                                            )
+                                           definedNewIri
                                          }
-                                       )
 
                 // Get the custom value UUID if provided.
                 maybeCustomUUID <- ZIO.attempt(jsonLdObject.maybeUUID(ValueHasUUID))

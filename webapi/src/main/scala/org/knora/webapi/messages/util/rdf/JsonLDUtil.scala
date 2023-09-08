@@ -914,26 +914,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     iri
   }
 
-  /**
-   * Validates the optional `@id` of a JSON-LD object as a Knora data IRI.
-   *
-   * @return an optional validated Knora data IRI.
-   */
-  @deprecated("use getIdValueAsKnoraDataIri() instead")
-  @throws[BadRequestException]
-  def maybeIDAsKnoraDataIri: Option[SmartIri] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val maybeIri: Option[SmartIri] = maybeStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr)
-
-    maybeIri.foreach { iri =>
-      if (!iri.isKnoraDataIri) {
-        throw BadRequestException(s"Invalid Knora data IRI: $maybeIri")
-      }
-    }
-
-    maybeIri
-  }
 
   def getIdValueAsKnoraDataIri: ZIO[StringFormatter, String, Option[SmartIri]] =
     getString(JsonLDKeywords.ID).flatMap {

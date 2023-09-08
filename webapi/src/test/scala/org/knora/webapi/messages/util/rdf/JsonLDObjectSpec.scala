@@ -518,20 +518,17 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   )
 
   private def knoraDataIdValueSuiteWhenGivenAnEmptyMap = suite("when given an empty map")(
-    test("maybeIDAsKnoraDataIri should return None") {
-      assertTrue(emptyJsonLdObject.maybeIDAsKnoraDataIri.isEmpty)
-    },
     test("requireIDAsKnoraDataIri should fail with a BadRequestException") {
       for {
         actual <- ZIO.attempt(emptyJsonLdObject.requireIDAsKnoraDataIri).exit
       } yield assertTrue(actual == Exit.fail(BadRequestException("No @id provided")))
     },
-    test("getIDAsKnoraDataIri should return None") {
+    test("getIdValueAsKnoraDataIri should return None") {
       for {
         actual <- emptyJsonLdObject.getIdValueAsKnoraDataIri
       } yield assertTrue(actual.isEmpty)
     },
-    test("getRequiredIDAsKnoraDataIri should fail with correct error message") {
+    test("getRequiredIdValueAsKnoraDataIri should fail with correct error message") {
       for {
         actual <- emptyJsonLdObject.getRequiredIdValueAsKnoraDataIri.exit
       } yield assertTrue(actual == Exit.fail("No @id provided"))
@@ -543,20 +540,17 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val validSmartIri = StringFormatter.getInitializedTestInstance.toSmartIri(validValue)
     val jsonLdObject  = JsonLDObject(Map("@id" -> JsonLDString(validValue)))
     suite("when given a valid value")(
-      test("maybeIDAsKnoraDataIri should return smart iri") {
-        assertTrue(jsonLdObject.maybeIDAsKnoraDataIri.contains(validSmartIri))
-      },
       test("requireIDAsKnoraDataIri should return smart iri") {
         for {
           actual <- ZIO.attempt(jsonLdObject.requireIDAsKnoraDataIri)
         } yield assertTrue(actual == validSmartIri)
       },
-      test("getIDAsKnoraDataIri should return smart iri") {
+      test("getIdValueAsKnoraDataIri should return smart iri") {
         for {
           actual <- jsonLdObject.getIdValueAsKnoraDataIri
         } yield assertTrue(actual.contains(validSmartIri))
       },
-      test("getRequiredIDAsKnoraDataIri should return smart iri") {
+      test("getRequiredIdValueAsKnoraDataIri should return smart iri") {
         for {
           actual <- jsonLdObject.getRequiredIdValueAsKnoraDataIri
         } yield assertTrue(actual == validSmartIri)
@@ -568,22 +562,17 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val jsonLdObject  = JsonLDObject(Map("@id" -> JsonLDInt(42)))
     val expectedError = "Invalid @id: JsonLDInt(42) (string expected)"
     suite("when given an invalid value")(
-      test("maybeIDAsKnoraDataIri should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.maybeIDAsKnoraDataIri).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-      },
       test("requireIDAsKnoraDataIri should fail with a BadRequestException") {
         for {
           actual <- ZIO.attempt(jsonLdObject.requireIDAsKnoraDataIri).exit
         } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
       },
-      test("getIDAsKnoraDataIri should fail with correct error message") {
+      test("getIdValueAsKnoraDataIri should fail with correct error message") {
         for {
           actual <- jsonLdObject.getIdValueAsKnoraDataIri.exit
         } yield assertTrue(actual == Exit.fail(expectedError))
       },
-      test("getRequiredIDAsKnoraDataIri should fail with correct error message") {
+      test("getRequiredIdValueAsKnoraDataIri should fail with correct error message") {
         for {
           actual <- jsonLdObject.getRequiredIdValueAsKnoraDataIri.exit
         } yield assertTrue(actual == Exit.fail(expectedError))

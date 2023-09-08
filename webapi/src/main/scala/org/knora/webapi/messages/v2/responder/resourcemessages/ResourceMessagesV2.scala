@@ -682,7 +682,7 @@ object CreateResourceRequestV2 {
         resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
 
         // Get the custom resource IRI if provided.
-        maybeCustomResourceIri <- ZIO.attempt(jsonLDDocument.body.maybeIDAsKnoraDataIri)
+        maybeCustomResourceIri <- jsonLDDocument.body.getIdValueAsKnoraDataIri.mapError(BadRequestException(_))
 
         // Get the resource's rdfs:label.
         label <-
@@ -775,7 +775,7 @@ object CreateResourceRequestV2 {
 
                   valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser)
 
-                  maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
+                  maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri.mapError(BadRequestException(_))
                   maybeCustomValueUUID: Option[UUID] =
                     valueJsonLDObject.maybeUUID(KnoraApiV2Complex.ValueHasUUID)
 
