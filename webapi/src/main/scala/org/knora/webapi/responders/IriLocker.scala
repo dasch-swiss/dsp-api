@@ -5,18 +5,15 @@
 
 package org.knora.webapi.responders
 
-import zio.Task
-import zio.ZIO
+import dsp.errors.ApplicationLockException
+import org.knora.webapi.IRI
+import org.knora.webapi.util.JavaUtil
+import zio.{Task, UIO, ZIO}
 
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.tailrec
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-
-import dsp.errors.ApplicationLockException
-import org.knora.webapi.IRI
-import org.knora.webapi.util.JavaUtil
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Implements JVM-wide, reentrant, application-level update locks on data represented by IRIs, such as Knora
@@ -99,15 +96,10 @@ object IriLocker {
    * @param task         The [[Task]] that performs the update.
    * @return the result of the task.
    */
-  def runWithIriLock[T](apiRequestID: UUID, iri: IRI, task: Task[T]): Task[T] = {
-    val acquireLock: Task[Unit]    = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
-    def releaseLock(ignored: Unit) = ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
-    ZIO.scoped {
-      for {
-        _          <- ZIO.acquireRelease(acquireLock)(releaseLock)
-        taskResult <- task
-      } yield taskResult
-    }
+  def runWithIriLock[A](apiRequestID: UUID, iri: IRI, task: Task[A]): Task[A] = {
+    val acquire: Task[Unit]        = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
+    val release: Unit => UIO[Unit] = _ => ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
+    ZIO.scoped(ZIO.acquireRelease(acquire)(release) *> task)
   }
 
   /**
