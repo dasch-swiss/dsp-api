@@ -1,5 +1,15 @@
 # Changelog
 
+## [30.1.2](https://github.com/dasch-swiss/dsp-api/compare/v30.1.1...v30.1.2) (2023-09-08)
+
+
+### Maintenance
+
+* Remove compiler warning stemming from -Wvalue-discard ([#2831](https://github.com/dasch-swiss/dsp-api/issues/2831)) ([9071204](https://github.com/dasch-swiss/dsp-api/commit/90712044d3bc1c1e32df73baf00f9ce898d36510))
+* Remove type annotations which produce compiler warnings ([#2829](https://github.com/dasch-swiss/dsp-api/issues/2829)) ([c754042](https://github.com/dasch-swiss/dsp-api/commit/c75404288b4b048554fd4d8ccc374723930d92e3))
+* Remove unused or dead code ([#2827](https://github.com/dasch-swiss/dsp-api/issues/2827)) ([36b835e](https://github.com/dasch-swiss/dsp-api/commit/36b835e82a76ecf01687b54bbdae410197ca4731))
+* Update 'fuseki_request_duration' histogram bucket boundaries ([#2830](https://github.com/dasch-swiss/dsp-api/issues/2830)) ([b7bef4e](https://github.com/dasch-swiss/dsp-api/commit/b7bef4ef1cdd768693ab544db0a2874ede9e95aa))
+
 ## [30.1.1](https://github.com/dasch-swiss/dsp-api/compare/v30.1.0...v30.1.1) (2023-09-06)
 
 
