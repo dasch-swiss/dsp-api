@@ -6,6 +6,7 @@
 package org.knora.webapi.responders
 
 import zio.Task
+import zio.UIO
 import zio.ZIO
 
 import java.util.UUID
@@ -99,15 +100,10 @@ object IriLocker {
    * @param task         The [[Task]] that performs the update.
    * @return the result of the task.
    */
-  def runWithIriLock[T](apiRequestID: UUID, iri: IRI, task: Task[T]): Task[T] = {
-    val acquireLock: Task[Unit]    = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
-    def releaseLock(ignored: Unit) = ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
-    ZIO.scoped {
-      for {
-        _          <- ZIO.acquireRelease(acquireLock)(releaseLock)
-        taskResult <- task
-      } yield taskResult
-    }
+  def runWithIriLock[A](apiRequestID: UUID, iri: IRI, task: Task[A]): Task[A] = {
+    val acquire: Task[Unit]        = ZIO.attemptBlocking(this.acquireLock(iri, apiRequestID)).logError
+    val release: Unit => UIO[Unit] = _ => ZIO.attempt(decrementOrReleaseLock(iri, apiRequestID)).logError.ignore
+    ZIO.scoped(ZIO.acquireRelease(acquire)(release) *> task)
   }
 
   /**
@@ -177,8 +173,8 @@ object IriLocker {
    * @param iri          the IRI that is locked.
    * @param apiRequestID the ID of the API request that has the lock.
    */
-  private def decrementOrReleaseLock(iri: IRI, apiRequestID: UUID): Unit =
-    lockMap.compute(
+  private def decrementOrReleaseLock(iri: IRI, apiRequestID: UUID): Unit = {
+    val _ = lockMap.compute(
       iri,
       JavaUtil.biFunction({ (_, maybeCurrentLock) =>
         Option(maybeCurrentLock) match {
@@ -209,4 +205,5 @@ object IriLocker {
         }
       })
     )
+  }
 }
