@@ -138,24 +138,6 @@ object CacheUtil {
     }
 
   }
-
-  /**
-   * Tries to remove a value from a cache.
-   *
-   * @param cacheName the name of the cache.
-   * @param key       the cache key as a [[String]]
-   */
-  def remove(cacheName: String, key: String): Unit = {
-    val cacheManager = CacheManager.getInstance()
-    val cacheOption  = Option(cacheManager.getCache(cacheName))
-
-    cacheOption match {
-      case Some(cache) => cache.remove(key)
-      case None =>
-        throw ApplicationCacheException(s"Can't find application cache '$cacheName'")
-    }
-  }
-
 }
 
 class LoggingCacheEventListener(log: Logger) extends CacheEventListener {

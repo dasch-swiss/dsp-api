@@ -109,7 +109,7 @@ private object TriGCombiner {
     override def prefix(prefix: String, iri: String): Unit =
       if (!prefixes.contains(prefix)) {
         writer.prefix(prefix, iri)
-        prefixes.add(prefix)
+        val _ = prefixes.add(prefix)
       }
     override def triple(triple: Triple): Unit = writer.triple(triple)
     override def quad(quad: Quad): Unit       = writer.quad(quad)
