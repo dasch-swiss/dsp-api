@@ -400,7 +400,7 @@ class KnoraSipiIntegrationV2ITSpec
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
         UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri)
+          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
           .toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
       )
 
@@ -465,7 +465,7 @@ class KnoraSipiIntegrationV2ITSpec
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
         UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri)
+          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
           .toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
       )
 
@@ -595,7 +595,9 @@ class KnoraSipiIntegrationV2ITSpec
       // Get the resource from Knora.
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-      assert(UnsafeZioRun.runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri).toString == thingDocumentIRI)
+      assert(
+        UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString == thingDocumentIRI
+      )
 
       // Get the new file value from the resource.
 
@@ -1000,7 +1002,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
 
-      UnsafeZioRun.runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri).toString should equal(
+      UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
       )
 
@@ -1113,7 +1115,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest          = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
 
-      UnsafeZioRun.runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri).toString should equal(
+      UnsafeZioRun.runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri).toString should equal(
         OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
       )
 
@@ -1173,7 +1175,7 @@ class KnoraSipiIntegrationV2ITSpec
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
         UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri)
+          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
           .toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation"
       )
 
@@ -1281,7 +1283,7 @@ class KnoraSipiIntegrationV2ITSpec
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
         UnsafeZioRun
-          .runOrThrow(resource.body.getRequiredIdValueAsKnoraDataIri)
+          .runOrThrow(resource.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri)
           .toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation"
       )
 
