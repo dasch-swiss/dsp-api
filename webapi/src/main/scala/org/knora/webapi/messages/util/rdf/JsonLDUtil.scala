@@ -850,21 +850,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case None      => ZIO.fail(s"No $key provided")
     }
 
-  /**
-   * Gets the required boolean value of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property is not found or if its value is not a boolean.
-   *
-   * @param key the key of the required value.
-   * @return the required value.
-   */
-  @deprecated("use getRequiredBoolean(String) instead")
-  @throws[BadRequestException]
-  def requireBoolean(key: String): Boolean =
-    value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-      case obj: JsonLDBoolean => obj.value
-      case other              => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
-    }
-
   def getBoolean(key: String): IO[String, Option[Boolean]] =
     value.get(key) match {
       case Some(obj: JsonLDBoolean) => ZIO.some(obj.value)

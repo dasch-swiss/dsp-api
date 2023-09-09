@@ -18,7 +18,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -29,6 +28,7 @@ import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForResourcesResponse
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -186,7 +186,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   }
 
   private def parseResourceLastModificationDate(resource: JsonLDDocument): Option[Instant] =
-    resource.body.maybeObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate).map { jsonLDObject =>
+    resource.body.maybeObject(KnoraApiV2Complex.LastModificationDate).map { jsonLDObject =>
       jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, validationFun) should ===(
         OntologyConstants.Xsd.DateTimeStamp
       )
@@ -751,7 +751,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b"
       )
 
-      val intValueAsInt: Int = value.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = value.requireInt(KnoraApiV2Complex.IntValueAsInt)
       intValueAsInt should ===(2)
     }
 
@@ -798,9 +798,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
       integerValueUUID = responseJsonDoc.body.requireStringWithValidation(
-        OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+        KnoraApiV2Complex.ValueHasUUID,
         UuidUtil.validateBase64EncodedUuid
       )
 
@@ -813,7 +813,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedIntValue: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+      val savedIntValue: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
       savedIntValue should ===(intValue)
 
       clientTestDataCollector.addFile(
@@ -868,7 +868,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
-      val valueUUID = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
       assert(valueUUID == customValueUUID)
     }
 
@@ -942,7 +942,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueUUID: String               = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID: String               = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
       assert(valueUUID == intValueCustomUUID)
       val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri.endsWith(valueUUID))
@@ -1027,7 +1027,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intValueForRsyncIri.set(valueIri)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+        key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -1083,11 +1083,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
-      val valueUUID = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
       assert(valueUUID == customValueUUID)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+        key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -1163,7 +1163,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intValueWithCustomPermissionsIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1174,9 +1174,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
       intValueAsInt should ===(intValue)
-      val hasPermissions = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+      val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
       hasPermissions should ===(customPermissions)
     }
 
@@ -1213,7 +1213,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1224,7 +1224,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1298,7 +1298,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1309,7 +1309,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1348,7 +1348,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1359,7 +1359,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1406,7 +1406,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1417,7 +1417,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1465,7 +1465,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1476,9 +1476,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
       savedValueAsString should ===(valueAsString)
-      val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+      val savedValueHasComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
       savedValueHasComment should ===(valueHasComment)
     }
 
@@ -1516,7 +1516,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1527,7 +1527,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff = DiffBuilder
@@ -1570,7 +1570,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1581,7 +1581,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff =
@@ -1618,7 +1618,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1629,7 +1629,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
       savedTextValueAsXml.contains("href") should ===(true)
     }
 
@@ -1658,7 +1658,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
 
       val expectedText =
         """<p>
@@ -1681,7 +1681,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "rdfs:label": "HTML mapping",
            |    "@context": {
            |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |        "knora-api": "${KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
            |    }
            |}""".stripMargin
 
@@ -1741,7 +1741,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
       assert(savedTextValueAsXml.contains(textValueAsXml))
     }
 
@@ -1808,7 +1808,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       decimalValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DecimalValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DecimalValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1820,7 +1820,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedDecimalValueAsDecimal: BigDecimal = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
+        key = KnoraApiV2Complex.DecimalValueAsDecimal,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
@@ -1877,7 +1877,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1888,24 +1888,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
         "GREGORIAN:2018-10-05 CE:2018-10-06 CE"
       )
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
     "create a date value representing a range with month precision" in {
@@ -1953,7 +1953,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -1964,24 +1964,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
         "GREGORIAN:2018-10 CE:2018-11 CE"
       )
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
     "create a date value representing a range with year precision" in {
@@ -2025,7 +2025,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2036,22 +2036,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
         "GREGORIAN:2018 CE:2019 CE"
       )
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
     "create a date value representing a single date with day precision" in {
@@ -2088,7 +2088,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2099,22 +2099,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-05 CE")
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-05 CE")
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
     "create a date value representing a single date with month precision" in {
@@ -2148,7 +2148,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2159,22 +2159,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10 CE")
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10 CE")
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
     "create a date value representing a single date with year precision" in {
@@ -2205,7 +2205,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2216,20 +2216,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018 CE")
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018 CE")
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
     "create a date value representing a single Islamic date with day precision" in {
@@ -2264,7 +2264,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2275,18 +2275,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-01-26")
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-01-26")
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
     }
 
     "create an Islamic date value representing a range with day precision" in {
@@ -2324,7 +2324,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2335,20 +2335,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
         "ISLAMIC:1407-01-15:1407-01-26"
       )
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
     }
 
     "create a boolean value" in {
@@ -2394,7 +2394,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       booleanValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.BooleanValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2405,8 +2405,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val booleanValueAsBoolean: Boolean =
-        savedValue.requireBoolean(OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean)
+      val booleanValueAsBoolean =
+        UnsafeZioRun.runOrThrow(savedValue.getRequiredBoolean(KnoraApiV2Complex.BooleanValueAsBoolean))
       booleanValueAsBoolean should ===(booleanValue)
     }
 
@@ -2452,7 +2452,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       geometryValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.GeomValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.GeomValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2464,7 +2464,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val geometryValueAsGeometry: String =
-        savedValue.requireString(OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry)
+        savedValue.requireString(KnoraApiV2Complex.GeometryValueAsGeometry)
       geometryValueAsGeometry should ===(geometryValue1)
     }
 
@@ -2520,7 +2520,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intervalValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntervalValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntervalValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2532,7 +2532,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
+        key = KnoraApiV2Complex.IntervalValueHasStart,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
@@ -2540,7 +2540,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedIntervalValueHasStart should ===(intervalStart)
 
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
+        key = KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
@@ -2595,7 +2595,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       timeValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TimeValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TimeValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2607,7 +2607,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
+        key = KnoraApiV2Complex.TimeValueAsTimeStamp,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -2661,7 +2661,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       listValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.ListValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.ListValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2674,7 +2674,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val savedListValueHasListNode: IRI =
         savedValue.requireIriInObject(
-          OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
+          KnoraApiV2Complex.ListValueAsListNode,
           validationFun
         )
       savedListValueHasListNode should ===(listNode)
@@ -2724,7 +2724,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       colorValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.ColorValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.ColorValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2735,7 +2735,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedColor: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ColorValueAsColor)
+      val savedColor: String = savedValue.requireString(KnoraApiV2Complex.ColorValueAsColor)
       savedColor should ===(color)
     }
 
@@ -2786,7 +2786,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       uriValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.UriValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.UriValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2798,7 +2798,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedUri: IRI = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.UriValueAsUri,
+        key = KnoraApiV2Complex.UriValueAsUri,
         expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
         validationFun = validationFun
       )
@@ -2850,7 +2850,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       geonameValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.GeonameValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.GeonameValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -2862,7 +2862,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedGeonameCode: String =
-        savedValue.requireString(OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode)
+        savedValue.requireString(KnoraApiV2Complex.GeonameValueAsGeonameCode)
       savedGeonameCode should ===(geonameCode)
     }
 
@@ -2913,9 +2913,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       linkValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.LinkValue.toSmartIri)
       linkValueUUID = responseJsonDoc.body.requireStringWithValidation(
-        OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+        KnoraApiV2Complex.ValueHasUUID,
         UuidUtil.validateBase64EncodedUuid
       )
 
@@ -2928,7 +2928,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
+      val savedTarget: JsonLDObject = savedValue.requireObject(KnoraApiV2Complex.LinkValueHasTarget)
       val savedTargetIri: IRI       = savedTarget.requireString(JsonLDKeywords.ID)
       savedTargetIri should ===(TestDing.iri)
     }
@@ -2984,11 +2984,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
-      val valueUUID: IRI = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID: IRI = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
       assert(valueUUID == customValueUUID)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+        key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -3041,10 +3041,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
       val newIntegerValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          KnoraApiV2Complex.ValueHasUUID,
           UuidUtil.validateBase64EncodedUuid
         )
       assert(newIntegerValueUUID == integerValueUUID) // The new version should have the same UUID.
@@ -3058,7 +3058,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
       intValueAsInt should ===(intValue)
 
       clientTestDataCollector.addFile(
@@ -3123,7 +3123,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intValueForRsyncIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3134,11 +3134,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
       intValueAsInt should ===(intValue)
 
       val savedCreationDate: Instant = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+        key = KnoraApiV2Complex.ValueCreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -3182,7 +3182,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
       intValueAsInt should ===(intValue)
     }
 
@@ -3344,7 +3344,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intValueWithCustomPermissionsIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3355,9 +3355,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
       intValueAsInt should ===(intValue)
-      val hasPermissions = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+      val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
       hasPermissions should ===(customPermissions)
     }
 
@@ -3405,7 +3405,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3416,7 +3416,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val hasPermissions = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+      val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
       hasPermissions should ===(customPermissions)
     }
 
@@ -3468,7 +3468,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       decimalValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DecimalValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DecimalValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3480,7 +3480,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedDecimalValue: BigDecimal = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
+        key = KnoraApiV2Complex.DecimalValueAsDecimal,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
@@ -3537,7 +3537,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3548,7 +3548,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
       savedTextValueAsXml.contains("updated text") should ===(true)
       savedTextValueAsXml.contains("salsah-link") should ===(true)
     }
@@ -3580,7 +3580,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
 
       val expectedText =
         """<p>
@@ -3615,7 +3615,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       textValueWithoutStandoffIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TextValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3626,9 +3626,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
       savedValueAsString should ===(valueAsString)
-      val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+      val savedValueHasComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
       savedValueHasComment should ===(valueHasComment)
     }
 
@@ -3683,7 +3683,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3694,24 +3694,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
         "GREGORIAN:2018-10-05 CE:2018-12-06 CE"
       )
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
     "update a date value representing a range with month precision" in {
@@ -3761,7 +3761,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3772,24 +3772,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
         "GREGORIAN:2018-09 CE:2018-12 CE"
       )
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
     "update a date value representing a range with year precision" in {
@@ -3835,7 +3835,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3846,22 +3846,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
         "GREGORIAN:2018 CE:2020 CE"
       )
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
     "update a date value representing a single date with day precision" in {
@@ -3900,7 +3900,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3911,22 +3911,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-06 CE")
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-06 CE")
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
     "update a date value representing a single date with month precision" in {
@@ -3962,7 +3962,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3973,22 +3973,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-07 CE")
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-07 CE")
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
         dateValueHasStartMonth
       )
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
     "update a date value representing a single date with year precision" in {
@@ -4021,7 +4021,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       dateValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.DateValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.DateValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4032,20 +4032,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2019 CE")
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2019 CE")
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
-      savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
+      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
     "update a boolean value" in {
@@ -4092,7 +4092,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       booleanValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.BooleanValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4103,8 +4103,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val booleanValueAsBoolean: Boolean =
-        savedValue.requireBoolean(OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean)
+      val booleanValueAsBoolean =
+        UnsafeZioRun.runOrThrow(savedValue.getRequiredBoolean(KnoraApiV2Complex.BooleanValueAsBoolean))
       booleanValueAsBoolean should ===(booleanValue)
     }
 
@@ -4151,7 +4151,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       geometryValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.GeomValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.GeomValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4163,7 +4163,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val geometryValueAsGeometry: String =
-        savedValue.requireString(OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry)
+        savedValue.requireString(KnoraApiV2Complex.GeometryValueAsGeometry)
       geometryValueAsGeometry should ===(geometryValue2)
     }
 
@@ -4220,7 +4220,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       intervalValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.IntervalValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.IntervalValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4232,7 +4232,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
+        key = KnoraApiV2Complex.IntervalValueHasStart,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
@@ -4240,7 +4240,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedIntervalValueHasStart should ===(intervalStart)
 
       val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
+        key = KnoraApiV2Complex.IntervalValueHasEnd,
         expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.validateBigDecimal(s).getOrElse(errorFun)
       )
@@ -4296,7 +4296,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       timeValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.TimeValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.TimeValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4308,7 +4308,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
+        key = KnoraApiV2Complex.TimeValueAsTimeStamp,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -4363,7 +4363,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       listValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.ListValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.ListValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4376,7 +4376,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val savedListValueHasListNode: IRI =
         savedValue.requireIriInObject(
-          OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
+          KnoraApiV2Complex.ListValueAsListNode,
           validationFun
         )
       savedListValueHasListNode should ===(listNode)
@@ -4427,7 +4427,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       colorValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.ColorValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.ColorValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4438,7 +4438,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedColor: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ColorValueAsColor)
+      val savedColor: String = savedValue.requireString(KnoraApiV2Complex.ColorValueAsColor)
       savedColor should ===(color)
     }
 
@@ -4490,7 +4490,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       uriValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.UriValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.UriValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4502,7 +4502,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedUri: IRI = savedValue.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.UriValueAsUri,
+        key = KnoraApiV2Complex.UriValueAsUri,
         expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
         validationFun = validationFun
       )
@@ -4555,7 +4555,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       geonameValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.GeonameValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.GeonameValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4567,7 +4567,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedGeonameCode: String =
-        savedValue.requireString(OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode)
+        savedValue.requireString(KnoraApiV2Complex.GeonameValueAsGeonameCode)
       savedGeonameCode should ===(geonameCode)
     }
 
@@ -4608,12 +4608,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       linkValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.LinkValue.toSmartIri)
 
       // When you change a link value's target, it gets a new UUID.
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          KnoraApiV2Complex.ValueHasUUID,
           UuidUtil.validateBase64EncodedUuid
         )
       assert(newLinkValueUUID != linkValueUUID)
@@ -4628,7 +4628,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
+      val savedTarget: JsonLDObject = savedValue.requireObject(KnoraApiV2Complex.LinkValueHasTarget)
       val savedTargetIri: IRI       = savedTarget.requireString(JsonLDKeywords.ID)
       savedTargetIri should ===(linkTargetIri)
     }
@@ -4679,12 +4679,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       linkValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.LinkValue.toSmartIri)
 
       // Since we only changed metadata, the UUID should be the same.
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          KnoraApiV2Complex.ValueHasUUID,
           UuidUtil.validateBase64EncodedUuid
         )
       assert(newLinkValueUUID == linkValueUUID)
@@ -4698,7 +4698,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+      val savedComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
       savedComment should ===(comment)
     }
 
@@ -4730,12 +4730,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       linkValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.LinkValue.toSmartIri)
 
       // Since we only changed metadata, the UUID should be the same.
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          KnoraApiV2Complex.ValueHasUUID,
           UuidUtil.validateBase64EncodedUuid
         )
       assert(newLinkValueUUID == linkValueUUID)
@@ -4749,7 +4749,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+      val savedComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
       savedComment should ===(comment)
     }
 
@@ -4811,7 +4811,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       linkValueIri.set(valueIri)
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+      valueType should ===(KnoraApiV2Complex.LinkValue.toSmartIri)
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -4822,11 +4822,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
+      val savedTarget: JsonLDObject = savedValue.requireObject(KnoraApiV2Complex.LinkValueHasTarget)
       val savedTargetIri: IRI       = savedTarget.requireString(JsonLDKeywords.ID)
       savedTargetIri should ===(TestDing.iri)
 
-      val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+      val savedComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
       savedComment should ===(comment)
     }
 
