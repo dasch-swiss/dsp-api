@@ -575,11 +575,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   def getString(key: String): IO[String, Option[String]] = getJsonLdString(key).map(_.map(_.value))
 
-  def getRequiredString(key: String): IO[String, String] =
-    getString(key).flatMap {
-      case Some(str) => ZIO.succeed(str)
-      case None      => ZIO.fail(s"No $key provided")
-    }
+  def getRequiredString(key: String): IO[String, String] = getString(key).someOrFail(s"No $key provided")
 
   /**
    * Gets an optional string value of a property of this JSON-LD object, throwing
@@ -758,11 +754,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(other)             => ZIO.fail(s"Invalid $key: $other (object expected)")
     }
 
-  def getRequiredObject(key: String): IO[String, JsonLDObject] =
-    getObject(key).flatMap {
-      case Some(obj) => ZIO.succeed(obj)
-      case None      => ZIO.fail(s"No $key provided")
-    }
+  def getRequiredObject(key: String): IO[String, JsonLDObject] = getObject(key).someOrFail(s"No $key provided")
 
   /**
    * Gets the required array value of this JSON-LD object. If the value is not an array,
@@ -801,11 +793,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(other)            => ZIO.some(JsonLDArray(List(other)))
     }
 
-  def getRequiredArray(key: String): IO[String, JsonLDArray] =
-    getArray(key).flatMap {
-      case Some(obj) => ZIO.succeed(obj)
-      case None      => ZIO.fail(s"No $key provided")
-    }
+  def getRequiredArray(key: String): IO[String, JsonLDArray] = getArray(key).someOrFail(s"No $key provided")
 
   /**
    * Gets the required integer value of this JSON-LD object, throwing
@@ -844,11 +832,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(other)          => ZIO.fail(s"Invalid $key: $other (integer expected)")
     }
 
-  def getRequiredInt(key: String): IO[String, Int] =
-    getInt(key).flatMap {
-      case Some(obj) => ZIO.succeed(obj)
-      case None      => ZIO.fail(s"No $key provided")
-    }
+  def getRequiredInt(key: String): IO[String, Int] = getInt(key).someOrFail(s"No $key provided")
 
   def getBoolean(key: String): IO[String, Option[Boolean]] =
     value.get(key) match {
@@ -857,11 +841,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(other)              => ZIO.fail(s"Invalid $key: $other (boolean expected)")
     }
 
-  def getRequiredBoolean(key: String): IO[String, Boolean] =
-    getBoolean(key).flatMap {
-      case Some(obj) => ZIO.succeed(obj)
-      case None      => ZIO.fail(s"No $key provided")
-    }
+  def getRequiredBoolean(key: String): IO[String, Boolean] = getBoolean(key).someOrFail(s"No $key provided")
 
   override def compare(that: JsonLDValue): Int = 0
 
@@ -879,10 +859,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
   def getRequiredIdValueAsKnoraDataIri: ZIO[StringFormatter, String, SmartIri] =
-    getIdValueAsKnoraDataIri.flatMap {
-      case Some(iri) => ZIO.succeed(iri)
-      case None      => ZIO.fail(s"No ${JsonLDKeywords.ID} provided")
-    }
+    getIdValueAsKnoraDataIri.someOrFail(s"No ${JsonLDKeywords.ID} provided")
 
   def getUuid(key: String): IO[String, Option[UUID]] =
     getString(key).flatMap {
