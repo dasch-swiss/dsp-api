@@ -16,7 +16,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
-
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
@@ -43,6 +42,10 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util._
+import org.knora.webapi.routing.UnsafeZioRun
+import dsp.errors.BadRequestException
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
+import zio._
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
@@ -176,7 +179,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   private val knoraApiSimpleOntologySegment =
     URLEncoder.encode(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri, "UTF-8")
   private val knoraApiWithValueObjectsOntologySegment =
-    URLEncoder.encode(OntologyConstants.KnoraApiV2Complex.KnoraApiOntologyIri, "UTF-8")
+    URLEncoder.encode(KnoraApiV2Complex.KnoraApiOntologyIri, "UTF-8")
   private val incunabulaOntologySimpleSegment =
     URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
   private val incunabulaOntologyWithValueObjectsSegment =
@@ -486,7 +489,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
 
         val lastModDate = metadata.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -533,7 +536,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
         barIri.set(ontologyIri)
         val lastModDate = metadata.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -612,7 +615,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(newComment))
 
         val lastModDate = metadata.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -655,7 +658,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
 
         val lastModDate = metadata.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -681,7 +684,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(!metadata.value.contains(OntologyConstants.Rdfs.Comment))
 
         val lastModDate = metadata.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -703,7 +706,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+        assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
       }
     }
 
@@ -986,7 +989,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
         val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1068,7 +1071,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
         val newFreetestLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1729,18 +1732,20 @@ class OntologyV2R2RSpec extends R2RSpec {
           OntologyConstants.Rdfs.Comment,
           OntologyConstants.Rdfs.Label,
           OntologyConstants.Rdfs.SubPropertyOf,
-          OntologyConstants.KnoraApiV2Complex.IsEditable,
-          OntologyConstants.KnoraApiV2Complex.IsResourceProperty,
-          OntologyConstants.KnoraApiV2Complex.IsLinkValueProperty,
-          OntologyConstants.KnoraApiV2Complex.ObjectType,
-          OntologyConstants.KnoraApiV2Complex.SubjectType,
+          KnoraApiV2Complex.IsEditable,
+          KnoraApiV2Complex.IsResourceProperty,
+          KnoraApiV2Complex.IsLinkValueProperty,
+          KnoraApiV2Complex.ObjectType,
+          KnoraApiV2Complex.SubjectType,
           "@id",
           "@type"
         )
 
         iris should equal(expectedIris)
 
-        val isEditable = hasOtherNothingValue.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable)
+        val isEditable = UnsafeZioRun.runOrThrow(
+          hasOtherNothingValue.getRequiredBoolean(KnoraApiV2Complex.IsEditable)
+        )
         isEditable shouldBe true
       }
     }
@@ -1792,7 +1797,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val returnedLabel = property.requireObject(OntologyConstants.Rdfs.Label).requireString("@value")
         returnedLabel should equal(newLabel)
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1809,9 +1814,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph           = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
-          val nothingValue    = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = nothingValue.maybeBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable)
+          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
+          val isEditableMaybe = UnsafeZioRun.runOrThrow(
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
+          )
           isEditableMaybe should equal(Some(true))
         }
       }
@@ -1865,7 +1872,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val returnedComment = property.requireObject(OntologyConstants.Rdfs.Comment).requireString("@value")
         returnedComment should equal(newComment)
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1882,9 +1889,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph           = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
-          val nothingValue    = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = nothingValue.maybeBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable)
+          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
+          val isEditableMaybe = UnsafeZioRun.runOrThrow(
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
+          )
           isEditableMaybe should equal(Some(true))
         }
       }
@@ -1911,7 +1920,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         returnedPropertyIri should equal(hasOtherNothingIri)
         assert(property.value.get(OntologyConstants.Rdfs.Comment) == None)
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1928,9 +1937,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph           = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
-          val nothingValue    = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = nothingValue.maybeBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable)
+          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
+          val isEditableMaybe = UnsafeZioRun.runOrThrow(
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
+          )
           isEditableMaybe should equal(Some(true))
         }
       }
@@ -1984,7 +1995,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val returnedPropertyIri = property.requireString("@id")
         returnedPropertyIri should equal(hasOtherNothingIri)
         val lastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -2001,9 +2012,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph           = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
-          val nothingValue    = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = nothingValue.maybeBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable)
+          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
+          val isEditableMaybe = UnsafeZioRun.runOrThrow(
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
+          )
           isEditableMaybe should equal(Some(true))
         }
       }
@@ -2066,7 +2079,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+        assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
       }
     }
 
@@ -2084,7 +2097,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -2340,7 +2353,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+        assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
       }
     }
 
@@ -2418,7 +2431,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -2490,7 +2503,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -2509,7 +2522,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+        assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
       }
     }
 
@@ -2527,7 +2540,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
 
         val newAnythingLastModDate = responseJsonDoc.body.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -2551,7 +2564,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "rdfs:label": "$label",
            |    "@context": {
            |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |        "knora-api": "${KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
            |    }
            |}""".stripMargin
 
@@ -2567,7 +2580,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
 
         val lastModDate = metadata.requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          key = KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -3157,7 +3170,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
         assert(
           !responseJsonDoc.body
-            .value(OntologyConstants.KnoraApiV2Complex.CanDo)
+            .value(KnoraApiV2Complex.CanDo)
             .asInstanceOf[JsonLDBoolean]
             .value
         )
@@ -3208,7 +3221,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      assert(responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
 
       CollectClientTestData("candeletecardinalities-true-response", responseStr)
     }
@@ -3444,7 +3457,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
         assert(
           responseJsonDoc.body
-            .value(OntologyConstants.KnoraApiV2Complex.CanDo)
+            .value(KnoraApiV2Complex.CanDo)
             .asInstanceOf[JsonLDBoolean]
             .value
         )
@@ -3477,7 +3490,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }
 
@@ -3490,7 +3503,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }
 
@@ -3503,7 +3516,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }
 
@@ -3516,7 +3529,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }
 
@@ -3529,7 +3542,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr = responseAs[String]
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      assert(!responseJsonDoc.body.value(KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }
 
@@ -3858,35 +3871,21 @@ class OntologyV2R2RSpec extends R2RSpec {
     Get(requestUrl) ~> ontologiesPath ~> check {
       val responseStr: String = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
-      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      val graph           = responseJsonDoc.body.requireArray(JsonLDKeywords.GRAPH).value.map(_.asInstanceOf[JsonLDObject])
 
-      val isSequenceOfIsEditable = graph
-        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsSequenceOf)
-        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
-      val isSequenceOfValueIsEditable = graph
-        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue)
-        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
-      val hasSequenceBoundsIsEditable = graph
-        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.HasSequenceBounds)
-        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
-      val isPartOfIsEditable = graph
-        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsPartOf)
-        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
-      val isPartOfValueIsEditable = graph
-        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.IsPartOfValue)
-        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
-      val seqnumIsEditable = graph
-        .find(_.requireString(JsonLDKeywords.ID) == OntologyConstants.KnoraApiV2Complex.Seqnum)
-        .fold(false)(_.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsEditable))
+      def isEditable(property: String): Boolean = UnsafeZioRun.runOrThrow {
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        val graph           = responseJsonDoc.body.requireArray(JsonLDKeywords.GRAPH).value.map(_.asInstanceOf[JsonLDObject])
+        ZIO
+          .fromOption(graph.find(_.requireString(JsonLDKeywords.ID) == property))
+          .flatMap(_.getRequiredBoolean(KnoraApiV2Complex.IsEditable))
+      }
 
-      assert(isSequenceOfIsEditable)
-      assert(isSequenceOfValueIsEditable)
-      assert(hasSequenceBoundsIsEditable)
-      assert(isPartOfIsEditable)
-      assert(isPartOfValueIsEditable)
-      assert(seqnumIsEditable)
-
+      assert(isEditable(KnoraApiV2Complex.IsSequenceOf))
+      assert(isEditable(KnoraApiV2Complex.IsSequenceOfValue))
+      assert(isEditable(KnoraApiV2Complex.HasSequenceBounds))
+      assert(isEditable(KnoraApiV2Complex.IsPartOf))
+      assert(isEditable(KnoraApiV2Complex.IsPartOfValue))
+      assert(isEditable(KnoraApiV2Complex.Seqnum))
     }
   }
 

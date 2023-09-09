@@ -865,21 +865,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case other              => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
     }
 
-  /**
-   * Gets the optional boolean value of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property's value is not a boolean.
-   *
-   * @param key the key of the optional value.
-   * @return the optional value.
-   */
-  @deprecated("use getBoolean(String) instead")
-  @throws[BadRequestException]
-  def maybeBoolean(key: String): Option[Boolean] =
-    value.get(key).map {
-      case obj: JsonLDBoolean => obj.value
-      case other              => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
-    }
-
   def getBoolean(key: String): IO[String, Option[Boolean]] =
     value.get(key) match {
       case Some(obj: JsonLDBoolean) => ZIO.some(obj.value)

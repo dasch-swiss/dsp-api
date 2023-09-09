@@ -439,14 +439,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   )
 
   private def booleanValueSuiteWhenGivenAnEmptyMap = suite("when given an empty map")(
-    test("maybeBoolean should return None") {
-      assertTrue(emptyJsonLdObject.maybeBoolean(someKey).isEmpty)
-    },
-    test("requireBoolean should fail with a BadRequestException") {
-      for {
-        actual <- ZIO.attempt(emptyJsonLdObject.requireBoolean(someKey)).exit
-      } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
-    },
     test("getBoolean should return None") {
       for {
         actual <- emptyJsonLdObject.getBoolean(someKey)
@@ -463,15 +455,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val booleanValue = true
     val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDBoolean(booleanValue)))
     suite("when given a valid value")(
-      // Boolean value
-      test("maybeBoolean should return boolean value") {
-        assertTrue(jsonLdObject.maybeBoolean(someKey).contains(booleanValue))
-      },
-      test("requireBoolean should return boolean value") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.requireBoolean(someKey))
-        } yield assertTrue(actual)
-      },
       test("getBoolean should return None") {
         for {
           actual <- jsonLdObject.getBoolean(someKey)
@@ -489,16 +472,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDInt(42)))
     val expectedError = "Invalid someKey: JsonLDInt(42) (boolean expected)"
     suite("when given an empty map")(
-      test("maybeBoolean should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.maybeBoolean(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-      },
-      test("requireBoolean should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.requireBoolean(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-      },
       test("getBoolean should fail with correct error message") {
         for {
           actual <- jsonLdObject.getBoolean(someKey).exit

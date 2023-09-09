@@ -1900,8 +1900,10 @@ object BooleanValueContentV2 {
    */
   def fromJsonLdObject(jsonLdObject: JsonLDObject): ZIO[StringFormatter, Throwable, BooleanValueContentV2] =
     for {
-      booleanValue <- ZIO.attempt(jsonLdObject.requireBoolean(BooleanValueAsBoolean))
-      comment      <- JsonLDUtil.getComment(jsonLdObject)
+      booleanValue <- jsonLdObject
+                        .getRequiredBoolean(BooleanValueAsBoolean)
+                        .mapError(BadRequestException(_))
+      comment <- JsonLDUtil.getComment(jsonLdObject)
     } yield BooleanValueContentV2(ApiV2Complex, booleanValue, comment)
 }
 
