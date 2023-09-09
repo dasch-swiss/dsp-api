@@ -3872,9 +3872,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseStr: String = responseAs[String]
       assert(status == StatusCodes.OK, response.toString)
 
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      val graph           = responseJsonDoc.body.requireArray(JsonLDKeywords.GRAPH).value.map(_.asInstanceOf[JsonLDObject])
       def isEditable(property: String): Boolean = UnsafeZioRun.runOrThrow {
-        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val graph           = responseJsonDoc.body.requireArray(JsonLDKeywords.GRAPH).value.map(_.asInstanceOf[JsonLDObject])
         ZIO
           .fromOption(graph.find(_.requireString(JsonLDKeywords.ID) == property))
           .flatMap(_.getRequiredBoolean(KnoraApiV2Complex.IsEditable))
