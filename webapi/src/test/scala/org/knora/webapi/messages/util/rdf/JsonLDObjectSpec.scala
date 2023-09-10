@@ -264,14 +264,10 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
       },
       test("getObject should return None") {
-        for {
-          actual <- emptyJsonLdObject.getObject(someKey)
-        } yield assertTrue(actual.isEmpty)
+        assertTrue(emptyJsonLdObject.getObject(someKey) == Right(None))
       },
       test("getRequiredObject should fail") {
-        for {
-          actual <- emptyJsonLdObject.getRequiredObject(someKey).exit
-        } yield assertTrue(actual == Exit.fail("No someKey provided"))
+        assertTrue(emptyJsonLdObject.getRequiredObject(someKey) == Left("No someKey provided"))
       }
     )
   )
@@ -370,14 +366,10 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
       },
       test("getInt should return None") {
-        for {
-          actual <- emptyJsonLdObject.getInt(someKey)
-        } yield assertTrue(actual.isEmpty)
+        assertTrue(emptyJsonLdObject.getInt(someKey) == Right(None))
       },
       test("getRequiredInt should fail with correct error message") {
-        for {
-          actual <- emptyJsonLdObject.getRequiredInt(someKey).exit
-        } yield assertTrue(actual == Exit.fail("No someKey provided"))
+        assertTrue(emptyJsonLdObject.getRequiredInt(someKey) == Left("No someKey provided"))
       }
     )
 
@@ -394,14 +386,10 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == intValue)
       },
       test("getInt should return int value") {
-        for {
-          actual <- jsonLdObject.getInt(someKey)
-        } yield assertTrue(actual.contains(intValue))
+        assertTrue(jsonLdObject.getInt(someKey) == Right(Some(intValue)))
       },
       test("getRequiredInt return int value") {
-        for {
-          actual <- jsonLdObject.getRequiredInt(someKey)
-        } yield assertTrue(actual == intValue)
+        assertTrue(jsonLdObject.getRequiredInt(someKey) == Right(intValue))
       }
     )
   }
@@ -421,14 +409,10 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
       },
       test("getInt should return None") {
-        for {
-          actual <- jsonLdObject.getInt(someKey).exit
-        } yield assertTrue(actual == Exit.fail(expectedError))
+        assertTrue(jsonLdObject.getInt(someKey) == Left(expectedError))
       },
       test("getRequiredInt should fail with correct error message") {
-        for {
-          actual <- jsonLdObject.getRequiredInt(someKey).exit
-        } yield assertTrue(actual == Exit.fail(expectedError))
+        assertTrue(jsonLdObject.getRequiredInt(someKey) == Left(expectedError))
       }
     )
   }
@@ -440,14 +424,10 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   private def booleanValueSuiteWhenGivenAnEmptyMap = suite("when given an empty map")(
     test("getBoolean should return None") {
-      for {
-        actual <- emptyJsonLdObject.getBoolean(someKey)
-      } yield assertTrue(actual.isEmpty)
+      assertTrue(emptyJsonLdObject.getBoolean(someKey) == Right(None))
     },
     test("getRequiredBoolean should fail with correct error message") {
-      for {
-        actual <- emptyJsonLdObject.getRequiredBoolean(someKey).exit
-      } yield assertTrue(actual == Exit.fail("No someKey provided"))
+      assertTrue(emptyJsonLdObject.getRequiredBoolean(someKey) == Left("No someKey provided"))
     }
   )
 
@@ -455,15 +435,11 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val booleanValue = true
     val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDBoolean(booleanValue)))
     suite("when given a valid value")(
-      test("getBoolean should return None") {
-        for {
-          actual <- jsonLdObject.getBoolean(someKey)
-        } yield assertTrue(actual.contains(booleanValue))
+      test("getBoolean should return some value") {
+        assertTrue(jsonLdObject.getBoolean(someKey) == Right(Some(booleanValue)))
       },
-      test("getRequiredBoolean should fail with correct error message") {
-        for {
-          actual <- jsonLdObject.getRequiredBoolean(someKey)
-        } yield assertTrue(actual)
+      test("getRequiredBoolean should return value") {
+        assertTrue(jsonLdObject.getRequiredBoolean(someKey) == Right(booleanValue))
       }
     )
   }
@@ -473,14 +449,10 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val expectedError = "Invalid someKey: JsonLDInt(42) (boolean expected)"
     suite("when given an empty map")(
       test("getBoolean should fail with correct error message") {
-        for {
-          actual <- jsonLdObject.getBoolean(someKey).exit
-        } yield assertTrue(actual == Exit.fail(expectedError))
+        assertTrue(jsonLdObject.getBoolean(someKey) == Left(expectedError))
       },
       test("getRequiredBoolean should fail with correct error message") {
-        for {
-          actual <- jsonLdObject.getRequiredBoolean(someKey).exit
-        } yield assertTrue(actual == Exit.fail(expectedError))
+        assertTrue(jsonLdObject.getRequiredBoolean(someKey) == Left(expectedError))
       }
     )
   }

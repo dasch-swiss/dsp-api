@@ -28,6 +28,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
+
 import dsp.errors.AssertionException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
@@ -45,7 +46,8 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.{RouteUtilV2, UnsafeZioRun}
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM

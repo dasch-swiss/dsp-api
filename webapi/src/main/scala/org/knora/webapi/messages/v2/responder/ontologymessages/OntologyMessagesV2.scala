@@ -9,11 +9,13 @@ import akka.actor.ActorRef
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
+import zio._
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -26,7 +28,8 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.{KnoraApiV2Complex, Rdfs}
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
+import org.knora.webapi.messages.OntologyConstants.Rdfs
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -39,7 +42,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import zio._
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -90,8 +92,8 @@ object CreateOntologyRequestV2 {
   ): ZIO[StringFormatter, Throwable, CreateOntologyRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
     implicit sf: StringFormatter =>
       for {
-        isShared <- jsonLDDocument.body
-                      .getBoolean(KnoraApiV2Complex.IsShared)
+        isShared <- ZIO
+                      .fromEither(jsonLDDocument.body.getBoolean(KnoraApiV2Complex.IsShared))
                       .mapBoth(BadRequestException(_), _.exists(identity))
         ontologyName <-
           ZIO.attempt {

@@ -638,7 +638,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
    */
   def getIriInObject(key: String): IO[String, Option[String]] =
-    getObject(key).flatMap(ZIO.foreach(_)(_.getIri()))
+    ZIO.fromEither(getObject(key)).flatMap(ZIO.foreach(_)(_.getIri()))
 
   /**
    * Gets a required datatype value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
@@ -706,7 +706,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         ZIO.fail(s"This JSON-LD object does not represent a datatype value: $this")
       }
 
-    getObject(key).flatMap(ZIO.foreach(_)(getDataTypeValueStringValue(expectedDataType, _)))
+    ZIO.fromEither(getObject(key)).flatMap(ZIO.foreach(_)(getDataTypeValueStringValue(expectedDataType, _)))
   }
 
   /**
@@ -747,14 +747,18 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *         Returns [[None]] if the key is not found.
    *         Fails if the value is not a [[JsonLDObject]].
    */
-  def getObject(key: String): IO[String, Option[JsonLDObject]] =
+  def getObject(key: String): Either[String, Option[JsonLDObject]] =
     value.get(key) match {
-      case Some(obj: JsonLDObject) => ZIO.some(obj)
-      case None                    => ZIO.none
-      case Some(other)             => ZIO.fail(s"Invalid $key: $other (object expected)")
+      case Some(obj: JsonLDObject) => Right(Some(obj))
+      case None                    => Right(None)
+      case Some(other)             => Left(s"Invalid $key: $other (object expected)")
     }
 
-  def getRequiredObject(key: String): IO[String, JsonLDObject] = getObject(key).someOrFail(s"No $key provided")
+  def getRequiredObject(key: String): Either[String, JsonLDObject] =
+    getObject(key).flatMap {
+      case Some(value) => Right(value)
+      case None        => Left(s"No $key provided")
+    }
 
   /**
    * Gets the required array value of this JSON-LD object. If the value is not an array,
@@ -804,11 +808,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   @deprecated("use getRequiredInt(String) instead")
   @throws[BadRequestException]
-  def requireInt(key: String): Int =
-    value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-      case obj: JsonLDInt => obj.value
-      case other          => throw BadRequestException(s"Invalid $key: $other (integer expected)")
-    }
+  def requireInt(key: String): Int = getRequiredInt(key).fold(e => throw BadRequestException(e), identity)
 
   /**
    * Gets the optional integer value of this JSON-LD object, throwing
@@ -819,29 +819,31 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   @deprecated("use getInt() instead")
   @throws[BadRequestException]
-  def maybeInt(key: String): Option[Int] =
-    value.get(key).map {
-      case obj: JsonLDInt => obj.value
-      case other          => throw BadRequestException(s"Invalid $key: $other (integer expected)")
-    }
+  def maybeInt(key: String): Option[Int] = getInt(key).fold(e => throw BadRequestException(e), identity)
 
-  def getInt(key: String): IO[String, Option[Int]] =
+  def getInt(key: String): Either[String, Option[Int]] =
     value.get(key) match {
-      case Some(obj: JsonLDInt) => ZIO.some(obj.value)
-      case None                 => ZIO.none
-      case Some(other)          => ZIO.fail(s"Invalid $key: $other (integer expected)")
+      case Some(obj: JsonLDInt) => Right(Some(obj.value))
+      case None                 => Right(None)
+      case Some(other)          => Left(s"Invalid $key: $other (integer expected)")
     }
 
-  def getRequiredInt(key: String): IO[String, Int] = getInt(key).someOrFail(s"No $key provided")
+  def getRequiredInt(key: String): Either[String, Int] = getInt(key).flatMap {
+    case Some(value) => Right(value)
+    case None        => Left(s"No $key provided")
+  }
 
-  def getBoolean(key: String): IO[String, Option[Boolean]] =
+  def getBoolean(key: String): Either[String, Option[Boolean]] =
     value.get(key) match {
-      case Some(obj: JsonLDBoolean) => ZIO.some(obj.value)
-      case None                     => ZIO.none
-      case Some(other)              => ZIO.fail(s"Invalid $key: $other (boolean expected)")
+      case Some(obj: JsonLDBoolean) => Right(Some(obj.value))
+      case None                     => Right(None)
+      case Some(other)              => Left(s"Invalid $key: $other (boolean expected)")
     }
 
-  def getRequiredBoolean(key: String): IO[String, Boolean] = getBoolean(key).someOrFail(s"No $key provided")
+  def getRequiredBoolean(key: String): Either[String, Boolean] = getBoolean(key).flatMap {
+    case Some(value) => Right(value)
+    case None        => Left(s"No $key provided")
+  }
 
   override def compare(that: JsonLDValue): Int = 0
 

@@ -9,6 +9,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json._
+import zio._
 
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -16,8 +17,10 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
+
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
@@ -28,6 +31,7 @@ import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
@@ -36,16 +40,13 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
 import org.knora.webapi.models._
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util._
-import org.knora.webapi.routing.UnsafeZioRun
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
-import zio._
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
@@ -1743,9 +1744,10 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         iris should equal(expectedIris)
 
-        val isEditable = UnsafeZioRun.runOrThrow(
-          hasOtherNothingValue.getRequiredBoolean(KnoraApiV2Complex.IsEditable)
-        )
+        val isEditable =
+          hasOtherNothingValue
+            .getRequiredBoolean(KnoraApiV2Complex.IsEditable)
+            .fold(msg => throw BadRequestException(msg), identity)
         isEditable shouldBe true
       }
     }
@@ -1816,9 +1818,9 @@ class OntologyV2R2RSpec extends R2RSpec {
 
           val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = UnsafeZioRun.runOrThrow(
-            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
-          )
+          val isEditableMaybe =
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity())
+
           isEditableMaybe should equal(Some(true))
         }
       }
@@ -1891,9 +1893,9 @@ class OntologyV2R2RSpec extends R2RSpec {
 
           val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = UnsafeZioRun.runOrThrow(
-            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
-          )
+          val isEditableMaybe =
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity())
+
           isEditableMaybe should equal(Some(true))
         }
       }
@@ -1939,9 +1941,8 @@ class OntologyV2R2RSpec extends R2RSpec {
 
           val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = UnsafeZioRun.runOrThrow(
-            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
-          )
+          val isEditableMaybe =
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity)
           isEditableMaybe should equal(Some(true))
         }
       }
@@ -2014,9 +2015,8 @@ class OntologyV2R2RSpec extends R2RSpec {
 
           val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
-          val isEditableMaybe = UnsafeZioRun.runOrThrow(
-            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).mapError(BadRequestException(_))
-          )
+          val isEditableMaybe =
+            nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity)
           isEditableMaybe should equal(Some(true))
         }
       }
