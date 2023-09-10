@@ -255,9 +255,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   // object  value related tests
   private val objectValuesSuite = suite("getting object values")(
     suite("when given an empty map")(
-      test("maybeObject should return None") {
-        assertTrue(emptyJsonLdObject.maybeObject(someKey).isEmpty)
-      },
       test("requireObject should fail with a BadRequestException") {
         for {
           actual <- ZIO.attempt(emptyJsonLdObject.requireObject(someKey)).exit

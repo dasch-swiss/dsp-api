@@ -186,15 +186,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   }
 
   private def parseResourceLastModificationDate(resource: JsonLDDocument): Option[Instant] =
-    resource.body.maybeObject(KnoraApiV2Complex.LastModificationDate).map { jsonLDObject =>
-      jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, validationFun) should ===(
-        OntologyConstants.Xsd.DateTimeStamp
-      )
-      jsonLDObject.requireStringWithValidation(
-        JsonLDKeywords.VALUE,
-        (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-      )
-    }
+    resource.body
+      .getObject(KnoraApiV2Complex.LastModificationDate)
+      .fold(e => throw BadRequestException(e), identity)
+      .map { jsonLDObject =>
+        jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, validationFun) should ===(
+          OntologyConstants.Xsd.DateTimeStamp
+        )
+        jsonLDObject.requireStringWithValidation(
+          JsonLDKeywords.VALUE,
+          (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+        )
+      }
 
   private def getResourceLastModificationDate(resourceIri: IRI, userEmail: String): Option[Instant] = {
     val request = Get(

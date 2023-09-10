@@ -3063,7 +3063,9 @@ object ClassInfoContentV2 {
     val datatypeInfo: Option[DatatypeInfoV2] =
       jsonLDClassDef.maybeIriInObject(OntologyConstants.Owl.OnDatatype, stringFormatter.toSmartIriWithErr) match {
         case Some(onDatatype: SmartIri) =>
-          val pattern: Option[String] = jsonLDClassDef.maybeObject(OntologyConstants.Owl.WithRestrictions) match {
+          val pattern: Option[String] = jsonLDClassDef
+            .getObject(OntologyConstants.Owl.WithRestrictions)
+            .fold(e => throw BadRequestException(e), identity) match {
             case Some(jsonLDValue: JsonLDValue) =>
               jsonLDValue match {
                 case jsonLDObject: JsonLDObject =>

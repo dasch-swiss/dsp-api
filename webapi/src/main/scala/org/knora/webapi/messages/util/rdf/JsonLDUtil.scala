@@ -626,7 +626,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   @deprecated("use getIdIriInObject(String) instead")
   def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
-    maybeObject(key).map(_.toIri(validationFun))
+    getObject(key)
+      .fold(e => throw BadRequestException(e), identity)
+      .map(_.toIri(validationFun))
 
   /**
    * Gets the IRI of the object value of this JSON-LD at a specific key.
@@ -677,7 +679,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     expectedDatatype: SmartIri,
     validationFun: (String, => Nothing) => T
   ): Option[T] =
-    maybeObject(key).map(_.toDatatypeValueLiteral(expectedDatatype, validationFun))
+    getObject(key)
+      .fold(e => throw BadRequestException(e), identity)
+      .map(_.toDatatypeValueLiteral(expectedDatatype, validationFun))
 
   /**
    * Gets the value as [[String]] of the object value of this JSON-LD at a specific key.
@@ -720,21 +724,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   @throws[BadRequestException]
   def requireObject(key: String): JsonLDObject =
     value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-      case obj: JsonLDObject => obj
-      case other             => throw BadRequestException(s"Invalid $key: $other (object expected)")
-    }
-
-  /**
-   * Gets the optional object value of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property's value is not an object.
-   *
-   * @param key the key of the optional value.
-   * @return the optional value.
-   */
-  @deprecated("use getObject(String) instead")
-  @throws[BadRequestException]
-  def maybeObject(key: String): Option[JsonLDObject] =
-    value.get(key).map {
       case obj: JsonLDObject => obj
       case other             => throw BadRequestException(s"Invalid $key: $other (object expected)")
     }
