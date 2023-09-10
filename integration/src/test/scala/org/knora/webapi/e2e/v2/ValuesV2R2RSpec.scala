@@ -10,7 +10,9 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 
 import scala.concurrent.ExecutionContextExecutor
-import dsp.errors.{AssertionException, BadRequestException}
+
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector

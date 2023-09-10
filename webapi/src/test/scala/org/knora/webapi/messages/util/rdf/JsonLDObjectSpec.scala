@@ -255,11 +255,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   // object  value related tests
   private val objectValuesSuite = suite("getting object values")(
     suite("when given an empty map")(
-      test("requireObject should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(emptyJsonLdObject.requireObject(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
-      },
       test("getObject should return None") {
         assertTrue(emptyJsonLdObject.getObject(someKey) == Right(None))
       },
@@ -276,7 +271,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   private def arrayValueSuiteWhenGivenEmptyMap = suite("when given an empty map")(
     test("getArray should return a None") {
-      assertTrue(emptyJsonLdObject.getArray(someKey) == Right(None)))
+      assertTrue(emptyJsonLdObject.getArray(someKey).isEmpty)
     },
     test("getRequiredArray should fail with correct error message") {
       assertTrue(emptyJsonLdObject.getRequiredArray(someKey) == Left("No someKey provided"))

@@ -609,7 +609,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   @deprecated("use getIdIriInObject(String) instead")
   @throws[BadRequestException]
   def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
-    requireObject(key).toIri(validationFun)
+    getRequiredObject(key)
+      .fold(e => throw BadRequestException(e), identity)
+      .toIri(validationFun)
 
   /**
    * Gets an optional IRI value (contained in a JSON-LD object) value of a property of this JSON-LD object, throwing
@@ -658,7 +660,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     expectedDatatype: SmartIri,
     validationFun: (String, => Nothing) => T
   ): T =
-    requireObject(key).toDatatypeValueLiteral(expectedDatatype, validationFun)
+    getRequiredObject(key)
+      .fold(e => throw BadRequestException(e), identity)
+      .toDatatypeValueLiteral(expectedDatatype, validationFun)
 
   /**
    * Gets an optional datatype value (contained in a JSON-LD object) value of a property of this JSON-LD object, throwing
@@ -712,21 +716,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
     ZIO.fromEither(getObject(key)).flatMap(ZIO.foreach(_)(getDataTypeValueStringValue(expectedDataType, _)))
   }
-
-  /**
-   * Gets the required object value of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property is not found or if its value is not an object.
-   *
-   * @param key the key of the required value.
-   * @return the required value.
-   */
-  @deprecated("use getRequiredObject(String) instead")
-  @throws[BadRequestException]
-  def requireObject(key: String): JsonLDObject =
-    value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-      case obj: JsonLDObject => obj
-      case other             => throw BadRequestException(s"Invalid $key: $other (object expected)")
-    }
 
   /**
    * Gets the optional object value of this JSON-LD object.

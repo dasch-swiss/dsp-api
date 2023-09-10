@@ -18,7 +18,9 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import dsp.errors.{AssertionException, BadRequestException}
+
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
@@ -2494,8 +2496,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val booleanValueAsBoolean =
-        UnsafeZioRun.runOrThrow(savedValue.getRequiredBoolean(KnoraApiV2Complex.BooleanValueAsBoolean))
+      val booleanValueAsBoolean = savedValue
+        .getRequiredBoolean(KnoraApiV2Complex.BooleanValueAsBoolean)
+        .fold(e => throw BadRequestException(e), identity)
       booleanValueAsBoolean should ===(booleanValue)
     }
 
@@ -3017,8 +3020,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTarget: JsonLDObject = savedValue.requireObject(KnoraApiV2Complex.LinkValueHasTarget)
-      val savedTargetIri: IRI       = savedTarget.requireString(JsonLDKeywords.ID)
+      val savedTarget: JsonLDObject = savedValue
+        .getRequiredObject(KnoraApiV2Complex.LinkValueHasTarget)
+        .fold(e => throw BadRequestException(e), identity)
+      val savedTargetIri: IRI = savedTarget.requireString(JsonLDKeywords.ID)
       savedTargetIri should ===(TestDing.iri)
     }
 
@@ -4262,8 +4267,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val booleanValueAsBoolean =
-        UnsafeZioRun.runOrThrow(savedValue.getRequiredBoolean(KnoraApiV2Complex.BooleanValueAsBoolean))
+      val booleanValueAsBoolean = savedValue
+        .getRequiredBoolean(KnoraApiV2Complex.BooleanValueAsBoolean)
+        .fold(e => throw BadRequestException(e), identity)
       booleanValueAsBoolean should ===(booleanValue)
     }
 
@@ -4787,8 +4793,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTarget: JsonLDObject = savedValue.requireObject(KnoraApiV2Complex.LinkValueHasTarget)
-      val savedTargetIri: IRI       = savedTarget.requireString(JsonLDKeywords.ID)
+      val savedTarget: JsonLDObject = savedValue
+        .getRequiredObject(KnoraApiV2Complex.LinkValueHasTarget)
+        .fold(e => throw BadRequestException(e), identity)
+      val savedTargetIri: IRI = savedTarget.requireString(JsonLDKeywords.ID)
       savedTargetIri should ===(linkTargetIri)
     }
 
@@ -4981,8 +4989,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTarget: JsonLDObject = savedValue.requireObject(KnoraApiV2Complex.LinkValueHasTarget)
-      val savedTargetIri: IRI       = savedTarget.requireString(JsonLDKeywords.ID)
+      val savedTarget: JsonLDObject = savedValue
+        .getRequiredObject(KnoraApiV2Complex.LinkValueHasTarget)
+        .fold(e => throw BadRequestException(e), identity)
+      val savedTargetIri: IRI = savedTarget.requireString(JsonLDKeywords.ID)
       savedTargetIri should ===(TestDing.iri)
 
       val savedComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
