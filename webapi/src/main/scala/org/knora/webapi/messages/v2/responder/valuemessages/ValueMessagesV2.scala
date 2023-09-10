@@ -1230,16 +1230,28 @@ object DateValueContentV2 {
    */
   def fromJsonLdObject(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, DateValueContentV2] =
     for {
-      comment                     <- JsonLDUtil.getComment(jsonLDObject)
-      calendarName                <- ZIO.attempt(jsonLDObject.requireStringWithValidation(DateValueHasCalendar, CalendarNameV2.parse))
-      dateValueHasStartYear       <- ZIO.attempt(jsonLDObject.requireInt(DateValueHasStartYear))
-      maybeDateValueHasStartMonth <- ZIO.attempt(jsonLDObject.maybeInt(DateValueHasStartMonth))
-      maybeDateValueHasStartDay   <- ZIO.attempt(jsonLDObject.maybeInt(DateValueHasStartDay))
+      comment      <- JsonLDUtil.getComment(jsonLDObject)
+      calendarName <- ZIO.attempt(jsonLDObject.requireStringWithValidation(DateValueHasCalendar, CalendarNameV2.parse))
+      dateValueHasStartYear <- ZIO
+                                 .fromEither(jsonLDObject.getRequiredInt(DateValueHasStartYear))
+                                 .mapError(BadRequestException(_))
+      maybeDateValueHasStartMonth <- ZIO
+                                       .fromEither(jsonLDObject.getInt(DateValueHasStartMonth))
+                                       .mapError(BadRequestException(_))
+      maybeDateValueHasStartDay <- ZIO
+                                     .fromEither(jsonLDObject.getInt(DateValueHasStartDay))
+                                     .mapError(BadRequestException(_))
       maybeDateValueHasStartEra <-
         ZIO.attempt(jsonLDObject.maybeStringWithValidation(DateValueHasStartEra, DateEraV2.parse))
-      dateValueHasEndYear       <- ZIO.attempt(jsonLDObject.requireInt(DateValueHasEndYear))
-      maybeDateValueHasEndMonth <- ZIO.attempt(jsonLDObject.maybeInt(DateValueHasEndMonth))
-      maybeDateValueHasEndDay   <- ZIO.attempt(jsonLDObject.maybeInt(DateValueHasEndDay))
+      dateValueHasEndYear <- ZIO
+                               .fromEither(jsonLDObject.getRequiredInt(DateValueHasEndYear))
+                               .mapError(BadRequestException(_))
+      maybeDateValueHasEndMonth <- ZIO
+                                     .fromEither(jsonLDObject.getInt(DateValueHasEndMonth))
+                                     .mapError(BadRequestException(_))
+      maybeDateValueHasEndDay <- ZIO
+                                   .fromEither(jsonLDObject.getInt(DateValueHasEndDay))
+                                   .mapError(BadRequestException(_))
       maybeDateValueHasEndEra <-
         ZIO.attempt(jsonLDObject.maybeStringWithValidation(DateValueHasEndEra, DateEraV2.parse))
       _ <- ZIO
@@ -1746,8 +1758,10 @@ object IntegerValueContentV2 {
     jsonLDObject: JsonLDObject
   ): ZIO[StringFormatter, Throwable, IntegerValueContentV2] =
     for {
-      intValue <- ZIO.attempt(jsonLDObject.requireInt(IntValueAsInt))
-      comment  <- JsonLDUtil.getComment(jsonLDObject)
+      intValue <- ZIO
+                    .fromEither(jsonLDObject.getRequiredInt(IntValueAsInt))
+                    .mapError(BadRequestException(_))
+      comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield IntegerValueContentV2(ApiV2Complex, intValue, comment)
 }
 

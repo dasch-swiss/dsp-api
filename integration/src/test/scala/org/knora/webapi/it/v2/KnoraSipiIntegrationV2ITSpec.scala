@@ -238,8 +238,12 @@ class KnoraSipiIntegrationV2ITSpec
       validationFun
     )
 
-    val width  = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
-    val height = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY)
+    val width = savedValue
+      .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
+      .fold(e => throw BadRequestException(e), identity)
+    val height = savedValue
+      .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY)
+      .fold(e => throw BadRequestException(e), identity)
 
     SavedImage(
       internalFilename = internalFilename,

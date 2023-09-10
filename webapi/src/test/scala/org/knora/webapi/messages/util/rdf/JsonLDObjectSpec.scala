@@ -357,14 +357,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   private def intValueSuiteWhenGivenAnEmptyMap =
     suite("when given an empty map")(
-      test("maybeInt should return None") {
-        assertTrue(emptyJsonLdObject.maybeInt(someKey).isEmpty)
-      },
-      test("requireInt should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(emptyJsonLdObject.requireInt(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
-      },
       test("getInt should return None") {
         assertTrue(emptyJsonLdObject.getInt(someKey) == Right(None))
       },
@@ -377,14 +369,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val intValue     = 42
     val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDInt(intValue)))
     suite("when given a valid value")(
-      test("maybeInt should return int value") {
-        assertTrue(jsonLdObject.maybeInt(someKey).contains(intValue))
-      },
-      test("requireInt should return int value") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.requireInt(someKey))
-        } yield assertTrue(actual == intValue)
-      },
       test("getInt should return int value") {
         assertTrue(jsonLdObject.getInt(someKey) == Right(Some(intValue)))
       },
@@ -398,16 +382,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDBoolean(false)))
     val expectedError = "Invalid someKey: JsonLDBoolean(false) (integer expected)"
     suite("when given an invalid value")(
-      test("maybeInt should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.maybeInt(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-      },
-      test("requireInt should fail with a BadRequestException") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.requireInt(someKey)).exit
-        } yield assertTrue(actual == Exit.fail(BadRequestException(expectedError)))
-      },
       test("getInt should return None") {
         assertTrue(jsonLdObject.getInt(someKey) == Left(expectedError))
       },

@@ -18,8 +18,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-import dsp.errors.AssertionException
+import dsp.errors.{AssertionException, BadRequestException}
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
@@ -752,7 +751,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b"
       )
 
-      val intValueAsInt: Int = value.requireInt(KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = value
+        .getRequiredInt(KnoraApiV2Complex.IntValueAsInt)
+        .fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(2)
     }
 
@@ -814,7 +815,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedIntValue: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
+      val savedIntValue: Int = savedValue
+        .getRequiredInt(KnoraApiV2Complex.IntValueAsInt)
+        .fold(e => throw BadRequestException(e), identity)
       savedIntValue should ===(intValue)
 
       clientTestDataCollector.addFile(
@@ -1175,7 +1178,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int = savedValue
+        .getRequiredInt(KnoraApiV2Complex.IntValueAsInt)
+        .fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
       val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
       hasPermissions should ===(customPermissions)
@@ -1895,17 +1900,27 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndDay)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
@@ -1971,17 +1986,29 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(
         dateValueHasStartMonth
       )
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndMonth)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
@@ -2043,15 +2070,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
@@ -2104,17 +2141,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
@@ -2164,17 +2209,27 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth
-      )
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
@@ -2221,15 +2276,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===( dateValueHasStartEra )
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
@@ -2280,14 +2345,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
     }
 
     "create an Islamic date value representing a range with day precision" in {
@@ -2342,14 +2417,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndDay)
     }
 
     "create a boolean value" in {
@@ -3059,7 +3144,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int =
+        savedValue.getRequiredInt(KnoraApiV2Complex.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
 
       clientTestDataCollector.addFile(
@@ -3135,7 +3221,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int =
+        savedValue.getRequiredInt(KnoraApiV2Complex.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
 
       val savedCreationDate: Instant = savedValue.requireDatatypeValueInObject(
@@ -3183,7 +3270,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int =
+        savedValue.getRequiredInt(KnoraApiV2Complex.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
     }
 
@@ -3356,7 +3444,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val intValueAsInt: Int = savedValue.requireInt(KnoraApiV2Complex.IntValueAsInt)
+      val intValueAsInt: Int =
+        savedValue.getRequiredInt(KnoraApiV2Complex.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
       val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
       hasPermissions should ===(customPermissions)
@@ -3701,17 +3790,27 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndDay)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
@@ -3779,17 +3878,29 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(
         dateValueHasStartMonth
       )
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndMonth)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
@@ -3853,15 +3964,27 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
     }
 
@@ -3916,17 +4039,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra
-      )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
@@ -3978,17 +4109,29 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(
         dateValueHasStartMonth
       )
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartMonth)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 
@@ -4037,15 +4180,27 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
         dateValueHasCalendar
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasStartYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasStartDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
         dateValueHasStartEra
       )
-      savedValue.requireInt(KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
-      savedValue.maybeInt(KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
+      savedValue
+        .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
+        .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndMonth)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
+      savedValue
+        .getInt(KnoraApiV2Complex.DateValueHasEndDay)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(None)
       savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
     }
 

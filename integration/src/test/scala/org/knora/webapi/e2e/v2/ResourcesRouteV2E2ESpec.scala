@@ -28,8 +28,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
-
-import dsp.errors.AssertionException
+import dsp.errors.{AssertionException, BadRequestException}
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -1769,7 +1768,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
         standoffBuffer.appendAll(standoffAsJsonLDObjects)
 
-        standoffGetResponseAsJsonLD.maybeInt(KnoraApiV2Complex.NextStandoffStartIndex) match {
+        standoffGetResponseAsJsonLD
+          .getInt(KnoraApiV2Complex.NextStandoffStartIndex)
+          .fold(e => throw BadRequestException(e), identity) match {
           case Some(nextOffset) => offset = nextOffset
           case None             => hasMoreStandoff = false
         }

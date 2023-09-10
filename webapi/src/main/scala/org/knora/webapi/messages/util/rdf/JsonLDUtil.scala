@@ -799,28 +799,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
   def getRequiredArray(key: String): IO[String, JsonLDArray] = getArray(key).someOrFail(s"No $key provided")
 
-  /**
-   * Gets the required integer value of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property is not found or if its value is not an integer.
-   *
-   * @param key the key of the required value.
-   * @return the required value.
-   */
-  @deprecated("use getRequiredInt(String) instead")
-  @throws[BadRequestException]
-  def requireInt(key: String): Int = getRequiredInt(key).fold(e => throw BadRequestException(e), identity)
-
-  /**
-   * Gets the optional integer value of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property's value is not an integer.
-   *
-   * @param key the key of the optional value.
-   * @return the optional value.
-   */
-  @deprecated("use getInt() instead")
-  @throws[BadRequestException]
-  def maybeInt(key: String): Option[Int] = getInt(key).fold(e => throw BadRequestException(e), identity)
-
   def getInt(key: String): Either[String, Option[Int]] =
     value.get(key) match {
       case Some(obj: JsonLDInt) => Right(Some(obj.value))

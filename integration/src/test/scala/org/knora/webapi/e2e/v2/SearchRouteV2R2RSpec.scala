@@ -10,6 +10,7 @@ import akka.http.scaladsl.model.ContentTypes
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import dsp.errors.BadRequestException
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -17,7 +18,6 @@ import org.xmlunit.diff.Diff
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
-
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -8270,7 +8270,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseAs[String])
 
         val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults  = responseDocument.body.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        val numberOfResults = responseDocument.body
+          .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
+          .fold(e => throw BadRequestException(e), identity)
 
         assert(numberOfResults != 0)
       }
@@ -8303,7 +8305,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseAs[String])
 
         val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults  = responseDocument.body.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        val numberOfResults  = responseDocument.body.getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
+          .fold(e => throw BadRequestException(e), identity)
 
         assert(numberOfResults != 0)
       }

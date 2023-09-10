@@ -3009,15 +3009,21 @@ object ClassInfoContentV2 {
                 }
 
                 val (owlCardinalityIri: IRI, owlCardinalityValue: Int) =
-                  restriction.maybeInt(OntologyConstants.Owl.Cardinality) match {
+                  restriction
+                    .getInt(OntologyConstants.Owl.Cardinality)
+                    .fold(msg => throw BadRequestException(msg), identity) match {
                     case Some(value) => OntologyConstants.Owl.Cardinality -> value
 
                     case None =>
-                      restriction.maybeInt(OntologyConstants.Owl.MinCardinality) match {
+                      restriction
+                        .getInt(OntologyConstants.Owl.MinCardinality)
+                        .fold(msg => throw BadRequestException(msg), identity) match {
                         case Some(value) => OntologyConstants.Owl.MinCardinality -> value
 
                         case None =>
-                          restriction.maybeInt(OntologyConstants.Owl.MaxCardinality) match {
+                          restriction
+                            .getInt(OntologyConstants.Owl.MaxCardinality)
+                            .fold(msg => throw BadRequestException(msg), identity) match {
                             case Some(value) => OntologyConstants.Owl.MaxCardinality -> value
                             case None =>
                               throw BadRequestException(
@@ -3029,7 +3035,9 @@ object ClassInfoContentV2 {
 
                 val onProperty =
                   restriction.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
-                val guiOrder = restriction.maybeInt(SalsahGui.External.GuiOrder)
+                val guiOrder = restriction
+                  .getInt(SalsahGui.External.GuiOrder)
+                  .fold(msg => throw BadRequestException(msg), identity)
 
                 val owlCardinalityInfo = OwlCardinalityInfo(
                   owlCardinalityIri = owlCardinalityIri,
