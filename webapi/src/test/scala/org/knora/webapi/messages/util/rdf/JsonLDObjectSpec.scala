@@ -278,23 +278,11 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   )
 
   private def arrayValueSuiteWhenGivenEmptyMap = suite("when given an empty map")(
-    test("maybeArray should return None") {
-      assertTrue(emptyJsonLdObject.maybeArray(someKey).isEmpty)
-    },
-    test("requireArray should fail with a BadRequestException ") {
-      for {
-        actual <- ZIO.attempt(emptyJsonLdObject.requireArray(someKey)).exit
-      } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
-    },
     test("getArray should return a None") {
-      for {
-        actual <- emptyJsonLdObject.getArray(someKey)
-      } yield assertTrue(actual.isEmpty)
+      assertTrue(emptyJsonLdObject.getArray(someKey) == Right(None)))
     },
     test("getRequiredArray should fail with correct error message") {
-      for {
-        actual <- emptyJsonLdObject.getRequiredArray(someKey).exit
-      } yield assertTrue(actual == Exit.fail("No someKey provided"))
+      assertTrue(emptyJsonLdObject.getRequiredArray(someKey) == Left("No someKey provided"))
     }
   )
 
@@ -304,46 +292,22 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val suiteWithArray = {
       val jsonLdObjectWithArray = JsonLDObject(Map(someKey -> jsonLdArray))
       suite("when given a jsonLdObject with an array")(
-        test("maybeArray should return value in List") {
-          assertTrue(jsonLdObjectWithArray.maybeArray(someKey).contains(jsonLdArray))
-        },
-        test("requireArray should return value in List") {
-          for {
-            actual <- ZIO.attempt(jsonLdObjectWithArray.requireArray(someKey))
-          } yield assertTrue(actual == jsonLdArray)
-        },
         test("getArray should return value in List") {
-          for {
-            actual <- jsonLdObjectWithArray.getArray(someKey)
-          } yield assertTrue(actual.contains(jsonLdArray))
+          assertTrue(jsonLdObjectWithArray.getArray(someKey).contains(jsonLdArray))
         },
         test("getRequiredArray should return value in List") {
-          for {
-            actual <- jsonLdObjectWithArray.getRequiredArray(someKey)
-          } yield assertTrue(actual == jsonLdArray)
+          assertTrue(jsonLdObjectWithArray.getRequiredArray(someKey) == Right(jsonLdArray))
         }
       )
     }
     val suiteWithSingleValue = {
       val jsonLdObjectWithSingleValue = JsonLDObject(Map(someKey -> stringValue))
       suite("when given a jsonLdObject with a single value")(
-        test("maybeArray should return value in List") {
-          assertTrue(jsonLdObjectWithSingleValue.maybeArray(someKey).contains(jsonLdArray))
-        },
-        test("requireArray should return value in List") {
-          for {
-            actual <- ZIO.attempt(jsonLdObjectWithSingleValue.requireArray(someKey))
-          } yield assertTrue(actual == jsonLdArray)
-        },
         test("getArray should return value in List") {
-          for {
-            actual <- jsonLdObjectWithSingleValue.getArray(someKey)
-          } yield assertTrue(actual.contains(jsonLdArray))
+          assertTrue(jsonLdObjectWithSingleValue.getArray(someKey).contains(jsonLdArray))
         },
         test("getRequiredArray should return value in List") {
-          for {
-            actual <- jsonLdObjectWithSingleValue.getRequiredArray(someKey)
-          } yield assertTrue(actual == jsonLdArray)
+          assertTrue(jsonLdObjectWithSingleValue.getRequiredArray(someKey) == Right(jsonLdArray))
         }
       )
     }

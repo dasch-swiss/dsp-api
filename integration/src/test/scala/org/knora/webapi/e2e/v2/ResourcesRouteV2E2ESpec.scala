@@ -542,7 +542,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val historyResponseAsString       = responseToString(historyResponse)
       assert(historyResponse.status == StatusCodes.OK, historyResponseAsString)
       val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(historyResponseAsString)
-      val entries: JsonLDArray           = jsonLDDocument.body.requireArray("@graph")
+      val entries: JsonLDArray = jsonLDDocument.body
+        .getRequiredArray("@graph")
+        .fold(e => throw BadRequestException(e), identity)
 
       for (entry: JsonLDValue <- entries.value) {
         entry match {
@@ -1759,7 +1761,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
 
         val standoff: Seq[JsonLDValue] =
-          standoffGetResponseAsJsonLD.maybeArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
+          standoffGetResponseAsJsonLD.getArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
 
         val standoffAsJsonLDObjects: Seq[JsonLDObject] = standoff.map {
           case jsonLDObject: JsonLDObject => jsonLDObject

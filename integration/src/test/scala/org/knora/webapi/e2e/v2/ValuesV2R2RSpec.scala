@@ -91,7 +91,7 @@ class ValuesV2R2RSpec extends R2RSpec {
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.body.requireArray(propertyIriInResult.toString)
+    resource.body.getRequiredArray(propertyIriInResult.toString).fold(e => throw BadRequestException(e), identity)
 
   private def getValueFromResource(
     resource: JsonLDDocument,

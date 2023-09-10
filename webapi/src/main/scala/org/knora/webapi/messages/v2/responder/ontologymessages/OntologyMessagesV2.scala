@@ -1677,7 +1677,7 @@ object InputOntologyV2 {
       lastModificationDate = lastModificationDate
     )
 
-    val maybeGraph: Option[JsonLDArray] = ontologyObj.maybeArray(JsonLDKeywords.GRAPH)
+    val maybeGraph: Option[JsonLDArray] = ontologyObj.getArray(JsonLDKeywords.GRAPH)
 
     maybeGraph match {
       case Some(graph) =>
@@ -2957,7 +2957,7 @@ object ClassInfoContentV2 {
     }
 
     val (subClassOf: Set[SmartIri], directCardinalities: Map[SmartIri, KnoraCardinalityInfo]) =
-      filteredClassDef.maybeArray(Rdfs.SubClassOf) match {
+      filteredClassDef.getArray(Rdfs.SubClassOf) match {
         case Some(valueArray: JsonLDArray) =>
           val arrayElemsAsObjs: Seq[JsonLDObject] = valueArray.value.map {
             case jsonLDObj: JsonLDObject => jsonLDObj
@@ -3277,7 +3277,7 @@ object PropertyInfoContentV2 {
         jsonLDPropertyDef
     }
 
-    val subPropertyOf: Set[SmartIri] = filteredPropertyDef.maybeArray(Rdfs.SubPropertyOf) match {
+    val subPropertyOf: Set[SmartIri] = filteredPropertyDef.getArray(Rdfs.SubPropertyOf) match {
       case Some(valueArray: JsonLDArray) =>
         valueArray.value.map {
           case superPropertyIriObj: JsonLDObject => superPropertyIriObj.toIri(stringFormatter.toSmartIriWithErr)

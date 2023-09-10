@@ -760,7 +760,9 @@ object CreateResourceRequestV2 {
             propertyIriStrs.map { propertyIriStr =>
               val propertyIri: SmartIri =
                 propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-              val valuesArray: JsonLDArray = jsonLDDocument.body.requireArray(propertyIriStr)
+              val valuesArray: JsonLDArray = jsonLDDocument.body
+                .getRequiredArray(propertyIriStr)
+                .fold(e => throw BadRequestException(e), identity)
 
               val valueFuturesSeq = ZIO.foreach(valuesArray.value) { valueJsonLD =>
                 for {

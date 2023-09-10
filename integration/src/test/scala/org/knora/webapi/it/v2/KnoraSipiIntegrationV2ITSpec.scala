@@ -176,7 +176,7 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a JSON-LD array containing the values of the specified property.
    */
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.body.requireArray(propertyIriInResult.toString)
+    resource.body.getRequiredArray(propertyIriInResult.toString).fold(e => throw BadRequestException(e), identity)
 
   /**
    * Given a JSON-LD document representing a resource, returns a JSON-LD object representing the expected single

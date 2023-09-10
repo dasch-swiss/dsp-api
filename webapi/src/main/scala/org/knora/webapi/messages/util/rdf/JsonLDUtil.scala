@@ -761,43 +761,20 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
   /**
-   * Gets the required array value of this JSON-LD object. If the value is not an array,
-   * returns a one-element array containing the value. Throws
-   * [[BadRequestException]] if the property is not found.
-   *
-   * @param key the key of the required value.
-   * @return the required value.
-   */
-  @deprecated("use getRequiredArray instead")
-  @throws[BadRequestException]
-  def requireArray(key: String): JsonLDArray =
-    value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-      case obj: JsonLDArray => obj
-      case other            => JsonLDArray(Seq(other))
-    }
-
-  /**
    * Gets the optional array value of this JSON-LD object. If the value is not an array,
    * returns a one-element array containing the value.
    *
    * @param key the key of the optional value.
    * @return the optional value.
    */
-  @deprecated("use getArray(String) instead")
-  def maybeArray(key: String): Option[JsonLDArray] =
-    value.get(key).map {
-      case obj: JsonLDArray => obj
-      case other            => JsonLDArray(Seq(other))
-    }
-
-  def getArray(key: String): IO[String, Option[JsonLDArray]] =
+  def getArray(key: String): Option[JsonLDArray] =
     value.get(key) match {
-      case Some(obj: JsonLDArray) => ZIO.some(obj)
-      case None                   => ZIO.none
-      case Some(other)            => ZIO.some(JsonLDArray(List(other)))
+      case Some(obj: JsonLDArray) => Some(obj)
+      case None                   => None
+      case Some(other)            => Some(JsonLDArray(List(other)))
     }
 
-  def getRequiredArray(key: String): IO[String, JsonLDArray] = getArray(key).someOrFail(s"No $key provided")
+  def getRequiredArray(key: String): Either[String, JsonLDArray] = getArray(key).toRight(s"No $key provided")
 
   def getInt(key: String): Either[String, Option[Int]] =
     value.get(key) match {
@@ -1042,7 +1019,7 @@ case class JsonLDDocument(
         // Make a @graph containing the entities to add to the top level, the elements of the existing @graph
         // if there is one, and the existing top-level entity if there is one.
         val existingGraphElements: Seq[JsonLDValue] =
-          flattenedContent.maybeArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
+          flattenedContent.getArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
         JsonLDObject(
           Map(
             JsonLDKeywords.GRAPH -> JsonLDArray(maybeTopLevelObject ++ existingGraphElements ++ entitiesToAddToTopLevel)

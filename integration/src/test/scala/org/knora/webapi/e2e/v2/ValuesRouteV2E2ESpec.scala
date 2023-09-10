@@ -153,7 +153,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.body.requireArray(propertyIriInResult.toString)
+    resource.body.getRequiredArray(propertyIriInResult.toString).fold(e => throw BadRequestException(e), identity)
 
   private def getValueFromResource(
     resource: JsonLDDocument,
@@ -2285,7 +2285,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===( dateValueHasStartEra )
+      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)

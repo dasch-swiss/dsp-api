@@ -374,7 +374,12 @@ class OntologyV2R2RSpec extends R2RSpec {
   private var uselessLastModDate: Instant = Instant.now
 
   private def getPropertyIrisFromResourceClassResponse(responseJsonDoc: JsonLDDocument): Set[SmartIri] = {
-    val classDef = responseJsonDoc.body.requireArray("@graph").value.head.asInstanceOf[JsonLDObject]
+    val classDef = responseJsonDoc.body
+      .getRequiredArray("@graph")
+      .fold(msg => throw BadRequestException(msg), identity)
+      .value
+      .head
+      .asInstanceOf[JsonLDObject]
 
     classDef
       .value(OntologyConstants.Rdfs.SubClassOf)
@@ -1715,7 +1720,10 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-        val graph = responseJsonDoc.body.requireArray("@graph").value
+        val graph = responseJsonDoc.body
+          .getRequiredArray("@graph")
+          .fold(e => throw BadRequestException(e), identity)
+          .value
 
         val hasOtherNothingValue = graph
           .filter(
@@ -1792,7 +1800,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
         val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
         assert(updatedOntologyIri == anythingOntoLocalhostIri)
-        val graph               = responseJsonDoc.body.requireArray("@graph").value
+        val graph =
+          responseJsonDoc.body.getRequiredArray("@graph").fold(e => throw BadRequestException(e), identity).value
         val property            = graph.head.asInstanceOf[JsonLDObject]
         val returnedPropertyIri = property.requireString("@id")
         returnedPropertyIri should equal(hasOtherNothingIri)
@@ -1816,7 +1825,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val graph = responseJsonDoc.body
+            .getRequiredArray("@graph")
+            .fold(e => throw BadRequestException(e), identity)
+            .value
+            .map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
           val isEditableMaybe =
             nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity())
@@ -1867,7 +1880,10 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
         val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
         assert(updatedOntologyIri == anythingOntoLocalhostIri)
-        val graph               = responseJsonDoc.body.requireArray("@graph").value
+        val graph = responseJsonDoc.body
+          .getRequiredArray("@graph")
+          .fold(e => throw BadRequestException(e), identity)
+          .value
         val property            = graph.head.asInstanceOf[JsonLDObject]
         val returnedPropertyIri = property.requireString("@id")
         returnedPropertyIri should equal(hasOtherNothingIri)
@@ -1891,7 +1907,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val graph = responseJsonDoc.body
+            .getRequiredArray("@graph")
+            .fold(e => throw BadRequestException(e), identity)
+            .value
+            .map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
           val isEditableMaybe =
             nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity())
@@ -1916,7 +1936,10 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
         val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
         assert(updatedOntologyIri == anythingOntoLocalhostIri)
-        val graph               = responseJsonDoc.body.requireArray("@graph").value
+        val graph = responseJsonDoc.body
+          .getRequiredArray("@graph")
+          .fold(e => throw BadRequestException(e), identity)
+          .value
         val property            = graph.head.asInstanceOf[JsonLDObject]
         val returnedPropertyIri = property.requireString("@id")
         returnedPropertyIri should equal(hasOtherNothingIri)
@@ -1939,7 +1962,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val graph = responseJsonDoc.body
+            .getRequiredArray("@graph")
+            .fold(e => throw BadRequestException(e), identity)
+            .value
+            .map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
           val isEditableMaybe =
             nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity)
@@ -1991,7 +2018,10 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseJsonDoc    = JsonLDUtil.parseJsonLD(responseStr)
         val updatedOntologyIri = responseJsonDoc.body.value("@id").asInstanceOf[JsonLDString].value
         assert(updatedOntologyIri == anythingOntoLocalhostIri)
-        val graph               = responseJsonDoc.body.requireArray("@graph").value
+        val graph = responseJsonDoc.body
+          .getRequiredArray("@graph")
+          .fold(e => throw BadRequestException(e), identity)
+          .value
         val property            = graph.head.asInstanceOf[JsonLDObject]
         val returnedPropertyIri = property.requireString("@id")
         returnedPropertyIri should equal(hasOtherNothingIri)
@@ -2013,7 +2043,11 @@ class OntologyV2R2RSpec extends R2RSpec {
           assert(status == StatusCodes.OK, response.toString)
           val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
 
-          val graph        = responseJsonDoc.body.requireArray("@graph").value.map(_.asInstanceOf[JsonLDObject])
+          val graph = responseJsonDoc.body
+            .getRequiredArray("@graph")
+            .fold(e => throw BadRequestException(e), identity)
+            .value
+            .map(_.asInstanceOf[JsonLDObject])
           val nothingValue = graph.filter(_.requireString("@id") == hasOtherNothingValueIri).head
           val isEditableMaybe =
             nothingValue.getBoolean(KnoraApiV2Complex.IsEditable).fold(throw BadRequestException(_), identity)
@@ -3873,7 +3907,11 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(status == StatusCodes.OK, response.toString)
 
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      val graph           = responseJsonDoc.body.requireArray(JsonLDKeywords.GRAPH).value.map(_.asInstanceOf[JsonLDObject])
+      val graph = responseJsonDoc.body
+        .getRequiredArray(JsonLDKeywords.GRAPH)
+        .fold(e => throw BadRequestException(e), identity)
+        .value
+        .map(_.asInstanceOf[JsonLDObject])
       def isEditable(property: String): Boolean = UnsafeZioRun.runOrThrow {
         ZIO
           .fromOption(graph.find(_.requireString(JsonLDKeywords.ID) == property))
