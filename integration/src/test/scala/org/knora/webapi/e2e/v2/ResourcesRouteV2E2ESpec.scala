@@ -1751,8 +1751,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         resourceGetResponseAsJsonLD.body
           .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
           .fold(e => throw BadRequestException(e), identity)
-      val maybeTextValueAsXml: Option[String] =
-        textValue.maybeString(KnoraApiV2Complex.TextValueAsXml)
+      val maybeTextValueAsXml: Option[String] = textValue
+        .getString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(maybeTextValueAsXml.isEmpty)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val textValueIri: IRI                             = textValue.requireStringWithValidation(JsonLDKeywords.ID, validationFun)

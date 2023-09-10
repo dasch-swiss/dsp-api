@@ -917,7 +917,7 @@ object UpdateResourceMetadataRequestV2 {
 
   private def getLabel(obj: JsonLDObject): IO[BadRequestException, Option[IRI]] = {
     val getLabel = for {
-      labelStr <- obj.getString(Rdfs.Label)
+      labelStr <- ZIO.fromEither(obj.getString(Rdfs.Label))
       label <- ZIO.foreach(labelStr)(it =>
                  ZIO
                    .fromOption(Iri.toSparqlEncodedString(it))
@@ -930,7 +930,7 @@ object UpdateResourceMetadataRequestV2 {
   private def getPermissions(obj: JsonLDObject): IO[BadRequestException, Option[String]] = {
     val key = KnoraApiV2Complex.HasPermissions
     val getPerms = for {
-      permsMaybe <- obj.getString(KnoraApiV2Complex.HasPermissions)
+      permsMaybe <- ZIO.fromEither(obj.getString(KnoraApiV2Complex.HasPermissions))
       perms <- ZIO.foreach(permsMaybe)(it =>
                  ZIO
                    .fromOption(Iri.toSparqlEncodedString(it))

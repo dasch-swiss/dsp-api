@@ -1595,8 +1595,8 @@ object TextValueContentV2 {
     obj: JsonLDObject,
     key: String
   ): ZIO[StringFormatter, BadRequestException, Option[IRI]] =
-    obj
-      .getString(key)
+    ZIO
+      .fromEither(obj.getString(key))
       .mapError(BadRequestException(_))
       .flatMap(ZIO.foreach(_)(it => RouteUtilZ.toSparqlEncodedString(it, s"Invalid key: $key: $it")))
 
@@ -1669,7 +1669,7 @@ object TextValueContentV2 {
     for {
       maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
       maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
-      maybeTextValueAsXml   <- jsonLdObject.getString(TextValueAsXml).mapError(BadRequestException(_))
+      maybeTextValueAsXml   <- ZIO.fromEither(jsonLdObject.getString(TextValueAsXml)).mapError(BadRequestException(_))
 
       // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
       maybeMappingResponse <-

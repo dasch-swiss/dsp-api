@@ -146,16 +146,11 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
   )
 
   private def stringValueWhenGivenAnEmptyMap = suite("when given an empty map")(
-    test("maybeString should return None") {
-      assertTrue(emptyJsonLdObject.maybeString(someKey).isEmpty)
-    },
     test("maybeStringWithValidation should return None") {
       assertTrue(emptyJsonLdObject.maybeStringWithValidation(someKey, noValidation).isEmpty)
     },
     test("getString should return None") {
-      for {
-        actual <- emptyJsonLdObject.getString(someKey)
-      } yield assertTrue(actual.isEmpty)
+      assertTrue(emptyJsonLdObject.getString(someKey) == Right(None))
     },
     test("requireString should fail with a BadRequestException") {
       for {
@@ -168,9 +163,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
     },
     test("getRequiredString should fail with correct message") {
-      for {
-        actual <- emptyJsonLdObject.getRequiredString(someKey).exit
-      } yield assertTrue(actual == Exit.fail("No someKey provided"))
+      assertTrue(emptyJsonLdObject.getRequiredString(someKey) == Left("No someKey provided"))
     }
   )
 
@@ -178,16 +171,11 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val someString   = "someString"
     val jsonLdObject = JsonLDObject(Map(someKey -> JsonLDString(someString)))
     suite("when given a valid String")(
-      test("maybeString should return correct value") {
-        assertTrue(jsonLdObject.maybeString(someKey).contains(someString))
-      },
       test("maybeStringWithValidation should return  correct value") {
         assertTrue(jsonLdObject.maybeStringWithValidation(someKey, noValidation).contains(someString))
       },
       test("getString should return correct value") {
-        for {
-          actual <- jsonLdObject.getString(someKey)
-        } yield assertTrue(actual.contains(someString))
+        assertTrue(jsonLdObject.getString(someKey) == Right(Some(someString)))
       },
       test("requireString should return correct value") {
         for {
@@ -200,9 +188,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         } yield assertTrue(actual == someString)
       },
       test("getRequiredString should return correct value") {
-        for {
-          actual <- jsonLdObject.getRequiredString(someKey)
-        } yield assertTrue(actual == someString)
+        assertTrue(jsonLdObject.getRequiredString(someKey) == Right(someString))
       }
     )
   }
@@ -211,13 +197,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val jsonLdObject  = JsonLDObject(Map(someKey -> JsonLDBoolean(true)))
     val expectedError = "Invalid someKey: JsonLDBoolean(true) (string expected)"
     suite("when given an invalid String")(
-      test("maybeString should fail with BadRequestExcpetion") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.maybeString(someKey)).exit
-        } yield assertTrue(
-          actual == Exit.fail(BadRequestException(expectedError))
-        )
-      },
       test("maybeStringWithValidation should fail with BadRequestExcpetion") {
         for {
           actual <- ZIO.attempt(jsonLdObject.maybeStringWithValidation(someKey, noValidation)).exit
@@ -226,9 +205,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         )
       },
       test("getString should fail with correct error message") {
-        for {
-          actual <- jsonLdObject.getString(someKey).exit
-        } yield assertTrue(actual == Exit.fail(expectedError))
+        assertTrue(jsonLdObject.getString(someKey) == Fail(expectedError))
       },
       test("requireString should fails with BadRequestException") {
         for {
@@ -245,9 +222,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         )
       },
       test("getRequiredString should return correct value") {
-        for {
-          actual <- jsonLdObject.getRequiredString(someKey).exit
-        } yield assertTrue(actual == Exit.fail(expectedError))
+        assertTrue(jsonLdObject.getRequiredString(someKey) == Left(expectedError))
       }
     )
   }

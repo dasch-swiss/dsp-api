@@ -478,7 +478,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   def getIri(): IO[String, String] =
     if (isIri) {
       val key = JsonLDKeywords.ID
-      getString(key).flatMap {
+      ZIO.fromEither(getString(key)).flatMap {
         case Some(id) => ZIO.succeed(id)
         case None     => ZIO.fail(s"No $key present")
       }
@@ -545,37 +545,24 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   }
 
   /**
-   * Gets an optional string value of a property of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property's value is not a string.
-   *
-   * @param key the key of the optional value.
-   * @return the value, or `None` if not found.
-   */
-  @deprecated("Use getString(String) instead")
-  @throws[BadRequestException]
-  def maybeString(key: String): Option[String] =
-    value.get(key).map {
-      case JsonLDString(str) => str
-      case other             => throw BadRequestException(s"Invalid $key: $other (string expected)")
-    }
-
-  private def getJsonLdString(key: String): IO[String, Option[JsonLDString]] =
-    value.get(key) match {
-      case Some(str: JsonLDString) => ZIO.some(str)
-      case None                    => ZIO.none
-      case Some(other)             => ZIO.fail(s"Invalid $key: $other (string expected)")
-    }
-
-  /**
    * Gets an optional string value of a property of this JSON-LD object.
    *
    * @param key the key of the optional value.
    * @return the [[String]] value for the given key if it exists and is [[JsonLDString]], or [[None]] if it doesn't.
    *         fails if the given key exists but is not a [[JsonLDString]].
    */
-  def getString(key: String): IO[String, Option[String]] = getJsonLdString(key).map(_.map(_.value))
+  def getString(key: String): Either[String, Option[String]] = getJsonLdString(key).map(_.map(_.value))
 
-  def getRequiredString(key: String): IO[String, String] = getString(key).someOrFail(s"No $key provided")
+  private def getJsonLdString(key: String): Either[String, Option[JsonLDString]] =
+    value.get(key) match {
+      case Some(str: JsonLDString) => Right(Some(str))
+      case None                    => Right(None)
+      case Some(other)             => Left(s"Invalid $key: $other (string expected)")
+    }
+  def getRequiredString(key: String): Either[String, String] = getString(key).flatMap {
+    case Some(value) => value
+    case None        => Left(s"No $key provided")
+  }
 
   /**
    * Gets an optional string value of a property of this JSON-LD object, throwing
@@ -593,9 +580,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   @deprecated("Use getString(String) instead")
   @throws[BadRequestException]
   def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
-    maybeString(key).map { str =>
-      validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
-    }
+    getString(key)
+      .fold(msg => throw BadRequestException(msg), identity)
+      .map(str => validationFun(str, throw BadRequestException(s"Invalid $key: $str")))
 
   /**
    * Gets a required IRI value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
@@ -703,12 +690,12 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     def getDataTypeValueStringValue(expectedType: SmartIri, obj: JsonLDObject): IO[String, String] =
       if (obj.isDatatypeValue) {
         for {
-          _ <- obj
-                 .getRequiredString(JsonLDKeywords.TYPE)
+          _ <- ZIO
+                 .fromEither(obj.getRequiredString(JsonLDKeywords.TYPE))
                  .filterOrElseWith(_ == expectedType.toString)(actualType =>
                    ZIO.fail(s"Expected data type '$expectedType', found data type '$actualType'")
                  )
-          value <- obj.getRequiredString(JsonLDKeywords.VALUE)
+          value <- ZIO.fromEither(obj.getRequiredString(JsonLDKeywords.VALUE))
         } yield value
       } else {
         ZIO.fail(s"This JSON-LD object does not represent a datatype value: $this")
@@ -781,7 +768,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   override def compare(that: JsonLDValue): Int = 0
 
   def getIdValueAsKnoraDataIri: ZIO[StringFormatter, String, Option[SmartIri]] =
-    getString(JsonLDKeywords.ID).flatMap {
+    ZIO.fromEither(getString(JsonLDKeywords.ID)).flatMap {
       case Some(str) =>
         ZIO.serviceWithZIO[StringFormatter] { sf =>
           ZIO
@@ -797,13 +784,13 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     getIdValueAsKnoraDataIri.someOrFail(s"No ${JsonLDKeywords.ID} provided")
 
   def getUuid(key: String): IO[String, Option[UUID]] =
-    getString(key).flatMap {
+    ZIO.fromEither(getString(key)).flatMap {
       case Some(str) => ZIO.fromTry(UuidUtil.base64Decode(str)).mapBoth(_ => s"Invalid $key: $str", Some(_))
       case None      => ZIO.none
     }
 
   def getRequiredTypeAsKnoraApiV2ComplexTypeIri: ZIO[IriConverter, String, SmartIri] =
-    getString(JsonLDKeywords.TYPE).flatMap {
+    ZIO.fromEither(getString(JsonLDKeywords.TYPE)).flatMap {
       case Some(str) =>
         IriConverter
           .asSmartIri(str)
@@ -1627,8 +1614,8 @@ object JsonLDUtil {
    */
   def getComment(jsonLDObject: JsonLDObject): ZIO[StringFormatter, Throwable, Option[String]] = {
     val key = ValueHasComment
-    jsonLDObject
-      .getString(key)
+    ZIO
+      .fromEither(jsonLDObject.getString(key))
       .mapError(BadRequestException(_))
       .flatMap(ZIO.foreach(_)(value => RouteUtilZ.toSparqlEncodedString(value, s"Invalid $key: $value")))
   }

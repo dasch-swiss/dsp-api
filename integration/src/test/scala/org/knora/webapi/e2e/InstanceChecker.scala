@@ -9,8 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import java.net.URLEncoder
 import scala.collection.mutable
-
-import dsp.errors.AssertionException
+import dsp.errors.{AssertionException, BadRequestException}
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -345,7 +344,9 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
+        jsonLDDocument.body
+          .getString(OntologyConstants.KnoraApiV2Complex.Error)
+          .fold(msg => throw BadRequestException(msg), identity) match {
           case Some(error) => throwAndLogAssertionException(error)
           case None        => ()
         }
@@ -373,7 +374,10 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
+        jsonLDDocument.body
+          .getString(OntologyConstants.KnoraApiV2Complex.Error)
+          .fold(msg => throw BadRequestException(msg), identity) match {
+
           case Some(error) => throwAndLogAssertionException(error)
           case None        => ()
         }
