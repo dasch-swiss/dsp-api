@@ -44,9 +44,9 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
 
   private def iriValueWhenGivenAnEmptyMap = suite("when given an empty map")(
     test("getIri should fail") {
-      for {
-        actual <- emptyJsonLdObject.getIri().exit
-      } yield assertTrue(actual == Exit.fail("This JSON-LD object does not represent an IRI: JsonLDObject(Map())"))
+      assertTrue(
+        emptyJsonLdObject.getIri == Left("This JSON-LD object does not represent an IRI: JsonLDObject(Map())")
+      )
     },
     test("toIri should fail") {
       for {
@@ -78,9 +78,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       Map(someKey -> JsonLDObject(Map(JsonLDKeywords.ID -> JsonLDString(someResourceIri))))
     )
     suite("when given a correct value")(
-      test("getIri returns expected value")(for {
-        actual <- jsonLdObject.getIri()
-      } yield assertTrue(actual == someResourceIri)),
+      test("getIri returns expected value")(assertTrue(jsonLdObject.getIri == Right(someResourceIri))),
       test("toIri returns expected value")(assertTrue(jsonLdObject.toIri(noValidation) == someResourceIri)),
       test("maybeIriInObject contains expected value") {
         for {
@@ -106,9 +104,9 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     val jsonLdObjectWithIriInObject = JsonLDObject(Map(someKey -> JsonLDObject(invalidIdMap)))
     val expectedError               = "Invalid @id: JsonLDBoolean(true) (string expected)"
     suite("when given an invalid value")(
-      test("getIri returns should fail with correct error message")(for {
-        actual <- jsonLdObject.getIri().exit
-      } yield assertTrue(actual == Exit.fail(expectedError))),
+      test("getIri returns should fail with correct error message")(
+        assertTrue(jsonLdObject.getIri == Left(expectedError))
+      ),
       test("toIri should fail with a BadRequestException")(
         for {
           actual <- ZIO.attempt(jsonLdObject.toIri(noValidation)).exit

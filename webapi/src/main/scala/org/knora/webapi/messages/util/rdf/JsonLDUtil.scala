@@ -474,11 +474,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   @deprecated("Use getIri() instead")
   @throws[BadRequestException]
   def toIri[T](validationFun: (String, => Nothing) => T): T =
-    if (isIri) {
-      val id: IRI = getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
-      validationFun(id, throw BadRequestException(s"Invalid IRI: $id"))
-    } else {
-      throw BadRequestException(s"This JSON-LD object does not represent an IRI: $this")
+    getIri match {
+      case Right(iri) => validationFun(iri, throw BadRequestException(s"Invalid IRI: $iri"))
+      case Left(msg)  => throw BadRequestException(msg)
     }
 
   /**
@@ -488,16 +486,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *         Fails if this JSON-LD object does not represent an IRI.
    *         Fails if the [[JsonLDKeywords.ID]] key is not present.
    */
-  def getIri(): IO[String, String] =
-    if (isIri) {
-      val key = JsonLDKeywords.ID
-      ZIO.fromEither(getString(key)).flatMap {
-        case Some(id) => ZIO.succeed(id)
-        case None     => ZIO.fail(s"No $key present")
-      }
-    } else {
-      ZIO.fail(s"This JSON-LD object does not represent an IRI: $this")
-    }
+  def getIri: Either[String, String] =
+    if (isIri) { getRequiredString(JsonLDKeywords.ID) }
+    else { Left(s"This JSON-LD object does not represent an IRI: $this") }
 
   /**
    * Converts a datatype value from its JSON-LD object value representation, validating it using the specified validation
@@ -627,7 +618,11 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    *         Fails if the [[JsonLDObject]] does not have an [[JsonLDKeywords.ID]].
    */
   def getIriInObject(key: String): IO[String, Option[String]] =
-    ZIO.fromEither(getObject(key)).flatMap(ZIO.foreach(_)(_.getIri()))
+    getObject(key) match {
+      case Right(Some(obj)) => ZIO.fromEither(obj.getIri.map(Some(_)))
+      case Right(None)      => ZIO.none
+      case Left(e)          => ZIO.fail(e)
+    }
 
   /**
    * Gets a required datatype value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
