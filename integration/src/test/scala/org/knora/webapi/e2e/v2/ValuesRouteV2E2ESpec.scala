@@ -877,7 +877,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
-      val valueUUID = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID = responseJsonDoc.body
+        .getRequiredString(KnoraApiV2Complex.ValueHasUUID)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(valueUUID == customValueUUID)
     }
 
@@ -951,7 +953,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueUUID: String               = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID: String = responseJsonDoc.body
+        .getRequiredString(KnoraApiV2Complex.ValueHasUUID)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(valueUUID == intValueCustomUUID)
       val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri.endsWith(valueUUID))
@@ -1092,7 +1096,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI                   = responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
-      val valueUUID = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID = responseJsonDoc.body
+        .getRequiredString(KnoraApiV2Complex.ValueHasUUID)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(valueUUID == customValueUUID)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
@@ -1187,7 +1193,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         .getRequiredInt(KnoraApiV2Complex.IntValueAsInt)
         .fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
-      val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
+      val hasPermissions = savedValue
+        .getRequiredString(KnoraApiV2Complex.HasPermissions)
+        .fold(msg => throw BadRequestException(msg), identity)
       hasPermissions should ===(customPermissions)
     }
 
@@ -1235,7 +1243,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1320,7 +1330,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1370,7 +1382,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1428,7 +1442,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueAsString should ===(valueAsString)
     }
 
@@ -1487,9 +1503,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueAsString should ===(valueAsString)
-      val savedValueHasComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
+      val savedValueHasComment: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueHasComment)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueHasComment should ===(valueHasComment)
     }
 
@@ -1538,7 +1558,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff = DiffBuilder
@@ -1592,7 +1614,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
 
       // Compare the original XML with the regenerated XML.
       val xmlDiff: Diff =
@@ -1640,7 +1664,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedTextValueAsXml.contains("href") should ===(true)
     }
 
@@ -1669,7 +1695,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
 
       val expectedText =
         """<p>
@@ -1752,7 +1780,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(savedTextValueAsXml.contains(textValueAsXml))
     }
 
@@ -1899,10 +1929,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         "GREGORIAN:2018-10-05 CE:2018-10-06 CE"
       )
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -1914,7 +1948,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -1926,7 +1962,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasEndEra)
     }
 
     "create a date value representing a range with month precision" in {
@@ -1985,10 +2023,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         "GREGORIAN:2018-10 CE:2018-11 CE"
       )
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -2002,7 +2044,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -2014,7 +2058,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasEndEra)
     }
 
     "create a date value representing a range with year precision" in {
@@ -2069,10 +2115,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         "GREGORIAN:2018 CE:2019 CE"
       )
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -2084,7 +2134,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndYear)
@@ -2094,7 +2146,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasEndEra)
     }
 
     "create a date value representing a single date with day precision" in {
@@ -2142,8 +2196,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-05 CE")
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===("GREGORIAN:2018-10-05 CE")
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -2155,7 +2213,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
@@ -2165,7 +2225,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
     }
 
     "create a date value representing a single date with month precision" in {
@@ -2210,8 +2272,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10 CE")
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===("GREGORIAN:2018-10 CE")
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -2223,7 +2289,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -2235,7 +2303,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
     }
 
     "create a date value representing a single date with year precision" in {
@@ -2277,8 +2347,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018 CE")
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===("GREGORIAN:2018 CE")
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -2290,7 +2364,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
@@ -2300,7 +2376,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
     }
 
     "create a date value representing a single Islamic date with day precision" in {
@@ -2346,8 +2424,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-01-26")
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===("ISLAMIC:1407-01-26")
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -2416,10 +2498,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         "ISLAMIC:1407-01-15:1407-01-26"
       )
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -2556,7 +2642,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val geometryValueAsGeometry: String =
-        savedValue.requireString(KnoraApiV2Complex.GeometryValueAsGeometry)
+        savedValue
+          .getRequiredString(KnoraApiV2Complex.GeometryValueAsGeometry)
+          .fold(msg => throw BadRequestException(msg), identity)
       geometryValueAsGeometry should ===(geometryValue1)
     }
 
@@ -2827,7 +2915,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedColor: String = savedValue.requireString(KnoraApiV2Complex.ColorValueAsColor)
+      val savedColor: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ColorValueAsColor)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedColor should ===(color)
     }
 
@@ -2954,7 +3044,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedGeonameCode: String =
-        savedValue.requireString(KnoraApiV2Complex.GeonameValueAsGeonameCode)
+        savedValue
+          .getRequiredString(KnoraApiV2Complex.GeonameValueAsGeonameCode)
+          .fold(msg => throw BadRequestException(msg), identity)
       savedGeonameCode should ===(geonameCode)
     }
 
@@ -3023,7 +3115,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedTarget: JsonLDObject = savedValue
         .getRequiredObject(KnoraApiV2Complex.LinkValueHasTarget)
         .fold(e => throw BadRequestException(e), identity)
-      val savedTargetIri: IRI = savedTarget.requireString(JsonLDKeywords.ID)
+      val savedTargetIri: IRI =
+        savedTarget.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
       savedTargetIri should ===(TestDing.iri)
     }
 
@@ -3078,7 +3171,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIri)
-      val valueUUID: IRI = responseJsonDoc.body.requireString(KnoraApiV2Complex.ValueHasUUID)
+      val valueUUID: IRI = responseJsonDoc.body
+        .getRequiredString(KnoraApiV2Complex.ValueHasUUID)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(valueUUID == customValueUUID)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
@@ -3455,7 +3550,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val intValueAsInt: Int =
         savedValue.getRequiredInt(KnoraApiV2Complex.IntValueAsInt).fold(e => throw BadRequestException(e), identity)
       intValueAsInt should ===(intValue)
-      val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
+      val hasPermissions = savedValue
+        .getRequiredString(KnoraApiV2Complex.HasPermissions)
+        .fold(msg => throw BadRequestException(msg), identity)
       hasPermissions should ===(customPermissions)
     }
 
@@ -3514,7 +3611,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val hasPermissions = savedValue.requireString(KnoraApiV2Complex.HasPermissions)
+      val hasPermissions = savedValue
+        .getRequiredString(KnoraApiV2Complex.HasPermissions)
+        .fold(msg => throw BadRequestException(msg), identity)
       hasPermissions should ===(customPermissions)
     }
 
@@ -3646,7 +3745,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedTextValueAsXml.contains("updated text") should ===(true)
       savedTextValueAsXml.contains("salsah-link") should ===(true)
     }
@@ -3678,7 +3779,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedTextValueAsXml: String = savedValue.requireString(KnoraApiV2Complex.TextValueAsXml)
+      val savedTextValueAsXml: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
 
       val expectedText =
         """<p>
@@ -3724,9 +3827,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedValueAsString: String = savedValue.requireString(KnoraApiV2Complex.ValueAsString)
+      val savedValueAsString: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueAsString should ===(valueAsString)
-      val savedValueHasComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
+      val savedValueHasComment: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueHasComment)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedValueHasComment should ===(valueHasComment)
     }
 
@@ -3792,10 +3899,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         "GREGORIAN:2018-10-05 CE:2018-12-06 CE"
       )
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -3807,7 +3918,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -3819,7 +3932,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasEndDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasEndEra)
     }
 
     "update a date value representing a range with month precision" in {
@@ -3880,10 +3995,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         "GREGORIAN:2018-09 CE:2018-12 CE"
       )
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -3897,7 +4016,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -3909,7 +4030,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasEndEra)
     }
 
     "update a date value representing a range with year precision" in {
@@ -3966,10 +4089,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         "GREGORIAN:2018 CE:2020 CE"
       )
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -3981,7 +4108,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -3993,7 +4122,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasEndEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasEndEra)
     }
 
     "update a date value representing a single date with day precision" in {
@@ -4043,8 +4174,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-06 CE")
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===("GREGORIAN:2018-10-06 CE")
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -4056,7 +4191,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndYear)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartYear)
@@ -4066,7 +4203,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getRequiredInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(e => throw BadRequestException(e), identity) should ===(dateValueHasStartDay)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
     }
 
     "update a date value representing a single date with month precision" in {
@@ -4113,8 +4252,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-07 CE")
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===("GREGORIAN:2018-07 CE")
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -4128,7 +4271,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -4140,7 +4285,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
     }
 
     "update a date value representing a single date with year precision" in {
@@ -4184,8 +4331,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      savedValue.requireString(KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2019 CE")
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasCalendar) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should ===("GREGORIAN:2019 CE")
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasCalendar)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasCalendar
       )
       savedValue
@@ -4197,7 +4348,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasStartDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasStartEra) should ===(
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasStartEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(
         dateValueHasStartEra
       )
       savedValue
@@ -4209,7 +4362,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       savedValue
         .getInt(KnoraApiV2Complex.DateValueHasEndDay)
         .fold(msg => throw BadRequestException(msg), identity) should ===(None)
-      savedValue.requireString(KnoraApiV2Complex.DateValueHasEndEra) should ===(dateValueHasStartEra)
+      savedValue
+        .getRequiredString(KnoraApiV2Complex.DateValueHasEndEra)
+        .fold(msg => throw BadRequestException(msg), identity) should ===(dateValueHasStartEra)
     }
 
     "update a boolean value" in {
@@ -4328,7 +4483,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val geometryValueAsGeometry: String =
-        savedValue.requireString(KnoraApiV2Complex.GeometryValueAsGeometry)
+        savedValue
+          .getRequiredString(KnoraApiV2Complex.GeometryValueAsGeometry)
+          .fold(msg => throw BadRequestException(msg), identity)
       geometryValueAsGeometry should ===(geometryValue2)
     }
 
@@ -4603,7 +4760,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedColor: String = savedValue.requireString(KnoraApiV2Complex.ColorValueAsColor)
+      val savedColor: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ColorValueAsColor)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedColor should ===(color)
     }
 
@@ -4732,7 +4891,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedGeonameCode: String =
-        savedValue.requireString(KnoraApiV2Complex.GeonameValueAsGeonameCode)
+        savedValue
+          .getRequiredString(KnoraApiV2Complex.GeonameValueAsGeonameCode)
+          .fold(msg => throw BadRequestException(msg), identity)
       savedGeonameCode should ===(geonameCode)
     }
 
@@ -4796,7 +4957,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedTarget: JsonLDObject = savedValue
         .getRequiredObject(KnoraApiV2Complex.LinkValueHasTarget)
         .fold(e => throw BadRequestException(e), identity)
-      val savedTargetIri: IRI = savedTarget.requireString(JsonLDKeywords.ID)
+      val savedTargetIri: IRI =
+        savedTarget.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
       savedTargetIri should ===(linkTargetIri)
     }
 
@@ -4865,7 +5027,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
+      val savedComment: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueHasComment)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedComment should ===(comment)
     }
 
@@ -4916,7 +5080,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         userEmail = anythingUserEmail
       )
 
-      val savedComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
+      val savedComment: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueHasComment)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedComment should ===(comment)
     }
 
@@ -4992,10 +5158,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val savedTarget: JsonLDObject = savedValue
         .getRequiredObject(KnoraApiV2Complex.LinkValueHasTarget)
         .fold(e => throw BadRequestException(e), identity)
-      val savedTargetIri: IRI = savedTarget.requireString(JsonLDKeywords.ID)
+      val savedTargetIri: IRI =
+        savedTarget.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
       savedTargetIri should ===(TestDing.iri)
 
-      val savedComment: String = savedValue.requireString(KnoraApiV2Complex.ValueHasComment)
+      val savedComment: String = savedValue
+        .getRequiredString(KnoraApiV2Complex.ValueHasComment)
+        .fold(msg => throw BadRequestException(msg), identity)
       savedComment should ===(comment)
     }
 

@@ -200,7 +200,9 @@ class ValuesV2R2RSpec extends R2RSpec {
           userEmail = anythingUserEmail
         )
 
-        savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename) should ===(internalFilename)
+        savedValue
+          .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+          .fold(msg => throw BadRequestException(msg), identity) should ===(internalFilename)
         savedValue
           .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
           .fold(e => throw BadRequestException(e), identity) should ===(512)

@@ -199,7 +199,11 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       if (isEntityWithIri) {
         // Yes. Add it to the top level, and return a reference to its IRI.
         entitiesToAddToTopLevel += thisWithFlattenedContent
-        JsonLDUtil.iriToJsonLDObject(thisWithFlattenedContent.requireString(JsonLDKeywords.ID))
+        JsonLDUtil.iriToJsonLDObject(
+          thisWithFlattenedContent
+            .getRequiredString(JsonLDKeywords.ID)
+            .fold(msg => throw BadRequestException(msg), identity)
+        )
       } else {
         // No, it's a blank node or some other type of data. Just return it with flattened content.
         thisWithFlattenedContent
@@ -360,18 +364,27 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         // It's a JSON-LD object. What does it represent?
         val rdfObj: RdfNode = if (jsonLDObject.isIri) {
           // An IRI.
-          nodeFactory.makeIriNode(jsonLDObject.requireString(JsonLDKeywords.ID))
+          nodeFactory.makeIriNode(
+            jsonLDObject.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
+          )
         } else if (jsonLDObject.isDatatypeValue) {
           // A literal.
           nodeFactory.makeDatatypeLiteral(
-            value = jsonLDObject.requireString(JsonLDKeywords.VALUE),
-            datatype = jsonLDObject.requireString(JsonLDKeywords.TYPE)
+            value = jsonLDObject
+              .getRequiredString(JsonLDKeywords.VALUE)
+              .fold(msg => throw BadRequestException(msg), identity),
+            datatype =
+              jsonLDObject.getRequiredString(JsonLDKeywords.TYPE).fold(msg => throw BadRequestException(msg), identity)
           )
         } else if (jsonLDObject.isStringWithLang) {
           // A string literal with a language tag.
           nodeFactory.makeStringWithLanguage(
-            value = jsonLDObject.requireString(JsonLDKeywords.VALUE),
-            language = jsonLDObject.requireString(JsonLDKeywords.LANGUAGE)
+            value = jsonLDObject
+              .getRequiredString(JsonLDKeywords.VALUE)
+              .fold(msg => throw BadRequestException(msg), identity),
+            language = jsonLDObject
+              .getRequiredString(JsonLDKeywords.LANGUAGE)
+              .fold(msg => throw BadRequestException(msg), identity)
           )
         } else {
           // Triples. Recurse to add its contents to the model.
@@ -462,7 +475,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   @throws[BadRequestException]
   def toIri[T](validationFun: (String, => Nothing) => T): T =
     if (isIri) {
-      val id: IRI = requireString(JsonLDKeywords.ID)
+      val id: IRI = getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
       validationFun(id, throw BadRequestException(s"Invalid IRI: $id"))
     } else {
       throw BadRequestException(s"This JSON-LD object does not represent an IRI: $this")
@@ -497,31 +510,16 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   private def toDatatypeValueLiteral[T](expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): T =
     if (isDatatypeValue) {
-      val datatype: IRI = requireString(JsonLDKeywords.TYPE)
+      val datatype: IRI = getRequiredString(JsonLDKeywords.TYPE).fold(msg => throw BadRequestException(msg), identity)
 
       if (datatype != expectedDatatype.toString) {
         throw BadRequestException(s"Expected datatype value of type <$expectedDatatype>, found <$datatype>")
       }
 
-      val value: String = requireString(JsonLDKeywords.VALUE)
+      val value: String = getRequiredString(JsonLDKeywords.VALUE).fold(msg => throw BadRequestException(msg), identity)
       validationFun(value, throw BadRequestException(s"Invalid datatype value literal: $value"))
     } else {
       throw BadRequestException(s"This JSON-LD object does not represent a datatype value: $this")
-    }
-
-  /**
-   * Gets a required string value of a property of this JSON-LD object, throwing
-   * [[BadRequestException]] if the property is not found or if its value is not a string.
-   *
-   * @param key the key of the required value.
-   * @return the value.
-   */
-  @deprecated("Use getRequiredString(String) instead")
-  @throws[BadRequestException]
-  def requireString(key: String): String =
-    value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-      case JsonLDString(str) => str
-      case other             => throw BadRequestException(s"Invalid $key: $other (string expected)")
     }
 
   /**
@@ -540,7 +538,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   @deprecated("Use getString(String) instead")
   @throws[BadRequestException]
   def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
-    val str: String = requireString(key)
+    val str: String = getRequiredString(key).fold(msg => throw BadRequestException(msg), identity)
     validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
   }
 
@@ -560,7 +558,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       case Some(other)             => Left(s"Invalid $key: $other (string expected)")
     }
   def getRequiredString(key: String): Either[String, String] = getString(key).flatMap {
-    case Some(value) => value
+    case Some(value) => Right(value)
     case None        => Left(s"No $key provided")
   }
 

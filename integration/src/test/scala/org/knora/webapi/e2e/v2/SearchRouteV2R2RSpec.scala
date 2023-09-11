@@ -7375,8 +7375,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         val searchResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(searchResponseStr)
         val xmlFromResponse: String = searchResponseAsJsonLD.body
           .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+          .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
           .fold(e => throw BadRequestException(e), identity)
-          .requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
 
         // Compare it to the original XML.
         val xmlDiff: Diff =
@@ -7800,8 +7800,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         val xmlFromResponse: String = responseAsJsonLD.body
           .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
+          .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
           .fold(e => throw BadRequestException(e), identity)
-          .requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
 
         // Compare it to the original XML.
         val xmlDiff: Diff =

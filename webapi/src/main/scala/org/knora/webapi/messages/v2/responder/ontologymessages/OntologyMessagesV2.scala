@@ -3069,7 +3069,11 @@ object ClassInfoContentV2 {
             case Some(jsonLDValue: JsonLDValue) =>
               jsonLDValue match {
                 case jsonLDObject: JsonLDObject =>
-                  Some(jsonLDObject.requireString(OntologyConstants.Xsd.Pattern))
+                  Some(
+                    jsonLDObject
+                      .getRequiredString(OntologyConstants.Xsd.Pattern)
+                      .fold(msg => throw BadRequestException(msg), identity)
+                  )
 
                 case other =>
                   throw BadRequestException(s"Object of owl:withRestrictions must be an object, but got $other")

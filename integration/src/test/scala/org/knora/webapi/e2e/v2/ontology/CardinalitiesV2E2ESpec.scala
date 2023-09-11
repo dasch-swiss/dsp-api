@@ -83,7 +83,8 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
       JsonLDUtil
         .parseJsonLD(responseToString(response))
         .body
-        .requireString(JsonLDKeywords.ID)
+        .getRequiredString(JsonLDKeywords.ID)
+        .fold(msg => throw BadRequestException(msg), identity)
     (ontologyIri, lastModificationDate)
   }
 
@@ -277,7 +278,8 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
       .body
       .getRequiredObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate)
       .fold(e => throw BadRequestException(e), identity)
-      .requireString(JsonLDKeywords.VALUE)
+      .getRequiredString(JsonLDKeywords.VALUE)
+      .fold(msg => throw BadRequestException(msg), identity)
 
   private val rootCredentials = BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
 

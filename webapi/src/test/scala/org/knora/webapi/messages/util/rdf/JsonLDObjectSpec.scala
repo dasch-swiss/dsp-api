@@ -152,11 +152,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
     test("getString should return None") {
       assertTrue(emptyJsonLdObject.getString(someKey) == Right(None))
     },
-    test("requireString should fail with a BadRequestException") {
-      for {
-        actual <- ZIO.attempt(emptyJsonLdObject.requireString(someKey)).exit
-      } yield assertTrue(actual == Exit.fail(BadRequestException("No someKey provided")))
-    },
     test("requireStringWithValidation should fail with a BadRequestException") {
       for {
         actual <- ZIO.attempt(emptyJsonLdObject.requireStringWithValidation(someKey, noValidation)).exit
@@ -176,11 +171,6 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
       },
       test("getString should return correct value") {
         assertTrue(jsonLdObject.getString(someKey) == Right(Some(someString)))
-      },
-      test("requireString should return correct value") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.requireString(someKey))
-        } yield assertTrue(actual == someString)
       },
       test("requireStringWithValidation should return correct value") {
         for {
@@ -205,14 +195,7 @@ object JsonLDObjectSpec extends ZIOSpecDefault {
         )
       },
       test("getString should fail with correct error message") {
-        assertTrue(jsonLdObject.getString(someKey) == Fail(expectedError))
-      },
-      test("requireString should fails with BadRequestException") {
-        for {
-          actual <- ZIO.attempt(jsonLdObject.requireString(someKey)).exit
-        } yield assertTrue(
-          actual == Exit.fail(BadRequestException(expectedError))
-        )
+        assertTrue(jsonLdObject.getString(someKey) == Left(expectedError))
       },
       test("requireStringWithValidation should fail with BadRequestException") {
         for {

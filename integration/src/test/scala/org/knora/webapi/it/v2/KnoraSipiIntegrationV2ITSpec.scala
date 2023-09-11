@@ -228,7 +228,9 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a [[SavedImage]] containing the same information.
    */
   private def savedValueToSavedImage(savedValue: JsonLDObject): SavedImage = {
-    val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+    val internalFilename = savedValue
+      .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+      .fold(msg => throw BadRequestException(msg), identity)
 
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
       Iri.toSparqlEncodedString(s).getOrElse(errorFun)
@@ -260,7 +262,9 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a [[SavedDocument]] containing the same information.
    */
   private def savedValueToSavedDocument(savedValue: JsonLDObject): SavedDocument = {
-    val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+    val internalFilename = savedValue
+      .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+      .fold(msg => throw BadRequestException(msg), identity)
 
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
       Iri.toSparqlEncodedString(s).getOrElse(errorFun)
@@ -283,7 +287,9 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a [[SavedTextFile]] containing the same information.
    */
   private def savedValueToSavedTextFile(savedValue: JsonLDObject): SavedTextFile = {
-    val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+    val internalFilename = savedValue
+      .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+      .fold(msg => throw BadRequestException(msg), identity)
 
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
       Iri.toSparqlEncodedString(s).getOrElse(errorFun)
@@ -306,7 +312,9 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a [[SavedAudioFile]] containing the same information.
    */
   private def savedValueToSavedAudioFile(savedValue: JsonLDObject): SavedAudioFile = {
-    val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+    val internalFilename = savedValue
+      .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+      .fold(msg => throw BadRequestException(msg), identity)
 
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
       Iri.toSparqlEncodedString(s).getOrElse(errorFun)
@@ -329,7 +337,9 @@ class KnoraSipiIntegrationV2ITSpec
    * @return a [[SavedVideoFile]] containing the same information.
    */
   private def savedValueToSavedVideoFile(savedValue: JsonLDObject): SavedVideoFile = {
-    val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+    val internalFilename = savedValue
+      .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+      .fold(msg => throw BadRequestException(msg), identity)
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>
       Iri.toSparqlEncodedString(s).getOrElse(errorFun)
     val url: String = savedValue.requireDatatypeValueInObject(
