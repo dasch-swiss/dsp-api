@@ -7,12 +7,10 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio._
 import zio.macros.accessible
-
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.Iri
+import dsp.valueobjects.{Iri, Project, RestrictedViewSize}
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -66,8 +64,8 @@ trait ProjectADMRestService {
   def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     user: UserADM,
-    size: String
-  ): Task[ProjectRestrictedViewSettingsResponseADM]
+    size: RestrictedViewSize
+  ): Task[ProjectRestrictedViewSizeResponseADM]
 }
 
 final case class ProjectsADMRestServiceLive(
@@ -256,8 +254,8 @@ final case class ProjectsADMRestServiceLive(
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     user: UserADM,
-    size: String
-  ): Task[ProjectRestrictedViewSettingsResponseADM] =
+    size: RestrictedViewSize
+  ): Task[ProjectRestrictedViewSizeResponseADM] =
     responder.setProjectRestrictedViewSettings(iri, user, size)
 
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {

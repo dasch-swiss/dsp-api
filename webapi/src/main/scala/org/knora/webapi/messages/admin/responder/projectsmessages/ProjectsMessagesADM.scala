@@ -14,14 +14,12 @@ import spray.json.RootJsonFormat
 import zio.prelude.Validation
 
 import java.util.UUID
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
+import dsp.valueobjects.{Iri, RestrictedViewSize, V2}
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
-import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -255,7 +253,7 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
 case class ProjectRestrictedViewSettingsSetRequestADM(
   iri: Iri.ProjectIri,
   user: UserADM,
-  size: String
+  size: RestrictedViewSize
 ) extends ProjectsResponderRequestADM
 
 /**
@@ -355,6 +353,23 @@ case class ProjectRestrictedViewSettingsResponseADM(settings: ProjectRestrictedV
     extends KnoraResponseADM
     with ProjectsADMJsonProtocol {
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
+}
+
+///**
+// * Represents a response to a request for the project's restricted view settings.
+// *
+// * @param settings the restricted view size.
+// */
+//case class ProjectRestrictedViewSizeResponseADM(settings: ProjectRestrictedViewSizeADM)
+//    extends KnoraResponseADM
+//    with ProjectsADMJsonProtocol {
+//  def toJsValue: JsValue = projectRestrictedViewSetResponseADMFormat.write(this)
+//}
+
+case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize)
+    extends KnoraResponseADM
+    with ProjectsADMJsonProtocol {
+  def toJsValue: JsValue = projectRestrictedViewSizeResponseADMFormat.write(this)
 }
 
 /**
@@ -551,6 +566,8 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
+  implicit val restrictedViewSize: RootJsonFormat[RestrictedViewSize] = jsonFormat1(RestrictedViewSize.apply
+  )
   implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(
     jsonFormat(
       ProjectADM,
@@ -574,7 +591,8 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   )
   implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] =
     jsonFormat(ProjectRestrictedViewSettingsADM, "size", "watermark")
-
+//  implicit val projectRestrictedViewSizeADMFormat: RootJsonFormat[ProjectRestrictedViewSizeADM] =
+//    jsonFormat(ProjectRestrictedViewSizeADM, "size")
   implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members"))
   )
@@ -617,7 +635,8 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
   implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsResponseADM] =
     jsonFormat(ProjectRestrictedViewSettingsResponseADM, "settings")
-
+  implicit val projectRestrictedViewSizeResponseADMFormat: JsonFormat[ProjectRestrictedViewSizeResponseADM] =
+    lazyFormat(jsonFormat(ProjectRestrictedViewSizeResponseADM, "size"))
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectOperationResponseADM, "project"))
   )

@@ -12,9 +12,9 @@ import zio.json._
 import zio.stream.ZStream
 
 import java.nio.file.Files
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
+import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
@@ -251,7 +251,8 @@ final case class ProjectsRouteZ(
       body       <- body.asString
       payload <-
         ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSettingsPayload]).mapError(e => BadRequestException(e))
-      response <- projectsService.setProjectRestrictedViewSettings(id.value, user, payload.size)
+      size     <- RestrictedViewSize.make(payload.size).toZIO
+      response <- projectsService.setProjectRestrictedViewSettings(id.value, user, size)
     } yield Response.json(response.toJsValue.toString)
 }
 

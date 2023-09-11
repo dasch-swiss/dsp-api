@@ -8,10 +8,8 @@ import com.typesafe.scalalogging.LazyLogging
 import zio._
 
 import java.util.UUID
-
 import dsp.errors._
-import dsp.valueobjects.Iri
-import dsp.valueobjects.V2
+import dsp.valueobjects.{Iri, RestrictedViewSize, V2}
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -136,8 +134,8 @@ trait ProjectsResponderADM {
   def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     user: UserADM,
-    size: String
-  ): Task[ProjectRestrictedViewSettingsResponseADM]
+    size: RestrictedViewSize
+  ): Task[ProjectRestrictedViewSizeResponseADM]
 
   /**
    * Creates a project.
@@ -475,8 +473,8 @@ final case class ProjectsResponderADMLive(
   override def setProjectRestrictedViewSettings(
     iri: Iri.ProjectIri,
     user: UserADM,
-    size: String
-  ): Task[ProjectRestrictedViewSettingsResponseADM] = {
+    size: RestrictedViewSize
+  ): Task[ProjectRestrictedViewSizeResponseADM] = {
     val id = ProjectIdentifierADM.IriIdentifier(iri)
     for {
       _ <- getProjectFromCacheOrTriplestore(id)
@@ -489,9 +487,9 @@ final case class ProjectsResponderADMLive(
       query = twirl.queries.sparql.admin.txt
                 .setProjectRestrictedViewSettings(iri.value, size, None)
 
-      _       <- triplestoreService.sparqlHttpUpdate(query.toString)
-      settings = ProjectRestrictedViewSettingsADM(Some(size))
-    } yield ProjectRestrictedViewSettingsResponseADM(settings)
+      _ <- triplestoreService.sparqlHttpUpdate(query.toString)
+//      settings = ProjectRestrictedViewSettingsSetADM(size)
+    } yield ProjectRestrictedViewSizeResponseADM(size)
   }
 
   /**
