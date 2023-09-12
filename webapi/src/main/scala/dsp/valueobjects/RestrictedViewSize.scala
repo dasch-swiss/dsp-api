@@ -9,17 +9,28 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import zio.prelude.Validation
 
+import scala.util.matching.Regex
+
 case class RestrictedViewSize(value: String) extends ProjectsADMJsonProtocol
 
 object RestrictedViewSize {
-  def make(value: String): Validation[Throwable, RestrictedViewSize] =
-    if (value.toString.isEmpty) Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeMissing))
-    else Validation.succeed(new RestrictedViewSize(s"!$value,$value") {})
-//      value match {
-//        case v if v == 0           => Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeInvalid))
-//        case v if v > 1 && v < 100 => Validation.succeed(new RestrictedViewSize(s"pct:$v") {})
-//        case v if v > 100          => Validation.succeed(new RestrictedViewSize(s"!$v,$v") {})
-//      }
+  def make(value: String): Validation[Throwable, RestrictedViewSize] = {
+    // matches strings "pct:1-100"
+    val pctPattern: Regex = "pct:[1-9][0-9]?0?$".r
+    // matches strings "!x,x" where x is a number of pixels
+    val pixelPattern: Regex = "!\\d+,\\d+$".r
+    def isSquare(value: String): Boolean = {
+      val substr = value.substring(1).split(",").toSeq
+      substr.head == substr.last
+    }
+
+    if (value.isEmpty) Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeMissing))
+    else if (!pctPattern.matches(value) || !pixelPattern.matches(value))
+      Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeInvalid))
+    else if (pixelPattern.matches(value) && !isSquare(value))
+      Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeInvalid))
+    else Validation.succeed(new RestrictedViewSize(value) {})
+  }
 }
 
 object ErrorMessages {
