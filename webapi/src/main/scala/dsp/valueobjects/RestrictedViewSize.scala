@@ -5,11 +5,12 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
+
+import dsp.errors.BadRequestException
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 
 case class RestrictedViewSize(value: String) extends ProjectsADMJsonProtocol
 

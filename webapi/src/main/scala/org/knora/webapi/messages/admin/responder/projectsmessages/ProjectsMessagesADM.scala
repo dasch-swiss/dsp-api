@@ -14,12 +14,15 @@ import spray.json.RootJsonFormat
 import zio.prelude.Validation
 
 import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
-import dsp.valueobjects.{Iri, RestrictedViewSize, V2}
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
+import dsp.valueobjects.RestrictedViewSize
+import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -566,8 +569,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-  implicit val restrictedViewSize: RootJsonFormat[RestrictedViewSize] = jsonFormat1(RestrictedViewSize.apply
-  )
+  implicit val restrictedViewSize: RootJsonFormat[RestrictedViewSize] = jsonFormat1(RestrictedViewSize.apply)
   implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(
     jsonFormat(
       ProjectADM,

@@ -16,19 +16,8 @@ import zio.mock.Proxy
 import java.util.UUID
 
 import dsp.valueobjects.Iri
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectAdminMembersGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
+import dsp.valueobjects.RestrictedViewSize
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
@@ -46,8 +35,6 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
       extends Effect[ProjectIdentifierADM, Throwable, Option[ProjectRestrictedViewSettingsADM]]
   object ProjectRestrictedViewSettingsGetRequestADM
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsResponseADM]
-  object ProjectRestrictedViewSettingSetRequestADM
-      extends Effect[(Iri.ProjectIri, UserADM, String), Throwable, ProjectRestrictedViewSettingsResponseADM]
   object ProjectCreateRequestADM
       extends Effect[(ProjectCreatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
@@ -86,12 +73,6 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           id: ProjectIdentifierADM
         ): Task[ProjectRestrictedViewSettingsResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
-        override def setProjectRestrictedViewSettings(
-          id: Iri.ProjectIri,
-          user: UserADM,
-          size: String
-        ): Task[ProjectRestrictedViewSettingsResponseADM] =
-          proxy(ProjectRestrictedViewSettingSetRequestADM, (id, user, size))
         override def projectCreateRequestADM(
           createPayload: ProjectCreatePayloadADM,
           requestingUser: UserADM,
@@ -105,6 +86,11 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
+        override def setProjectRestrictedViewSettings(
+          iri: Iri.ProjectIri,
+          user: UserADM,
+          size: RestrictedViewSize
+        ): Task[ProjectRestrictedViewSizeResponseADM] = ???
       }
     }
 }

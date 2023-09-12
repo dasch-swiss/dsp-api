@@ -8,8 +8,11 @@ import com.typesafe.scalalogging.LazyLogging
 import zio._
 
 import java.util.UUID
+
 import dsp.errors._
-import dsp.valueobjects.{Iri, RestrictedViewSize, V2}
+import dsp.valueobjects.Iri
+import dsp.valueobjects.RestrictedViewSize
+import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler

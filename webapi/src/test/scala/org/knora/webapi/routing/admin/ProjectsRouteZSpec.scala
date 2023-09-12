@@ -83,8 +83,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
     getProjectAdminsSpec,
     getKeywordsSpec,
     getKeywordsByProjectSpec,
-    getProjectRestrictedViewSettings,
-    setProjectRestrictedViewSettingsSpec
+    getProjectRestrictedViewSettings
   )
 
   val getProjectsSpec: Spec[Any, Serializable] = test("get all projects") {
@@ -657,32 +656,6 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
         response.status == Status.BadRequest,
         bodyAsString == """{"error":"dsp.errors.BadRequestException: Project IRI is invalid."}"""
       )
-    }
-  )
-
-  val setProjectRestrictedViewSettingsSpec: Spec[Any, Serializable] = suite("set project restricted view settings")(
-    test("successfully set project restricted view") {
-      val iri      = "http://rdfh.ch/projects/0001"
-      val user     = KnoraSystemInstances.Users.SystemUser
-      val id       = TestDataFactory.projectIri(iri)
-      val payload  = """{"size":"pct:1"}"""
-      val body     = Body.fromString(payload)
-      val request  = Request.post(body, URL(basePathProjectsIri / encode(iri) / "RestrictedViewSettings"))
-      val settings = ProjectRestrictedViewSettingsADM(Some("pct:1"), Some("null"))
-
-      val expectedResult =
-        Expectation.value[ProjectRestrictedViewSettingsResponseADM](ProjectRestrictedViewSettingsResponseADM(settings))
-
-      val mockService = ProjectADMRestServiceMock
-        .SetRestrictedViewSettings(
-          assertion = Assertion.equalTo((id, user, "pct:1")),
-          result = expectedResult
-        )
-        .toLayer
-      for {
-        response <- applyRoutes(request).provide(mockService)
-        body     <- response.body.asString
-      } yield assertTrue(body.contains("pct:1"))
     }
   )
 

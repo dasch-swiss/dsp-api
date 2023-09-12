@@ -7,11 +7,14 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio._
 import zio.macros.accessible
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.{Iri, Project, RestrictedViewSize}
+import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
+import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM

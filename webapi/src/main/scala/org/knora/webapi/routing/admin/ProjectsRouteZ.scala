@@ -12,6 +12,7 @@ import zio.json._
 import zio.stream.ZStream
 
 import java.nio.file.Files
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.RestrictedViewSize
