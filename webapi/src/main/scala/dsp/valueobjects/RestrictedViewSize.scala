@@ -12,7 +12,7 @@ import scala.util.matching.Regex
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 
-case class RestrictedViewSize(value: String) extends ProjectsADMJsonProtocol
+case class RestrictedViewSize(value: String)
 
 object RestrictedViewSize {
   def make(value: String): Validation[Throwable, RestrictedViewSize] = {
