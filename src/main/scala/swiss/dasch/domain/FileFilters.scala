@@ -25,6 +25,6 @@ object FileFilters {
 
   def hasFileExtension(extension: List[String]): FileFilter = (path: Path) =>
     isNonHiddenRegularFile(path) &&
-    ZIO.succeed(extension.contains(FilenameUtils.getExtension(path.filename.toString)))
+    ZIO.succeed(extension.contains(FilenameUtils.getExtension(path.filename.toString).toLowerCase))
 
 }
