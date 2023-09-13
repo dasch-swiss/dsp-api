@@ -27,6 +27,7 @@ object Main extends ZIOAppDefault {
       .provide(
         AssetInfoServiceLive.layer,
         AuthenticatorLive.layer,
+        BulkIngestServiceLive.layer,
         Configuration.layer,
         FileChecksumServiceLive.layer,
         FileSystemCheckLive.layer,

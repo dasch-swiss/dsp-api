@@ -5,6 +5,8 @@
 
 package swiss.dasch.domain
 
+import swiss.dasch.domain
+import zio.Random
 import zio.test.*
 
 object AssetIdSpec extends ZIOSpecDefault {
@@ -25,6 +27,13 @@ object AssetIdSpec extends ZIOSpecDefault {
     test("AssetId should not be created from a String shorter than four characters") {
       val validButTooShort = Gen.stringBounded(0, 3)(validCharacters)
       check(validButTooShort)(s => assertTrue(AssetId.make(s).isLeft))
+    },
+    test("AssetId.makeNew should create a UUID in Base 62 encoding") {
+      val uuid = "4sAf4AmPeeg-ZjDn3Tot1Zt"
+      for {
+        _  <- Random.setSeed(1977)
+        id <- AssetId.makeNew
+      } yield assertTrue(id.toString == uuid)
     },
   )
 }

@@ -85,7 +85,7 @@ object SipiClient {
   def applyTopLeftCorrection(fileIn: Path, fileOut: Path): RIO[SipiClient, SipiOutput] =
     ZIO.serviceWithZIO[SipiClient](_.applyTopLeftCorrection(fileIn, fileOut))
 
-  def queryImageFile(file: Path): RIO[SipiClient, SipiOutput] =
+  def queryImageFile(file: Path): ZIO[SipiClient, IOException, SipiOutput] =
     ZIO.serviceWithZIO[SipiClient](_.queryImageFile(file))
 
   def transcodeImageFile(

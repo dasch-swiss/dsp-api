@@ -5,7 +5,8 @@
 
 package swiss.dasch.infrastructure
 
-import swiss.dasch.api.*
+import swiss.dasch.api.{ IngestEndpoint, * }
+import swiss.dasch.api.IngestEndpoint.*
 import swiss.dasch.api.monitoring.{ HealthEndpoint, InfoEndpoint, MetricsEndpoint }
 import swiss.dasch.config.Configuration.ServiceConfig
 import swiss.dasch.version.BuildInfo
@@ -18,6 +19,7 @@ object IngestApiServer {
   private val serviceApps    =
     (ExportEndpoint.app ++
       ImportEndpoint.app ++
+      IngestEndpoint.app ++
       ListProjectsEndpoint.app ++
       ReportEndpoint.app ++
       MaintenanceEndpointRoutes.app) @@ Authenticator.middleware
