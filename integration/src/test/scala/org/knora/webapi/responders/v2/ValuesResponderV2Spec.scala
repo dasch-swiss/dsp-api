@@ -6,13 +6,11 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import zio.Exit
 
 import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.concurrent.duration._
-import scala.reflect.ClassTag
 
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
@@ -40,6 +38,7 @@ import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -397,11 +396,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     } else {
       Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
     }
-  }
-
-  private def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _]) = actual match {
-    case Exit.Failure(err) => err.squash shouldBe a[T]
-    case _                 => fail(s"Expected Exit.Failure with specific T.")
   }
 
   "Load test data" in {
