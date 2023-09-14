@@ -1,5 +1,18 @@
 # Changelog
 
+## [30.2.0](https://github.com/dasch-swiss/dsp-api/compare/v30.1.2...v30.2.0) (2023-09-14)
+
+
+### Enhancements
+
+* SystemAdmins receive a token which is valid on the dps-ingest api ([#2835](https://github.com/dasch-swiss/dsp-api/issues/2835)) ([469f228](https://github.com/dasch-swiss/dsp-api/commit/469f228d85ee1f02246e09de32bddfc1f44854c2))
+
+
+### Maintenance
+
+* Remove deprecated methods on JsonLDObject ([#2832](https://github.com/dasch-swiss/dsp-api/issues/2832)) ([c8cf990](https://github.com/dasch-swiss/dsp-api/commit/c8cf990837ce51245fd616b9f677108dbf161152))
+* Update db image in docker-compose and Dependencies ([#2833](https://github.com/dasch-swiss/dsp-api/issues/2833)) ([b0d48d0](https://github.com/dasch-swiss/dsp-api/commit/b0d48d010b194282c6cfb8dae47d32eb3de5192f))
+
 ## [30.1.2](https://github.com/dasch-swiss/dsp-api/compare/v30.1.1...v30.1.2) (2023-09-08)
 
 
