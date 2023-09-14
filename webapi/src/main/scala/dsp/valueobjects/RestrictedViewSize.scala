@@ -8,28 +8,28 @@ package dsp.valueobjects
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-
 import dsp.errors.BadRequestException
 
-case class RestrictedViewSize(value: String)
+/**
+ * RestrictedViewSize value object.
+ */
+sealed abstract case class RestrictedViewSize private (value: String)
 
 object RestrictedViewSize {
   def make(value: String): Validation[Throwable, RestrictedViewSize] = {
-    val trimmed = value.trim
+    val trimmed: String = value.trim
     // matches strings "pct:1-100"
     val percentagePattern: Regex = "pct:[1-9][0-9]?0?$".r
     // matches strings "!x,x" where x is a number of pixels
     val dimensionsPattern: Regex = "!\\d+,\\d+$".r
-    def isSquare(value: String): Boolean = {
+    def isSquare: Boolean = {
       val substr = trimmed.substring(1).split(",").toSeq
       substr.head == substr.last
     }
-    println(111, value, percentagePattern.matches(value), dimensionsPattern.matches(value), isSquare(value))
 
     if (value.isEmpty) Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeMissing))
     else if (percentagePattern.matches(trimmed)) Validation.succeed(new RestrictedViewSize(trimmed) {})
-    else if (dimensionsPattern.matches(trimmed) && isSquare(value))
-      Validation.succeed(new RestrictedViewSize(trimmed) {})
+    else if (dimensionsPattern.matches(trimmed) && isSquare) Validation.succeed(new RestrictedViewSize(trimmed) {})
     else Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeInvalid))
   }
 }

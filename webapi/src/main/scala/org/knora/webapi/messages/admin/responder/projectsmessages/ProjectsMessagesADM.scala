@@ -8,12 +8,17 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import spray.json.DefaultJsonProtocol
+import spray.json.JsString
 import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
+import spray.json.deserializationError
 import zio.prelude.Validation
 
 import java.util.UUID
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
@@ -569,7 +574,20 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-  implicit val restrictedViewSize: RootJsonFormat[RestrictedViewSize] = jsonFormat1(RestrictedViewSize.apply)
+  implicit val restrictedViewSizeFormat: JsonFormat[RestrictedViewSize] =
+    new JsonFormat[RestrictedViewSize] {
+      override def read(json: JsValue): RestrictedViewSize = json match {
+        case JsString(str) =>
+          Try(RestrictedViewSize.make(str)) match {
+            case Success(result)    => result.asInstanceOf[RestrictedViewSize]
+            case Failure(exception) => deserializationError(s"Could not parse $str", exception)
+          }
+        case other => deserializationError(s"Expected a String but got a $other")
+      }
+
+      override def write(obj: RestrictedViewSize): JsValue = JsString(obj.value)
+    }
+
   implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(
     jsonFormat(
       ProjectADM,
@@ -638,7 +656,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsResponseADM] =
     jsonFormat(ProjectRestrictedViewSettingsResponseADM, "settings")
   implicit val projectRestrictedViewSizeResponseADMFormat: JsonFormat[ProjectRestrictedViewSizeResponseADM] =
-    lazyFormat(jsonFormat(ProjectRestrictedViewSizeResponseADM, "size"))
+    jsonFormat(ProjectRestrictedViewSizeResponseADM, "size")
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectOperationResponseADM, "project"))
   )
