@@ -19,6 +19,7 @@ import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
@@ -155,19 +156,32 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
-      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
+      val textValueObject = responseDocument.body
+        .getRequiredObject(s"${freetestOntologyIRI}hasText")
+        .fold(e => throw BadRequestException(e), identity)
       textValueObject
-        .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
-        .requireString(JsonLDKeywords.ID) should equal(OntologyConstants.KnoraBase.StandardMapping)
-      val retrievedXML = textValueObject.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .getRequiredString(JsonLDKeywords.TYPE)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(
+        OntologyConstants.KnoraApiV2Complex.TextValue
+      )
+      textValueObject
+        .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
+        .flatMap(_.getRequiredString(JsonLDKeywords.ID))
+        .fold(e => throw BadRequestException(e), identity) should equal(OntologyConstants.KnoraBase.StandardMapping)
+      val retrievedXML = textValueObject
+        .getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
       val xmlDiff: Diff = DiffBuilder
         .compare(Input.fromString(xmlContent))
         .withTest(Input.fromString(retrievedXML))
         .build()
       xmlDiff.hasDifferences should be(false)
-      textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml) should equal(None)
-      textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
+      textValueObject
+        .getString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
+      textValueObject
+        .getString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
     }
 
     "create a mapping from a XML" in {
@@ -230,7 +244,8 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val mappingResponseDocument = responseToJsonLDDocument(mappingResponse)
       mappingResponse.status should equal(StatusCodes.OK)
 
-      val mappingIRI = mappingResponseDocument.body.requireString("@id")
+      val mappingIRI =
+        mappingResponseDocument.body.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
       mappingIRI should equal(freetestCustomMappingIRI)
     }
 
@@ -256,14 +271,27 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
-      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
+      val textValueObject = responseDocument.body
+        .getRequiredObject(s"${freetestOntologyIRI}hasText")
+        .fold(e => throw BadRequestException(e), identity)
       textValueObject
-        .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
-        .requireString(JsonLDKeywords.ID) should equal(freetestCustomMappingIRI)
-      textValueObject.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml) should equal(xmlContent)
-      textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml) should equal(None)
-      textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
+        .getRequiredString(JsonLDKeywords.TYPE)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(
+        OntologyConstants.KnoraApiV2Complex.TextValue
+      )
+      textValueObject
+        .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
+        .flatMap(_.getRequiredString(JsonLDKeywords.ID))
+        .fold(msg => throw BadRequestException(msg), identity) should equal(freetestCustomMappingIRI)
+      textValueObject
+        .getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(xmlContent)
+      textValueObject
+        .getString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
+      textValueObject
+        .getString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
     }
 
     "create a custom mapping with an XSL transformation" in {
@@ -309,14 +337,17 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val fileRepresentationResponse = singleAwaitingRequest(fileRepresentationRequest)
       assert(StatusCodes.OK == fileRepresentationResponse.status, responseToString(fileRepresentationResponse))
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(fileRepresentationResponse)
-      responseJsonDoc.body.requireString(JsonLDKeywords.ID) should equal(freetestXSLTIRI)
+      responseJsonDoc.body
+        .getRequiredString(JsonLDKeywords.ID)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(freetestXSLTIRI)
 
       // add a mapping that refers to the transformation
       val mappingResponse =
         createMapping(pathToFreetestCustomMappingWithTransformation, "FreetestCustomMappingWithTransformation")
       val mappingResponseDocument = responseToJsonLDDocument(mappingResponse)
       mappingResponse.status should equal(StatusCodes.OK)
-      val mappingIRI = mappingResponseDocument.body.requireString("@id")
+      val mappingIRI =
+        mappingResponseDocument.body.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
       mappingIRI should equal(freetestCustomMappingWithTranformationIRI)
     }
 
@@ -343,14 +374,27 @@ class StandoffRouteV2ITSpec extends ITKnoraLiveSpec with AuthenticationV2JsonPro
       val expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
-      textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
+      val textValueObject = responseDocument.body
+        .getRequiredObject(s"${freetestOntologyIRI}hasText")
+        .fold(e => throw BadRequestException(e), identity)
       textValueObject
-        .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
-        .requireString(JsonLDKeywords.ID) should equal(freetestCustomMappingWithTranformationIRI)
-      textValueObject.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml) should equal(xmlContent)
-      textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml) should equal(expectedHTML)
-      textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
+        .getRequiredString(JsonLDKeywords.TYPE)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(
+        OntologyConstants.KnoraApiV2Complex.TextValue
+      )
+      textValueObject
+        .getRequiredObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
+        .flatMap(_.getRequiredString(JsonLDKeywords.ID))
+        .fold(e => throw BadRequestException(e), identity) should equal(freetestCustomMappingWithTranformationIRI)
+      textValueObject
+        .getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(xmlContent)
+      textValueObject
+        .getString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(expectedHTML)
+      textValueObject
+        .getString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+        .fold(msg => throw BadRequestException(msg), identity) should equal(None)
     }
   }
 }

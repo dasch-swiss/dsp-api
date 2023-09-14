@@ -12,6 +12,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
@@ -82,7 +83,9 @@ class RdfFormatUtilSpec() extends CoreSpec {
 
   private def checkJsonLDDocumentForRdfTypeBook(jsonLDDocument: JsonLDDocument): Unit =
     assert(
-      jsonLDDocument.body.requireString(JsonLDKeywords.TYPE) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"
+      jsonLDDocument.body
+        .getRequiredString(JsonLDKeywords.TYPE)
+        .fold(msg => throw BadRequestException(msg), identity) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"
     )
 
   "RdfFormatUtil" should {

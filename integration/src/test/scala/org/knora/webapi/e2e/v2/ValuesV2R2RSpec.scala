@@ -12,6 +12,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import scala.concurrent.ExecutionContextExecutor
 
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -92,7 +93,7 @@ class ValuesV2R2RSpec extends R2RSpec {
   }
 
   private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
-    resource.body.requireArray(propertyIriInResult.toString)
+    resource.body.getRequiredArray(propertyIriInResult.toString).fold(e => throw BadRequestException(e), identity)
 
   private def getValueFromResource(
     resource: JsonLDDocument,
@@ -199,9 +200,15 @@ class ValuesV2R2RSpec extends R2RSpec {
           userEmail = anythingUserEmail
         )
 
-        savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename) should ===(internalFilename)
-        savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX) should ===(512)
-        savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY) should ===(256)
+        savedValue
+          .getRequiredString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+          .fold(msg => throw BadRequestException(msg), identity) should ===(internalFilename)
+        savedValue
+          .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
+          .fold(e => throw BadRequestException(e), identity) should ===(512)
+        savedValue
+          .getRequiredInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY)
+          .fold(e => throw BadRequestException(e), identity) should ===(256)
       }
     }
   }

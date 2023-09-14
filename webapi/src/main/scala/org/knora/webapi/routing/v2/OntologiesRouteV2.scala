@@ -777,13 +777,13 @@ final case class OntologiesRouteV2()(
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-          val requestTask = for {
+          val t = for {
             requestingUser <- Authenticator.getUserADM(requestContext)
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            requestMessage <- ZIO.attempt(CreateOntologyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser))
+            requestMessage <- CreateOntologyRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser)
           } yield requestMessage
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+          RouteUtilV2.runRdfRouteZ(t, requestContext)
         }
       }
     }

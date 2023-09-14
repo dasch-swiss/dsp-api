@@ -11,6 +11,7 @@ import java.net.URLEncoder
 import scala.collection.mutable
 
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -345,7 +346,9 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
+        jsonLDDocument.body
+          .getString(OntologyConstants.KnoraApiV2Complex.Error)
+          .fold(msg => throw BadRequestException(msg), identity) match {
           case Some(error) => throwAndLogAssertionException(error)
           case None        => ()
         }
@@ -373,7 +376,10 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
+        jsonLDDocument.body
+          .getString(OntologyConstants.KnoraApiV2Complex.Error)
+          .fold(msg => throw BadRequestException(msg), identity) match {
+
           case Some(error) => throwAndLogAssertionException(error)
           case None        => ()
         }
@@ -451,16 +457,20 @@ class JsonLDInstanceInspector extends InstanceInspector {
       case jsonLDObject: JsonLDObject =>
         if (jsonLDObject.isStringWithLang) {
           // This object represents a string with a language tag.
-          val literalContent = jsonLDObject.requireString(JsonLDKeywords.VALUE)
+          val literalContent =
+            jsonLDObject.getRequiredString(JsonLDKeywords.VALUE).fold(msg => throw BadRequestException(msg), identity)
           Vector(InstanceElement(elementType = OntologyConstants.Xsd.String, literalContent = Some(literalContent)))
         } else if (jsonLDObject.isDatatypeValue) {
           // This object represents a JSON-LD datatype value.
-          val datatype       = jsonLDObject.requireString(JsonLDKeywords.TYPE)
-          val literalContent = jsonLDObject.requireString(JsonLDKeywords.VALUE)
+          val datatype =
+            jsonLDObject.getRequiredString(JsonLDKeywords.TYPE).fold(msg => throw BadRequestException(msg), identity)
+          val literalContent =
+            jsonLDObject.getRequiredString(JsonLDKeywords.VALUE).fold(msg => throw BadRequestException(msg), identity)
           Vector(InstanceElement(elementType = datatype, literalContent = Some(literalContent)))
         } else if (jsonLDObject.isIri) {
           // This object represents an IRI.
-          val literalContent = jsonLDObject.requireString(JsonLDKeywords.ID)
+          val literalContent =
+            jsonLDObject.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
           Vector(InstanceElement(elementType = OntologyConstants.Xsd.Uri, literalContent = Some(literalContent)))
         } else {
           // This object represents a class instance.
@@ -492,7 +502,10 @@ class JsonLDInstanceInspector extends InstanceInspector {
     }
 
   private def jsonLDObjectToElement(jsonLDObject: JsonLDObject): InstanceElement = {
-    val elementType = jsonLDObject.requireString(JsonLDKeywords.TYPE)
+    val elementType =
+      jsonLDObject
+        .getRequiredString(JsonLDKeywords.TYPE)
+        .fold(msg => throw BadRequestException(msg), identity)
 
     val propertyObjects: Map[String, Vector[InstanceElement]] = jsonLDObject.value.map {
       case (key, jsonLDValue: JsonLDValue) => key -> jsonLDValueToElements(jsonLDValue)
