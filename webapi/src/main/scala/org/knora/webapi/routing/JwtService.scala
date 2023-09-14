@@ -139,7 +139,7 @@ final case class JwtServiceLive(
    * @return an optional [[IRI]].
    */
   override def extractUserIriFromToken(token: String): Task[Option[IRI]] =
-    ZIO.attempt(decodeToken(token)).map(_.flatMap(_._2.subject))
+    ZIO.attempt(decodeToken(token)).map(_.flatMap { case (_, claims) => claims.subject })
 
   /**
    * Decodes and validates a JWT token.

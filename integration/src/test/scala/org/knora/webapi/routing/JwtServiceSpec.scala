@@ -42,7 +42,7 @@ class JwtServiceSpec extends CoreSpec with ImplicitSender {
       token     <- JwtService.createJwt(user)
       jwtConfig <- ZIO.service[JwtConfig]
       decoded    = JwtSprayJson.decodeAll(token.jwtString, jwtConfig.secret, Seq(JwtAlgorithm.HS256))
-      audience   = decoded.toOption.map(_._2).flatMap(_.audience).head
+      audience   = decoded.toOption.flatMap { case (_, claims, _) => claims.audience }.head
     } yield audience
 
     "create a token without dsp-ingest audience for non sys admins" in {
