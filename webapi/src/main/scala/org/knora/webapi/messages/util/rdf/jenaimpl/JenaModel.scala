@@ -231,7 +231,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
   override def setNamespace(prefix: String, namespace: IRI): Unit = {
     def setNamespaceInGraph(graph: jena.graph.Graph): Unit = {
       val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
-      prefixMapping.setNsPrefix(prefix, namespace)
+      val _                                        = prefixMapping.setNsPrefix(prefix, namespace)
     }
 
     // Add the namespace to the default graph.

@@ -385,14 +385,14 @@ case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(
  *
  * @param nodeinfo the basic information about a node.
  */
-abstract class NodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraResponseADM with ListADMJsonProtocol
+abstract class NodeInfoGetResponseADM() extends KnoraResponseADM with ListADMJsonProtocol
 
 /**
  * Provides basic information about a root node without it's children.
  *
  * @param listinfo the basic information about a list.
  */
-case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends NodeInfoGetResponseADM(listinfo) {
+case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends NodeInfoGetResponseADM() {
 
   def toJsValue: JsValue = listInfoGetResponseADMFormat.write(this)
 }
@@ -402,7 +402,7 @@ case class RootNodeInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends Nod
  *
  * @param nodeinfo the basic information about a list node.
  */
-case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends NodeInfoGetResponseADM(nodeinfo) {
+case class ChildNodeInfoGetResponseADM(nodeinfo: ListChildNodeInfoADM) extends NodeInfoGetResponseADM() {
 
   def toJsValue: JsValue = listNodeInfoGetResponseADMFormat.write(this)
 }

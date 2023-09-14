@@ -1,5 +1,38 @@
 # Changelog
 
+## [30.1.2](https://github.com/dasch-swiss/dsp-api/compare/v30.1.1...v30.1.2) (2023-09-08)
+
+
+### Maintenance
+
+* Remove compiler warning stemming from -Wvalue-discard ([#2831](https://github.com/dasch-swiss/dsp-api/issues/2831)) ([9071204](https://github.com/dasch-swiss/dsp-api/commit/90712044d3bc1c1e32df73baf00f9ce898d36510))
+* Remove type annotations which produce compiler warnings ([#2829](https://github.com/dasch-swiss/dsp-api/issues/2829)) ([c754042](https://github.com/dasch-swiss/dsp-api/commit/c75404288b4b048554fd4d8ccc374723930d92e3))
+* Remove unused or dead code ([#2827](https://github.com/dasch-swiss/dsp-api/issues/2827)) ([36b835e](https://github.com/dasch-swiss/dsp-api/commit/36b835e82a76ecf01687b54bbdae410197ca4731))
+* Update 'fuseki_request_duration' histogram bucket boundaries ([#2830](https://github.com/dasch-swiss/dsp-api/issues/2830)) ([b7bef4e](https://github.com/dasch-swiss/dsp-api/commit/b7bef4ef1cdd768693ab544db0a2874ede9e95aa))
+
+## [30.1.1](https://github.com/dasch-swiss/dsp-api/compare/v30.1.0...v30.1.1) (2023-09-06)
+
+
+### Maintenance
+
+* Remove -HEAD from published docker tag when building a git tag ([#2825](https://github.com/dasch-swiss/dsp-api/issues/2825)) ([108c480](https://github.com/dasch-swiss/dsp-api/commit/108c48048624508c493a8acec0322bb1f484a883))
+
+## [30.1.0](https://github.com/dasch-swiss/dsp-api/compare/v30.0.0...v30.1.0) (2023-09-06)
+
+
+### Enhancements
+
+* Add metrics to TriplestoreService SparqlQuery execution DEV-2627 ([#2823](https://github.com/dasch-swiss/dsp-api/issues/2823)) ([8ce554b](https://github.com/dasch-swiss/dsp-api/commit/8ce554bc3051799134ac86d23ae25f2ee241ef1c))
+
+
+### Maintenance
+
+* Filter "HEAD" as branch name when building a release on a chec… ([#2817](https://github.com/dasch-swiss/dsp-api/issues/2817)) ([818fb41](https://github.com/dasch-swiss/dsp-api/commit/818fb41ea81bda03669fff86353cbdcd3a521de2))
+* Introduce typed queries Ask, Select, Construct, Update and remove TriplestoreMessageHandler ([#2816](https://github.com/dasch-swiss/dsp-api/issues/2816)) ([96c330d](https://github.com/dasch-swiss/dsp-api/commit/96c330d21d5e5bd74d7e8f50ba3515b039afa773))
+* Speedup /projects endpoint ([#2824](https://github.com/dasch-swiss/dsp-api/issues/2824)) ([22d5146](https://github.com/dasch-swiss/dsp-api/commit/22d514677e8b073e3e6f13c0cb4c4516ed9c7e99))
+* Update app in docker-compose ([#2821](https://github.com/dasch-swiss/dsp-api/issues/2821)) ([f124f85](https://github.com/dasch-swiss/dsp-api/commit/f124f855043443d355a6d07b6fb384361c7b4e24))
+* Update Dependencies ([#2822](https://github.com/dasch-swiss/dsp-api/issues/2822)) ([198d570](https://github.com/dasch-swiss/dsp-api/commit/198d57058468be1037750c493eba1c2c00a43bb2))
+
 ## [30.0.0](https://github.com/dasch-swiss/dsp-api/compare/v29.1.3...v30.0.0) (2023-08-31)
 
 

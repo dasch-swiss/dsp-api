@@ -11,6 +11,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import spray.json.JsString
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.messages.OntologyConstants
@@ -82,7 +83,8 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
       JsonLDUtil
         .parseJsonLD(responseToString(response))
         .body
-        .requireString(JsonLDKeywords.ID)
+        .getRequiredString(JsonLDKeywords.ID)
+        .fold(msg => throw BadRequestException(msg), identity)
     (ontologyIri, lastModificationDate)
   }
 
@@ -274,8 +276,10 @@ class CardinalitiesV2E2ESpec extends E2ESpec {
     JsonLDUtil
       .parseJsonLD(responseToString(response))
       .body
-      .requireObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate)
-      .requireString(JsonLDKeywords.VALUE)
+      .getRequiredObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate)
+      .fold(e => throw BadRequestException(e), identity)
+      .getRequiredString(JsonLDKeywords.VALUE)
+      .fold(msg => throw BadRequestException(msg), identity)
 
   private val rootCredentials = BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
 

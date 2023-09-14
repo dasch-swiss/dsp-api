@@ -74,7 +74,14 @@ case class TriplestoreServiceLive(
     with FusekiTriplestore {
 
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-  private val requestTimer                 = Metric.timer("fuseki_request_duration", ChronoUnit.MILLIS)
+  private val requestTimer =
+    Metric.timer(
+      "fuseki_request_duration",
+      ChronoUnit.MILLIS,
+      // 7 buckets for upper bounds 10ms, 100ms, 1s, 10s, 1.6m, 16.6m, inf
+      Chunk.iterate(10.0, 6)(_ * 10)
+    )
+
   private def processError(sparql: String, response: String): IO[TriplestoreException, Nothing] =
     if (response.contains("##  Query cancelled due to timeout during execution")) {
       val msg: String = "Triplestore timed out while sending a response, after sending statuscode 200."

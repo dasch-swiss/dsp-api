@@ -345,11 +345,8 @@ final case class ResourcesResponderV2Live(
                                              .toOntologySchema(InternalSchema)
 
       _ <- ZIO.when(
-             !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
-               ResourceCreateOperation(internalResourceClassIri.toString),
-               projectIri,
-               None
-             )
+             !createResourceRequestV2.requestingUser.permissions
+               .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri)
            ) {
              val msg =
                s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
@@ -1624,7 +1621,7 @@ final case class ResourcesResponderV2Live(
             val msg = s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
             ZIO.fail(InconsistentRepositoryDataException(msg))
         }
-      (fileValueIri: IRI, gravsearchFileValueContent: TextFileValueContentV2) = valueAndContent
+      (fileValueIri, gravsearchFileValueContent) = valueAndContent
 
       // check if gravsearchFileValueContent represents a text file
       _ <- ZIO.when(gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
@@ -2281,11 +2278,8 @@ final case class ResourcesResponderV2Live(
                             )
                           )
 
-      resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
-
-      incomingLinks: Seq[ReadValueV2] =
-        resource.values
-          .getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
+      resource      = searchResponse.toResource(request.resourceIri)
+      incomingLinks = resource.values.getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
 
       representations: Seq[ReadResourceV2] = incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>
                                                readLinkValueV2.valueContent.nestedResource

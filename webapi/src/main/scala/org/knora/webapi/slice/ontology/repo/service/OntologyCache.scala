@@ -518,15 +518,14 @@ final case class OntologyCacheLive(
                                    )
       _                           <- ZIO.logInfo(s"Loading ontologies into cache")
       allOntologyMetadataResponse <- triplestore.query(Select(allOntologyMetadataSparql))
-      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] =
-        OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
+      allOntologyMetadata          = OntologyHelpers.buildOntologyMetadata(allOntologyMetadataResponse)
 
-      knoraBaseOntologyMetadata: OntologyMetadataV2 =
+      knoraBaseOntologyMetadata =
         allOntologyMetadata.getOrElse(
           OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
           throw InconsistentRepositoryDataException(s"No knora-base ontology found")
         )
-      knoraBaseOntologyVersion: String =
+      knoraBaseOntologyVersion =
         knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
           throw InconsistentRepositoryDataException(
             "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
@@ -540,7 +539,7 @@ final case class OntologyCacheLive(
           }
 
       // Get the contents of each named graph containing an ontology.
-      ontologyGraphResponseFutures: Iterable[Task[OntologyGraph]] =
+      ontologyGraphResponseTasks =
         allOntologyMetadata.keys.map { ontologyIri =>
           val ontology: OntologyMetadataV2 =
             allOntologyMetadata(ontologyIri)
@@ -570,7 +569,7 @@ final case class OntologyCacheLive(
             .map(OntologyGraph(ontologyIri, _))
         }
 
-      ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseFutures)
+      ontologyGraphs <- ZIO.collectAll(ontologyGraphResponseTasks)
 
       cacheData <- makeOntologyCache(allOntologyMetadata, ontologyGraphs)
       _         <- ZIO.logInfo(s"Loaded ${cacheData.ontologies.values.size} ontologies into cache")
@@ -725,7 +724,6 @@ final case class OntologyCacheLive(
       classDefs = allClassDefs,
       directClassCardinalities = directClassCardinalities,
       classCardinalitiesWithInheritance = classCardinalitiesWithInheritance,
-      directSubClassOfRelations = directSubClassOfRelations,
       allSubClassOfRelations = allSubClassOfRelations,
       allSubPropertyOfRelations = allSubPropertyOfRelations,
       allPropertyDefs = allPropertyDefs,
@@ -738,9 +736,7 @@ final case class OntologyCacheLive(
     // Construct a ReadPropertyInfoV2 for each property definition.
     val readPropertyInfos: Map[SmartIri, ReadPropertyInfoV2] = OntologyHelpers.makeReadPropertyInfos(
       propertyDefs = allPropertyDefs,
-      directSubPropertyOfRelations = directSubPropertyOfRelations,
       allSubPropertyOfRelations = allSubPropertyOfRelations,
-      allSubClassOfRelations = allSubClassOfRelations,
       allKnoraResourceProps = allKnoraResourceProps,
       allLinkProps = allLinkProps,
       allLinkValueProps = allLinkValueProps,

@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util.search.gravsearch.mainquery
 
 import dsp.errors.GravsearchException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -225,7 +224,6 @@ object GravsearchMainQueryGenerator {
    * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
    * @param targetSchema          the target API schema.
    * @param schemaOptions         the schema options submitted with the request.
-   * @param appConfig             the application's configuration.
    * @return the main [[ConstructQuery]] query to be executed.
    */
   def createMainQuery(
@@ -233,8 +231,7 @@ object GravsearchMainQueryGenerator {
     dependentResourceIris: Set[IriRef],
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption],
-    appConfig: AppConfig
+    schemaOptions: Set[SchemaOption]
   ): ConstructQuery = {
     import GravsearchConstants._
 

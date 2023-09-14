@@ -669,7 +669,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
   private def makeDatatype(
     datatypeIri: IRI,
     datatypeInfo: DatatypeInfoV2,
-    predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2]
+    predicates: Seq[PredicateInfoV2]
   ): ReadClassInfoV2 = {
 
     val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(

@@ -30,6 +30,7 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.SECONDS
 
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -40,6 +41,7 @@ import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -541,13 +543,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val historyResponseAsString       = responseToString(historyResponse)
       assert(historyResponse.status == StatusCodes.OK, historyResponseAsString)
       val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(historyResponseAsString)
-      val entries: JsonLDArray           = jsonLDDocument.body.requireArray("@graph")
+      val entries: JsonLDArray = jsonLDDocument.body
+        .getRequiredArray("@graph")
+        .fold(e => throw BadRequestException(e), identity)
 
       for (entry: JsonLDValue <- entries.value) {
         entry match {
           case jsonLDObject: JsonLDObject =>
             val versionDate: Instant = jsonLDObject.requireDatatypeValueInObject(
-              key = OntologyConstants.KnoraApiV2Complex.VersionDate,
+              key = KnoraApiV2Complex.VersionDate,
               expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
               validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
             )
@@ -842,7 +846,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Check that the text value with standoff is correct in the simple schema.
       val resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
       val text: String =
-        resourceSimpleAsJsonLD.body.requireString("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasRichtext")
+        resourceSimpleAsJsonLD.body
+          .getRequiredString("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasRichtext")
+          .fold(msg => throw BadRequestException(msg), identity)
       assert(text == "this is text with standoff")
     }
 
@@ -909,7 +915,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Check that the value is correct in the simple schema.
       val resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
       val foafName: String =
-        resourceSimpleAsJsonLD.body.requireString("http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#hasFoafName")
+        resourceSimpleAsJsonLD.body
+          .getRequiredString("http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#hasFoafName")
+          .fold(msg => throw BadRequestException(msg), identity)
       assert(foafName == "this is a foaf name")
     }
 
@@ -971,7 +979,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+        key = KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -1120,7 +1128,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Get the value from the response.
       val resourceGetResponseAsJsonLD = getResponseAsJsonLD(resourceGetRequest)
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .fold(e => throw BadRequestException(e), identity)
         .requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIRI)
     }
@@ -1167,8 +1176,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Get the value from the response.
       val resourceGetResponseAsJsonLD = getResponseAsJsonLD(resourceGetRequest)
       val valueUUID = resourceGetResponseAsJsonLD.body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
-        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasUUID))
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(valueUUID == customValueUUID)
 
     }
@@ -1219,9 +1229,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Get the value from the response.
       val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
       val savedCreationDate: Instant = resourceGetResponseAsJsonLD.body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .fold(e => throw BadRequestException(e), identity)
         .requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+          key = KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1285,17 +1296,19 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Get the value from the response.
       val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
       val valueIri: IRI = resourceGetResponseAsJsonLD.body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .fold(e => throw BadRequestException(e), identity)
         .requireStringWithValidation(JsonLDKeywords.ID, validationFun)
       assert(valueIri == customValueIRI)
 
       val valueUUID = resourceGetResponseAsJsonLD.body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
-        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasUUID))
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(valueUUID == customValueUUID)
 
       val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+        key = KnoraApiV2Complex.CreationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -1304,9 +1317,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // when no custom creation date is given to the value, it should have the same creation date as the resource
       val savedValueCreationDate: Instant = resourceGetResponseAsJsonLD.body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean")
+        .fold(e => throw BadRequestException(e), identity)
         .requireDatatypeValueInObject(
-          key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+          key = KnoraApiV2Complex.ValueCreationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
           validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
         )
@@ -1350,7 +1364,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
       val savedAttachedToUser: IRI =
         responseJsonDoc.body.requireIriInObject(
-          OntologyConstants.KnoraApiV2Complex.AttachedToUser,
+          KnoraApiV2Complex.AttachedToUser,
           validationFun
         )
       assert(savedAttachedToUser == SharedTestDataADM.anythingUser1.id)
@@ -1451,17 +1465,21 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
 
-      val previewJsonLD        = getResponseAsJsonLD(previewRequest)
-      val updatedLabel: String = previewJsonLD.body.requireString(OntologyConstants.Rdfs.Label)
+      val previewJsonLD = getResponseAsJsonLD(previewRequest)
+      val updatedLabel: String = previewJsonLD.body
+        .getRequiredString(OntologyConstants.Rdfs.Label)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(updatedLabel == newLabel)
       val updatedPermissions: String =
-        previewJsonLD.body.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+        previewJsonLD.body
+          .getRequiredString(KnoraApiV2Complex.HasPermissions)
+          .fold(msg => throw BadRequestException(msg), identity)
       assert(
         PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions)
       )
 
       val lastModificationDate: Instant = previewJsonLD.body.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+        key = KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -1527,17 +1545,21 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val previewResponseAsString       = responseToString(previewResponse)
       assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
 
-      val previewJsonLD        = JsonLDUtil.parseJsonLD(previewResponseAsString)
-      val updatedLabel: String = previewJsonLD.body.requireString(OntologyConstants.Rdfs.Label)
+      val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+      val updatedLabel: String = previewJsonLD.body
+        .getRequiredString(OntologyConstants.Rdfs.Label)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(updatedLabel == newLabel)
       val updatedPermissions: String =
-        previewJsonLD.body.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
+        previewJsonLD.body
+          .getRequiredString(KnoraApiV2Complex.HasPermissions)
+          .fold(msg => throw BadRequestException(msg), identity)
       assert(
         PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions)
       )
 
       val lastModificationDate: Instant = previewJsonLD.body.requireDatatypeValueInObject(
-        key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+        key = KnoraApiV2Complex.LastModificationDate,
         expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
         validationFun = (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun)
       )
@@ -1586,10 +1608,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       val previewResponseAsString = responseToString(previewResponse)
       val previewJsonLD           = JsonLDUtil.parseJsonLD(previewResponseAsString)
-      val responseIsDeleted       = previewJsonLD.body.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      val responseIsDeleted = previewJsonLD.body
+        .getRequiredBoolean(KnoraApiV2Complex.IsDeleted)
+        .fold(e => throw BadRequestException(e), identity)
       responseIsDeleted should equal(true)
-      val responseType = previewJsonLD.body.requireString("@type")
-      responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
+      val responseType =
+        previewJsonLD.body.getRequiredString("@type").fold(msg => throw BadRequestException(msg), identity)
+      responseType should equal(KnoraApiV2Complex.DeletedResource)
 
       collectClientTestData("deleted-resource-preview-response", previewResponseAsString)
     }
@@ -1634,14 +1659,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val previewResponseAsString       = responseToString(previewResponse)
       previewResponse.status should equal(StatusCodes.OK)
 
-      val previewJsonLD     = JsonLDUtil.parseJsonLD(previewResponseAsString)
-      val responseIsDeleted = previewJsonLD.body.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+      val responseIsDeleted = previewJsonLD.body
+        .getRequiredBoolean(KnoraApiV2Complex.IsDeleted)
+        .fold(e => throw BadRequestException(e), identity)
       responseIsDeleted should equal(true)
-      val responseType = previewJsonLD.body.requireString("@type")
-      responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
+      val responseType =
+        previewJsonLD.body.getRequiredString("@type").fold(msg => throw BadRequestException(msg), identity)
+      responseType should equal(KnoraApiV2Complex.DeletedResource)
       val responseDeleteDate = previewJsonLD.body
-        .requireObject(OntologyConstants.KnoraApiV2Complex.DeleteDate)
-        .requireString("@value")
+        .getRequiredObject(KnoraApiV2Complex.DeleteDate)
+        .flatMap(_.getRequiredString("@value"))
+        .fold(e => throw BadRequestException(e), identity)
       responseDeleteDate should equal(deleteDate.toString)
     }
 
@@ -1704,8 +1733,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Get the XML from the response.
       val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
       val xmlFromResponse: String = resourceGetResponseAsJsonLD.body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
-        .requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+        .flatMap(_.getRequiredString(KnoraApiV2Complex.TextValueAsXml))
+        .fold(e => throw BadRequestException(e), identity)
 
       // Compare it to the original XML.
       val xmlDiff: Diff =
@@ -1732,9 +1762,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Get the standoff markup separately.
       val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
       val textValue: JsonLDObject =
-        resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
-      val maybeTextValueAsXml: Option[String] =
-        textValue.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+        resourceGetResponseAsJsonLD.body
+          .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+          .fold(e => throw BadRequestException(e), identity)
+      val maybeTextValueAsXml: Option[String] = textValue
+        .getString(KnoraApiV2Complex.TextValueAsXml)
+        .fold(msg => throw BadRequestException(msg), identity)
       assert(maybeTextValueAsXml.isEmpty)
       val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
       val textValueIri: IRI                             = textValue.requireStringWithValidation(JsonLDKeywords.ID, validationFun)
@@ -1756,7 +1789,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
         val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
 
         val standoff: Seq[JsonLDValue] =
-          standoffGetResponseAsJsonLD.maybeArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
+          standoffGetResponseAsJsonLD.getArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
 
         val standoffAsJsonLDObjects: Seq[JsonLDObject] = standoff.map {
           case jsonLDObject: JsonLDObject => jsonLDObject
@@ -1765,7 +1798,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
         standoffBuffer.appendAll(standoffAsJsonLDObjects)
 
-        standoffGetResponseAsJsonLD.maybeInt(OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex) match {
+        standoffGetResponseAsJsonLD
+          .getInt(KnoraApiV2Complex.NextStandoffStartIndex)
+          .fold(e => throw BadRequestException(e), identity) match {
           case Some(nextOffset) => offset = nextOffset
           case None             => hasMoreStandoff = false
         }
@@ -1874,7 +1909,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Check that it has the property knora-api:hasStandoffLinkToValue.
       val resourceJsonLDDoc = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
-      assert(resourceJsonLDDoc.body.value.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue))
+      assert(resourceJsonLDDoc.body.value.contains(KnoraApiV2Complex.HasStandoffLinkToValue))
     }
 
     "create a resource containing a text value with multiple standoff links" in {
@@ -1921,7 +1956,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       // Check that it has multiple property knora-api:hasStandoffLinkToValue.
       val resourceJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
       val numberOfStandofHasLinkValue = resourceJsonLDDoc.body
-        .value(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)
+        .value(KnoraApiV2Complex.HasStandoffLinkToValue)
         .asInstanceOf[JsonLDArray]
         .value
         .size
@@ -2032,9 +2067,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
 
       val valueObject = responseToJsonLDDocument(resourceComplexGetResponse).body
-        .requireObject("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasName")
-      val valueIri: IRI      = valueObject.requireString("@id")
-      val valueAsString: IRI = valueObject.requireString("http://api.knora.org/ontology/knora-api/v2#valueAsString")
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasName")
+        .fold(e => throw BadRequestException(e), identity)
+      val valueIri: IRI = valueObject.getRequiredString("@id").fold(msg => throw BadRequestException(msg), identity)
+      val valueAsString: IRI = valueObject
+        .getRequiredString("http://api.knora.org/ontology/knora-api/v2#valueAsString")
+        .fold(msg => throw BadRequestException(msg), identity)
 
       assert(valueAsString == "The new text value")
 
@@ -2136,7 +2174,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val createSequenceResponse = singleAwaitingRequest(createSequenceRequest)
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
-      val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
+      val sequenceResourceIri =
+        URLEncoder.encode(
+          createSequenceResponseBody
+            .getRequiredString(JsonLDKeywords.ID)
+            .fold(msg => throw BadRequestException(msg), identity),
+          "UTF-8"
+        )
 
       // get the newly created sequence resource
       val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
@@ -2144,11 +2188,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(sequenceResponse.status == StatusCodes.OK)
       val getSequenceResponseBody = responseToJsonLDDocument(sequenceResponse).body
       val sequenceOfUuid = getSequenceResponseBody
-        .requireObject(OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue)
-        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+        .getRequiredObject(KnoraApiV2Complex.IsSequenceOfValue)
+        .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasUUID))
+        .fold(e => throw BadRequestException(e), identity)
       val sequenceBoundsUuid = getSequenceResponseBody
-        .requireObject(OntologyConstants.KnoraApiV2Complex.HasSequenceBounds)
-        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+        .getRequiredObject(KnoraApiV2Complex.HasSequenceBounds)
+        .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasUUID))
+        .fold(e => throw BadRequestException(e), identity)
 
       // get the isSequenceOfValue property on the sequence resource
       val sequenceOfRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceOfUuid") ~> addCredentials(cred)
@@ -2205,7 +2251,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       val createSequenceResponse = singleAwaitingRequest(createSequenceRequest)
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
-      val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
+      val sequenceResourceIri =
+        URLEncoder.encode(
+          createSequenceResponseBody
+            .getRequiredString(JsonLDKeywords.ID)
+            .fold(msg => throw BadRequestException(msg), identity),
+          "UTF-8"
+        )
 
       // get the newly created sequence reource
       val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
@@ -2213,11 +2265,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
       assert(sequenceResponse.status == StatusCodes.OK)
       val getSequenceResponseBody = responseToJsonLDDocument(sequenceResponse).body
       val sequenceOfUuid = getSequenceResponseBody
-        .requireObject("http://0.0.0.0:3333/ontology/0001/sequences/v2#isAnnotatedSequenceOfAudioValue")
-        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/sequences/v2#isAnnotatedSequenceOfAudioValue")
+        .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasUUID))
+        .fold(msg => throw BadRequestException(msg), identity)
       val sequenceBoundsUuid = getSequenceResponseBody
-        .requireObject("http://0.0.0.0:3333/ontology/0001/sequences/v2#hasCustomSequenceBounds")
-        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+        .getRequiredObject("http://0.0.0.0:3333/ontology/0001/sequences/v2#hasCustomSequenceBounds")
+        .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasUUID))
+        .fold(msg => throw BadRequestException(msg), identity)
 
       // get the isSequenceOfValue property on the sequence resource
       val sequenceOfRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceOfUuid") ~> addCredentials(cred)

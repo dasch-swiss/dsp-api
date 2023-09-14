@@ -235,10 +235,9 @@ final case class ProjectsResponderADMLive(
         (projects, withSystemProjects) match {
           case (Nil, _)  => ZIO.fail(NotFoundException(s"No projects found"))
           case (_, true) => ZIO.succeed(ProjectsGetResponseADM(projects))
-          case _ => {
+          case _ =>
             val noSystemProjects: List[ProjectADM] = projects.filter(p => p.id.startsWith("http://rdfh.ch/projects/"))
             ZIO.succeed(ProjectsGetResponseADM(noSystemProjects))
-          }
         }
       )
 
@@ -297,12 +296,9 @@ final case class ProjectsResponderADMLive(
                       .map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris: Seq[IRI] =
-        if (statements.nonEmpty) {
-          statements.map(_._1.toString)
-        } else {
-          Seq.empty[IRI]
-        }
+      userIris =
+        if (statements.nonEmpty) { statements.map(_._1.toString) }
+        else { Seq.empty[IRI] }
 
       maybeUserFutures: Seq[Task[Option[UserADM]]] =
         userIris.map { userIri =>
@@ -356,12 +352,8 @@ final case class ProjectsResponderADMLive(
       statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.toList)
 
       // get project member IRI from results rows
-      userIris: Seq[IRI] =
-        if (statements.nonEmpty) {
-          statements.map(_._1.toString)
-        } else {
-          Seq.empty[IRI]
-        }
+      userIris = if (statements.nonEmpty) { statements.map(_._1.toString) }
+                 else { Seq.empty[IRI] }
 
       maybeUserTasks: Seq[Task[Option[UserADM]]] = userIris.map { userIri =>
                                                      messageRelay
@@ -489,11 +481,7 @@ final case class ProjectsResponderADMLive(
         ZIO.fail(ForbiddenException("Project's information can only be changed by a project or system admin."))
       } else {
         for {
-          result <- updateProjectADM(
-                      projectIri = projectIri,
-                      projectUpdatePayload = projectUpdatePayload,
-                      requestingUser = KnoraSystemInstances.Users.SystemUser
-                    )
+          result <- updateProjectADM(projectIri = projectIri, projectUpdatePayload = projectUpdatePayload)
 
         } yield result
       }
@@ -514,11 +502,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[NotFoundException]] In the case that the project's IRI is not found.
    */
-  private def updateProjectADM(
-    projectIri: Iri.ProjectIri,
-    projectUpdatePayload: ProjectUpdatePayloadADM,
-    requestingUser: UserADM
-  ): Task[ProjectOperationResponseADM] = {
+  private def updateProjectADM(projectIri: Iri.ProjectIri, projectUpdatePayload: ProjectUpdatePayloadADM) = {
 
     val areAllParamsNone: Boolean = projectUpdatePayload.productIterator.forall {
       case param: Option[Any] => param.isEmpty
@@ -642,7 +626,7 @@ final case class ProjectsResponderADMLive(
     }
 
     if (projectUpdatePayload.status.nonEmpty) {
-      projectUpdatePayload.status
+      val _ = projectUpdatePayload.status
         .map(_.value)
         .filter(_ == updatedProject.status)
         .getOrElse(
@@ -653,7 +637,7 @@ final case class ProjectsResponderADMLive(
     }
 
     if (projectUpdatePayload.selfjoin.nonEmpty) {
-      projectUpdatePayload.selfjoin
+      val _ = projectUpdatePayload.selfjoin
         .map(_.value)
         .filter(_ == updatedProject.selfjoin)
         .getOrElse(
