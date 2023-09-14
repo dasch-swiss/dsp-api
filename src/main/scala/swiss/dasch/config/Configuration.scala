@@ -20,6 +20,7 @@ object Configuration {
       service: ServiceConfig,
       storage: StorageConfig,
       sipi: SipiConfig,
+      ingest: IngestConfig,
     )
 
   final case class JwtConfig(
@@ -42,7 +43,11 @@ object Configuration {
     val tempPath: Path  = Path(tempDir)
   }
 
-  val layer: Layer[ReadError[String], ServiceConfig with JwtConfig with StorageConfig with SipiConfig] = {
+  final case class IngestConfig(bulkMaxParallel: Int)
+
+  private type AllConfigs = ServiceConfig with JwtConfig with StorageConfig with SipiConfig with IngestConfig
+
+  val layer: Layer[ReadError[String], AllConfigs] = {
     val applicationConf = ZConfig.fromTypesafeConfig(
       ZIO.attempt(ConfigFactory.defaultApplication().resolve()),
       descriptor[ApplicationConf].mapKey(toKebabCase),
@@ -50,6 +55,7 @@ object Configuration {
     applicationConf.project(_.service) ++
       applicationConf.project(_.storage) ++
       applicationConf.project(_.jwt) ++
-      applicationConf.project(_.sipi)
+      applicationConf.project(_.sipi) ++
+      applicationConf.project(_.ingest)
   }
 }

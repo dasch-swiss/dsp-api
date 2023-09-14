@@ -8,8 +8,9 @@ package swiss.dasch.api
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
 import swiss.dasch.api.ListProjectsEndpoint.ProjectResponse
-import swiss.dasch.domain.SipiImageFormat.Jpx
+import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.domain.*
+import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
 import zio.http.Status
 import zio.http.codec.HttpCodec
@@ -41,42 +42,66 @@ object IngestEndpoint {
 
 trait BulkIngestService {
 
-  def startBulkIngest(shortcode: ProjectShortcode): Task[Int]
+  def startBulkIngest(shortcode: ProjectShortcode): Task[IngestResult]
 }
 
 object BulkIngestService {
-  def startBulkIngest(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, Int] =
+  def startBulkIngest(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, IngestResult] =
     ZIO.serviceWithZIO[BulkIngestService](_.startBulkIngest(shortcode))
+}
+
+case class IngestResult(success: Int = 0, failed: Int = 0) {
+  def +(other: IngestResult): IngestResult = IngestResult(success + other.success, failed + other.failed)
+}
+
+object IngestResult {
+  val success: IngestResult = IngestResult(success = 1)
+  val failed: IngestResult  = IngestResult(failed = 1)
 }
 
 final case class BulkIngestServiceLive(
     storage: StorageService,
     sipiClient: SipiClient,
     assetInfo: AssetInfoService,
+    config: IngestConfig,
   ) extends BulkIngestService {
 
-  override def startBulkIngest(project: ProjectShortcode): Task[Int] =
+  override def startBulkIngest(project: ProjectShortcode): Task[IngestResult] =
     for {
       _          <- ZIO.logInfo(s"Starting bulk ingest for project $project")
       importDir  <- storage.getTempDirectory().map(_ / "import" / project.value)
-      mappingFile = importDir / "mapping.csv"
+      mappingFile = importDir.parent.head / s"mapping-$project.csv"
       _          <- (Files.createFile(mappingFile) *> Files.writeLines(mappingFile, List("original,derivative")))
                       .whenZIO(Files.exists(mappingFile).negate)
+      total      <- StorageService.findInPath(importDir, FileFilters.isNonHiddenRegularFile).runCount
       sum        <- StorageService
                       .findInPath(importDir, FileFilters.isImage)
-                      .mapZIOPar(8)(image =>
+                      .mapZIOPar(config.bulkMaxParallel)(image =>
                         ingestSingleImage(image, project, mappingFile)
-                          .catchNonFatalOrDie(e => ZIO.logError(s"Error ingesting image $image: ${e.getMessage}").as(0))
+                          .catchNonFatalOrDie(e =>
+                            ZIO
+                              .logError(s"Error ingesting image $image: ${e.getMessage}")
+                              .as(IngestResult.failed)
+                          )
                       )
-                      .runSum
-      _          <- ZIO.logInfo(s"Finished bulk ingest for project $project, ingested $sum images")
+                      .runFold(IngestResult())(_ + _)
+      _          <- {
+        val countImages  = sum.success + sum.failed
+        val countSuccess = sum.success
+        val countFailed  = sum.failed
+        ZIO.logInfo(
+          s"Finished bulk ingest for project $project. " +
+            s"Found $countImages images from $total files. " +
+            s"Ingested $countSuccess successfully and failed $countFailed images (See logs above for more details)."
+        )
+      }
     } yield sum
 
   private def ingestSingleImage(
       file: Path,
       project: ProjectShortcode,
       csv: Path,
-    ): Task[Int] =
+    ): Task[IngestResult] =
     for {
       _               <- ZIO.logInfo(s"Ingesting image $file")
       asset           <- Asset.makeNew(project)
@@ -88,7 +113,7 @@ final case class BulkIngestServiceLive(
       _               <- updateMappingCsv(csv, derivativeFile, originalFilename, asset)
       _               <- Files.delete(file)
       _               <- ZIO.logInfo(s"Finished ingesting image $file")
-    } yield 1
+    } yield IngestResult.success
 
   private def updateMappingCsv(
       mappingFile: Path,
@@ -115,7 +140,7 @@ final case class BulkIngestServiceLive(
       assetDir: Path,
       asset: Asset,
     ) = {
-    val originalFile = assetDir / s"${asset.id}${FilenameUtils.getExtension(file.filename.toString)}.orig"
+    val originalFile = assetDir / s"${asset.id}.${FilenameUtils.getExtension(file.filename.toString)}.orig"
     ZIO.logInfo(s"Copying file $file to $assetDir, $asset") *>
       Files.copy(file, originalFile).as(originalFile)
   }
@@ -130,11 +155,11 @@ final case class BulkIngestServiceLive(
       sipiClient.transcodeImageFile(originalFile, derivativeFile, Jpx) *>
       ZIO
         .whenZIO(Files.exists(derivativeFile).negate)(
-          ZIO.fail(IllegalStateException(s"Sipi failed transcoding $originalFile to $derivativeFile"))
+          Files.delete(originalFile) *>
+            ZIO.fail(IllegalStateException(s"Sipi failed transcoding $originalFile to $derivativeFile"))
         )
         .as(derivativeFile)
   }
-
 }
 
 object BulkIngestServiceLive {
