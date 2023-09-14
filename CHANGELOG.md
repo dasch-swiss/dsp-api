@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.5...v0.2.0) (2023-09-14)
+
+
+### Enhancements
+
+* Add bulk ingest for images ([#80](https://github.com/dasch-swiss/dsp-ingest/issues/80)) ([0d5d991](https://github.com/dasch-swiss/dsp-ingest/commit/0d5d9915bd4d39dc91dbf44ab47c893e8e2ab01c))
+
+
+### Bug Fixes
+
+* Compare file extensions in lower case ([9b53cc6](https://github.com/dasch-swiss/dsp-ingest/commit/9b53cc612e7dd6ffa1e9cfb4d970ad49eaa13b1a))
+* Finetuning bulk ingest ([#83](https://github.com/dasch-swiss/dsp-ingest/issues/83)) ([13f5913](https://github.com/dasch-swiss/dsp-ingest/commit/13f59139bdab245ac8fa7fa143f02ad8add44ec1))
+* Skip images which Sipi fails to transcode while creating originals ([#81](https://github.com/dasch-swiss/dsp-ingest/issues/81)) ([af53ebf](https://github.com/dasch-swiss/dsp-ingest/commit/af53ebfefe1cd2175697cf7fc7feee17b47851de))
+
 ## [0.1.5](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.4...v0.1.5) (2023-09-06)
 
 
