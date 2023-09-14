@@ -77,11 +77,8 @@ final case class JwtServiceLive(
   private val logger                  = Logger(LoggerFactory.getLogger(this.getClass))
 
   override def createJwt(user: UserADM, content: Map[String, JsValue] = Map.empty): UIO[Jwt] = {
-    val audience = if (user.isSystemAdmin) {
-      Set("Knora", "Sipi", dspIngestConfig.audience)
-    } else {
-      Set("Knora", "Sipi")
-    }
+    val audience = if (user.isSystemAdmin) { Set("Knora", "Sipi", dspIngestConfig.audience) }
+    else { Set("Knora", "Sipi") }
     createJwtToken(jwtConfig.issuerAsString(), user.id, audience, Some(JsObject(content)))
   }
 
