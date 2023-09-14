@@ -7,6 +7,7 @@ package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
 import org.scalatest.PrivateMethodTester
+import zio.ZIO
 
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
@@ -18,6 +19,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.knora.webapi.util.cache.CacheUtil
 
 object AuthenticatorSpec {
@@ -35,29 +37,23 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
   "During Authentication" when {
     "called, the 'getUserADMByEmail' method " should {
       "succeed with the correct 'email' " in {
-        val resF = UnsafeZioRun.runToFuture(
+        val user = UnsafeZioRun.runOrThrow(
           Authenticator.getUserByIdentifier(UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)))
         )
-        resF map { res =>
-          assert(res == AuthenticatorSpec.rootUser)
-        }
+        assert(user == AuthenticatorSpec.rootUser)
       }
 
       "fail with the wrong 'email' " in {
-        val resF = UnsafeZioRun.runToFuture(
-          Authenticator.getUserByIdentifier(
-            UserIdentifierADM(maybeEmail = Some("wronguser@example.com"))
-          )
+        val actual = UnsafeZioRun.run(
+          Authenticator.getUserByIdentifier(UserIdentifierADM(maybeEmail = Some("wronguser@example.com")))
         )
-        resF map { _ =>
-          assertThrows(BadCredentialsException)
-        }
+        assertFailsWithA[BadCredentialsException](actual)
       }
 
       "fail when not providing anything " in {
-        a[BadRequestException] should be thrownBy {
-          throw UnsafeZioRun.run(Authenticator.getUserByIdentifier(UserIdentifierADM())).causeOption.get.squash
-        }
+        val actual = UnsafeZioRun.run(ZIO.attempt(UserIdentifierADM()))
+
+        assertFailsWithA[BadRequestException](actual)
       }
     }
 
@@ -68,26 +64,27 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
             UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
             AuthenticatorSpec.rootUserPassword
           )
-        val resF = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(correctPasswordCreds)))
-        resF map { res => assert(res) }
+        val isAuthenticated =
+          UnsafeZioRun.runOrThrow(Authenticator.authenticateCredentialsV2(Some(correctPasswordCreds)))
+        assert(isAuthenticated)
       }
       "fail with unknown email" in {
-        val wrongPasswordCreds =
+        val invalidEmailCreds =
           KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some("wrongemail@example.com")), "wrongpassword")
-        val resF = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(wrongPasswordCreds)))
-        resF map { _ => assertThrows(BadCredentialsException) }
+        val resF = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidEmailCreds)))
+        assertFailsWithA[BadCredentialsException](resF)
       }
       "fail with wrong password" in {
-        val wrongPasswordCreds =
+        val invalidPasswordCreds =
           KnoraPasswordCredentialsV2(
             UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
             "wrongpassword"
           )
-        val resF = UnsafeZioRun.runToFuture(Authenticator.authenticateCredentialsV2(Some(wrongPasswordCreds)))
-        resF map { _ => assertThrows(BadCredentialsException) }
+        val actual = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidPasswordCreds)))
+        assertFailsWithA[BadCredentialsException](actual)
       }
       "succeed with correct token" in {
-        val resF = UnsafeZioRun.runToFuture(
+        val isAuthenticated = UnsafeZioRun.runOrThrow(
           for {
             token <-
               JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
@@ -95,38 +92,30 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
             result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
           } yield result
         )
-        resF map { res => assert(res) }
+        assert(isAuthenticated)
       }
       "fail with invalidated token" in {
-
-        assertThrows[BadCredentialsException] {
-          throw UnsafeZioRun
-            .run(for {
-              token <-
-                JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
-              tokenCreds = KnoraJWTTokenCredentialsV2(token)
-              _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
-              result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
-            } yield result)
-            .causeOption
-            .get
-            .squash
-        }
+        val actual = UnsafeZioRun
+          .run(for {
+            token <-
+              JwtService.createJwt(testUserAdmFromIri("http://rdfh.ch/users/X-T8IkfQTKa86UWuISpbOA")).map(_.jwtString)
+            tokenCreds = KnoraJWTTokenCredentialsV2(token)
+            _          = CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
+            result    <- Authenticator.authenticateCredentialsV2(Some(tokenCreds))
+          } yield result)
+        assertFailsWithA[BadCredentialsException](actual)
       }
       "fail with wrong token" in {
-        val tokenCreds = KnoraJWTTokenCredentialsV2("123456")
-
-        assertThrows[BadCredentialsException] {
-          throw UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(tokenCreds))).causeOption.get.squash
-        }
+        val invalidTokenCreds = KnoraJWTTokenCredentialsV2("123456")
+        val actual            = UnsafeZioRun.run(Authenticator.authenticateCredentialsV2(Some(invalidTokenCreds)))
+        assertFailsWithA[BadCredentialsException](actual)
       }
     }
 
     "called, the 'calculateCookieName' method" should {
       "succeed with generating the name" in {
-        UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName()) should equal(
-          "KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999"
-        )
+        val cookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
+        cookieName should equal("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999")
       }
     }
   }

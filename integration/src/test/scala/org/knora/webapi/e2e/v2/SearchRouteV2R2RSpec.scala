@@ -18,6 +18,7 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
 
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -7373,8 +7374,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, searchResponseStr)
         val searchResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(searchResponseStr)
         val xmlFromResponse: String = searchResponseAsJsonLD.body
-          .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
-          .requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+          .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+          .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
+          .fold(e => throw BadRequestException(e), identity)
 
         // Compare it to the original XML.
         val xmlDiff: Diff =
@@ -7797,8 +7799,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(resourceIri == timeTagResourceIri.get)
 
         val xmlFromResponse: String = responseAsJsonLD.body
-          .requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
-          .requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+          .getRequiredObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText")
+          .flatMap(_.getRequiredString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml))
+          .fold(e => throw BadRequestException(e), identity)
 
         // Compare it to the original XML.
         val xmlDiff: Diff =
@@ -8270,7 +8273,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseAs[String])
 
         val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults  = responseDocument.body.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        val numberOfResults = responseDocument.body
+          .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
+          .fold(e => throw BadRequestException(e), identity)
 
         assert(numberOfResults != 0)
       }
@@ -8303,7 +8308,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseAs[String])
 
         val responseDocument = responseToJsonLDDocument(response)
-        val numberOfResults  = responseDocument.body.requireInt(OntologyConstants.SchemaOrg.NumberOfItems)
+        val numberOfResults = responseDocument.body
+          .getRequiredInt(OntologyConstants.SchemaOrg.NumberOfItems)
+          .fold(e => throw BadRequestException(e), identity)
 
         assert(numberOfResults != 0)
       }

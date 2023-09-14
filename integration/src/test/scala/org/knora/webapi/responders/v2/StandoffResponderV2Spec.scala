@@ -5,43 +5,28 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.pattern.ask
 import akka.testkit.ImplicitSender
-import akka.util.Timeout
 
-import scala.concurrent.Await
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
-/**
- * Tests [[StandoffResponderV2]].
- */
 class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
   override implicit val timeout: FiniteDuration = 30.seconds
 
-  private def getMapping(iri: String): SparqlConstructResponse = {
-
-    val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .getMapping(
-        mappingIri = iri
-      )
-      .toString()
-
-    implicit val timeout: Timeout = Duration(10, SECONDS)
-    val resF: Future[SparqlConstructResponse] = (appActor ? SparqlConstructRequest(
-      sparql = getMappingSparql
-    )).mapTo[SparqlConstructResponse]
-    Await.result(resF, 10.seconds)
-  }
+  private def getMapping(iri: String): SparqlConstructResponse =
+    UnsafeZioRun.runOrThrow(TriplestoreService.query(Construct(sparql.v2.txt.getMapping(iri))))
 
   "The standoff responder" should {
     "create a standoff mapping" in {

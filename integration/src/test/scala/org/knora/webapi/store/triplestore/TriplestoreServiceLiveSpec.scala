@@ -11,7 +11,10 @@ import scala.concurrent.duration._
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 
@@ -128,99 +131,95 @@ class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
   var afterChangeCount: Int       = -1
   var afterChangeRevertCount: Int = -1
 
-  "The TriplestoreServiceManager" should {
+  "The TriplestoreService" should {
 
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {
-      appActor ! ResetRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, ())
+      UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .resetTripleStoreContent(rdfDataObjects)
+          .timeout(java.time.Duration.ofMinutes(5))
+      )
 
-      appActor ! SparqlSelectRequest(countTriplesQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
-        (afterLoadCount > 0) should ===(true)
-      }
+      val msg = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(countTriplesQuery)))
+      afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
+      (afterLoadCount > 0) should ===(true)
     }
 
     "provide data receiving a Named Graph request" in {
-      appActor ! SparqlSelectRequest(namedGraphQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        msg.results.bindings.nonEmpty should ===(true)
-      }
+      val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(namedGraphQuery)))
+      actual.results.bindings.nonEmpty should ===(true)
     }
 
     "execute an update" in {
-      appActor ! SparqlSelectRequest(countTriplesQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
-      }
+      val countTriplesBefore = UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .query(Select(countTriplesQuery))
+          .map(_.results.bindings.head.rowMap("no").toInt)
+      )
+      countTriplesBefore should ===(afterLoadCount)
 
-      appActor ! SparqlUpdateRequest(insertQuery)
-      expectMsg(())
+      UnsafeZioRun.runOrThrow(TriplestoreService.query(Update(insertQuery)))
 
-      appActor ! SparqlSelectRequest(checkInsertQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        msg.results.bindings.size should ===(3)
-      }
+      val checkInsertActual = UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .query(Select(checkInsertQuery))
+          .map(_.results.bindings.size)
+      )
+      checkInsertActual should ===(3)
 
-      appActor ! SparqlSelectRequest(countTriplesQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
-        (afterChangeCount - afterLoadCount) should ===(3)
-      }
+      afterChangeCount = UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .query(Select(countTriplesQuery))
+          .map(_.results.bindings.head.rowMap("no").toInt)
+      )
+      (afterChangeCount - afterLoadCount) should ===(3)
     }
 
     "revert back " in {
-      appActor ! SparqlSelectRequest(countTriplesQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
-      }
+      val countTriplesBefore = UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .query(Select(countTriplesQuery))
+          .map(_.results.bindings.head.rowMap("no").toInt)
+      )
+      countTriplesBefore should ===(afterChangeCount)
 
-      appActor ! SparqlUpdateRequest(revertInsertQuery)
-      expectMsg(())
+      UnsafeZioRun.runOrThrow(TriplestoreService.query(Update(revertInsertQuery)))
 
-      appActor ! SparqlSelectRequest(countTriplesQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
-      }
+      val countTriplesQueryActual = UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .query(Select(countTriplesQuery))
+          .map(_.results.bindings.head.rowMap("no").toInt)
+      )
+      countTriplesQueryActual should ===(afterLoadCount)
 
-      appActor ! SparqlSelectRequest(checkInsertQuery)
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        msg.results.bindings.size should ===(0)
-      }
+      val checkInsertActual = UnsafeZioRun.runOrThrow(
+        TriplestoreService
+          .query(Select(checkInsertQuery))
+          .map(_.results.bindings.size)
+      )
+      checkInsertActual should ===(0)
     }
 
     "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
       within(1000.millis) {
-        appActor ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
-        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-          msg.results.bindings.size should ===(3)
-        }
+        val actual = UnsafeZioRun.runOrThrow(
+          TriplestoreService
+            .query(Select(textSearchQueryFusekiValueHasString))
+            .map(_.results.bindings.size)
+        )
+        actual should ===(3)
       }
     }
 
     "execute the search with the lucene index for 'rdfs:label' properties" in {
       within(1000.millis) {
-        appActor ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
-        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-          msg.results.bindings.size should ===(1)
-        }
+        val actual = UnsafeZioRun.runOrThrow(
+          TriplestoreService
+            .query(Select(textSearchQueryFusekiDRFLabel))
+            .map(_.results.bindings.size)
+        )
+        actual should ===(1)
       }
-    }
-
-    "insert RDF DataObjects" in {
-      appActor ! InsertRepositoryContent(rdfDataObjects)
-      expectMsg(5.minutes, ())
-    }
-
-    "put the graph data as turtle" in {
-      appActor ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
-      expectMsgType[Unit](10.second)
-    }
-
-    "read the graph data as turtle" in {
-      appActor ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
-      val response = expectMsgType[NamedGraphDataResponse](1.second)
-      response.turtle.length should be > 0
     }
   }
 }

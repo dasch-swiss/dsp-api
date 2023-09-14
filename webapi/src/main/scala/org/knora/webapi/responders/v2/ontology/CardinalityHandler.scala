@@ -17,13 +17,15 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 /**
  * Contains methods used for dealing with cardinalities on a class
@@ -121,10 +123,10 @@ final case class CardinalityHandlerLive(
 
       // Make an update class definition in which the cardinality to delete is removed
 
-      submittedPropertyToDeleteIsLinkProperty: Boolean = cacheData
-                                                           .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
-                                                           .properties(submittedPropertyToDelete)
-                                                           .isLinkProp
+      submittedPropertyToDeleteIsLinkProperty = cacheData
+                                                  .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
+                                                  .properties(submittedPropertyToDelete)
+                                                  .isLinkProp
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
@@ -140,7 +142,7 @@ final case class CardinalityHandlerLive(
 
       // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
 
-      allBaseClassIrisWithoutInternal: Seq[SmartIri] =
+      allBaseClassIrisWithoutInternal =
         newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
           cacheData.classToSuperClassLookup.getOrElse(
             baseClassIri,
@@ -148,7 +150,7 @@ final case class CardinalityHandlerLive(
           )
         }
 
-      allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
+      allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
 
       (newInternalClassDefWithLinkValueProps, _) =
         OntologyHelpers
@@ -270,10 +272,10 @@ final case class CardinalityHandlerLive(
 
       // Make an update class definition in which the cardinality to delete is removed
 
-      submittedPropertyToDeleteIsLinkProperty: Boolean = cacheData
-                                                           .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
-                                                           .properties(submittedPropertyToDelete)
-                                                           .isLinkProp
+      submittedPropertyToDeleteIsLinkProperty = cacheData
+                                                  .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
+                                                  .properties(submittedPropertyToDelete)
+                                                  .isLinkProp
 
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
@@ -297,7 +299,7 @@ final case class CardinalityHandlerLive(
           )
         }
 
-      allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
+      allBaseClassIris = internalClassIri +: allBaseClassIrisWithoutInternal
 
       (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
         OntologyHelpers
@@ -331,10 +333,9 @@ final case class CardinalityHandlerLive(
 
       propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
-      inheritedCardinalities: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
-        cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
-          newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
-        }
+      inheritedCardinalities = cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
+                                 newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
+                               }
 
       readClassInfo = ReadClassInfoV2(
                         entityInfoContent = newInternalClassDefWithLinkValueProps,
@@ -360,18 +361,16 @@ final case class CardinalityHandlerLive(
 
       currentTime: Instant = Instant.now
 
-      updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                       .replaceClassCardinalities(
-                         ontologyNamedGraphIri = internalOntologyIri,
-                         ontologyIri = internalOntologyIri,
-                         classIri = internalClassIri,
-                         newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
-                         lastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-                         currentTime = currentTime
-                       )
-                       .toString()
+      updateSparql = sparql.v2.txt.replaceClassCardinalities(
+                       ontologyNamedGraphIri = internalOntologyIri,
+                       ontologyIri = internalOntologyIri,
+                       classIri = internalClassIri,
+                       newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
+                       lastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
+                       currentTime = currentTime
+                     )
 
-      _ <- triplestoreService.sparqlHttpUpdate(updateSparql)
+      _ <- triplestoreService.query(Update(updateSparql))
 
       // Check that the ontology's last modification date was updated.
       _ <- ontologyHelpers.checkOntologyLastModificationDateAfterUpdate(internalOntologyIri, currentTime)
@@ -417,10 +416,8 @@ final case class CardinalityHandlerLive(
    *
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  override def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] = {
-    val request = twirl.queries.sparql.v2.txt.isPropertyUsed(propertyIri, classIri).toString()
-    triplestoreService.sparqlHttpAsk(request).map(_.result)
-  }
+  override def isPropertyUsedInResources(classIri: InternalIri, propertyIri: InternalIri): Task[Boolean] =
+    triplestoreService.query(Ask(sparql.v2.txt.isPropertyUsed(propertyIri, classIri)))
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.

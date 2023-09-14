@@ -673,16 +673,17 @@ object CreateResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] = ZIO.serviceWithZIO[StringFormatter] {
-    implicit stringFormatter =>
+  ): ZIO[IriConverter with StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
         (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
       for {
         // Get the resource class.
-        resourceClassIri <- ZIO.attempt(jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri)
+        resourceClassIri <-
+          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
 
         // Get the custom resource IRI if provided.
-        maybeCustomResourceIri <- ZIO.attempt(jsonLDDocument.body.maybeIDAsKnoraDataIri)
+        maybeCustomResourceIri <- jsonLDDocument.body.getIdValueAsKnoraDataIri.mapError(BadRequestException(_))
 
         // Get the resource's rdfs:label.
         label <-
@@ -759,7 +760,9 @@ object CreateResourceRequestV2 {
             propertyIriStrs.map { propertyIriStr =>
               val propertyIri: SmartIri =
                 propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-              val valuesArray: JsonLDArray = jsonLDDocument.body.requireArray(propertyIriStr)
+              val valuesArray: JsonLDArray = jsonLDDocument.body
+                .getRequiredArray(propertyIriStr)
+                .fold(e => throw BadRequestException(e), identity)
 
               val valueFuturesSeq = ZIO.foreach(valuesArray.value) { valueJsonLD =>
                 for {
@@ -775,9 +778,11 @@ object CreateResourceRequestV2 {
 
                   valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser)
 
-                  maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
-                  maybeCustomValueUUID: Option[UUID] =
-                    valueJsonLDObject.maybeUUID(KnoraApiV2Complex.ValueHasUUID)
+                  maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
+                                           .mapError(BadRequestException(_))
+                  maybeCustomValueUUID <- valueJsonLDObject
+                                            .getUuid(KnoraApiV2Complex.ValueHasUUID)
+                                            .mapError(BadRequestException(_))
 
                   // Get the value's creation date.
                   // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
@@ -838,7 +843,7 @@ object CreateResourceRequestV2 {
         requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
         apiRequestID = apiRequestID
       )
-  }
+    }
 }
 
 /**
@@ -912,7 +917,7 @@ object UpdateResourceMetadataRequestV2 {
 
   private def getLabel(obj: JsonLDObject): IO[BadRequestException, Option[IRI]] = {
     val getLabel = for {
-      labelStr <- obj.getString(Rdfs.Label)
+      labelStr <- ZIO.fromEither(obj.getString(Rdfs.Label))
       label <- ZIO.foreach(labelStr)(it =>
                  ZIO
                    .fromOption(Iri.toSparqlEncodedString(it))
@@ -925,7 +930,7 @@ object UpdateResourceMetadataRequestV2 {
   private def getPermissions(obj: JsonLDObject): IO[BadRequestException, Option[String]] = {
     val key = KnoraApiV2Complex.HasPermissions
     val getPerms = for {
-      permsMaybe <- obj.getString(KnoraApiV2Complex.HasPermissions)
+      permsMaybe <- ZIO.fromEither(obj.getString(KnoraApiV2Complex.HasPermissions))
       perms <- ZIO.foreach(permsMaybe)(it =>
                  ZIO
                    .fromOption(Iri.toSparqlEncodedString(it))
@@ -1072,48 +1077,46 @@ object DeleteOrEraseResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): ZIO[StringFormatter, Throwable, DeleteOrEraseResourceRequestV2] =
-    ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
-      ZIO.attempt {
+  ): ZIO[StringFormatter with IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
+    ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
+      for {
+        resourceIri <-
+          jsonLDDocument.body.getRequiredIdValueAsKnoraDataIri
+            .mapError(BadRequestException(_))
+            .tap(iri =>
+              ZIO.when(!iri.isKnoraResourceIri)(ZIO.fail(BadRequestException(s"Invalid resource IRI: <$iri>")))
+            )
 
-        val resourceIri: SmartIri = jsonLDDocument.body.requireIDAsKnoraDataIri
+        resourceClassIri <-
+          jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
 
-        if (!resourceIri.isKnoraResourceIri) {
-          throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
-        }
+        maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
+                                                       key = KnoraApiV2Complex.LastModificationDate,
+                                                       expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
+                                                       validationFun = (s, errorFun) =>
+                                                         xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                                                     )
 
-        val resourceClassIri: SmartIri = jsonLDDocument.body.requireTypeAsKnoraApiV2ComplexTypeIri
+        maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
+                                               KnoraApiV2Complex.DeleteComment,
+                                               (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                                             )
 
-        val maybeLastModificationDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-          key = KnoraApiV2Complex.LastModificationDate,
-          expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-        )
+        maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
+                                             KnoraApiV2Complex.DeleteDate,
+                                             Xsd.DateTimeStamp.toSmartIri,
+                                             (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun)
+                                           )
 
-        val validationFun: (String, => Nothing) => String =
-          (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-
-        val maybeDeleteComment: Option[String] = jsonLDDocument.body.maybeStringWithValidation(
-          KnoraApiV2Complex.DeleteComment,
-          validationFun
-        )
-
-        val maybeDeleteDate: Option[Instant] = jsonLDDocument.body.maybeDatatypeValueInObject(
-          key = KnoraApiV2Complex.DeleteDate,
-          expectedDatatype = Xsd.DateTimeStamp.toSmartIri,
-          validationFun = (s, errorFun) => xsdDateTimeStampToInstant(s).getOrElse(errorFun)
-        )
-
-        DeleteOrEraseResourceRequestV2(
-          resourceIri = resourceIri.toString,
-          resourceClassIri = resourceClassIri,
-          maybeDeleteComment = maybeDeleteComment,
-          maybeDeleteDate = maybeDeleteDate,
-          maybeLastModificationDate = maybeLastModificationDate,
-          requestingUser = requestingUser,
-          apiRequestID = apiRequestID
-        )
-      }
+      } yield DeleteOrEraseResourceRequestV2(
+        resourceIri = resourceIri.toString,
+        resourceClassIri = resourceClassIri,
+        maybeDeleteComment = maybeDeleteComment,
+        maybeDeleteDate = maybeDeleteDate,
+        maybeLastModificationDate = maybeLastModificationDate,
+        requestingUser = requestingUser,
+        apiRequestID = apiRequestID
+      )
     }
 }
 

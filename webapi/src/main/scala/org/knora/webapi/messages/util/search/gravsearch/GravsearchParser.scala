@@ -164,7 +164,7 @@ object GravsearchParser {
 
       if (smartIri.isKnoraEntityIri) {
         smartIri.getOntologySchema match {
-          case Some(_: ApiV2Schema) => allIris.add(smartIri)
+          case Some(_: ApiV2Schema) => val _ = allIris.add(smartIri)
           case _                    => throw GravsearchException(s"Ontology schema not allowed in Gravsearch query: $smartIri")
         }
       }
@@ -470,7 +470,7 @@ object GravsearchParser {
           if (node.getName.startsWith("_const_")) {
             // This is a parser-generated constant used in the CONSTRUCT clause. Just save it so we can
             // build the CONSTRUCT clause correctly later.
-            valueConstants.put(node.getName, valueConstant)
+            val _ = valueConstants.put(node.getName, valueConstant)
           } else {
             // It's a BIND. Accept it if it refers to a Knora data IRI.
             valueConstant.getValue match {

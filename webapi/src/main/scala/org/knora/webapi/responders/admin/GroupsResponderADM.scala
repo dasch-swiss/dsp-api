@@ -30,13 +30,17 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.twirl
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -140,7 +144,7 @@ trait GroupsResponderADM {
 }
 
 final case class GroupsResponderADMLive(
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   messageRelay: MessageRelay,
   iriService: IriService,
   implicit val stringFormatter: StringFormatter
@@ -178,9 +182,9 @@ final case class GroupsResponderADMLive(
    * @return all the groups as a sequence of [[GroupADM]].
    */
   override def groupsGetADM: Task[Seq[GroupADM]] = {
-    val query = twirl.queries.sparql.admin.txt.getGroups(None)
+    val query = Construct(sparql.admin.txt.getGroups(None))
     for {
-      groupsResponse <- triplestoreService.sparqlHttpExtendedConstruct(query.toString())
+      groupsResponse <- triplestore.query(query).flatMap(_.asExtended)
       groups          = groupsResponse.statements.map(convertStatementsToGroupADM)
       result         <- ZioHelper.sequence(groups.toSeq)
     } yield result.sorted
@@ -237,9 +241,9 @@ final case class GroupsResponderADMLive(
    * @return information about the group as a [[GroupADM]]
    */
   override def groupGetADM(groupIri: IRI): Task[Option[GroupADM]] = {
-    val query = twirl.queries.sparql.admin.txt.getGroups(maybeIri = Some(groupIri))
+    val query = Construct(sparql.admin.txt.getGroups(maybeIri = Some(groupIri)))
     for {
-      statements <- triplestoreService.sparqlHttpExtendedConstruct(query.toString()).map(_.statements.headOption)
+      statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements.headOption)
       maybeGroup <- statements.map(convertStatementsToGroupADM).map(_.map(Some(_))).getOrElse(ZIO.succeed(None))
     } yield maybeGroup
   }
@@ -289,8 +293,7 @@ final case class GroupsResponderADMLive(
                !userPermissions.isSystemAdmin && !requestingUser.isSystemUser
              }
 
-      query                 = twirl.queries.sparql.admin.txt.getGroupMembersByIri(groupIri)
-      groupMembersResponse <- triplestoreService.sparqlHttpSelect(query.toString())
+      groupMembersResponse <- triplestore.query(Select(sparql.admin.txt.getGroupMembersByIri(groupIri)))
 
       // get project member IRI from results rows
       groupMemberIris =
@@ -377,7 +380,7 @@ final case class GroupsResponderADMLive(
 
         /* create the group */
         createNewGroupSparqlString =
-          twirl.queries.sparql.admin.txt
+          sparql.admin.txt
             .createNewGroup(
               AdminConstants.adminDataNamedGraph.value,
               groupIri,
@@ -389,7 +392,7 @@ final case class GroupsResponderADMLive(
               hasSelfJoinEnabled = createRequest.selfjoin.value
             )
 
-        _ <- triplestoreService.sparqlHttpUpdate(createNewGroupSparqlString.toString())
+        _ <- triplestore.query(Update(createNewGroupSparqlString))
 
         /* Verify that the group was created and updated  */
         createdGroup <-
@@ -454,7 +457,7 @@ final case class GroupsResponderADMLive(
                                status = changeGroupRequest.status,
                                selfjoin = changeGroupRequest.selfjoin
                              )
-        result <- updateGroupADM(groupIri, groupUpdatePayload, KnoraSystemInstances.Users.SystemUser)
+        result <- updateGroupADM(groupIri, groupUpdatePayload)
       } yield result
 
     val task = changeGroupTask(groupIri, changeGroupRequest, requestingUser)
@@ -512,7 +515,7 @@ final case class GroupsResponderADMLive(
         groupUpdatePayload = GroupUpdatePayloadADM(status = maybeStatus)
 
         // update group status
-        updateGroupResult <- updateGroupADM(groupIri, groupUpdatePayload, KnoraSystemInstances.Users.SystemUser)
+        updateGroupResult <- updateGroupADM(groupIri, groupUpdatePayload)
 
         // remove all members from group if status is false
         operationResponse <-
@@ -532,14 +535,9 @@ final case class GroupsResponderADMLive(
    *
    * @param groupIri             the IRI of the group we are updating.
    * @param groupUpdatePayload   the payload holding the information which we want to update.
-   * @param requestingUser       the profile of the user making the request.
    * @return a [[GroupOperationResponseADM]]
    */
-  private def updateGroupADM(
-    groupIri: IRI,
-    groupUpdatePayload: GroupUpdatePayloadADM,
-    requestingUser: UserADM
-  ): Task[GroupOperationResponseADM] =
+  private def updateGroupADM(groupIri: IRI, groupUpdatePayload: GroupUpdatePayloadADM) =
     for {
       _ <- ZIO
              .fail(BadRequestException("No data would be changed. Aborting update request."))
@@ -571,7 +569,7 @@ final case class GroupsResponderADMLive(
              .when(groupByNameAlreadyExists)
 
       /* Update group */
-      updateGroupSparqlString = twirl.queries.sparql.admin.txt
+      updateGroupSparqlString = sparql.admin.txt
                                   .updateGroup(
                                     adminNamedGraphIri = "http://www.knora.org/data/admin",
                                     groupIri,
@@ -582,7 +580,7 @@ final case class GroupsResponderADMLive(
                                     maybeStatus = groupUpdatePayload.status.map(_.value),
                                     maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
                                   )
-      _ <- triplestoreService.sparqlHttpUpdate(updateGroupSparqlString.toString())
+      _ <- triplestore.query(Update(updateGroupSparqlString))
 
       /* Verify that the project was updated. */
       updatedGroup <-
@@ -602,10 +600,8 @@ final case class GroupsResponderADMLive(
    * @param projectIri the IRI of the project.
    * @return a [[Boolean]].
    */
-  private def groupByNameAndProjectExists(name: String, projectIri: IRI): Task[Boolean] = {
-    val query = twirl.queries.sparql.admin.txt.checkGroupExistsByName(projectIri, name)
-    triplestoreService.sparqlHttpAsk(query.toString()).map(_.result)
-  }
+  private def groupByNameAndProjectExists(name: String, projectIri: IRI): Task[Boolean] =
+    triplestore.query(Ask(sparql.admin.txt.checkGroupExistsByName(projectIri, name)))
 
   /**
    * In the case that the group was deactivated (status = false), the

@@ -57,8 +57,6 @@ import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandler
-import org.knora.webapi.store.triplestore.TriplestoreRequestMessageHandlerLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -126,7 +124,6 @@ object LayersTest {
       with State
       with StoresResponderADM
       with TestClientService
-      with TriplestoreRequestMessageHandler
       with TriplestoreService
       with UsersResponderADM
       with ValuesResponderV2
@@ -189,7 +186,6 @@ object LayersTest {
       State.layer,
       StoresResponderADMLive.layer,
       TestClientService.layer,
-      TriplestoreRequestMessageHandlerLive.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
       ValuesResponderV2Live.layer

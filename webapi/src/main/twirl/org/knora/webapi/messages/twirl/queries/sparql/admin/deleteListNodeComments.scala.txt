@@ -10,11 +10,8 @@
  *
  * @param namedGraph     the named graph to update.
  * @param nodeIri        the IRI of the list node to update.
- * @param isRootNode     flag to identify node type.
  *@
-@(namedGraph: IRI,
-  nodeIri: IRI,
-  isRootNode: Boolean)
+@(namedGraph: IRI, nodeIri: IRI)
 
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>

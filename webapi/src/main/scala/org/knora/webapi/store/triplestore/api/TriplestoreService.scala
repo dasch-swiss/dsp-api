@@ -11,62 +11,50 @@ import zio.macros.accessible
 
 import java.nio.file.Path
 
-import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 
 @accessible
 trait TriplestoreService {
 
   /**
-   * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
+   * Performs a SPARQL ASK query.
    *
-   * @param sparql          The SPARQL SELECT query string.
-   * @param isGravsearch    If `true`, takes a long timeout because gravsearch queries can take a long time.
-   * @return A [[SparqlSelectResult]].
+   * @param sparql the SPARQL [[Ask]] query.
+   * @return a [[Boolean]].
    */
-  def sparqlHttpSelect(sparql: IRI, isGravsearch: Boolean = false): Task[SparqlSelectResult]
+  def query(sparql: Ask): Task[Boolean]
 
   /**
-   * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
+   *  Performs a SPARQL CONSTRUCT query.
    *
-   * @param query The SPARQL SELECT query.
-   * @return A [[SparqlSelectResult]].
-   */
-  def sparqlHttpSelect(query: TxtFormat.Appendable): Task[SparqlSelectResult] = sparqlHttpSelect(query.toString)
-
-  /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
-   *
-   * @param sparqlConstructRequest the query.
+   * @param sparql The SPARQL [[Construct]] query.
    * @return a [[SparqlConstructResponse]]
    */
-  def sparqlHttpConstruct(sparqlConstructRequest: String): Task[SparqlConstructResponse] =
-    sparqlHttpConstruct(SparqlConstructRequest(sparqlConstructRequest))
+  def query(sparql: Construct): Task[SparqlConstructResponse]
 
   /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
+   * Performs a SPARQL SELECT query.
    *
-   * @param sparqlConstructRequest the request message.
-   * @return a [[SparqlConstructResponse]]
+   * @param sparql          The SPARQL [[Select]] query.
+   * @return A [[SparqlSelectResult]].
    */
-  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): Task[SparqlConstructResponse]
+  def query(sparql: Select): Task[SparqlSelectResult]
 
   /**
-   * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
+   * Performs a SPARQL update operation, i.e. an INSERT or DELETE query.
    *
-   * @param req the request message.
-   * @return a [[SparqlExtendedConstructResponse]]
+   * @param sparql the SPARQL [[Update]] query.
+   * @return a [[Unit]].
    */
-  def sparqlHttpExtendedConstruct(req: SparqlExtendedConstructRequest): Task[SparqlExtendedConstructResponse]
-
-  def sparqlHttpExtendedConstruct(query: String, isGravsearch: Boolean = false): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(SparqlExtendedConstructRequest(query, isGravsearch))
-
-  def sparqlHttpExtendedConstruct(query: TxtFormat.Appendable): Task[SparqlExtendedConstructResponse] =
-    sparqlHttpExtendedConstruct(query.toString)
+  def query(sparql: Update): Task[Unit]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -77,44 +65,12 @@ trait TriplestoreService {
    * @param outputFormat the output file format.
    * @return  [[Unit]].
    */
-  def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: IRI,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit]
-
-  def sparqlHttpConstructFile(
-    sparql: String,
+  def queryToFile(
+    sparql: Construct,
     graphIri: InternalIri,
     outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile.toFile.toPath, outputFormat)
-  def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: InternalIri,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpConstructFile(sparql, graphIri.value, outputFile, outputFormat)
-
-  /**
-   * Performs a SPARQL update operation.
-   *
-   * @param sparqlUpdate the SPARQL update.
-   * @return a [[Unit]].
-   */
-  def sparqlHttpUpdate(sparqlUpdate: String): Task[Unit]
-
-  def sparqlHttpUpdate(query: TxtFormat.Appendable): Task[Unit] = sparqlHttpUpdate(query.toString)
-
-  /**
-   * Performs a SPARQL ASK query.
-   *
-   * @param sparql the SPARQL ASK query.
-   * @return a [[SparqlAskResponse]].
-   */
-  def sparqlHttpAsk(sparql: String): Task[SparqlAskResponse]
-  def sparqlHttpAsk(query: TxtFormat.Appendable): Task[SparqlAskResponse] = sparqlHttpAsk(query.toString)
+  ): Task[Unit]
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
@@ -123,29 +79,7 @@ trait TriplestoreService {
    * @param outputFile           the file to be written.
    * @param outputFormat         the output file format.
    */
-  def sparqlHttpGraphFile(
-    graphIri: IRI,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit]
-  def sparqlHttpGraphFile(
-    graphIri: InternalIri,
-    outputFile: zio.nio.file.Path,
-    outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile.toFile.toPath, outputFormat)
-  def sparqlHttpGraphFile(
-    graphIri: InternalIri,
-    outputFile: Path,
-    outputFormat: QuadFormat
-  ): Task[Unit] = sparqlHttpGraphFile(graphIri.value, outputFile, outputFormat)
-
-  /**
-   * Requests the contents of a named graph, returning the response as Turtle.
-   *
-   * @param graphIri the IRI of the named graph.
-   * @return a string containing the contents of the graph in Turtle format.
-   */
-  def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse]
+  def downloadGraph(graphIri: InternalIri, outputFile: zio.nio.file.Path, outputFormat: QuadFormat): Task[Unit]
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.
@@ -158,11 +92,6 @@ trait TriplestoreService {
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean = true
   ): Task[Unit]
-
-  /**
-   * Drops (deletes) all data from the triplestore using "DROP ALL" SPARQL query.
-   */
-  def dropAllTriplestoreContent(): Task[Unit]
 
   /**
    * Wipes all triplestore data out using HTTP requests.
@@ -186,7 +115,7 @@ trait TriplestoreService {
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure () the required dataset.
    */
-  def checkTriplestore(): Task[CheckTriplestoreResponse]
+  def checkTriplestore(): Task[TriplestoreStatus]
 
   /**
    * Dumps the whole repository in N-Quads format, saving the response in a file.
@@ -201,13 +130,44 @@ trait TriplestoreService {
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
   def uploadRepository(inputFile: Path): Task[Unit]
+}
 
-  /**
-   * Puts a data graph into the repository.
-   *
-   * @param graphContent a data graph in Turtle format to be inserted into the repository.
-   * @param graphName    the name of the graph.
-   */
-  def insertDataGraphRequest(graphContent: String, graphName: String): Task[Unit]
+object TriplestoreService {
+  object Queries {
 
+    sealed trait SparqlQuery {
+      val sparql: String
+      val isGravsearch: Boolean
+    }
+
+    case class Ask(sparql: String) extends SparqlQuery {
+      override val isGravsearch: Boolean = false
+    }
+    object Ask {
+      def apply(sparql: TxtFormat.Appendable): Ask = Ask(sparql.toString)
+    }
+
+    case class Select(sparql: String, isGravsearch: Boolean) extends SparqlQuery
+    object Select {
+      def apply(sparql: TxtFormat.Appendable, isGravsearch: Boolean = false): Select =
+        Select(sparql.toString, isGravsearch)
+
+      def apply(sparql: String): Select = Select(sparql, isGravsearch = false)
+    }
+
+    case class Construct(sparql: String, isGravsearch: Boolean) extends SparqlQuery
+    object Construct {
+      def apply(sparql: TxtFormat.Appendable, isGravsearch: Boolean = false): Construct =
+        Construct(sparql.toString, isGravsearch)
+
+      def apply(sparql: String): Construct = Construct(sparql, isGravsearch = false)
+    }
+
+    case class Update(sparql: String) extends SparqlQuery {
+      override val isGravsearch: Boolean = false
+    }
+    object Update {
+      def apply(sparql: TxtFormat.Appendable): Update = Update(sparql.toString())
+    }
+  }
 }

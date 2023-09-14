@@ -3,14 +3,14 @@ version: '3.7'
 services:
 
   app:
-    image: daschswiss/dsp-app:v10.19.2
+    image: daschswiss/dsp-app:v10.23.3
     ports:
       - "4200:4200"
     networks:
       - knora-net
 
   db:
-    image: daschswiss/apache-jena-fuseki:2.0.13 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    image: daschswiss/apache-jena-fuseki:2.1.0 # should be the same version as in Dependencies.scala, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
     ports:
       - "3030:3030"
     volumes:

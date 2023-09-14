@@ -22,7 +22,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
@@ -35,6 +34,8 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -5816,27 +5817,28 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Check that the correct blank nodes were stored for the cardinalities.
-
-      appActor ! SparqlSelectRequest(
-        """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-          |
-          |SELECT ?cardinalityProp
-          |WHERE {
-          |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
-          |  FILTER isBlank(?restriction)
-          |  ?restriction owl:onProperty ?cardinalityProp .
-          |}""".stripMargin
-      )
-
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        assert(
-          msg.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
-            "http://www.knora.org/ontology/0001/anything#testIntProp",
-            "http://www.knora.org/ontology/0001/anything#testTextProp"
+      val actual = UnsafeZioRun.runOrThrow(
+        TriplestoreService.query(
+          Select(
+            """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+              |
+              |SELECT ?cardinalityProp
+              |WHERE {
+              |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
+              |  FILTER isBlank(?restriction)
+              |  ?restriction owl:onProperty ?cardinalityProp .
+              |}""".stripMargin
           )
         )
-      }
+      )
+
+      assert(
+        actual.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
+          "http://www.knora.org/ontology/0001/anything#testIntProp",
+          "http://www.knora.org/ontology/0001/anything#testTextProp"
+        )
+      )
     }
 
     "create a class with two cardinalities, use one in data, and allow only removal of the cardinality for the property not used in data" in {
@@ -6119,26 +6121,27 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       }
 
       // Check that the correct blank nodes were stored for the cardinalities.
-
-      appActor ! SparqlSelectRequest(
-        """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-          |
-          |SELECT ?cardinalityProp
-          |WHERE {
-          |  <http://www.knora.org/ontology/0001/freetest#BlueFreeTestClass> rdfs:subClassOf ?restriction .
-          |  FILTER isBlank(?restriction)
-          |  ?restriction owl:onProperty ?cardinalityProp .
-          |}""".stripMargin
-      )
-
-      expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        assert(
-          msg.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
-            "http://www.knora.org/ontology/0001/freetest#hasBlueTestIntProp"
+      val actual = UnsafeZioRun.runOrThrow(
+        TriplestoreService.query(
+          Select(
+            """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+              |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+              |
+              |SELECT ?cardinalityProp
+              |WHERE {
+              |  <http://www.knora.org/ontology/0001/freetest#BlueFreeTestClass> rdfs:subClassOf ?restriction .
+              |  FILTER isBlank(?restriction)
+              |  ?restriction owl:onProperty ?cardinalityProp .
+              |}""".stripMargin
           )
         )
-      }
+      )
+
+      assert(
+        actual.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
+          "http://www.knora.org/ontology/0001/freetest#hasBlueTestIntProp"
+        )
+      )
     }
 
     "create a class anything:FoafPerson as a subclass of foaf:Person" in {

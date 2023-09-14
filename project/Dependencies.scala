@@ -10,7 +10,7 @@ import sbt.*
 object Dependencies {
 
   val fusekiImage =
-    "daschswiss/apache-jena-fuseki:2.0.13" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+    "daschswiss/apache-jena-fuseki:2.1.0" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
   val sipiImage = "daschswiss/sipi:3.8.1" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.11"
@@ -22,7 +22,6 @@ object Dependencies {
   val ZioConfigVersion            = "3.0.7"
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
-  val ZioJsonVersion              = "0.6.0"
   val ZioLoggingVersion           = "2.1.14"
   val ZioNioVersion               = "2.0.1"
   val ZioMetricsConnectorsVersion = "2.1.0"
@@ -37,7 +36,7 @@ object Dependencies {
   val zioConfigTypesafe             = "dev.zio"                       %% "zio-config-typesafe"               % ZioConfigVersion
   val zioHttpOld                    = "io.d11"                        %% "zhttp"                             % ZioHttpVersionOld
   val zioHttp                       = "dev.zio"                       %% "zio-http"                          % ZioHttpVersion
-  val zioJson                       = "dev.zio"                       %% "zio-json"                          % ZioJsonVersion
+  val zioJson                       = "dev.zio"                       %% "zio-json"                          % "0.6.1"
   val zioLogging                    = "dev.zio"                       %% "zio-logging"                       % ZioLoggingVersion
   val zioLoggingSlf4jBridge         = "dev.zio"                       %% "zio-logging-slf4j2-bridge"         % ZioLoggingVersion
   val zioNio                        = "dev.zio"                       %% "zio-nio"                           % ZioNioVersion
@@ -68,7 +67,7 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.7" // the logging interface
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.19"
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20"
   val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.3" // Scala 3 compatible
   val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.3" // Scala 3 incompatible
 
@@ -80,7 +79,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.1.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.1.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.76"
 
   // caching
@@ -95,8 +94,8 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.5"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.5"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.6"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.6"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.3"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "5.0.0"  // Scala 3 compatible
@@ -114,7 +113,7 @@ object Dependencies {
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.10"
-  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.18.3"
+  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.19.0"
   val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "3.0.0"
 
   // found/added by the plugin but deleted anyway

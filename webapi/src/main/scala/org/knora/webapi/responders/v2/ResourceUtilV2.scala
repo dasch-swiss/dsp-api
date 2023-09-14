@@ -20,8 +20,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObje
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
@@ -31,6 +30,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
  * Utility functions for working with Knora resources and their values.
@@ -115,7 +115,7 @@ trait ResourceUtilV2 {
   ): Task[T] = doSipiPostUpdate(updateTask, List(fileValue), requestingUser)
 }
 
-final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, messageRelay: MessageRelay)
+final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRelay: MessageRelay)
     extends ResourceUtilV2
     with LazyLogging {
 
@@ -226,22 +226,13 @@ final case class ResourceUtilV2Live(triplestoreService: TriplestoreService, mess
   override def checkListNodeExistsAndIsRootNode(nodeIri: IRI): Task[Either[Option[Nothing], Boolean]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    val query = Construct(sparql.admin.txt.getListNode(nodeIri))
     for {
-      sparqlQuery <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .getListNode(nodeIri = nodeIri)
-            .toString()
-        )
-
-      listNodeResponse                                         <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQuery)
-      statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
-
+      statements <- triplestore.query(query).flatMap(_.asExtended).map(_.statements)
       maybeList =
         if (statements.nonEmpty) {
           val propToCheck: SmartIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsRootNode)
           val isRootNode: Boolean   = statements.map(_._2.contains(propToCheck)).head
-
           Right(isRootNode)
         } else {
           Left(None)

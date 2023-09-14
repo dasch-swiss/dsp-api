@@ -24,6 +24,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.util.EitherUtil.joinOnLeft
 import org.knora.webapi.util.EitherUtil.joinOnLeftList
 
@@ -283,8 +284,7 @@ final case class CardinalityServiceLive(
       // via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
       val query = twirl.queries.sparql.v2.txt.isEntityUsed(classIri, ignoreKnoraConstraints = true)
       tripleStore
-        .sparqlHttpAsk(query)
-        .map(_.result)
+        .query(Ask(query))
         .map {
           case true  => IsInUseCheckFailure
           case false => CanReplaceCardinalityCheckResult.Success
