@@ -225,12 +225,16 @@ object LayersTest {
    */
   def integrationTestsWithFusekiTestcontainers(
     system: Option[akka.actor.ActorSystem] = None
-  ): ULayer[DefaultTestEnvironmentWithoutSipi] =
+  ): ULayer[DefaultTestEnvironmentWithoutSipi] = {
+    // Due to bug in Scala 2 compiler invoking methods with by-name parameters in provide/provideSome method does not work
+    // assign the layer to a temp val and use it in the ZLayer.make
+    val temp = system.map(ActorSystemTest.layer).getOrElse(ActorSystem.layer)
     ZLayer.make[DefaultTestEnvironmentWithoutSipi](
       commonLayersForAllIntegrationTests,
       fusekiTestcontainers,
-      system.map(ActorSystemTest.layer).getOrElse(ActorSystem.layer)
+      temp
     )
+  }
 
   /**
    * Provides a layer for integration tests which depend on Fuseki and Sipi as Testcontainers.
