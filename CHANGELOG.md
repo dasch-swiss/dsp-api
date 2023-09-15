@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.2.0...v0.2.1) (2023-09-15)
+
+
+### Maintenance
+
+* Update Scala version and dependencies ([#89](https://github.com/dasch-swiss/dsp-ingest/issues/89)) ([02abc99](https://github.com/dasch-swiss/dsp-ingest/commit/02abc99812a46ce1d49e33781ac61657b4f3a9c4))
+
 ## [0.2.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.1.5...v0.2.0) (2023-09-14)
 
 
