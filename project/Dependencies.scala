@@ -27,7 +27,7 @@ object Dependencies {
   val ZioMetricsConnectorsVersion = "2.1.0"
   val ZioPreludeVersion           = "1.0.0-RC20"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.15"
+  val ZioVersion                  = "2.0.16"
 
   // ZIO - all Scala 3 compatible
   val zio                           = "dev.zio"                       %% "zio"                               % ZioVersion
@@ -112,9 +112,9 @@ object Dependencies {
   // Fixes error message when running IT in IntelliJ
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
-  val scoverage      = "org.scoverage"         %% "scalac-scoverage-runtime" % "2.0.10"
-  val testcontainers = "org.testcontainers"     % "testcontainers"           % "1.19.0"
-  val wiremock       = "com.github.tomakehurst" % "wiremock-jre8"            % "2.35.0"
+  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.10"
+  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.0"
+  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.0.4"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
