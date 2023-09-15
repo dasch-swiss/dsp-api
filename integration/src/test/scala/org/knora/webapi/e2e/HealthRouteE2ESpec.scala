@@ -5,9 +5,7 @@
 
 package org.knora.webapi.e2e
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.apache.pekko
 import zio.Unsafe
 import zio.ZIO
 
@@ -17,6 +15,10 @@ import scala.concurrent.duration.NANOSECONDS
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
+
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.

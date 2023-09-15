@@ -5,9 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -29,6 +27,10 @@ import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
+
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.StatusCodes
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * Tests creating a still image file value using a mock Sipi.

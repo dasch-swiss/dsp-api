@@ -5,9 +5,9 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import akka.actor.ActorRef
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.util.Timeout
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext

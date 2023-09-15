@@ -5,11 +5,8 @@
 
 package org.knora.webapi.routing
 
-import akka.actor
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import org.apache.pekko
+import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import zio._
 
 import scala.concurrent.ExecutionContext
@@ -31,6 +28,11 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import pekko.actor
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Route
+import pekko.http.cors.scaladsl.settings.CorsSettings
 
 trait ApiRoutes {
   val routes: Route
@@ -82,7 +84,7 @@ object ApiRoutes {
 
 /**
  * All routes composed together and CORS activated based on the
- * the configuration in application.conf (akka-http-cors).
+ * the configuration in application.conf (pekko-http-cors).
  *
  * ALL requests go through each of the routes in ORDER.
  * The FIRST matching route is used for handling a request.

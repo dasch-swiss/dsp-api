@@ -5,19 +5,21 @@
 
 package org.knora.webapi.http.version
 
-import akka.http.scaladsl.model.headers.Server
-import akka.http.scaladsl.server.Directives.respondWithHeader
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
+
+import pekko.http.scaladsl.model.headers.Server
+import pekko.http.scaladsl.server.Directives.respondWithHeader
+import pekko.http.scaladsl.server.Route
 
 /**
  * This object provides methods that can be used to add the [[Server]] header
- * to an [[akka.http.scaladsl.model.HttpResponse]].
+ * to an [[pekko.http.scaladsl.model.HttpResponse]].
  */
 object ServerVersion {
 
   private val ApiNameAndVersion  = s"${BuildInfo.name}/${BuildInfo.version}"
-  private val AkkaNameAndVersion = s"akka-http/${BuildInfo.akkaHttp}"
-  private val AllProducts        = ApiNameAndVersion + " " + AkkaNameAndVersion
+  private val PekkoNameAndVersion = s"pekko-http/${BuildInfo.pekkoHttp}"
+  private val AllProducts        = ApiNameAndVersion + " " + PekkoNameAndVersion
 
   def serverVersionHeader: Server = Server(products = AllProducts)
 

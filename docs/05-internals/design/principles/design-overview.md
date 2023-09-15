@@ -45,7 +45,7 @@ The error-handling design has these aims:
 4.  Ensure that `ask` requests are properly terminated with an
     `akka.actor.Status.Failure` message in the event of an error,
     without which they will simply time out (see
-    [Ask: Send and Receive Future](https://doc.akka.io/docs/akka/current/actors.html?language=scala#ask-send-and-receive-future)).
+    [Ask: Send and Receive Future](https://pekko.apache.org/docs/pekko/current/actors.html?language=scala#ask-send-and-receive-future)).
 5.  When a actor encounters an error that isn't the client's fault (e.g.
     a triplestore failure), log it, but don't do this with errors caused
     by bad input.
@@ -92,20 +92,20 @@ If you want to add a new exception class, see the comments in
 ### Transformation of Exception to Client Responses
 
 The `org.knora.webapi.KnoraExceptionHandler` is brought implicitly into
-scope of `akka-http`, and by doing so registered and used to handle the
+scope of `pekko-http`, and by doing so registered and used to handle the
 transformation of all `KnoraExceptions` into `HttpResponses`. This
 handler handles only exceptions thrown inside the route and not the
 actors. However, the design of reply message passing from actors (by
 using `future2Message`), makes sure that any exceptions thrown inside
 actors, will reach the route, where they will be handled.
 
-See also [Futures with Akka](futures-with-akka.md).
+See also [Futures with Akka](futures-with-pekko.md).
 
 ## API Routing
 
 The API routes in the `routing` package are defined using the DSL
 provided by the
-[akka-http](https://doc.akka.io/docs/akka-http/current/index.html)
+[pekko-http](https://pekko.apache.org/docs/pekko-http/current/index.html)
 library. A routing function has to do the following:
 
 1.  Authenticate the client.
@@ -137,6 +137,6 @@ in the appropriate format, and handles any errors.
 Logging in DSP-API is configurable through `logback.xml`, allowing fine
 grain configuration of what classes / objects should be logged from which level.
 
-The Akka Actors use [Akka Logging](https://doc.akka.io/docs/akka/current/logging.html)
+The Akka Actors use [Akka Logging](https://pekko.apache.org/docs/pekko/current/logging.html)
 while logging inside plain Scala Objects and Classes is done through
 [Scala Logging](https://github.com/lightbend/scala-logging).

@@ -15,9 +15,9 @@ object Dependencies {
 
   val ScalaVersion = "2.13.11"
 
-  val AkkaActorVersion = "2.6.20"
-  val AkkaHttpVersion  = "10.2.10"
-  val JenaVersion      = "4.8.0"
+  val PekkoActorVersion = "1.0.1"
+  val PekkoHttpVersion  = "1.0.0"
+  val JenaVersion       = "4.8.0"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioHttpVersionOld           = "2.0.0-RC11"
@@ -51,13 +51,13 @@ object Dependencies {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
   val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC11"
 
-  // akka
-  val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
-  val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.2.0"          // Scala 3 incompatible
-  val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % AkkaActorVersion // Scala 3 compatible
-  val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % AkkaActorVersion // Scala 3 compatible
+  // pekko
+  val pekkoActor         = "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion
+  val pekkoHttp          = "org.apache.pekko" %% "pekko-http"            % PekkoHttpVersion
+  val pekkoHttpCors      = "org.apache.pekko" %% "pekko-http-cors"       % PekkoHttpVersion
+  val pekkoHttpSprayJson = "org.apache.pekko" %% "pekko-http-spray-json" % PekkoHttpVersion
+  val pekkoSlf4j         = "org.apache.pekko" %% "pekko-slf4j"           % PekkoActorVersion
+  val pekkoStream        = "org.apache.pekko" %% "pekko-stream"          % PekkoActorVersion
 
   // jena
   val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
@@ -103,10 +103,10 @@ object Dependencies {
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
   // test
-  val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
-  val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
-  val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
-  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.17"         // Scala 3 compatible
+  val pekkoHttpTestkit   = "org.apache.pekko" %% "pekko-http-testkit"   % PekkoHttpVersion  // Scala 3 incompatible
+  val pekkoStreamTestkit = "org.apache.pekko" %% "pekko-stream-testkit" % PekkoActorVersion // Scala 3 compatible
+  val pekkoTestkit       = "org.apache.pekko" %% "pekko-testkit"        % PekkoActorVersion // Scala 3 compatible
+  val scalaTest          = "org.scalatest"    %% "scalatest"            % "3.2.17"          // Scala 3 compatible
   // The scoverage plugin actually adds its dependencies automatically.
   // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
   // Fixes error message when running IT in IntelliJ
@@ -120,9 +120,9 @@ object Dependencies {
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
 
   val integrationTestDependencies = Seq(
-    akkaHttpTestkit,
-    akkaStreamTestkit,
-    akkaTestkit,
+    pekkoHttpTestkit,
+    pekkoStreamTestkit,
+    pekkoTestkit,
     rdf4jClient,
     scalaTest,
     scoverage,
@@ -136,12 +136,12 @@ object Dependencies {
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock, wiremock).map(_ % Test)
 
   val webapiDependencies = Seq(
-    akkaActor,
-    akkaHttp,
-    akkaHttpCors,
-    akkaHttpSprayJson,
-    akkaSlf4j,
-    akkaStream,
+    pekkoActor,
+    pekkoHttp,
+    pekkoHttpCors,
+    pekkoHttpSprayJson,
+    pekkoSlf4j,
+    pekkoStream,
     bouncyCastle,
     commonsLang3,
     commonsValidator,

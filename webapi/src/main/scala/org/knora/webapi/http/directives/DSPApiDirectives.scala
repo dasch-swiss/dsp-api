@@ -5,15 +5,17 @@
 
 package org.knora.webapi.http.directives
 
-import akka.http.scaladsl.server
-import akka.http.scaladsl.server.Directives.handleExceptions
-import akka.http.scaladsl.server.Directives.handleRejections
-import akka.http.scaladsl.server.ExceptionHandler
-import akka.http.scaladsl.server.RejectionHandler
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import org.apache.pekko
+import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.KnoraExceptionHandler
+
+import pekko.http.scaladsl.server
+import pekko.http.scaladsl.server.Directives.handleExceptions
+import pekko.http.scaladsl.server.Directives.handleRejections
+import pekko.http.scaladsl.server.ExceptionHandler
+import pekko.http.scaladsl.server.RejectionHandler
 
 /**
  * DSP-API HTTP directives, used by wrapping around a routes, to influence

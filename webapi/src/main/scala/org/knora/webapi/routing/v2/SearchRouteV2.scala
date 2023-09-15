@@ -5,9 +5,7 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 import zio.metrics._
 
@@ -28,6 +26,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
+
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a function for API routes that deal with search.

@@ -5,8 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 
 import org.knora.webapi.core.MessageRelay
@@ -16,8 +15,11 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.admin.permissions._
 
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Route
+
 /**
- * Provides an akka-http-routing function for API routes that deal with permissions.
+ * Provides an pekko-http-routing function for API routes that deal with permissions.
  */
 final case class PermissionsRouteADM(
   private val routeData: KnoraRouteData,

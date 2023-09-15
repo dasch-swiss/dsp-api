@@ -5,9 +5,7 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 
 import dsp.errors.BadRequestException
@@ -23,6 +21,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.PathMatcher
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a routing function for API v2 routes that deal with values.

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.javadsl.model.StatusCodes
+import org.apache.pekko
 import spray.json._
 
 import java.net.URLEncoder
@@ -17,6 +17,8 @@ import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.v2.ResourcesRouteV2
+
+import pekko.http.javadsl.model.StatusCodes
 
 /**
  * End-to-end specification for the handling of JSONLD documents.

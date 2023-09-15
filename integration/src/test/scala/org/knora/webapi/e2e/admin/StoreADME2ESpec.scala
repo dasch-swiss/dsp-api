@@ -5,14 +5,16 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.StatusCodes
+import org.apache.pekko
 import spray.json._
 import zio.Duration
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+
+import pekko.http.scaladsl.model.ContentTypes
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.StatusCodes
 
 /**
  * End-to-End (E2E) test specification for testing the 'v1/store' route.

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import scala.concurrent.duration._
 
@@ -19,6 +19,8 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+
+import pekko.testkit.ImplicitSender
 
 class StandoffResponderV2Spec extends CoreSpec with ImplicitSender {
 

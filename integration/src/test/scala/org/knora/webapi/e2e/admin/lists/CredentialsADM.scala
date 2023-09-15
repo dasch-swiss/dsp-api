@@ -5,9 +5,11 @@
 
 package org.knora.webapi.e2e.admin.lists
 
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * Representing user's credentials

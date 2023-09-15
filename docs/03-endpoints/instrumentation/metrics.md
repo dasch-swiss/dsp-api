@@ -42,7 +42,7 @@ zio_fiber_lifetimes_bucket{le="2.0"}  17.0 1671021037947
 
 Metrics of all routes served by ZIO-HTTP (default: port `5555`) are exposed through a default metrics middleware. 
 However, instead of `http_concurrent_requests_total` etc. they are labeled `zio_http_concurrent_requests_total` etc.
-with `zio` prepended, so that they are clearly distinguishable while we still run ZIO-HTTP and Akka-HTTP in parallel. 
+with `zio` prepended, so that they are clearly distinguishable while we still run ZIO-HTTP and Pekko-HTTP in parallel. 
 
 To prevent excessive amounts of labels, it is considered good practice, 
 to replace dynamic path segments with slugs (e.g. `/projects/shortcode/0000` with `/projects/shortcode/:shortcode`). 

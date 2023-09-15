@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.pekko
 import spray.json._
 import zio._
 
@@ -19,6 +19,8 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
+
+import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.

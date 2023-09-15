@@ -262,9 +262,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoKeys ++= Seq[BuildInfoKey](
       name,
       version,
-      "akkaHttp" -> Dependencies.AkkaHttpVersion,
       "sipi"     -> Dependencies.sipiImage,
-      "fuseki"   -> Dependencies.fusekiImage
+      "fuseki"   -> Dependencies.fusekiImage,
+      "pekkoHttp" -> Dependencies.pekkoHttp
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
@@ -299,7 +299,7 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
     Test / fork               := true, // run tests in a forked JVM
     Test / testForkedParallel := false,
     Test / parallelExecution  := false,
-    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "akka"),
+    Test / javaOptions += "-Dkey=" + sys.props.getOrElse("key", "pekko"),
     Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     libraryDependencies ++= Dependencies.webapiDependencies ++ Dependencies.webapiTestDependencies ++ Dependencies.integrationTestDependencies
   )

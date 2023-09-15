@@ -5,11 +5,8 @@
 
 package org.knora.webapi.http.handler
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.complete
-import akka.http.scaladsl.server.Directives.extractRequest
-import akka.http.scaladsl.server.ExceptionHandler
 import com.typesafe.scalalogging.LazyLogging
+import org.apache.pekko
 import spray.json.JsObject
 import spray.json.JsString
 import spray.json.JsValue
@@ -23,8 +20,13 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.server.Directives.complete
+import pekko.http.scaladsl.server.Directives.extractRequest
+import pekko.http.scaladsl.server.ExceptionHandler
+
 /**
- * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
+ * The Knora exception handler is used by pekko-http to convert any exceptions thrown during route processing
  * into HttpResponses. It is brought implicitly into scope by the application actor.
  */
 object KnoraExceptionHandler extends LazyLogging {

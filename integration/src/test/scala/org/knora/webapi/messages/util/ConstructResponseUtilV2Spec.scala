@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 import zio.FiberFailure
 import zio.Unsafe
 import zio.ZIO
@@ -24,6 +24,8 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.FileUtil
+
+import pekko.testkit.ImplicitSender
 
 /**
  * Tests [[ConstructResponseUtilV2]].

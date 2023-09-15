@@ -5,13 +5,15 @@
 
 package org.knora.webapi.util
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.HttpResponse
+import org.apache.pekko
 import spray.json.JsString
 
 import scala.concurrent.ExecutionContext
 
 import dsp.errors.InvalidApiJsonException
+
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.model.HttpResponse
 
 /**
  * Created by subotic on 06.02.17.

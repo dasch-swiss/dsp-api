@@ -5,10 +5,7 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 import zio.prelude.Validation
 
@@ -39,6 +36,11 @@ import org.knora.webapi.routing.RouteUtilV2.getStringQueryParam
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.PathMatcher
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.

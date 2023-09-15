@@ -5,11 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.Multipart
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -42,6 +38,12 @@ import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
+
+import pekko.http.javadsl.model.StatusCodes
+import pekko.http.scaladsl.model.ContentTypes
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.Multipart
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented

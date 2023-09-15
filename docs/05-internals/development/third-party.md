@@ -12,7 +12,7 @@ All third party dependencies need to be declared there.
 There is an object `Dependencies` where each library should be declared in a `val`.
 
 ```scala
-val akkaHttpCors = "ch.megard" %% "akka-http-cors" % "1.0.0"
+val akkaHttpCors = "ch.megard" %% "pekko-http-cors" % "1.0.0"
 ```
 
 The first string corresponds to the group/organization in the library's maven artefact,

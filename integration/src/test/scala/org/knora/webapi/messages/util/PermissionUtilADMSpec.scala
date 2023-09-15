@@ -5,7 +5,7 @@
 
 package org.knora.webapi.util
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import scala.collection.Map
 
@@ -17,6 +17,8 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+
+import pekko.testkit.ImplicitSender
 
 class PermissionUtilADMSpec extends CoreSpec with ImplicitSender {
 

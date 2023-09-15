@@ -5,9 +5,7 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 import zio.prelude.Validation
 
@@ -27,6 +25,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM._
+
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.PathMatcher
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides routes to create list items.
