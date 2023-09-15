@@ -112,7 +112,7 @@ object Dependencies {
   // Fixes error message when running IT in IntelliJ
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
-  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.10"
+  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
   val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.0"
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.0.4"
 
