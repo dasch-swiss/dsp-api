@@ -7,7 +7,6 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-
 val zioVersion                  = "2.0.16"
 val zioJsonVersion              = "0.6.1"
 val zioConfigVersion            = "3.0.7"
@@ -67,7 +66,7 @@ lazy val root = (project in file("."))
       "dev.zio"              %% "zio-streams"                       % zioVersion,
       "eu.timepit"           %% "refined"                           % "0.11.0",
       "commons-io"            % "commons-io"                        % "2.13.0",
-      "com.github.jwt-scala" %% "jwt-zio-json"                      % "9.4.3",
+      "com.github.jwt-scala" %% "jwt-zio-json"                      % "9.4.4",
       // add the silencer lib for scala 2.13 in order to compile with scala 3.3.0 until https://github.com/zio/zio-config/pull/1171 is merged
       // resolves problems when `sbt doc` failed with
       // [error] -- Error: typesafe/shared/src/main/scala/zio/config/typesafe/TypesafeConfigSource.scala:15:0
