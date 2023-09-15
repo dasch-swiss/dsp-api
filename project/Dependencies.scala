@@ -23,7 +23,7 @@ object Dependencies {
   val ZioHttpVersionOld           = "2.0.0-RC11"
   val ZioHttpVersion              = "0.0.3"
   val ZioLoggingVersion           = "2.1.14"
-  val ZioNioVersion               = "2.0.1"
+  val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.1.0"
   val ZioPreludeVersion           = "1.0.0-RC20"
   val ZioSchemaVersion            = "0.2.0"
@@ -36,7 +36,7 @@ object Dependencies {
   val zioConfigTypesafe             = "dev.zio"                       %% "zio-config-typesafe"               % ZioConfigVersion
   val zioHttpOld                    = "io.d11"                        %% "zhttp"                             % ZioHttpVersionOld
   val zioHttp                       = "dev.zio"                       %% "zio-http"                          % ZioHttpVersion
-  val zioJson                       = "dev.zio"                       %% "zio-json"                          % "0.6.1"
+  val zioJson                       = "dev.zio"                       %% "zio-json"                          % "0.6.2"
   val zioLogging                    = "dev.zio"                       %% "zio-logging"                       % ZioLoggingVersion
   val zioLoggingSlf4jBridge         = "dev.zio"                       %% "zio-logging-slf4j2-bridge"         % ZioLoggingVersion
   val zioNio                        = "dev.zio"                       %% "zio-nio"                           % ZioNioVersion
@@ -64,10 +64,10 @@ object Dependencies {
 
   // logging
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" // Scala 3 compatible
-  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.7" // the logging interface
+  val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.9" // the logging interface
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20"
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20.1"
   val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.3" // Scala 3 compatible
   val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.3" // Scala 3 incompatible
 
@@ -106,13 +106,13 @@ object Dependencies {
   val akkaHttpTestkit   = "com.typesafe.akka" %% "akka-http-testkit"   % AkkaHttpVersion  // Scala 3 incompatible
   val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % AkkaActorVersion // Scala 3 compatible
   val akkaTestkit       = "com.typesafe.akka" %% "akka-testkit"        % AkkaActorVersion // Scala 3 compatible
-  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.16"         // Scala 3 compatible
+  val scalaTest         = "org.scalatest"     %% "scalatest"           % "3.2.17"         // Scala 3 compatible
   // The scoverage plugin actually adds its dependencies automatically.
   // Add it redundantly to the IT dependencies in order to fix build issues with IntelliJ
   // Fixes error message when running IT in IntelliJ
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
-  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.10"
+  val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
   val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.0"
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.0.4"
 
