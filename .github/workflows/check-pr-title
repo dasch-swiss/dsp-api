@@ -11,5 +11,5 @@ jobs:
     steps:
       - uses: deepakputhraya/action-pr-title@master
         with:
-          regex: '^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+\))?!?: .+$'
+          regex: '^(feat|fix|build|chore|test|refactor|docs)(\(.+\))?!?: .+$'
           max_length: 140
