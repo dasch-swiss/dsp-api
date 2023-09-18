@@ -39,32 +39,17 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInf
 sealed trait StandoffResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
- * Requests a page of standoff markup from a text value. A successful response will be a [[GetStandoffResponseV2]].
+ * Requests all standoff markup from a text value. A successful response will be a [[GetStandoffResponseV2]].
  *
  * @param resourceIri          the IRI of the resource containing the value.
  * @param valueIri             the IRI of the value.
- * @param offset               the start index of the first standoff tag to be returned.
  * @param targetSchema         the schema of the response.
  * @param requestingUser       the user making the request.
  */
-case class GetStandoffPageRequestV2(
+case class GetStandoffRequestV2(
   resourceIri: IRI,
   valueIri: IRI,
-  offset: Int,
   targetSchema: ApiV2Schema,
-  requestingUser: UserADM
-) extends StandoffResponderRequestV2
-
-/**
- * Requests all the standoff markup from a text value, except for the first page. A successful response will be a [[GetStandoffResponseV2]].
- *
- * @param resourceIri          the IRI of the resource containing the text value.
- * @param valueIri             the IRI of the text value.
- * @param requestingUser       the user making the request.
- */
-case class GetRemainingStandoffFromTextValueRequestV2(
-  resourceIri: IRI,
-  valueIri: IRI,
   requestingUser: UserADM
 ) extends StandoffResponderRequestV2
 
@@ -76,8 +61,7 @@ case class GetRemainingStandoffFromTextValueRequestV2(
  * @param standoff   standoff tags from the value.
  * @param nextOffset the next available offset, if any.
  */
-case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2], nextOffset: Option[Int])
-    extends KnoraJsonLDResponseV2 {
+case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2]) extends KnoraJsonLDResponseV2 {
 
   /**
    * Converts the response to a data structure that can be used to generate JSON-LD.
@@ -99,15 +83,11 @@ case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2], ne
       standoffInTargetSchema.flatMap(_.getOntologyIrisUsed).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
     val standoffAsJsonLD: Seq[JsonLDValue] = standoffInTargetSchema.map(_.toJsonLDValue(targetSchema = targetSchema))
 
-    val contentMap: Map[IRI, JsonLDValue] = Map(
-      JsonLDKeywords.GRAPH -> JsonLDArray(standoffAsJsonLD)
+    val body: JsonLDObject = JsonLDObject(
+      Map(
+        JsonLDKeywords.GRAPH -> JsonLDArray(standoffAsJsonLD)
+      )
     )
-
-    val nextOffsetStatement: Option[(IRI, JsonLDInt)] = nextOffset.map { definedNextOffset =>
-      OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex -> JsonLDInt(definedNextOffset)
-    }
-
-    val body: JsonLDObject = JsonLDObject(contentMap ++ nextOffsetStatement)
 
     val context: JsonLDObject = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
@@ -159,18 +139,10 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
     Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
-      )
+      fromJsonLDSync(jsonLDDocument = jsonLDDocument)
     }
 
-  def fromJsonLDSync(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): CreateMappingRequestMetadataV2 = {
+  def fromJsonLDSync(jsonLDDocument: JsonLDDocument): CreateMappingRequestMetadataV2 = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val validationFun: (String, => Nothing) => String = (s, errorFun) =>

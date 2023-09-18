@@ -21,11 +21,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
@@ -35,21 +31,14 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
 import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.JsonLDArray
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDInt
-import org.knora.webapi.messages.util.rdf.JsonLDKeywords
-import org.knora.webapi.messages.util.rdf.JsonLDObject
-import org.knora.webapi.messages.util.rdf.JsonLDString
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.util.search.ConstructQuery
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -61,7 +50,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequest
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -72,6 +60,9 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.ZioHelper
 
@@ -81,7 +72,7 @@ final case class ResourcesResponderV2Live(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
@@ -203,7 +194,7 @@ final case class ResourcesResponderV2Live(
                requestingUser = createResourceRequestV2.requestingUser
              )
 
-        _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
+        _ <- checkListNodes(internalCreateResource.flatValues)
 
         // Get the class IRIs of all the link targets in the request.
         linkTargetClasses <- getLinkTargetClasses(
@@ -282,21 +273,18 @@ final case class ResourcesResponderV2Live(
                                  )
 
         // Get the IRI of the named graph in which the resource will be created.
-        dataNamedGraph: IRI =
+        dataNamedGraph =
           ProjectADMService.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM).value
 
         // Generate SPARQL for creating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .createNewResources(
-                           dataNamedGraph = dataNamedGraph,
-                           resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
-                           projectIri = createResourceRequestV2.createResource.projectADM.id,
-                           creatorIri = createResourceRequestV2.requestingUser.id
-                         )
-                         .toString()
-
+        sparqlUpdate = sparql.v2.txt.createNewResources(
+                         dataNamedGraph = dataNamedGraph,
+                         resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+                         projectIri = createResourceRequestV2.createResource.projectADM.id,
+                         creatorIri = createResourceRequestV2.requestingUser.id
+                       )
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was created correctly.
         previewOfCreatedResource <- verifyResource(
@@ -309,24 +297,16 @@ final case class ResourcesResponderV2Live(
 
     val triplestoreUpdateFuture: Task[ReadResourcesSequenceV2] = for {
       // Don't allow anonymous users to create resources.
-      _ <- ZIO.attempt {
-             if (createResourceRequestV2.requestingUser.isAnonymousUser) {
-               throw ForbiddenException("Anonymous users aren't allowed to create resources")
-             } else {
-               createResourceRequestV2.requestingUser.id
-             }
+      _ <- ZIO.when(createResourceRequestV2.requestingUser.isAnonymousUser) {
+             ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources"))
            }
 
       // Ensure that the project isn't the system project or the shared ontologies project.
-
       projectIri = createResourceRequestV2.createResource.projectADM.id
-
-      _ =
-        if (
+      _ <-
+        ZIO.when(
           projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-        ) {
-          throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
-        }
+        )(ZIO.fail(BadRequestException(s"Resources cannot be created in project <$projectIri>")))
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
@@ -338,21 +318,24 @@ final case class ResourcesResponderV2Live(
                                       createResourceRequestV2.requestingUser
                                     )
                                   )
-      ontologyMetadata: OntologyMetadataV2 =
-        readOntologyMetadataV2.ontologies.headOption
-          .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-      ontologyProjectIri: IRI =
-        ontologyMetadata.projectIri
-          .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
-          .toString
+      ontologyMetadata <- ZIO
+                            .fromOption(readOntologyMetadataV2.ontologies.headOption)
+                            .orElseFail(BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+      ontologyProjectIri <-
+        ZIO
+          .fromOption(ontologyMetadata.projectIri)
+          .mapBoth(
+            _ => InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"),
+            _.toString()
+          )
 
-      _ =
-        if (
+      _ <-
+        ZIO.when(
           projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
         ) {
-          throw BadRequestException(
+          val msg =
             s"Cannot create a resource in project <$projectIri> with resource class <${createResourceRequestV2.createResource.resourceClassIri}>, which is defined in a non-shared ontology in another project"
-          )
+          ZIO.fail(BadRequestException(msg))
         }
 
       // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
@@ -361,17 +344,14 @@ final case class ResourcesResponderV2Live(
       internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri
                                              .toOntologySchema(InternalSchema)
 
-      _ = if (
-            !createResourceRequestV2.requestingUser.permissions.hasPermissionFor(
-              ResourceCreateOperation(internalResourceClassIri.toString),
-              projectIri,
-              None
-            )
-          ) {
-            throw ForbiddenException(
-              s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
-            )
-          }
+      _ <- ZIO.when(
+             !createResourceRequestV2.requestingUser.permissions
+               .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri)
+           ) {
+             val msg =
+               s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>"
+             ZIO.fail(ForbiddenException(msg))
+           }
 
       resourceIri <-
         iriService.checkOrCreateEntityIri(
@@ -419,32 +399,31 @@ final case class ResourcesResponderV2Live(
         internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        _ = if (resource.resourceClassIri != internalResourceClassIri) {
-              throw BadRequestException(
-                s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>"
-              )
-            }
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // If resource has already been modified, make sure that its lastModificationDate is given in the request body.
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             resource.lastModificationDate.nonEmpty && updateResourceMetadataRequestV2.maybeLastModificationDate.isEmpty
           ) {
-            throw EditConflictException(
+            val msg =
               s"Resource <${resource.resourceIri}> has been modified in the past. Its lastModificationDate " +
                 s"${resource.lastModificationDate.get} must be included in the request body."
-            )
+            ZIO.fail(EditConflictException(msg))
           }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (
-              updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
-              resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate
-            ) {
-              throw EditConflictException(
-                s"Resource <${resource.resourceIri}> has been modified since you last read it"
-              )
-            }
+        _ <- ZIO.when(
+               updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
+                 resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate
+             ) {
+               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
+               ZIO.fail(EditConflictException(msg))
+             }
 
         // Check that the user has permission to modify the resource.
         _ <- resourceUtilV2.checkResourcePermission(
@@ -456,37 +435,31 @@ final case class ResourcesResponderV2Live(
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
-        newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
-                                         case Some(submittedNewModificationDate) =>
-                                           if (
-                                             resource.lastModificationDate.exists(
-                                               _.isAfter(submittedNewModificationDate)
-                                             )
-                                           ) {
-                                             throw BadRequestException(
-                                               s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate"
-                                             )
-                                           } else {
-                                             submittedNewModificationDate
-                                           }
-                                         case None => Instant.now
-                                       }
+        newModificationDate <-
+          updateResourceMetadataRequestV2.maybeNewModificationDate match {
+            case Some(submittedNewModificationDate) =>
+              if (resource.lastModificationDate.exists(_.isAfter(submittedNewModificationDate))) {
+                val msg =
+                  s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate"
+                ZIO.fail(BadRequestException(msg))
+              } else {
+                ZIO.succeed(submittedNewModificationDate)
+              }
+            case None => ZIO.succeed(Instant.now)
+          }
 
         // Generate SPARQL for updating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .changeResourceMetadata(
-                           dataNamedGraph = dataNamedGraph,
-                           resourceIri = updateResourceMetadataRequestV2.resourceIri,
-                           resourceClassIri = internalResourceClassIri,
-                           maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
-                           newModificationDate = newModificationDate,
-                           maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
-                           maybePermissions = updateResourceMetadataRequestV2.maybePermissions
-                         )
-                         .toString()
-
+        sparqlUpdate = sparql.v2.txt.changeResourceMetadata(
+                         dataNamedGraph = dataNamedGraph,
+                         resourceIri = updateResourceMetadataRequestV2.resourceIri,
+                         resourceClassIri = internalResourceClassIri,
+                         maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
+                         newModificationDate = newModificationDate,
+                         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
+                         maybePermissions = updateResourceMetadataRequestV2.maybePermissions
+                       )
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was updated correctly.
 
@@ -497,38 +470,31 @@ final case class ResourcesResponderV2Live(
             requestingUser = updateResourceMetadataRequestV2.requestingUser
           )
 
-        _ = if (updatedResourcesSeq.resources.size != 1) {
-              throw AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}")
-            }
+        _ <- ZIO.when(updatedResourcesSeq.resources.size != 1) {
+               ZIO.fail(AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}"))
+             }
 
         updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
 
-        _ = if (!updatedResource.lastModificationDate.contains(newModificationDate)) {
-              throw UpdateNotPerformedException(
-                s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newModificationDate"
-              )
-            }
+        _ <- ZIO.when(!updatedResource.lastModificationDate.contains(newModificationDate)) {
+               val msg =
+                 s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newModificationDate"
+               ZIO.fail(UpdateNotPerformedException(msg))
+             }
 
-        _ = updateResourceMetadataRequestV2.maybeLabel match {
-              case Some(newLabel) =>
-                if (!updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel))) {
-                  throw UpdateNotPerformedException()
-                }
+        _ <- updateResourceMetadataRequestV2.maybeLabel match {
+               case Some(newLabel) if !updatedResource.label.contains(Iri.fromSparqlEncodedString(newLabel)) =>
+                 ZIO.fail(UpdateNotPerformedException())
+               case _ => ZIO.unit
+             }
 
-              case None => ()
-            }
-
-        _ = updateResourceMetadataRequestV2.maybePermissions match {
-              case Some(newPermissions) =>
-                if (
-                  PermissionUtilADM
-                    .parsePermissions(updatedResource.permissions) != PermissionUtilADM.parsePermissions(newPermissions)
-                ) {
-                  throw UpdateNotPerformedException()
-                }
-
-              case None => ()
-            }
+        _ <- updateResourceMetadataRequestV2.maybePermissions match {
+               case Some(newPermissions)
+                   if PermissionUtilADM.parsePermissions(updatedResource.permissions) != PermissionUtilADM
+                     .parsePermissions(newPermissions) =>
+                 ZIO.fail(UpdateNotPerformedException())
+               case _ => ZIO.unit
+             }
 
       } yield UpdateResourceMetadataResponseV2(
         resourceIri = updateResourceMetadataRequestV2.resourceIri,
@@ -570,7 +536,7 @@ final case class ResourcesResponderV2Live(
    * @param deleteResourceV2 the request message.
    */
   private def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
-    def makeTaskFuture: Task[SuccessResponseV2] =
+    def deleteTask(): Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewV2(
@@ -583,84 +549,64 @@ final case class ResourcesResponderV2Live(
         internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        _ = if (resource.resourceClassIri != internalResourceClassIri) {
-              throw BadRequestException(
-                s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>"
-              )
-            }
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (resource.lastModificationDate != deleteResourceV2.maybeLastModificationDate) {
-              throw EditConflictException(
-                s"Resource <${resource.resourceIri}> has been modified since you last read it"
-              )
-            }
+        _ <- ZIO.when(resource.lastModificationDate != deleteResourceV2.maybeLastModificationDate) {
+               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
+               ZIO.fail(EditConflictException(msg))
+             }
 
         // If a custom delete date was provided, make sure it's later than the resource's most recent timestamp.
-        _ = if (
-              deleteResourceV2.maybeDeleteDate.exists(
-                !_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate))
-              )
-            ) {
-              throw BadRequestException(
-                s"A custom delete date must be later than the date when the resource was created or last modified"
-              )
-            }
+        _ <- ZIO.when(
+               deleteResourceV2.maybeDeleteDate.exists(
+                 !_.isAfter(resource.lastModificationDate.getOrElse(resource.creationDate))
+               )
+             ) {
+               val msg =
+                 s"A custom delete date must be later than the date when the resource was created or last modified"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // Check that the user has permission to mark the resource as deleted.
         _ <- resourceUtilV2.checkResourcePermission(resource, DeletePermission, deleteResourceV2.requestingUser)
 
         // Get the IRI of the named graph in which the resource is stored.
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
+        dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Generate SPARQL for marking the resource as deleted.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .deleteResource(
-                           dataNamedGraph = dataNamedGraph,
-                           resourceIri = deleteResourceV2.resourceIri,
-                           maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
-                           currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
-                           requestingUser = deleteResourceV2.requestingUser.id
-                         )
-                         .toString()
-
+        sparqlUpdate = sparql.v2.txt.deleteResource(
+                         dataNamedGraph = dataNamedGraph,
+                         resourceIri = deleteResourceV2.resourceIri,
+                         maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
+                         currentTime = deleteResourceV2.maybeDeleteDate.getOrElse(Instant.now),
+                         requestingUser = deleteResourceV2.requestingUser.id
+                       )
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparqlUpdate))
 
         // Verify that the resource was deleted correctly.
-
-        sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                        .checkResourceDeletion(
-                          resourceIri = deleteResourceV2.resourceIri
-                        )
-                        .toString()
-
-        sparqlSelectResponse <- triplestoreService.sparqlHttpSelect(sparqlQuery)
+        sparqlSelectResponse <-
+          triplestore.query(Select(sparql.v2.txt.checkResourceDeletion(deleteResourceV2.resourceIri)))
 
         rows = sparqlSelectResponse.results.bindings
 
-        _ =
-          if (
+        _ <-
+          ZIO.when(
             rows.isEmpty || !ValuesValidator.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), fallback = false)
           ) {
-            throw UpdateNotPerformedException(
+            val msg =
               s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug."
-            )
+            ZIO.fail(UpdateNotPerformedException(msg))
           }
       } yield SuccessResponseV2("Resource marked as deleted")
 
-    if (deleteResourceV2.erase) {
-      throw AssertionException(s"Request message has erase == true")
-    }
-
-    for {
-      // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteResourceV2.apiRequestID,
-                      deleteResourceV2.resourceIri,
-                      makeTaskFuture
-                    )
-    } yield taskResult
+    ZIO.when(deleteResourceV2.erase)(ZIO.fail(AssertionException(s"Request message has erase == true"))) *>
+      IriLocker.runWithIriLock(deleteResourceV2.apiRequestID, deleteResourceV2.resourceIri, deleteTask())
   }
 
   /**
@@ -669,7 +615,7 @@ final case class ResourcesResponderV2Live(
    * @param eraseResourceV2 the request message.
    */
   private def eraseResourceV2(eraseResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
-    def makeTaskFuture: Task[SuccessResponseV2] =
+    def eraseTask: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq <- getResourcePreviewV2(
@@ -681,59 +627,48 @@ final case class ResourcesResponderV2Live(
         resource: ReadResourceV2 = resourcesSeq.toResource(eraseResourceV2.resourceIri)
 
         // Ensure that the requesting user is a system admin, or an admin of this project.
-        _ = if (
-              !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id) ||
-                eraseResourceV2.requestingUser.permissions.isSystemAdmin)
-            ) {
-              throw ForbiddenException(s"Only a system admin or project admin can erase a resource")
-            }
+        _ <- ZIO.when(
+               !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id) ||
+                 eraseResourceV2.requestingUser.permissions.isSystemAdmin)
+             ) {
+               ZIO.fail(ForbiddenException(s"Only a system admin or project admin can erase a resource"))
+             }
 
         internalResourceClassIri = eraseResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
         // Make sure that the resource's class is what the client thinks it is.
-        _ = if (resource.resourceClassIri != internalResourceClassIri) {
-              throw BadRequestException(
-                s"Resource <${resource.resourceIri}> is not a member of class <${eraseResourceV2.resourceClassIri}>"
-              )
-            }
+        _ <- ZIO.when(resource.resourceClassIri != internalResourceClassIri) {
+               val msg =
+                 s"Resource <${resource.resourceIri}> is not a member of class <${eraseResourceV2.resourceClassIri}>"
+               ZIO.fail(BadRequestException(msg))
+             }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (resource.lastModificationDate != eraseResourceV2.maybeLastModificationDate) {
-              throw EditConflictException(
-                s"Resource <${resource.resourceIri}> has been modified since you last read it"
-              )
-            }
+        _ <- ZIO.when(resource.lastModificationDate != eraseResourceV2.maybeLastModificationDate) {
+               val msg = s"Resource <${resource.resourceIri}> has been modified since you last read it"
+               ZIO.fail(EditConflictException(msg))
+             }
 
         // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
         // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
         // refers to it). Any such deleted link values will be erased along with the resource. If there
         // is a non-deleted link to the resource, the direct link (rather than the link value) will case
-        // isEntityUsed() to throw an exception.
+        // isEntityUsed() to fail with an exception.
 
         resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
-        _ <-
-          ZIO
-            .fail(
-              BadRequestException(
-                s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
-              )
-            )
-            .whenZIO(iriService.isEntityUsed(resourceSmartIri, ignoreRdfSubjectAndObject = true))
+        _ <- ZIO
+               .whenZIO(iriService.isEntityUsed(resourceSmartIri, ignoreRdfSubjectAndObject = true)) {
+                 val msg =
+                   s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"
+                 ZIO.fail(BadRequestException(msg))
+               }
 
         // Get the IRI of the named graph from which the resource will be erased.
-        dataNamedGraph: IRI = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
-
-        // Generate SPARQL for erasing the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .eraseResource(
-                           dataNamedGraph = dataNamedGraph,
-                           resourceIri = eraseResourceV2.resourceIri
-                         )
-                         .toString()
+        dataNamedGraph = ProjectADMService.projectDataNamedGraphV2(resource.projectADM).value
 
         // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(sparqlUpdate)
+        _ <- triplestore.query(Update(sparql.v2.txt.eraseResource(dataNamedGraph, eraseResourceV2.resourceIri)))
 
         _ <- // Verify that the resource was erased correctly.
           ZIO
@@ -745,17 +680,9 @@ final case class ResourcesResponderV2Live(
             .whenZIO(iriService.checkIriExists(resourceSmartIri.toString))
       } yield SuccessResponseV2("Resource erased")
 
-    if (!eraseResourceV2.erase) {
-      throw AssertionException(s"Request message has erase == false")
-    }
-
     for {
-      // Do the pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(
-                      eraseResourceV2.apiRequestID,
-                      eraseResourceV2.resourceIri,
-                      makeTaskFuture
-                    )
+      _          <- ZIO.when(!eraseResourceV2.erase)(ZIO.fail(AssertionException(s"Request message has erase == false")))
+      taskResult <- IriLocker.runWithIriLock(eraseResourceV2.apiRequestID, eraseResourceV2.resourceIri, eraseTask)
     } yield taskResult
   }
 
@@ -801,27 +728,34 @@ final case class ResourcesResponderV2Live(
           .filterKeys(resourceClassInfo.knoraResourceProperties)
           .toMap
 
-      _ = internalCreateResource.values.foreach {
-            case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
-              val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
+      _ <- ZIO.foreachDiscard(internalCreateResource.values) {
+             case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
+               val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
+               for {
 
-              val cardinalityInfo = knoraPropertyCardinalities.getOrElse(
-                internalPropertyIri,
-                throw OntologyConstraintException(
-                  s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                      .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"
-                )
-              )
+                 cardinalityInfo <-
+                   ZIO
+                     .fromOption(knoraPropertyCardinalities.get(internalPropertyIri))
+                     .orElseFail(
+                       OntologyConstraintException(
+                         s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
+                             .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"
+                       )
+                     )
 
-              if (
-                (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
-              ) {
-                throw OntologyConstraintException(
-                  s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                      .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>"
-                )
-              }
-          }
+                 _ <-
+                   ZIO.when(
+                     (cardinalityInfo.cardinality == ZeroOrOne || cardinalityInfo.cardinality == ExactlyOne) && valuesForProperty.size > 1
+                   ) {
+                     ZIO.fail(
+                       OntologyConstraintException(
+                         s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
+                             .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>"
+                       )
+                     )
+                   }
+               } yield ()
+           }
 
       // Check that no required values are missing.
 
@@ -831,35 +765,31 @@ final case class ResourcesResponderV2Live(
 
       internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
 
-      _ = if (!requiredProps.subsetOf(internalPropertyIris)) {
-            val missingProps =
-              (requiredProps -- internalPropertyIris)
-                .map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>")
-                .mkString(", ")
-            throw OntologyConstraintException(
-              s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}>: $missingProps"
-            )
-          }
+      _ <- ZIO.when(!requiredProps.subsetOf(internalPropertyIris)) {
+             val missingProps =
+               (requiredProps -- internalPropertyIris)
+                 .map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>")
+                 .mkString(", ")
+             ZIO.fail(
+               OntologyConstraintException(
+                 s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri
+                     .toOntologySchema(ApiV2Complex)}>: $missingProps"
+               )
+             )
+           }
 
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
-
-      _ = checkObjectClassConstraints(
-            values = internalCreateResource.values,
-            linkTargetClasses = linkTargetClasses,
-            entityInfo = entityInfo,
-            clientResourceIDs = clientResourceIDs,
-            resourceIDForErrorMsg = resourceIDForErrorMsg
-          )
+      _ <- checkObjectClassConstraints(
+             internalCreateResource.values,
+             linkTargetClasses,
+             entityInfo,
+             clientResourceIDs,
+             resourceIDForErrorMsg
+           )
 
       // Check that the submitted values do not contain duplicates.
-
-      _ = checkForDuplicateValues(
-            values = internalCreateResource.values,
-            clientResourceIDs = clientResourceIDs,
-            resourceIDForErrorMsg = resourceIDForErrorMsg
-          )
+      _ <- checkForDuplicateValues(internalCreateResource.values, resourceIDForErrorMsg)
 
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
@@ -870,30 +800,25 @@ final case class ResourcesResponderV2Live(
             for {
               validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
 
-              // Is the requesting user a system admin, or an admin of this project?
-              _ = if (
-                    !(requestingUser.permissions.isProjectAdmin(
-                      internalCreateResource.projectADM.id
-                    ) || requestingUser.permissions.isSystemAdmin)
-                  ) {
-
-                    // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-
-                    val permissionComparisonResult: PermissionComparisonResult =
-                      PermissionUtilADM.comparePermissionsADM(
-                        entityCreator = requestingUser.id,
-                        entityProject = internalCreateResource.projectADM.id,
-                        permissionLiteralA = validatedCustomPermissions,
-                        permissionLiteralB = defaultResourcePermissions,
-                        requestingUser = requestingUser
-                      )
-
-                    if (permissionComparisonResult == AGreaterThanB) {
-                      throw ForbiddenException(
-                        s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
-                      )
-                    }
-                  }
+              _ <- ZIO.when {
+                     !(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id) &&
+                       !requestingUser.permissions.isSystemAdmin)
+                   } {
+                     // Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                     val permissionComparisonResult: PermissionComparisonResult =
+                       PermissionUtilADM.comparePermissionsADM(
+                         requestingUser.id,
+                         internalCreateResource.projectADM.id,
+                         validatedCustomPermissions,
+                         defaultResourcePermissions,
+                         requestingUser
+                       )
+                     ZIO.when(permissionComparisonResult == AGreaterThanB) {
+                       val msg =
+                         s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
+                       ZIO.fail(ForbiddenException(msg))
+                     }
+                   }
             } yield validatedCustomPermissions
 
           case None => ZIO.succeed(defaultResourcePermissions)
@@ -991,28 +916,25 @@ final case class ResourcesResponderV2Live(
    * Checks that values to be created in a new resource do not contain duplicates.
    *
    * @param values                a map of property IRIs to values to be created (in the internal schema).
-   * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
    * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
    *                              resource to be created, if any.
    */
   private def checkForDuplicateValues(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-    clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
     resourceIDForErrorMsg: IRI
-  ): Unit =
-    values.foreach { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+  ): Task[Unit] =
+    ZIO.foreachDiscard(values) { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       // Given the values for a property, compute all possible combinations of two of those values.
-      val valueCombinations: Iterator[Seq[CreateValueInNewResourceV2]] = valuesToCreate.combinations(2)
-
-      for (valueCombination: Seq[CreateValueInNewResourceV2] <- valueCombinations) {
+      ZIO.foreachDiscard(valuesToCreate.combinations(2).toSeq) { valueCombination =>
         // valueCombination must have two elements.
+
         val firstValue: ValueContentV2  = valueCombination.head.valueContent
         val secondValue: ValueContentV2 = valueCombination(1).valueContent
 
-        if (firstValue.wouldDuplicateOtherValue(secondValue)) {
-          throw DuplicateValueException(
+        ZIO.when(firstValue.wouldDuplicateOtherValue(secondValue)) {
+          val msg =
             s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2Complex)}>"
-          )
+          ZIO.fail(DuplicateValueException(msg))
         }
       }
     }
@@ -1033,84 +955,90 @@ final case class ResourcesResponderV2Live(
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     linkTargetClasses: Map[IRI, SmartIri],
     entityInfo: EntityInfoGetResponseV2,
-    clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
+    clientResourceIDs: Map[IRI, String],
     resourceIDForErrorMsg: IRI
-  ): Unit =
-    values.foreach { case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+  ): Task[Unit] = ZIO.foreachDiscard(values) {
+    case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
       val propertyInfo: ReadPropertyInfoV2 = entityInfo.propertyInfoMap(propertyIri)
 
-      // Don't accept link properties.
-      if (propertyInfo.isLinkProp) {
-        throw BadRequestException(
-          s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
-        )
-      }
+      for {
+        // Don't accept link properties.
+        _ <- ZIO.when(propertyInfo.isLinkProp) {
+               val msg =
+                 s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link."
+               ZIO.fail(BadRequestException(msg))
+             }
 
-      // Get the property's object class constraint. If this is a link value property, we want the object
-      // class constraint of the corresponding link property instead.
+        // Get the property's object class constraint. If this is a link value property, we want the object
+        // class constraint of the corresponding link property instead.
+        propertyInfoForObjectClassConstraint = if (propertyInfo.isLinkValueProp) {
+                                                 entityInfo.propertyInfoMap(propertyIri.fromLinkValuePropToLinkProp)
+                                               } else {
+                                                 propertyInfo
+                                               }
 
-      val propertyInfoForObjectClassConstraint = if (propertyInfo.isLinkValueProp) {
-        entityInfo.propertyInfoMap(propertyIri.fromLinkValuePropToLinkProp)
-      } else {
-        propertyInfo
-      }
+        propertyIriForObjectClassConstraint = propertyInfoForObjectClassConstraint.entityInfoContent.propertyIri
 
-      val propertyIriForObjectClassConstraint = propertyInfoForObjectClassConstraint.entityInfoContent.propertyIri
+        objectClassConstraint <- ZIO
+                                   .fromOption(
+                                     propertyInfoForObjectClassConstraint.entityInfoContent.getIriObject(
+                                       OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
+                                     )
+                                   )
+                                   .orElseFail {
+                                     val msg =
+                                       s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"
+                                     InconsistentRepositoryDataException(msg)
+                                   }
 
-      val objectClassConstraint: SmartIri = propertyInfoForObjectClassConstraint.entityInfoContent.requireIriObject(
-        OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-        throw InconsistentRepositoryDataException(
-          s"Property <$propertyIriForObjectClassConstraint> has no knora-api:objectType"
-        )
-      )
+        // Check each value.
+        _ <- ZIO.foreachDiscard(valuesToCreate) { valueToCreate =>
+               valueToCreate.valueContent match {
+                 case linkValueContentV2: LinkValueContentV2 =>
+                   // It's a link value.
+                   for {
+                     _ <- ZIO.when(!propertyInfo.isLinkValueProp) {
+                            val msg =
+                              s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
+                                  .toOntologySchema(ApiV2Complex)}>"
+                            ZIO.fail(OntologyConstraintException(msg))
+                          }
 
-      // Check each value.
-      for (valueToCreate: CreateValueInNewResourceV2 <- valuesToCreate) {
-        valueToCreate.valueContent match {
-          case linkValueContentV2: LinkValueContentV2 =>
-            // It's a link value.
+                     // Does the resource that's the target of the link belongs to a subclass of the
+                     // link property's object class constraint?
+                     linkTargetClass     = linkTargetClasses(linkValueContentV2.referredResourceIri)
+                     linkTargetClassInfo = entityInfo.classInfoMap(linkTargetClass)
+                     _ <- ZIO.when(!linkTargetClassInfo.allBaseClasses.contains(objectClassConstraint)) {
+                            // No. If the target resource already exists, use its IRI in the error message.
+                            // Otherwise, use the client's ID for the resource.
+                            val resourceID = if (linkValueContentV2.referredResourceExists) {
+                              s"<${linkValueContentV2.referredResourceIri}>"
+                            } else {
+                              s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
+                            }
 
-            if (!propertyInfo.isLinkValueProp) {
-              throw OntologyConstraintException(
-                s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>"
-              )
-            }
+                            ZIO.fail(
+                              OntologyConstraintException(
+                                s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint
+                                    .toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint
+                                    .toOntologySchema(ApiV2Complex)}>"
+                              )
+                            )
+                          }
+                   } yield ()
 
-            // Does the resource that's the target of the link belongs to a subclass of the
-            // link property's object class constraint?
-
-            val linkTargetClass     = linkTargetClasses(linkValueContentV2.referredResourceIri)
-            val linkTargetClassInfo = entityInfo.classInfoMap(linkTargetClass)
-
-            if (!linkTargetClassInfo.allBaseClasses.contains(objectClassConstraint)) {
-              // No. If the target resource already exists, use its IRI in the error message.
-              // Otherwise, use the client's ID for the resource.
-              val resourceID = if (linkValueContentV2.referredResourceExists) {
-                s"<${linkValueContentV2.referredResourceIri}>"
-              } else {
-                s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
-              }
-
-              throw OntologyConstraintException(
-                s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>"
-              )
-            }
-
-          case otherValueContentV2: ValueContentV2 =>
-            // It's not a link value. Check that its type is equal to the property's object
-            // class constraint.
-            if (otherValueContentV2.valueType != objectClassConstraint) {
-              throw OntologyConstraintException(
-                s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
-                    .toOntologySchema(ApiV2Complex)}>"
-              )
-            }
-        }
-      }
-    }
+                 case other: ValueContentV2 =>
+                   // It's not a link value. Check that its type is equal to the property's object class constraint.
+                   ZIO.when(other.valueType != objectClassConstraint) {
+                     val msg =
+                       s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
+                           .toOntologySchema(ApiV2Complex)}>"
+                     ZIO.fail(OntologyConstraintException(msg))
+                   }
+               }
+             }
+      } yield ()
+  }
 
   /**
    * Given a sequence of values to be created in a new resource, checks the targets of standoff links in text
@@ -1146,9 +1074,8 @@ final case class ResourcesResponderV2Live(
    * in list values.
    *
    * @param values         the values to be checked.
-   * @param requestingUser the user making the request.
    */
-  private def checkListNodes(values: Iterable[CreateValueInNewResourceV2], requestingUser: UserADM): Task[Unit] = {
+  private def checkListNodes(values: Iterable[CreateValueInNewResourceV2]): Task[Unit] = {
     val listNodesThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
         valueToCreate.valueContent match {
@@ -1163,21 +1090,17 @@ final case class ResourcesResponderV2Live(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
             checkNode <- resourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri)
-
-            _ = checkNode match {
-                  // it doesn't have isRootNode property - it's a child node
-                  case Right(false) => ()
-                  // it does have isRootNode property - it's a root node
-                  case Right(true) =>
-                    throw BadRequestException(
-                      s"<$listNodeIri> is a root node. Root nodes cannot be set as values."
-                    )
-                  // it doesn't exists or isn't valid list
-                  case Left(_) =>
-                    throw NotFoundException(
-                      s"<$listNodeIri> does not exist, or is not a ListNode."
-                    )
-                }
+            _ <-
+              checkNode match {
+                // it doesn't have isRootNode property - it's a child node
+                case Right(false) => ZIO.unit
+                // it does have isRootNode property - it's a root node
+                case Right(true) =>
+                  ZIO.fail(BadRequestException(s"<$listNodeIri> is a root node. Root nodes cannot be set as values."))
+                // it doesn't exists or isn't valid list
+                case Left(_) =>
+                  ZIO.fail(NotFoundException(s"<$listNodeIri> does not exist, or is not a ListNode."))
+              }
           } yield ()
         }.toSeq
       )
@@ -1216,29 +1139,30 @@ final case class ResourcesResponderV2Live(
                   validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissionStr)
 
                   // Is the requesting user a system admin, or an admin of this project?
-                  _ =
-                    if (
-                      !(requestingUser.permissions
-                        .isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)
-                    ) {
+                  _ <- ZIO.when(
+                         !(requestingUser.permissions
+                           .isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)
+                       ) {
 
-                      // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                         // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
-                      val permissionComparisonResult: PermissionComparisonResult =
-                        PermissionUtilADM.comparePermissionsADM(
-                          entityCreator = requestingUser.id,
-                          entityProject = project.id,
-                          permissionLiteralA = validatedCustomPermissions,
-                          permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                          requestingUser = requestingUser
-                        )
+                         val permissionComparisonResult: PermissionComparisonResult =
+                           PermissionUtilADM.comparePermissionsADM(
+                             entityCreator = requestingUser.id,
+                             entityProject = project.id,
+                             permissionLiteralA = validatedCustomPermissions,
+                             permissionLiteralB = defaultPropertyPermissions(propertyIri),
+                             requestingUser = requestingUser
+                           )
 
-                      if (permissionComparisonResult == AGreaterThanB) {
-                        throw ForbiddenException(
-                          s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
-                        )
-                      }
-                    }
+                         ZIO.when(permissionComparisonResult == AGreaterThanB) {
+                           ZIO.fail(
+                             ForbiddenException(
+                               s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions"
+                             )
+                           )
+                         }
+                       }
                 } yield GenerateSparqlForValueInNewResourceV2(
                   valueContent = valueToCreate.valueContent,
                   customValueIri = valueToCreate.customValueIri,
@@ -1353,78 +1277,71 @@ final case class ResourcesResponderV2Live(
 
       resource: ReadResourceV2 = resourcesResponse.toResource(requestedResourceIri = resourceIri)
 
-      _ = if (
-            resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri
-          ) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class")
-          }
+      _ <- ZIO.when(
+             resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri
+           ) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class"))
+           }
 
-      _ = if (resource.attachedToUser != requestingUser.id) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
-          }
+      _ <- ZIO.when(resource.attachedToUser != requestingUser.id) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
+           }
 
-      _ = if (resource.projectADM.id != projectIri) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
-          }
+      _ <- ZIO.when(resource.projectADM.id != projectIri) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user"))
+           }
 
-      _ = if (resource.permissions != resourceReadyToCreate.sparqlTemplateResourceToCreate.permissions) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions")
-          }
+      _ <- ZIO.when(resource.permissions != resourceReadyToCreate.sparqlTemplateResourceToCreate.permissions) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions"))
+           }
 
       // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
       unescapedLabel: String = Iri.fromSparqlEncodedString(
                                  resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel
                                )
 
-      _ = if (resource.label != unescapedLabel) {
-            throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label")
-          }
+      _ <- ZIO.when(resource.label != unescapedLabel) {
+             ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label"))
+           }
 
       savedPropertyIris: Set[SmartIri] = resource.values.keySet
 
       // Check that the property knora-base:hasStandoffLinkToValue was automatically added if necessary.
       expectedPropertyIris: Set[SmartIri] =
         resourceReadyToCreate.values.keySet ++ (if (resourceReadyToCreate.hasStandoffLink) {
-                                                  Some(
-                                                    OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri
-                                                  )
-                                                } else {
-                                                  None
-                                                })
+                                                  Some(OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
+                                                } else { None })
 
-      _ = if (savedPropertyIris != expectedPropertyIris) {
-            throw AssertionException(
-              s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
-                  .map(_.toSparql)
-                  .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
-            )
-          }
+      _ <- ZIO.when(savedPropertyIris != expectedPropertyIris) {
+             val msg =
+               s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
+                   .map(_.toSparql)
+                   .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
+             ZIO.fail(AssertionException(msg))
+           }
 
       // Ignore knora-base:hasStandoffLinkToValue when checking the expected values.
-      _ = (resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri).foreach {
-            case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
-              val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
+      _ <- ZIO.foreachDiscard(resource.values - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri) {
+             case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
+               val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
+               for {
+                 _ <- ZIO.when(expectedValues.size != savedValues.size) {
+                        ZIO.fail(AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values"))
+                      }
 
-              if (expectedValues.size != savedValues.size) {
-                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values")
-              }
-
-              savedValues.zip(expectedValues).foreach { case (savedValue, expectedValue) =>
-                if (
-                  !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
-                    savedValue.permissions == expectedValue.permissions &&
-                    savedValue.attachedToUser == requestingUser.id)
-                ) {
-                  // println(s"========== Expected ==========\n${MessageUtil.toSource(expectedValue.valueContent)}\n========== Saved ==========\n${MessageUtil.toSource(savedValue.valueContent)}")
-                  throw AssertionException(
-                    s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
-                  )
-                }
-              }
-          }
-    } yield ReadResourcesSequenceV2(
-      resources = Seq(resource.copy(values = Map.empty))
-    )
+                 _ <- ZIO.foreachDiscard(savedValues.zip(expectedValues)) { case (savedValue, expectedValue) =>
+                        ZIO.when(
+                          !(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
+                            savedValue.permissions == expectedValue.permissions &&
+                            savedValue.attachedToUser == requestingUser.id)
+                        ) {
+                          val msg = s"Resource <$resourceIri> was saved, but one or more of its values are not correct"
+                          ZIO.fail(AssertionException(msg))
+                        }
+                      }
+               } yield ()
+           }
+    } yield ReadResourcesSequenceV2(resources = Seq(resource.copy(values = Map.empty)))
 
     resourceFuture.mapError { case _: NotFoundException =>
       UpdateNotPerformedException(
@@ -1450,45 +1367,32 @@ final case class ResourcesResponderV2Live(
   private def getResourcesFromTriplestore(
     resourceIris: Seq[IRI],
     preview: Boolean,
-    withDeleted: Boolean = false,
+    withDeleted: Boolean,
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
     queryStandoff: Boolean,
     requestingUser: UserADM
   ): Task[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
-    // eliminate duplicate Iris
-    val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
-
-    // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
-    // pages, if any, will be queried separately.)
-    val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) =
-      StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
-        queryStandoff = queryStandoff,
-        appConfig = appConfig
+    val query =
+      Construct(
+        sparql.v2.txt
+          .getResourcePropertiesAndValues(
+            resourceIris = resourceIris.distinct,
+            preview = preview,
+            withDeleted = withDeleted,
+            maybePropertyIri = propertyIri,
+            maybeValueUuid = valueUuid,
+            maybeVersionDate = versionDate,
+            queryAllNonStandoff = true,
+            queryStandoff = queryStandoff
+          )
       )
 
-    for {
-      resourceRequestSparql <- ZIO.attempt(
-                                 org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                   .getResourcePropertiesAndValues(
-                                     resourceIris = resourceIrisDistinct,
-                                     preview = preview,
-                                     withDeleted = withDeleted,
-                                     maybePropertyIri = propertyIri,
-                                     maybeValueUuid = valueUuid,
-                                     maybeVersionDate = versionDate,
-                                     queryAllNonStandoff = true,
-                                     maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                                     maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
-                                   )
-                                   .toString()
-                               )
-
-      resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
-
-      // separate resources and values
-    } yield constructResponseUtilV2.splitMainResourcesAndValueRdfData(resourceRequestResponse, requestingUser)
+    triplestore
+      .query(query)
+      .flatMap(_.asExtended)
+      .map(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
   }
 
   /**
@@ -1537,8 +1441,6 @@ final case class ResourcesResponderV2Live(
           queryStandoff = queryStandoff,
           requestingUser = requestingUser
         )
-
-      // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
           constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
@@ -1562,21 +1464,19 @@ final case class ResourcesResponderV2Live(
           requestingUser = requestingUser
         )
 
-      _ = apiResponse.checkResourceIris(
-            targetResourceIris = resourceIris.toSet,
-            resourcesSequence = apiResponse
-          )
+      _ = apiResponse.checkResourceIris(resourceIris.toSet, apiResponse)
 
-      _ = valueUuid match {
-            case Some(definedValueUuid) =>
-              if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
-                throw NotFoundException(
-                  s"Value with UUID ${UuidUtil.base64Encode(definedValueUuid)} not found (maybe you do not have permission to see it)"
-                )
-              }
-
-            case None => ()
-          }
+      _ <- valueUuid match {
+             case Some(definedValueUuid) =>
+               ZIO.unless(
+                 apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))
+               ) {
+                 val msg =
+                   s"Value with UUID ${UuidUtil.base64Encode(definedValueUuid)} not found (maybe you do not have permission to see it)"
+                 ZIO.fail(NotFoundException(msg))
+               }
+             case None => ZIO.unit
+           }
 
       // Check if resources are deleted, if so, replace them with DeletedResource
       responseWithDeletedResourcesReplaced = apiResponse.resources match {
@@ -1688,7 +1588,7 @@ final case class ResourcesResponderV2Live(
     requestingUser: UserADM
   ): Task[String] = {
 
-    val gravsearchUrlFuture = for {
+    val gravsearchUrlTask = for {
       resources <- getResourcesV2(
                      resourceIris = Vector(gravsearchTemplateIri),
                      targetSchema = ApiV2Complex,
@@ -1698,51 +1598,48 @@ final case class ResourcesResponderV2Live(
 
       resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
-      _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
-            throw BadRequestException(
-              s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
-            )
-          }
+      _ <- ZIO.when(resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
+             val msg = s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)"
+             ZIO.fail(BadRequestException(msg))
+           }
 
-      (fileValueIri: IRI, gravsearchFileValueContent: TextFileValueContentV2) =
-        resource.values.get(
-          OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri
-        ) match {
-          case Some(values: Seq[ReadValueV2]) if values.size == 1 =>
-            values.head match {
+      valueAndContent <-
+        resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+          case Some(singleValue :: Nil) =>
+            singleValue match {
               case value: ReadValueV2 =>
                 value.valueContent match {
-                  case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
+                  case textRepr: TextFileValueContentV2 => ZIO.succeed((value.valueIri, textRepr))
                   case _ =>
-                    throw InconsistentRepositoryDataException(
+                    val msg =
                       s"Resource $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}"
-                    )
+                    ZIO.fail(InconsistentRepositoryDataException(msg))
                 }
             }
 
           case _ =>
-            throw InconsistentRepositoryDataException(
-              s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
-            )
+            val msg = s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
+            ZIO.fail(InconsistentRepositoryDataException(msg))
         }
+      (fileValueIri, gravsearchFileValueContent) = valueAndContent
 
       // check if gravsearchFileValueContent represents a text file
-      _ = if (gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
-            throw BadRequestException(
-              s"Expected $fileValueIri to be a text file referring to a Gravsearch template, but it has MIME type ${gravsearchFileValueContent.fileValue.internalMimeType}"
-            )
-          }
+      _ <- ZIO.when(gravsearchFileValueContent.fileValue.internalMimeType != "text/plain") {
+             val msg =
+               s"Expected $fileValueIri to be a text file referring to a Gravsearch template, but it has MIME type ${gravsearchFileValueContent.fileValue.internalMimeType}"
+             ZIO.fail(BadRequestException(msg))
+           }
 
       gravsearchUrl: String =
         s"${appConfig.sipi.internalBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}/file"
     } yield gravsearchUrl
 
-    val recoveredGravsearchUrlFuture = gravsearchUrlFuture.mapError { case notFound: NotFoundException =>
-      throw BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")
+    val recoveredGravsearchUrlTask = gravsearchUrlTask.mapError { case notFound: NotFoundException =>
+      BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")
     }
 
     for {
-      gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
+      gravsearchTemplateUrl <- recoveredGravsearchUrlTask
       response <- messageRelay
                     .ask[SipiGetTextFileResponse](
                       SipiGetTextFileRequest(
@@ -1785,20 +1682,18 @@ final case class ResourcesResponderV2Live(
      * @param readResource the resource which is expected to hold the text value.
      * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
      */
-    def getTextValueFromReadResource(readResource: ReadResourceV2): TextValueContentV2 =
+    def getTextValueFromReadResource(readResource: ReadResourceV2): Task[TextValueContentV2] =
       readResource.values.get(textProperty) match {
         case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
           // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
           valObjs.head.valueContent match {
-            case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty => textValWithStandoff
-
+            case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty =>
+              ZIO.succeed(textValWithStandoff)
             case _ =>
-              throw BadRequestException(
-                s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)"
-              )
+              val msg = s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)"
+              ZIO.fail(BadRequestException(msg))
           }
-
-        case _ => throw BadRequestException(s"$textProperty is expected to occur once on $resourceIri")
+        case _ => ZIO.fail(BadRequestException(s"$textProperty is expected to occur once on $resourceIri"))
       }
 
     /**
@@ -1848,111 +1743,76 @@ final case class ResourcesResponderV2Live(
       // get the requested resource
       resource <-
         if (gravsearchTemplateIri.nonEmpty) {
-
-          // check that there is an XSLT to create the TEI header
-          if (headerXSLTIri.isEmpty)
-            throw BadRequestException(
-              s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided."
-            )
-
           for {
+            templateIri <-
+              ZIO.fromOption(gravsearchTemplateIri).orDieWith(_ => new Exception("cannot happen, checked nonEmpty"))
+            // check that there is an XSLT to create the TEI header
+            _ <- ZIO.when(headerXSLTIri.isEmpty) {
+                   val msg = s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided."
+                   ZIO.fail(BadRequestException(msg))
+                 }
             // get the template
-            template <- getGravsearchTemplate(
-                          gravsearchTemplateIri = gravsearchTemplateIri.get,
-                          requestingUser = requestingUser
-                        )
-
-            // insert actual resource Iri, replacing the placeholder
-            gravsearchQuery = template.replace("$resourceIri", resourceIri)
-
-            // parse the Gravsearch query
-            constructQuery: ConstructQuery = GravsearchParser.parseQuery(gravsearchQuery)
+            query <- getGravsearchTemplate(templateIri, requestingUser)
+                       .map(_.replace("$resourceIri", resourceIri))
+                       .mapAttempt(GravsearchParser.parseQuery)
 
             // do a request to the SearchResponder
-            gravSearchResponse <-
-              messageRelay
-                .ask[ReadResourcesSequenceV2](
-                  GravsearchRequestV2(
-                    constructQuery = constructQuery,
-                    targetSchema = ApiV2Complex,
-                    schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                    requestingUser = requestingUser
-                  )
-                )
-          } yield gravSearchResponse.toResource(resourceIri)
+            req       = GravsearchRequestV2(query, ApiV2Complex, SchemaOptions.ForStandoffWithTextValues, requestingUser)
+            resource <- messageRelay.ask[ReadResourcesSequenceV2](req).mapAttempt(_.toResource(resourceIri))
+          } yield resource
 
         } else {
           // no Gravsearch template is provided
 
-          // check that there is no XSLT for the header since there is no Gravsearch template
-          if (headerXSLTIri.nonEmpty)
-            throw BadRequestException(
-              s"When no Gravsearch template Iri is provided, no header XSLT Iri is expected to be provided either."
-            )
-
           for {
+            // check that there is no XSLT for the header since there is no Gravsearch template
+            _ <- ZIO.when(headerXSLTIri.nonEmpty) {
+                   val msg =
+                     s"When no Gravsearch template Iri is provided, no header XSLT Iri is expected to be provided either."
+                   ZIO.fail(BadRequestException(msg))
+                 }
+
             // get requested resource
             resource <- getResourcesV2(
                           resourceIris = Vector(resourceIri),
                           targetSchema = ApiV2Complex,
                           schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                           requestingUser = requestingUser
-                        ).map(_.toResource(resourceIri))
+                        ).mapAttempt(_.toResource(resourceIri))
           } yield resource
         }
 
       // get the value object representing the text value that is to be mapped to the body of the TEI document
-      bodyTextValue: TextValueContentV2 = getTextValueFromReadResource(resource)
+      bodyTextValue <- getTextValueFromReadResource(resource)
 
       // the ext value is expected to have standoff markup
-      _ = if (bodyTextValue.standoff.isEmpty)
-            throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
+      _ <-
+        ZIO.when(bodyTextValue.standoff.isEmpty)(
+          ZIO.fail(BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup"))
+        )
 
       // get all the metadata but the text property for the TEI header
-      headerResource = resource.copy(
-                         values = convertDateToGregorian(resource.values - textProperty)
-                       )
+      headerResource = resource.copy(values = convertDateToGregorian(resource.values - textProperty))
 
       // get the XSL transformation for the TEI header
       headerXSLT <- headerXSLTIri match {
                       case Some(headerIri) =>
-                        val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
-                          xsltTextRepresentationIri = headerIri,
-                          requestingUser = requestingUser
-                        )
-
-                        val xslTransformationFuture = messageRelay
-                          .ask[GetXSLTransformationResponseV2](teiHeaderXsltRequest)
-                          .map(xslTransformation => Some(xslTransformation.xslt))
-
-                        xslTransformationFuture.mapError { case notFound: NotFoundException =>
-                          throw SipiException(
-                            s"TEI header XSL transformation <$headerIri> not found: ${notFound.message}"
+                        messageRelay
+                          .ask[GetXSLTransformationResponseV2](GetXSLTransformationRequestV2(headerIri, requestingUser))
+                          .mapBoth(
+                            { case e: NotFoundException =>
+                              SipiException(s"TEI header XSL transformation <$headerIri> not found: ${e.message}")
+                            },
+                            resp => Some(resp.xslt)
                           )
-                        }
-
-                      case None => ZIO.succeed(None)
+                      case _ => ZIO.none
                     }
 
       // get the Iri of the mapping to convert standoff markup to TEI/XML
-      mappingToBeApplied = mappingIri match {
-                             case Some(mapping: IRI) =>
-                               // a custom mapping is provided
-                               mapping
-
-                             case None =>
-                               // no mapping is provided, assume the standard case (standard standoff entites only)
-                               OntologyConstants.KnoraBase.TEIMapping
-                           }
+      mappingToBeApplied = mappingIri.getOrElse(OntologyConstants.KnoraBase.TEIMapping)
 
       // get mapping to convert standoff markup to TEI/XML
-      teiMapping <- messageRelay
-                      .ask[GetMappingResponseV2](
-                        GetMappingRequestV2(
-                          mappingIri = mappingToBeApplied,
-                          requestingUser = requestingUser
-                        )
-                      )
+      teiMapping <- messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingToBeApplied, requestingUser))
 
       // get XSLT from mapping for the TEI body
       bodyXslt <- teiMapping.mappingIri match {
@@ -1971,24 +1831,21 @@ final case class ResourcesResponderV2Live(
 
                         case Some(xslTransformationIri) =>
                           // get XSLT for the TEI body.
-                          val teiBodyXsltRequest = GetXSLTransformationRequestV2(
-                            xsltTextRepresentationIri = xslTransformationIri,
-                            requestingUser = requestingUser
-                          )
-
-                          val xslTransformationFuture = messageRelay
-                            .ask[GetXSLTransformationResponseV2](teiBodyXsltRequest)
-                            .map(_.xslt)
-
-                          xslTransformationFuture.mapError { case notFound: NotFoundException =>
-                            throw SipiException(
-                              s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                          messageRelay
+                            .ask[GetXSLTransformationResponseV2](
+                              GetXSLTransformationRequestV2(xslTransformationIri, requestingUser)
                             )
-                          }
+                            .mapBoth(
+                              { case notFound: NotFoundException =>
+                                val msg =
+                                  s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                                SipiException(msg)
+                              },
+                              _.xslt
+                            )
                         case None =>
-                          throw BadRequestException(
-                            s"Default XSL Transformation expected for mapping $otherMapping"
-                          )
+                          val msg = s"Default XSL Transformation expected for mapping $otherMapping"
+                          ZIO.fail(BadRequestException(msg))
                       }
                   }
 
@@ -2086,21 +1943,18 @@ final case class ResourcesResponderV2Live(
     ): Task[GraphQueryResults] = {
       if (depth < 1) Future.failed(AssertionException("Depth must be at least 1"))
 
+      val query =
+        sparql.v2.txt
+          .getGraphData(
+            startNodeIri = startNode.nodeIri,
+            startNodeOnly = false,
+            maybeExcludeLinkProperty = excludePropertyInternal,
+            outbound = outbound, // true to query outbound edges, false to query inbound edges
+            limit = appConfig.v2.graphRoute.maxGraphBreadth
+          )
       for {
         // Get the direct links from/to the start node.
-        sparql <- ZIO.attempt(
-                    org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                      .getGraphData(
-                        startNodeIri = startNode.nodeIri,
-                        startNodeOnly = false,
-                        maybeExcludeLinkProperty = excludePropertyInternal,
-                        outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = appConfig.v2.graphRoute.maxGraphBreadth
-                      )
-                      .toString()
-                  )
-
-        response                     <- triplestoreService.sparqlHttpSelect(sparql)
+        response                     <- triplestore.query(Select(query))
         rows: Seq[VariableResultsRow] = response.results.bindings
 
         // Did we get any results?
@@ -2225,30 +2079,27 @@ final case class ResourcesResponderV2Live(
       } yield recursiveResults
     }
 
-    for {
-      // Get the start node.
-      sparql <- ZIO.attempt(
-                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                    .getGraphData(
-                      startNodeIri = graphDataGetRequest.resourceIri,
-                      maybeExcludeLinkProperty = excludePropertyInternal,
-                      startNodeOnly = true,
-                      outbound = true,
-                      limit = appConfig.v2.graphRoute.maxGraphBreadth
-                    )
-                    .toString()
-                )
+    // Get the start node.
+    val query =
+      sparql.v2.txt
+        .getGraphData(
+          startNodeIri = graphDataGetRequest.resourceIri,
+          maybeExcludeLinkProperty = excludePropertyInternal,
+          startNodeOnly = true,
+          outbound = true,
+          limit = appConfig.v2.graphRoute.maxGraphBreadth
+        )
 
-      response                     <- triplestoreService.sparqlHttpSelect(sparql)
+    for {
+      response                     <- triplestore.query(Select(query))
       rows: Seq[VariableResultsRow] = response.results.bindings
 
-      _ = if (rows.isEmpty) {
-            throw NotFoundException(
-              s"Resource <${graphDataGetRequest.resourceIri}> not found (it may have been deleted)"
-            )
-          }
+      _ <- ZIO.when(rows.isEmpty) {
+             val msg = s"Resource <${graphDataGetRequest.resourceIri}> not found (it may have been deleted)"
+             ZIO.fail(NotFoundException(msg))
+           }
 
-      firstRowMap: Map[String, String] = rows.head.rowMap
+      firstRowMap = rows.head.rowMap
 
       startNode: QueryResultNode = QueryResultNode(
                                      nodeIri = firstRowMap("node"),
@@ -2260,20 +2111,20 @@ final case class ResourcesResponderV2Live(
                                    )
 
       // Make sure the user has permission to see the start node.
-      _ = if (
-            PermissionUtilADM
-              .getUserPermissionADM(
-                entityCreator = startNode.nodeCreator,
-                entityProject = startNode.nodeProject,
-                entityPermissionLiteral = startNode.nodePermissions,
-                requestingUser = graphDataGetRequest.requestingUser
-              )
-              .isEmpty
-          ) {
-            throw ForbiddenException(
-              s"User ${graphDataGetRequest.requestingUser.email} does not have permission to view resource <${graphDataGetRequest.resourceIri}>"
-            )
-          }
+      _ <- ZIO.when(
+             PermissionUtilADM
+               .getUserPermissionADM(
+                 entityCreator = startNode.nodeCreator,
+                 entityProject = startNode.nodeProject,
+                 entityPermissionLiteral = startNode.nodePermissions,
+                 requestingUser = graphDataGetRequest.requestingUser
+               )
+               .isEmpty
+           ) {
+             val msg =
+               s"User ${graphDataGetRequest.requestingUser.email} does not have permission to view resource <${graphDataGetRequest.resourceIri}>"
+             ZIO.fail(ForbiddenException(msg))
+           }
 
       // Recursively get the graph containing outbound links.
       outboundQueryResults <-
@@ -2300,8 +2151,8 @@ final case class ResourcesResponderV2Live(
         }
 
       // Combine the outbound and inbound graphs into a single graph.
-      nodes: Set[QueryResultNode] = outboundQueryResults.nodes ++ inboundQueryResults.nodes + startNode
-      edges: Set[QueryResultEdge] = outboundQueryResults.edges ++ inboundQueryResults.edges
+      nodes = outboundQueryResults.nodes ++ inboundQueryResults.nodes + startNode
+      edges = outboundQueryResults.edges ++ inboundQueryResults.edges
 
       // Convert each node to a GraphNodeV2 for the API response message.
       resultNodes: Vector[GraphNodeV2] = nodes.map { node: QueryResultNode =>
@@ -2351,28 +2202,25 @@ final case class ResourcesResponderV2Live(
 
       // Get the version history of the resource's values.
 
-      historyRequestSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      historyRequestSparql = sparql.v2.txt
                                .getResourceValueVersionHistory(
                                  withDeletedResource = resourceHistoryRequest.withDeletedResource,
                                  resourceIri = resourceHistoryRequest.resourceIri,
                                  maybeStartDate = resourceHistoryRequest.startDate,
                                  maybeEndDate = resourceHistoryRequest.endDate
                                )
-                               .toString()
+      valueHistoryResponse <- triplestore.query(Select(historyRequestSparql))
 
-      valueHistoryResponse <- triplestoreService.sparqlHttpSelect(historyRequestSparql)
-
-      valueHistoryEntries: Seq[ResourceHistoryEntry] =
-        valueHistoryResponse.results.bindings.map { row: VariableResultsRow =>
-          val versionDateStr: String = row.rowMap("versionDate")
-          val author: IRI            = row.rowMap("author")
-
-          ResourceHistoryEntry(
-            versionDate = ValuesValidator
-              .xsdDateTimeStampToInstant(versionDateStr)
-              .getOrElse(throw InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr")),
-            author = author
-          )
+      valueHistoryEntries <-
+        ZIO.foreach(valueHistoryResponse.results.bindings) { row =>
+          val versionDateStr = row.rowMap("versionDate")
+          val author         = row.rowMap("author")
+          ZIO
+            .fromOption(ValuesValidator.xsdDateTimeStampToInstant(versionDateStr))
+            .mapBoth(
+              _ => InconsistentRepositoryDataException(s"Could not parse version date: $versionDateStr"),
+              versionDate => ResourceHistoryEntry(versionDate, author)
+            )
         }
 
       // Figure out whether to add the resource's creation to the history.
@@ -2399,7 +2247,7 @@ final case class ResourcesResponderV2Live(
       historyEntriesWithResourceCreation
     )
 
-  private def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Task[ResourceIIIFManifestGetResponseV2] = {
+  private def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Task[ResourceIIIFManifestGetResponseV2] =
     // The implementation here is experimental. If we had a way of streaming the canvas URLs to the IIIF viewer,
     // it would be better to write the Gravsearch query differently, so that ?representation was the main resource.
     // Then the Gravsearch query could return pages of results.
@@ -2430,15 +2278,13 @@ final case class ResourcesResponderV2Live(
                             )
                           )
 
-      resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
-
-      incomingLinks: Seq[ReadValueV2] =
-        resource.values
-          .getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
+      resource      = searchResponse.toResource(request.resourceIri)
+      incomingLinks = resource.values.getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
 
       representations: Seq[ReadResourceV2] = incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>
                                                readLinkValueV2.valueContent.nestedResource
                                              }.flatten
+      items <- toItems(representations)
     } yield ResourceIIIFManifestGetResponseV2(
       JsonLDDocument(
         body = JsonLDObject(
@@ -2446,88 +2292,72 @@ final case class ResourcesResponderV2Live(
             JsonLDKeywords.CONTEXT -> JsonLDString("http://iiif.io/api/presentation/3/context.json"),
             "id"                   -> JsonLDString(s"${request.resourceIri}/manifest"), // Is this IRI OK?
             "type"                 -> JsonLDString("Manifest"),
-            "label" -> JsonLDObject(
-              Map(
-                "en" -> JsonLDArray(
-                  Seq(
-                    JsonLDString(resource.label)
-                  )
-                )
+            "label"                -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(resource.label))))),
+            "behavior"             -> JsonLDArray(Seq(JsonLDString("paged"))),
+            "items"                -> items
+          )
+        ),
+        keepStructure = true
+      )
+    )
+
+  private def toItems(representations: Seq[ReadResourceV2]): Task[JsonLDArray] =
+    ZIO
+      .foreach(representations) { representation: ReadResourceV2 =>
+        for {
+          imageValue <-
+            ZIO
+              .fromOption(
+                representation.values
+                  .get(OntologyConstants.KnoraBase.HasStillImageFileValue.toSmartIri)
+                  .flatMap(_.headOption)
               )
-            ),
-            "behavior" -> JsonLDArray(
-              Seq(
-                JsonLDString("paged")
-              )
-            ),
+              .orElseFail {
+                val msg = s"Representation ${representation.resourceIri} has no still image file value"
+                InconsistentRepositoryDataException(msg)
+              }
+
+          imageValueContent <-
+            imageValue.valueContent match {
+              case s: StillImageFileValueContentV2 => ZIO.succeed(s)
+              case _                               => ZIO.fail(AssertionException("Expected a StillImageFileValueContentV2"))
+            }
+
+          fileUrl = imageValueContent.makeFileUrl(representation.projectADM, appConfig.sipi.externalBaseUrl)
+        } yield JsonLDObject(
+          Map(
+            "id"     -> JsonLDString(s"${representation.resourceIri}/canvas"),
+            "type"   -> JsonLDString("Canvas"),
+            "label"  -> JsonLDObject(Map("en" -> JsonLDArray(Seq(JsonLDString(representation.label))))),
+            "height" -> JsonLDInt(imageValueContent.dimY),
+            "width"  -> JsonLDInt(imageValueContent.dimX),
             "items" -> JsonLDArray(
-              representations.map { representation: ReadResourceV2 =>
-                val imageValue: ReadValueV2 = representation.values
-                  .getOrElse(
-                    OntologyConstants.KnoraBase.HasStillImageFileValue.toSmartIri,
-                    throw InconsistentRepositoryDataException(
-                      s"Representation ${representation.resourceIri} has no still image file value"
-                    )
-                  )
-                  .head
-
-                val imageValueContent: StillImageFileValueContentV2 = imageValue.valueContent match {
-                  case stillImageFileValueContentV2: StillImageFileValueContentV2 => stillImageFileValueContentV2
-                  case _                                                          => throw AssertionException("Expected a StillImageFileValueContentV2")
-                }
-
-                val fileUrl: String =
-                  imageValueContent.makeFileUrl(
-                    projectADM = representation.projectADM,
-                    appConfig.sipi.externalBaseUrl
-                  )
-
+              Seq(
                 JsonLDObject(
                   Map(
-                    "id"   -> JsonLDString(s"${representation.resourceIri}/canvas"), // Is this IRI OK?
-                    "type" -> JsonLDString("Canvas"),
-                    "label" -> JsonLDObject(
-                      Map(
-                        "en" -> JsonLDArray(
-                          Seq(
-                            JsonLDString(representation.label)
-                          )
-                        )
-                      )
-                    ),
-                    "height" -> JsonLDInt(imageValueContent.dimY),
-                    "width"  -> JsonLDInt(imageValueContent.dimX),
+                    "id"   -> JsonLDString(s"${imageValue.valueIri}/image"),
+                    "type" -> JsonLDString("AnnotationPage"),
                     "items" -> JsonLDArray(
                       Seq(
                         JsonLDObject(
                           Map(
-                            "id"   -> JsonLDString(s"${imageValue.valueIri}/image"), // Is this IRI OK?
-                            "type" -> JsonLDString("AnnotationPage"),
-                            "items" -> JsonLDArray(
-                              Seq(
-                                JsonLDObject(
-                                  Map(
-                                    "id"         -> JsonLDString(imageValue.valueIri),
-                                    "type"       -> JsonLDString("Annotation"),
-                                    "motivation" -> JsonLDString("painting"),
-                                    "body" -> JsonLDObject(
+                            "id"         -> JsonLDString(imageValue.valueIri),
+                            "type"       -> JsonLDString("Annotation"),
+                            "motivation" -> JsonLDString("painting"),
+                            "body" -> JsonLDObject(
+                              Map(
+                                "id"     -> JsonLDString(fileUrl),
+                                "type"   -> JsonLDString("Image"),
+                                "format" -> JsonLDString("image/jpeg"),
+                                "height" -> JsonLDInt(imageValueContent.dimY),
+                                "width"  -> JsonLDInt(imageValueContent.dimX),
+                                "service" -> JsonLDArray(
+                                  Seq(
+                                    JsonLDObject(
                                       Map(
-                                        "id"     -> JsonLDString(fileUrl),
-                                        "type"   -> JsonLDString("Image"),
-                                        "format" -> JsonLDString("image/jpeg"),
-                                        "height" -> JsonLDInt(imageValueContent.dimY),
-                                        "width"  -> JsonLDInt(imageValueContent.dimX),
-                                        "service" -> JsonLDArray(
-                                          Seq(
-                                            JsonLDObject(
-                                              Map(
-                                                "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
-                                                "type"    -> JsonLDString("ImageService3"),
-                                                "profile" -> JsonLDString("level1")
-                                              )
-                                            )
-                                          )
-                                        )
+                                        "id"      -> JsonLDString(appConfig.sipi.externalBaseUrl),
+                                        "type"    -> JsonLDString("ImageService3"),
+                                        "profile" -> JsonLDString("level1")
                                       )
                                     )
                                   )
@@ -2540,14 +2370,12 @@ final case class ResourcesResponderV2Live(
                     )
                   )
                 )
-              }
+              )
             )
           )
-        ),
-        keepStructure = true
-      )
-    )
-  }
+        )
+      }
+      .map(JsonLDArray)
 
   /**
    * Returns all events describing the history of a resource ordered by version date.
@@ -2586,25 +2414,17 @@ final case class ResourcesResponderV2Live(
   ): Task[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse <-
-        messageRelay
-          .ask[ProjectGetResponseADM](
-            ProjectGetRequestADM(identifier =
-              IriIdentifier
-                .fromString(projectResourceHistoryEventsGetRequest.projectIri)
-                .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-            )
-          )
+      projectId <- IriIdentifier
+                     .fromString(projectResourceHistoryEventsGetRequest.projectIri)
+                     .toZIO
+                     .mapError(e => BadRequestException(e.getMessage))
+      projectInfoResponse <- messageRelay.ask[ProjectGetResponseADM](ProjectGetRequestADM(projectId))
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
-      prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                   .getAllResourcesInProjectPrequery(
-                     projectIri = projectInfoResponse.project.id
-                   )
-                   .toString
-
-      sparqlSelectResponse      <- triplestoreService.sparqlHttpSelect(prequery)
-      mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
+      prequery = sparql.v2.txt
+                   .getAllResourcesInProjectPrequery(projectIri = projectInfoResponse.project.id)
+      sparqlSelectResponse <- triplestore.query(Select(prequery))
+      mainResourceIris      = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Task[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIri =>
@@ -2677,10 +2497,12 @@ final case class ResourcesResponderV2Live(
       resourceDeleteEvent = getResourceDeletionEvents(deletionRep)
 
       // For each value version, form an event
-      valuesEvents: Seq[ResourceAndValueHistoryEvent] =
-        resourceAtValueChanges.flatMap { case (versionHist, readResource) =>
-          getValueEvents(readResource, versionHist, fullReps)
-        }
+      valuesEvents <-
+        ZIO
+          .foreach(resourceAtValueChanges) { case (versionHist, readResource) =>
+            getValueEvents(readResource, versionHist, fullReps)
+          }
+          .map(_.flatten)
 
       // Get the update resource metadata event, if there is any.
       resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryEvent] = getResourceMetadataUpdateEvent(
@@ -2789,38 +2611,31 @@ final case class ResourcesResponderV2Live(
     resourceAtGivenTime: ReadResourceV2,
     versionHist: ResourceHistoryEntry,
     allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]
-  ): Seq[ResourceAndValueHistoryEvent] = {
-    val resourceIri = resourceAtGivenTime.resourceIri
+  ): Task[Seq[ResourceAndValueHistoryEvent]] = {
 
     /** returns the values of the resource which have the given version date. */
-    def findValuesWithGivenVersionDate(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, ReadValueV2] = {
-      val valuesWithVersionDate: Map[SmartIri, ReadValueV2] = values.foldLeft(Map.empty[SmartIri, ReadValueV2]) {
-        case (acc, (propIri, readValue)) =>
-          val valuesWithGivenVersion: Seq[ReadValueV2] =
-            readValue.filter(readValue =>
-              readValue.valueCreationDate == versionHist.versionDate || readValue.deletionInfo.exists(deleteInfo =>
-                deleteInfo.deleteDate == versionHist.versionDate
-              )
+    def findValuesWithGivenVersionDate(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, ReadValueV2] =
+      values.foldLeft(Map.empty[SmartIri, ReadValueV2]) { case (acc, (propIri, readValue)) =>
+        val valuesWithGivenVersion: Seq[ReadValueV2] =
+          readValue.filter(readValue =>
+            readValue.valueCreationDate == versionHist.versionDate || readValue.deletionInfo.exists(deleteInfo =>
+              deleteInfo.deleteDate == versionHist.versionDate
             )
-          if (valuesWithGivenVersion.nonEmpty) {
-            acc + (propIri -> valuesWithGivenVersion.head)
-          } else { acc }
+          )
+        if (valuesWithGivenVersion.nonEmpty) {
+          acc + (propIri -> valuesWithGivenVersion.head)
+        } else { acc }
       }
 
-      valuesWithVersionDate
+    ZIO.foldLeft(findValuesWithGivenVersionDate(resourceAtGivenTime.values))(List.empty[ResourceAndValueHistoryEvent]) {
+      (acc, next) =>
+        val (propIri, readValue) = next
 
-    }
-
-    val valuesWithAskedVersionDate: Map[SmartIri, ReadValueV2] = findValuesWithGivenVersionDate(
-      resourceAtGivenTime.values
-    )
-    val valueEvents: Seq[ResourceAndValueHistoryEvent] = valuesWithAskedVersionDate.map { case (propIri, readValue) =>
-      val event =
         // Is the given date a deletion date?
         if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
           // Yes. Return a deleteValue event
           val deleteValueRequestBody = ValueEventBody(
-            resourceIri = resourceIri,
+            resourceIri = resourceAtGivenTime.resourceIri,
             resourceClassIri = resourceAtGivenTime.resourceClassIri,
             projectADM = resourceAtGivenTime.projectADM,
             propertyIri = propIri,
@@ -2829,18 +2644,20 @@ final case class ResourcesResponderV2Live(
             deletionInfo = readValue.deletionInfo,
             previousValueIri = readValue.previousValueIri
           )
-          ResourceAndValueHistoryEvent(
-            eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
-            versionDate = versionHist.versionDate,
-            author = versionHist.author,
-            eventBody = deleteValueRequestBody
+          ZIO.succeed(
+            acc appended ResourceAndValueHistoryEvent(
+              eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
+              versionDate = versionHist.versionDate,
+              author = versionHist.author,
+              eventBody = deleteValueRequestBody
+            )
           )
         } else {
           // No. Is the given date a creation date, i.e. value does not have a previous version?
           if (readValue.previousValueIri.isEmpty) {
             // Yes. return a createValue event with its request body
             val createValueRequestBody = ValueEventBody(
-              resourceIri = resourceIri,
+              resourceIri = resourceAtGivenTime.resourceIri,
               resourceClassIri = resourceAtGivenTime.resourceClassIri,
               projectADM = resourceAtGivenTime.projectADM,
               propertyIri = propIri,
@@ -2852,28 +2669,28 @@ final case class ResourcesResponderV2Live(
               permissions = Some(readValue.permissions),
               valueComment = readValue.valueContent.comment
             )
-            ResourceAndValueHistoryEvent(
-              eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
-              versionDate = versionHist.versionDate,
-              author = versionHist.author,
-              eventBody = createValueRequestBody
+            ZIO.succeed(
+              acc appended ResourceAndValueHistoryEvent(
+                eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
+                versionDate = versionHist.versionDate,
+                author = versionHist.author,
+                eventBody = createValueRequestBody
+              )
             )
           } else {
             // No. return updateValue event
-            val (updateEventType: String, updateEventRequestBody: ValueEventBody) =
-              getValueUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime)
-            ResourceAndValueHistoryEvent(
-              eventType = updateEventType,
-              versionDate = versionHist.versionDate,
-              author = versionHist.author,
-              eventBody = updateEventRequestBody
-            )
+            getValueUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime).map {
+              case (updateEventType, updateEventRequestBody) =>
+                acc appended ResourceAndValueHistoryEvent(
+                  eventType = updateEventType,
+                  versionDate = versionHist.versionDate,
+                  author = versionHist.author,
+                  eventBody = updateEventRequestBody
+                )
+            }
           }
         }
-      event
-    }.toSeq
-
-    valueEvents
+    }
   }
 
   /**
@@ -2892,34 +2709,39 @@ final case class ResourcesResponderV2Live(
     currentVersionOfValue: ReadValueV2,
     allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
     resourceAtGivenTime: ReadResourceV2
-  ): (String, ValueEventBody) = {
-    val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
-      throw BadRequestException("No previous value IRI found for the value, Please report this as a bug.")
-    )
+  ): Task[(String, ValueEventBody)] = for {
+    previousValueIri <-
+      ZIO
+        .fromOption(currentVersionOfValue.previousValueIri)
+        .orElseFail(BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
 
     // find the version of resource which has a value with previousValueIri
-    val (previousVersionDate, previousVersionOfResource): (ResourceHistoryEntry, ReadResourceV2) = allResourceVersions
-      .find(resourceWithHist =>
-        resourceWithHist._2.values.exists(item =>
-          item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri)
+    versionDateAndPreviousVersion <-
+      ZIO
+        .fromOption(
+          allResourceVersions.find { case (_, resource) =>
+            resource.values.exists(item =>
+              item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri)
+            )
+          }
         )
-      )
-      .getOrElse(throw NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
+        .orElseFail(NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
+    (previousVersionDate, previousVersionOfResource) = versionDateAndPreviousVersion
 
     // check that the version date of the previousValue is before the version date of the current value.
-    if (previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
-      throw ForbiddenException(
-        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI $previousValueIri " +
-          s"has a date after the current value."
-      )
-    }
+    _ <- ZIO.when(previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
+           val msg = s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI " +
+             s"$previousValueIri has a date after the current value."
+           ZIO.fail(ForbiddenException(msg))
+         }
 
     // get the previous value
-    val previousValue: ReadValueV2 =
-      previousVersionOfResource.values(propertyIri).find(value => value.valueIri == previousValueIri).get
+    previousValue <- ZIO
+                       .fromOption(previousVersionOfResource.values(propertyIri).find(_.valueIri == previousValueIri))
+                       .orDieWith(_ => new Exception("cannot happen as the previous value must exist"))
 
-    // Is the content of previous version of value the same as content of the current version?
-    val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
+  } yield // Is the content of previous version of value the same as content of the current version?
+    if (previousValue.valueContent == currentVersionOfValue.valueContent) {
       // Yes. Permission must have been updated; return a permission update event.
       val updateValuePermissionsRequestBody = ValueEventBody(
         resourceIri = resourceAtGivenTime.resourceIri,
@@ -2949,8 +2771,6 @@ final case class ResourcesResponderV2Live(
       )
       (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentRequestBody)
     }
-    event
-  }
 
   /**
    * Returns an updateResourceMetadata event as [[ResourceAndValueHistoryEvent]] with request body of the form

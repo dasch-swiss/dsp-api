@@ -15,7 +15,6 @@ import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.tdb2.TDB2Factory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
-import zio.IO
 import zio.Ref
 import zio.Scope
 import zio.Task
@@ -24,47 +23,35 @@ import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 
-import java.io.StringReader
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.collection.mutable
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
-import org.knora.webapi.messages.store.triplestoremessages.DropAllRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.DropDataGraphByGraphACK
-import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
-import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.RepositoryUploadedResponse
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormatUtil
-import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.RdfStringSource
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
-import org.knora.webapi.messages.util.rdf.Statement
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
+import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.createEmptyDataset
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
-import org.knora.webapi.store.triplestore.errors.TriplestoreException
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureException
@@ -75,21 +62,10 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-  override def doSimulateTimeout(): Task[SparqlSelectResult] = ZIO.fail(
-    TriplestoreTimeoutException(
-      "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-    )
-  )
 
-  override def sparqlHttpSelect(
-    sparql: String,
-    simulateTimeout: Boolean,
-    isGravsearch: Boolean
-  ): Task[SparqlSelectResult] = {
-    require(!simulateTimeout, "`simulateTimeout` parameter is not supported by fake implementation yet")
-    require(!isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
-
-    ZIO.scoped(execSelect(sparql).map(toSparqlSelectResult))
+  override def query(query: Select): Task[SparqlSelectResult] = {
+    require(!query.isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
+    ZIO.scoped(execSelect(query.sparql).map(toSparqlSelectResult))
   }
 
   private def execSelect(query: String): ZIO[Any with Scope, Throwable, ResultSet] = {
@@ -134,40 +110,24 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     VariableResultsRow(keyValueMap)
   }
 
-  override def sparqlHttpAsk(query: String): Task[SparqlAskResponse] =
-    ZIO.scoped(getReadTransactionQueryExecution(query).map(_.execAsk())).map(SparqlAskResponse)
+  override def query(query: Ask): Task[Boolean] =
+    ZIO.scoped(getReadTransactionQueryExecution(query.sparql).map(_.execAsk()))
 
-  override def sparqlHttpConstruct(request: SparqlConstructRequest): Task[SparqlConstructResponse] = {
-    def parseTurtleResponse(
-      turtleStr: String
-    ): IO[TriplestoreException, SparqlConstructResponse] =
-      ZIO.attemptBlocking {
-        val rdfModel: RdfModel                                 = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-        val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
-        for (st: Statement <- rdfModel) {
-          val subjectIri   = st.subj.stringValue
-          val predicateIri = st.pred.stringValue
-          val objectIri    = st.obj.stringValue
-          val currentStatementsForSubject: Seq[(IRI, String)] =
-            statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
-          statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
-        }
-        SparqlConstructResponse(statementMap.toMap)
-      }.foldZIO(
-        _ =>
-          if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
-            ZIO.fail(TriplestoreTimeoutException("Triplestore timed out."))
-          } else {
-            ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore."))
-          },
-        ZIO.succeed(_)
-      )
-
+  override def query(query: Construct): Task[SparqlConstructResponse] =
     for {
-      turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle))
-      response <- parseTurtleResponse(turtle)
-    } yield response
-  }
+      turtle <- ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
+      rdfModel <- ZIO
+                    .attempt(RdfFeatureFactory.getRdfFormatUtil().parseToRdfModel(turtle, Turtle))
+                    .foldZIO(
+                      _ =>
+                        if (turtle.contains("##  Query cancelled due to timeout during execution")) {
+                          ZIO.fail(TriplestoreTimeoutException("Triplestore timed out."))
+                        } else {
+                          ZIO.fail(TriplestoreResponseException("Couldn't parse Turtle from triplestore."))
+                        },
+                      ZIO.succeed(_)
+                    )
+    } yield SparqlConstructResponse.make(rdfModel)
 
   private def execConstruct(query: String): ZIO[Any with Scope, Throwable, Model] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
@@ -182,99 +142,60 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       turtle = os.toString(StandardCharsets.UTF_8)
     } yield turtle
 
-  override def sparqlHttpExtendedConstruct(
-    request: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse] =
-    for {
-      turtle   <- ZIO.scoped(execConstruct(request.sparql).flatMap(modelToTurtle))
-      response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtle)
-    } yield response
-
-  override def sparqlHttpConstructFile(
-    sparql: String,
-    graphIri: IRI,
-    outputFile: Path,
+  override def queryToFile(
+    query: Construct,
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = ZIO.scoped {
+  ): Task[Unit] = ZIO.scoped {
     for {
-      model  <- execConstruct(sparql)
-      turtle <- modelToTurtle(model)
-      _ <- ZIO
-             .attempt(
-               rdfFormatUtil
-                 .turtleToQuadsFile(
-                   rdfSource = RdfStringSource(turtle),
-                   graphIri = graphIri,
-                   outputFile = outputFile,
-                   outputFormat = outputFormat
-                 )
-             )
-    } yield FileWrittenResponse()
+      model  <- execConstruct(query.sparql)
+      source <- modelToTurtle(model).map(RdfStringSource)
+      _      <- ZIO.attempt(rdfFormatUtil.turtleToQuadsFile(source, graphIri.value, outputFile.toFile.toPath, outputFormat))
+    } yield ()
   }
 
-  override def sparqlHttpUpdate(query: String): Task[SparqlUpdateResponse] = {
+  override def query(query: Update): Task[Unit] = {
     def doUpdate(ds: Dataset) = ZIO.attempt {
-      val update    = UpdateFactory.create(query)
+      val update    = UpdateFactory.create(query.sparql)
       val processor = UpdateExecutionFactory.create(update, ds)
       processor.execute()
     }
-    ZIO.scoped {
-      for {
-        ds <- getDataSetWithTransaction(ReadWrite.WRITE)
-        _  <- doUpdate(ds)
-      } yield SparqlUpdateResponse()
-    }
+    ZIO.scoped(getDataSetWithTransaction(ReadWrite.WRITE).flatMap(doUpdate)).unit
   }
 
-  override def sparqlHttpGraphFile(
-    graphIri: IRI,
-    outputFile: Path,
+  override def downloadGraph(
+    graphIri: InternalIri,
+    outputFile: zio.nio.file.Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = ZIO.scoped {
+  ): Task[Unit] = ZIO.scoped {
     for {
       fos <- fileOutputStream(outputFile)
       ds  <- datasetRef.get
       lang = JenaFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
       _ <- ZIO.attemptBlocking {
              ds.begin(ReadWrite.READ)
-             try { ds.getNamedModel(graphIri).write(fos, lang.getName) }
+             try { ds.getNamedModel(graphIri.value).write(fos, lang.getName) }
              finally { ds.end() }
            }
-    } yield FileWrittenResponse()
-  }
-
-  override def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = ZIO.scoped {
-    for {
-      ds <- getDataSetWithTransaction(ReadWrite.READ)
-      model <- ZIO
-                 .fromOption(Option(ds.getNamedModel(graphIri)))
-                 .orElseFail(TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri."))
-      turtle <- modelToTurtle(model)
-    } yield NamedGraphDataResponse(turtle)
+    } yield ()
   }
 
   override def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[ResetRepositoryContentACK] = for {
-    _ <- dropAllTriplestoreContent()
+  ): Task[Unit] = for {
+    _ <- dropDataGraphByGraph()
     _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
-  } yield ResetRepositoryContentACK()
+  } yield ()
 
-  override def dropAllTriplestoreContent(): Task[DropAllRepositoryContentACK] =
-    createEmptyDataset.flatMap(ds => datasetRef.set(ds)).as(DropAllRepositoryContentACK())
-
-  override def dropDataGraphByGraph(): Task[DropDataGraphByGraphACK] =
-    dropAllTriplestoreContent().as(DropDataGraphByGraphACK())
+  override def dropDataGraphByGraph(): Task[Unit] = createEmptyDataset.flatMap(datasetRef.set(_)).unit
 
   override def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean
-  ): Task[InsertTriplestoreContentACK] =
-    for {
-      objects <- getListToInsert(rdfDataObjects, prependDefaults)
-      _       <- ZIO.foreachDiscard(objects)(insertRdfDataObject)
-    } yield InsertTriplestoreContentACK()
+  ): Task[Unit] =
+    getListToInsert(rdfDataObjects, prependDefaults).flatMap(ZIO.foreachDiscard(_)(insertRdfDataObject))
 
   private def getListToInsert(
     rdfDataObjects: List[RdfDataObject],
@@ -312,22 +233,13 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
       ZIO.succeed(graphName)
     }
 
-  override def checkTriplestore(): Task[CheckTriplestoreResponse] = ZIO.succeed(CheckTriplestoreResponse.Available)
+  override def checkTriplestore(): Task[TriplestoreStatus] = ZIO.succeed(Available)
 
-  override def downloadRepository(outputFile: Path): Task[FileWrittenResponse] =
+  override def downloadRepository(outputFile: Path): Task[Unit] =
     ZIO.fail(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
 
-  override def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse] =
+  override def uploadRepository(inputFile: Path): Task[Unit] =
     ZIO.fail(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
-
-  override def insertDataGraphRequest(turtle: String, graphName: String): Task[InsertGraphDataContentResponse] =
-    ZIO.scoped {
-      for {
-        name <- checkGraphName(graphName)
-        ds   <- getDataSetWithTransaction(ReadWrite.WRITE)
-        _     = ds.getNamedModel(name).read(new StringReader(turtle), null, turtle)
-      } yield InsertGraphDataContentResponse()
-    }
 }
 
 object TriplestoreServiceInMemory {

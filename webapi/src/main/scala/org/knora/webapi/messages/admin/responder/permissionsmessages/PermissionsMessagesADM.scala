@@ -762,9 +762,7 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 }
 
-abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
-    extends KnoraResponseADM
-    with PermissionsADMJsonProtocol
+abstract class PermissionGetResponseADM() extends KnoraResponseADM with PermissionsADMJsonProtocol
 
 /**
  * Represents an answer to a request for getting a default object access permission.
@@ -772,7 +770,7 @@ abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
  * @param defaultObjectAccessPermission the retrieved [[DefaultObjectAccessPermissionADM]].
  */
 case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM)
-    extends PermissionGetResponseADM(defaultObjectAccessPermission) {
+    extends PermissionGetResponseADM() {
   def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
 }
 
@@ -782,7 +780,7 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
  * @param administrativePermission the retrieved [[AdministrativePermissionADM]].
  */
 case class AdministrativePermissionGetResponseADM(administrativePermission: AdministrativePermissionADM)
-    extends PermissionGetResponseADM(administrativePermission) {
+    extends PermissionGetResponseADM() {
   def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
 }
 
@@ -897,11 +895,7 @@ case class PermissionsDataADM(
    * @param insideProject the IRI of the project inside which the operation will be performed.
    * @return a boolean value.
    */
-  def hasPermissionFor(
-    operation: OperationADM,
-    insideProject: IRI,
-    objectAccessPermissions: Option[Set[PermissionADM]]
-  ): Boolean =
+  def hasPermissionFor(operation: OperationADM, insideProject: IRI): Boolean =
     // println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
     if (this.isSystemAdmin) {
       /* A member of the SystemAdmin group is allowed to perform any operation */

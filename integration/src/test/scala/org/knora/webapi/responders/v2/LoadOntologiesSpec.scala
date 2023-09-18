@@ -8,16 +8,13 @@ package org.knora.webapi.responders.v2
 import akka.actor.Status
 import akka.testkit.ImplicitSender
 
-import scala.concurrent.duration._
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Tests that the [[OntologyCache.loadOntologies]] method does not load invalid data into the cache.
@@ -35,8 +32,11 @@ class LoadOntologiesSpec extends CoreSpec with ImplicitSender {
   private def resetRepositoryAndLoadDataIntoCache(
     rdfDataObjs: List[RdfDataObject]
   ): Either[Status.Failure, SuccessResponseV2] = {
-    appActor ! ResetRepositoryContent(rdfDataObjs)
-    expectMsg(5.minutes, ResetRepositoryContentACK())
+    UnsafeZioRun.runOrThrow(
+      TriplestoreService
+        .resetTripleStoreContent(rdfDataObjs)
+        .timeout(java.time.Duration.ofMinutes(5))
+    )
 
     UnsafeZioRun
       .run(OntologyCache.loadOntologies(KnoraSystemInstances.Users.SystemUser))

@@ -6,9 +6,14 @@
 package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
+import pdi.jwt.JwtAlgorithm
+import pdi.jwt.JwtSprayJson
 import spray.json.JsString
+import zio.ZIO
 
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.config.JwtConfig
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 class JwtServiceSpec extends CoreSpec with ImplicitSender {
@@ -25,6 +30,25 @@ class JwtServiceSpec extends CoreSpec with ImplicitSender {
       } yield useriri
 
       UnsafeZioRun.runOrThrow(runZio) should be(Some(SharedTestDataADM.anythingUser1.id))
+    }
+
+    "create a token with dsp-ingest audience for sys admins" in {
+      val sysAdmin = SharedTestDataADM.rootUser
+      val audience = createTokenAndExtractAudience(sysAdmin)
+      UnsafeZioRun.runOrThrow(audience) should contain("http://localhost:3340")
+    }
+
+    def createTokenAndExtractAudience(user: UserADM) = for {
+      token     <- JwtService.createJwt(user)
+      jwtConfig <- ZIO.service[JwtConfig]
+      decoded    = JwtSprayJson.decodeAll(token.jwtString, jwtConfig.secret, Seq(JwtAlgorithm.HS256))
+      audience   = decoded.toOption.flatMap { case (_, claims, _) => claims.audience }.head
+    } yield audience
+
+    "create a token without dsp-ingest audience for non sys admins" in {
+      val normalUser = SharedTestDataADM.anythingUser2
+      val audience   = createTokenAndExtractAudience(normalUser)
+      UnsafeZioRun.runOrThrow(audience) should not contain "http://localhost:3340"
     }
 
     "validate a token" in {

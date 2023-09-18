@@ -309,6 +309,33 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       }
     }
 
+    "perform an extended search ordered by label" in {
+
+      val queryAsc = searchResponderV2SpecFullData.constructQuerySortByLabel
+
+      appActor ! GravsearchRequestV2(
+        constructQuery = queryAsc,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        requestingUser = SharedTestDataADM.anonymousUser
+      )
+
+      val asc = expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 => response }
+      assert(asc.resources.head.label == "A blue thing")
+
+      val queryDesc = searchResponderV2SpecFullData.constructQuerySortByLabelDesc
+
+      appActor ! GravsearchRequestV2(
+        constructQuery = queryDesc,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        requestingUser = SharedTestDataADM.anonymousUser
+      )
+
+      val desc = expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 => response }
+      assert(desc.resources.head.label == "visible thing with hidden int values")
+    }
+
   }
 
 }

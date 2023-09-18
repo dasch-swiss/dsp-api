@@ -11,8 +11,6 @@ import zio._
 
 import java.util.UUID
 
-import dsp.errors.BadRequestException
-import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.User._
@@ -32,18 +30,22 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserChangeRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
 
 /**
@@ -55,7 +57,7 @@ final case class UsersResponderADMLive(
   appConfig: AppConfig,
   iriService: IriService,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends UsersResponderADM
     with MessageHandler
@@ -71,16 +73,15 @@ final case class UsersResponderADMLive(
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case UsersGetADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADM(userInformationTypeADM, requestingUser)
-    case UsersGetRequestADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADMRequest(userInformationTypeADM, requestingUser)
+    case UsersGetADM(_, requestingUser) => getAllUserADM(requestingUser)
+    case UsersGetRequestADM(_, requestingUser) =>
+      getAllUserADMRequest(requestingUser)
     case UserGetADM(identifier, userInformationTypeADM, requestingUser) =>
       getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
     case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) =>
       getSingleUserADMRequest(identifier, userInformationTypeADM, requestingUser)
-    case UserCreateRequestADM(userCreatePayloadADM, requestingUser, apiRequestID) =>
-      createNewUserADM(userCreatePayloadADM, requestingUser, apiRequestID)
+    case UserCreateRequestADM(userCreatePayloadADM, _, apiRequestID) =>
+      createNewUserADM(userCreatePayloadADM, apiRequestID)
     case UserChangeBasicInformationRequestADM(
           userIri,
           userUpdateBasicInformationPayload,
@@ -114,8 +115,7 @@ final case class UsersResponderADMLive(
         requestingUser,
         apiRequestID
       )
-    case UserProjectMembershipsGetRequestADM(userIri, requestingUser) =>
-      userProjectMembershipsGetRequestADM(userIri, requestingUser)
+    case UserProjectMembershipsGetRequestADM(userIri, _) => userProjectMembershipsGetRequestADM(userIri)
     case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserProjectMembershipRemoveRequestADM(
@@ -125,8 +125,8 @@ final case class UsersResponderADMLive(
           apiRequestID
         ) =>
       userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) =>
-      userProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
+    case UserProjectAdminMembershipsGetRequestADM(userIri, _, _) =>
+      userProjectAdminMembershipsGetRequestADM(userIri)
     case UserProjectAdminMembershipAddRequestADM(
           userIri,
           projectIri,
@@ -146,8 +146,8 @@ final case class UsersResponderADMLive(
         requestingUser,
         apiRequestID
       )
-    case UserGroupMembershipsGetRequestADM(userIri, requestingUser) =>
-      userGroupMembershipsGetRequestADM(userIri, requestingUser)
+    case UserGroupMembershipsGetRequestADM(userIri, _) =>
+      userGroupMembershipsGetADM(userIri).map(UserGroupMembershipsGetResponseADM)
     case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
       userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
     case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
@@ -158,15 +158,10 @@ final case class UsersResponderADMLive(
   /**
    * Gets all the users and returns them as a sequence of [[UserADM]].
    *
-   * @param userInformationType  the extent of the information returned.
-   *
    * @param requestingUser       the user initiating the request.
    * @return all the users as a sequence of [[UserADM]].
    */
-  private def getAllUserADM(
-    userInformationType: UserInformationTypeADM,
-    requestingUser: UserADM
-  ): Task[Seq[UserADM]] =
+  private def getAllUserADM(requestingUser: UserADM) =
     for {
       _ <- ZIO.attempt(
              if (
@@ -177,19 +172,12 @@ final case class UsersResponderADMLive(
              }
            )
 
-      sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                               .getUsers(
-                                 maybeIri = None,
-                                 maybeUsername = None,
-                                 maybeEmail = None
-                               )
-                               .toString()
-                           )
+      query = Construct(sparql.admin.txt.getUsers(maybeIri = None, maybeUsername = None, maybeEmail = None))
 
-      usersResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
-
-      statements = usersResponse.statements.toList
+      statements <- triplestore
+                      .query(query)
+                      .flatMap(_.asExtended)
+                      .map(_.statements.toList)
 
       users: Seq[UserADM] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
                               UserADM(
@@ -260,20 +248,12 @@ final case class UsersResponderADMLive(
   /**
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
    *
-   * @param userInformationType  the extent of the information returned.
-   *
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    */
-  private def getAllUserADMRequest(
-    userInformationType: UserInformationTypeADM,
-    requestingUser: UserADM
-  ): Task[UsersGetResponseADM] =
+  private def getAllUserADMRequest(requestingUser: UserADM): Task[UsersGetResponseADM] =
     for {
-      maybeUsersListToReturn <- getAllUserADM(
-                                  userInformationType = userInformationType,
-                                  requestingUser = requestingUser
-                                )
+      maybeUsersListToReturn <- getAllUserADM(requestingUser)
 
       result = maybeUsersListToReturn match {
                  case users: Seq[UserADM] if users.nonEmpty =>
@@ -383,8 +363,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if the necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   *               with a [[BadRequestException]] if the necessary parameters are not supplied.
+   *               with a [[ForbiddenException]]  if the user doesn't hold the necessary permission for the operation.
    */
   private def changeBasicUserInformationADM(
     userIri: IRI,
@@ -401,8 +381,7 @@ final case class UsersResponderADMLive(
     def changeBasicUserDataTask(
       userIri: IRI,
       userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -449,15 +428,14 @@ final case class UsersResponderADMLive(
                       familyName = userUpdateBasicInformationPayload.familyName,
                       lang = userUpdateBasicInformationPayload.lang
                     ),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       USERS_GLOBAL_LOCK_IRI,
-      changeBasicUserDataTask(userIri, userUpdateBasicInformationPayload, requestingUser, apiRequestID)
+      changeBasicUserDataTask(userIri, userUpdateBasicInformationPayload, requestingUser)
     )
   }
 
@@ -470,10 +448,10 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
-   * @throws ForbiddenException  if the supplied old password doesn't match with the user's current password.
-   * @throws NotFoundException   if the user is not found.
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
+   *         fails with a [[ForbiddenException]] if the supplied old password doesn't match with the user's current password.
+   *         fails with a [[NotFoundException]] if the user is not found.
    */
   private def changePasswordADM(
     userIri: IRI,
@@ -488,8 +466,7 @@ final case class UsersResponderADMLive(
     def changePasswordTask(
       userIri: IRI,
       userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -516,8 +493,7 @@ final case class UsersResponderADMLive(
         result <- updateUserPasswordADM(
                     userIri = userIri,
                     password = newHashedPassword,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
       } yield result
@@ -525,7 +501,7 @@ final case class UsersResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      changePasswordTask(userIri, userUpdatePasswordPayload, requestingUser, apiRequestID)
+      changePasswordTask(userIri, userUpdatePasswordPayload, requestingUser)
     )
   }
 
@@ -538,8 +514,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
    */
   private def changeUserStatusADM(
     userIri: IRI,
@@ -556,8 +532,7 @@ final case class UsersResponderADMLive(
     def changeUserStatusTask(
       userIri: IRI,
       status: UserStatus,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -572,8 +547,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(status = Some(status)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
       } yield result
@@ -581,7 +555,7 @@ final case class UsersResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      changeUserStatusTask(userIri, status, requestingUser, apiRequestID)
+      changeUserStatusTask(userIri, status, requestingUser)
     )
   }
 
@@ -594,8 +568,8 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the user profile of the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
-   * @throws BadRequestException if necessary parameters are not supplied.
-   * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
+   *         fails with a [[BadRequestException]] if necessary parameters are not supplied.
+   *         fails with a [[ForbiddenException]] if the user doesn't hold the necessary permission for the operation.
    */
   private def changeUserSystemAdminMembershipStatusADM(
     userIri: IRI,
@@ -610,8 +584,7 @@ final case class UsersResponderADMLive(
     def changeUserSystemAdminMembershipStatusTask(
       userIri: IRI,
       systemAdmin: SystemAdmin,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. system admin)
@@ -626,8 +599,7 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
       } yield result
@@ -635,7 +607,7 @@ final case class UsersResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      changeUserSystemAdminMembershipStatusTask(userIri, systemAdmin, requestingUser, apiRequestID)
+      changeUserSystemAdminMembershipStatusTask(userIri, systemAdmin, requestingUser)
     )
   }
 
@@ -643,48 +615,25 @@ final case class UsersResponderADMLive(
    * Returns user's project memberships as a sequence of [[ProjectADM]].
    *
    * @param userIri        the IRI of the user.
-   * @param requestingUser the requesting user.
    * @return a sequence of [[ProjectADM]]
    */
-  private def userProjectMembershipsGetADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[Seq[ProjectADM]] =
-    for {
-      maybeUser <- getSingleUserADM(
-                     identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                     userInformationType = UserInformationTypeADM.Full,
-                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                   )
-
-      result = maybeUser match {
-                 case Some(userADM) => userADM.projects
-                 case None          => Seq.empty[ProjectADM]
-               }
-
-    } yield result
+  private def userProjectMembershipsGetADM(userIri: IRI) =
+    getSingleUserADM(
+      UserIdentifierADM(maybeIri = Some(userIri)),
+      UserInformationTypeADM.Full,
+      KnoraSystemInstances.Users.SystemUser
+    ).map(_.map(_.projects).getOrElse(Seq.empty))
 
   /**
    * Returns the user's project memberships as [[UserProjectMembershipsGetResponseADM]].
    *
    * @param userIri        the user's IRI.
-   * @param requestingUser the requesting user.
    * @return a [[UserProjectMembershipsGetResponseADM]].
    */
-  private def userProjectMembershipsGetRequestADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[UserProjectMembershipsGetResponseADM] =
+  private def userProjectMembershipsGetRequestADM(userIri: IRI) =
     for {
-      userExists <- userExists(userIri)
-      _ = if (!userExists) {
-            throw BadRequestException(s"User $userIri does not exist.")
-          }
-
-      projects <- userProjectMembershipsGetADM(
-                    userIri = userIri,
-                    requestingUser = requestingUser
-                  )
+      _        <- ZIO.whenZIO(userExists(userIri).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
+      projects <- userProjectMembershipsGetADM(userIri)
     } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
@@ -711,8 +660,7 @@ final case class UsersResponderADMLive(
     def userProjectMembershipAddRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
@@ -734,12 +682,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetRequestADM(
-                                       userIri = userIri,
-                                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                                     )
-
-        currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects.map(_.id)
+        currentProjectMembershipIris <- userProjectMembershipsGetRequestADM(userIri).map(_.projects.map(_.id))
 
         // check if user is already member and if not then append to list
         updatedProjectMembershipIris =
@@ -755,15 +698,14 @@ final case class UsersResponderADMLive(
         updateUserResult <- updateUserADM(
                               userIri = userIri,
                               userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
-                              requestingUser = requestingUser,
-                              apiRequestID = apiRequestID
+                              requestingUser = requestingUser
                             )
       } yield updateUserResult
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser)
     )
 
   }
@@ -790,8 +732,7 @@ final case class UsersResponderADMLive(
     def userProjectMembershipRemoveRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
@@ -813,10 +754,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetADM(
-                                       userIri = userIri,
-                                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                                     )
+        currentProjectMemberships   <- userProjectMembershipsGetADM(userIri = userIri)
         currentProjectMembershipIris = currentProjectMemberships.map(_.id)
 
         // check if user is a member and if he is then remove the project from to list
@@ -830,20 +768,15 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project admin membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-                                            userIri = userIri,
-                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                            apiRequestID = apiRequestID
-                                          )
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
 
         // in case the user has an admin membership for that project, remove it as well
-        maybeUpdatedProjectAdminMembershipIris = if (currentProjectAdminMembershipIris.contains(projectIri)) {
-                                                   Some(
-                                                     currentProjectAdminMembershipIris.filterNot(p => p == projectIri)
-                                                   )
-                                                 } else None
+        maybeUpdatedProjectAdminMembershipIris =
+          if (currentProjectAdminMembershipIris.contains(projectIri)) {
+            Some(currentProjectAdminMembershipIris.filterNot(p => p == projectIri))
+          } else {
+            None
+          }
 
         // create the update request by using the SystemUser
         result <- updateUserADM(
@@ -852,15 +785,14 @@ final case class UsersResponderADMLive(
                       projects = Some(updatedProjectMembershipIris),
                       projectsAdmin = maybeUpdatedProjectAdminMembershipIris
                     ),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser)
     )
   }
 
@@ -868,39 +800,25 @@ final case class UsersResponderADMLive(
    * Returns the user's project admin group memberships as a sequence of [[IRI]]
    *
    * @param userIri              the user's IRI.
-   * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
    * @return a list of [[ProjectADM]].
    */
-  private def userProjectAdminMembershipsGetADM(
-    userIri: IRI,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[Seq[ProjectADM]] =
+  private def userProjectAdminMembershipsGetADM(userIri: IRI): Task[Seq[ProjectADM]] =
     // ToDo: only allow system user
     // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
     for {
-      sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                               .getUserByIri(
-                                 userIri = userIri
-                               )
-                               .toString()
-                           )
+      userDataQueryResponse <- triplestore.query(Select(sparql.admin.txt.getUserByIri(userIri)))
 
-      userDataQueryResponse <- triplestoreService.sparqlHttpSelect(sparqlQueryString)
-
-      groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                                                    case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-                                                  }
+      groupedUserData = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
+                          predicate -> rows.map(_.rowMap("o"))
+                        }
 
       /* the projects the user is member of */
-      projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
-                                case Some(projects) => projects
-                                case None           => Seq.empty[IRI]
-                              }
+      projectIris = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
+                      case Some(projects) => projects
+                      case None           => Seq.empty[IRI]
+                    }
 
-      maybeProjectFutures: Seq[Task[Option[ProjectADM]]] =
+      maybeProjectFutures =
         projectIris.map { projectIri =>
           messageRelay.ask[Option[ProjectADM]](
             ProjectGetADM(
@@ -920,29 +838,15 @@ final case class UsersResponderADMLive(
    * is a member of the project admin group.
    *
    * @param userIri              the user's IRI.
-   * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectAdminMembershipsGetResponseADM]].
    */
-  private def userProjectAdminMembershipsGetRequestADM(
-    userIri: IRI,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[UserProjectAdminMembershipsGetResponseADM] =
+  private def userProjectAdminMembershipsGetRequestADM(userIri: IRI) =
     // ToDo: which user is allowed to do this operation?
     // ToDo: check permissions
     for {
-      userExists <- userExists(userIri)
-      _ = if (!userExists) {
-            throw BadRequestException(s"User $userIri does not exist.")
-          }
-
-      projects <- userProjectAdminMembershipsGetADM(
-                    userIri = userIri,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
-                  )
-    } yield UserProjectAdminMembershipsGetResponseADM(projects = projects)
+      _        <- ZIO.whenZIO(userExists(userIri).negate)(ZIO.fail(BadRequestException(s"User $userIri does not exist.")))
+      projects <- userProjectAdminMembershipsGetADM(userIri)
+    } yield UserProjectAdminMembershipsGetResponseADM(projects)
 
   /**
    * Adds a user to the project admin group of a project.
@@ -966,8 +870,7 @@ final case class UsersResponderADMLive(
     def userProjectAdminMembershipAddRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. project admin or system admin)
@@ -989,10 +892,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetADM(
-                                       userIri = userIri,
-                                       requestingUser = KnoraSystemInstances.Users.SystemUser
-                                     )
+        currentProjectMemberships <- userProjectMembershipsGetADM(userIri = userIri)
 
         currentProjectMembershipIris = currentProjectMemberships.map(_.id)
 
@@ -1005,13 +905,7 @@ final case class UsersResponderADMLive(
             }
 
         // get users current project admin membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-                                            userIri = userIri,
-                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                            apiRequestID = apiRequestID
-                                          )
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
 
         // check if user is already project admin and if not then append to list
         updatedProjectAdminMembershipIris =
@@ -1027,15 +921,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectAdminMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectAdminMembershipAddRequestTask(userIri, projectIri, requestingUser)
     )
 
   }
@@ -1062,8 +955,7 @@ final case class UsersResponderADMLive(
     def userProjectAdminMembershipRemoveRequestTask(
       userIri: IRI,
       projectIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
@@ -1085,13 +977,7 @@ final case class UsersResponderADMLive(
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-                                            userIri = userIri,
-                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                            apiRequestID = apiRequestID
-                                          )
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+        currentProjectAdminMembershipIris <- userProjectAdminMembershipsGetADM(userIri).map(_.map(_.id))
 
         // check if user is not already a member and if he is then remove the project from to list
         updatedProjectAdminMembershipIris =
@@ -1107,15 +993,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, requestingUser)
     )
   }
 
@@ -1123,52 +1008,14 @@ final case class UsersResponderADMLive(
    * Returns the user's group memberships as a sequence of [[GroupADM]]
    *
    * @param userIri              the IRI of the user.
-   * @param requestingUser       the requesting user.
    * @return a sequence of [[GroupADM]].
    */
-  private def userGroupMembershipsGetADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[Seq[GroupADM]] =
-    for {
-      maybeUserADM <- getSingleUserADM(
-                        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                        userInformationType = UserInformationTypeADM.Full,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser
-                      )
-
-      groups: Seq[GroupADM] = maybeUserADM match {
-                                case Some(user) =>
-                                  logger.debug(
-                                    "userGroupMembershipsGetADM - user found. Returning his groups: {}.",
-                                    user.groups
-                                  )
-                                  user.groups
-                                case None =>
-                                  logger.debug("userGroupMembershipsGetADM - user not found. Returning empty seq.")
-                                  Seq.empty[GroupADM]
-                              }
-
-    } yield groups
-
-  /**
-   * Returns the user's group memberships as a [[UserGroupMembershipsGetResponseADM]]
-   *
-   * @param userIri              the IRI of the user.
-   *
-   * @param requestingUser       the requesting user.
-   * @return a [[UserGroupMembershipsGetResponseADM]].
-   */
-  private def userGroupMembershipsGetRequestADM(
-    userIri: IRI,
-    requestingUser: UserADM
-  ): Task[UserGroupMembershipsGetResponseADM] =
-    for {
-      groups <- userGroupMembershipsGetADM(
-                  userIri = userIri,
-                  requestingUser = requestingUser
-                )
-    } yield UserGroupMembershipsGetResponseADM(groups = groups)
+  private def userGroupMembershipsGetADM(userIri: IRI) =
+    getSingleUserADM(
+      UserIdentifierADM(maybeIri = Some(userIri)),
+      UserInformationTypeADM.Full,
+      KnoraSystemInstances.Users.SystemUser
+    ).map(_.map(_.groups).getOrElse(Seq.empty))
 
   /**
    * Adds a user to a group.
@@ -1192,8 +1039,7 @@ final case class UsersResponderADMLive(
     def userGroupMembershipAddRequestTask(
       userIri: IRI,
       groupIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
@@ -1229,9 +1075,7 @@ final case class UsersResponderADMLive(
             }
 
         // get users current group membership list
-        currentGroupMemberships = userToChange.groups
-
-        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.map(_.id)
+        currentGroupMembershipIris = userToChange.groups.map(_.id)
 
         // check if user is already member and if not then append to list
         updatedGroupMembershipIris =
@@ -1245,15 +1089,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
-                    requestingUser = KnoraSystemInstances.Users.SystemUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser, apiRequestID)
+      userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser)
     )
   }
 
@@ -1279,8 +1122,7 @@ final case class UsersResponderADMLive(
     def userGroupMembershipRemoveRequestTask(
       userIri: IRI,
       groupIri: IRI,
-      requestingUser: UserADM,
-      apiRequestID: UUID
+      requestingUser: UserADM
     ): Task[UserOperationResponseADM] =
       for {
         // check if user exists
@@ -1309,12 +1151,7 @@ final case class UsersResponderADMLive(
           }
 
         // get users current project membership list
-        currentGroupMemberships <- userGroupMembershipsGetRequestADM(
-                                     userIri = userIri,
-                                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                                   )
-
-        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups.map(_.id)
+        currentGroupMembershipIris <- userGroupMembershipsGetADM(userIri).map(_.map(_.id))
 
         // check if user is not already a member and if he is then remove the project from to list
         updatedGroupMembershipIris =
@@ -1328,15 +1165,14 @@ final case class UsersResponderADMLive(
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
-                    requestingUser = requestingUser,
-                    apiRequestID = apiRequestID
+                    requestingUser = requestingUser
                   )
       } yield result
 
     IriLocker.runWithIriLock(
       apiRequestID,
       userIri,
-      userGroupMembershipRemoveRequestTask(userIri, groupIri, requestingUser, apiRequestID)
+      userGroupMembershipRemoveRequestTask(userIri, groupIri, requestingUser)
     )
   }
 
@@ -1346,17 +1182,11 @@ final case class UsersResponderADMLive(
    * @param userIri              the IRI of the existing user that we want to update.
    * @param userUpdatePayload    the updated information.
    * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
-   * @throws BadRequestException         if necessary parameters are not supplied.
-   * @throws UpdateNotPerformedException if the update was not performed.
+   *         fails with a BadRequestException         if necessary parameters are not supplied.
+   *         fails with a UpdateNotPerformedException if the update was not performed.
    */
-  private def updateUserADM(
-    userIri: IRI,
-    userUpdatePayload: UserChangeRequestADM,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  private def updateUserADM(userIri: IRI, userUpdatePayload: UserChangeRequestADM, requestingUser: UserADM) = {
 
     logger.debug("updateUserADM - userUpdatePayload: {}", userUpdatePayload)
 
@@ -1442,30 +1272,25 @@ final case class UsersResponderADMLive(
                                   case Some(systemAdmin) => Some(systemAdmin.value)
                                   case None              => None
                                 }
-      updateUserSparqlString <- ZIO.attempt(
-                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                                    .updateUser(
-                                      AdminConstants.adminDataNamedGraph.value,
-                                      userIri = userIri,
-                                      maybeUsername = maybeChangedUsername,
-                                      maybeEmail = maybeChangedEmail,
-                                      maybeGivenName = maybeChangedGivenName,
-                                      maybeFamilyName = maybeChangedFamilyName,
-                                      maybeStatus = maybeChangedStatus,
-                                      maybeLang = maybeChangedLang,
-                                      maybeProjects = maybeChangedProjects,
-                                      maybeProjectsAdmin = maybeChangedProjectsAdmin,
-                                      maybeGroups = maybeChangedGroups,
-                                      maybeSystemAdmin = maybeChangedSystemAdmin
-                                    )
-                                    .toString
-                                )
 
-      // we are changing the user, so lets get rid of the cached copy
-      _ <- invalidateCachedUserADM(maybeCurrentUser)
+      updateUserSparql = sparql.admin.txt.updateUser(
+                           AdminConstants.adminDataNamedGraph.value,
+                           userIri = userIri,
+                           maybeUsername = maybeChangedUsername,
+                           maybeEmail = maybeChangedEmail,
+                           maybeGivenName = maybeChangedGivenName,
+                           maybeFamilyName = maybeChangedFamilyName,
+                           maybeStatus = maybeChangedStatus,
+                           maybeLang = maybeChangedLang,
+                           maybeProjects = maybeChangedProjects,
+                           maybeProjectsAdmin = maybeChangedProjectsAdmin,
+                           maybeGroups = maybeChangedGroups,
+                           maybeSystemAdmin = maybeChangedSystemAdmin
+                         )
 
-      // write the updated user to the triplestore
-      _ <- triplestoreService.sparqlHttpUpdate(updateUserSparqlString)
+      // we are changing the user, so lets invalidate the cached copy
+      // and write the updated user to the triplestore
+      _ <- invalidateCachedUserADM(maybeCurrentUser) *> triplestore.query(Update(updateUserSparql))
 
       /* Verify that the user was updated */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1520,10 +1345,7 @@ final case class UsersResponderADMLive(
 
       _ = if (userUpdatePayload.projects.isDefined) {
             for {
-              projects <- userProjectMembershipsGetADM(
-                            userIri = userIri,
-                            requestingUser = requestingUser
-                          )
+              projects <- userProjectMembershipsGetADM(userIri = userIri)
               _ =
                 if (projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
                   throw UpdateNotPerformedException(
@@ -1562,17 +1384,11 @@ final case class UsersResponderADMLive(
    * @param userIri              the IRI of the existing user that we want to update.
    * @param password             the new password.
    * @param requestingUser       the requesting user.
-   * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
-   * @throws BadRequestException         if necessary parameters are not supplied.
-   * @throws UpdateNotPerformedException if the update was not performed.
+   *         fails with a [[BadRequestException]]         if necessary parameters are not supplied.
+   *         fails with a [[UpdateNotPerformedException]] if the update was not performed.
    */
-  private def updateUserPasswordADM(
-    userIri: IRI,
-    password: Password,
-    requestingUser: UserADM,
-    apiRequestID: UUID
-  ): Task[UserOperationResponseADM] = {
+  private def updateUserPasswordADM(userIri: IRI, password: Password, requestingUser: UserADM) = {
 
     // check if it is a request for a built-in user
     if (
@@ -1598,17 +1414,9 @@ final case class UsersResponderADMLive(
       _ <- invalidateCachedUserADM(maybeCurrentUser)
 
       // update the password
-      updateUserSparqlString <- ZIO.attempt(
-                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                                    .updateUserPassword(
-                                      AdminConstants.adminDataNamedGraph.value,
-                                      userIri = userIri,
-                                      newPassword = password.value
-                                    )
-                                    .toString
-                                )
-
-      updateResult <- triplestoreService.sparqlHttpUpdate(updateUserSparqlString)
+      updateUserSparql =
+        sparql.admin.txt.updateUserPassword(AdminConstants.adminDataNamedGraph.value, userIri, password.value)
+      _ <- triplestore.query(Update(updateUserSparql))
 
       /* Verify that the password was updated. */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1638,13 +1446,11 @@ final case class UsersResponderADMLive(
    *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
    *
    * @param userCreatePayloadADM    a [[UserCreatePayloadADM]] object containing information about the new user to be created.
-   * @param requestingUser          a [[UserADM]] object containing information about the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
    */
   private def createNewUserADM(
     userCreatePayloadADM: UserCreatePayloadADM,
-    requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[UserOperationResponseADM] = {
 
@@ -1680,55 +1486,50 @@ final case class UsersResponderADMLive(
         hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.
-        createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                                      .createNewUser(
-                                        AdminConstants.adminDataNamedGraph.value,
-                                        userIri = userIri,
-                                        userClassIri = OntologyConstants.KnoraAdmin.User,
-                                        username = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.username.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
-                                            )
-                                          ),
-                                        email = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.email.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
-                                            )
-                                          ),
-                                        password = hashedPassword,
-                                        givenName = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
-                                            )
-                                          ),
-                                        familyName = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
-                                            )
-                                          ),
-                                        status = userCreatePayloadADM.status.value,
-                                        preferredLanguage = Iri
-                                          .toSparqlEncodedString(userCreatePayloadADM.lang.value)
-                                          .getOrElse(
-                                            throw BadRequestException(
-                                              s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
-                                            )
-                                          ),
-                                        systemAdmin = userCreatePayloadADM.systemAdmin.value
-                                      )
-                                      .toString
-
-        _ = logger.debug(s"createNewUser: $createNewUserSparqlString")
-
-        _ <- triplestoreService.sparqlHttpUpdate(createNewUserSparqlString)
+        createNewUserSparql = sparql.admin.txt.createNewUser(
+                                AdminConstants.adminDataNamedGraph.value,
+                                userIri = userIri,
+                                userClassIri = OntologyConstants.KnoraAdmin.User,
+                                username = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.username.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
+                                    )
+                                  ),
+                                email = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.email.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
+                                    )
+                                  ),
+                                password = hashedPassword,
+                                givenName = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.givenName.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
+                                    )
+                                  ),
+                                familyName = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.familyName.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
+                                    )
+                                  ),
+                                status = userCreatePayloadADM.status.value,
+                                preferredLanguage = Iri
+                                  .toSparqlEncodedString(userCreatePayloadADM.lang.value)
+                                  .getOrElse(
+                                    throw BadRequestException(
+                                      s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
+                                    )
+                                  ),
+                                systemAdmin = userCreatePayloadADM.systemAdmin.value
+                              )
+        _ <- triplestore.query(Update(createNewUserSparql))
 
         // try to retrieve newly created user (will also add to cache)
         maybeNewUserADM <- getSingleUserADM(
@@ -1806,31 +1607,20 @@ final case class UsersResponderADMLive(
    */
   private def getUserFromTriplestore(
     identifier: UserIdentifierADM
-  ): Task[Option[UserADM]] =
-    for {
-      sparqlQueryString <- ZIO.attempt(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                               .getUsers(
-                                 maybeIri = identifier.toIriOption,
-                                 maybeUsername = identifier.toUsernameOption,
-                                 maybeEmail = identifier.toEmailOption
-                               )
-                               .toString()
-                           )
-
-      userQueryResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
-
-      maybeUserADM <-
-        if (userQueryResponse.statements.nonEmpty) {
-          logger.debug("getUserFromTriplestore - triplestore hit for: {}", identifier)
-          statements2UserADM(
-            statements = userQueryResponse.statements.head
-          )
-        } else {
-          logger.debug("getUserFromTriplestore - no triplestore hit for: {}", identifier)
-          ZIO.succeed(None)
-        }
-    } yield maybeUserADM
+  ): Task[Option[UserADM]] = {
+    val query = Construct(
+      sparql.admin.txt.getUsers(
+        maybeIri = identifier.toIriOption,
+        maybeUsername = identifier.toUsernameOption,
+        maybeEmail = identifier.toEmailOption
+      )
+    )
+    triplestore
+      .query(query)
+      .flatMap(_.asExtended)
+      .map(_.statements.headOption)
+      .flatMap(_.map(statements2UserADM).getOrElse(ZIO.none))
+  }
 
   /**
    * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.
@@ -1888,7 +1678,7 @@ final case class UsersResponderADMLive(
         maybeGroups          <- ZioHelper.sequence(maybeGroupFutures)
         groups: Seq[GroupADM] = maybeGroups.flatten
 
-        maybeProjectFutures: Seq[Task[Option[ProjectADM]]] =
+        maybeProjectFutures =
           projectIris.map { projectIri =>
             messageRelay
               .ask[Option[ProjectADM]](
@@ -1899,8 +1689,7 @@ final case class UsersResponderADMLive(
                 )
               )
           }
-        maybeProjects            <- ZioHelper.sequence(maybeProjectFutures)
-        projects: Seq[ProjectADM] = maybeProjects.flatten
+        projects <- ZioHelper.sequence(maybeProjectFutures).map(_.flatten)
 
         /* construct the user profile from the different parts */
         user = UserADM(
@@ -1977,13 +1766,7 @@ final case class UsersResponderADMLive(
    * @return a [[Boolean]].
    */
   private def userExists(userIri: IRI): Task[Boolean] =
-    for {
-      askString <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString
-        )
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-    } yield checkUserExistsResponse.result
+    triplestore.query(Ask(sparql.admin.txt.checkUserExists(userIri)))
 
   /**
    * Helper method for checking if an username is already registered.
@@ -2000,14 +1783,7 @@ final case class UsersResponderADMLive(
       case Some(username) =>
         if (maybeCurrent.contains(username.value)) ZIO.succeed(true)
         else
-          for {
-            askString <- ZIO.attempt(
-                           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                             .checkUserExistsByUsername(username = username.value)
-                             .toString
-                         )
-            checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-          } yield checkUserExistsResponse.result
+          triplestore.query(Ask(sparql.admin.txt.checkUserExistsByUsername(username.value)))
 
       case None => ZIO.succeed(false)
     }
@@ -2029,15 +1805,8 @@ final case class UsersResponderADMLive(
             _ <- ZIO
                    .fromOption(stringFormatter.validateEmail(email.value))
                    .orElseFail(BadRequestException(s"The email address '${email.value}' is invalid"))
-
-            askString <- ZIO.attempt(
-                           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                             .checkUserExistsByEmail(email = email.value)
-                             .toString
-                         )
-
-            checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-          } yield checkUserExistsResponse.result
+            userExists <- triplestore.query(Ask(sparql.admin.txt.checkUserExistsByEmail(email.value)))
+          } yield userExists
         }
 
       case None => ZIO.succeed(false)
@@ -2050,17 +1819,7 @@ final case class UsersResponderADMLive(
    * @return a [[Boolean]].
    */
   private def projectExists(projectIri: IRI): Task[Boolean] =
-    for {
-      askString <- ZIO.attempt(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByIri(projectIri = projectIri)
-                       .toString
-                   )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
+    triplestore.query(Ask(sparql.admin.txt.checkProjectExistsByIri(projectIri)))
 
   /**
    * Helper method for checking if a group exists.
@@ -2069,16 +1828,7 @@ final case class UsersResponderADMLive(
    * @return a [[Boolean]].
    */
   private def groupExists(groupIri: IRI): Task[Boolean] =
-    for {
-      askString <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
-        )
-
-      checkUserExistsResponse <- triplestoreService.sparqlHttpAsk(askString)
-      result                   = checkUserExistsResponse.result
-
-    } yield result
+    triplestore.query(Ask(sparql.admin.txt.checkGroupExistsByIri(groupIri)))
 
   /**
    * Tries to retrieve a [[UserADM]] from the cache.
@@ -2103,12 +1853,10 @@ final case class UsersResponderADMLive(
    *
    * @param user a [[UserADM]].
    * @return Unit
-   * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
-  private def writeUserADMToCache(user: UserADM): Task[Unit] = for {
-    _ <- messageRelay.ask[Any](CacheServicePutUserADM(user))
-    _ <- ZIO.attempt(logger.debug(s"writeUserADMToCache done - user: ${user.id}"))
-  } yield ()
+  private def writeUserADMToCache(user: UserADM): Task[Unit] =
+    messageRelay.ask[Any](CacheServicePutUserADM(user)) *>
+      ZIO.logDebug(s"writeUserADMToCache done - user: ${user.id}")
 
   /**
    * Removes the user from cache.

@@ -759,7 +759,7 @@ For links to a `kb:Resource`, see [StandoffLinkTag](#standofflinktag).
 
 A mapping allows for the conversion of an XML document to RDF-standoff and back. A mapping defines one-to-one relations
 between XML elements (with or without a class) and attributes and standoff classes and properties (see 
-[XML to Standoff Mapping](../03-endpoints/api-v2/xml-to-standoff-mapping.md)).
+[XML to Standoff Mapping](../03-endpoints/api-v2/text/custom-standoff.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains one or more `kb:MappingElement`.
 A `kb:MappingElement` maps an XML element (including attributes) to a standoff class and standoff properties. It has the

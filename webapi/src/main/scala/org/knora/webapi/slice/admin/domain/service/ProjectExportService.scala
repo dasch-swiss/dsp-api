@@ -24,13 +24,14 @@ import zio.nio.file.Path
 import java.io.OutputStream
 import scala.collection.mutable
 
-import org.knora.webapi.messages.twirl.queries.sparql.admin.txt._
+import org.knora.webapi.messages.twirl.queries._
 import org.knora.webapi.messages.util.rdf.TriG
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.util.ZScopedJavaIoStreams
 
 @accessible
@@ -108,7 +109,7 @@ private object TriGCombiner {
     override def prefix(prefix: String, iri: String): Unit =
       if (!prefixes.contains(prefix)) {
         writer.prefix(prefix, iri)
-        prefixes.add(prefix)
+        val _ = prefixes.add(prefix)
       }
     override def triple(triple: Triple): Unit = writer.triple(triple)
     override def quad(quad: Quad): Unit       = writer.quad(quad)
@@ -120,7 +121,7 @@ private object TriGCombiner {
 
 final case class ProjectExportServiceLive(
   private val projectService: ProjectADMService,
-  private val triplestoreService: TriplestoreService,
+  private val triplestore: TriplestoreService,
   private val dspIngestClient: DspIngestClient,
   private val exportStorage: ProjectExportStorageService
 ) extends ProjectExportService {
@@ -147,9 +148,8 @@ final case class ProjectExportServiceLive(
   private def downloadOntologyAndData(project: KnoraProject, tempDir: Path): Task[List[NamedGraphTrigFile]] = for {
     allGraphsTrigFile <-
       projectService.getNamedGraphsForProject(project).map(_.map(NamedGraphTrigFile(_, tempDir)))
-    files <- ZIO.foreach(allGraphsTrigFile)(file =>
-               triplestoreService.sparqlHttpGraphFile(file.graphIri, file.dataFile, TriG).as(file)
-             )
+    files <-
+      ZIO.foreach(allGraphsTrigFile)(file => triplestore.downloadGraph(file.graphIri, file.dataFile, TriG).as(file))
   } yield files
 
   /**
@@ -166,19 +166,15 @@ final case class ProjectExportServiceLive(
   private def downloadProjectAdminData(project: KnoraProject, targetDir: Path): Task[NamedGraphTrigFile] = {
     val graphIri = adminDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, targetDir)
-    for {
-      query <- ZIO.attempt(getProjectAdminData(project.id.value))
-      _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
-    } yield file
+    val query    = Construct(sparql.admin.txt.getProjectAdminData(project.id.value))
+    triplestore.queryToFile(query, graphIri, file.dataFile, TriG).as(file)
   }
 
   private def downloadPermissionData(project: KnoraProject, tempDir: Path) = {
     val graphIri = permissionsDataNamedGraph
     val file     = NamedGraphTrigFile(graphIri, tempDir)
-    for {
-      query <- ZIO.attempt(getProjectPermissions(project.id.value))
-      _     <- triplestoreService.sparqlHttpConstructFile(query.toString(), graphIri, file.dataFile, TriG)
-    } yield file
+    val query    = Construct(sparql.admin.txt.getProjectPermissions(project.id.value))
+    triplestore.queryToFile(query, graphIri, file.dataFile, TriG).as(file)
   }
 
   private def mergeDataToFile(allData: Seq[NamedGraphTrigFile], targetFile: Path): Task[Path] =

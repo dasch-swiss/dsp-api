@@ -60,14 +60,13 @@ final case class ProjectADMServiceLive(
   private val projectRepo: KnoraProjectRepo
 ) extends ProjectADMService {
 
-  override def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreach(_)(toProjectADM))
+  override def findAll: Task[List[ProjectADM]] = projectRepo.findAll().flatMap(ZIO.foreachPar(_)(toProjectADM))
   override def findByProjectIdentifier(projectId: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM))
 
   private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] =
     for {
-      ontologies  <- ontologyRepo.findByProject(knoraProject.id)
-      ontologyIris = ontologies.map(_.ontologyMetadata.ontologyIri.toIri)
+      ontologyIris <- projectRepo.findOntologies(knoraProject)
     } yield ProjectADM(
       id = knoraProject.id.value,
       shortname = knoraProject.shortname,
@@ -78,7 +77,7 @@ final case class ProjectADMServiceLive(
       logo = knoraProject.logo,
       status = knoraProject.status,
       selfjoin = knoraProject.selfjoin,
-      ontologies = ontologyIris
+      ontologies = ontologyIris.map(_.value)
     ).unescape
 
   override def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =

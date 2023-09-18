@@ -16,16 +16,18 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-final case class ResourceInfoRepoLive(ts: TriplestoreService) extends ResourceInfoRepo {
+final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends ResourceInfoRepo {
 
   override def findByProjectAndResourceClass(
     projectIri: InternalIri,
     resourceClass: InternalIri
-  ): Task[List[ResourceInfo]] = {
-    val query = resourcesByCreationDate(resourceClass, projectIri).toString
-    ZIO.debug(query) *> ts.sparqlHttpSelect(query).map(toResourceInfoList)
-  }
+  ): Task[List[ResourceInfo]] =
+    ZIO.debug(resourcesByCreationDate(resourceClass, projectIri).toString) *>
+      triplestore
+        .query(Select(resourcesByCreationDate(resourceClass, projectIri)))
+        .map(toResourceInfoList)
 
   private def toResourceInfoList(result: SparqlSelectResult): List[ResourceInfo] =
     result.results.bindings.map(toResourceInfo).toList

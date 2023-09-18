@@ -60,11 +60,10 @@ object OntologyTransformationRules {
    * Given an ontology IRI and a target ontology schema, returns the [[OntologyTransformationRules]] describing how to
    * convert the ontology to the target schema.
    *
-   * @param ontologyIri  the IRI of the ontology being transformed.
    * @param targetSchema the target ontology schema.
    * @return the appropriate [[OntologyTransformationRules]].
    */
-  def getTransformationRules(ontologyIri: SmartIri, targetSchema: ApiV2Schema): OntologyTransformationRules =
+  def getTransformationRules(targetSchema: ApiV2Schema): OntologyTransformationRules =
     targetSchema match {
       case ApiV2Simple  => KnoraBaseToApiV2SimpleTransformationRules
       case ApiV2Complex => KnoraBaseToApiV2ComplexTransformationRules

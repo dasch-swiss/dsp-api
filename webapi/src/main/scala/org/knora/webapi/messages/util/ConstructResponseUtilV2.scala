@@ -10,7 +10,6 @@ import zio._
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
@@ -52,8 +51,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetRemainingStandoffFromTextValueRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
@@ -820,7 +817,6 @@ final case class ConstructResponseUtilV2Live(
     val transformedValuePropertyAssertions: RdfPropertyValues = resource.valuePropertyAssertions.map {
       case (propIri: SmartIri, values: Seq[ValueRdfData]) =>
         val transformedValues: Seq[ValueRdfData] = transformValuesByNestingResources(
-          resourceIri = resourceIri,
           values = values,
           flatResourcesWithValues = flatResourcesWithValues,
           visibleResources = visibleResources,
@@ -907,7 +903,6 @@ final case class ConstructResponseUtilV2Live(
   /**
    * Transforms a resource's values by nesting dependent resources in link values.
    *
-   * @param resourceIri                     the IRI of the resource.
    * @param values                          the values of the resource.
    * @param flatResourcesWithValues         the complete set of resources with their values, before permission filtering.
    * @param visibleResources                the resources that the user has permission to see.
@@ -919,7 +914,6 @@ final case class ConstructResponseUtilV2Live(
    * @return the transformed values.
    */
   private def transformValuesByNestingResources(
-    resourceIri: IRI,
     values: Seq[ValueRdfData],
     flatResourcesWithValues: RdfResources,
     visibleResources: RdfResources,
@@ -939,7 +933,7 @@ final case class ConstructResponseUtilV2Live(
           if (dependentResourceIrisVisible.contains(dependentResourceIri)) {
             // Yes. Nest it in the link value.
             val dependentResource: ResourceWithValueRdfData = nestResources(
-              resourceIri = dependentResourceIri,
+              dependentResourceIri,
               flatResourcesWithValues = flatResourcesWithValues,
               visibleResources = visibleResources,
               dependentResourceIrisVisible = dependentResourceIrisVisible,
@@ -1006,17 +1000,14 @@ final case class ConstructResponseUtilV2Live(
    * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
    * @param valueCommentOption        the value's comment, if any.
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-   * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
    * @param requestingUser            the user making the request.
    * @return a [[TextValueContentV2]].
    */
   private def makeTextValueContentV2(
-    resourceIri: IRI,
     valueObject: ValueRdfData,
     valueObjectValueHasString: Option[String],
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
-    queryStandoff: Boolean,
     requestingUser: UserADM
   ): Task[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
@@ -1024,10 +1015,6 @@ final case class ConstructResponseUtilV2Live(
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
 
     if (valueObject.standoff.nonEmpty) {
-      // The query included a page of standoff markup. This is either because we've queried the text value
-      // and got the first page of its standoff along with it, or because we're querying a subsequent page
-      // of standoff for a text value.
-
       val mappingIri: Option[IRI] = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
       val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] =
         mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
@@ -1037,40 +1024,11 @@ final case class ConstructResponseUtilV2Live(
                       standoffAssertions = valueObject.standoff,
                       requestingUser = requestingUser
                     )
-
-        valueHasMaxStandoffStartIndex: Int = valueObject.requireIntObject(
-                                               OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri
-                                             )
-        lastStartIndexQueried = standoff.last.startIndex
-
-        // Should we get more the rest of the standoff for the same text value?
-        standoffToReturn <-
-          if (queryStandoff && lastStartIndexQueried < valueHasMaxStandoffStartIndex) {
-            // We're supposed to get all the standoff for the text value. Ask the standoff responder for the rest of it.
-            // Each page of markup will be also be processed by this method. The resulting pages will be
-            // concatenated together and returned in a GetStandoffResponseV2.
-
-            for {
-              standoffResponse <-
-                messageRelay
-                  .ask[GetStandoffResponseV2](
-                    GetRemainingStandoffFromTextValueRequestV2(
-                      resourceIri = resourceIri,
-                      valueIri = valueObject.subjectIri,
-                      requestingUser = requestingUser
-                    )
-                  )
-            } yield standoff ++ standoffResponse.standoff
-          } else {
-            // We're not supposed to get any more standoff here, either because we have all of it already,
-            // or because we're just supposed to return one page.
-            ZIO.succeed(standoff)
-          }
       } yield TextValueContentV2(
         ontologySchema = InternalSchema,
         maybeValueHasString = valueObjectValueHasString,
         valueHasLanguage = valueLanguageOption,
-        standoff = standoffToReturn,
+        standoff = standoff,
         mappingIri = mappingIri,
         mapping = mappingAndXsltTransformation.map(_.mapping),
         xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
@@ -1095,20 +1053,10 @@ final case class ConstructResponseUtilV2Live(
    *
    * @param valueType                 the IRI of the file value type
    * @param valueObject               the given [[ValueRdfData]].
-   * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
    * @param valueCommentOption        the value's comment, if any.
-   * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-   * @param requestingUser            the user making the request.
    * @return a [[FileValueContentV2]].
    */
-  private def makeFileValueContentV2(
-    valueType: IRI,
-    valueObject: ValueRdfData,
-    valueObjectValueHasString: String,
-    valueCommentOption: Option[String],
-    mappings: Map[IRI, MappingAndXSLTransformation],
-    requestingUser: UserADM
-  ): Task[FileValueContentV2] = {
+  private def makeFileValueContentV2(valueType: IRI, valueObject: ValueRdfData, valueCommentOption: Option[IRI]) = {
     val fileValue = FileValueV2(
       internalMimeType = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalMimeType.toSmartIri),
       internalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri),
@@ -1176,7 +1124,7 @@ final case class ConstructResponseUtilV2Live(
           )
         )
 
-      case _ => throw InconsistentRepositoryDataException(s"Unexpected file value type: $valueType")
+      case _ => ZIO.fail(InconsistentRepositoryDataException(s"Unexpected file value type: $valueType"))
     }
   }
 
@@ -1184,7 +1132,6 @@ final case class ConstructResponseUtilV2Live(
    * Given a [[ValueRdfData]], constructs a [[LinkValueContentV2]].
    *
    * @param valueObject               the given [[ValueRdfData]].
-   * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
    * @param valueCommentOption        the value's comment, if any.
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
    * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
@@ -1195,14 +1142,13 @@ final case class ConstructResponseUtilV2Live(
    */
   private def makeLinkValueContentV2(
     valueObject: ValueRdfData,
-    valueObjectValueHasString: String,
-    valueCommentOption: Option[String],
+    valueCommentOption: Option[IRI],
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
-  ): Task[LinkValueContentV2] = {
+  ) = {
     val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
       valueObject.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
     } else {
@@ -1253,14 +1199,13 @@ final case class ConstructResponseUtilV2Live(
    * @return a [[ValueContentV2]] representing a value.
    */
   private def createValueContentV2FromValueRdfData(
-    resourceIri: IRI,
     valueObject: ValueRdfData,
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant] = None,
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
-  ): Task[ValueContentV2] = {
+  ) = {
     // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
     val valueObjectValueHasString: Option[String] =
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasString.toSmartIri)
@@ -1274,12 +1219,10 @@ final case class ConstructResponseUtilV2Live(
     valueTypeStr match {
       case OntologyConstants.KnoraBase.TextValue =>
         makeTextValueContentV2(
-          resourceIri = resourceIri,
           valueObject = valueObject,
           valueObjectValueHasString = valueObjectValueHasString,
           valueCommentOption = valueCommentOption,
           mappings = mappings,
-          queryStandoff = queryStandoff,
           requestingUser = requestingUser
         )
 
@@ -1425,27 +1368,19 @@ final case class ConstructResponseUtilV2Live(
       case OntologyConstants.KnoraBase.LinkValue =>
         makeLinkValueContentV2(
           valueObject = valueObject,
-          valueObjectValueHasString = valueObjectValueHasString.getOrElse(
-            throw AssertionException(s"Value <${valueObject.subjectIri}> has no knora-base:valueHasString")
-          ),
           valueCommentOption = valueCommentOption,
           mappings = mappings,
           queryStandoff = queryStandoff,
           versionDate = versionDate,
-          requestingUser = requestingUser,
-          targetSchema = targetSchema
+          targetSchema = targetSchema,
+          requestingUser = requestingUser
         )
 
       case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
         makeFileValueContentV2(
           valueType = fileValueClass,
           valueObject = valueObject,
-          valueObjectValueHasString = valueObjectValueHasString.getOrElse(
-            throw AssertionException(s"Value <${valueObject.subjectIri}> has no knora-base:valueHasString")
-          ),
-          valueCommentOption = valueCommentOption,
-          mappings = mappings,
-          requestingUser = requestingUser
+          valueCommentOption = valueCommentOption
         )
 
       case other => throw NotImplementedException(s"Not implemented yet: $other")
@@ -1528,12 +1463,11 @@ final case class ConstructResponseUtilV2Live(
             for {
               valueContent <-
                 createValueContentV2FromValueRdfData(
-                  resourceIri = resourceIri,
                   valueObject = valObj,
                   mappings = mappings,
                   queryStandoff = queryStandoff,
-                  requestingUser = requestingUser,
-                  targetSchema = targetSchema
+                  targetSchema = targetSchema,
+                  requestingUser = requestingUser
                 )
 
               attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)

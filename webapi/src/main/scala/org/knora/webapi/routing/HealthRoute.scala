@@ -118,7 +118,7 @@ final case class HealthRoute()(
             result <- healthCheck(state)
             _      <- ZIO.logDebug("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
           } yield result
-        } @@ LogAspect.logSpan("health-request") @@ LogAspect.logAnnotateCorrelationId(requestContext.request)
+        } @@ LogAspect.logSpan("health-request") @@ LogAspect.logAnnotateCorrelationId()
 
         // executing our effect and returning a future to Akka Http
         Unsafe.unsafe { implicit u =>

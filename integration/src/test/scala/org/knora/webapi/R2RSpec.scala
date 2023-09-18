@@ -142,25 +142,19 @@ abstract class R2RSpec
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
   }
 
-  /**
-   * Reads or writes a test data file.
-   *
-   * @param responseAsString the API response received from Knora.
-   * @param file             the file in which the expected API response is stored.
-   * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-   * @return the expected response.
-   */
-  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String =
-    if (writeFile) {
-      val testOutputDir = Paths.get("..", "test_data", "ontologyR2RV2")
-      val newOutputFile = testOutputDir.resolve(file)
-      Files.createDirectories(newOutputFile.getParent)
-      FileUtil.writeTextFile(
-        newOutputFile,
-        responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
-      )
-      responseAsString
-    } else {
-      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
-    }
+  private def adjustFilePath(file: Path): Path =
+    Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()
+
+  protected def readTestData(file: Path): String =
+    FileUtil.readTextFile(adjustFilePath(file)).replaceAll("IIIF_BASE_URL", appConfig.sipi.externalBaseUrl)
+
+  protected def writeTestData(responseAsString: String, file: Path): String = {
+    val adjustedFile = adjustFilePath(file)
+    Files.createDirectories(adjustedFile.getParent)
+    FileUtil.writeTextFile(
+      adjustedFile,
+      responseAsString.replaceAll(appConfig.sipi.externalBaseUrl, "IIIF_BASE_URL")
+    )
+    responseAsString
+  }
 }

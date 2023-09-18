@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util.search.gravsearch.mainquery
 
 import dsp.errors.GravsearchException
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -225,7 +224,6 @@ object GravsearchMainQueryGenerator {
    * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
    * @param targetSchema          the target API schema.
    * @param schemaOptions         the schema options submitted with the request.
-   * @param appConfig             the application's configuration.
    * @return the main [[ConstructQuery]] query to be executed.
    */
   def createMainQuery(
@@ -233,8 +231,7 @@ object GravsearchMainQueryGenerator {
     dependentResourceIris: Set[IriRef],
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption],
-    appConfig: AppConfig
+    schemaOptions: Set[SchemaOption]
   ): ConstructQuery = {
     import GravsearchConstants._
 
@@ -397,20 +394,10 @@ object GravsearchMainQueryGenerator {
             )
           ),
           FilterPattern(
-            AndExpression(
-              leftArg = CompareExpression(
-                leftArg = standoffStartIndexVar,
-                operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
-                rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
-              ),
-              rightArg = CompareExpression(
-                leftArg = standoffStartIndexVar,
-                operator = CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
-                rightArg = XsdLiteral(
-                  value = (appConfig.standoffPerPage - 1).toString,
-                  datatype = OntologyConstants.Xsd.Integer.toSmartIri
-                )
-              )
+            CompareExpression(
+              leftArg = standoffStartIndexVar,
+              operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
+              rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
             )
           )
         )

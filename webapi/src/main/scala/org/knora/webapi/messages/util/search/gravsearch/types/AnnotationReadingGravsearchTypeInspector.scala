@@ -13,7 +13,6 @@ import dsp.errors.GravsearchException
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperties
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperty
@@ -52,13 +51,11 @@ final case class AnnotationReadingGravsearchTypeInspector(private val queryTrave
    *
    * @param previousResult the result of previous type inspection.
    * @param whereClause    the Gravsearch WHERE clause.
-   * @param requestingUser the requesting user.
    * @return the result returned by the pipeline.
    */
   def inspectTypes(
     previousResult: IntermediateTypeInspectionResult,
-    whereClause: WhereClause,
-    requestingUser: UserADM
+    whereClause: WhereClause
   ): Task[IntermediateTypeInspectionResult] =
     for {
       // Get all the type annotations.

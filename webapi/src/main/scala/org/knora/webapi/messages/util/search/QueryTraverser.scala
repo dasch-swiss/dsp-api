@@ -57,8 +57,7 @@ case class TransformedOrderBy(
 )
 
 /**
- * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[ConstructToConstructTransformer]]
- * or [[AbstractPrequeryGenerator]].
+ * Assists in the transformation of CONSTRUCT queries by traversing the query, delegating work to a [[AbstractPrequeryGenerator]].
  */
 final case class QueryTraverser(
   private val messageRelay: MessageRelay,
@@ -79,7 +78,7 @@ final case class QueryTraverser(
     patterns: Seq[QueryPattern],
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Option[Set[SmartIri]]
   ): Task[Seq[QueryPattern]] =
     for {
       // Optimization has to be called before WhereTransformer.transformStatementInWhere,
@@ -206,22 +205,14 @@ final case class QueryTraverser(
    */
   private def findMainResourceType(query: ConstructQuery): Option[StatementPattern] =
     for {
-      mainResourceName <-
-        query.constructClause.statements.collectFirst {
-          case StatementPattern(QueryVariable(name), IriRef(pred, _), _)
-              if pred
-                .toOntologySchema(InternalSchema)
-                .toString == OntologyConstants.KnoraBase.IsMainResource =>
-            name
-        }
       mainResourceTypeStatement <-
         query.whereClause.patterns.collectFirst {
-          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef)
+          case stmt @ StatementPattern(QueryVariable(_), IriRef(pred, _), obj: IriRef)
               if pred.toIri == OntologyConstants.Rdf.Type &&
                 obj.iri.toOntologySchema(InternalSchema).toIri != OntologyConstants.KnoraBase.Resource =>
             stmt.copy(obj = obj.copy(iri = obj.iri.toOntologySchema(InternalSchema)))
         }.orElse(query.whereClause.patterns.collectFirst {
-          case stmt @ StatementPattern(QueryVariable(mainResourceName), IriRef(pred, _), obj: IriRef)
+          case stmt @ StatementPattern(QueryVariable(_), IriRef(pred, _), obj: IriRef)
               if pred.toIri == OntologyConstants.Rdf.Type =>
             stmt.copy(obj = obj.copy(iri = obj.iri.toOntologySchema(InternalSchema)))
         })
@@ -233,7 +224,7 @@ final case class QueryTraverser(
    *
    * @param patterns the optimized patterns, potentially containing only negations.
    * @param inputQuery the initial input query.
-   * @return succeeds with a sequence of [[QueryPatterns]] or fails with a [[GravsearchOptimizationException]].
+   * @return succeeds with a sequence of [[QueryPattern]]s or fails with a [[GravsearchOptimizationException]].
    */
   private def ensureNotOnlyNegationPatterns(
     patterns: Seq[QueryPattern],
@@ -243,43 +234,45 @@ final case class QueryTraverser(
       case MinusPattern(_) +: Nil =>
         ZIO
           .fromOption(findMainResourceType(inputQuery))
-          .map { statement =>
-            val notDeletedPattern = StatementPattern(
-              subj = statement.subj,
-              pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
-              obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
-            )
-            patterns.appendedAll(Seq(statement, notDeletedPattern))
-          }
-          .orElseFail(
-            GravsearchOptimizationException(
-              s"Query consisted only of a MINUS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
-            )
+          .mapBoth(
+            _ =>
+              GravsearchOptimizationException(
+                s"Query consisted only of a MINUS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
+              ),
+            { statement =>
+              val notDeletedPattern = StatementPattern(
+                subj = statement.subj,
+                pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
+                obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+              )
+              patterns.appendedAll(Seq(statement, notDeletedPattern))
+            }
           )
       case FilterNotExistsPattern(_) +: Nil =>
         ZIO
           .fromOption(findMainResourceType(inputQuery))
-          .map { statement =>
-            val notDeletedPattern = StatementPattern(
-              subj = statement.subj,
-              pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
-              obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
-            )
-            patterns.appendedAll(Seq(statement, notDeletedPattern))
-          }
-          .orElseFail(
-            GravsearchOptimizationException(
-              s"Query consisted only of a FILTER NOT EXISTS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
-            )
+          .mapBoth(
+            _ =>
+              GravsearchOptimizationException(
+                s"Query consisted only of a FILTER NOT EXISTS pattern after optimization, which always returns empty results. Query: ${inputQuery.toSparql}"
+              ),
+            { statement =>
+              val notDeletedPattern = StatementPattern(
+                subj = statement.subj,
+                pred = IriRef(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsDeleted)),
+                obj = XsdLiteral(value = "false", datatype = stringFormatter.toSmartIri(OntologyConstants.Xsd.Boolean))
+              )
+              patterns.appendedAll(Seq(statement, notDeletedPattern))
+            }
           )
       case _ => ZIO.succeed(patterns)
     }
 
   /**
-   * Traverses a SELECT query, delegating transformation tasks to a [[ConstructToSelectTransformer]], and returns the transformed query.
+   * Traverses a SELECT query, delegating transformation tasks to a [[AbstractPrequeryGenerator]], and returns the transformed query.
    *
    * @param inputQuery                 the query to be transformed.
-   * @param transformer                the [[ConstructToSelectTransformer]] to be used.
+   * @param transformer                the [[AbstractPrequeryGenerator]] to be used.
    * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the transformed query.
    */

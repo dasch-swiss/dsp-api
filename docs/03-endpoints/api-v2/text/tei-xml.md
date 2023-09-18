@@ -7,13 +7,22 @@
 
 ## General
 
-Knora offers a way to convert standoff markup to TEI/XML. The conversion is based on the assumption that a whole resource is to be turned into a TEI document.
-There is a basic distinction between the body and the header of a TEI document. The resource's property that contains the text with standoff markup is mapped to the TEI document's body.
+DSP-API offers a way to convert standoff markup to TEI/XML.
+The conversion is based on the assumption that a whole resource is to be turned into a TEI document.
+There is a basic distinction between the body and the header of a TEI document.
+The resource's property that contains the text with standoff markup is mapped to the TEI document's body.
 Other of the resource's property may be mapped to the TEI header.
 
 ## Standard Standoff to TEI Conversion
 
-Knora offers a built-in conversion form standard standoff entities (defined in the `standoff` ontology) tags to TEI.
+DSP-API offers a built-in conversion form standard standoff entities (defined in the `standoff` ontology) tags to TEI.
+
+!!! Note 
+    As TEI provides a wide range of Elements and Attributes 
+    which can have different meaning depending on the markup practices of a project,
+    whereas DSP standard standoff has a very limited tagset,
+    this conversion is oppinionated by necessity
+    and may not be appropriate for all projects.
 
 In order to obtain a resource as a TEI document, the following request has to be performed. 
 Please note that the URL parameters have to be URL-encoded.
@@ -25,13 +34,13 @@ HTTP GET to http://host/v2/tei/resourceIri?textProperty=textPropertyIri
 In addition to the resource's Iri, the Iri of the property containing the text with standoff has to be submitted. This will be converted to the TEI body. 
 Please note that the resource can only have one instance of this property and the text must have standoff markup.
 
-The Knora test data contain the resource `http://rdfh.ch/0001/thing_with_richtext_with_markup` with the text property `http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext` that can be converted to TEI as follows:
+The test data contain the resource `http://rdfh.ch/0001/thing_with_richtext_with_markup` with the text property `http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext` that can be converted to TEI as follows:
 
 ```
 HTTP GET to http://host/v2/tei/http%3A%2F%2Frdfh.ch%2F0001%2Fthing_with_richtext_with_markup?textProperty=http%3A%2F%2F0.0.0.0%3A3333%2Fontology%2F0001%2Fanything%2Fv2%23hasRichtext
 ```
 
-The answer to this request is a TEI XML document:
+The response to this request is a TEI XML document:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -73,7 +82,7 @@ TEI body:
 - additional mapping from standoff to XML (URL parameter `mappingIri`)
 - XSL transformation to turn the XML into a valid TEI body (referred to by the mapping).
 
-The mapping has to refer to a `defaultXSLTransformation` that transforms the XML that was created from standoff markup (see [XML To Standoff Mapping in API v1](../api-v1/xml-to-standoff-mapping.md)). This step is necessary because the mapping assumes a one to one relation between standoff classes and properties and XML elements and attributes.
+The mapping has to refer to a `defaultXSLTransformation` that transforms the XML that was created from standoff markup (see [XML To Standoff Mapping](custom-standoff.md)). This step is necessary because the mapping assumes a one to one relation between standoff classes and properties and XML elements and attributes.
 For example, we may want to convert a `standoff:StandoffItalicTag` into TEI/XML. TEI expresses this as `<hi rend="italic">...</hi>`. In the mapping, the `standoff:StandoffItalicTag` may be mapped to a a temporary XML element that is going to be converted to `<hi rend="italic">...</hi>` in a further step by the XSLT. 
 
 For sample data, see `webapi/_test_data/test_route/texts/beol/BEOLTEIMapping.xml` (mapping) and `webapi/_test_data/test_route/texts/beol/standoffToTEI.xsl`. The standoff entities are defined in `beol-onto.ttl`.
@@ -178,7 +187,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 Note the placeholder `BIND(<$resourceIri> as ?letter)` that is going to be replaced by the Iri of the resource the request is performed for.
 The query asks for information about the letter's text `beol:hasText` and information about its author and recipient. This information is converted to the TEI header in the format required by [correspSearch](https://correspsearch.net).
 
-To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (see [Introduction](introduction.md)).
+To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (see [Introduction](../introduction.md)).
 
 The Gravsearch query's result may look like this (`RDF/XML`):
 
@@ -412,8 +421,3 @@ The complete request looks like this:
 ```
 HTTP GET request to http://host/v2/tei/resourceIri&textProperty=textPropertyIri&mappingIri=mappingIri&gravsearchTemplateIri=gravsearchTemplateIri&teiHeaderXSLTIri=teiHeaderXSLTIri
 ```
-
-See `webapi/src/it/scala/org/knora/webapi/e2e/v1/KnoraSipiIntegrationV1ITSpec.scala` for a complete test case involving the sample data ("create a mapping for standoff conversion to TEI referring to an XSLT and also create a Gravsearch template and an XSLT for transforming TEI header data").
-
-When you provide a custom conversion, it is up to you to ensure the validity of the TEI document. You can use this service to validate: [TEI by example validator](http://teibyexample.org/xquery/TBEvalidator.xq).
-Problems and bugs caused by XSL transformations are out of scope of the responsibility of the Knora software.

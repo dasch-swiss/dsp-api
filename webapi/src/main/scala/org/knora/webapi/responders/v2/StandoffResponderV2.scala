@@ -14,10 +14,7 @@ import java.io._
 import java.util.UUID
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.Schema
 import javax.xml.validation.SchemaFactory
-import javax.xml.validation.{Validator => JValidator}
-import scala.xml.Elem
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
@@ -43,6 +40,7 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.twirl.MappingElement
 import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
 import org.knora.webapi.messages.twirl.MappingXMLAttribute
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -60,9 +58,9 @@ import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.NextExecutionStep
-import org.knora.webapi.util.ResultAndNext
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
@@ -73,7 +71,7 @@ trait StandoffResponderV2
 final case class StandoffResponderV2Live(
   appConfig: AppConfig,
   messageRelay: MessageRelay,
-  triplestoreService: TriplestoreService,
+  triplestore: TriplestoreService,
   constructResponseUtilV2: ConstructResponseUtilV2,
   standoffTagUtilV2: StandoffTagUtilV2,
   implicit val stringFormatter: StringFormatter
@@ -90,9 +88,7 @@ final case class StandoffResponderV2Live(
    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
    */
   override def handle(msg: ResponderRequest): Task[Any] = msg match {
-    case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
-    case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 =>
-      getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
+    case getStandoffPageRequestV2: GetStandoffRequestV2 => getStandoffV2(getStandoffPageRequestV2)
     case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) =>
       createMappingV2(
         xml.xml,
@@ -109,28 +105,23 @@ final case class StandoffResponderV2Live(
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
-  private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Task[GetStandoffResponseV2] = {
-    val requestMaxStartIndex = getStandoffRequestV2.offset + appConfig.standoffPerPage - 1
+  private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Task[GetStandoffResponseV2] = {
+    val resourceRequestSparql =
+      Construct(
+        sparql.v2.txt.getResourcePropertiesAndValues(
+          resourceIris = Seq(getStandoffRequestV2.resourceIri),
+          preview = false,
+          withDeleted = false,
+          maybePropertyIri = None,
+          maybeVersionDate = None,
+          queryAllNonStandoff = false,
+          queryStandoff = true,
+          maybeValueIri = Some(getStandoffRequestV2.valueIri)
+        )
+      )
 
     for {
-      resourceRequestSparql <-
-        ZIO.attempt(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .getResourcePropertiesAndValues(
-              resourceIris = Seq(getStandoffRequestV2.resourceIri),
-              preview = false,
-              withDeleted = false,
-              maybePropertyIri = None,
-              maybeVersionDate = None,
-              queryAllNonStandoff = false,
-              maybeValueIri = Some(getStandoffRequestV2.valueIri),
-              maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
-              maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
-            )
-            .toString()
-        )
-
-      resourceRequestResponse <- triplestoreService.sparqlHttpExtendedConstruct(resourceRequestSparql)
+      resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
 
       // separate resources and values
       mainResourcesAndValueRdfData =
@@ -154,7 +145,7 @@ final case class StandoffResponderV2Live(
 
       readResourceV2 = readResourcesSequenceV2.toResource(getStandoffRequestV2.resourceIri)
 
-      valueObj: ReadValueV2 =
+      valueObj =
         readResourceV2.values.values.flatten
           .find(_.valueIri == getStandoffRequestV2.valueIri)
           .getOrElse(
@@ -163,7 +154,7 @@ final case class StandoffResponderV2Live(
             )
           )
 
-      textValueObj: ReadTextValueV2 =
+      textValueObj =
         valueObj match {
           case textVal: ReadTextValueV2 => textVal
           case _ =>
@@ -172,21 +163,9 @@ final case class StandoffResponderV2Live(
             )
         }
 
-      nextOffset: Option[Int] =
-        textValueObj.valueHasMaxStandoffStartIndex match {
-          case Some(definedMaxIndex) =>
-            if (requestMaxStartIndex >= definedMaxIndex) {
-              None
-            } else {
-              Some(requestMaxStartIndex + 1)
-            }
-
-          case None => None
-        }
     } yield GetStandoffResponseV2(
       valueIri = textValueObj.valueIri,
-      standoff = textValueObj.valueContent.standoff,
-      nextOffset = nextOffset
+      standoff = textValueObj.valueContent.standoff
     )
   }
 
@@ -222,7 +201,7 @@ final case class StandoffResponderV2Live(
             )
           }
 
-      (fileValueIri: IRI, xsltFileValueContent: TextFileValueContentV2) =
+      (fileValueIri, xsltFileValueContent) =
         resource.values.get(
           OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri
         ) match {
@@ -318,19 +297,19 @@ final case class StandoffResponderV2Live(
         factory <- ZIO.attempt(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
 
         // get the schema the mapping has to be validated against
-        schemaFile: String = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
+        schemaFile = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
 
-        schemaSource: StreamSource = new StreamSource(new StringReader(schemaFile))
+        schemaSource = new StreamSource(new StringReader(schemaFile))
 
         // create a schema instance
-        schemaInstance: Schema = factory.newSchema(schemaSource)
-        validator: JValidator  = schemaInstance.newValidator()
+        schemaInstance = factory.newSchema(schemaSource)
+        validator      = schemaInstance.newValidator()
 
         // validate the provided mapping
         _ = validator.validate(new StreamSource(new StringReader(xml)))
 
         // the mapping conforms to the XML schema "src/main/resources/mappingXMLToStandoff.xsd"
-        mappingXML: Elem = XML.loadString(xml)
+        mappingXML = XML.loadString(xml)
 
         // get the default XSL transformation, if given (optional)
         defaultXSLTransformation <-
@@ -358,7 +337,7 @@ final case class StandoffResponderV2Live(
           }
 
         // create a collection of a all elements mappingElement
-        mappingElementsXML: NodeSeq = mappingXML \ "mappingElement"
+        mappingElementsXML = mappingXML \ "mappingElement"
 
         mappingElements: Seq[MappingElement] =
           mappingElementsXML.map { curMappingEle: Node =>
@@ -527,33 +506,24 @@ final case class StandoffResponderV2Live(
         _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
 
         // check if the mapping IRI already exists
-        getExistingMappingSparql =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .getMapping(mappingIri)
-            .toString()
-
-        existingMappingResponse <- triplestoreService.sparqlHttpConstruct(getExistingMappingSparql)
+        getExistingMappingSparql = sparql.v2.txt.getMapping(mappingIri)
+        existingMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
 
         _ = if (existingMappingResponse.statements.nonEmpty) {
               throw BadRequestException(s"mapping IRI $mappingIri already exists")
             }
 
-        createNewMappingSparql =
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-            .createNewMapping(
-              dataNamedGraph = namedGraph,
-              mappingIri = mappingIri,
-              label = label,
-              defaultXSLTransformation = defaultXSLTransformation,
-              mappingElements = mappingElements
-            )
-            .toString()
-
-        // Do the update.
-        _ <- triplestoreService.sparqlHttpUpdate(createNewMappingSparql)
+        createNewMappingSparql = sparql.v2.txt.createNewMapping(
+                                   dataNamedGraph = namedGraph,
+                                   mappingIri = mappingIri,
+                                   label = label,
+                                   defaultXSLTransformation = defaultXSLTransformation,
+                                   mappingElements = mappingElements
+                                 )
+        _ <- triplestore.query(Update(createNewMappingSparql))
 
         // check if the mapping has been created
-        newMappingResponse <- triplestoreService.sparqlHttpConstruct(getExistingMappingSparql)
+        newMappingResponse <- triplestore.query(Construct(getExistingMappingSparql))
 
         _ = if (newMappingResponse.statements.isEmpty) {
               logger.error(
@@ -565,17 +535,8 @@ final case class StandoffResponderV2Live(
             }
 
         // get the mapping from the triplestore and cache it thereby
-        _ = getMappingFromTriplestore(
-              mappingIri = mappingIri,
-              requestingUser = requestingUser
-            )
-      } yield {
-        CreateMappingResponseV2(
-          mappingIri = mappingIri,
-          label = label,
-          projectIri = projectIri
-        )
-      }
+        _ <- getMappingFromTriplestore(mappingIri)
+      } yield CreateMappingResponseV2(mappingIri, label, projectIri)
 
       createMappingFuture.mapError {
         case validationException: SAXException =>
@@ -816,10 +777,7 @@ final case class StandoffResponderV2Live(
 
         case None =>
           for {
-            mapping <- getMappingFromTriplestore(
-                         mappingIri = mappingIri,
-                         requestingUser = requestingUser
-                       )
+            mapping <- getMappingFromTriplestore(mappingIri = mappingIri)
 
             entities <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
@@ -844,22 +802,11 @@ final case class StandoffResponderV2Live(
    * Gets a mapping from the triplestore.
    *
    * @param mappingIri           the IRI of the mapping to retrieve.
-   * @param requestingUser       the user making the request.
    * @return a [[MappingXMLtoStandoff]].
    */
-  private def getMappingFromTriplestore(
-    mappingIri: IRI,
-    requestingUser: UserADM
-  ): Task[MappingXMLtoStandoff] = {
-
-    val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .getMapping(
-        mappingIri = mappingIri
-      )
-      .toString()
-
+  private def getMappingFromTriplestore(mappingIri: IRI) =
     for {
-      mappingResponse <- triplestoreService.sparqlHttpConstruct(getMappingSparql)
+      mappingResponse <- triplestore.query(Construct(sparql.v2.txt.getMapping(mappingIri)))
 
       // if the result is empty, the mapping does not exist
       _ = if (mappingResponse.statements.isEmpty) {
@@ -867,12 +814,12 @@ final case class StandoffResponderV2Live(
           }
 
       // separate MappingElements from other statements (attributes and datatypes)
-      (mappingElementStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) =
+      (mappingElementStatements, otherStatements) =
         mappingResponse.statements.partition { case (_: IRI, assertions: Seq[(IRI, String)]) =>
           assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.MappingElement))
         }
 
-      mappingElements: Seq[MappingElement] =
+      mappingElements =
         mappingElementStatements.map { case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
           // for convenience (works only for props with cardinality one)
           val assertionsAsMap: Map[IRI, String] = assertions.toMap
@@ -941,7 +888,7 @@ final case class StandoffResponderV2Live(
         }.toSeq
 
       // check if there is a default XSL transformation
-      defaultXSLTransformationOption: Option[IRI] =
+      defaultXSLTransformationOption =
         otherStatements(mappingIri).find { case (pred: IRI, _: String) =>
           pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
         }.map { case (_: IRI, xslTransformationIri: IRI) =>
@@ -958,7 +905,6 @@ final case class StandoffResponderV2Live(
       _ = CacheUtil.put(cacheName = mappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
 
     } yield mappingXMLToStandoff
-  }
 
   /**
    * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
@@ -1117,102 +1063,6 @@ final case class StandoffResponderV2Live(
     } yield StandoffEntityInfoGetResponseV2(
       standoffClassInfoMap = standoffClassEntities.standoffClassInfoMap,
       standoffPropertyInfoMap = standoffPropertyEntities.standoffPropertyInfoMap
-    )
-  }
-
-  /**
-   * A [[ResultAndNext]] containing a page of standoff queried from a text value.
-   *
-   * @param result the standoff result.
-   * @param next the next task/step, or `None` if there is no more standoff to query in the text value.
-   */
-  private case class StandoffTaskResult(
-    override val result: StandoffTaskUnderlyingResult,
-    override val next: Option[GetStandoffTask]
-  ) extends ResultAndNext[StandoffTaskUnderlyingResult]
-
-  /**
-   * The underlying result type contained in a [[StandoffTaskResult]].
-   *
-   * @param standoff the standoff that was queried.
-   */
-  case class StandoffTaskUnderlyingResult(standoff: Vector[StandoffTagV2])
-
-  /**
-   * A task that gets a page of standoff from a text value.
-   *
-   * @param resourceIri          the IRI of the resource containing the value.
-   * @param valueIri             the IRI of the value.
-   * @param offset               the start index of the first standoff tag to be returned.
-   * @param requestingUser       the user making the request.
-   */
-  case class GetStandoffTask(
-    resourceIri: IRI,
-    valueIri: IRI,
-    offset: Int,
-    requestingUser: UserADM
-  ) extends NextExecutionStep[StandoffTaskUnderlyingResult] {
-    override def run(
-      previousResult: Option[ResultAndNext[StandoffTaskUnderlyingResult]]
-    ): Task[ResultAndNext[StandoffTaskUnderlyingResult]] =
-      for {
-        // Get a page of standoff.
-        standoffResponse <-
-          getStandoffV2(
-            GetStandoffPageRequestV2(
-              resourceIri = resourceIri,
-              valueIri = valueIri,
-              offset = offset,
-              targetSchema = ApiV2Complex,
-              requestingUser = requestingUser
-            )
-          )
-
-        // Add it to the standoff that has already been collected.
-        collectedStandoff =
-          previousResult match {
-            case Some(definedPreviousResult) =>
-              definedPreviousResult.result.standoff ++ standoffResponse.standoff
-            case None => standoffResponse.standoff.toVector
-          }
-      } yield standoffResponse.nextOffset match {
-        case Some(definedNextOffset) =>
-          // There is more standoff to query. Return the collected standoff and the next task.
-          StandoffTaskResult(
-            StandoffTaskUnderlyingResult(collectedStandoff),
-            Some(copy(offset = definedNextOffset))
-          )
-        case None =>
-          // There is no more standoff to query. Just return the collected standoff.
-          StandoffTaskResult(
-            StandoffTaskUnderlyingResult(collectedStandoff),
-            None
-          )
-      }
-  }
-
-  /**
-   * Returns all pages of standoff markup from a text value, except for the first page.
-   *
-   * @param getRemainingStandoffFromTextValueRequestV2 the request message.
-   * @return the text value's standoff markup.
-   */
-  private def getRemainingStandoffFromTextValueV2(
-    getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2
-  ): Task[GetStandoffResponseV2] = {
-    val firstTask = GetStandoffTask(
-      resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
-      valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      offset = appConfig.standoffPerPage, // the offset of the second page
-      requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
-    )
-
-    for {
-      result <- NextExecutionStep.runSteps(firstTask)
-    } yield GetStandoffResponseV2(
-      valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-      standoff = result.result.standoff,
-      nextOffset = None
     )
   }
 }

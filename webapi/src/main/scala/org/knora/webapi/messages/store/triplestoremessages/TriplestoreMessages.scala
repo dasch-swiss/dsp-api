@@ -6,95 +6,46 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.apache.commons.lang3.StringUtils
-import play.twirl.api.TxtFormat
 import spray.json._
 import zio._
 
-import java.nio.file.Path
 import java.time.Instant
 import scala.collection.mutable
 
 import dsp.errors._
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.store.StoreRequest
+import org.knora.webapi.messages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.store.triplestore.domain
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Messages
-
-sealed trait TriplestoreRequest extends StoreRequest with RelayedMessage
 
 /**
- * Simple message for checking the connection to the triplestore.
- */
-case class CheckConnection() extends TriplestoreRequest
-
-/**
- * Simple message for acknowledging connection check
- */
-case class CheckConnectionACK()
-
-/**
- * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResult]].
- *
- * @param sparql the SPARQL string.
- */
-case class SparqlSelectRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
-
-/**
- * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
- * [[SparqlConstructResponse]].
- *
- * @param sparql               the SPARQL string.
- */
-case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
-
-/**
- * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
- * written to the specified file in a quad format. A successful response message will be a [[FileWrittenResponse]].
- *
- * @param sparql               the SPARQL string.
- * @param graphIri             the named graph IRI to be used in the TriG file.
- * @param outputFile           the file to be written.
- * @param outputFormat         the output file format.
- */
-case class SparqlConstructFileRequest(
-  sparql: String,
-  graphIri: IRI,
-  outputFile: Path,
-  outputFormat: QuadFormat
-) extends TriplestoreRequest
-
-/**
- * A response to a [[SparqlConstructRequest]].
+ * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
  *
  * @param statements a map of subject IRIs to statements about each subject.
  */
-case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
+case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]], rdfModel: RdfModel) {
+  def asExtended(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
+    SparqlExtendedConstructResponse.make(rdfModel)
+}
+object SparqlConstructResponse {
+  def make(rdfModel: RdfModel): SparqlConstructResponse = {
+    val statementMap = mutable.Map.empty[IRI, Seq[(IRI, String)]]
+    for (st: Statement <- rdfModel) {
+      val subjectIri                  = st.subj.stringValue
+      val predicateIri                = st.pred.stringValue
+      val objectIri                   = st.obj.stringValue
+      val currentStatementsForSubject = statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
+      statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
+    }
+    SparqlConstructResponse(statementMap.toMap, rdfModel)
+  }
+}
 
-/**
- * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
- * [[SparqlExtendedConstructResponse]].
- *
- * @param sparql               the SPARQL string.
- */
-case class SparqlExtendedConstructRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
-
-/**
- * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
- */
+case class SparqlExtendedConstructResponse(
+  statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects]
+)
 object SparqlExtendedConstructResponse {
 
   /**
@@ -102,25 +53,16 @@ object SparqlExtendedConstructResponse {
    */
   type ConstructPredicateObjects = Map[SmartIri, Seq[LiteralV2]]
 
-  private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
+  def make(turtle: String)(implicit
+    stringFormatter: StringFormatter
+  ): IO[DataConversionException, SparqlExtendedConstructResponse] =
+    make(RdfFeatureFactory.getRdfFormatUtil().parseToRdfModel(turtle, Turtle))
 
-  /**
-   * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
-   *
-   * @param turtleStr     the Turtle document.
-   * @return a [[SparqlExtendedConstructResponse]] representing the document.
-   */
-  def parseTurtleResponse(
-    turtleStr: String
-  )(implicit stringFormatter: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] = {
-
-    val rdfFormatUtil: RdfFormatUtil =
-      RdfFeatureFactory.getRdfFormatUtil()
-
-    ZIO.attemptBlocking {
-
-      val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
-      val rdfModel: RdfModel                                              = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+  def make(
+    rdfModel: RdfModel
+  )(implicit sf: StringFormatter): IO[DataConversionException, SparqlExtendedConstructResponse] =
+    ZIO.attempt {
+      val statementMap = mutable.Map.empty[SubjectV2, ConstructPredicateObjects]
 
       for (st: Statement <- rdfModel) {
         val subject: SubjectV2 = st.subj match {
@@ -182,10 +124,8 @@ object SparqlExtendedConstructResponse {
             }
         }
 
-        val currentStatementsForSubject: Map[SmartIri, Seq[LiteralV2]] =
-          statementMap.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
-        val currentStatementsForPredicate: Seq[LiteralV2] =
-          currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
+        val currentStatementsForSubject   = statementMap.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
+        val currentStatementsForPredicate = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
 
         val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
         val updatedSubjectStatements   = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
@@ -195,209 +135,17 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      e =>
-        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter : ${e.getMessage}") *>
-          ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
+      _ => ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)
     )
-  }
 }
-
-/**
- * A response to a [[SparqlExtendedConstructRequest]].
- *
- * @param statements a map of subjects to statements about each subject.
- */
-case class SparqlExtendedConstructResponse(
-  statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects]
-)
-
-/**
- * Requests a named graph, which will be written to the specified file. A successful response
- * will be a [[FileWrittenResponse]].
- *
- * @param graphIri             the IRI of the named graph.
- * @param outputFile           the destination file.
- * @param outputFormat         the output file format.
- */
-case class NamedGraphFileRequest(
-  graphIri: IRI,
-  outputFile: Path,
-  outputFormat: QuadFormat
-) extends TriplestoreRequest
-    with ResponderRequest
-
-/**
- * Requests a named graph, which will be returned as Turtle. A successful response
- * will be a [[NamedGraphDataResponse]].
- *
- * @param graphIri the IRI of the named graph.
- */
-case class NamedGraphDataRequest(graphIri: IRI) extends TriplestoreRequest
-
-/**
- * A graph of triples in Turtle format.
- */
-case class NamedGraphDataResponse(turtle: String)
-
-/**
- * Represents a SPARQL Update operation to be performed.
- *
- * @param sparql the SPARQL string.
- */
-case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
-
-/**
- * Indicates that the requested SPARQL Update was executed and returned no errors.
- */
-case class SparqlUpdateResponse()
-
-/**
- * Represents a SPARQL ASK query to be sent to the triplestore. A successful response will be a
- * [[SparqlAskResponse]].
- *
- * @param sparql the SPARQL string.
- */
-case class SparqlAskRequest(sparql: String) extends TriplestoreRequest
-object SparqlAskRequest {
-  def apply(query: TxtFormat.Appendable): SparqlAskRequest = SparqlAskRequest(query.toString)
-}
-
-/**
- * Represents a response to a SPARQL ASK query, containing the result.
- *
- * @param result of the query.
- */
-case class SparqlAskResponse(result: Boolean)
-
-/**
- * Message for resetting the contents of the repository and loading a fresh set of data. The data needs to be
- * stored in an accessible path and supplied via the [[RdfDataObject]].
- *
- * @param rdfDataObjects  contains a list of [[RdfDataObject]].
- * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
- */
-case class ResetRepositoryContent(rdfDataObjects: List[RdfDataObject], prependDefaults: Boolean = true)
-    extends TriplestoreRequest
-
-/**
- * Sent as a response to [[ResetRepositoryContent]] if the request was processed successfully.
- */
-case class ResetRepositoryContentACK()
-
-/**
- * Message for removing all content from the repository.
- */
-case class DropAllTRepositoryContent() extends TriplestoreRequest
-
-/**
- * Sent as a response to [[DropAllTRepositoryContent]] if the request was processed successfully.
- */
-case class DropAllRepositoryContentACK()
-
-/**
- * Message for removing all content from the repository.
- */
-case class DropDataGraphByGraph() extends TriplestoreRequest
-
-/**
- * Sent as a response to [[DropDataGraphByGraph]] if the request was processed successfully.
- */
-case class DropDataGraphByGraphACK()
-
-/**
- * Inserts data into the repository.
- *
- * @param rdfDataObjects contains a list of [[RdfDataObject]].
- */
-case class InsertRepositoryContent(rdfDataObjects: List[RdfDataObject]) extends TriplestoreRequest
-
-/**
- * Sent as a response to [[InsertRepositoryContent]] if the request was processed successfully.
- */
-case class InsertTriplestoreContentACK()
-
-/**
- * Inserts raw RDF data into the repository.
- *
- * @param graphContent contains graph data as turtle.
- * @param graphName    the name of the graph.
- */
-case class InsertGraphDataContentRequest(graphContent: String, graphName: String) extends TriplestoreRequest
-
-/**
- * Sent as a response to [[InsertGraphDataContentRequest]] if the request was processed successfully.
- */
-case class InsertGraphDataContentResponse()
-
-/**
- * Initialize the repository. This will initiate the (re)creation of the repository and adding data to it.
- *
- * @param rdfDataObject contains a list of [[RdfDataObject]].
- */
-case class InitRepository(rdfDataObject: RdfDataObject) extends TriplestoreRequest
-
-/**
- * Initialization ((re)creation of repository and loading of data) is finished successfully.
- */
-case class InitRepositoryACK()
-
-/**
- * Ask triplestore if it is ready
- */
-case class CheckTriplestoreRequest() extends TriplestoreRequest
-
-/**
- * Response indicating whether the triplestore has finished initialization and is ready for processing messages
- *
- * @param triplestoreStatus the state of the triplestore.
- */
-case class CheckTriplestoreResponse(triplestoreStatus: domain.TriplestoreStatus)
-object CheckTriplestoreResponse {
-  val Available: CheckTriplestoreResponse = CheckTriplestoreResponse(TriplestoreStatus.Available)
-}
-
-/**
- * Simulates a triplestore timeout. Used only in testing.
- */
-case class SimulateTimeoutRequest() extends TriplestoreRequest
-
-/**
- * Requests that the repository is updated to be compatible with the running version of Knora.
- */
-case class UpdateRepositoryRequest() extends TriplestoreRequest
-
-/**
- * Requests that the repository is downloaded to an N-Quads file. A successful response will be a [[FileWrittenResponse]].
- *
- * @param outputFile           the output file.
- */
-case class DownloadRepositoryRequest(outputFile: Path) extends TriplestoreRequest
-
-/**
- * Indicates that a file was written successfully.
- */
-case class FileWrittenResponse()
-
-/**
- * Requests that repository content is uploaded from an N-Quads. A successful response will be a
- * [[RepositoryUploadedResponse]].
- *
- * @param inputFile a TriG file containing the content to be uploaded to the repository.
- */
-case class UploadRepositoryRequest(inputFile: Path) extends TriplestoreRequest
-
-/**
- * Indicates that repository content was successfully uploaded.
- */
-case class RepositoryUploadedResponse()
 
 /**
  * Indicates whether the repository is up to date.
  *
  * @param message a message providing details of what was done.
  */
-case class RepositoryUpdatedResponse(message: String) extends TriplestoreRequest
+case class RepositoryUpdatedResponse(message: String)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -574,14 +322,6 @@ case class StringLiteralV2(value: String, language: Option[String] = None)
  * @param stringLiterals a sequence of [[StringLiteralV2]].
  */
 case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
-
-  /**
-   * Sort sequence of [[StringLiteralV2]] by their text value.
-   *
-   * @return a [[StringLiteralSequenceV2]] sorted by string value.
-   */
-  def sortByStringValue: StringLiteralSequenceV2 =
-    StringLiteralSequenceV2(stringLiterals.sortBy(_.value))
 
   /**
    * Sort sequence of [[StringLiteralV2]] by their language value.
@@ -850,8 +590,4 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   }
 
   implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
-  implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetRepositoryContent] = jsonFormat2(
-    ResetRepositoryContent
-  )
-
 }

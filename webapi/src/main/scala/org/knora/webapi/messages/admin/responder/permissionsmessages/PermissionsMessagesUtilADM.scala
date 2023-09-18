@@ -119,7 +119,7 @@ object PermissionsMessagesUtilADM {
     }
   }
 
-  def checkPermissionIri(iri: IRI): Unit = {
+  def checkPermissionIri(iri: IRI): IRI = {
     implicit val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
     sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
   }

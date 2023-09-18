@@ -65,8 +65,7 @@ it possible to search for a date in one calendar, and get search results in othe
 Commonly used text markup systems, such as [TEI/XML](http://www.tei-c.org/),
 have to represent a text as a hierarchy, and therefore have trouble supporting
 overlapping markup. DSP supports [Standoff/RDF markup](standoff-rdf.md): the markup is stored
-as RDF data, separately from the text, allowing for overlapping markup. DSP's RDF-based standoff
-is designed to support the needs of complex digital critical editions. The DSP
+as RDF data, separately from the text, allowing for overlapping markup. The DSP
 can import any XML document (including TEI/XML) for storage as standoff/RDF,
 and can regenerate the original XML document at any time.
 

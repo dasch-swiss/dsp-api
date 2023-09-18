@@ -6,13 +6,11 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import zio.Exit
 
 import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.concurrent.duration._
-import scala.reflect.ClassTag
 
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
@@ -27,7 +25,6 @@ import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -38,7 +35,10 @@ import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.errors.SipiException
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -363,20 +363,17 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |SELECT ?valueUUID WHERE {
          |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
          |}
-             """.stripMargin
+         |""".stripMargin
 
-    appActor ! SparqlSelectRequest(sparqlQuery)
+    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
 
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valueUUID")).get)
-      }
+    val rows = actual.results.bindings
+    if (rows.isEmpty) {
+      None
+    } else if (rows.size > 1) {
+      throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
+    } else {
+      Some(UuidUtil.base64Decode(rows.head.rowMap("valueUUID")).get)
     }
   }
 
@@ -387,27 +384,18 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
          |
          |SELECT ?valuePermissions WHERE {
          |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
-         |}
-             """.stripMargin
+         |}""".stripMargin
 
-    appActor ! SparqlSelectRequest(sparqlQuery)
+    val actual = UnsafeZioRun.runOrThrow(TriplestoreService.query(Select(sparqlQuery)))
 
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
-      }
+    val rows = actual.results.bindings
+    if (rows.isEmpty) {
+      None
+    } else if (rows.size > 1) {
+      throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
+    } else {
+      Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
     }
-  }
-
-  private def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _]) = actual match {
-    case Exit.Failure(err) => err.squash shouldBe a[T]
-    case _                 => fail(s"Expected Exit.Failure with specific T.")
   }
 
   "Load test data" in {

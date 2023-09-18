@@ -56,7 +56,7 @@ To optimise query performance:
 data structure to represent standoff. This data structure knows nothing about RDF, and each standoff tag
 contains its XML element name and namespace and those of its attributes.
 
-In Knora, it is possible to define [mappings](../../../03-endpoints/api-v2/xml-to-standoff-mapping.md) to
+In DSP-API, it is possible to define [mappings](../../../03-endpoints/api-v2/text/custom-standoff.md) to
 control how standoff/RDF is converted to XML and vice versa. Different mappings can be used to convert the same
 standoff/RDF to different sorts of XML documents. `StandoffTagUtilV2` converts between standoff/RDF and XML using
 mappings, delegating the lower-level work to `XMLToStandoffUtil`.

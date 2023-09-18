@@ -5,11 +5,6 @@
 
 package org.knora.webapi.messages
 
-import akka.actor.ActorRef
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
 import spray.json._
 import zio.ZLayer
 import zio.prelude.Validation
@@ -18,8 +13,6 @@ import java.time._
 import java.time.temporal.ChronoField
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -32,8 +25,6 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter._
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
@@ -521,6 +512,12 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   override def hashCode: Int = toString.hashCode
 
   def compare(that: SmartIri): Int = toString.compare(that.toString)
+
+  /**
+   * Some Iri contain a UUID as last path segment, which is Base64 encoded. This method returns the UUID, if present.
+   * @return The [[UUID]], if present. [[None]] if either the id is not present or it is not a valid base 64 encoded UUID.
+   */
+  def getUuid: Option[UUID] = toString.split("/").lastOption.flatMap(UuidUtil.base64Decode(_).toOption)
 }
 
 /**
@@ -561,7 +558,7 @@ object IriConversions {
  * Handles string parsing, formatting, conversion, and validation.
  */
 class StringFormatter private (
-  val maybeConfig: Option[AppConfig] = None,
+  val maybeConfig: Option[AppConfig],
   maybeKnoraHostAndPort: Option[String] = None,
   initForTest: Boolean = false
 ) {
@@ -874,19 +871,20 @@ class StringFormatter private (
             // Determine whether the ontology is shared, and get its project code, if any.
             val (sharedOntology: Boolean, projectCode: Option[String]) = if (ontologyPath.head == "shared") {
               if (ontologyPath.length == 2) {
-                (true, Some(DefaultSharedOntologiesProjectCode)) // default shared ontologies project
+                // default shared ontologies project
+                (true, Some(DefaultSharedOntologiesProjectCode))
               } else if (ontologyPath.length == 3) {
-                (true, Some(validateProjectShortcode(ontologyPath(1), errorFun))) // other shared ontologies project
+                // other shared ontologies project
+                (true, Some(validateProjectShortcode(ontologyPath(1), errorFun)))
               } else {
                 errorFun
               }
             } else if (ontologyPath.length == 2) {
-              (
-                false,
-                Some(validateProjectShortcode(ontologyPath.head, errorFun))
-              ) // non-shared ontology with project code
+              // non-shared ontology with project code
+              (false, Some(validateProjectShortcode(ontologyPath.head, errorFun)))
             } else {
-              (false, None) // built-in ontology
+              // built-in ontology
+              (false, None)
             }
 
             // Extract the ontology name.
@@ -1592,8 +1590,8 @@ class StringFormatter private (
   private def makeArkUrl(
     projectID: String,
     resourceID: String,
-    maybeValueUUID: Option[UUID] = None,
-    maybeTimestamp: Option[Instant] = None
+    maybeValueUUID: Option[UUID],
+    maybeTimestamp: Option[Instant]
   ): String = {
 
     /**
@@ -1650,54 +1648,6 @@ class StringFormatter private (
    * @return a URL for accessing the file.
    */
   def makeSipiTempFilePath(filename: String): String = s"/tmp/$filename"
-
-  /**
-   * Checks whether an IRI already exists in the triplestore.
-   *
-   * @param iri          the IRI to be checked.
-   * @param appActor     a reference to the application actor.
-   * @return `true` if the IRI already exists, `false` otherwise.
-   */
-  def checkIriExists(iri: IRI, appActor: ActorRef)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[Boolean] =
-    for {
-      askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
-      response  <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-    } yield response.result
-
-  /**
-   * Attempts to create a new IRI that isn't already used in the triplestore. Will try up to [[MAX_IRI_ATTEMPTS]]
-   * times, then throw an exception if an unused IRI could not be created.
-   *
-   * @param iriFun       a function that generates a random IRI.
-   * @param storeManager a reference to the Knora store manager actor.
-   */
-  def makeUnusedIri(iriFun: => IRI, storeManager: ActorRef, log: Logger)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[IRI] = {
-    def makeUnusedIriRec(attempts: Int): Future[IRI] = {
-      val newIri = iriFun
-
-      for {
-        iriExists <- checkIriExists(newIri, storeManager)
-
-        result <-
-          if (!iriExists) {
-            FastFuture.successful(newIri)
-          } else if (attempts > 1) {
-            log.warn("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
-            makeUnusedIriRec(attempts - 1)
-          } else {
-            throw UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts")
-          }
-      } yield result
-    }
-
-    makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
-  }
 
   /**
    * Creates a new resource IRI based on a UUID.

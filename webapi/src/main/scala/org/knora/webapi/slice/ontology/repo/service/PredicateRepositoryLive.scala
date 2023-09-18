@@ -13,6 +13,7 @@ import org.knora.webapi.messages.twirl.queries.sparql.v2.txt.countPropertyUsedWi
 import org.knora.webapi.slice.ontology.domain.service.PredicateRepository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final case class PredicateRepositoryLive(private val tripleStore: TriplestoreService) extends PredicateRepository {
 
@@ -27,15 +28,12 @@ final case class PredicateRepositoryLive(private val tripleStore: TriplestoreSer
   def getCountForPropertyUsedNumberOfTimesWithClass(
     propertyIri: InternalIri,
     classIri: InternalIri
-  ): Task[List[(InternalIri, Int)]] = {
-    val query = countPropertyUsedWithClass(propertyIri, classIri)
+  ): Task[List[(InternalIri, Int)]] =
     tripleStore
-      .sparqlHttpSelect(query.toString)
-      .map(result =>
-        result.results.bindings.map(row => (InternalIri(row.rowMap("subject")), row.rowMap("count").toInt)).toList
-      )
-  }
+      .query(Select(countPropertyUsedWithClass(propertyIri, classIri)))
+      .map(_.results.bindings.map(row => (InternalIri(row.rowMap("subject")), row.rowMap("count").toInt)).toList)
 }
+
 object PredicateRepositoryLive {
   val layer: URLayer[TriplestoreService, PredicateRepositoryLive] = ZLayer.fromFunction(PredicateRepositoryLive.apply _)
 }
