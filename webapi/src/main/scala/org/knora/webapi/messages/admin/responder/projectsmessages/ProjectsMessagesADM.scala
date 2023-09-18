@@ -363,17 +363,6 @@ case class ProjectRestrictedViewSettingsResponseADM(settings: ProjectRestrictedV
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 }
 
-///**
-// * Represents a response to a request for the project's restricted view settings.
-// *
-// * @param settings the restricted view size.
-// */
-//case class ProjectRestrictedViewSizeResponseADM(settings: ProjectRestrictedViewSizeADM)
-//    extends KnoraResponseADM
-//    with ProjectsADMJsonProtocol {
-//  def toJsValue: JsValue = projectRestrictedViewSetResponseADMFormat.write(this)
-//}
-
 case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize)
     extends KnoraResponseADM
     with ProjectsADMJsonProtocol {
@@ -611,8 +600,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   )
   implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] =
     jsonFormat(ProjectRestrictedViewSettingsADM, "size", "watermark")
-//  implicit val projectRestrictedViewSizeADMFormat: RootJsonFormat[ProjectRestrictedViewSizeADM] =
-//    jsonFormat(ProjectRestrictedViewSizeADM, "size")
+
   implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members"))
   )

@@ -493,7 +493,6 @@ final case class ProjectsResponderADMLive(
                 .setProjectRestrictedViewSettings(iri.value, size.value, None)
 
       _ <- triplestoreService.sparqlHttpUpdate(query.toString)
-//      settings = ProjectRestrictedViewSettingsSetADM(size)
     } yield ProjectRestrictedViewSizeResponseADM(size)
   }
 

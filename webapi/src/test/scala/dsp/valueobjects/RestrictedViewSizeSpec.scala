@@ -32,8 +32,8 @@ object RestrictedViewSizeSpec extends ZIOSpecDefault {
         ),
         RestrictedViewSize.make("pct:101") == Validation.fail(
           BadRequestException(ErrorMessages.RestrictedViewSizeInvalid)
-        )
-//        RestrictedViewSize.make("") == Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeMissing))
+        ),
+        RestrictedViewSize.make("") == Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeMissing))
       )
     }
   )
