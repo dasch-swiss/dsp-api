@@ -815,6 +815,14 @@ Example response:
 
 ### Set Restricted View Settings
 
+The route takes String parameter which sets restricted view size in on of two formats: as an image dimensions or a 
+percentage. The dimensions pattern looks like: `!X,X`, where X is the number representing scaled image dimensions in
+a square, so that the width and height of the returned image are not greater than the requested value.
+Example: `!512,512` means the image's bigger side will be set to 512 pixels, setting the other side respectively to
+image aspect ratio.
+The percentage pattern looks like: `pct:X`, where X is the number between 1-100 representing the percentage the image
+will be scaled to. Example: `pct:1` means the image will be scaled to 1% of the original image size.
+
 Permissions: ProjectAdmin/SystemAdmin
 
 Request definition:
@@ -830,17 +838,14 @@ Example request:
 ```bash
 curl --request GET 'http://0.0.0.0:3333/admin/projects/iri/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/RestrictedViewSettings' \
 --header 'Authorization: Basic cm9vdEBleGFtcGxlLmNvbTp0ZXN0' \
---data '{"size": "222"}
+--data '{"size": "!512,512"}
 ```
 
 Example response:
 
 ```jsonc
 {
-    "settings": {
-        "size": "!512,512",
-        "watermark": "path_to_image"
-    }
+    "size": "!512,512"
 }
 ```
 

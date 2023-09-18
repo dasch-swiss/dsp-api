@@ -487,8 +487,6 @@ final case class ProjectsResponderADMLive(
              .fail(ForbiddenException("User is neither system nor project admin."))
              .unless(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(iri.value))
 
-      _ = println(888, size)
-
       query = twirl.queries.sparql.admin.txt
                 .setProjectRestrictedViewSettings(iri.value, size.value, None)
 

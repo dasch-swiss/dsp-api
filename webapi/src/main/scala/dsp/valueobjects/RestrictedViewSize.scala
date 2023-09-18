@@ -8,6 +8,7 @@ package dsp.valueobjects
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
+
 import dsp.errors.BadRequestException
 
 /**
