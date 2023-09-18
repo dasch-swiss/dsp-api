@@ -19,7 +19,6 @@ import java.util.UUID
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
@@ -36,6 +35,7 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import zio.json.{DeriveJsonCodec, JsonCodec}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -364,9 +364,9 @@ case class ProjectRestrictedViewSettingsResponseADM(settings: ProjectRestrictedV
 }
 
 case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize)
-    extends KnoraResponseADM
-    with ProjectsADMJsonProtocol {
-  def toJsValue: JsValue = projectRestrictedViewSizeResponseADMFormat.write(this)
+object ProjectRestrictedViewSizeResponseADM {
+  implicit val codec: JsonCodec[ProjectRestrictedViewSizeResponseADM] =
+    DeriveJsonCodec.gen[ProjectRestrictedViewSizeResponseADM]
 }
 
 /**
@@ -563,20 +563,6 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-  implicit val restrictedViewSizeFormat: JsonFormat[RestrictedViewSize] =
-    new JsonFormat[RestrictedViewSize] {
-      override def read(json: JsValue): RestrictedViewSize = json match {
-        case JsString(str) =>
-          Try(RestrictedViewSize.make(str)) match {
-            case Success(result)    => result.asInstanceOf[RestrictedViewSize]
-            case Failure(exception) => deserializationError(s"Could not parse $str", exception)
-          }
-        case other => deserializationError(s"Expected a String but got a $other")
-      }
-
-      override def write(obj: RestrictedViewSize): JsValue = JsString(obj.value)
-    }
-
   implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(
     jsonFormat(
       ProjectADM,
@@ -643,8 +629,6 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
   implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsResponseADM] =
     jsonFormat(ProjectRestrictedViewSettingsResponseADM, "settings")
-  implicit val projectRestrictedViewSizeResponseADMFormat: JsonFormat[ProjectRestrictedViewSizeResponseADM] =
-    jsonFormat(ProjectRestrictedViewSizeResponseADM, "size")
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectOperationResponseADM, "project"))
   )

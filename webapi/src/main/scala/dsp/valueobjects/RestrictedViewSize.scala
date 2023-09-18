@@ -8,8 +8,8 @@ package dsp.valueobjects
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-
 import dsp.errors.BadRequestException
+import zio.json.JsonCodec
 
 /**
  * RestrictedViewSize value object.
@@ -33,6 +33,11 @@ object RestrictedViewSize {
     else if (dimensionsPattern.matches(trimmed) && isSquare) Validation.succeed(new RestrictedViewSize(trimmed) {})
     else Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeInvalid))
   }
+
+  implicit val codec: JsonCodec[RestrictedViewSize] = JsonCodec[String].transformOrFail(
+    str => RestrictedViewSize.make(str).toEither.left.map(err => err.map(_.getMessage).mkString(", ")),
+    value => value.value
+  )
 }
 
 object ErrorMessages {
