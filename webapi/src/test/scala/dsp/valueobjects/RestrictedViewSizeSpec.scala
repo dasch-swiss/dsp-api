@@ -14,7 +14,7 @@ object RestrictedViewSizeSpec extends ZIOSpecDefault {
 
   def spec = suite("Size")(
     test("should succeed on passing percentage values") {
-      val gen = Gen.int(1,100)
+      val gen = Gen.int(1, 100)
       check(gen) { int =>
         val param = s"pct:$int"
         assertTrue(RestrictedViewSize.make(param).map(_.value) == Right(param))

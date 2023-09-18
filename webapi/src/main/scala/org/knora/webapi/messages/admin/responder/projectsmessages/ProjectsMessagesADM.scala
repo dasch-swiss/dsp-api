@@ -8,17 +8,15 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import spray.json.DefaultJsonProtocol
-import spray.json.JsString
 import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
-import spray.json.deserializationError
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
@@ -35,7 +33,6 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import zio.json.{DeriveJsonCodec, JsonCodec}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

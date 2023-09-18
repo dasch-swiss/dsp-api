@@ -5,10 +5,9 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
+import zio.json.JsonCodec
 
 import scala.util.matching.Regex
-import zio.json.JsonCodec
 
 /**
  * RestrictedViewSize value object.
