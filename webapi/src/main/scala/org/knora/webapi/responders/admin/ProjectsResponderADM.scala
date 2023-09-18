@@ -492,7 +492,7 @@ final case class ProjectsResponderADMLive(
       query = twirl.queries.sparql.admin.txt
                 .setProjectRestrictedViewSettings(iri.value, size.value, None)
 
-      _ = Update(query.toString)
+      _ <- triplestore.query(Update(query.toString))
     } yield ProjectRestrictedViewSizeResponseADM(size)
   }
 

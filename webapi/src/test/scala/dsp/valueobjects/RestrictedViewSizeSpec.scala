@@ -13,10 +13,14 @@ import zio.test._
 object RestrictedViewSizeSpec extends ZIOSpecDefault {
 
   def spec = suite("Size")(
-    test("pass correct percentage value") {
-      assertTrue(RestrictedViewSize.make("pct:1").map(_.value) == Right("pct:1"))
+    test("should succeed on passing percentage values") {
+      val gen = Gen.int(1,100)
+      check(gen) { int =>
+        val param = s"pct:$int"
+        assertTrue(RestrictedViewSize.make(param).map(_.value) == Right(param))
+      }
     },
-    test("should succeed on passing same x y dimensions") {
+    test("should succeed on passing the same x y dimensions") {
       val gen = Gen.int(1, 1000)
       check(gen) { integer =>
         val param = s"!$integer,$integer"
@@ -30,13 +34,13 @@ object RestrictedViewSizeSpec extends ZIOSpecDefault {
         assertTrue(RestrictedViewSize.make(param).map(_.value) == Left(ErrorMessages.RestrictedViewSizeInvalid))
       }
     },
-    test("fail on passing incorrect values") {
-      val gen = Gen.fromIterable(Seq("!512,100", "pct:0", "pct:101"))
+    test("should fail on passing incorrect values") {
+      val gen = Gen.fromIterable(Seq("!512,100", "pct:-1", "pct:0", "pct:101"))
       check(gen) { param =>
         assertTrue(RestrictedViewSize.make(param) == Left(ErrorMessages.RestrictedViewSizeInvalid))
       }
     },
-    test("fail on passing empty value") {
+    test("should fail on passing empty value") {
       assertTrue(RestrictedViewSize.make("") == Left(ErrorMessages.RestrictedViewSizeMissing))
     }
   )
