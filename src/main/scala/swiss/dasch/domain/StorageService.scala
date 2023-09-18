@@ -24,6 +24,8 @@ trait StorageService  {
   def getAssetDirectory(asset: Asset): UIO[Path]
   def getAssetDirectory(): UIO[Path]
   def getTempDirectory(): UIO[Path]
+  def getBulkIngestImportFolder(project: ProjectShortcode): UIO[Path] =
+    getTempDirectory().map(_ / "import" / project.toString)
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit]
@@ -44,6 +46,8 @@ object StorageService {
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory())
   def getTempDirectory(): RIO[StorageService, Path]                                                                   =
     ZIO.serviceWithZIO[StorageService](_.getTempDirectory())
+  def getBulkIngestImportFolder(project: ProjectShortcode): RIO[StorageService, Path]                                 =
+    ZIO.serviceWithZIO[StorageService](_.getBulkIngestImportFolder(project))
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None)
       : ZIO[Scope with StorageService, IOException, Path] =
     ZIO.serviceWithZIO[StorageService](_.createTempDirectoryScoped(directoryName, prefix))
