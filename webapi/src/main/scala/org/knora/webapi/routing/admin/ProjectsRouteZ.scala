@@ -250,10 +250,9 @@ final case class ProjectsRouteZ(
       iriDecoded <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
       id         <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
       body       <- body.asString
-      payload <-
-        ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSettingsPayload]).mapError(e => BadRequestException(e))
-      size     <- RestrictedViewSize.make(payload.size).toZIO
-      response <- projectsService.setProjectRestrictedViewSettings(id.value, user, size)
+      payload    <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSettingsPayload]).mapError(BadRequestException(_))
+      size       <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
+      response   <- projectsService.setProjectRestrictedViewSettings(id.value, user, size)
     } yield Response.json(response.toJson)
 }
 

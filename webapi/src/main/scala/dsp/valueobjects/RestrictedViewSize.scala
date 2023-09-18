@@ -8,7 +8,6 @@ package dsp.valueobjects
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-import dsp.errors.BadRequestException
 import zio.json.JsonCodec
 
 /**
@@ -17,7 +16,7 @@ import zio.json.JsonCodec
 sealed abstract case class RestrictedViewSize private (value: String)
 
 object RestrictedViewSize {
-  def make(value: String): Validation[Throwable, RestrictedViewSize] = {
+  def make(value: String): Either[String, RestrictedViewSize] = {
     val trimmed: String = value.trim
     // matches strings "pct:1-100"
     val percentagePattern: Regex = "pct:[1-9][0-9]?0?$".r
@@ -28,16 +27,17 @@ object RestrictedViewSize {
       substr.head == substr.last
     }
 
-    if (value.isEmpty) Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeMissing))
-    else if (percentagePattern.matches(trimmed)) Validation.succeed(new RestrictedViewSize(trimmed) {})
-    else if (dimensionsPattern.matches(trimmed) && isSquare) Validation.succeed(new RestrictedViewSize(trimmed) {})
-    else Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeInvalid))
+    if (value.isEmpty) Left(ErrorMessages.RestrictedViewSizeMissing)
+    else if (percentagePattern.matches(trimmed)) Right(new RestrictedViewSize(trimmed) {})
+    else if (dimensionsPattern.matches(trimmed) && isSquare) Right(new RestrictedViewSize(trimmed) {})
+    else Left(ErrorMessages.RestrictedViewSizeInvalid)
   }
 
-  implicit val codec: JsonCodec[RestrictedViewSize] = JsonCodec[String].transformOrFail(
-    str => RestrictedViewSize.make(str).toEither.left.map(err => err.map(_.getMessage).mkString(", ")),
-    value => value.value
-  )
+  def unsafeFrom(value: String): RestrictedViewSize =
+    make(value).fold(s => throw new IllegalArgumentException(s), identity)
+
+  implicit val codec: JsonCodec[RestrictedViewSize] =
+    JsonCodec[String].transformOrFail(RestrictedViewSize.make, _.value)
 }
 
 object ErrorMessages {

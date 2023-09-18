@@ -5,10 +5,7 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
 import zio.test._
-
-import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test the [[dsp.valueobjects.RestrictedViewSize]] value object creation.
@@ -17,24 +14,30 @@ object RestrictedViewSizeSpec extends ZIOSpecDefault {
 
   def spec = suite("Size")(
     test("pass correct percentage value") {
-      assertTrue(RestrictedViewSize.make("pct:1").toOption.get.value == "pct:1")
+      assertTrue(RestrictedViewSize.make("pct:1").map(_.value) == Right("pct:1"))
     },
-    test("pass correct dimension value") {
-      assertTrue(RestrictedViewSize.make("!512,512").toOption.get.value == "!512,512")
+    test("should succeed on passing same x y dimensions") {
+      val gen = Gen.int(1, 1000)
+      check(gen) { integer =>
+        val param = s"!$integer,$integer"
+        assertTrue(RestrictedViewSize.make(param).map(_.value) == Right(param))
+      }
+    },
+    test("should fail on passing negative x y dimensions") {
+      val gen = Gen.int(-1000, -1)
+      check(gen) { integer =>
+        val param = s"!$integer,$integer"
+        assertTrue(RestrictedViewSize.make(param).map(_.value) == Left(ErrorMessages.RestrictedViewSizeInvalid))
+      }
     },
     test("fail on passing incorrect values") {
-      assertTrue(
-        RestrictedViewSize.make("!512,100") == Validation.fail(
-          BadRequestException(ErrorMessages.RestrictedViewSizeInvalid)
-        ),
-        RestrictedViewSize.make("pct:0") == Validation.fail(
-          BadRequestException(ErrorMessages.RestrictedViewSizeInvalid)
-        ),
-        RestrictedViewSize.make("pct:101") == Validation.fail(
-          BadRequestException(ErrorMessages.RestrictedViewSizeInvalid)
-        ),
-        RestrictedViewSize.make("") == Validation.fail(BadRequestException(ErrorMessages.RestrictedViewSizeMissing))
-      )
+      val gen = Gen.fromIterable(Seq("!512,100", "pct:0", "pct:101"))
+      check(gen) { param =>
+        assertTrue(RestrictedViewSize.make(param) == Left(ErrorMessages.RestrictedViewSizeInvalid))
+      }
+    },
+    test("fail on passing empty value") {
+      assertTrue(RestrictedViewSize.make("") == Left(ErrorMessages.RestrictedViewSizeMissing))
     }
   )
 }
