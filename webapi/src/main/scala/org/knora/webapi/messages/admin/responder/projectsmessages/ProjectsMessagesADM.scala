@@ -249,19 +249,6 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
 ) extends ProjectsResponderRequestADM
 
 /**
- * Return project's RestrictedView settings.
- *
- * @param iri  the identifier of the project.
- * @param user  requesting user.
- * @param size  size value to be applied.
- */
-case class ProjectRestrictedViewSettingsSetRequestADM(
-  iri: Iri.ProjectIri,
-  user: UserADM,
-  size: RestrictedViewSize
-) extends ProjectsResponderRequestADM
-
-/**
  * Requests the creation of a new project.
  *
  * @param createRequest        the [[ProjectCreatePayloadADM]] information for the creation of a new project.

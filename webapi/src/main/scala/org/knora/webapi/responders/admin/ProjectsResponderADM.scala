@@ -219,8 +219,6 @@ final case class ProjectsResponderADMLive(
       projectRestrictedViewSettingsGetADM(identifier)
     case ProjectRestrictedViewSettingsGetRequestADM(identifier) =>
       projectRestrictedViewSettingsGetRequestADM(identifier)
-    case ProjectRestrictedViewSettingsSetRequestADM(iri, user, size) =>
-      setProjectRestrictedViewSettings(iri, user, size)
     case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
