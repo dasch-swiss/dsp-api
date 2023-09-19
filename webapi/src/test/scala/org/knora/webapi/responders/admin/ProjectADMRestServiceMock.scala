@@ -100,7 +100,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = ???
 
         override def setProjectRestrictedViewSettings(
-          iri: ProjectIri,
+          iri: ProjectIdentifierADM,
           user: UserADM,
           size: RestrictedViewSize
         ): Task[ProjectRestrictedViewSizeResponseADM] = ???

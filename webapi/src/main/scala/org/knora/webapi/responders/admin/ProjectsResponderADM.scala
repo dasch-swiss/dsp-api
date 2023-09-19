@@ -139,7 +139,7 @@ trait ProjectsResponderADM {
    * @return [[ProjectRestrictedViewSettingsResponseADM]].
    */
   def setProjectRestrictedViewSettings(
-    iri: Iri.ProjectIri,
+    iri: ProjectIdentifierADM,
     user: UserADM,
     size: RestrictedViewSize
   ): Task[ProjectRestrictedViewSizeResponseADM]
@@ -474,25 +474,24 @@ final case class ProjectsResponderADMLive(
    * @return [[ProjectRestrictedViewSettingsResponseADM]].
    */
   override def setProjectRestrictedViewSettings(
-    iri: Iri.ProjectIri,
+    iri: ProjectIdentifierADM,
     user: UserADM,
     size: RestrictedViewSize
-  ): Task[ProjectRestrictedViewSizeResponseADM] = {
-    val id = ProjectIdentifierADM.IriIdentifier(iri)
+  ): Task[ProjectRestrictedViewSizeResponseADM] =
+//    val id = ProjectIdentifierADM.IriIdentifier(iri)
     for {
-      _ <- getProjectFromCacheOrTriplestore(id)
+      _ <- getProjectFromCacheOrTriplestore(iri)
              .flatMap(ZIO.fromOption(_))
-             .orElseFail(NotFoundException(s"Project '${getId(id)}' not found."))
+             .orElseFail(NotFoundException(s"Project '${getId(iri)}' not found."))
       _ <- ZIO
              .fail(ForbiddenException("User is neither system nor project admin."))
-             .unless(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(iri.value))
+             .unless(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(getId(iri)))
 
       query = twirl.queries.sparql.admin.txt
-                .setProjectRestrictedViewSettings(iri.value, size.value, None)
+                .setProjectRestrictedViewSettings(getId(iri), size.value, None)
 
       _ <- triplestore.query(Update(query.toString))
     } yield ProjectRestrictedViewSizeResponseADM(size)
-  }
 
   /**
    * Update project's basic information.

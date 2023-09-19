@@ -10,7 +10,6 @@ import zio.macros.accessible
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
@@ -65,7 +64,7 @@ trait ProjectADMRestService {
     identifier: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsResponseADM]
   def setProjectRestrictedViewSettings(
-    iri: Iri.ProjectIri,
+    iri: ProjectIdentifierADM,
     user: UserADM,
     size: RestrictedViewSize
   ): Task[ProjectRestrictedViewSizeResponseADM]
@@ -255,7 +254,7 @@ final case class ProjectsADMRestServiceLive(
    * @return [[ProjectRestrictedViewSettingsResponseADM]].
    */
   override def setProjectRestrictedViewSettings(
-    iri: Iri.ProjectIri,
+    iri: ProjectIdentifierADM,
     user: UserADM,
     size: RestrictedViewSize
   ): Task[ProjectRestrictedViewSizeResponseADM] =

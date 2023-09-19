@@ -252,7 +252,7 @@ final case class ProjectsRouteZ(
       body       <- body.asString
       payload    <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSettingsPayload]).mapError(BadRequestException(_))
       size       <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
-      response   <- projectsService.setProjectRestrictedViewSettings(id.value, user, size)
+      response   <- projectsService.setProjectRestrictedViewSettings(id, user, size)
     } yield Response.json(response.toJson)
 }
 

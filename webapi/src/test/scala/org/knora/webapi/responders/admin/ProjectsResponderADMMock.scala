@@ -87,7 +87,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
         override def setProjectRestrictedViewSettings(
-          iri: Iri.ProjectIri,
+          iri: ProjectIdentifierADM,
           user: UserADM,
           size: RestrictedViewSize
         ): Task[ProjectRestrictedViewSizeResponseADM] = ???
