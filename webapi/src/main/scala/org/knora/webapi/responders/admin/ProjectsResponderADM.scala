@@ -11,7 +11,6 @@ import java.util.UUID
 
 import dsp.errors._
 import dsp.valueobjects.Iri
-import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -129,20 +128,6 @@ trait ProjectsResponderADM {
   def projectRestrictedViewSettingsGetRequestADM(
     id: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsResponseADM]
-
-  /**
-   * Sets project's restricted view settings.
-   *
-   * @param iri  the project's iri,
-   * @param user requesting user,
-   * @param size value to be set,
-   * @return [[ProjectRestrictedViewSettingsResponseADM]].
-   */
-  def setProjectRestrictedViewSettings(
-    iri: ProjectIdentifierADM,
-    user: UserADM,
-    size: RestrictedViewSize
-  ): Task[ProjectRestrictedViewSizeResponseADM]
 
   /**
    * Creates a project.
@@ -464,34 +449,6 @@ final case class ProjectsResponderADMLive(
         _ => NotFoundException(s"Project '${getId(id)}' not found."),
         ProjectRestrictedViewSettingsResponseADM
       )
-
-  /**
-   * Sets project's restricted view settings.
-   *
-   * @param iri the project's iri,
-   * @param user  requesting user,
-   * @param size  value to be set,
-   * @return [[ProjectRestrictedViewSettingsResponseADM]].
-   */
-  override def setProjectRestrictedViewSettings(
-    iri: ProjectIdentifierADM,
-    user: UserADM,
-    size: RestrictedViewSize
-  ): Task[ProjectRestrictedViewSizeResponseADM] =
-//    val id = ProjectIdentifierADM.IriIdentifier(iri)
-    for {
-      _ <- getProjectFromCacheOrTriplestore(iri)
-             .flatMap(ZIO.fromOption(_))
-             .orElseFail(NotFoundException(s"Project '${getId(iri)}' not found."))
-      _ <- ZIO
-             .fail(ForbiddenException("User is neither system nor project admin."))
-             .unless(user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(getId(iri)))
-
-      query = twirl.queries.sparql.admin.txt
-                .setProjectRestrictedViewSettings(getId(iri), size.value, None)
-
-      _ <- triplestore.query(Update(query.toString))
-    } yield ProjectRestrictedViewSizeResponseADM(size)
 
   /**
    * Update project's basic information.

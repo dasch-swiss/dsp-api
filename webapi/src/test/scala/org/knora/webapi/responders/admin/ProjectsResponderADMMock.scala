@@ -16,7 +16,6 @@ import zio.mock.Proxy
 import java.util.UUID
 
 import dsp.valueobjects.Iri
-import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
@@ -86,11 +85,6 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
-        override def setProjectRestrictedViewSettings(
-          iri: ProjectIdentifierADM,
-          user: UserADM,
-          size: RestrictedViewSize
-        ): Task[ProjectRestrictedViewSizeResponseADM] = ???
       }
     }
 }

@@ -17,6 +17,7 @@ import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
@@ -25,6 +26,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.common.api.RestPermissionService
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 @accessible
 trait ProjectADMRestService {
@@ -71,6 +74,7 @@ trait ProjectADMRestService {
 }
 
 final case class ProjectsADMRestServiceLive(
+  triplestore: TriplestoreService,
   responder: ProjectsResponderADM,
   projectRepo: KnoraProjectRepo,
   projectExportService: ProjectExportService,
@@ -258,7 +262,13 @@ final case class ProjectsADMRestServiceLive(
     user: UserADM,
     size: RestrictedViewSize
   ): Task[ProjectRestrictedViewSizeResponseADM] =
-    responder.setProjectRestrictedViewSettings(iri, user, size)
+    for {
+      project <- projectRepo.findById(iri).someOrFail(NotFoundException(s"Project '${getId(iri)}' not found."))
+      _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
+      query = sparql.admin.txt
+                .setProjectRestrictedViewSettings(getId(iri), size.value, None)
+      _ <- triplestore.query(Update(query.toString))
+    } yield ProjectRestrictedViewSizeResponseADM(size)
 
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)
@@ -294,6 +304,7 @@ final case class ProjectsADMRestServiceLive(
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
     ProjectsResponderADM
+      with TriplestoreService
       with KnoraProjectRepo
       with ProjectExportService
       with ProjectImportService
