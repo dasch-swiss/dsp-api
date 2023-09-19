@@ -17,9 +17,9 @@ import pekko.http.scaladsl.server.Route
  */
 object ServerVersion {
 
-  private val ApiNameAndVersion  = s"${BuildInfo.name}/${BuildInfo.version}"
+  private val ApiNameAndVersion   = s"${BuildInfo.name}/${BuildInfo.version}"
   private val PekkoNameAndVersion = s"pekko-http/${BuildInfo.pekkoHttp}"
-  private val AllProducts        = ApiNameAndVersion + " " + PekkoNameAndVersion
+  private val AllProducts         = ApiNameAndVersion + " " + PekkoNameAndVersion
 
   def serverVersionHeader: Server = Server(products = AllProducts)
 

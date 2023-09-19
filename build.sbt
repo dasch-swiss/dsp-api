@@ -262,8 +262,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoKeys ++= Seq[BuildInfoKey](
       name,
       version,
-      "sipi"     -> Dependencies.sipiImage,
-      "fuseki"   -> Dependencies.fusekiImage,
+      "sipi"      -> Dependencies.sipiImage,
+      "fuseki"    -> Dependencies.fusekiImage,
       "pekkoHttp" -> Dependencies.pekkoHttp
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
