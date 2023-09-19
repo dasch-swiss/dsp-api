@@ -7,10 +7,10 @@ package org.knora.webapi.routing
 
 import org.apache.pekko
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
+import org.apache.pekko.http.scaladsl.model.HttpMethods.{DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT}
 import zio._
 
 import scala.concurrent.ExecutionContext
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -28,7 +28,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
 import pekko.actor
 import pekko.http.scaladsl.server.Directives._
 import pekko.http.scaladsl.server.Route
@@ -115,7 +114,10 @@ private final case class ApiRoutesImpl(
     logDuration {
       ServerVersion.addServerHeader {
         DSPApiDirectives.handleErrors(appConfig) {
-          CorsDirectives.cors(CorsSettings(routeData.system)) {
+          CorsDirectives.cors(
+            CorsSettings(routeData.system)
+              .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
+          ) {
             DSPApiDirectives.handleErrors(appConfig) {
               HealthRoute().makeRoute ~
                 VersionRoute().makeRoute ~
