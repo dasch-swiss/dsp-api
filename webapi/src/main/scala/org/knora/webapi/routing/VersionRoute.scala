@@ -30,11 +30,12 @@ final case class VersionRoute() {
       entity = HttpEntity(
         ContentTypes.`application/json`,
         JsObject(
-          "name"   -> JsString("version"),
-          "webapi" -> JsString(BuildInfo.version),
-          "scala"  -> JsString(BuildInfo.scalaVersion),
-          "sipi"   -> JsString(sipiVersion),
-          "fuseki" -> JsString(fusekiVersion)
+          "name"      -> JsString("version"),
+          "webapi"    -> JsString(BuildInfo.version),
+          "scala"     -> JsString(BuildInfo.scalaVersion),
+          "pekkoHttp" -> JsString(BuildInfo.pekkoHttp),
+          "sipi"      -> JsString(sipiVersion),
+          "fuseki"    -> JsString(fusekiVersion)
         ).prettyPrint
       )
     )

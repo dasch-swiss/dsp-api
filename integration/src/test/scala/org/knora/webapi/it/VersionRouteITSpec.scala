@@ -63,8 +63,8 @@ class VersionRouteITSpec extends ITKnoraLiveSpec {
       assert(checkNonEmpty("scala"))
     }
 
-    "contain nonempty value for key 'akkaHttp'" in {
-      assert(checkNonEmpty("akkaHttp"))
+    "contain nonempty value for key 'pekkoHttp'" in {
+      assert(checkNonEmpty("pekkoHttp"))
     }
 
     "contain nonempty value for key 'sipi'" in {
