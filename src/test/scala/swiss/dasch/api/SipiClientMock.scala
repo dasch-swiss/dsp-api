@@ -27,6 +27,7 @@ object SipiClientMockMethodInvocation {
 final case class SipiClientMock(
     invocations: Ref[List[SipiClientMockMethodInvocation]],
     imageOrientation: Ref[OrientationValue],
+    dontTranscode: Ref[Boolean],
   ) extends SipiClient {
 
   override def transcodeImageFile(
@@ -34,10 +35,13 @@ final case class SipiClientMock(
       fileOut: Path,
       outputFormat: SipiImageFormat,
     ): UIO[SipiOutput] =
-    Files.copy(fileIn, fileOut, StandardCopyOption.REPLACE_EXISTING).orDie *>
-      invocations
-        .update(_.appended(TranscodeImageFile(fileIn, fileOut, outputFormat)))
-        .as(SipiOutput("", ""))
+    ZIO.ifZIO(dontTranscode.get)(
+      onTrue = ZIO.succeed(SipiOutput("", "")),
+      onFalse = Files.copy(fileIn, fileOut, StandardCopyOption.REPLACE_EXISTING).orDie *>
+        invocations
+          .update(_.appended(TranscodeImageFile(fileIn, fileOut, outputFormat)))
+          .as(SipiOutput("", "")),
+    )
 
   override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[SipiOutput] =
     Files.copy(fileIn, fileOut, StandardCopyOption.REPLACE_EXISTING).orDie *>
@@ -58,6 +62,8 @@ final case class SipiClientMock(
   def noInteractions(): UIO[Boolean] = getInvocations().map(_.isEmpty)
 
   def setOrientation(orientation: OrientationValue): UIO[Unit] = imageOrientation.set(orientation)
+
+  def setDontTranscode(newState: Boolean): UIO[Unit] = this.dontTranscode.set(newState)
 }
 
 object SipiClientMock {
@@ -86,8 +92,12 @@ object SipiClientMock {
   def setOrientation(orientation: OrientationValue): RIO[SipiClientMock, Unit] =
     ZIO.serviceWithZIO[SipiClientMock](_.setOrientation(orientation))
 
+  def dontTranscode(): RIO[SipiClientMock, Unit] =
+    ZIO.serviceWithZIO[SipiClientMock](_.setDontTranscode(true))
+
   val layer: ULayer[SipiClientMock] = ZLayer.fromZIO(for {
-    invocations <- Ref.make(List.empty[SipiClientMockMethodInvocation])
-    orientation <- Ref.make[OrientationValue](OrientationValue.Horizontal)
-  } yield SipiClientMock(invocations, orientation))
+    invocations  <- Ref.make(List.empty[SipiClientMockMethodInvocation])
+    orientation  <- Ref.make[OrientationValue](OrientationValue.Horizontal)
+    failSilently <- Ref.make[Boolean](false)
+  } yield SipiClientMock(invocations, orientation, failSilently))
 }

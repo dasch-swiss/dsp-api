@@ -30,11 +30,32 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
   }
 
   val spec = suite("StorageServiceLiveSpec")(
+    test("should create original file in asset directory") {
+      ZIO.scoped {
+        for {
+          // given
+          tmp       <- Files.createTempDirectoryScoped(Some("test"), List())
+          essence    = tmp / "test.txt"
+          _         <- Files.createFile(essence)
+          assetId   <- AssetId.makeNew
+          asset      = SimpleAsset(assetId, "0001".toProjectShortcode)
+          // when
+          original  <- StorageService.createOriginalFileInAssetDir(essence, asset)
+          // then
+          fileExist <- Files.exists(original.toPath)
+          assetDir  <- StorageService.getAssetDirectory(asset)
+        } yield assertTrue(
+          fileExist,
+          original.filename == s"${assetId.toString}.txt.orig",
+          original.toPath.parent.contains(assetDir),
+        )
+      }
+    },
     test("should return the path of the folder where the asset is stored") {
       for {
         assetPath <- ZIO.serviceWith[StorageConfig](_.assetPath)
         actual    <-
-          StorageService.getAssetDirectory(Asset("FGiLaT4zzuV-CqwbEDFAFeS".toAssetId, "0001".toProjectShortcode))
+          StorageService.getAssetDirectory(SimpleAsset("FGiLaT4zzuV-CqwbEDFAFeS".toAssetId, "0001".toProjectShortcode))
       } yield assertTrue(actual == assetPath / "0001" / "fg" / "il")
     },
     test("should return asset path") {
@@ -62,7 +83,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(expected == actual)
     },
     test("should load asset info file") {
-      val asset = Asset("FGiLaT4zzuV-CqwbEDFAFeS".toAssetId, "0001".toProjectShortcode)
+      val asset = SimpleAsset("FGiLaT4zzuV-CqwbEDFAFeS".toAssetId, "0001".toProjectShortcode)
       val name  = NonEmptyString.unsafeFrom("250x250.jp2")
       for {
         projectPath <- ZIO.serviceWith[StorageConfig](_.assetPath).map(_ / asset.belongsToProject.toString)

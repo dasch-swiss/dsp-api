@@ -15,8 +15,8 @@ import zio.test.*
 
 object ImageServiceLiveSpec extends ZIOSpecDefault {
 
-  private val imageAsset = Asset("needs-topleft-correction".toAssetId, "0001".toProjectShortcode)
-  private val imageFile  = StorageService.getAssetDirectory(imageAsset).map(_ / s"${imageAsset.id}.jp2")
+  private val asset      = SimpleAsset("needs-topleft-correction".toAssetId, "0001".toProjectShortcode)
+  private val imageFile  = StorageService.getAssetDirectory(asset).map(_ / s"${asset.id}.jp2")
   private val backupFile = imageFile.map(image => image.parent.map(_ / s"${image.filename}.bak").orNull)
 
   val spec =
@@ -26,8 +26,8 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           _                 <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
           image             <- imageFile
           backup            <- backupFile
-          info              <- AssetInfoService.findByAsset(imageAsset)
-          infoFile          <- AssetInfoService.getInfoFilePath(imageAsset)
+          info              <- AssetInfoService.findByAsset(asset)
+          infoFile          <- AssetInfoService.getInfoFilePath(asset)
           _                 <- StorageService.saveJsonFile[AssetInfoFileContent](
                                  infoFile,
                                  AssetInfoFileContent(
@@ -41,7 +41,7 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           _                 <- ImageService.applyTopLeftCorrection(image)
           backupExists      <- Files.exists(backup)
           correctionApplied <- SipiClientMock.wasInvoked(ApplyTopLeftCorrection(image, image))
-          checksumUpdated   <- FileChecksumService.verifyChecksumDerivative(imageAsset)
+          checksumUpdated   <- FileChecksumService.verifyChecksumDerivative(asset)
         } yield assertTrue(backupExists, correctionApplied, checksumUpdated)
       },
       test("not apply top left if not necessary") {
@@ -53,6 +53,28 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           backupNotCreated     <- Files.exists(backup).negate
           correctionNotApplied <- SipiClientMock.wasInvoked(ApplyTopLeftCorrection(image, image)).negate
         } yield assertTrue(backupNotCreated, correctionNotApplied)
+      },
+      test("createDerivative should create a jpx file with correct name") {
+        for {
+          assetId    <- AssetId.makeNew
+          assetDir   <- StorageService.getAssetDirectory(SimpleAsset(assetId, "0001".toProjectShortcode))
+          _          <- Files.createDirectories(assetDir)
+          image       = assetDir / s"$assetId.jp2.orig"
+          _          <- Files.createFile(image)
+          derivative <- ImageService.createDerivative(OriginalFile.unsafeFrom(image))
+          fileExists <- Files.exists(derivative.toPath)
+        } yield assertTrue(fileExists, derivative.toPath.filename.toString == s"$assetId.jpx")
+      },
+      test("createDerivative should fail if Sipi silently does not transcode the image") {
+        for {
+          _        <- SipiClientMock.dontTranscode()
+          assetId  <- AssetId.makeNew
+          assetDir <- StorageService.getAssetDirectory(SimpleAsset(assetId, "0001".toProjectShortcode))
+          _        <- Files.createDirectories(assetDir)
+          image     = assetDir / s"$assetId.jp2.orig"
+          _        <- Files.createFile(image)
+          actual   <- ImageService.createDerivative(OriginalFile.unsafeFrom(image)).exit
+        } yield assertTrue(actual.isFailure)
       },
     ).provide(
       AssetInfoServiceLive.layer,

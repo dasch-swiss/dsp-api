@@ -5,14 +5,14 @@
 
 package swiss.dasch.domain
 
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.{ FileUtils, FilenameUtils }
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
 import zio.json.{ DecoderOps, EncoderOps, JsonDecoder, JsonEncoder }
 import zio.nio.file.{ Files, Path }
 import zio.stream.ZStream
 
-import java.io.IOException
+import java.io.{ FileNotFoundException, IOException }
 import java.nio.file.StandardOpenOption.*
 import java.nio.file.{ OpenOption, StandardOpenOption }
 import java.text.ParseException
@@ -23,9 +23,9 @@ trait StorageService  {
   def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path]
   def getAssetDirectory(asset: Asset): UIO[Path]
   def getAssetDirectory(): UIO[Path]
+  def createOriginalFileInAssetDir(file: Path, asset: Asset): IO[IOException, OriginalFile]
   def getTempDirectory(): UIO[Path]
-  def getBulkIngestImportFolder(project: ProjectShortcode): UIO[Path] =
-    getTempDirectory().map(_ / "import" / project.toString)
+  def getBulkIngestImportFolder(project: ProjectShortcode): UIO[Path]
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit]
@@ -44,6 +44,8 @@ object StorageService {
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory(asset))
   def getAssetDirectory(): RIO[StorageService, Path]                                                                  =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory())
+  def createOriginalFileInAssetDir(file: Path, asset: Asset): ZIO[StorageService, IOException, OriginalFile]          =
+    ZIO.serviceWithZIO[StorageService](_.createOriginalFileInAssetDir(file, asset))
   def getTempDirectory(): RIO[StorageService, Path]                                                                   =
     ZIO.serviceWithZIO[StorageService](_.getTempDirectory())
   def getBulkIngestImportFolder(project: ProjectShortcode): RIO[StorageService, Path]                                 =
@@ -58,13 +60,30 @@ object StorageService {
 }
 
 final case class StorageServiceLive(config: StorageConfig) extends StorageService {
-  override def getTempDirectory(): UIO[Path]                                      =
+
+  override def createOriginalFileInAssetDir(file: Path, asset: Asset): IO[IOException, OriginalFile] = for {
+    _           <- ZIO.logInfo(s"Creating original from $file, $asset")
+    _           <- ZIO
+                     .fail(new FileNotFoundException(s"File $file is not a regular file"))
+                     .whenZIO(FileFilters.isNonHiddenRegularFile(file).negate)
+    assetDir    <- getAssetDirectory(asset).tap(Files.createDirectories(_))
+    originalPath = assetDir / s"${asset.id}.${FilenameUtils.getExtension(file.filename.toString)}.orig"
+    _           <- Files.copy(file, originalPath)
+  } yield OriginalFile.unsafeFrom(originalPath)
+
+  override def getTempDirectory(): UIO[Path] =
     ZIO.succeed(config.tempPath)
-  override def getAssetDirectory(): UIO[Path]                                     =
+
+  override def getBulkIngestImportFolder(project: ProjectShortcode): UIO[Path] =
+    getTempDirectory().map(_ / "import" / project.toString)
+
+  override def getAssetDirectory(): UIO[Path] =
     ZIO.succeed(config.assetPath)
+
   override def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path] =
     getAssetDirectory().map(_ / projectShortcode.toString)
-  override def getAssetDirectory(asset: Asset): UIO[Path]                         =
+
+  override def getAssetDirectory(asset: Asset): UIO[Path] =
     getProjectDirectory(asset.belongsToProject).map(_ / segments(asset.id))
 
   private def segments(assetId: AssetId): Path = {

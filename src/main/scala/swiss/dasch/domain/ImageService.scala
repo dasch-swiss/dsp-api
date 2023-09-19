@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
 import zio.nio.file.{ Files, Path }
 
@@ -26,13 +27,17 @@ trait ImageService {
   def applyTopLeftCorrection(image: Path): Task[Option[Path]]
 
   def needsTopLeftCorrection(image: Path): IO[IOException, Boolean]
+
+  def createDerivative(original: OriginalFile): Task[JpxDerivativeFile]
 }
 
 object ImageService {
-  def applyTopLeftCorrection(image: Path): ZIO[ImageService, Throwable, Option[Path]] =
+  def applyTopLeftCorrection(image: Path): ZIO[ImageService, Throwable, Option[Path]]           =
     ZIO.serviceWithZIO[ImageService](_.applyTopLeftCorrection(image))
-  def needsTopLeftCorrection(image: Path): ZIO[ImageService, IOException, Boolean]    =
+  def needsTopLeftCorrection(image: Path): ZIO[ImageService, IOException, Boolean]              =
     ZIO.serviceWithZIO[ImageService](_.needsTopLeftCorrection(image))
+  def createDerivative(original: OriginalFile): ZIO[ImageService, Throwable, JpxDerivativeFile] =
+    ZIO.serviceWithZIO[ImageService](_.createDerivative(original))
 }
 
 final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoService) extends ImageService {
@@ -56,6 +61,17 @@ final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoS
           .filter(_.startsWith(Exif.Image.Orientation))
           .exists(_.lastOption.exists(_ != Exif.Image.OrientationValue.Horizontal.value))
       }
+
+  override def createDerivative(original: OriginalFile): Task[JpxDerivativeFile] = {
+    val imagePath      = original.toPath
+    val derivativePath = imagePath.parent.head / s"${original.assetId}.${Jpx.extension}"
+    ZIO.logInfo(s"Creating derivative for $imagePath") *>
+      sipiClient.transcodeImageFile(imagePath, derivativePath, Jpx) *>
+      ZIO
+        .fail(new IOException(s"Sipi failed creating derivative for $imagePath"))
+        .whenZIO(Files.notExists(derivativePath))
+        .as(JpxDerivativeFile.unsafeFrom(derivativePath))
+  }
 }
 
 object ImageServiceLive {

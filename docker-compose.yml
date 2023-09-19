@@ -17,5 +17,5 @@ services:
       - JWT_ISSUER=0.0.0.0:3333
       - JWT_SECRET=UP 4888, nice 4-8-4 steam engine
       - JWT_DISABLE_AUTH=true
+      - INGEST_BULK_MAX_PARALLEL=10
       - SIPI_USE_LOCAL_DEV=false
-
