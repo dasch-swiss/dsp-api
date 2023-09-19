@@ -6,10 +6,10 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
+import swiss.dasch.api.ApiProblem.{ BadRequest, NotFound, InternalServerError }
 import swiss.dasch.domain.ProjectService
 import zio.http.Header.{ ContentDisposition, ContentType }
 import zio.http.codec.*
-import zio.http.codec.HttpCodec.*
 import zio.http.endpoint.Endpoint
 import zio.http.{ Header, * }
 import zio.schema.Schema
@@ -27,9 +27,9 @@ object ExportEndpoint {
     .post(projects / shortcodePathVar / "export")
     .outCodec(downloadCodec)
     .outErrors(
-      HttpCodec.error[ProjectNotFound](Status.NotFound),
-      HttpCodec.error[IllegalArguments](Status.BadRequest),
-      HttpCodec.error[InternalProblem](Status.InternalServerError),
+      HttpCodec.error[NotFound](Status.NotFound),
+      HttpCodec.error[BadRequest](Status.BadRequest),
+      HttpCodec.error[InternalServerError](Status.InternalServerError),
     )
 
   val app: App[ProjectService] = exportEndpoint
@@ -41,8 +41,8 @@ object ExportEndpoint {
                        .some
                        .mapBoth(
                          {
-                           case Some(err) => ApiProblem.internalError(err)
-                           case _         => ApiProblem.projectNotFound(shortcode)
+                           case Some(err) => InternalServerError(err)
+                           case _         => NotFound(shortcode)
                          },
                          path =>
                            (

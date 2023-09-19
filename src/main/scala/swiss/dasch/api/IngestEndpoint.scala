@@ -6,6 +6,7 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
+import swiss.dasch.api.ApiProblem.{ BadRequest, InternalServerError, NotFound }
 import swiss.dasch.api.ListProjectsEndpoint.ProjectResponse
 import swiss.dasch.domain.*
 import zio.*
@@ -19,9 +20,9 @@ object IngestEndpoint {
     .post(projects / shortcodePathVar / "bulk-ingest")
     .out[ProjectResponse]
     .outErrors(
-      HttpCodec.error[ProjectNotFound](Status.NotFound),
-      HttpCodec.error[IllegalArguments](Status.BadRequest),
-      HttpCodec.error[InternalProblem](Status.InternalServerError),
+      HttpCodec.error[NotFound](Status.NotFound),
+      HttpCodec.error[BadRequest](Status.BadRequest),
+      HttpCodec.error[InternalServerError](Status.InternalServerError),
     )
 
   private val route = endpoint.implement(shortcode =>

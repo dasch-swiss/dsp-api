@@ -6,13 +6,13 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.*
+import swiss.dasch.api.ApiProblem.{ BadRequest, InternalServerError, NotFound }
 import swiss.dasch.domain.*
 import zio.Chunk
-import zio.http.codec.*
-import zio.http.codec.HttpCodec.*
-import zio.http.endpoint.Endpoint
 import zio.http.*
-import zio.json.{ DeriveJsonEncoder, JsonEncoder }
+import zio.http.codec.*
+import zio.http.endpoint.Endpoint
+import zio.json.{ DeriveJsonCodec, JsonCodec }
 import zio.schema.{ DeriveSchema, Schema }
 
 import scala.collection.immutable.Map
@@ -21,11 +21,12 @@ object ReportEndpoint {
 
   final case class SingleFileCheckResultResponse(filename: String, checksumMatches: Boolean)
   private object SingleFileCheckResultResponse {
-    implicit val encoder: JsonEncoder[SingleFileCheckResultResponse] =
-      DeriveJsonEncoder.gen[SingleFileCheckResultResponse]
-    implicit val schema: Schema[SingleFileCheckResultResponse]       = DeriveSchema.gen[SingleFileCheckResultResponse]
-    def make(result: ChecksumResult): SingleFileCheckResultResponse  =
+
+    def make(result: ChecksumResult): SingleFileCheckResultResponse =
       SingleFileCheckResultResponse(result.file.filename.toString, result.checksumMatches)
+
+    given codec: JsonCodec[SingleFileCheckResultResponse] = DeriveJsonCodec.gen[SingleFileCheckResultResponse]
+    given schema: Schema[SingleFileCheckResultResponse]   = DeriveSchema.gen[SingleFileCheckResultResponse]
   }
 
   final case class AssetCheckResultEntry(
@@ -33,30 +34,33 @@ object ReportEndpoint {
       originalFilename: String,
       results: List[SingleFileCheckResultResponse],
     )
-  private object AssetCheckResultEntry         {
-    implicit val encoder: JsonEncoder[AssetCheckResultEntry]                              = DeriveJsonEncoder.gen[AssetCheckResultEntry]
-    implicit val schema: Schema[AssetCheckResultEntry]                                    = DeriveSchema.gen[AssetCheckResultEntry]
+  private object AssetCheckResultEntry {
+
     def make(assetInfo: AssetInfo, results: Chunk[ChecksumResult]): AssetCheckResultEntry =
       AssetCheckResultEntry(
         assetInfo.asset.id.toString,
         assetInfo.originalFilename.toString,
         results.map(SingleFileCheckResultResponse.make).toList,
       )
+
+    given codec: JsonCodec[AssetCheckResultEntry] = DeriveJsonCodec.gen[AssetCheckResultEntry]
+    given schema: Schema[AssetCheckResultEntry]   = DeriveSchema.gen[AssetCheckResultEntry]
   }
+
   final case class AssetCheckResultSummary(
       numberOfAssets: Int,
       numberOfFiles: Int,
       numberOfChecksumMatches: Int,
     )
-  private object AssetCheckResultSummary       {
-    implicit val encoder: JsonEncoder[AssetCheckResultSummary] = DeriveJsonEncoder.gen[AssetCheckResultSummary]
-    implicit val schema: Schema[AssetCheckResultSummary]       = DeriveSchema.gen[AssetCheckResultSummary]
+  private object AssetCheckResultSummary {
+    given codec: JsonCodec[AssetCheckResultSummary] = DeriveJsonCodec.gen[AssetCheckResultSummary]
+    given schema: Schema[AssetCheckResultSummary]   = DeriveSchema.gen[AssetCheckResultSummary]
   }
   final case class AssetCheckResultResponse(summary: AssetCheckResultSummary, results: List[AssetCheckResultEntry])
 
   private object AssetCheckResultResponse {
-    implicit val encoder: JsonEncoder[AssetCheckResultResponse] = DeriveJsonEncoder.gen[AssetCheckResultResponse]
-    implicit val schema: Schema[AssetCheckResultResponse]       = DeriveSchema.gen[AssetCheckResultResponse]
+    given codec: JsonCodec[AssetCheckResultResponse] = DeriveJsonCodec.gen[AssetCheckResultResponse]
+    given schema: Schema[AssetCheckResultResponse]   = DeriveSchema.gen[AssetCheckResultResponse]
 
     def make(report: Report): AssetCheckResultResponse = {
       val reportResults = report.results
@@ -75,15 +79,15 @@ object ReportEndpoint {
     .get(projects / shortcodePathVar / "checksumreport")
     .out[AssetCheckResultResponse]
     .outErrors(
-      HttpCodec.error[ProjectNotFound](Status.NotFound),
-      HttpCodec.error[IllegalArguments](Status.BadRequest),
-      HttpCodec.error[InternalProblem](Status.InternalServerError),
+      HttpCodec.error[NotFound](Status.NotFound),
+      HttpCodec.error[BadRequest](Status.BadRequest),
+      HttpCodec.error[InternalServerError](Status.InternalServerError),
     )
 
   val app = endpoint
     .implement((shortcode: String) =>
       ApiStringConverters.fromPathVarToProjectShortcode(shortcode).flatMap {
-        ReportService.checksumReport(_).mapBoth(ApiProblem.internalError, AssetCheckResultResponse.make)
+        ReportService.checksumReport(_).mapBoth(ApiProblem.InternalServerError(_), AssetCheckResultResponse.make)
       }
     )
     .toApp

@@ -6,13 +6,14 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.shortcodePathVarStr
+import swiss.dasch.api.ApiProblem.BadRequest
 import swiss.dasch.domain.ProjectShortcode
 import zio.{ IO, ZIO }
 
 object ApiStringConverters {
   def fromPathVarToProjectShortcode(value: String, pathVariableName: String = shortcodePathVarStr)
-      : IO[IllegalArguments, ProjectShortcode] =
+      : IO[BadRequest, ProjectShortcode] =
     ZIO
       .fromEither(ProjectShortcode.make(value))
-      .mapError(ApiProblem.invalidPathVariable(pathVariableName, value, _))
+      .mapError(BadRequest.invalidPathVariable(pathVariableName, value, _))
 }

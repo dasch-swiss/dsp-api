@@ -35,7 +35,7 @@ private object AssetInfoFileContent {
       derivativeChecksum.toString,
     )
 
-  implicit val codec: JsonCodec[AssetInfoFileContent] = DeriveJsonCodec.gen[AssetInfoFileContent]
+  given codec: JsonCodec[AssetInfoFileContent] = DeriveJsonCodec.gen[AssetInfoFileContent]
 }
 
 final case class FileAndChecksum(file: Path, checksum: Sha256Hash)

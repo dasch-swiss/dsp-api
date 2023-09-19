@@ -9,7 +9,7 @@ import swiss.dasch.version.BuildInfo
 import zio.*
 import zio.http.*
 import zio.http.endpoint.*
-import zio.json.{ DeriveJsonEncoder, JsonEncoder }
+import zio.json.{ DeriveJsonCodec, JsonCodec }
 import zio.schema.{ DeriveSchema, Schema }
 
 object InfoEndpoint {
@@ -22,8 +22,8 @@ object InfoEndpoint {
       gitCommit: String,
     )
   object InfoEndpointResponse {
-    implicit val schema: Schema[InfoEndpointResponse]       = DeriveSchema.gen[InfoEndpointResponse]
-    implicit val encoder: JsonEncoder[InfoEndpointResponse] = DeriveJsonEncoder.gen[InfoEndpointResponse]
+    given schema: Schema[InfoEndpointResponse]     = DeriveSchema.gen[InfoEndpointResponse]
+    given encoder: JsonCodec[InfoEndpointResponse] = DeriveJsonCodec.gen[InfoEndpointResponse]
 
     def apply(): InfoEndpointResponse = InfoEndpointResponse(
       name = BuildInfo.name,

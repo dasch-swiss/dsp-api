@@ -26,7 +26,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
 
   final private case class SomeJsonContent(value: String)
   private object SomeJsonContent {
-    implicit val codec: JsonCodec[SomeJsonContent] = DeriveJsonCodec.gen[SomeJsonContent]
+    given codec: JsonCodec[SomeJsonContent] = DeriveJsonCodec.gen[SomeJsonContent]
   }
 
   val spec = suite("StorageServiceLiveSpec")(

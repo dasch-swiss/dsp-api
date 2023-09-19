@@ -6,15 +6,15 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.ApiPathCodecSegments.{ projects, shortcodePathVar }
+import swiss.dasch.api.ApiProblem.{ BadRequest, InternalServerError }
 import swiss.dasch.api.ApiStringConverters.fromPathVarToProjectShortcode
 import swiss.dasch.domain.*
 import zio.*
 import zio.http.Header.ContentType
 import zio.http.codec.*
-import zio.http.codec.HttpCodec.*
 import zio.http.endpoint.Endpoint
 import zio.http.{ Header, * }
-import zio.json.{ DeriveJsonEncoder, JsonEncoder }
+import zio.json.{ DeriveJsonCodec, JsonCodec }
 import zio.schema.{ DeriveSchema, Schema }
 import zio.stream.ZStream
 
@@ -22,8 +22,8 @@ object ImportEndpoint {
   case class UploadResponse(status: String = "okey")
 
   private object UploadResponse {
-    implicit val schema: Schema[UploadResponse]       = DeriveSchema.gen[UploadResponse]
-    implicit val encoder: JsonEncoder[UploadResponse] = DeriveJsonEncoder.gen[UploadResponse]
+    given schema: Schema[UploadResponse]   = DeriveSchema.gen[UploadResponse]
+    given codec: JsonCodec[UploadResponse] = DeriveJsonCodec.gen[UploadResponse]
   }
 
   private val importEndpoint =
@@ -35,8 +35,8 @@ object ImportEndpoint {
       .inCodec(ContentCodec.contentStream[Byte] ++ HeaderCodec.contentType)
       .out[UploadResponse]
       .outErrors(
-        HttpCodec.error[IllegalArguments](Status.BadRequest),
-        HttpCodec.error[InternalProblem](Status.InternalServerError),
+        HttpCodec.error[BadRequest](Status.BadRequest),
+        HttpCodec.error[InternalServerError](Status.InternalServerError),
       )
 
   val app: App[StorageService with ImportService] = importEndpoint
@@ -52,15 +52,15 @@ object ImportEndpoint {
           _         <- ImportService
                          .importZipStream(shortcode, stream)
                          .mapError {
-                           case IoError(e)       => ApiProblem.internalError(s"Import of project $shortcodeStr failed", e)
-                           case EmptyFile        => ApiProblem.invalidBody("The uploaded file is empty")
-                           case NoZipFile        => ApiProblem.invalidBody("The uploaded file is not a zip file")
-                           case InvalidChecksums => ApiProblem.invalidBody("The uploaded file contains invalid checksums")
+                           case IoError(e)       => InternalServerError(s"Import of project $shortcodeStr failed", e)
+                           case EmptyFile        => BadRequest.invalidBody("The uploaded file is empty")
+                           case NoZipFile        => BadRequest.invalidBody("The uploaded file is not a zip file")
+                           case InvalidChecksums => BadRequest.invalidBody("The uploaded file contains invalid checksums")
                          }
         } yield UploadResponse()
     )
     .toApp
 
   private def verifyContentType(actual: ContentType, expected: ContentType) =
-    ZIO.when(actual != expected)(ZIO.fail(ApiProblem.invalidHeaderContentType(actual, expected)))
+    ZIO.when(actual != expected)(ZIO.fail(BadRequest.invalidHeaderContentType(actual, expected)))
 }

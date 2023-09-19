@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.api.ApiProblem.{ InternalServerError, NotFound }
 import swiss.dasch.api.MaintenanceEndpoint.*
 import swiss.dasch.domain.*
 import swiss.dasch.domain.FileFilters.{ isImage, isNonHiddenRegularFile }
@@ -22,8 +23,8 @@ object MaintenanceEndpointRoutes {
       .fromPathVarToProjectShortcode(shortcode)
       .flatMap(code =>
         ProjectService.findProject(code).some.mapError {
-          case Some(e) => ApiProblem.internalError(e)
-          case _       => ApiProblem.projectNotFound(code)
+          case Some(e) => InternalServerError(e)
+          case _       => NotFound(code)
         }
       )
 
@@ -62,7 +63,7 @@ object MaintenanceEndpointRoutes {
                                .logError
                                .forkDaemon
       } yield "work in progress"
-    }.logError.mapError(ApiProblem.internalError)
+    }.logError.mapError(InternalServerError(_))
   )
 
   private def originalNotPresent(imagesOnly: Boolean)(path: file.Path): IO[IOException, Boolean] = {
@@ -121,7 +122,7 @@ object MaintenanceEndpointRoutes {
               .logError
               .forkDaemon
         } yield "work in progress"
-      ).logError.mapError(ApiProblem.internalError)
+      ).logError.mapError(InternalServerError(_))
     )
 
   private val applyTopLeftCorrectionRoute =

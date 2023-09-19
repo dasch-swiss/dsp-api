@@ -5,61 +5,70 @@
 
 package swiss.dasch.api
 
+import swiss.dasch.api.ApiProblem.BadRequest.Argument
 import swiss.dasch.domain.ProjectShortcode
 import zio.http.Header.ContentType
-import zio.json.{ DeriveJsonEncoder, JsonEncoder }
+import zio.json.{ DeriveJsonCodec, JsonCodec }
 import zio.schema.{ DeriveSchema, Schema }
 
 sealed trait ApiProblem
 
-case class ProjectNotFound(shortcode: ProjectShortcode) extends ApiProblem
-
-case class IllegalArguments(errors: List[IllegalArgument]) extends ApiProblem
-
-object IllegalArguments {
-  def apply(error: IllegalArgument): IllegalArguments = IllegalArguments(List(error))
-
-  def apply(argument: String, reason: String): IllegalArguments = IllegalArguments(IllegalArgument(argument, reason))
-}
-
-case class IllegalArgument(argument: String, reason: String)
-
-case class InternalProblem(errorMessage: String) extends ApiProblem
-
 object ApiProblem {
-  implicit val projectNotFoundEncoder: JsonEncoder[ProjectNotFound]   = DeriveJsonEncoder.gen[ProjectNotFound]
-  implicit val projectNotFoundSchema: Schema[ProjectNotFound]         = DeriveSchema.gen[ProjectNotFound]
-  implicit val illegalArgumentsEncoder: JsonEncoder[IllegalArguments] = DeriveJsonEncoder.gen[IllegalArguments]
-  implicit val illegalArgumentsSchema: Schema[IllegalArguments]       = DeriveSchema.gen[IllegalArguments]
-  implicit val illegalArgumentEncoder: JsonEncoder[IllegalArgument]   = DeriveJsonEncoder.gen[IllegalArgument]
-  implicit val internalErrorEncoder: JsonEncoder[InternalProblem]     = DeriveJsonEncoder.gen[InternalProblem]
-  implicit val internalErrorSchema: Schema[InternalProblem]           = DeriveSchema.gen[InternalProblem]
 
-  def internalError(msg: String): InternalProblem               = InternalProblem(msg)
-  def internalError(t: Throwable): InternalProblem              = InternalProblem(t.getMessage)
-  def internalError(msg: String, t: Throwable): InternalProblem = InternalProblem(s"$msg: ${t.getMessage}")
+  case class NotFound(id: String, `type`: String) extends ApiProblem
 
-  // body
-  val bodyIsEmpty: IllegalArguments                 = invalidBody("Body is empty")
-  def invalidBody(reason: String): IllegalArguments = IllegalArguments.apply("Body", reason)
+  object NotFound {
+    given codec: JsonCodec[NotFound]                 = DeriveJsonCodec.gen[NotFound]
+    given schema: Schema[NotFound]                   = DeriveSchema.gen[NotFound]
+    def apply(shortcode: ProjectShortcode): NotFound = NotFound(shortcode.toString, "project")
+  }
 
-  // path variables
-  def invalidPathVariable(
-      key: String,
-      value: String,
-      reason: String,
-    ): IllegalArguments = IllegalArguments(s"Path variable: '$key''", s"'$value' is invalid: $reason")
+  case class BadRequest(errors: List[Argument]) extends ApiProblem
 
-  // headers
-  def invalidHeader(
-      key: String,
-      value: String,
-      reason: String,
-    ): IllegalArguments = IllegalArguments(s"Header: '$key''", s"'$value' is invalid: $reason")
+  object BadRequest {
+    given codec: JsonCodec[BadRequest] = DeriveJsonCodec.gen[BadRequest]
+    given schema: Schema[BadRequest]   = DeriveSchema.gen[BadRequest]
 
-  def invalidHeaderContentType(actual: ContentType, expected: ContentType): IllegalArguments =
-    invalidHeader("Content-Type", actual.toString, s"expected '$expected'")
+    def apply(error: Argument): BadRequest                  = BadRequest(List(error))
+    def apply(argument: String, reason: String): BadRequest = BadRequest(Argument(argument, reason))
 
-  // other
-  def projectNotFound(shortcode: ProjectShortcode): ProjectNotFound = ProjectNotFound(shortcode)
+    case class Argument(argument: String, reason: String)
+    object Argument {
+      given codec: JsonCodec[Argument] = DeriveJsonCodec.gen[Argument]
+      given schema: Schema[Argument]   = DeriveSchema.gen[Argument]
+    }
+
+    def invalidBody(reason: String): BadRequest = BadRequest.apply("Body", reason)
+
+    def invalidHeaderContentType(actual: ContentType, expected: ContentType): BadRequest =
+      invalidHeader("Content-Type", actual.toString, s"expected '$expected'")
+
+    def invalidHeader(
+        key: String,
+        value: String,
+        reason: String,
+      ): BadRequest = BadRequest(s"Header: '$key''", s"'$value' is invalid: $reason")
+
+    def invalidPathVariable(
+        key: String,
+        value: String,
+        reason: String,
+      ): BadRequest = BadRequest(s"Path variable: '$key''", s"'$value' is invalid: $reason")
+  }
+
+  case class InternalServerError(errorMessage: String) extends ApiProblem
+  object InternalServerError {
+    given codec: JsonCodec[InternalServerError] = DeriveJsonCodec.gen[InternalServerError]
+
+    given schema: Schema[InternalServerError] = DeriveSchema.gen[InternalServerError]
+
+    def apply(t: Throwable): InternalServerError = InternalServerError(t.getMessage)
+
+    def apply(msg: String, t: Throwable): InternalServerError = InternalServerError(s"$msg: ${t.getMessage}")
+  }
+
+  case class Unauthorized(reason: String) extends ApiProblem
+  object Unauthorized {
+    given codec: JsonCodec[Unauthorized] = DeriveJsonCodec.gen[Unauthorized]
+  }
 }
