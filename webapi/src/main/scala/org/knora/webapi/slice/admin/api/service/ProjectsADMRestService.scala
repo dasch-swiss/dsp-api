@@ -67,7 +67,7 @@ trait ProjectADMRestService {
     identifier: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsResponseADM]
   def setProjectRestrictedViewSettings(
-    iri: ProjectIdentifierADM,
+    id: ProjectIdentifierADM,
     user: UserADM,
     size: RestrictedViewSize
   ): Task[ProjectRestrictedViewSizeResponseADM]
@@ -252,21 +252,23 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Sets project's restricted view settings.
    *
-   * @param iri the project's IRI,
+   * @param id the project's id represented by iri, shortocde or shortname,
    * @param user requesting user,
    * @param size value to be set,
    * @return [[ProjectRestrictedViewSettingsResponseADM]].
    */
   override def setProjectRestrictedViewSettings(
-    iri: ProjectIdentifierADM,
+    id: ProjectIdentifierADM,
     user: UserADM,
     size: RestrictedViewSize
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
-      project <- projectRepo.findById(iri).someOrFail(NotFoundException(s"Project '${getId(iri)}' not found."))
+      project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
       query = sparql.admin.txt
-                .setProjectRestrictedViewSettings(getId(iri), size.value, None)
+                .setProjectRestrictedViewSettings(project.id.value, size.value, None)
+
+      _ = println(777, getId(id), project)
       _ <- triplestore.query(Update(query.toString))
     } yield ProjectRestrictedViewSizeResponseADM(size)
 

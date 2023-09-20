@@ -91,6 +91,11 @@ final case class ProjectsRouteZ(
               requestingUser
             ) =>
           setProjectRestrictedViewSizeByIri(iri, request.body, requestingUser)
+        case (
+              request @ Method.POST -> !! / "admin" / "projects" / "shortcode" / shortcode / "RestrictedViewSettings",
+              requstingUser
+            ) =>
+          setProjectRestrictedViewSizeByShortcode(shortcode, request.body, requstingUser)
       }
       .catchAll(ExceptionHandlerZ.exceptionToJsonHttpResponseZ(_, appConfig))
 
@@ -254,6 +259,18 @@ final case class ProjectsRouteZ(
       size       <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
       response   <- projectsService.setProjectRestrictedViewSettings(id, user, size)
     } yield Response.json(response.toJson)
+
+  private def setProjectRestrictedViewSizeByShortcode(
+    shortcode: String,
+    body: Body,
+    user: UserADM
+  ): Task[Response] = for {
+    id       <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
+    body     <- body.asString
+    payload  <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizePayload]).mapError(BadRequestException(_))
+    size     <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
+    response <- projectsService.setProjectRestrictedViewSettings(id, user, size)
+  } yield Response.json(response.toJson)
 }
 
 object ProjectsRouteZ {
