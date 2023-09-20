@@ -20,12 +20,12 @@ import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StandoffConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
@@ -1329,14 +1329,15 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val resourceIri      = SharedTestDataV2.Anything.resource1.resourceIri
       val propertyIri      = SharedTestDataV2.AnythingOntology.hasRichtextPropIriExternal
       val resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIri
-      val standoff         = sampleStandoff // XXX: not yet adjusted
+      val standoff         = sampleStandoff
 
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
-      createFormattedTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
-      val valueIri = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        createValueResponse.valueIri
-      }
+      val valueIri = UnsafeZioRun
+        .runOrThrow(
+          createFormattedTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
+        )
+        .valueIri
 
       // Read the value back to check that it was added correctly.
 
@@ -1354,7 +1355,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           assert(savedValue.valueHasString.contains(valueHasString))
           savedValue.standoff should ===(sampleStandoff)
           assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
-          assert(savedValue.mapping == standardMapping)
+          assert(savedValue.mapping.contains(StandoffConstants.standardMapping))
 
         case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
       }
@@ -1367,10 +1368,10 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIri
       val standoff         = sampleStandoffModified // XXX: not yet adjusted
 
-      createFormattedTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      val res = UnsafeZioRun.run(
+        createFormattedTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
+      )
+      assertFailsWithA[DuplicateValueException](res)
     }
 
     "create a decimal value" in {
@@ -2200,23 +2201,23 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val valueHasString        = "Some String Value"
       val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
 
-      ValuesResponderV2.createValueV2(
-        CreateValueV2(
-          resourceIri = resourceIri,
-          resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIriExternal,
-          propertyIri = propertyIri,
-          valueContent = UnformattedTextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasString = valueHasString
-          )
-        ),
-        requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
+      val res = UnsafeZioRun.run(
+        ValuesResponderV2.createValueV2(
+          CreateValueV2(
+            resourceIri = resourceIri,
+            resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIriExternal,
+            propertyIri = propertyIri,
+            valueContent = UnformattedTextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasString = valueHasString
+            )
+          ),
+          requestingUser = anythingUser1,
+          apiRequestID = UUID.randomUUID
+        )
       )
+      assertFailsWithA[NotFoundException](res)
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[NotFoundException])
-      }
     }
 
     "not add a new value if the resource's rdf:type is not correctly given" in {
@@ -2376,7 +2377,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           assert(savedTextValue.valueHasString.contains(valueHasString))
           savedTextValue.standoff should ===(standoff)
           assert(savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
-          savedTextValue.mapping should ===(standardMapping)
+          assert(savedTextValue.mapping.contains(StandoffConstants.standardMapping))
 
         case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
       }
@@ -2472,7 +2473,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           assert(savedTextValue.valueHasString.contains(valueHasString))
           savedTextValue.standoff should ===(standoff)
           assert(savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
-          savedTextValue.mapping should ===(standardMapping)
+          assert(savedTextValue.mapping.contains(StandoffConstants.standardMapping))
 
         case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
       }

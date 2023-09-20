@@ -10,6 +10,7 @@ import java.time.Instant
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StandoffConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.CalendarNameJulian
@@ -19,7 +20,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.messages.OntologyConstants
 
 // FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
