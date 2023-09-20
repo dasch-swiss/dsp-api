@@ -418,20 +418,21 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     resourceClassIri: SmartIri,
     user: UserADM,
     comment: Option[String] = None
-  ) = ValuesResponderV2.createValueV2(
-    CreateValueV2(
-      resourceIri = resourceIri,
-      resourceClassIri = resourceClassIri,
-      propertyIri = propertyIri,
-      valueContent = UnformattedTextValueContentV2(
-        ontologySchema = ApiV2Complex,
-        valueHasString = valueHasString,
-        comment = comment
-      )
-    ),
-    requestingUser = user,
-    apiRequestID = UUID.randomUUID
-  )
+  ) =
+    ValuesResponderV2.createValueV2(
+      CreateValueV2(
+        resourceIri = resourceIri,
+        resourceClassIri = resourceClassIri,
+        propertyIri = propertyIri,
+        valueContent = UnformattedTextValueContentV2(
+          ontologySchema = ApiV2Complex,
+          valueHasString = valueHasString,
+          comment = comment
+        )
+      ),
+      requestingUser = user,
+      apiRequestID = UUID.randomUUID
+    )
 
   private def createFormattedTextValue(
     valueHasString: String,
@@ -458,17 +459,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     requestingUser = user,
     apiRequestID = UUID.randomUUID
   )
-
-  "Load test data" in {
-    appActor ! GetMappingRequestV2(
-      mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      requestingUser = KnoraSystemInstances.Users.SystemUser
-    )
-
-    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
-      standardMapping = Some(mappingResponse.mapping)
-    }
-  }
 
   "The values responder" should {
     "create an integer value" in {
@@ -1266,15 +1256,14 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "create a text value without standoff" in {
       val valueHasString             = "text value"
-      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
+      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal
       val resourceClassIri: SmartIri = SharedTestDataV2.AnythingOntology.thingClassIri
 
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
 
-      createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1)
-      val valueIri = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        createValueResponse.valueIri
-      }
+      val valueIri = UnsafeZioRun
+        .runOrThrow(createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1))
+        .valueIri
 
       // Read the value back to check that it was added correctly.
       val valueFromTriplestore = getValue(
@@ -1294,29 +1283,29 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not create a duplicate text value without standoff" in {
-      val valueHasString                            = "text value"
-      val propertyIri: SmartIri                     = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
-      val resourceClassIri: SmartIri                = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
+      val valueHasString             = "text value"
+      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal
+      val resourceClassIri: SmartIri = SharedTestDataV2.AnythingOntology.thingClassIri
 
-      createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1)
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[DuplicateValueException])
-      }
+      val res = UnsafeZioRun.run(
+        createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1)
+      )
+      assertFailsWithA[DuplicateValueException](res)
     }
 
     "create a text value with a comment" in {
-      val valueHasString   = "text value with comment"
-      val propertyIri      = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
-      val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
-      val comment          = Some("This is a comment")
+      val valueHasString             = "text value with comment"
+      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal
+      val resourceClassIri: SmartIri = SharedTestDataV2.AnythingOntology.thingClassIri
+      val comment                    = Some("This is a comment")
 
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
 
-      createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1, comment)
-      val valueIri = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
-        createValueResponse.valueIri
-      }
+      val valueIri = UnsafeZioRun
+        .runOrThrow(
+          createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1, comment)
+        )
+        .valueIri
 
       val valueFromTriplestore = getValue(
         resourceIri = aThingIri,
