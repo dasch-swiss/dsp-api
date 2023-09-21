@@ -6,13 +6,14 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import zio._
-
 import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{
+  ProjectADM,
+  ProjectIdentifierADM,
+  ProjectKeywordsGetResponseADM,
+  ProjectsKeywordsGetResponseADM
+}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri

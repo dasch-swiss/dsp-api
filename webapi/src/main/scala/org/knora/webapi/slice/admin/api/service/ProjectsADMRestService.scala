@@ -17,7 +17,6 @@ import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
@@ -27,7 +26,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 @accessible
 trait ProjectADMRestService {
@@ -265,11 +263,7 @@ final case class ProjectsADMRestServiceLive(
     for {
       project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
-      query = sparql.admin.txt
-                .setProjectRestrictedViewSettings(project.id.value, size.value, None)
-
-      _ = println(777, getId(id), project)
-      _ <- triplestore.query(Update(query.toString))
+      _       <- projectRepo.setProjectRestrictedViewSize(project, size)
     } yield ProjectRestrictedViewSizeResponseADM(size)
 
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {

@@ -12,6 +12,7 @@ import zio.json._
 import zio.stream.ZStream
 
 import java.nio.file.Files
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.RestrictedViewSize
@@ -24,7 +25,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRest
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.routing.admin.ProjectsRouteZ.layer
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 final case class ProjectsRouteZ(

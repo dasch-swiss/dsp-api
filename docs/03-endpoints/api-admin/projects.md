@@ -822,7 +822,7 @@ a square, so that the width and height of the returned image are not greater tha
 Example: `!512,512` means the image's bigger side will be set to 512 pixels, setting the other side respectively to
 image aspect ratio. The percentage pattern looks like: `pct:X`, where X is the number between 1-100 representing the
 percentage the image will be scaled to. Example: `pct:1` means the image will be scaled to 1% of the original image
-size. **Both routes are implemented only in `ZIO-HTTP`, thus can be reached under port `5555`.**
+size. **Both routes are implemented in `ZIO-HTTP`, thus can be reached only under port `5555`.**
 
 Permissions: ProjectAdmin/SystemAdmin
 

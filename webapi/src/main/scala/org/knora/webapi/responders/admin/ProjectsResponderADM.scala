@@ -646,7 +646,6 @@ final case class ProjectsResponderADMLive(
           )
         )
     }
-
   }
 
   /**
