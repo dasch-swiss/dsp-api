@@ -58,7 +58,7 @@ object ProjectSpec extends ZIOSpecDefault {
   )
 
   private val shortnameTest = suite("ProjectSpec - Shortname")(
-    test("pass an empty value and return an error") {
+    test("pass an empty value and return validation error") {
       assertTrue(
         Shortname.make("") == Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing))
       )
@@ -86,7 +86,7 @@ object ProjectSpec extends ZIOSpecDefault {
         )
       }
     },
-    test("pass valid values and successfully create value object") {
+    test("pass valid values and successfully create value objects") {
       val gen = Gen.fromIterable(
         Seq("valid-shortname", "valid_shortname", "validshortname-", "validshortname_", "abc", "a20charLongShortname")
       )

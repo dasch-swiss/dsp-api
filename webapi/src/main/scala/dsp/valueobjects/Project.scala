@@ -23,8 +23,8 @@ object Project {
   /**
    * Regex which matches string that:
    * - is 3-20 characters long,
-   * - contains small and capital letters, numbers, special characters `-` and `_`,
-   * - cannot start with number or allowed special characters.
+   * - contains small and capital letters, numbers, special characters: `-` and `_`,
+   * - cannot start with number nor allowed special characters.
    */
   private val shortcodeRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
@@ -68,8 +68,8 @@ object Project {
    */
   sealed abstract case class Shortname private (value: String)
   object Shortname { self =>
-    implicit val decoder: JsonDecoder[Shortname] = JsonDecoder[String].mapOrFail { case value =>
-      Shortname.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Shortname] = JsonDecoder[String].mapOrFail { value =>
+      Shortname.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Shortname] =
       JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
