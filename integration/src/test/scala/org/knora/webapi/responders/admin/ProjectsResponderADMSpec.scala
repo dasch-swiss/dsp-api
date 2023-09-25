@@ -290,7 +290,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
-            shortname = Shortname.make("project_with_character").fold(error => throw error.head, value => value),
+            shortname = Shortname.make("project_with_char").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
             description = ProjectDescription
@@ -604,7 +604,6 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
     }
 
     "used to query keywords" should {
-
       "return all unique keywords for all projects" in {
         appActor ! ProjectsKeywordsGetRequestADM()
         val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
