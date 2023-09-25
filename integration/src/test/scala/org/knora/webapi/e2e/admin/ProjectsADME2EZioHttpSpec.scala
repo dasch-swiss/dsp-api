@@ -239,7 +239,7 @@ class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol wit
         val params =
           s"""{
              |    "id": "$customProjectIri",
-             |    "shortname": "newprojectWithDuplicateIri",
+             |    "shortname": "newWithDuplicateIri",
              |    "shortcode": "2222",
              |    "longname": "new project with a duplicate custom invalid IRI",
              |    "description": [{"value": "a project created with a duplicate custom IRI", "language": "en"}],
