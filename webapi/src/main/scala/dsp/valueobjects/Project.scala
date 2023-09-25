@@ -35,7 +35,7 @@ object Project {
    * @return the same string.
    */
   def validateAndEscapeProjectShortname(shortname: String): Option[String] =
-    shortcodeRegex
+    shortnameRegex
       .findFirstIn(shortname)
       .flatMap(Iri.toSparqlEncodedString)
 
