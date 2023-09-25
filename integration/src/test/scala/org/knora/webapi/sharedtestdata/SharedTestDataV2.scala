@@ -62,6 +62,21 @@ object SharedTestDataV2 {
     /**
      * Simple resource of type anything:Thing with one integer value and restrictive permissions.
      */
+    val resouce1value1 = ReadOtherValueV2(
+      valueIri = "http://rdfh.ch/0001/IwMDbs0KQsaxSRUTl2cAIQ/values/95r2v2DQSgmID6Kmr2LwHg",
+      attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+      permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+      userPermission = PermissionUtilADM.ModifyPermission,
+      valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+      valueHasUUID = UuidUtil.base64Decode("95r2v2DQSgmID6Kmr2LwHg").get,
+      valueContent = IntegerValueContentV2(
+        ontologySchema = InternalSchema,
+        valueHasInteger = 123454321,
+        comment = Some("visible int value in hidden resource")
+      ),
+      previousValueIri = None,
+      deletionInfo = None
+    )
     val resource1 = ReadResourceV2(
       resourceIri = "http://rdfh.ch/0001/IwMDbs0KQsaxSRUTl2cAIQ",
       label = "hidden thing",
@@ -70,25 +85,7 @@ object SharedTestDataV2 {
       projectADM = SharedTestDataADM.anythingProject,
       permissions = "M knora-admin:ProjectMember",
       userPermission = PermissionUtilADM.ModifyPermission,
-      values = Map(
-        AnythingOntology.hasIntegerPropIri -> Seq(
-          ReadOtherValueV2(
-            valueIri = "http://rdfh.ch/0001/IwMDbs0KQsaxSRUTl2cAIQ/values/95r2v2DQSgmID6Kmr2LwHg",
-            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-            permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-            userPermission = PermissionUtilADM.ModifyPermission,
-            valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
-            valueHasUUID = UuidUtil.base64Decode("95r2v2DQSgmID6Kmr2LwHg").get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasInteger = 123454321,
-              comment = Some("visible int value in hidden resource")
-            ),
-            previousValueIri = None,
-            deletionInfo = None
-          )
-        )
-      ),
+      values = Map(AnythingOntology.hasIntegerPropIri -> Seq(resouce1value1)),
       creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
       lastModificationDate = None,
       versionDate = None,
