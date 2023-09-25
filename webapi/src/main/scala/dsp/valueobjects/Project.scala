@@ -26,7 +26,7 @@ object Project {
    * - contains small and capital letters, numbers, special characters: `-` and `_`,
    * - cannot start with number nor allowed special characters.
    */
-  private val shortcodeRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
+  private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
   /**
    * Check that the string represents a valid project shortname.
