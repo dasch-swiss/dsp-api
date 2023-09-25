@@ -462,52 +462,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "create an integer value that belongs to a property of another ontology" in {
-      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
-      val propertyIri: SmartIri =
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      // Create the value.
-      val intValue = 40
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri =
-              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      intValueIriForFreetest.set(createValueResponse.valueIri)
-      integerValueUUID = createValueResponse.valueUUID
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-        case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-      }
-    }
-
     "update an integer value that belongs to a property of another ontology" in {
       val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
       val propertyIri: SmartIri =

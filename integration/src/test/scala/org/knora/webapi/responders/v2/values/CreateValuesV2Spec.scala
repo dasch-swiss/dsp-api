@@ -199,7 +199,7 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
   private def getValue(
     resourceIri: IRI,
-    maybePreviousLastModDate: Option[Instant],
+    maybePreviousLastModDate: Option[Instant] = None,
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
@@ -354,10 +354,9 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
       "create an integer value" in {
         // Add the value.
-        val resourceIri: IRI                          = aThingIri
-        val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-        val intValue                                  = 4
-        val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+        val resourceIri: IRI      = aThingIri
+        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+        val intValue              = 4
 
         val createValueResponse = UnsafeZioRun.runOrThrow(
           ValuesResponderV2.createValueV2(
@@ -375,15 +374,8 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
           )
         )
 
-        // intValueIri.set(createValueResponse.valueIri)
-        // firstIntValueVersionIri.set(createValueResponse.valueIri)
-        // integerValueUUID = createValueResponse.valueUUID
-
-        // Read the value back to check that it was added correctly.
-
         val valueFromTriplestore = getValue(
           resourceIri = resourceIri,
-          maybePreviousLastModDate = maybeResourceLastModDate,
           propertyIriForGravsearch = propertyIri,
           propertyIriInResult = propertyIri,
           expectedValueIri = createValueResponse.valueIri,
@@ -405,6 +397,50 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
         val actual = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID))
         assertFailsWithA[DuplicateValueException](actual)
+      }
+
+      "create an integer value that belongs to a property of another ontology" in {
+        val resourceIri: IRI = "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
+        val propertyIri: SmartIri =
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
+        val valueUuid = randomUUID()
+
+        // Create the value.
+        val intValue = 40
+
+        val createValueResponse = UnsafeZioRun.runOrThrow(
+          ValuesResponderV2.createValueV2(
+            CreateValueV2(
+              resourceIri = resourceIri,
+              resourceClassIri =
+                "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+              propertyIri = propertyIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue
+              )
+            ),
+            requestingUser = anythingUser1,
+            apiRequestID = valueUuid
+          )
+        )
+
+        val intValueIriForFreetestIri = createValueResponse.valueIri
+
+        // Read the value back to check that it was added correctly.
+
+        val valueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = intValueIriForFreetestIri,
+          requestingUser = anythingUser1
+        )
+
+        valueFromTriplestore.valueContent match {
+          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+          case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+        }
       }
 
     }
