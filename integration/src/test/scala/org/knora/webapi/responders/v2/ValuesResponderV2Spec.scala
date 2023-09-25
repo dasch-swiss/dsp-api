@@ -96,7 +96,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private val intValueForRsyncIri                       = new MutableTestIri
   private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
   private val zeitglöckleinCommentWithStandoffIri       = new MutableTestIri
-  private val zeitglöckleinCommentWithCommentIri        = new MutableTestIri
   private val zeitglöckleinSecondCommentWithStandoffIri = new MutableTestIri
   private val lobComment1Iri                            = new MutableTestIri
   private val lobComment2Iri                            = new MutableTestIri
@@ -114,8 +113,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private val standoffLinkValueIri                      = new MutableTestIri
   private val stillImageFileValueIri                    = new MutableTestIri
 
-  private var integerValueUUID = randomUUID
-  private var linkValueUUID    = randomUUID
+  private var linkValueUUID = randomUUID
 
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(
     StandoffTagV2(
@@ -181,7 +179,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     )
   )
 
-  private var standardMapping: Option[MappingXMLtoStandoff] = None
+  private val standardMapping: Option[MappingXMLtoStandoff] = None
 
   private def getResourceWithValues(
     resourceIri: IRI,
