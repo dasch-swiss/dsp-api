@@ -8,19 +8,17 @@ package org.knora.webapi.responders.v2.values
 import akka.testkit.ImplicitSender
 import zio.Exit
 
-import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.reflect.ClassTag
 
 import dsp.errors.AssertionException
+import dsp.errors.DuplicateValueException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.CoreSpec
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StandoffConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -29,23 +27,14 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesPreviewGetRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
-import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FormattedTextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
-import dsp.errors.DuplicateValueException
-import org.knora.webapi.messages.v2.responder.valuemessages.ReadOtherValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueResponseV2
 
 class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -115,86 +104,6 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
       )
   }
 
-  private def checkValueIsDeleted(
-    resourceIri: IRI,
-    maybePreviousLastModDate: Option[Instant],
-    valueIri: IRI,
-    customDeleteDate: Option[Instant] = None,
-    deleteComment: Option[String] = None,
-    requestingUser: UserADM,
-    isLinkValue: Boolean = false
-  ): Unit = {
-    appActor ! ResourcesGetRequestV2(
-      resourceIris = Seq(resourceIri),
-      targetSchema = ApiV2Complex,
-      requestingUser = requestingUser
-    )
-
-    val resource = expectMsgPF(timeout) { case getResponse: ReadResourcesSequenceV2 =>
-      getResponse.toResource(resourceIri)
-    }
-    //  ensure the resource was not deleted
-    resource.deletionInfo should be(None)
-
-    val deletedValues = resource.values.getOrElse(
-      OntologyConstants.KnoraBase.DeletedValue.toSmartIri,
-      throw AssertionException(
-        s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted."
-      )
-    )
-
-    if (!isLinkValue) {
-      // not a LinkValue, so the value should be a DeletedValue of the resource
-      val deletedValue = deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
-        .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources"))
-
-      checkLastModDate(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybePreviousLastModDate,
-        maybeUpdatedLastModDate = resource.lastModificationDate
-      )
-
-      val deletionInfo = deletedValue.deletionInfo.getOrElse(
-        throw AssertionException(s"Value <$valueIri> does not have deletion information")
-      )
-
-      customDeleteDate match {
-        case Some(deleteDate) => deletionInfo.deleteDate should equal(deleteDate)
-        case None             => ()
-      }
-
-      deleteComment match {
-        case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
-        case None          => ()
-      }
-    } else {
-      // The value is a LinkValue, so there should be a DeletedValue having a PreviousValue with the IRI of the value.
-      if (
-        !deletedValues.exists(v =>
-          v.previousValueIri match {
-            case Some(previousValueIRI) => previousValueIRI == valueIri
-            case None                   => false
-          }
-        )
-      ) throw AssertionException(s"ListValue <$valueIri> was not deleted correctly.")
-    }
-  }
-
-  private def checkLastModDate(
-    resourceIri: IRI,
-    maybePreviousLastModDate: Option[Instant],
-    maybeUpdatedLastModDate: Option[Instant]
-  ): Unit =
-    maybeUpdatedLastModDate match {
-      case Some(updatedLastModDate) =>
-        maybePreviousLastModDate match {
-          case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
-          case None                      => ()
-        }
-
-      case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")
-    }
-
   private def getValue(
     resourceIri: IRI,
     propertyIriForGravsearch: SmartIri,
@@ -212,19 +121,6 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
       propertyIriInResult = propertyIriInResult,
       expectedValueIri = expectedValueIri
     )
-  }
-
-  private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
-    appActor ! ResourcesPreviewGetRequestV2(
-      resourceIris = Seq(resourceIri),
-      targetSchema = ApiV2Complex,
-      requestingUser = requestingUser
-    )
-
-    expectMsgPF(timeout) { case previewResponse: ReadResourcesSequenceV2 =>
-      val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
-      resourcePreview.lastModificationDate
-    }
   }
 
   private def getValueUUID(valueIri: IRI): Option[UUID] = {
@@ -282,57 +178,6 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
     case _                 => fail(s"Expected Exit.Failure with specific T.")
   }
 
-  private def createUnformattedTextValue(
-    valueHasString: String,
-    propertyIri: SmartIri,
-    resourceIri: IRI,
-    resourceClassIri: SmartIri,
-    user: UserADM,
-    comment: Option[String] = None
-  ) =
-    ValuesResponderV2.createValueV2(
-      CreateValueV2(
-        resourceIri = resourceIri,
-        resourceClassIri = resourceClassIri,
-        propertyIri = propertyIri,
-        valueContent = UnformattedTextValueContentV2(
-          ontologySchema = ApiV2Complex,
-          valueHasString = valueHasString,
-          comment = comment
-        )
-      ),
-      requestingUser = user,
-      apiRequestID = UUID.randomUUID
-    )
-
-  private def createFormattedTextValue(
-    valueHasString: String,
-    standoff: Seq[StandoffTagV2],
-    propertyIri: SmartIri,
-    resourceIri: IRI,
-    resourceClassIri: SmartIri,
-    user: UserADM,
-    comment: Option[String] = None
-  ) = ValuesResponderV2.createValueV2(
-    CreateValueV2(
-      resourceIri = resourceIri,
-      resourceClassIri = resourceClassIri,
-      propertyIri = propertyIri,
-      valueContent = FormattedTextValueContentV2(
-        ontologySchema = ApiV2Complex,
-        valueHasString = valueHasString,
-        comment = comment,
-        mappingIri = OntologyConstants.KnoraBase.StandardMapping,
-        mapping = Some(StandoffConstants.standardMapping),
-        standoff = standoff
-      )
-    ),
-    requestingUser = user,
-    apiRequestID = UUID.randomUUID
-  )
-
-  private val aThingIri = "http://rdfh.ch/0001/a-thing"
-
   private val anythingUser1 = SharedTestDataADM.anythingUser1
   private val anythingUser2 = SharedTestDataADM.anythingUser2
 
@@ -371,7 +216,6 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         val resourceIri: IRI      = SharedTestDataV2.Anything.resource1.resourceIri
         val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasIntegerPropIriExternal
         val intValueIri: IRI      = SharedTestDataV2.Anything.resouce1value1.valueIri
-        val valueUUID: UUID       = SharedTestDataV2.Anything.resouce1value1.valueHasUUID
 
         // Update the value.
 

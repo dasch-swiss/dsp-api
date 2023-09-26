@@ -15,7 +15,6 @@ import scala.reflect.ClassTag
 
 import dsp.errors.AssertionException
 import dsp.errors.DuplicateValueException
-import dsp.valueobjects.UuidUtil
 import org.knora.webapi.CoreSpec
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -25,13 +24,9 @@ import org.knora.webapi.messages.StandoffConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesPreviewGetRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
@@ -112,71 +107,6 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
       )
   }
 
-  private def checkValueIsDeleted(
-    resourceIri: IRI,
-    maybePreviousLastModDate: Option[Instant],
-    valueIri: IRI,
-    customDeleteDate: Option[Instant] = None,
-    deleteComment: Option[String] = None,
-    requestingUser: UserADM,
-    isLinkValue: Boolean = false
-  ): Unit = {
-    appActor ! ResourcesGetRequestV2(
-      resourceIris = Seq(resourceIri),
-      targetSchema = ApiV2Complex,
-      requestingUser = requestingUser
-    )
-
-    val resource = expectMsgPF(timeout) { case getResponse: ReadResourcesSequenceV2 =>
-      getResponse.toResource(resourceIri)
-    }
-    //  ensure the resource was not deleted
-    resource.deletionInfo should be(None)
-
-    val deletedValues = resource.values.getOrElse(
-      OntologyConstants.KnoraBase.DeletedValue.toSmartIri,
-      throw AssertionException(
-        s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted."
-      )
-    )
-
-    if (!isLinkValue) {
-      // not a LinkValue, so the value should be a DeletedValue of the resource
-      val deletedValue = deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
-        .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources"))
-
-      checkLastModDate(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybePreviousLastModDate,
-        maybeUpdatedLastModDate = resource.lastModificationDate
-      )
-
-      val deletionInfo = deletedValue.deletionInfo.getOrElse(
-        throw AssertionException(s"Value <$valueIri> does not have deletion information")
-      )
-
-      customDeleteDate match {
-        case Some(deleteDate) => deletionInfo.deleteDate should equal(deleteDate)
-        case None             => ()
-      }
-
-      deleteComment match {
-        case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
-        case None          => ()
-      }
-    } else {
-      // The value is a LinkValue, so there should be a DeletedValue having a PreviousValue with the IRI of the value.
-      if (
-        !deletedValues.exists(v =>
-          v.previousValueIri match {
-            case Some(previousValueIRI) => previousValueIRI == valueIri
-            case None                   => false
-          }
-        )
-      ) throw AssertionException(s"ListValue <$valueIri> was not deleted correctly.")
-    }
-  }
-
   private def checkLastModDate(
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
@@ -219,69 +149,6 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
       propertyIriInResult = propertyIriInResult,
       expectedValueIri = expectedValueIri
     )
-  }
-
-  private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
-    appActor ! ResourcesPreviewGetRequestV2(
-      resourceIris = Seq(resourceIri),
-      targetSchema = ApiV2Complex,
-      requestingUser = requestingUser
-    )
-
-    expectMsgPF(timeout) { case previewResponse: ReadResourcesSequenceV2 =>
-      val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
-      resourcePreview.lastModificationDate
-    }
-  }
-
-  private def getValueUUID(valueIri: IRI): Option[UUID] = {
-    val sparqlQuery =
-      s"""
-         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-         |
-         |SELECT ?valueUUID WHERE {
-         |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
-         |}
-             """.stripMargin
-
-    appActor ! SparqlSelectRequest(sparqlQuery)
-
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valueUUID")).get)
-      }
-    }
-  }
-
-  private def getValuePermissions(valueIri: IRI): Option[UUID] = {
-    val sparqlQuery =
-      s"""
-         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-         |
-         |SELECT ?valuePermissions WHERE {
-         |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
-         |}
-             """.stripMargin
-
-    appActor ! SparqlSelectRequest(sparqlQuery)
-
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
-      }
-    }
   }
 
   private def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _]) = actual match {
@@ -338,10 +205,7 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
     apiRequestID = UUID.randomUUID
   )
 
-  private val aThingIri = "http://rdfh.ch/0001/a-thing"
-
   private val anythingUser1 = SharedTestDataADM.anythingUser1
-  private val anythingUser2 = SharedTestDataADM.anythingUser2
 
   "The values responder" when {
 
