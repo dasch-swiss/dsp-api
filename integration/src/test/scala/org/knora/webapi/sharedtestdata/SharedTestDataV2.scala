@@ -55,6 +55,11 @@ object SharedTestDataV2 {
     val hasUnformattedTextPropIri: SmartIri         = ontologyIri.makeEntityIri("hasUnformattedText")
     val hasUnformattedTextPropIriExternal: SmartIri = hasUnformattedTextPropIri.toOntologySchema(ApiV2Complex)
 
+    // anything:hasIntegerUsedByOtherOntologies
+    val hasIntegerUsedByOtherOntologiesPropIri: SmartIri = ontologyIri.makeEntityIri("hasIntegerUsedByOtherOntologies")
+    val hasIntegerUsedByOtherOntologiesPropIriExternal: SmartIri =
+      hasIntegerUsedByOtherOntologiesPropIri.toOntologySchema(ApiV2Complex)
+
   }
 
   object Anything {

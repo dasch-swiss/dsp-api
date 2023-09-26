@@ -460,69 +460,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "update an integer value that belongs to a property of another ontology" in {
-      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
-      val propertyIri: SmartIri =
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
-
-      // Get the value before update.
-      val previousValueFromTriplestore: ReadValueV2 = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2,
-        checkLastModDateChanged = false
-      )
-
-      // Update the value.
-      val intValue: Int = 50
-
-      val updateValueContent: UpdateValueContentV2 = UpdateValueContentV2(
-        resourceIri = resourceIri,
-        resourceClassIri =
-          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = intValueIriForFreetest.get,
-        valueContent = IntegerValueContentV2(
-          ontologySchema = ApiV2Complex,
-          valueHasInteger = intValue
-        )
-      )
-
-      val updateValueResponse =
-        UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser2, randomUUID))
-
-      intValueIriForFreetest.set(updateValueResponse.valueIri)
-      assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2
-      )
-
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
-          updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
-
-        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-      }
-
-      // Check that the permissions and UUID were deleted from the previous version of the value.
-      assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
-      assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
-    }
-
     "delete an integer value that belongs to a property of another ontology" in {
       val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
       val propertyIri: SmartIri =
