@@ -460,30 +460,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "not update an integer value without a comment without changing it" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 5
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-      assertFailsWithA[DuplicateValueException](actual)
-    }
-
     "update an integer value, adding a comment" in {
       val resourceIri: IRI                          = aThingIri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri

@@ -119,5 +119,10 @@ object SharedTestDataV2 {
 
     val deletedResourceIri            = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
     val resourceWithMaxCardinalityIri = "http://rdfh.ch/0001/t1TgU0hUS3O3DDE9thMqdQ"
+
+    object Resource3 {
+      val resourceIri = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg"
+      val intValueIri = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/c8zmKe-eRjWMOGIOw-5GyA"
+    }
   }
 }

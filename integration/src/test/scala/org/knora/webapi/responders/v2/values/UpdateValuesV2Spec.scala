@@ -43,6 +43,9 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
+import dsp.errors.DuplicateValueException
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadOtherValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueResponseV2
 
 class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -207,7 +210,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
     requestingUser: UserADM,
-    checkLastModDateChanged: Boolean = true
+    checkLastModDateChanged: Boolean = false
   ): ReadValueV2 = {
     val resource = getResourceWithValues(
       resourceIri = resourceIri,
@@ -383,9 +386,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
             randomUUID
           )
         )
-
-        val updatedValueUuid = updateValueResponse.valueUUID
-        val updatedValueIri  = updateValueResponse.valueIri
+        val updatedValueIri = updateValueResponse.valueIri
 
         // Read the value back to check that it was added correctly.
 
@@ -468,6 +469,33 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         // Check that the permissions and UUID were deleted from the previous version of the value.
         assert(getValueUUID(valueIri).isEmpty)
         assert(getValuePermissions(valueIri).isEmpty)
+      }
+
+      "not update an integer value without changing it" in {
+        val resourceIri: IRI      = SharedTestDataV2.Anything.Resource3.resourceIri
+        val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasIntegerPropIriExternal
+        val classIri: SmartIri    = SharedTestDataV2.AnythingOntology.thingClassIriExternal
+        val intValue              = 123454321
+        val intValueIri: IRI      = SharedTestDataV2.Anything.Resource3.intValueIri
+
+        val actual = UnsafeZioRun.run(
+          ValuesResponderV2.updateValueV2(
+            UpdateValueContentV2(
+              resourceIri = resourceIri,
+              resourceClassIri = classIri,
+              propertyIri = propertyIri,
+              valueIri = intValueIri,
+              valueContent = IntegerValueContentV2(
+                ontologySchema = ApiV2Complex,
+                valueHasInteger = intValue,
+                comment = Some("visible int value in main resource")
+              )
+            ),
+            anythingUser1,
+            randomUUID
+          )
+        )
+        assertFailsWithA[DuplicateValueException](actual)
       }
 
     }

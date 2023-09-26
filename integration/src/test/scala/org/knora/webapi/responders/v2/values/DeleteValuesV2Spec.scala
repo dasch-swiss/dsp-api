@@ -110,7 +110,6 @@ class DeleteValuesV2Spec extends CoreSpec with ImplicitSender {
     }
   }
 
-  private val anythingUser1 = SharedTestDataADM.anythingUser1
   private val anythingUser2 = SharedTestDataADM.anythingUser2
 
   "The values responder" when {
