@@ -5,7 +5,10 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.util.Timeout
@@ -14,6 +17,7 @@ import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
+
 import dsp.valueobjects.V2
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
