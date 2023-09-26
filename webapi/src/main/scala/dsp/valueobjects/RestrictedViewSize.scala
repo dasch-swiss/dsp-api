@@ -29,7 +29,7 @@ object RestrictedViewSize {
     if (value.isEmpty) Left(ErrorMessages.RestrictedViewSizeMissing)
     else if (percentagePattern.matches(trimmed)) Right(new RestrictedViewSize(trimmed) {})
     else if (dimensionsPattern.matches(trimmed) && isSquare) Right(new RestrictedViewSize(trimmed) {})
-    else Left(ErrorMessages.RestrictedViewSizeInvalid)
+    else Left(ErrorMessages.RestrictedViewSizeInvalid(value))
   }
 
   def unsafeFrom(value: String): RestrictedViewSize =
@@ -41,5 +41,5 @@ object RestrictedViewSize {
 
 object ErrorMessages {
   val RestrictedViewSizeMissing = "RestrictedViewSize cannot be empty."
-  val RestrictedViewSizeInvalid = "RestrictedViewSize is invalid."
+  val RestrictedViewSizeInvalid = (v: String) => s"Invalid RestrictedViewSize: $v"
 }

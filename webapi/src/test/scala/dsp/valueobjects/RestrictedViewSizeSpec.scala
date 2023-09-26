@@ -31,13 +31,13 @@ object RestrictedViewSizeSpec extends ZIOSpecDefault {
       val gen = Gen.int(-1000, -1)
       check(gen) { integer =>
         val param = s"!$integer,$integer"
-        assertTrue(RestrictedViewSize.make(param).map(_.value) == Left(ErrorMessages.RestrictedViewSizeInvalid))
+        assertTrue(RestrictedViewSize.make(param).map(_.value) == Left(ErrorMessages.RestrictedViewSizeInvalid(param)))
       }
     },
     test("should fail on passing incorrect values") {
       val gen = Gen.fromIterable(Seq("!512,100", "pct:-1", "pct:0", "pct:101"))
       check(gen) { param =>
-        assertTrue(RestrictedViewSize.make(param) == Left(ErrorMessages.RestrictedViewSizeInvalid))
+        assertTrue(RestrictedViewSize.make(param) == Left(ErrorMessages.RestrictedViewSizeInvalid(param)))
       }
     },
     test("should fail on passing empty value") {

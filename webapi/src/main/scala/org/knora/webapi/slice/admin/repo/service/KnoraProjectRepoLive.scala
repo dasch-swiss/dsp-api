@@ -113,9 +113,7 @@ final case class KnoraProjectRepoLive(
   ): Task[Unit] = {
     val query = sparql.admin.txt
       .setProjectRestrictedViewSettings(project.id.value, size.value, None)
-    for {
-      _ <- triplestore.query(Update(query.toString))
-    } yield ()
+    triplestore.query(Update(query.toString))
   }
 }
 
