@@ -460,36 +460,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "delete an integer value that belongs to a property of another ontology" in {
-      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
-      val propertyIri: SmartIri =
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
-
-      UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.deleteValueV2(
-          DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri =
-              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIriForFreetest.get,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            deleteComment = Some("this value was incorrect")
-          ),
-          anythingUser2,
-          randomUUID
-        )
-      )
-
-      checkValueIsDeleted(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        valueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2
-      )
-    }
-
     "not update an integer value without a comment without changing it" in {
       val resourceIri: IRI      = aThingIri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri

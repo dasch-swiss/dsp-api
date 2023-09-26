@@ -411,6 +411,71 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         assert(getValuePermissions(intValueIri).isEmpty)
       }
 
+      "update an integer value that belongs to a property of another ontology" in {
+        val resourceIri: IRI = "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
+        val valueIri: IRI =
+          "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology/values/CYWRc1iuQ3-pKgIZ1RPasA"
+        val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasIntegerUsedByOtherOntologiesPropIriExternal
+
+        // Get the value before update.
+        val previousValueFromTriplestore: ReadValueV2 = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = valueIri,
+          requestingUser = anythingUser2,
+          checkLastModDateChanged = false
+        )
+
+        // Update the value.
+        val intValue = 50
+        val updateValueContent: UpdateValueContentV2 = UpdateValueContentV2(
+          resourceIri = resourceIri,
+          resourceClassIri =
+            "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
+          propertyIri = propertyIri,
+          valueIri = valueIri,
+          valueContent = IntegerValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasInteger = intValue
+          )
+        )
+
+        val updateValueResponse =
+          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser2, randomUUID))
+
+        val updatedValueIri = updateValueResponse.valueIri
+        assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
+
+        // Read the value back to check that it was added correctly.
+        val updatedValueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = updatedValueIri,
+          requestingUser = anythingUser2
+        )
+
+        updatedValueFromTriplestore.valueContent match {
+          case savedValue: IntegerValueContentV2 =>
+            savedValue.valueHasInteger should ===(intValue)
+            updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+            updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
+
+          case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+        }
+
+        // Check that the permissions and UUID were deleted from the previous version of the value.
+        assert(getValueUUID(valueIri).isEmpty)
+        assert(getValuePermissions(valueIri).isEmpty)
+      }
+
+    }
+
+    "updating link values" should {
+
+      "..." in {}
+
     }
 
   }
