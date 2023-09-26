@@ -5,41 +5,43 @@
 
 package org.knora.webapi.responders.v2.values
 
-import org.knora.webapi.CoreSpec
 import akka.testkit.ImplicitSender
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.SmartIri
+import zio.Exit
+
 import java.time.Instant
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesPreviewGetRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
-import java.util.UUID.randomUUID
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
-import dsp.errors.AssertionException
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
-import org.knora.webapi.messages.OntologyConstants
 import java.util.UUID
+import java.util.UUID.randomUUID
+import scala.reflect.ClassTag
+
+import dsp.errors.AssertionException
+import dsp.errors.DuplicateValueException
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi.CoreSpec
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StandoffConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import dsp.valueobjects.UuidUtil
-import scala.reflect.ClassTag
-import zio.Exit
-import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValueContentV2
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesPreviewGetRequestV2
+import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
+import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FormattedTextValueContentV2
-import org.knora.webapi.messages.StandoffConstants
-import dsp.errors.DuplicateValueException
+import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValueContentV2
+import org.knora.webapi.responders.v2.ValuesResponderV2
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
