@@ -35,21 +35,13 @@ class DeleteValuesV2Spec extends CoreSpec with ImplicitSender {
   override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
-    ),
-    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
-    RdfDataObject(
-      path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
-    ),
-    RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    )
+    RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
+    RdfDataObject("test_data/project_data/freetest-data.ttl", "http://www.knora.org/data/0001/anything"),
+    RdfDataObject("test_data/project_data/images-demo-data.ttl", "http://www.knora.org/data/00FF/images"),
+    RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything"),
+    RdfDataObject("test_data/project_ontologies/anything-onto.ttl", "http://www.knora.org/ontology/0001/anything"),
+    RdfDataObject("test_data/project_ontologies/values-onto.ttl", "http://www.knora.org/ontology/0001/values"),
+    RdfDataObject("test_data/project_data/values-data.ttl", "http://www.knora.org/data/0001/anything")
   )
 
   private def checkValueIsDeleted(
@@ -110,7 +102,7 @@ class DeleteValuesV2Spec extends CoreSpec with ImplicitSender {
     }
   }
 
-  private val anythingUser2 = SharedTestDataADM.anythingUser2
+  private val root = SharedTestDataADM.rootUser
 
   "The values responder" when {
 
@@ -128,9 +120,9 @@ class DeleteValuesV2Spec extends CoreSpec with ImplicitSender {
 
         val deleteValue =
           DeleteValueV2(resourceIri, classIri, propertyIri, valueIri, valueTypeIri, Some("this value was incorrect"))
-        UnsafeZioRun.runOrThrow(ValuesResponderV2.deleteValueV2(deleteValue, anythingUser2, randomUUID))
+        UnsafeZioRun.runOrThrow(ValuesResponderV2.deleteValueV2(deleteValue, root, randomUUID))
 
-        checkValueIsDeleted(resourceIri = resourceIri, valueIri = valueIri, requestingUser = anythingUser2)
+        checkValueIsDeleted(resourceIri = resourceIri, valueIri = valueIri, requestingUser = root)
       }
     }
   }

@@ -42,6 +42,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValue
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataV2
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -51,21 +52,13 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
-    ),
-    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
-    RdfDataObject(
-      path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
-    ),
-    RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    )
+    RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
+    RdfDataObject("test_data/project_data/freetest-data.ttl", "http://www.knora.org/data/0001/anything"),
+    RdfDataObject("test_data/project_data/images-demo-data.ttl", "http://www.knora.org/data/00FF/images"),
+    RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything"),
+    RdfDataObject("test_data/project_ontologies/anything-onto.ttl", "http://www.knora.org/ontology/0001/anything"),
+    RdfDataObject("test_data/project_ontologies/values-onto.ttl", "http://www.knora.org/ontology/0001/values"),
+    RdfDataObject("test_data/project_data/values-data.ttl", "http://www.knora.org/data/0001/anything")
   )
 
   private def getResourceWithValues(
@@ -356,25 +349,15 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
       "create an integer value" in {
         // Add the value.
-        val resourceIri: IRI      = aThingIri
-        val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-        val intValue              = 4
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 42
 
-        val createValueResponse = UnsafeZioRun.runOrThrow(
-          ValuesResponderV2.createValueV2(
-            CreateValueV2(
-              resourceIri = resourceIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = propertyIri,
-              valueContent = IntegerValueContentV2(
-                ontologySchema = ApiV2Complex,
-                valueHasInteger = intValue
-              )
-            ),
-            requestingUser = anythingUser1,
-            apiRequestID = randomUUID
-          )
-        )
+        val createValue =
+          CreateValueV2(resourceIri, resourceClassIri, propertyIri, IntegerValueContentV2(ApiV2Complex, intValue))
+        val createValueResponse =
+          UnsafeZioRun.runOrThrow(ValuesResponderV2.createValueV2(createValue, anythingUser1, randomUUID))
 
         val valueFromTriplestore = getValue(
           resourceIri = resourceIri,
@@ -391,13 +374,12 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
       }
 
       "not create a duplicate integer value" in {
-        val resourceIri      = aThingIri
-        val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
-        val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-        val intVal           = IntegerValueContentV2(ApiV2Complex, 4)
-        val duplicateValue   = CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal)
-
-        val actual = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID))
+        val intVal                     = IntegerValueContentV2(ApiV2Complex, 1)
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val duplicateValue             = CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal)
+        val actual                     = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID))
         assertFailsWithA[DuplicateValueException](actual)
       }
 

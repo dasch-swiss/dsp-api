@@ -55,21 +55,13 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
   override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(
-      path = "test_data/project_ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
-    ),
-    RdfDataObject(path = "test_data/project_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
-    RdfDataObject(
-      path = "test_data/generated_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
-      name = "http://www.knora.org/data/0803/incunabula"
-    ),
-    RdfDataObject(path = "test_data/project_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-    RdfDataObject(
-      path = "test_data/project_ontologies/anything-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/anything"
-    )
+    RdfDataObject("test_data/project_ontologies/freetest-onto.ttl", "http://www.knora.org/ontology/0001/freetest"),
+    RdfDataObject("test_data/project_data/freetest-data.ttl", "http://www.knora.org/data/0001/anything"),
+    RdfDataObject("test_data/project_data/images-demo-data.ttl", "http://www.knora.org/data/00FF/images"),
+    RdfDataObject("test_data/project_data/anything-data.ttl", "http://www.knora.org/data/0001/anything"),
+    RdfDataObject("test_data/project_ontologies/anything-onto.ttl", "http://www.knora.org/ontology/0001/anything"),
+    RdfDataObject("test_data/project_ontologies/values-onto.ttl", "http://www.knora.org/ontology/0001/values"),
+    RdfDataObject("test_data/project_data/values-data.ttl", "http://www.knora.org/data/0001/anything")
   )
 
   private def getResourceWithValues(
@@ -205,26 +197,16 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
 
   private def getValue(
     resourceIri: IRI,
-    maybePreviousLastModDate: Option[Instant] = None,
     propertyIriForGravsearch: SmartIri,
     propertyIriInResult: SmartIri,
     expectedValueIri: IRI,
-    requestingUser: UserADM,
-    checkLastModDateChanged: Boolean = false
+    requestingUser: UserADM
   ): ReadValueV2 = {
     val resource = getResourceWithValues(
       resourceIri = resourceIri,
       propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
       requestingUser = requestingUser
     )
-
-    if (checkLastModDateChanged) {
-      checkLastModDate(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybePreviousLastModDate,
-        maybeUpdatedLastModDate = resource.lastModificationDate
-      )
-    }
     getValueFromResource(
       resource = resource,
       propertyIriInResult = propertyIriInResult,
@@ -354,9 +336,34 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
   private val anythingUser1 = SharedTestDataADM.anythingUser1
   private val anythingUser2 = SharedTestDataADM.anythingUser2
 
-  private def fooBarBazValueIri = "http://rdfh.ch/0001/a-thing/values/1"
-
   "The values responder" when {
+
+    "updating values" should {
+
+      "remove UUID and permissions from the previous value" in {
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue1.valueIri
+        val valueUuid: UUID            = SharedTestDataV2.Values.Data.Resource1.IntValue1.valueUuid
+        val valuePermissions: String   = SharedTestDataV2.Values.Data.Resource1.IntValue1.permissions
+
+        val newValue    = IntegerValueContentV2(ApiV2Complex, -1)
+        val updateValue = UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, newValue)
+        val response = UnsafeZioRun.runOrThrow(
+          ValuesResponderV2.updateValueV2(updateValue, SharedTestDataADM.anythingUser1, randomUUID)
+        )
+        val newValueIri  = response.valueIri
+        val updatedValue = getValue(resourceIri, propertyIri, propertyIri, newValueIri, anythingUser1)
+
+        assert(valueIri != newValueIri)
+        assert(updatedValue.valueHasUUID == valueUuid)
+        assert(getValueUUID(valueIri).isEmpty)
+        assert(updatedValue.permissions == valuePermissions)
+        assert(getValuePermissions(valueIri).isEmpty)
+      }
+
+    }
 
     "updating integer values" should {
 
@@ -424,8 +431,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
           propertyIriForGravsearch = propertyIri,
           propertyIriInResult = propertyIri,
           expectedValueIri = valueIri,
-          requestingUser = anythingUser2,
-          checkLastModDateChanged = false
+          requestingUser = anythingUser2
         )
 
         // Update the value.
@@ -497,6 +503,10 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[DuplicateValueException](actual)
       }
+
+      "update an integer value adding a comment" in {}
+      "update an integer value updating a comment" in {}
+      "update an integer value removing a comment" in {}
 
     }
 

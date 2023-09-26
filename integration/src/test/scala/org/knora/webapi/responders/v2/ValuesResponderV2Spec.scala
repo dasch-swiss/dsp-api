@@ -47,11 +47,9 @@ import org.knora.webapi.util.MutableTestIri
 class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
-  private val generationeIri   = "http://rdfh.ch/0803/c3f913666f"
-  private val aThingIri        = "http://rdfh.ch/0001/a-thing"
-  private val freetestWithAPropertyFromAnythingOntologyIri =
-    "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
+  private val zeitglöckleinIri     = "http://rdfh.ch/0803/c5058f3a"
+  private val generationeIri       = "http://rdfh.ch/0803/c3f913666f"
+  private val aThingIri            = "http://rdfh.ch/0001/a-thing"
   private val aThingPictureIri     = "http://rdfh.ch/0001/a-thing-picture"
   private val sierraIri            = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
   private val thingPictureClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
@@ -91,7 +89,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private val firstIntValueVersionIri                   = new MutableTestIri
   private val intValueIri                               = new MutableTestIri
-  private val intValueIriForFreetest                    = new MutableTestIri
   private val intValueIriWithCustomPermissions          = new MutableTestIri
   private val intValueForRsyncIri                       = new MutableTestIri
   private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
@@ -525,32 +522,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       // Check that the permissions and UUID were deleted from the previous version of the value.
       assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
       assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
-    }
-
-    "not update an integer value with a comment without changing it" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 5
-      val comment               = "Added a comment"
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment)
-            )
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-      assertFailsWithA[DuplicateValueException](actual)
     }
 
     "update an integer value with a comment, changing only the comment" in {

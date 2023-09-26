@@ -125,4 +125,32 @@ object SharedTestDataV2 {
       val intValueIri = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg/values/c8zmKe-eRjWMOGIOw-5GyA"
     }
   }
+
+  object Values {
+    object Ontology {
+      // ontology
+      val ontologyIri: SmartIri         = "http://www.knora.org/ontology/0001/values".toSmartIri
+      val ontologyIriExternal: SmartIri = ontologyIri.toOntologySchema(ApiV2Complex)
+
+      // v:Resource
+      val resourceClassIri: SmartIri         = ontologyIri.makeEntityIri("Resource")
+      val resourceClassIriExternal: SmartIri = resourceClassIri.toOntologySchema(ApiV2Complex)
+
+      // v:hasInteger
+      val hasIntegerPropIri: SmartIri         = ontologyIri.makeEntityIri("hasInteger")
+      val hasIntegerPropIriExternal: SmartIri = hasIntegerPropIri.toOntologySchema(ApiV2Complex)
+    }
+    object Data {
+      object Resource1 {
+        val resourceIri = "http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A"
+        object IntValue1 {
+          val valueIri    = "http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/uAdQoNrUR3iCY24IUa9JrA"
+          val intValue    = 1
+          val valueUuid   = UuidUtil.base64Decode("uAdQoNrUR3iCY24IUa9JrA").get
+          val permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember"
+        }
+      }
+    }
+  }
+
 }
