@@ -10,14 +10,14 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 
 import java.net.URLEncoder
-
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class RestrictedViewSizeE2ESpec extends E2ESpec {
+class RestrictedViewSizeE2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
 
   private val rootEmail = SharedTestDataADM.rootUser.email
   private val testPass  = SharedTestDataADM.testPass

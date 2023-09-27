@@ -37,7 +37,7 @@ import org.knora.webapi.util.MutableTestIri
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
-class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol with TriplestoreJsonProtocol {
+class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol {
 
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass
