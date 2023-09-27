@@ -773,5 +773,103 @@ class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol {
         )
       }
     }
+
+    if (baseApiUrl.contains("5555")) "used to set RestrictedViewSize by project IRI" should {
+      "return requested value to be set with 200 Response Status" in {
+        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
+        val payload    = """{"size":"pct:1"}"""
+        val request =
+          Post(
+            baseApiUrl + s"/admin/projects/iri/$encodedIri/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
+            BasicHttpCredentials(rootEmail, testPass)
+          )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        val result: String         = responseToString(response)
+        assert(response.status === StatusCodes.OK)
+        assert(payload === result)
+      }
+
+      "return the `BadRequest` if the size value is invalid" in {
+        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
+        val payload    = """{"size":"pct:0"}"""
+        val request =
+          Post(
+            baseApiUrl + s"/admin/projects/iri/$encodedIri/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
+            BasicHttpCredentials(rootEmail, testPass)
+          )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        val result: String         = responseToString(response)
+        assert(response.status === StatusCodes.BadRequest)
+        assert(result.contains("Invalid RestrictedViewSize: pct:0"))
+      }
+
+      "return `Forbidden` for the user who is not a system nor project admin" in {
+        val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
+        val payload    = """{"size":"pct:1"}"""
+        val request =
+          Post(
+            baseApiUrl + s"/admin/projects/iri/$encodedIri/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
+            BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
+          )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.Forbidden)
+      }
+    }
+    else "used to set RestrictedViewSize by project IRI" ignore ()
+
+    if (baseApiUrl.contains("5555")) "used to set RestrictedViewSize by project Shortcode" should {
+      "return requested value to be set with 200 Response Status" in {
+        val shortcode = SharedTestDataADM.imagesProject.shortcode
+        val payload   = """{"size":"pct:1"}"""
+        val request =
+          Post(
+            baseApiUrl + s"/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
+            BasicHttpCredentials(rootEmail, testPass)
+          )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        val result: String         = responseToString(response)
+        assert(response.status === StatusCodes.OK)
+        assert(payload === result)
+      }
+
+      "return the `BadRequest` if the size value is invalid" in {
+        val shortcode = SharedTestDataADM.imagesProject.shortcode
+        val payload   = """{"size":"pct:0"}"""
+        val request =
+          Post(
+            baseApiUrl + s"/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
+            BasicHttpCredentials(rootEmail, testPass)
+          )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        val result: String         = responseToString(response)
+        assert(response.status === StatusCodes.BadRequest)
+        assert(result.contains("Invalid RestrictedViewSize: pct:0"))
+      }
+
+      "return `Forbidden` for the user who is not a system nor project admin" in {
+        val shortcode = SharedTestDataADM.imagesProject.shortcode
+        val payload   = """{"size":"pct:1"}"""
+        val request =
+          Post(
+            baseApiUrl + s"/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
+            BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
+          )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.Forbidden)
+      }
+    }
+    else "used to set RestrictedViewSize by project Shortcode" ignore ()
   }
 }
