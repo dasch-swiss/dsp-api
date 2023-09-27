@@ -89,8 +89,9 @@ Description: Create a new project.
 Required payload:
 
 - `shortcode` (unique, 4-digits)
-- `shortname` (unique, it should be in the form of a [xsd:NCNAME](https://www.w3.org/TR/xmlschema11-2/#NCName) and it 
-  should be URL safe)
+- `shortname` (unique, 3-20 characters long, can contain small and capital letters, numbers, special characters: `-`
+and `_`, cannot start with number nor allowed special characters, should be in the form of a
+[xsd:NCNAME](https://www.w3.org/TR/xmlschema11-2/#NCName) and URL safe)
 - `description` (collection of descriptions as strings with language tag)
 - `keywords` (collection of keywords)
 - `status` (true, if project is active. false, if project is inactive)
