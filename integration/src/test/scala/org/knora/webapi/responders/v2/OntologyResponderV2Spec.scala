@@ -6,14 +6,15 @@
 package org.knora.webapi.responders.v2
 
 import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
-import org.apache.pekko.actor.Status.Failure
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -36,6 +37,7 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
+
 import pekko.pattern.ask
 import pekko.testkit.ImplicitSender
 
