@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v2.values
 import akka.testkit.ImplicitSender
 import zio.Exit
 
-import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.reflect.ClassTag
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
+import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FormattedTextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
@@ -107,47 +107,19 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
       )
   }
 
-  private def checkLastModDate(
-    resourceIri: IRI,
-    maybePreviousLastModDate: Option[Instant],
-    maybeUpdatedLastModDate: Option[Instant]
-  ): Unit =
-    maybeUpdatedLastModDate match {
-      case Some(updatedLastModDate) =>
-        maybePreviousLastModDate match {
-          case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
-          case None                      => ()
-        }
+  private def createValue(createValue: CreateValueV2, user: UserADM, uuid: UUID): CreateValueResponseV2 =
+    UnsafeZioRun.runOrThrow(ValuesResponderV2.createValueV2(createValue, user, uuid))
 
-      case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")
-    }
-
-  private def getValue(
-    resourceIri: IRI,
-    maybePreviousLastModDate: Option[Instant] = None,
-    propertyIriForGravsearch: SmartIri,
-    propertyIriInResult: SmartIri,
-    expectedValueIri: IRI,
-    requestingUser: UserADM,
-    checkLastModDateChanged: Boolean = true
-  ): ReadValueV2 = {
+  private def getValue(resourceIri: IRI, propertyIri: SmartIri, valueIri: IRI, requestingUser: UserADM): ReadValueV2 = {
     val resource = getResourceWithValues(
       resourceIri = resourceIri,
-      propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
+      propertyIrisForGravsearch = Seq(propertyIri),
       requestingUser = requestingUser
     )
-
-    if (checkLastModDateChanged) {
-      checkLastModDate(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybePreviousLastModDate,
-        maybeUpdatedLastModDate = resource.lastModificationDate
-      )
-    }
     getValueFromResource(
       resource = resource,
-      propertyIriInResult = propertyIriInResult,
-      expectedValueIri = expectedValueIri
+      propertyIriInResult = propertyIri,
+      expectedValueIri = valueIri
     )
   }
 
@@ -212,25 +184,16 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
     "creating integer values" should {
 
       "create an integer value" in {
-        // Add the value.
         val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
         val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
         val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
         val intValue                   = 42
 
-        val createValue =
-          CreateValueV2(resourceIri, resourceClassIri, propertyIri, IntegerValueContentV2(ApiV2Complex, intValue))
-        val createValueResponse =
-          UnsafeZioRun.runOrThrow(ValuesResponderV2.createValueV2(createValue, anythingUser1, randomUUID))
+        val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create       = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+        val response     = createValue(create, anythingUser1, randomUUID)
 
-        val valueFromTriplestore = getValue(
-          resourceIri = resourceIri,
-          propertyIriForGravsearch = propertyIri,
-          propertyIriInResult = propertyIri,
-          expectedValueIri = createValueResponse.valueIri,
-          requestingUser = anythingUser1
-        )
-
+        val valueFromTriplestore = getValue(resourceIri, propertyIri, response.valueIri, anythingUser1)
         valueFromTriplestore.valueContent match {
           case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
           case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
@@ -238,25 +201,17 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
       }
 
       "create an integer value with a comment" in {
-        // Add the value.
         val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
         val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
         val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
         val intValue                   = 43
         val comment                    = Some("A Comment")
-        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue, comment)
-        val createValue                = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
-        val createValueResponse =
-          UnsafeZioRun.runOrThrow(ValuesResponderV2.createValueV2(createValue, anythingUser1, randomUUID))
 
-        val valueFromTriplestore = getValue(
-          resourceIri = resourceIri,
-          propertyIriForGravsearch = propertyIri,
-          propertyIriInResult = propertyIri,
-          expectedValueIri = createValueResponse.valueIri,
-          requestingUser = anythingUser1
-        )
+        val valueContent        = IntegerValueContentV2(ApiV2Complex, intValue, comment)
+        val create              = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+        val createValueResponse = createValue(create, anythingUser1, randomUUID)
 
+        val valueFromTriplestore = getValue(resourceIri, propertyIri, createValueResponse.valueIri, anythingUser1)
         valueFromTriplestore.valueContent match {
           case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
           case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
@@ -277,40 +232,17 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         val resourceIri: IRI = "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
         val propertyIri: SmartIri =
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
+        val resourceClassIri =
+          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri
         val valueUuid = randomUUID()
+        val intValue  = 40
 
-        // Create the value.
-        val intValue = 40
-
-        val createValueResponse = UnsafeZioRun.runOrThrow(
-          ValuesResponderV2.createValueV2(
-            CreateValueV2(
-              resourceIri = resourceIri,
-              resourceClassIri =
-                "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-              propertyIri = propertyIri,
-              valueContent = IntegerValueContentV2(
-                ontologySchema = ApiV2Complex,
-                valueHasInteger = intValue
-              )
-            ),
-            requestingUser = anythingUser1,
-            apiRequestID = valueUuid
-          )
-        )
+        val valueContent        = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create              = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+        val createValueResponse = createValue(create, anythingUser1, valueUuid)
 
         val intValueIriForFreetestIri = createValueResponse.valueIri
-
-        // Read the value back to check that it was added correctly.
-
-        val valueFromTriplestore = getValue(
-          resourceIri = resourceIri,
-          propertyIriForGravsearch = propertyIri,
-          propertyIriInResult = propertyIri,
-          expectedValueIri = intValueIriForFreetestIri,
-          requestingUser = anythingUser1
-        )
-
+        val valueFromTriplestore      = getValue(resourceIri, propertyIri, intValueIriForFreetestIri, anythingUser1)
         valueFromTriplestore.valueContent match {
           case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
           case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
