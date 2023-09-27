@@ -38,6 +38,8 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
+import org.knora.webapi.messages.util.PermissionUtilADM
+import dsp.errors.BadRequestException
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -107,8 +109,13 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
       )
   }
 
-  private def createValue(createValue: CreateValueV2, user: UserADM, uuid: UUID): CreateValueResponseV2 =
+  private def createValueOrThrow(createValue: CreateValueV2, user: UserADM, uuid: UUID): CreateValueResponseV2 =
     UnsafeZioRun.runOrThrow(ValuesResponderV2.createValueV2(createValue, user, uuid))
+
+  private def doNotCreate[A <: Throwable: ClassTag](createValue: CreateValueV2, user: UserADM, uuid: UUID): Unit = {
+    val res = UnsafeZioRun.run(ValuesResponderV2.createValueV2(createValue, user, uuid))
+    assertFailsWithA[A](res)
+  }
 
   private def getValue(resourceIri: IRI, propertyIri: SmartIri, valueIri: IRI, requestingUser: UserADM): ReadValueV2 = {
     val resource = getResourceWithValues(
@@ -181,6 +188,41 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" when {
 
+    "creating values in general" should {
+
+      "create an value with custom permissions" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 123
+        val permissions                = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+
+        val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create =
+          CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent, permissions = Some(permissions))
+        val response             = createValueOrThrow(create, anythingUser1, randomUUID)
+        val valueFromTriplestore = getValue(resourceIri, propertyIri, response.valueIri, anythingUser1)
+
+        val expected = PermissionUtilADM.parsePermissions(permissions)
+        val actual   = PermissionUtilADM.parsePermissions(valueFromTriplestore.permissions)
+        actual should ===(expected)
+      }
+
+      "not create a value with syntactically invalid custom permissions" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 124
+        val permissions                = "M knora-admin:Creator,V knora-admin:KnownUser"
+
+        val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create =
+          CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent, permissions = Some(permissions))
+        doNotCreate[BadRequestException](create, anythingUser1, randomUUID)
+      }
+
+    }
+
     "creating integer values" should {
 
       "create an integer value" in {
@@ -191,7 +233,7 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
         val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
         val create       = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
-        val response     = createValue(create, anythingUser1, randomUUID)
+        val response     = createValueOrThrow(create, anythingUser1, randomUUID)
 
         val valueFromTriplestore = getValue(resourceIri, propertyIri, response.valueIri, anythingUser1)
         valueFromTriplestore.valueContent match {
@@ -209,7 +251,7 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
         val valueContent        = IntegerValueContentV2(ApiV2Complex, intValue, comment)
         val create              = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
-        val createValueResponse = createValue(create, anythingUser1, randomUUID)
+        val createValueResponse = createValueOrThrow(create, anythingUser1, randomUUID)
 
         val valueFromTriplestore = getValue(resourceIri, propertyIri, createValueResponse.valueIri, anythingUser1)
         valueFromTriplestore.valueContent match {
@@ -239,7 +281,7 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
         val valueContent        = IntegerValueContentV2(ApiV2Complex, intValue)
         val create              = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
-        val createValueResponse = createValue(create, anythingUser1, valueUuid)
+        val createValueResponse = createValueOrThrow(create, anythingUser1, valueUuid)
 
         val intValueIriForFreetestIri = createValueResponse.valueIri
         val valueFromTriplestore      = getValue(resourceIri, propertyIri, intValueIriForFreetestIri, anythingUser1)
