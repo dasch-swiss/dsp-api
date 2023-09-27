@@ -56,7 +56,7 @@ nav:
               - 0003 Change IIIF Service Manager and Sipi implementation to zlayer: 05-internals/design/adr/ADR-0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer.md
               - 0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer: 05-internals/design/adr/ADR-0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer.md
               - 0005 Change ResponderManager to a simple case class: 05-internals/design/adr/ADR-0005-change-respondermanager-to-a-simple-case-class.md
-              - 0006 Gradually Replace pekko-HTTP with ZIO-HTTP: 05-internals/design/adr/ADR-0006-use-zio-http.md
+              - 0006 Gradually Replace Akka-HTTP with ZIO-HTTP: 05-internals/design/adr/ADR-0006-use-zio-http.md
               - 0007 ZIO-fication of Responders: 05-internals/design/adr/ADR-0007-zio-fication-of-responders.md
               - 0008 Replace Akka with Pekko: 05-internals/design/adr/ADR-0008-replace-akka-with-pekko.md
           - DSP-API Design Principles:
