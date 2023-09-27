@@ -14,9 +14,9 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.duration._
-
 import dsp.errors._
 import dsp.valueobjects.UuidUtil
+import org.apache.pekko.actor.Status.Failure
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -41,7 +41,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util._
-
 import pekko.testkit.ImplicitSender
 
 object ResourcesResponderV2Spec {
@@ -1239,7 +1238,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1286,7 +1285,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1327,7 +1326,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1372,7 +1371,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
@@ -1405,7 +1404,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -1438,7 +1437,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -1510,7 +1509,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -1543,7 +1542,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -1576,7 +1575,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1609,7 +1608,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1632,7 +1631,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1667,7 +1666,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1689,7 +1688,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1705,7 +1704,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -1721,7 +1720,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1768,7 +1767,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
     }
@@ -1785,7 +1784,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
     }
@@ -1827,7 +1826,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1871,7 +1870,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! deleteRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1957,7 +1956,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -2034,7 +2033,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -2207,7 +2206,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! eraseRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -2262,7 +2261,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! eraseRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -2623,7 +2622,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = "http://rdfh.ch/projects/1111",
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }

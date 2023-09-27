@@ -9,11 +9,11 @@ import org.apache.pekko
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
+import org.apache.pekko.actor.Status.Failure
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -36,7 +36,6 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
-
 import pekko.pattern.ask
 import pekko.testkit.ImplicitSender
 
@@ -130,7 +129,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = SharedTestDataADM.imagesUser02
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
@@ -282,7 +281,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -342,7 +341,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -356,7 +355,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
@@ -370,7 +369,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = SharedTestDataADM.imagesUser02
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
@@ -429,7 +428,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         val cause: Throwable = msg.cause
         val errorMsg: String = cause.getMessage
         if (printErrorMessages) println(errorMsg)
@@ -455,7 +454,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -471,7 +470,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -487,7 +486,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -503,7 +502,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -519,7 +518,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -535,7 +534,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -551,7 +550,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -567,7 +566,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -584,7 +583,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -599,7 +598,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = SharedTestDataADM.superUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -686,7 +685,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
@@ -1163,7 +1162,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1212,7 +1211,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1261,7 +1260,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1310,7 +1309,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1359,7 +1358,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1411,7 +1410,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1460,7 +1459,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1513,7 +1512,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1562,7 +1561,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1611,7 +1610,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1660,7 +1659,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1709,7 +1708,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1758,7 +1757,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1807,7 +1806,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1856,7 +1855,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1905,7 +1904,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -1954,7 +1953,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -2004,7 +2003,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -2030,7 +2029,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
@@ -2129,7 +2128,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
@@ -2408,7 +2407,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
@@ -2451,7 +2450,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -2491,7 +2490,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3170,7 +3169,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
@@ -3262,7 +3261,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
@@ -3380,7 +3379,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3420,7 +3419,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3460,7 +3459,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3500,7 +3499,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3542,7 +3541,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
@@ -3583,7 +3582,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3677,7 +3676,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3694,7 +3693,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -3740,14 +3739,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! linkPropGetRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       appActor ! linkValuePropGetRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
@@ -3757,14 +3756,14 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! linkPropGetRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       appActor ! linkValuePropGetRequest
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
@@ -3991,7 +3990,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -4031,7 +4030,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -4146,7 +4145,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -4200,7 +4199,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
@@ -4344,7 +4343,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -4439,7 +4438,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -4640,7 +4639,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
@@ -4780,7 +4779,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -4817,7 +4816,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -4845,7 +4844,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
@@ -4903,7 +4902,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
@@ -4919,7 +4918,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingNonAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
@@ -5016,7 +5015,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -5054,7 +5053,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -5099,7 +5098,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -5148,7 +5147,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
@@ -5193,7 +5192,7 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         if (printErrorMessages) println(msg.cause.getMessage)
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }

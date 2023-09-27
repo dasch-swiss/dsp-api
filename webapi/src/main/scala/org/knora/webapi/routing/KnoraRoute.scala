@@ -29,7 +29,7 @@ import pekko.util.Timeout
  * @param appActor  the main application actor.
  * @param appConfig the application's configuration.
  */
-case class KnoraRouteData(system: pekko.actor.ActorSystem, appActor: pekko.actor.ActorRef, appConfig: AppConfig)
+case class KnoraRouteData(system: ActorSystem, appActor: ActorRef, appConfig: AppConfig)
 
 /**
  * An abstract class providing functionality that is commonly used in implementing Knora routes.
