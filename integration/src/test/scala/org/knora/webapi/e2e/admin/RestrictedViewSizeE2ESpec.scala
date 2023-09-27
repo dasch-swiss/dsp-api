@@ -5,11 +5,14 @@
 
 package org.knora.webapi.e2e.admin
 
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 
 import java.net.URLEncoder
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -23,13 +26,15 @@ class RestrictedViewSizeE2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
   private val testPass  = SharedTestDataADM.testPass
 
   s"The Projects Route 'admin/projects'" when {
-
     "used to set RestrictedViewSize by project IRI" should {
       "return requested value to be set with 200 Response Status" in {
         val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
         val payload    = """{"size":"pct:1"}"""
         val request =
-          Post(s"http://0.0.0.0:5555/admin/projects/iri/$encodedIri/RestrictedViewSettings", payload) ~> addCredentials(
+          Post(
+            s"http://0.0.0.0:5555/admin/projects/iri/$encodedIri/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
             BasicHttpCredentials(rootEmail, testPass)
           )
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -42,7 +47,10 @@ class RestrictedViewSizeE2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
         val payload    = """{"size":"pct:0"}"""
         val request =
-          Post(s"http://0.0.0.0:5555/admin/projects/iri/$encodedIri/RestrictedViewSettings", payload) ~> addCredentials(
+          Post(
+            s"http://0.0.0.0:5555/admin/projects/iri/$encodedIri/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
             BasicHttpCredentials(rootEmail, testPass)
           )
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -55,7 +63,10 @@ class RestrictedViewSizeE2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
         val payload    = """{"size":"pct:1"}"""
         val request =
-          Post(s"http://0.0.0.0:5555/admin/projects/iri/$encodedIri/RestrictedViewSettings", payload) ~> addCredentials(
+          Post(
+            s"http://0.0.0.0:5555/admin/projects/iri/$encodedIri/RestrictedViewSettings",
+            HttpEntity(ContentTypes.`application/json`, payload)
+          ) ~> addCredentials(
             BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
           )
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -70,7 +81,7 @@ class RestrictedViewSizeE2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             s"http://0.0.0.0:5555/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
-            payload
+            HttpEntity(ContentTypes.`application/json`, payload)
           ) ~> addCredentials(
             BasicHttpCredentials(rootEmail, testPass)
           )
@@ -86,7 +97,7 @@ class RestrictedViewSizeE2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             s"http://0.0.0.0:5555/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
-            payload
+            HttpEntity(ContentTypes.`application/json`, payload)
           ) ~> addCredentials(
             BasicHttpCredentials(rootEmail, testPass)
           )
@@ -102,7 +113,7 @@ class RestrictedViewSizeE2ESpec extends E2ESpec with ProjectsADMJsonProtocol {
         val request =
           Post(
             s"http://0.0.0.0:5555/admin/projects/shortcode/$shortcode/RestrictedViewSettings",
-            payload
+            HttpEntity(ContentTypes.`application/json`, payload)
           ) ~> addCredentials(
             BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass)
           )
