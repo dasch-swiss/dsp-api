@@ -143,14 +143,50 @@ object SharedTestDataV2 {
     object Data {
       object Resource1 {
         val resourceIri = "http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A"
+
         object IntValue1 {
-          val valueIri    = "http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/uAdQoNrUR3iCY24IUa9JrA"
+          val encodedUuid = "uAdQoNrUR3iCY24IUa9JrA"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
           val intValue    = 1
-          val valueUuid   = UuidUtil.base64Decode("uAdQoNrUR3iCY24IUa9JrA").get
+          val valueUuid   = UuidUtil.base64Decode(encodedUuid).get
           val permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember"
+        }
+
+        object IntValue2 {
+          val encodedUuid = "9fB9e0uCSpSQtj8vPmpYSg"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val intValue    = 2
+          val valueUuid   = UuidUtil.base64Decode(encodedUuid).get
+        }
+
+        object IntValue3 {
+          val encodedUuid = "PKh9WhhrSL2mFYLtJkNJDw"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val intValue    = 3
+          val valueUuid   = UuidUtil.base64Decode(encodedUuid).get
+        }
+
+        object IntValue4 {
+          val encodedUuid = "BnrfmiVQRXeTLfK1wJoVAA"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val intValue    = 4
+          val valueUuid   = UuidUtil.base64Decode(encodedUuid).get
+        }
+
+        object IntValue5 {
+          val encodedUuid = "RrFwcpKlR5y2spM4fnwrqw"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val intValue    = 5
+          val valueUuid   = UuidUtil.base64Decode(encodedUuid).get
+        }
+
+        object IntValue6 {
+          val encodedUuid = "px9HxJjER3a3b1gYXiBxAw"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val intValue    = 6
+          val valueUuid   = UuidUtil.base64Decode(encodedUuid).get
         }
       }
     }
   }
-
 }

@@ -183,7 +183,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" when {
 
-    "updating values" should {
+    "updating values in general" should {
 
       "remove UUID and permissions from the previous value" in {
         val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
@@ -213,54 +213,29 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
     "updating integer values" should {
 
       "update an integer value" in {
-        val resourceIri: IRI      = SharedTestDataV2.Anything.resource1.resourceIri
-        val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasIntegerPropIriExternal
-        val intValueIri: IRI      = SharedTestDataV2.Anything.resouce1value1.valueIri
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue2.valueIri
+        val intValue                   = -2
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue)
+        val updateValueContent =
+          UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
 
-        // Update the value.
-
-        val intValue = 5
-
-        val updateValueResponse = UnsafeZioRun.runOrThrow(
-          ValuesResponderV2.updateValueV2(
-            UpdateValueContentV2(
-              resourceIri = resourceIri,
-              resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-              propertyIri = propertyIri,
-              valueIri = intValueIri,
-              valueContent = IntegerValueContentV2(
-                ontologySchema = ApiV2Complex,
-                valueHasInteger = intValue
-              )
-            ),
-            anythingUser1,
-            randomUUID
-          )
-        )
-        val updatedValueIri = updateValueResponse.valueIri
-
-        // Read the value back to check that it was added correctly.
-
+        val updateValueResponse =
+          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
         val updatedValueFromTriplestore = getValue(
           resourceIri = resourceIri,
           propertyIriForGravsearch = propertyIri,
           propertyIriInResult = propertyIri,
-          expectedValueIri = updatedValueIri,
+          expectedValueIri = updateValueResponse.valueIri,
           requestingUser = anythingUser1
         )
 
         updatedValueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 =>
-            savedValue.valueHasInteger should ===(intValue)
-            updatedValueFromTriplestore.permissions should ===(SharedTestDataV2.Anything.resouce1value1.permissions)
-            updatedValueFromTriplestore.valueHasUUID should ===(SharedTestDataV2.Anything.resouce1value1.valueHasUUID)
-
-          case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
         }
-
-        // Check that the permissions and UUID were deleted from the previous version of the value.
-        assert(getValueUUID(intValueIri).isEmpty)
-        assert(getValuePermissions(intValueIri).isEmpty)
       }
 
       "update an integer value that belongs to a property of another ontology" in {
@@ -322,41 +297,98 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
       }
 
       "not update an integer value without changing it" in {
-        val resourceIri: IRI      = SharedTestDataV2.Anything.Resource3.resourceIri
-        val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasIntegerPropIriExternal
-        val classIri: SmartIri    = SharedTestDataV2.AnythingOntology.thingClassIriExternal
-        val intValue              = 123454321
-        val intValueIri: IRI      = SharedTestDataV2.Anything.Resource3.intValueIri
-
-        val actual = UnsafeZioRun.run(
-          ValuesResponderV2.updateValueV2(
-            UpdateValueContentV2(
-              resourceIri = resourceIri,
-              resourceClassIri = classIri,
-              propertyIri = propertyIri,
-              valueIri = intValueIri,
-              valueContent = IntegerValueContentV2(
-                ontologySchema = ApiV2Complex,
-                valueHasInteger = intValue,
-                comment = Some("visible int value in main resource")
-              )
-            ),
-            anythingUser1,
-            randomUUID
-          )
-        )
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue3.valueIri
+        val intValue                   = SharedTestDataV2.Values.Data.Resource1.IntValue3.intValue // same as before
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue)
+        val updateValueContent =
+          UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
+        val actual = UnsafeZioRun.run(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
         assertFailsWithA[DuplicateValueException](actual)
       }
 
-      "update an integer value adding a comment" in {}
-      "update an integer value updating a comment" in {}
-      "update an integer value removing a comment" in {}
+      "update an integer value, adding only a comment" in {
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue4.valueIri
+        val intValue                   = SharedTestDataV2.Values.Data.Resource1.IntValue4.intValue
+        val comment                    = Some("Added a comment")
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue, comment)
+        val updateValueContent =
+          UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
 
-    }
+        val updateValueResponse =
+          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        val updatedValueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = updateValueResponse.valueIri,
+          requestingUser = anythingUser1
+        )
 
-    "updating link values" should {
+        updatedValueFromTriplestore.valueContent match {
+          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+        }
+      }
 
-      "..." in {}
+      "update an integer value, updating only its comment" in {
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue5.valueIri
+        val intValue                   = SharedTestDataV2.Values.Data.Resource1.IntValue5.intValue
+        val comment                    = Some("Modified comment")
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue, comment)
+        val updateValueContent =
+          UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
+
+        val updateValueResponse =
+          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        val updatedValueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = updateValueResponse.valueIri,
+          requestingUser = anythingUser1
+        )
+
+        updatedValueFromTriplestore.valueContent match {
+          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+        }
+      }
+
+      "update an integer value, removing only its comment" in {
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue6.valueIri
+        val intValue                   = SharedTestDataV2.Values.Data.Resource1.IntValue6.intValue
+        val comment                    = None
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue, comment)
+        val updateValueContent =
+          UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
+
+        val updateValueResponse =
+          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        val updatedValueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = updateValueResponse.valueIri,
+          requestingUser = anythingUser1
+        )
+
+        updatedValueFromTriplestore.valueContent match {
+          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+        }
+      }
 
     }
 

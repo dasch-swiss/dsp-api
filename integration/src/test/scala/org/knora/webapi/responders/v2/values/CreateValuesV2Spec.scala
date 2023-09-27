@@ -237,6 +237,32 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         }
       }
 
+      "create an integer value with a comment" in {
+        // Add the value.
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 43
+        val comment                    = Some("A Comment")
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue, comment)
+        val createValue                = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+        val createValueResponse =
+          UnsafeZioRun.runOrThrow(ValuesResponderV2.createValueV2(createValue, anythingUser1, randomUUID))
+
+        val valueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = createValueResponse.valueIri,
+          requestingUser = anythingUser1
+        )
+
+        valueFromTriplestore.valueContent match {
+          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
+          case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+        }
+      }
+
       "not create a duplicate integer value" in {
         val intVal                     = IntegerValueContentV2(ApiV2Complex, 1)
         val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
