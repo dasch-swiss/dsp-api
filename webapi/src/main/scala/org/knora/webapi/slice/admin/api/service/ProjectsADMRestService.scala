@@ -25,7 +25,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
 import org.knora.webapi.slice.common.api.RestPermissionService
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 @accessible
 trait ProjectADMRestService {
@@ -72,7 +71,6 @@ trait ProjectADMRestService {
 }
 
 final case class ProjectsADMRestServiceLive(
-  triplestore: TriplestoreService,
   responder: ProjectsResponderADM,
   projectRepo: KnoraProjectRepo,
   projectExportService: ProjectExportService,
@@ -300,7 +298,6 @@ final case class ProjectsADMRestServiceLive(
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
     ProjectsResponderADM
-      with TriplestoreService
       with KnoraProjectRepo
       with ProjectExportService
       with ProjectImportService
