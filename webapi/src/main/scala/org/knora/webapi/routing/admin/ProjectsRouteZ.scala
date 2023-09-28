@@ -246,31 +246,23 @@ final case class ProjectsRouteZ(
       r                   <- projectsService.getProjectRestrictedViewSettings(shortcodeIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
-  private def setProjectRestrictedViewSizeByIri(
-    iri: String,
-    body: Body,
-    user: UserADM
-  ): Task[Response] =
+  private def setProjectRestrictedViewSizeByIri(iri: IRI, body: Body, user: UserADM): Task[Response] =
     for {
       iriDecoded <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
-      id         <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      body       <- body.asString
-      payload    <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizePayload]).mapError(BadRequestException(_))
-      size       <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
-      response   <- projectsService.setProjectRestrictedViewSettings(id, user, size)
-    } yield Response.json(response.toJson)
+      result     <- handleRestrictedViewSizeRequest(iriDecoded, body, user)
+    } yield result
 
-  private def setProjectRestrictedViewSizeByShortcode(
-    shortcode: String,
-    body: Body,
-    user: UserADM
-  ): Task[Response] = for {
-    id       <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-    body     <- body.asString
-    payload  <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizePayload]).mapError(BadRequestException(_))
-    size     <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
-    response <- projectsService.setProjectRestrictedViewSettings(id, user, size)
-  } yield Response.json(response.toJson)
+  private def setProjectRestrictedViewSizeByShortcode(shortcode: String, body: Body, user: UserADM): Task[Response] =
+    handleRestrictedViewSizeRequest(shortcode, body, user)
+
+  private def handleRestrictedViewSizeRequest(shortcode: String, body: Body, user: UserADM) =
+    for {
+      id       <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
+      body     <- body.asString
+      payload  <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizePayload]).mapError(BadRequestException(_))
+      size     <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
+      response <- projectsService.setProjectRestrictedViewSettings(id, user, size)
+    } yield Response.json(response.toJson)
 }
 
 object ProjectsRouteZ {
