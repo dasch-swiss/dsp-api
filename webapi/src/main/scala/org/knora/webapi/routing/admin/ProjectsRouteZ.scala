@@ -12,17 +12,19 @@ import zio.json._
 import zio.stream.ZStream
 
 import java.nio.file.Files
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{
+  ProjectCreatePayloadADM,
+  ProjectIdentifierADM,
+  ProjectSetRestrictedViewSizePayload,
+  ProjectUpdatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRestrictedViewSizePayload
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
@@ -249,15 +251,18 @@ final case class ProjectsRouteZ(
   private def setProjectRestrictedViewSizeByIri(iri: IRI, body: Body, user: UserADM): Task[Response] =
     for {
       iriDecoded <- RouteUtilZ.urlDecode(iri, s"Failed to URL decode IRI parameter $iri.")
-      result     <- handleRestrictedViewSizeRequest(iriDecoded, body, user)
+      id         <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      result     <- handleRestrictedViewSizeRequest(id, body, user)
     } yield result
 
   private def setProjectRestrictedViewSizeByShortcode(shortcode: String, body: Body, user: UserADM): Task[Response] =
-    handleRestrictedViewSizeRequest(shortcode, body, user)
-
-  private def handleRestrictedViewSizeRequest(shortcode: String, body: Body, user: UserADM) =
     for {
-      id       <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
+      id     <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
+      result <- handleRestrictedViewSizeRequest(id, body, user)
+    } yield result
+
+  private def handleRestrictedViewSizeRequest(id: ProjectIdentifierADM, body: Body, user: UserADM) =
+    for {
       body     <- body.asString
       payload  <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizePayload]).mapError(BadRequestException(_))
       size     <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
