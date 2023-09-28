@@ -123,11 +123,11 @@ trait ProjectsResponderADM {
    * Get project's restricted view settings.
    *
    * @param id the project's identifier (IRI / shortcode / shortname)
-   * @return [[ProjectRestrictedViewSettingsResponseADM]]
+   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   def projectRestrictedViewSettingsGetRequestADM(
     id: ProjectIdentifierADM
-  ): Task[ProjectRestrictedViewSettingsResponseADM]
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
 
   /**
    * Creates a project.
@@ -438,16 +438,16 @@ final case class ProjectsResponderADMLive(
    *
    * @param id  the project's identifier (IRI / shortcode / shortname / UUID)
    *
-   * @return [[ProjectRestrictedViewSettingsResponseADM]]
+   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   override def projectRestrictedViewSettingsGetRequestADM(
     id: ProjectIdentifierADM
-  ): Task[ProjectRestrictedViewSettingsResponseADM] =
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     projectRestrictedViewSettingsGetADM(id)
       .flatMap(ZIO.fromOption(_))
       .mapBoth(
         _ => NotFoundException(s"Project '${getId(id)}' not found."),
-        ProjectRestrictedViewSettingsResponseADM
+        ProjectRestrictedViewSettingsGetResponseADM
       )
 
   /**

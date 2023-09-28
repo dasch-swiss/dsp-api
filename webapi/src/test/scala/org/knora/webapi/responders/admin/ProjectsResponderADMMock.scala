@@ -33,7 +33,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object ProjectRestrictedViewSettingsGetADM
       extends Effect[ProjectIdentifierADM, Throwable, Option[ProjectRestrictedViewSettingsADM]]
   object ProjectRestrictedViewSettingsGetRequestADM
-      extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsResponseADM]
+      extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsGetResponseADM]
   object ProjectCreateRequestADM
       extends Effect[(ProjectCreatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
@@ -70,7 +70,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           proxy(ProjectRestrictedViewSettingsGetADM, id)
         override def projectRestrictedViewSettingsGetRequestADM(
           id: ProjectIdentifierADM
-        ): Task[ProjectRestrictedViewSettingsResponseADM] =
+        ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
         override def projectCreateRequestADM(
           createPayload: ProjectCreatePayloadADM,

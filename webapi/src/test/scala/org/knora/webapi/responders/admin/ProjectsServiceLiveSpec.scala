@@ -300,7 +300,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
-        result = Expectation.value(ProjectRestrictedViewSettingsResponseADM(settings))
+        result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
       )
       for {
         _ <- ProjectADMRestService
@@ -314,7 +314,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
-        result = Expectation.value(ProjectRestrictedViewSettingsResponseADM(settings))
+        result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
       )
       for {
         _ <- ProjectADMRestService
@@ -328,7 +328,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       val settings   = ProjectRestrictedViewSettingsADM(Some("!512,512"), Some("path_to_image"))
       val mockResponder = ProjectsResponderADMMock.ProjectRestrictedViewSettingsGetRequestADM(
         assertion = Assertion.equalTo(identifier),
-        result = Expectation.value(ProjectRestrictedViewSettingsResponseADM(settings))
+        result = Expectation.value(ProjectRestrictedViewSettingsGetResponseADM(settings))
       )
       for {
         _ <- ProjectADMRestService

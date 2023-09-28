@@ -63,7 +63,7 @@ trait ProjectADMRestService {
   ): Task[ProjectKeywordsGetResponseADM]
   def getProjectRestrictedViewSettings(
     identifier: ProjectIdentifierADM
-  ): Task[ProjectRestrictedViewSettingsResponseADM]
+  ): Task[ProjectRestrictedViewSettingsGetResponseADM]
   def setProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: UserADM,
@@ -240,11 +240,11 @@ final case class ProjectsADMRestServiceLive(
    *
    * @param id      the [[ProjectIdentifierADM]] of the project
    * @return
-   *     '''success''': the restricted view settings as [[ProjectRestrictedViewSettingsResponseADM]]
+   *     '''success''': the restricted view settings as [[ProjectRestrictedViewSettingsGetResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    */
-  def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsResponseADM] =
+  def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
 
   /**
@@ -253,7 +253,7 @@ final case class ProjectsADMRestServiceLive(
    * @param id the project's id represented by iri, shortocde or shortname,
    * @param user requesting user,
    * @param size value to be set,
-   * @return [[ProjectRestrictedViewSettingsResponseADM]].
+   * @return [[ProjectRestrictedViewSizeResponseADM]].
    */
   override def setProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
