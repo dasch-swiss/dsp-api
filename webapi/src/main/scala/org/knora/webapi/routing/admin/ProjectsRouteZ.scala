@@ -12,19 +12,18 @@ import zio.json._
 import zio.stream.ZStream
 
 import java.nio.file.Files
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectCreatePayloadADM,
-  ProjectIdentifierADM,
-  ProjectSetRestrictedViewSizePayload,
-  ProjectUpdatePayloadADM
-}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRestrictedViewSizePayload
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService

@@ -11,12 +11,10 @@
  *
  * @param iri project's IRI.
  * @param size project's restricted view size.
- * @param watermark project's watermark.
  *
  *@
 @(iri: IRI,
-  size: String,
-  watermark: Option[String])
+  size: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -25,25 +23,13 @@ PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 WITH <http://www.knora.org/data/admin>
 DELETE {
 	<@iri> knora-admin:projectRestrictedViewSize ?prevSize .
-
-    @if(watermark.nonEmpty) {
-        <@iri> knora-admin:projectRestrictedViewWatermark ?prevWatermark .
-    }
 }
 INSERT {
 	<@iri> knora-admin:projectRestrictedViewSize "@size"^^xsd:string .
-
-    @if(watermark.nonEmpty) {
-        <@iri> knora-admin:projectRestrictedViewWatermark "@watermark"^^xsd:string .
-    }
 }
 WHERE {
     <@iri> a knora-admin:knoraProject .
     OPTIONAL {
         <@iri> knora-admin:projectRestrictedViewSize ?prevSize .
-
-        @if(watermark.nonEmpty) {
-            <@iri> knora-admin:projectRestrictedViewWatermark ?prevWatermark .
-        }
     }
 }
