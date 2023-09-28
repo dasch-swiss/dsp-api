@@ -4,7 +4,8 @@
  */
 
 package org.knora.webapi.routing
-import akka.http.scaladsl.server.RequestContext
+
+import org.apache.pekko
 import zio._
 
 import java.net.URLDecoder
@@ -18,6 +19,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import pekko.http.scaladsl.server.RequestContext
 
 object RouteUtilZ {
 

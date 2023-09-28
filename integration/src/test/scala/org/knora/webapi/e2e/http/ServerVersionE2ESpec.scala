@@ -5,15 +5,17 @@
 
 package org.knora.webapi.e2e.http
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.apache.pekko
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration.NANOSECONDS
 
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.version.ServerVersion
+
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**
  * End-to-End (E2E) test specification for testing the server response.
@@ -31,7 +33,7 @@ class ServerVersionE2ESpec extends E2ESpec {
       response.headers.find(_.name == "Server") match {
         case Some(serverHeader: HttpHeader) =>
           serverHeader.value() should include("webapi/")
-          serverHeader.value() should include("akka-http/")
+          serverHeader.value() should include("pekko-http/")
         case None => fail("no server header found")
       }
       response.status should be(StatusCodes.OK)

@@ -7,5 +7,5 @@
 
 The http module holds only a convenience method for adding CORS support
 to api routes. The CORS implementation uses the
-[akka-http-cors](https://github.com/lomigmegard/akka-http-cors)
+[pekko-http-cors](https://github.com/lomigmegard/pekko-http-cors)
 directives implementation.

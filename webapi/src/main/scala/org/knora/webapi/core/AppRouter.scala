@@ -5,9 +5,7 @@
 
 package org.knora.webapi.core
 
-import akka.actor.ActorRef
-import akka.actor.Props
-import akka.routing.RoundRobinPool
+import org.apache.pekko
 import zio._
 import zio.macros.accessible
 
@@ -23,9 +21,12 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
+import pekko.actor.{ActorRef, Props}
+import pekko.routing.RoundRobinPool
+
 @accessible
 trait AppRouter {
-  val system: akka.actor.ActorSystem
+  val system: pekko.actor.ActorSystem
   val ref: ActorRef
 }
 
@@ -62,7 +63,7 @@ object AppRouter {
               with StandoffTagUtilV2
           ]
       } yield new AppRouter {
-        implicit val system: akka.actor.ActorSystem = as.system
+        implicit val system: org.apache.pekko.actor.ActorSystem = as.system
 
         val ref: ActorRef = system.actorOf(
           Props(

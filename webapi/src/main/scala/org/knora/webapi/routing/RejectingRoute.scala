@@ -5,10 +5,8 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.Logger
+import org.apache.pekko
 import zio._
 
 import scala.concurrent.Future
@@ -18,6 +16,10 @@ import scala.util.Success
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
+
+import pekko.http.scaladsl.model.StatusCodes
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Route
 
 /**
  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.

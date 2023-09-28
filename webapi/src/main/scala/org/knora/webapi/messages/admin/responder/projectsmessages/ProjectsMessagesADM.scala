@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.apache.pekko
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
@@ -30,6 +30,8 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+
+import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

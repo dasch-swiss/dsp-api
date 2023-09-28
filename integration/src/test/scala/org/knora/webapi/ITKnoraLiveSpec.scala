@@ -5,11 +5,9 @@
 
 package org.knora.webapi
 
-import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model._
-import akka.testkit.TestKitBase
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
+import org.apache.pekko
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -36,6 +34,10 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.LogAspect
+
+import pekko.http.scaladsl.client.RequestBuilding
+import pekko.http.scaladsl.model._
+import pekko.testkit.TestKitBase
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack and
@@ -86,7 +88,7 @@ abstract class ITKnoraLiveSpec
   val (router: AppRouter, config: AppConfig) =
     Unsafe.unsafe(implicit u => runtime.unsafe.run(routerAndConfig).getOrThrowFiberFailure())
 
-  implicit lazy val system: akka.actor.ActorSystem     = router.system
+  implicit lazy val system: pekko.actor.ActorSystem    = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass())

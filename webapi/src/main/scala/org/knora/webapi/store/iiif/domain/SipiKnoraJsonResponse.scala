@@ -5,11 +5,13 @@
 
 package org.knora.webapi.store.iiif.domain
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.pekko
 import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonFormat
 
 import org.knora.webapi.store.iiif.errors.SipiException
+
+import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 /**
  * Represents a response from Sipi's `knora.json` route.

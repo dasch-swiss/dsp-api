@@ -5,13 +5,15 @@
 
 package org.knora.webapi.e2e
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.http.handler
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Route
 
 /**
  * Route (R2R) test specification for testing exception handling.

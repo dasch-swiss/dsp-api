@@ -5,8 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.Accept
+import org.apache.pekko
 import spray.json.JsValue
 import spray.json.JsonParser
 
@@ -22,6 +21,9 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.routing.v2.ListsRouteV2
 import org.knora.webapi.util.FileUtil
+
+import pekko.http.javadsl.model.StatusCodes
+import pekko.http.scaladsl.model.headers.Accept
 
 /**
  * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented

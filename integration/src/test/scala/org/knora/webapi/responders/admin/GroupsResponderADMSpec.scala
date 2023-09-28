@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.actor.Status.Failure
+import org.apache.pekko
 
 import java.util.UUID
 
@@ -21,6 +21,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
+
+import pekko.actor.Status.Failure
 
 /**
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.GroupsResponderADMSpec]] actor.

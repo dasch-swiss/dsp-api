@@ -53,18 +53,16 @@ object GravsearchQueryOptimisationFactory {
     typeInspectionResult: GravsearchTypeInspectionResult,
     querySchema: ApiV2Schema
   ): GravsearchQueryOptimisationFeature =
-    new GravsearchQueryOptimisationFeature(
-      typeInspectionResult: GravsearchTypeInspectionResult,
-      querySchema: ApiV2Schema
-    ) {
+    new GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
       override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-        new ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult, querySchema).optimiseQueryPatterns(
-          new RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult, querySchema)
-            .optimiseQueryPatterns(
-              new RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult, querySchema)
-                .optimiseQueryPatterns(patterns)
-            )
-        )
+        new ReorderPatternsByDependencyOptimisationFeature(this.typeInspectionResult, querySchema)
+          .optimiseQueryPatterns(
+            new RemoveEntitiesInferredFromPropertyOptimisationFeature(this.typeInspectionResult, querySchema)
+              .optimiseQueryPatterns(
+                new RemoveRedundantKnoraApiResourceOptimisationFeature(this.typeInspectionResult, querySchema)
+                  .optimiseQueryPatterns(patterns)
+              )
+          )
 
     }
 }

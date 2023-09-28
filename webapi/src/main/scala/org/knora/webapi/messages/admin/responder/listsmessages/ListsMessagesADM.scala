@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.pekko
 import spray.json._
 
 import java.util.UUID
@@ -25,6 +25,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+
+import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 /////////////// API requests
 

@@ -5,14 +5,16 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.get
-import akka.http.scaladsl.server.Directives.path
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import spray.json.JsObject
 import spray.json.JsString
 
 import org.knora.webapi.http.version.BuildInfo
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.server.Directives.get
+import pekko.http.scaladsl.server.Directives.path
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides the '/version' endpoint serving the components versions.
@@ -28,12 +30,12 @@ final case class VersionRoute() {
       entity = HttpEntity(
         ContentTypes.`application/json`,
         JsObject(
-          "name"     -> JsString("version"),
-          "webapi"   -> JsString(BuildInfo.version),
-          "scala"    -> JsString(BuildInfo.scalaVersion),
-          "akkaHttp" -> JsString(BuildInfo.akkaHttp),
-          "sipi"     -> JsString(sipiVersion),
-          "fuseki"   -> JsString(fusekiVersion)
+          "name"      -> JsString("version"),
+          "webapi"    -> JsString(BuildInfo.version),
+          "scala"     -> JsString(BuildInfo.scalaVersion),
+          "pekkoHttp" -> JsString(BuildInfo.pekkoHttp),
+          "sipi"      -> JsString(sipiVersion),
+          "fuseki"    -> JsString(fusekiVersion)
         ).prettyPrint
       )
     )

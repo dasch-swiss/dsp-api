@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import akka.http.scaladsl.model.MediaType
+import org.apache.pekko
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -23,6 +23,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
+
+import pekko.http.scaladsl.model.MediaType
 
 /**
  * A trait for supported RDF formats.

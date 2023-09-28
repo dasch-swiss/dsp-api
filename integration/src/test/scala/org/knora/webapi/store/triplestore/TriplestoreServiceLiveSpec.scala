@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.triplestore
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import scala.concurrent.duration._
 
@@ -15,6 +15,8 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+
+import pekko.testkit.ImplicitSender
 
 class TriplestoreServiceLiveSpec extends CoreSpec with ImplicitSender {
 

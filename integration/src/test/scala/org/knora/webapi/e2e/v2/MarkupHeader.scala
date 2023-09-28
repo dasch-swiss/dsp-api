@@ -5,18 +5,20 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.scaladsl.model.headers.ModeledCustomHeader
-import akka.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
+import org.apache.pekko
 
 import scala.util.Try
 
 import org.knora.webapi.routing.RouteUtilV2
 
+import pekko.http.scaladsl.model.headers.ModeledCustomHeader
+import pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
+
 /**
- * A custom Akka HTTP header representing [[RouteUtilV2.MARKUP_HEADER]], which a client can send to specify
+ * A custom Pekko HTTP header representing [[RouteUtilV2.MARKUP_HEADER]], which a client can send to specify
  * how text markup should be returned in an API response.
  *
- * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
+ * The definition follows [[https://doc.pekko.io/docs/pekko-http/current/common/http-model.html#custom-headers]].
  */
 final class MarkupHeader(token: String) extends ModeledCustomHeader[MarkupHeader] {
   override def renderInRequests             = true

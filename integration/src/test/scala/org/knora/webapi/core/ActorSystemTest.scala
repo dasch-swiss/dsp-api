@@ -5,6 +5,7 @@
 
 package org.knora.webapi.core
 
+import org.apache.pekko
 import zio._
 
 import org.knora.webapi.config.AppConfig
@@ -12,13 +13,13 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 object ActorSystemTest {
 
-  def layer(sys: akka.actor.ActorSystem): ZLayer[AppConfig, Nothing, ActorSystem] =
+  def layer(sys: pekko.actor.ActorSystem): ZLayer[AppConfig, Nothing, ActorSystem] =
     ZLayer.scoped {
       for {
         appConfig <- ZIO.service[AppConfig]
         context   <- ZIO.executor.map(_.asExecutionContext)
       } yield new ActorSystem {
-        override val system: akka.actor.ActorSystem             = sys
+        override val system: pekko.actor.ActorSystem            = sys
         override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(appConfig)
       }
     }

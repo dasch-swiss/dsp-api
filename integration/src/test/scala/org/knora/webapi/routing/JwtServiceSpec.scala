@@ -5,7 +5,7 @@
 
 package org.knora.webapi.routing
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtSprayJson
 import spray.json.JsString
@@ -15,6 +15,8 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.config.JwtConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.testkit.ImplicitSender
 
 class JwtServiceSpec extends CoreSpec with ImplicitSender {
 

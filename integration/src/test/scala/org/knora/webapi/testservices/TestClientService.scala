@@ -5,8 +5,6 @@
 
 package org.knora.webapi.testservices
 
-import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.apache.http
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
@@ -20,6 +18,7 @@ import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
+import org.apache.pekko
 import spray.json.JsObject
 import spray.json._
 import zio._
@@ -47,6 +46,9 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 
+import pekko.http.scaladsl.client.RequestBuilding
+import pekko.http.scaladsl.unmarshalling.Unmarshal
+
 /**
  * Represents a file to be uploaded to the IIF Service.
  *
@@ -64,11 +66,11 @@ final case class FileToUpload(path: Path, mimeType: ContentType)
  */
 final case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
-final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, sys: akka.actor.ActorSystem)
+final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, sys: pekko.actor.ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
 
-  implicit val system: akka.actor.ActorSystem     = sys
+  implicit val system: pekko.actor.ActorSystem    = sys
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
   case class TestClientTimeoutException(msg: String) extends Exception
@@ -80,9 +82,9 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
 
     val loadRequest = Post(
       config.knoraApi.internalKnoraApiBaseUrl + "/admin/store/ResetTriplestoreContent",
-      akka.http.scaladsl.model
+      pekko.http.scaladsl.model
         .HttpEntity(
-          akka.http.scaladsl.model.ContentTypes.`application/json`,
+          pekko.http.scaladsl.model.ContentTypes.`application/json`,
           rdfDataObjects.toJson.compactPrint
         )
     )
@@ -107,13 +109,13 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    * @return the response.
    */
   def singleAwaitingRequest(
-    request: akka.http.scaladsl.model.HttpRequest,
+    request: pekko.http.scaladsl.model.HttpRequest,
     timeout: Option[zio.Duration] = None,
     printFailure: Boolean = false
-  ): Task[akka.http.scaladsl.model.HttpResponse] =
+  ): Task[pekko.http.scaladsl.model.HttpResponse] =
     ZIO
-      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
-        akka.http.scaladsl.Http().singleRequest(request).map { resp =>
+      .fromFuture[pekko.http.scaladsl.model.HttpResponse](_ =>
+        pekko.http.scaladsl.Http().singleRequest(request).map { resp =>
           if (printFailure && resp.status.isFailure()) {
             Unmarshal(resp.entity).to[String].map { body =>
               println(s"Request failed with status ${resp.status} and body $body")
@@ -132,7 +134,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   /**
    * Performs a http request and returns the body of the response.
    */
-  def getResponseString(request: akka.http.scaladsl.model.HttpRequest): Task[String] =
+  def getResponseString(request: pekko.http.scaladsl.model.HttpRequest): Task[String] =
     for {
       response <- singleAwaitingRequest(request)
       body <-
@@ -151,7 +153,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   /**
    * Performs a http request and dosn't return the string (only error channel).
    */
-  def checkResponseOK(request: akka.http.scaladsl.model.HttpRequest): Task[Unit] =
+  def checkResponseOK(request: pekko.http.scaladsl.model.HttpRequest): Task[Unit] =
     for {
       // _        <- ZIO.debug(request)
       _ <- getResponseString(request)
@@ -160,7 +162,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   /**
    * Performs a http request and tries to parse the response body as Json.
    */
-  def getResponseJson(request: akka.http.scaladsl.model.HttpRequest): Task[JsObject] =
+  def getResponseJson(request: pekko.http.scaladsl.model.HttpRequest): Task[JsObject] =
     for {
       body <- getResponseString(request)
       json <- ZIO.succeed(body.parseJson.asJsObject)
@@ -169,7 +171,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   /**
    * Performs a http request and tries to parse the response body as JsonLD.
    */
-  def getResponseJsonLD(request: akka.http.scaladsl.model.HttpRequest): Task[JsonLDDocument] =
+  def getResponseJsonLD(request: pekko.http.scaladsl.model.HttpRequest): Task[JsonLDDocument] =
     for {
       body <- getResponseString(request)
       // _    <- ZIO.debug(body)
@@ -373,8 +375,8 @@ object TestClientService {
   /**
    * Releases the httpClient, freeing all resources.
    */
-  private def release(httpClient: CloseableHttpClient)(implicit system: akka.actor.ActorSystem) = ZIO.attemptBlocking {
-    akka.http.scaladsl.Http().shutdownAllConnectionPools()
+  private def release(httpClient: CloseableHttpClient)(implicit system: pekko.actor.ActorSystem) = ZIO.attemptBlocking {
+    pekko.http.scaladsl.Http().shutdownAllConnectionPools()
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 

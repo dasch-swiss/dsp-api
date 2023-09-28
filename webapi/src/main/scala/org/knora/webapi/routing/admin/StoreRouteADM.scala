@@ -5,8 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio.Runtime
 
 import org.knora.webapi.core.MessageRelay
@@ -18,6 +17,9 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.runJsonRoute
+
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Route
 
 /**
  * A route used to send requests which can directly affect the data stored inside the triplestore.

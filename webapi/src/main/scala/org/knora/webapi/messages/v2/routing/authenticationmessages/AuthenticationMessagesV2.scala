@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.v2.routing.authenticationmessages
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.pekko
 import spray.json._
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
@@ -13,6 +13,8 @@ import zio.json.JsonCodec
 import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+
+import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

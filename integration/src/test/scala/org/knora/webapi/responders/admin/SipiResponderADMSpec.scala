@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.testkit._
+import org.apache.pekko
 
 import scala.concurrent.duration._
 
@@ -14,6 +14,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestric
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.testkit._
 
 /**
  * Tests [[SipiResponderADM]].

@@ -5,9 +5,11 @@
 
 package org.knora.webapi.http.version
 
-import akka.http.scaladsl.model.headers.Server
+import org.apache.pekko
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+
+import pekko.http.scaladsl.model.headers.Server
 
 /**
  * This spec is used to test 'ServerVersion'.
@@ -17,7 +19,7 @@ class ServerVersionSpec extends AnyWordSpecLike with Matchers {
     "contain the necessary information" in {
       val header: Server = ServerVersion.serverVersionHeader
       header.toString() should include("webapi/")
-      header.toString() should include("akka-http/")
+      header.toString() should include("pekko-http/")
     }
   }
 }

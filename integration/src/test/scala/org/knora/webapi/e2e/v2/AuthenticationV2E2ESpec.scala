@@ -5,9 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.apache.pekko
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -20,6 +18,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestString
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers._
+import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * End-to-End (E2E) test specification for testing authentication.

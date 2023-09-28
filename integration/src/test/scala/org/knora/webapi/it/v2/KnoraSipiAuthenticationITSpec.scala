@@ -5,9 +5,7 @@
 
 package org.knora.webapi.it.v2
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.apache.pekko
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -21,6 +19,10 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.

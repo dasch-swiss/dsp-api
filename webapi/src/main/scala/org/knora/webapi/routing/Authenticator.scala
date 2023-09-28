@@ -5,14 +5,9 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers
-import akka.http.scaladsl.model.headers.HttpCookie
-import akka.http.scaladsl.model.headers.HttpCookiePair
-import akka.http.scaladsl.server.RequestContext
-import akka.util.ByteString
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.codec.binary.Base32
+import org.apache.pekko
 import org.slf4j.LoggerFactory
 import spray.json._
 import zio._
@@ -37,6 +32,13 @@ import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_INACTIVE
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_NOT_FOUND
 import org.knora.webapi.util.cache.CacheUtil
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers
+import pekko.http.scaladsl.model.headers.HttpCookie
+import pekko.http.scaladsl.model.headers.HttpCookiePair
+import pekko.http.scaladsl.server.RequestContext
+import pekko.util.ByteString
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]

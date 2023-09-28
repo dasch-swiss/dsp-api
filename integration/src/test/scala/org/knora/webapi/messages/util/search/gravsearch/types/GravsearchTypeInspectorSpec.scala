@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import zio.RIO
 import zio.ZIO
@@ -19,6 +19,8 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.testkit.ImplicitSender
 
 /**
  * Tests Gravsearch type inspection.

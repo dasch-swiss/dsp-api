@@ -5,8 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.actor.Status.Failure
-import akka.testkit._
+import org.apache.pekko
 
 import java.util.UUID
 
@@ -27,6 +26,9 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.util.MutableTestIri
+
+import pekko.actor.Status.Failure
+import pekko.testkit._
 
 /**
  * Tests [[ListsResponderADM]].

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.core
 
+import org.apache.pekko
 import zio._
 
 import org.knora.webapi.config.AppConfig.AppConfigurations
@@ -220,11 +221,11 @@ object LayersTest {
   /**
    * Provides a layer for integration tests which depend on Fuseki as Testcontainers.
    * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl]]
-   * @param system An optional [[akka.actor.ActorSystem]] for use with Akka's [[akka.testkit.TestKit]]
+   * @param system An optional [[pekko.actor.ActorSystem]] for use with Akka's [[pekko.testkit.TestKit]]
    * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */
   def integrationTestsWithFusekiTestcontainers(
-    system: Option[akka.actor.ActorSystem] = None
+    system: Option[pekko.actor.ActorSystem] = None
   ): ULayer[DefaultTestEnvironmentWithoutSipi] = {
     // Due to bug in Scala 2 compiler invoking methods with by-name parameters in provide/provideSome method does not work
     // assign the layer to a temp val and use it in the ZLayer.make

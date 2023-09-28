@@ -5,10 +5,9 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import akka.actor.ActorRef
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.apache.pekko
 import zio._
 
 import java.time.Instant
@@ -42,6 +41,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
+
+import pekko.actor.ActorRef
+import pekko.util.Timeout
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

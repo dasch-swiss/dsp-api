@@ -5,9 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.Accept
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko
 import spray.json._
 import zio._
 
@@ -47,6 +45,10 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.ontology.domain.model.Cardinality._
 import org.knora.webapi.util._
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers.Accept
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser

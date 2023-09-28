@@ -5,8 +5,7 @@
 
 package org.knora.webapi.e2e
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.apache.pekko
 
 import java.nio.file.Paths
 import scala.concurrent.duration.FiniteDuration
@@ -17,6 +16,9 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.util.FileUtil
+
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**
  * Tests [[InstanceChecker]].
