@@ -852,7 +852,7 @@ curl --request POST 'http://0.0.0.0:5555/admin/projects/shortcode/0001/Restricte
 
 Example response:
 
-```jsonc
+```json
 {
     "size": "!512,512"
 }
