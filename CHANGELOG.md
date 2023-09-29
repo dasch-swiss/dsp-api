@@ -1,5 +1,19 @@
 # Changelog
 
+## [30.3.0](https://github.com/dasch-swiss/dsp-api/compare/v30.2.1...v30.3.0) (2023-09-28)
+
+
+### Enhancements
+
+* update Shortname value object ([#2851](https://github.com/dasch-swiss/dsp-api/issues/2851)) ([35187ca](https://github.com/dasch-swiss/dsp-api/commit/35187ca32cb4c0314683009457fe32f3a1a091a3))
+
+
+### Maintenance
+
+* add GH action that checks PR title ([#2849](https://github.com/dasch-swiss/dsp-api/issues/2849)) ([e6c4b90](https://github.com/dasch-swiss/dsp-api/commit/e6c4b907c9ba5cd966a5940a4cc704f55aa2871c))
+* Replace Akka with Pekko ([#2848](https://github.com/dasch-swiss/dsp-api/issues/2848)) ([d343d8e](https://github.com/dasch-swiss/dsp-api/commit/d343d8e87a3db8092e402f446429bedc6d21fdb6))
+* Update and rename check-pr-title workflow ([#2852](https://github.com/dasch-swiss/dsp-api/issues/2852)) ([fde1faf](https://github.com/dasch-swiss/dsp-api/commit/fde1faf5b4722275d6910e0f06174fcbbaaaa2ae))
+
 ## [30.2.1](https://github.com/dasch-swiss/dsp-api/compare/v30.2.0...v30.2.1) (2023-09-15)
 
 
