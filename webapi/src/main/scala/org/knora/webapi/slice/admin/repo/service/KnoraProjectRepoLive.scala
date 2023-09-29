@@ -9,6 +9,7 @@ import play.twirl.api.TxtFormat
 import zio._
 
 import dsp.valueobjects.Project
+import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
@@ -33,6 +34,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
@@ -103,6 +105,15 @@ final case class KnoraProjectRepoLive(
     triplestore
       .query(Select(query))
       .map(_.results.bindings.flatMap(_.rowMap.get("ontologyIri")).map(InternalIri).toList)
+  }
+
+  override def setProjectRestrictedViewSize(
+    project: KnoraProject,
+    size: RestrictedViewSize
+  ): Task[Unit] = {
+    val query = sparql.admin.txt
+      .setProjectRestrictedViewSettings(project.id.value, size.value)
+    triplestore.query(Update(query.toString))
   }
 }
 

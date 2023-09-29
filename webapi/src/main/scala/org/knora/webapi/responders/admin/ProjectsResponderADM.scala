@@ -114,7 +114,7 @@ trait ProjectsResponderADM {
   /**
    * Get project's restricted view settings.
    *
-   * @param id the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id the project's identifier (IRI / shortcode / shortname)
    * @return [[ProjectRestrictedViewSettingsADM]]
    */
   def projectRestrictedViewSettingsGetADM(id: ProjectIdentifierADM): Task[Option[ProjectRestrictedViewSettingsADM]]
@@ -122,7 +122,7 @@ trait ProjectsResponderADM {
   /**
    * Get project's restricted view settings.
    *
-   * @param id the project's identifier (IRI / shortcode / shortname / UUID)
+   * @param id the project's identifier (IRI / shortcode / shortname)
    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
    */
   def projectRestrictedViewSettingsGetRequestADM(
@@ -646,7 +646,6 @@ final case class ProjectsResponderADMLive(
           )
         )
     }
-
   }
 
   /**
@@ -816,6 +815,9 @@ final case class ProjectsResponderADMLive(
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
+//      TODO: DEV-2626 add default value here
+//        defaultSize = ""
+//        _          <- setProjectRestrictedViewSettings(id.value, requestingUser, defaultSize)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 

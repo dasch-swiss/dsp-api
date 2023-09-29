@@ -10,6 +10,7 @@ import zio._
 import zio.mock._
 
 import dsp.valueobjects.Iri._
+import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
@@ -97,6 +98,12 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         override def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse] = ???
 
         override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = ???
+
+        override def setProjectRestrictedViewSettings(
+          id: ProjectIdentifierADM,
+          user: UserADM,
+          size: RestrictedViewSize
+        ): Task[ProjectRestrictedViewSizeResponseADM] = ???
       }
     }
 }
