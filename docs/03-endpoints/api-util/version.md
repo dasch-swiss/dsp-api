@@ -11,7 +11,7 @@ The response has the type `application/json` and contains the following informat
 1. name: has the value "version"
 
 2. version numbers for the following components:
-    - akkaHttp
+    - pekkoHttp
     - gdbFree
     - gdbSE
     - sbt
@@ -29,7 +29,7 @@ The response has the type `application/json` and contains the following informat
 
 ```json
 {
-    "akkaHttp": "10.1.7",
+    "pekkoHttp": "10.1.7",
     "gdbFree": "8.10.0-free",
     "gdbSE": "8.5.0-se",
     "name": "version",

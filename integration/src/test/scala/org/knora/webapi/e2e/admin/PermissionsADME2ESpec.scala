@@ -5,8 +5,7 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko
 import spray.json._
 import zio.durationInt
 
@@ -20,6 +19,9 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.util.AkkaHttpUtils
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 /**
  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.

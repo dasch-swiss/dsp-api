@@ -5,10 +5,7 @@
 
 package org.knora.webapi.e2e.v2.ontology
 
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko
 import spray.json.JsString
 
 import dsp.errors.BadRequestException
@@ -19,6 +16,11 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
+
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.HttpResponse
+import pekko.http.scaladsl.model.StatusCodes
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
 
 class CardinalitiesV2E2ESpec extends E2ESpec {
 

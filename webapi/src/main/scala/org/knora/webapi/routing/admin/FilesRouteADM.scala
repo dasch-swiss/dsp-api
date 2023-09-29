@@ -5,8 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 
 import dsp.errors.BadRequestException
@@ -18,6 +17,9 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
+
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a routing function for the API that Sipi connects to.

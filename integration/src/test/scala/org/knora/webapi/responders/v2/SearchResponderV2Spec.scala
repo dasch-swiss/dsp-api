@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
@@ -20,6 +20,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.testkit.ImplicitSender
 
 /**
  * Tests [[SearchResponderV2]].
@@ -99,7 +101,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[BadRequestException])
       }
 

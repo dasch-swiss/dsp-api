@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import akka.event.LogSource
 import com.typesafe.scalalogging.LazyLogging
+import org.apache.pekko
 import zio.Task
 import zio.ZIO
 
@@ -27,6 +27,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequ
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+
+import pekko.event.LogSource
 
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
@@ -1660,7 +1662,7 @@ object InferringGravsearchTypeInspector {
   /**
    * Provides the string representation of the companion class in log messages.
    *
-   * See [[https://doc.akka.io/docs/akka/current/logging.html#translating-log-source-to-string-and-class]].
+   * See [[https://doc.pekko.io/docs/akka/current/logging.html#translating-log-source-to-string-and-class]].
    */
   implicit val logSource: LogSource[AnyRef] = (o: AnyRef) => o.getClass.getName
 }

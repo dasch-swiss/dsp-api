@@ -5,9 +5,7 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.RouteResult
+import org.apache.pekko
 import zio._
 import zio.prelude.Validation
 
@@ -26,6 +24,10 @@ import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.RouteResult
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
@@ -105,7 +107,7 @@ object RouteUtilV2 {
    * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
    * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
    *
-   * @param ctx the akka-http [[RequestContext]].
+   * @param ctx the pekko-http [[RequestContext]].
    * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
    */
   def getOntologySchema(ctx: RequestContext): IO[BadRequestException, ApiV2Schema] = {
@@ -126,7 +128,7 @@ object RouteUtilV2 {
    * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
    * default of [[MarkupAsXml]] is returned.
    *
-   * @param requestContext the akka-http [[RequestContext]].
+   * @param requestContext the pekko-http [[RequestContext]].
    * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
    *         in the request.
    */
@@ -184,7 +186,7 @@ object RouteUtilV2 {
   /**
    * Gets the project IRI specified in a Knora-specific HTTP header.
    *
-   * @param requestContext the akka-http [[RequestContext]].
+   * @param requestContext the pekko-http [[RequestContext]].
    * @return The specified project IRI, or [[None]] if no project header was included in the request.
    *         Fails with a [[BadRequestException]] if the project IRI is invalid.
    */
@@ -200,7 +202,7 @@ object RouteUtilV2 {
   /**
    * Gets the required project IRI specified in a Knora-specific HTTP header [[PROJECT_HEADER]].
    *
-   * @param requestContext The akka-http [[RequestContext]].
+   * @param requestContext The pekko-http [[RequestContext]].
    * @return The  [[SmartIri]] of the project provided in the header.
    *         Fails with a [[BadRequestException]] if the project IRI is invalid.
    *         Fails with a [[BadRequestException]] if the project header is missing.
@@ -215,7 +217,7 @@ object RouteUtilV2 {
    * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
    *
    * @param requestMessageF     A [[Future]] containing a [[KnoraRequestV2]] message that should be evaluated.
-   * @param requestContext      The akka-http [[RequestContext]].
+   * @param requestContext      The pekko-http [[RequestContext]].
    * @param targetSchema        The API schema that should be used in the response, default is [[ApiV2Complex]].
    * @param schemaOptionsOption The schema options that should be used when processing the request.
    *                            Uses RouteUtilV2.getSchemaOptions if not present.
@@ -238,7 +240,7 @@ object RouteUtilV2 {
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
    *
    * @param requestZio          A Task containing a [[KnoraRequestV2]] message that should be evaluated.
-   * @param requestContext      The akka-http [[RequestContext]].
+   * @param requestContext      The pekko-http [[RequestContext]].
    * @param targetSchemaTask    The API schema that should be used in the response, default is [[ApiV2Complex]].
    * @param schemaOptionsOption The schema options that should be used when processing the request.
    *                            Uses RouteUtilV2.getSchemaOptions if not present.
@@ -260,7 +262,7 @@ object RouteUtilV2 {
    * The response is calculated by _unsafely_ running the `responseZio` in the provided [[zio.Runtime]]
    *
    * @param responseTask         A [[Task]] containing a [[KnoraResponseV2]] message that will be run unsafe.
-   * @param requestContext       The akka-http [[RequestContext]].
+   * @param requestContext       The pekko-http [[RequestContext]].
    * @param targetSchemaTask     The API schema that should be used in the response, default is ApiV2Complex.
    * @param schemaOptionsOption  The schema options that should be used when processing the request.
    *                             Uses RouteUtilV2.getSchemaOptions if not present.
@@ -269,7 +271,7 @@ object RouteUtilV2 {
    *
    * @tparam R                The requirements for the response zio, must be present in the [[zio.Runtime]].
    *
-   * @return a [[Future]]     Containing the [[RouteResult]] for Akka HTTP.
+   * @return a [[Future]]     Containing the [[RouteResult]] for Pekko HTTP.
    */
   def completeResponse[R](
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
@@ -294,7 +296,7 @@ object RouteUtilV2 {
    * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
    *
    * @param requestTask          a [[Task]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
-   * @param requestContext       the akka-http [[RequestContext]].
+   * @param requestContext       the pekko-http [[RequestContext]].
    *
    * @return a [[Future]] containing a [[RouteResult]].
    */
@@ -344,11 +346,11 @@ object RouteUtilV2 {
 
   /**
    * Completes the HTTP request in the [[RequestContext]] by _unsafely_ running the ZIO.
-   * @param ctx The akka-http [[RequestContext]].
+   * @param ctx The pekko-http [[RequestContext]].
    * @param task The ZIO to run.
    * @param runtime The [[zio.Runtime]] used for executing the ZIO.
    * @tparam R The requirements for the ZIO, must be present in the [[zio.Runtime]].
-   * @return A [[Future]] containing the [[RouteResult]] for Akka HTTP.
+   * @return A [[Future]] containing the [[RouteResult]] for Pekko HTTP.
    */
   def complete[R](ctx: RequestContext, task: ZIO[R, Throwable, HttpResponse])(implicit
     runtime: Runtime[R]

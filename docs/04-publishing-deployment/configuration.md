@@ -6,26 +6,26 @@
 # Configuration
 
 All configuration for Knora is done in `application.conf`. Besides the Knora application
-specific configuration, there we can also find configuration for the underlying Akka library.
+specific configuration, there we can also find configuration for the underlying Pekko library.
 
 For optimal performance it is important to tune the configuration to the hardware used, mainly
 to the number of CPUs and cores per CPU.
 
 The relevant sections for tuning are:
 
- - `akka.actor.deployment`
- - `knora-actor-dispatcher`
- - `knora-blocking-dispatcher`
+- `pekko.actor.deployment`
+- `knora-actor-dispatcher`
+- `knora-blocking-dispatcher`
 
 ## System Environment Variables
- 
+
 A number of core settings is additionally configurable through system environment variables. These are:
- 
+
 | key in application.conf                | environment variable                            | default value         |
 |----------------------------------------|-------------------------------------------------|-----------------------|
-| akka.log-config-on-start               | KNORA_AKKA_LOG_CONFIG_ON_START                  | off                   |
-| akka.loglevel                          | KNORA_AKKA_LOGLEVEL                             | INFO                  |
-| akka.stdout-loglevel                   | KNORA_AKKA_STDOUT_LOGLEVEL                      | INFO                  |
+| pekko.log-config-on-start              | KNORA_AKKA_LOG_CONFIG_ON_START                  | off                   |
+| pekko.loglevel                         | KNORA_AKKA_LOGLEVEL                             | INFO                  |
+| pekko.stdout-loglevel                  | KNORA_AKKA_STDOUT_LOGLEVEL                      | INFO                  |
 | app.print-extended-config              | KNORA_WEBAPI_PRINT_EXTENDED_CONFIG              | false                 |
 | app.bcrypt-password-strength           | KNORA_WEBAPI_BCRYPT_PASSWORD_STRENGTH           | 12                    |
 | app.jwt.secret                         | KNORA_WEBAPI_JWT_SECRET_KEY                     | super-secret-key      |
@@ -74,8 +74,8 @@ route which contains this string.
 There is a number of flags that can be set on startup, they will
 override any value set in the application configuration file:
 
-  - `loadDemoData`, `--loadDemoData`, `-d`: Loads the demo data.
-  - `allowReloadOverHTTP`, `--allow-reload-over-http`, `-r`: Allows
-    reloading of data over HTTP.
-  - `-c`: Print the configuration at startup.
-  - `--help`: Shows the help message with all startup flags.
+- `loadDemoData`, `--loadDemoData`, `-d`: Loads the demo data.
+- `allowReloadOverHTTP`, `--allow-reload-over-http`, `-r`: Allows
+  reloading of data over HTTP.
+- `-c`: Print the configuration at startup.
+- `--help`: Shows the help message with all startup flags.

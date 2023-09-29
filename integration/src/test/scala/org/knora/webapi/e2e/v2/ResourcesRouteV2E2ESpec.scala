@@ -5,15 +5,9 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.MediaRange
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.Accept
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import org.apache.pekko
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -52,6 +46,14 @@ import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.HttpResponse
+import pekko.http.scaladsl.model.MediaRange
+import pekko.http.scaladsl.model.StatusCodes
+import pekko.http.scaladsl.model.headers.Accept
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * Tests the API v2 resources route.
@@ -2287,8 +2289,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 }
 
 object ResourcesRouteV2E2ESpec {
-  val config: Config = ConfigFactory.parseString("""akka.loglevel = "DEBUG"
-                                                   |akka.stdout-loglevel = "DEBUG"
+  val config: Config = ConfigFactory.parseString("""pekko.loglevel = "DEBUG"
+                                                   |pekko.stdout-loglevel = "DEBUG"
                                                    |app.triplestore.profile-queries = false
         """.stripMargin)
 }

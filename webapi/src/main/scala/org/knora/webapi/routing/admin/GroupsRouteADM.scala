@@ -5,9 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 import zio.prelude.Validation
 
@@ -23,6 +21,10 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing.RouteUtilZ
+
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.PathMatcher
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a routing function for API routes that deal with groups.

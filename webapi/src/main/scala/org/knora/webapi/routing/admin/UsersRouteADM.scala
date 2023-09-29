@@ -5,10 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 
 import dsp.errors.BadRequestException
@@ -27,8 +24,13 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
 
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.PathMatcher
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.Route
+
 /**
- * Provides an akka-http-routing function for API routes that deal with users.
+ * Provides an pekko-http-routing function for API routes that deal with users.
  */
 final case class UsersRouteADM()(
   private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]

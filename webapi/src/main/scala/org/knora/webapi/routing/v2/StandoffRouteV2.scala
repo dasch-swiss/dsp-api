@@ -5,12 +5,8 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.Multipart
-import akka.http.scaladsl.model.Multipart.BodyPart
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
+import org.apache.pekko
 import zio.Runtime
 import zio.ZIO
 
@@ -30,6 +26,12 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.model.Multipart
+import pekko.http.scaladsl.model.Multipart.BodyPart
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a function for API routes that deal with search.

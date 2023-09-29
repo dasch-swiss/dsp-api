@@ -5,18 +5,20 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.server.Directive0
-import akka.http.scaladsl.server.Directives._
+import org.apache.pekko
 
 import org.knora.webapi.instrumentation.InstrumentationSupport
 
+import pekko.http.scaladsl.server.Directive0
+import pekko.http.scaladsl.server.Directives._
+
 /**
- * Akka HTTP directives which can be wrapped around a [[akka.http.scaladsl.server.Route]]].
+ * Pekko HTTP directives which can be wrapped around a [[pekko.http.scaladsl.server.Route]]].
  */
 trait AroundDirectives extends InstrumentationSupport {
 
   /**
-   * When wrapped around a [[akka.http.scaladsl.server.Route]], logs the time it took for the route to run.
+   * When wrapped around a [[pekko.http.scaladsl.server.Route]], logs the time it took for the route to run.
    */
   def logDuration: Directive0 = extractRequestContext.flatMap { ctx =>
     val start = System.currentTimeMillis()

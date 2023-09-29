@@ -5,12 +5,8 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import org.apache.pekko
 import zio._
 import zio.prelude.Validation
 
@@ -20,6 +16,12 @@ import scala.concurrent.Future
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 
+import pekko.actor.ActorRef
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.Route
+import pekko.util.Timeout
+
 /**
  * Data that needs to be passed to each route.
  *
@@ -27,7 +29,7 @@ import org.knora.webapi.messages.StringFormatter
  * @param appActor  the main application actor.
  * @param appConfig the application's configuration.
  */
-case class KnoraRouteData(system: akka.actor.ActorSystem, appActor: akka.actor.ActorRef, appConfig: AppConfig)
+case class KnoraRouteData(system: ActorSystem, appActor: ActorRef, appConfig: AppConfig)
 
 /**
  * An abstract class providing functionality that is commonly used in implementing Knora routes.

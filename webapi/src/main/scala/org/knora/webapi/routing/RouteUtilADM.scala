@@ -5,13 +5,7 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.model.ContentTypes.`application/json`
-import akka.http.scaladsl.model.StatusCodes.Accepted
-import akka.http.scaladsl.model.StatusCodes.OK
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.RouteResult
-import akka.util.ByteString
+import org.apache.pekko
 import zio._
 import zio.json.EncoderOps
 import zio.json.JsonEncoder
@@ -30,6 +24,14 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
+
+import pekko.http.scaladsl.model.ContentTypes.`application/json`
+import pekko.http.scaladsl.model.StatusCodes.Accepted
+import pekko.http.scaladsl.model.StatusCodes.OK
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.RouteResult
+import pekko.util.ByteString
 
 /**
  * Convenience methods for Knora Admin routes.
@@ -98,7 +100,7 @@ object RouteUtilADM {
    * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
    *
    * @param requestTask    A [[Task]] containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
-   * @param requestContext The akka-http [[RequestContext]].
+   * @param requestContext The pekko-http [[RequestContext]].
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runJsonRouteZ[R](
@@ -111,7 +113,7 @@ object RouteUtilADM {
    * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
    *
    * @param requestFuture    A [[Task]] containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
-   * @param requestContext The akka-http [[RequestContext]].
+   * @param requestContext The pekko-http [[RequestContext]].
    * @return a [[Future]] containing a [[RouteResult]].
    */
   def runJsonRouteF(

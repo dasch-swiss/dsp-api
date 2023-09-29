@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-# Futures with Akka
+# Futures with Pekko
 
 ## Introduction
 
@@ -22,14 +22,14 @@ introduces them in this way:
 The rest of that page is well worth reading to get an overview of how
 futures work and what you can do with them.
 
-In [Akka](http://akka.io/), one of the standard patterns for
-communication between actors is the [ask pattern](https://doc.akka.io/docs/akka/current/actors.html?language=scala#ask-send-and-receive-future),
+In [Pekko](http://pekko.apache.org/), one of the standard patterns for
+communication between actors is the [ask pattern](https://pekko.apache.org/docs/pekko/current/actors.html?language=scala#ask-send-and-receive-future),
 in which you send a message to an actor and you expect a reply. When you
 call the `ask` function (which can be written as a question mark, `?`,
 which acts as an infix operator), it immediately returns a `Future`,
-which will complete when the reply is sent. As the Akka documentation
+which will complete when the reply is sent. As the Pekko documentation
 explains in [Use with
-Actors](https://doc.akka.io/docs/akka/snapshot/futures.html?language=scala#Use_With_Actors),
+Actors](https://pekko.apache.org/docs/pekko/snapshot/futures.html?language=scala#Use_With_Actors),
 it is possible to block the calling thread until the future completes,
 using `Await.result`. However, they say: 'Blocking is discouraged though
 as it will cause performance problems.' In particular, by not blocking,
@@ -182,7 +182,7 @@ for a future to complete. The normal flow of control works like this:
 1.  Incoming HTTP requests are handled by an actor called
     `KnoraService`, which delegates them to routing functions (in
     the `routing` package).
-2.  For each request, a routing function gets an Akka HTTP
+2.  For each request, a routing function gets an Pekko HTTP
     `RequestContext`, and calls `RouteUtilV1.runJsonRoute` (in API v1)
     or `RouteUtilV2.runRdfRouteWithFuture` (in API v2) to send a
     message to a supervisor actor to fulfil the request. This creates

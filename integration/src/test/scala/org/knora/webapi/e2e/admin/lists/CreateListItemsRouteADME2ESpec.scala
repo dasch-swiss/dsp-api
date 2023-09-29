@@ -5,10 +5,7 @@
 
 package org.knora.webapi.e2e.admin.lists
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.apache.pekko
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -25,6 +22,11 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
+
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.testkit.RouteTestTimeout
+import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * End-to-End (E2E) test specification for testing lists endpoint.

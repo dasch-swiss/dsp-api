@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
@@ -15,6 +15,8 @@ import org.knora.webapi.messages.v2.responder.listsmessages.ListGetResponseV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.testkit.ImplicitSender
 
 /**
  * Tests [[ListsResponderV2]].

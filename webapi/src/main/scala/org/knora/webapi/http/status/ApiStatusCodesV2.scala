@@ -5,11 +5,13 @@
 
 package org.knora.webapi.http.status
 
-import akka.http.scaladsl.model.StatusCode
-import akka.http.scaladsl.model.StatusCodes
+import org.apache.pekko
 
 import dsp.errors._
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
+
+import pekko.http.scaladsl.model.StatusCode
+import pekko.http.scaladsl.model.StatusCodes
 
 /**
  * The possible values for the HTTP status code that is returned as part of each Knora API v2 response.

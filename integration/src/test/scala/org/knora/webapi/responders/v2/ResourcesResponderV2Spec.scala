@@ -5,7 +5,8 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -41,6 +42,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util._
+
+import pekko.testkit.ImplicitSender
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -1237,7 +1240,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1284,7 +1287,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1325,7 +1328,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1370,7 +1373,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
@@ -1403,7 +1406,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -1436,7 +1439,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -1508,7 +1511,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -1541,7 +1544,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
@@ -1574,7 +1577,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1607,7 +1610,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
@@ -1630,7 +1633,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1665,7 +1668,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1687,7 +1690,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1703,7 +1706,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -1719,7 +1722,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1766,7 +1769,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
     }
@@ -1783,7 +1786,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
     }
@@ -1825,7 +1828,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! updateRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1869,7 +1872,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! deleteRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
@@ -1955,7 +1958,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -2032,7 +2035,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -2205,7 +2208,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! eraseRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
@@ -2260,7 +2263,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
       appActor ! eraseRequest
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
@@ -2621,7 +2624,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         projectIri = "http://rdfh.ch/projects/1111",
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(timeout) { case msg: Failure =>
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }

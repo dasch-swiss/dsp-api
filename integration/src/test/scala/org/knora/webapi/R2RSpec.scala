@@ -5,12 +5,8 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.typesafe.scalalogging.Logger
+import org.apache.pekko
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -35,6 +31,12 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
+
+import pekko.actor.ActorRef
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.model.HttpResponse
+import pekko.http.scaladsl.testkit.RouteTestTimeout
+import pekko.http.scaladsl.testkit.ScalatestRouteTest
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.

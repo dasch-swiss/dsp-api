@@ -5,17 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.Done
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.ContentDispositionTypes
-import akka.http.scaladsl.model.headers.`Content-Disposition`
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.Route
-import akka.stream.IOResult
-import akka.stream.scaladsl.FileIO
+import org.apache.pekko
 import zio._
 
 import java.nio.file.Files
@@ -37,9 +27,21 @@ import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
+import pekko.Done
+import pekko.http.scaladsl.model.ContentTypes
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.headers.ContentDispositionTypes
+import pekko.http.scaladsl.model.headers.`Content-Disposition`
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.PathMatcher
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.Route
+import pekko.stream.IOResult
+import pekko.stream.scaladsl.FileIO
+
 final case class ProjectsRouteADM()(
   private implicit val runtime: Runtime[
-    Authenticator with StringFormatter with MessageRelay with ProjectADMRestService
+    org.knora.webapi.routing.Authenticator with StringFormatter with MessageRelay with ProjectADMRestService
   ],
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {

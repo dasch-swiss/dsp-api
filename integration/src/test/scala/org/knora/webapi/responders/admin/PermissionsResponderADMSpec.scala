@@ -5,8 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.actor.Status.Failure
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import java.util.UUID
 import scala.collection.Map
@@ -28,6 +27,9 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+
+import pekko.actor.Status.Failure
+import pekko.testkit.ImplicitSender
 
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.

@@ -5,11 +5,13 @@
 
 package org.knora.webapi.util
 
-import akka.actor.ActorRef
+import org.apache.pekko
 import zio._
 
 import dsp.errors._
 import org.knora.webapi.routing.UnsafeZioRun
+
+import pekko.actor.ActorRef
 
 object ActorUtil {
 
@@ -19,7 +21,7 @@ object ActorUtil {
    */
   def zio2Message[R, A](sender: ActorRef, zio: ZIO[R, Throwable, A])(implicit runtime: Runtime[R]): Unit =
     UnsafeZioRun.runOrThrow {
-      zio.foldCause(cause => sender ! akka.actor.Status.Failure(cause.squash), success => sender ! success)
+      zio.foldCause(cause => sender ! pekko.actor.Status.Failure(cause.squash), success => sender ! success)
     }
 
   /**
@@ -33,7 +35,7 @@ object ActorUtil {
     val unexpectedMessageException = UnexpectedMessageException(
       s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}"
     )
-    sender ! akka.actor.Status.Failure(unexpectedMessageException)
+    sender ! pekko.actor.Status.Failure(unexpectedMessageException)
   }
 }
 

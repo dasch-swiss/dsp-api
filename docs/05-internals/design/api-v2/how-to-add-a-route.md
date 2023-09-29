@@ -25,7 +25,7 @@ request messages should extend a responder-specific trait, so that
 
 ## Write a Responder
 
-Write an Akka actor class that extends `org.knora.webapi.responders.Responder`,
+Write a Pekko actor class that extends `org.knora.webapi.responders.Responder`,
 and add it to the `org.knora.webapi.responders.v2` package.
 
 Give your responder a `receive(msg: YourCustomType)` method that handles each of your
@@ -36,13 +36,13 @@ and add code to `ResponderManager` to instantiate the new responder. Then add a 
 the `receive` method in `ResponderManager`, to match messages that extend your request
 message trait, and pass them them to that responder's receive method.
 The responder's resulting `Future` must be passed to the `ActorUtil.future2Message`.
-See [Futures with Akka](../principles/futures-with-akka.md) and
+See [Futures with Pekko](../principles/futures-with-pekko.md) and
 [Error Handling](../principles/design-overview.md#error-handling) for details.
 
 ## Write a Route
 
 Add a class to the `org.knora.webapi.routing.v2` package for your
-route, using the Akka HTTP [Routing DSL](https://doc.akka.io/docs/akka-http/current/routing-dsl/index.html).
+route, using the Pekko HTTP [Routing DSL](https://pekko.apache.org/docs/pekko-http/current/routing-dsl/index.html).
 See the routes in that package for examples. Typically, each route
 route will construct a responder request message and pass it to
 `RouteUtilV2.runRdfRouteWithFuture` to handle the request.

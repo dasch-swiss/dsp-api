@@ -5,13 +5,15 @@
 
 package org.knora.webapi.it
 
-import akka.http.scaladsl.model._
+import org.apache.pekko
 import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import org.knora.webapi.ITKnoraLiveSpec
+
+import pekko.http.scaladsl.model._
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
@@ -61,8 +63,8 @@ class VersionRouteITSpec extends ITKnoraLiveSpec {
       assert(checkNonEmpty("scala"))
     }
 
-    "contain nonempty value for key 'akkaHttp'" in {
-      assert(checkNonEmpty("akkaHttp"))
+    "contain nonempty value for key 'pekkoHttp'" in {
+      assert(checkNonEmpty("pekkoHttp"))
     }
 
     "contain nonempty value for key 'sipi'" in {

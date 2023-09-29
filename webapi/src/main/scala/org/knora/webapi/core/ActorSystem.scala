@@ -5,7 +5,7 @@
 
 package org.knora.webapi.core
 
-import akka.actor
+import org.apache.pekko
 import zio._
 import zio.macros.accessible
 
@@ -14,9 +14,11 @@ import scala.concurrent.ExecutionContext
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
+import pekko.actor
+
 @accessible
 trait ActorSystem {
-  val system: akka.actor.ActorSystem
+  val system: pekko.actor.ActorSystem
   val cacheServiceSettings: CacheServiceSettings
 }
 
@@ -25,7 +27,7 @@ object ActorSystem {
   private def acquire(executionContext: ExecutionContext): URIO[Any, actor.ActorSystem] =
     ZIO
       .attempt(
-        akka.actor.ActorSystem(
+        pekko.actor.ActorSystem(
           name = "webapi",
           config = None,
           classLoader = None,
@@ -35,7 +37,7 @@ object ActorSystem {
       .zipLeft(ZIO.logInfo(">>> Acquire Actor System <<<"))
       .orDie
 
-  private def release(system: akka.actor.ActorSystem): URIO[Any, actor.Terminated] =
+  private def release(system: pekko.actor.ActorSystem): URIO[Any, actor.Terminated] =
     ZIO
       .fromFuture(_ => system.terminate())
       .zipLeft(ZIO.logInfo(">>> Release Actor System <<<"))
@@ -48,7 +50,7 @@ object ActorSystem {
         context     <- ZIO.executor.map(_.asExecutionContext)
         actorSystem <- ZIO.acquireRelease(acquire(context))(release)
       } yield new ActorSystem {
-        override val system: akka.actor.ActorSystem             = actorSystem
+        override val system: pekko.actor.ActorSystem            = actorSystem
         override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(config)
       }
     }

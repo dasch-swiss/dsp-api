@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.ActorSystem
+import org.apache.pekko
 
 import java.time.Instant
 
@@ -18,6 +18,8 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.actor.ActorSystem
 
 class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 

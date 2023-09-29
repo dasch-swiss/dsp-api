@@ -5,7 +5,7 @@
 
 package org.knora.webapi.core.actors
 
-import akka.actor.Actor
+import org.apache.pekko
 import zio._
 
 import dsp.errors.UnexpectedMessageException
@@ -21,6 +21,8 @@ import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.util.ActorUtil
+
+import pekko.actor.Actor
 
 final case class RoutingActor(
   messageRelay: MessageRelay,

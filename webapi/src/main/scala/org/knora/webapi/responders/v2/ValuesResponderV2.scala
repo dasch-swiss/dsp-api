@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.http.scaladsl.util.FastFuture
+import org.apache.pekko
 import zio.Task
 import zio.ZIO
 import zio._
@@ -47,6 +47,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
+
+import pekko.http.scaladsl.util.FastFuture
 
 /**
  * Handles requests to read and write Knora values.

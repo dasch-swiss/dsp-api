@@ -19,7 +19,7 @@ trait RelayedMessage extends ResponderRequest
 
 /**
  * Central component which is capable of relaying message to subscribed [[MessageHandler]]s.
- * Should replace the ask pattern with the [[akka.actor.ActorRef]] to our [[org.knora.webapi.core.actors.RoutingActor]]
+ * Should replace the ask pattern with the [[pekko.actor.ActorRef]] to our [[org.knora.webapi.core.actors.RoutingActor]]
  * in [[org.knora.webapi.responders.Responder]]s which are migrated to [[ZIO]].
  *
  * This is only meant to be replacing the [[org.knora.webapi.core.actors.RoutingActor]] short term.

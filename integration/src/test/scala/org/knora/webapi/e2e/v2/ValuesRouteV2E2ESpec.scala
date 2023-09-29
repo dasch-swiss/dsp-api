@@ -5,9 +5,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.apache.pekko
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -40,6 +38,10 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 

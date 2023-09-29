@@ -5,12 +5,7 @@
 
 package org.knora.webapi.e2e.admin.lists
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.apache.pekko
 
 import scala.concurrent.duration._
 
@@ -25,6 +20,13 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
+
+import pekko.actor.ActorSystem
+import pekko.http.scaladsl.model.ContentTypes
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.HttpResponse
+import pekko.http.scaladsl.model.StatusCodes
+import pekko.http.scaladsl.testkit.RouteTestTimeout
 
 /**
  * End-to-End (E2E) test specification for testing update node props routes.

@@ -5,10 +5,7 @@
 
 package org.knora.webapi.routing
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.get
-import akka.http.scaladsl.server.Directives.path
-import akka.http.scaladsl.server.Route
+import org.apache.pekko
 import zio._
 import zio.json._
 
@@ -16,6 +13,11 @@ import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.util.LogAspect
+
+import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.server.Directives.get
+import pekko.http.scaladsl.server.Directives.path
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides health check logic
@@ -120,7 +122,7 @@ final case class HealthRoute()(
           } yield result
         } @@ LogAspect.logSpan("health-request") @@ LogAspect.logAnnotateCorrelationId()
 
-        // executing our effect and returning a future to Akka Http
+        // executing our effect and returning a future to Pekko HTTP
         Unsafe.unsafe { implicit u =>
           val resF = runtime.unsafe.runToFuture(res)
           requestContext.complete(resF)

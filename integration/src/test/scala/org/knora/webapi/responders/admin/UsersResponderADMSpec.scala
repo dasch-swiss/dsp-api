@@ -5,8 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.actor.Status.Failure
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import java.util.UUID
 
@@ -31,6 +30,9 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+
+import pekko.actor.Status.Failure
+import pekko.testkit.ImplicitSender
 
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.

@@ -5,16 +5,8 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.http.scaladsl.model.ContentTypes.`application/json`
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes.InternalServerError
-import akka.http.scaladsl.model.StatusCodes.OK
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatcher
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.server.Route
 import com.typesafe.scalalogging.LazyLogging
+import org.apache.pekko
 import zio.Exit.Failure
 import zio.Exit.Success
 import zio._
@@ -47,6 +39,16 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
+import pekko.http.scaladsl.model.ContentTypes.`application/json`
+import pekko.http.scaladsl.model.HttpEntity
+import pekko.http.scaladsl.model.HttpResponse
+import pekko.http.scaladsl.model.StatusCodes.InternalServerError
+import pekko.http.scaladsl.model.StatusCodes.OK
+import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.PathMatcher
+import pekko.http.scaladsl.server.RequestContext
+import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.

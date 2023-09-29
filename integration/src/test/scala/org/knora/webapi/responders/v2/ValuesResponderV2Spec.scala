@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.testkit.ImplicitSender
+import org.apache.pekko
 
 import java.time.Instant
 import java.util.UUID
@@ -39,6 +39,8 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
+
+import pekko.testkit.ImplicitSender
 
 /**
  * Tests [[ValuesResponderV2]].

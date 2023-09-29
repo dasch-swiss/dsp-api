@@ -5,10 +5,8 @@
 
 package org.knora.webapi
 
-import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model._
-import akka.testkit.TestKitBase
 import com.typesafe.scalalogging._
+import org.apache.pekko
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -40,6 +38,10 @@ import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.LogAspect
+
+import pekko.http.scaladsl.client.RequestBuilding
+import pekko.http.scaladsl.model._
+import pekko.testkit.TestKitBase
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack
@@ -96,7 +98,7 @@ abstract class E2ESpec
         .getOrThrowFiberFailure()
     }
 
-  implicit lazy val system: akka.actor.ActorSystem     = router.system
+  implicit lazy val system: pekko.actor.ActorSystem    = router.system
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   lazy val rdfDataObjects                              = List.empty[RdfDataObject]
   val log: Logger                                      = Logger(this.getClass())
