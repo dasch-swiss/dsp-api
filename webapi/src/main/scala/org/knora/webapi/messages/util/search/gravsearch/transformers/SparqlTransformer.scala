@@ -87,7 +87,7 @@ object SparqlTransformer {
     createUniqueVariableFromStatement(baseStatement, "LinkValue")
 
   /**
-   * Optimises a query by replacing `knora-base:isDeleted false` with a `FILTER NOT EXISTS` pattern
+   * Optimises a query by replacing `knora-base:isDeleted false` with a `MINUS` pattern
    * placed at the end of the block.
    *
    * @param patterns the block of patterns to be optimised.
