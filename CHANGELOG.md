@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.2.1...v0.2.2) (2023-09-28)
+
+
+### Bug Fixes
+
+* Include folder name in mapping.csv in order to prevent collisions ([#91](https://github.com/dasch-swiss/dsp-ingest/issues/91)) ([ec428ae](https://github.com/dasch-swiss/dsp-ingest/commit/ec428ae4f95dfe2568f471cee991bc22f3dff82d))
+
+
+### Maintenance
+
+* add check-pr-title GH action ([#92](https://github.com/dasch-swiss/dsp-ingest/issues/92)) ([935d6c3](https://github.com/dasch-swiss/dsp-ingest/commit/935d6c3d0fa56dc582957fce2087632c227ee2a2))
+* Align ApiProblem class naming with HTTP Status codes ([#96](https://github.com/dasch-swiss/dsp-ingest/issues/96)) ([1349544](https://github.com/dasch-swiss/dsp-ingest/commit/13495447c67a1a06b7bb95622c790a3f9d07fbc7))
+* Introduce types for ImageAsset, OriginalFile and DerivativeFile ([#93](https://github.com/dasch-swiss/dsp-ingest/issues/93)) ([49aa0ed](https://github.com/dasch-swiss/dsp-ingest/commit/49aa0edc9925359b4e310d21759e60ada6c74cd2))
+* Update and rename check-pr-title workflow ([#98](https://github.com/dasch-swiss/dsp-ingest/issues/98)) ([6a8642d](https://github.com/dasch-swiss/dsp-ingest/commit/6a8642d35c48b6f22c2e2003003b3abb702fc67c))
+* Update sbt to 1.9.6 ([#100](https://github.com/dasch-swiss/dsp-ingest/issues/100)) ([e004ad1](https://github.com/dasch-swiss/dsp-ingest/commit/e004ad1ef9b72d165b859c84d02b1e726a8db581))
+
 ## [0.2.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.2.0...v0.2.1) (2023-09-15)
 
 
