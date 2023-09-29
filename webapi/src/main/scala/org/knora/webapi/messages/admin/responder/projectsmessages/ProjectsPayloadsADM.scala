@@ -79,3 +79,10 @@ object ProjectUpdatePayloadADM {
     )
   }
 }
+
+final case class ProjectSetRestrictedViewSizePayload(size: String)
+
+object ProjectSetRestrictedViewSizePayload {
+  implicit val codec: JsonCodec[ProjectSetRestrictedViewSizePayload] =
+    DeriveJsonCodec.gen[ProjectSetRestrictedViewSizePayload]
+}

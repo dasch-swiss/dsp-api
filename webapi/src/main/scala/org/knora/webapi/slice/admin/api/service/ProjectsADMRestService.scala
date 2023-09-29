@@ -13,6 +13,7 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project
 import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -62,6 +63,11 @@ trait ProjectADMRestService {
   def getProjectRestrictedViewSettings(
     identifier: ProjectIdentifierADM
   ): Task[ProjectRestrictedViewSettingsGetResponseADM]
+  def setProjectRestrictedViewSettings(
+    id: ProjectIdentifierADM,
+    user: UserADM,
+    size: RestrictedViewSize
+  ): Task[ProjectRestrictedViewSizeResponseADM]
 }
 
 final case class ProjectsADMRestServiceLive(
@@ -238,6 +244,25 @@ final case class ProjectsADMRestServiceLive(
    */
   def getProjectRestrictedViewSettings(id: ProjectIdentifierADM): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     responder.projectRestrictedViewSettingsGetRequestADM(id)
+
+  /**
+   * Sets project's restricted view settings.
+   *
+   * @param id the project's id represented by iri, shortocde or shortname,
+   * @param user requesting user,
+   * @param size value to be set,
+   * @return [[ProjectRestrictedViewSizeResponseADM]].
+   */
+  override def setProjectRestrictedViewSettings(
+    id: ProjectIdentifierADM,
+    user: UserADM,
+    size: RestrictedViewSize
+  ): Task[ProjectRestrictedViewSizeResponseADM] =
+    for {
+      project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+      _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
+      _       <- projectRepo.setProjectRestrictedViewSize(project, size)
+    } yield ProjectRestrictedViewSizeResponseADM(size)
 
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)

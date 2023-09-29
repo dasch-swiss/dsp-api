@@ -11,6 +11,8 @@ import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -21,6 +23,7 @@ import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
+import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
@@ -346,6 +349,12 @@ case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrict
   def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 }
 
+case class ProjectRestrictedViewSizeResponseADM(size: RestrictedViewSize)
+object ProjectRestrictedViewSizeResponseADM {
+  implicit val codec: JsonCodec[ProjectRestrictedViewSizeResponseADM] =
+    DeriveJsonCodec.gen[ProjectRestrictedViewSizeResponseADM]
+}
+
 /**
  * Represents an answer to a project creating/modifying operation.
  *
@@ -606,9 +615,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
   implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] =
     jsonFormat(ProjectRestrictedViewSettingsGetResponseADM, "settings")
-
   implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectOperationResponseADM, "project"))
   )
-
 }

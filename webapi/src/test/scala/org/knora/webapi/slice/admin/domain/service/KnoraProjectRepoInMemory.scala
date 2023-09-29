@@ -10,6 +10,7 @@ import zio.Task
 import zio.ULayer
 import zio.ZLayer
 
+import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
@@ -32,6 +33,8 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
 
   override def findOntologies(project: KnoraProject): Task[List[InternalIri]] =
     throw new UnsupportedOperationException("not yet implemented")
+
+  override def setProjectRestrictedViewSize(project: KnoraProject, size: RestrictedViewSize): Task[Unit] = ???
 }
 
 object KnoraProjectRepoInMemory {
