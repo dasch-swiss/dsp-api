@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util.search
+package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
@@ -84,7 +84,7 @@ class SparqlTransformerSpec extends CoreSpec {
       val expectedPatterns = Seq(
         typeStatement,
         linkStatement,
-        FilterNotExistsPattern(
+        MinusPattern(
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),
