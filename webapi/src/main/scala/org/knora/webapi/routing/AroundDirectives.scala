@@ -6,9 +6,12 @@
 package org.knora.webapi.routing
 
 import org.apache.pekko
-import org.apache.pekko.http.scaladsl.model.StatusCodes.{MethodNotAllowed, NotFound}
-import org.apache.pekko.http.scaladsl.model.{HttpResponse, StatusCodes}
+import org.apache.pekko.http.scaladsl.model.HttpResponse
+import org.apache.pekko.http.scaladsl.model.StatusCodes.MethodNotAllowed
+import org.apache.pekko.http.scaladsl.model.StatusCodes.NotFound
+
 import org.knora.webapi.instrumentation.InstrumentationSupport
+
 import pekko.http.scaladsl.server.Directive0
 import pekko.http.scaladsl.server.Directives._
 
