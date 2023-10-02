@@ -37,6 +37,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import java.time.Instant
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -130,6 +131,15 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
     case Exit.Failure(err) => err.squash shouldBe a[T]
     case _                 => fail(s"Expected Exit.Failure with specific T.")
   }
+
+  private def assertValueContent[A <: ValueContentV2: ClassTag](value: ReadValueV2)(f: A => Unit) =
+    value.valueContent match {
+      case v: A => f(v)
+      case _ =>
+        throw AssertionException(
+          s"Expected value content of type ${implicitly[ClassTag[A]].runtimeClass.getSimpleName()}, got ${value.valueContent}"
+        )
+    }
 
   // private def createUnformattedTextValue(
   //   valueHasString: String,
@@ -307,10 +317,7 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         val createValueResponse = createValueOrThrow(create, anythingUser1, randomUUID)
 
         val valueFromTriplestore = getValue(resourceIri, propertyIri, createValueResponse.valueIri, anythingUser1)
-        valueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-          case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-        }
+        assertValueContent[IntegerValueContentV2](valueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
       "not create a duplicate integer value" in {
@@ -338,10 +345,8 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
         val intValueIriForFreetestIri = createValueResponse.valueIri
         val valueFromTriplestore      = getValue(resourceIri, propertyIri, intValueIriForFreetestIri, anythingUser1)
-        valueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-          case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-        }
+
+        assertValueContent[IntegerValueContentV2](valueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
     }

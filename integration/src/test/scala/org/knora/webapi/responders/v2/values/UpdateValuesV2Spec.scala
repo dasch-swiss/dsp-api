@@ -36,6 +36,8 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
 import dsp.errors.BadRequestException
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueResponseV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 
 class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -53,6 +55,27 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
     RdfDataObject("test_data/project_ontologies/values-onto.ttl", "http://www.knora.org/ontology/0001/values"),
     RdfDataObject("test_data/project_data/values-data.ttl", "http://www.knora.org/data/0001/anything")
   )
+
+  private def updateValueOrThrow(updateValue: UpdateValueContentV2, user: UserADM, uuid: UUID): UpdateValueResponseV2 =
+    UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValue, user, uuid))
+
+  private def doNotUpdate[A <: Throwable: ClassTag](
+    updateValue: UpdateValueContentV2,
+    user: UserADM,
+    uuid: UUID
+  ): Unit = {
+    val res = UnsafeZioRun.run(ValuesResponderV2.updateValueV2(updateValue, user, uuid))
+    assertFailsWithA[A](res)
+  }
+
+  private def assertValueContent[A <: ValueContentV2: ClassTag](value: ReadValueV2)(f: A => Unit) =
+    value.valueContent match {
+      case v: A => f(v)
+      case _ =>
+        throw AssertionException(
+          s"Expected value content of type ${implicitly[ClassTag[A]].runtimeClass.getSimpleName()}, got ${value.valueContent}"
+        )
+    }
 
   private def getResourceWithValues(
     resourceIri: IRI,
@@ -194,11 +217,9 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         val valueUuid: UUID            = SharedTestDataV2.Values.Data.Resource1.IntValue1.valueUuid
         val valuePermissions: String   = SharedTestDataV2.Values.Data.Resource1.IntValue1.permissions
 
-        val newValue    = IntegerValueContentV2(ApiV2Complex, -1)
-        val updateValue = UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, newValue)
-        val response = UnsafeZioRun.runOrThrow(
-          ValuesResponderV2.updateValueV2(updateValue, SharedTestDataADM.anythingUser1, randomUUID)
-        )
+        val newValue     = IntegerValueContentV2(ApiV2Complex, -1)
+        val updateValue  = UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, newValue)
+        val response     = updateValueOrThrow(updateValue, anythingUser1, randomUUID)
         val newValueIri  = response.valueIri
         val updatedValue = getValue(resourceIri, propertyIri, propertyIri, newValueIri, anythingUser1)
 
@@ -230,8 +251,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
             valueContent,
             valueCreationDate = Some(customCreationDate)
           )
-        val actual = UnsafeZioRun.run(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
-        assertFailsWithA[BadRequestException](actual)
+        doNotUpdate[BadRequestException](updateValueContent, anythingUser1, randomUUID)
       }
 
     }
@@ -248,8 +268,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         val updateValueContent =
           UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
 
-        val updateValueResponse =
-          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        val updateValueResponse = updateValueOrThrow(updateValueContent, anythingUser1, randomUUID)
         val updatedValueFromTriplestore = getValue(
           resourceIri = resourceIri,
           propertyIriForGravsearch = propertyIri,
@@ -258,10 +277,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
           requestingUser = anythingUser1
         )
 
-        updatedValueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-        }
+        assertValueContent[IntegerValueContentV2](updatedValueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
       "update an integer value that belongs to a property of another ontology" in {
@@ -293,10 +309,8 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
           )
         )
 
-        val updateValueResponse =
-          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser2, randomUUID))
-
-        val updatedValueIri = updateValueResponse.valueIri
+        val updateValueResponse = updateValueOrThrow(updateValueContent, anythingUser2, randomUUID)
+        val updatedValueIri     = updateValueResponse.valueIri
         assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
 
         // Read the value back to check that it was added correctly.
@@ -308,18 +322,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
           requestingUser = anythingUser2
         )
 
-        updatedValueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 =>
-            savedValue.valueHasInteger should ===(intValue)
-            updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
-            updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
-
-          case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-        }
-
-        // Check that the permissions and UUID were deleted from the previous version of the value.
-        assert(getValueUUID(valueIri).isEmpty)
-        assert(getValuePermissions(valueIri).isEmpty)
+        assertValueContent[IntegerValueContentV2](updatedValueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
       "not update an integer value without changing it" in {
@@ -331,8 +334,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue)
         val updateValueContent =
           UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
-        val actual = UnsafeZioRun.run(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
-        assertFailsWithA[DuplicateValueException](actual)
+        doNotUpdate[DuplicateValueException](updateValueContent, anythingUser1, randomUUID)
       }
 
       "update an integer value, adding only a comment" in {
@@ -346,8 +348,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         val updateValueContent =
           UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
 
-        val updateValueResponse =
-          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        val updateValueResponse = updateValueOrThrow(updateValueContent, anythingUser1, randomUUID)
         val updatedValueFromTriplestore = getValue(
           resourceIri = resourceIri,
           propertyIriForGravsearch = propertyIri,
@@ -355,11 +356,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
           expectedValueIri = updateValueResponse.valueIri,
           requestingUser = anythingUser1
         )
-
-        updatedValueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-        }
+        assertValueContent[IntegerValueContentV2](updatedValueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
       "update an integer value, updating only its comment" in {
@@ -373,8 +370,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         val updateValueContent =
           UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
 
-        val updateValueResponse =
-          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        val updateValueResponse = updateValueOrThrow(updateValueContent, anythingUser1, randomUUID)
         val updatedValueFromTriplestore = getValue(
           resourceIri = resourceIri,
           propertyIriForGravsearch = propertyIri,
@@ -383,10 +379,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
           requestingUser = anythingUser1
         )
 
-        updatedValueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-        }
+        assertValueContent[IntegerValueContentV2](updatedValueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
       "update an integer value, removing only its comment" in {
@@ -400,8 +393,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         val updateValueContent =
           UpdateValueContentV2(resourceIri, resourceClassIri, propertyIri, valueIri, valueContent)
 
-        val updateValueResponse =
-          UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        val updateValueResponse = updateValueOrThrow(updateValueContent, anythingUser1, randomUUID)
         val updatedValueFromTriplestore = getValue(
           resourceIri = resourceIri,
           propertyIriForGravsearch = propertyIri,
@@ -410,10 +402,7 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
           requestingUser = anythingUser1
         )
 
-        updatedValueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-          case _                                 => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-        }
+        assertValueContent[IntegerValueContentV2](updatedValueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
     }

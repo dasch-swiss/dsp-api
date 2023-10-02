@@ -3615,7 +3615,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val deleteDate: Instant                       = Instant.now
     val deleteComment                             = Some("this value was incorrect")
 
-    val actual = UnsafeZioRun.run(
+    UnsafeZioRun.run(
       ValuesResponderV2.deleteValueV2(
         DeleteValueV2(
           resourceIri = resourceIri,
