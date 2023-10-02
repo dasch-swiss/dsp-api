@@ -40,11 +40,12 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
 import org.knora.webapi.messages.util.PermissionUtilADM
 import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import java.time.Instant
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  /* we need to run our app with the mocked sipi implementation */
   override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
   override lazy val effectLayers = core.LayersTest.integrationTestsWithFusekiTestcontainers()
 
@@ -188,7 +189,7 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" when {
 
-    "creating values in general" should {
+    "provided custom permissions" should {
 
       "create an value with custom permissions" in {
         val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
@@ -219,6 +220,63 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         val create =
           CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent, permissions = Some(permissions))
         doNotCreate[BadRequestException](create, anythingUser1, randomUUID)
+      }
+
+      "not create a value with custom permissions referring to a nonexistent group" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 125
+        val permissions                = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
+
+        val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create =
+          CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent, permissions = Some(permissions))
+        doNotCreate[NotFoundException](create, anythingUser1, randomUUID)
+      }
+    }
+
+    "provided custom UUIDs" should {
+
+      "create a value with a custom UUID" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 126
+        val valueUuid                  = randomUUID
+
+        val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create =
+          CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent, valueUUID = Some(valueUuid))
+        val response = createValueOrThrow(create, anythingUser1, randomUUID)
+
+        val valueFromTriplestore = getValue(resourceIri, propertyIri, response.valueIri, anythingUser1)
+        valueFromTriplestore.valueHasUUID should ===(valueUuid)
+      }
+    }
+
+    "provided custom custom creation dates" should {
+
+      "create a value with a custom creation date" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 127
+        val valueCreationDate          = Instant.now
+
+        val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create =
+          CreateValueV2(
+            resourceIri,
+            resourceClassIri,
+            propertyIri,
+            valueContent,
+            valueCreationDate = Some(valueCreationDate)
+          )
+        val response = createValueOrThrow(create, anythingUser1, randomUUID)
+
+        val valueFromTriplestore = getValue(resourceIri, propertyIri, response.valueIri, anythingUser1)
+        valueFromTriplestore.valueCreationDate should ===(valueCreationDate)
       }
 
     }

@@ -26,7 +26,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -89,7 +88,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private val firstIntValueVersionIri                   = new MutableTestIri
   private val intValueIri                               = new MutableTestIri
-  private val intValueIriWithCustomPermissions          = new MutableTestIri
   private val intValueForRsyncIri                       = new MutableTestIri
   private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
   private val zeitglöckleinCommentWithStandoffIri       = new MutableTestIri
@@ -376,31 +374,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
   }
 
-  private def getValuePermissions(valueIri: IRI): Option[UUID] = {
-    val sparqlQuery =
-      s"""
-         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-         |
-         |SELECT ?valuePermissions WHERE {
-         |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
-         |}
-             """.stripMargin
-
-    appActor ! SparqlSelectRequest(sparqlQuery)
-
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
-      }
-    }
-  }
-
   private def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _]) = actual match {
     case Exit.Failure(err) => err.squash shouldBe a[T]
     case _                 => fail(s"Expected Exit.Failure with specific T.")
@@ -456,83 +429,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   )
 
   "The values responder" should {
-
-    "not create an integer value with custom permissions referring to a nonexistent group" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 1024
-      val permissions           = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            permissions = Some(permissions)
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      assertFailsWithA[NotFoundException](actual)
-    }
-
-    "create an integer value with custom UUID and creation date" in {
-      // Add the value.
-
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue                                  = 987
-      val valueUUID                                 = randomUUID
-      val valueCreationDate                         = Instant.now
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            valueUUID = Some(valueUUID),
-            valueCreationDate = Some(valueCreationDate)
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      intValueForRsyncIri.set(createValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueForRsyncIri.get,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          valueFromTriplestore.valueHasUUID should ===(valueUUID)
-          valueFromTriplestore.valueCreationDate should ===(valueCreationDate)
-
-        case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-      }
-    }
 
     "not update an integer value with a custom creation date that is earlier than the date of the current version" in {
       val resourceIri: IRI      = aThingIri
