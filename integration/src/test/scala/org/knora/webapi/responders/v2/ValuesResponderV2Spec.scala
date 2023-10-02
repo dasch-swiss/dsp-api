@@ -430,29 +430,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "not create a value if the user does not have modify permission on the resource" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 5
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
-      )
-      assertFailsWithA[ForbiddenException](actual)
-    }
-
     "create a text value without standoff" in {
       val valueHasString             = "text value"
       val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal

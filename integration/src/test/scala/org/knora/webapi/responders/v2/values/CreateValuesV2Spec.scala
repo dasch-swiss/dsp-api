@@ -38,6 +38,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import java.time.Instant
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import dsp.errors.ForbiddenException
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -193,6 +194,23 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private val anythingUser1 = SharedTestDataADM.anythingUser1
 
   "The values responder" when {
+
+    "creating resources" should {
+
+      "not create a value if the requesting user does not have permissions" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 201
+
+        val valueContent = IntegerValueContentV2(ApiV2Complex, intValue)
+        val create =
+          CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+
+        doNotCreate[ForbiddenException](create, SharedTestDataADM.imagesUser01, randomUUID)
+      }
+
+    }
 
     "provided custom permissions" should {
 
