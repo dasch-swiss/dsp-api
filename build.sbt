@@ -65,7 +65,7 @@ lazy val root = (project in file("."))
       "dev.zio"              %% "zio-prelude"                       % zioPreludeVersion,
       "dev.zio"              %% "zio-streams"                       % zioVersion,
       "eu.timepit"           %% "refined"                           % "0.11.0",
-      "commons-io"            % "commons-io"                        % "2.13.0",
+      "commons-io"            % "commons-io"                        % "2.14.0",
       "com.github.jwt-scala" %% "jwt-zio-json"                      % "9.4.4",
       // add the silencer lib for scala 2.13 in order to compile with scala 3.3.0 until https://github.com/zio/zio-config/pull/1171 is merged
       // resolves problems when `sbt doc` failed with
