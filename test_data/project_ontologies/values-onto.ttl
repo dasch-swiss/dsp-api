@@ -29,6 +29,11 @@ v:Resource
                          salsah-gui:guiOrder  "10"^^xsd:nonNegativeInteger;
                          owl:minCardinality   "0"^^xsd:nonNegativeInteger;
                          owl:onProperty       v:hasUnformattedText
+                        ] ,
+                        [ rdf:type             owl:Restriction;
+                         salsah-gui:guiOrder  "10"^^xsd:nonNegativeInteger;
+                         owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                         owl:onProperty       v:hasFormattedText
                         ] .
 
 v:hasInteger
@@ -45,6 +50,13 @@ v:hasUnformattedText
         rdfs:label                        "Unformatted Text"@en;
         rdfs:subPropertyOf                knora-base:hasValue;
         knora-base:objectClassConstraint  knora-base:UnformattedTextValue;
+        knora-base:subjectClassConstraint v:Resource.
+
+v:hasFormattedText
+        rdf:type                          owl:ObjectProperty;
+        rdfs:label                        "Formatted Text"@en;
+        rdfs:subPropertyOf                knora-base:hasValue;
+        knora-base:objectClassConstraint  knora-base:FormattedTextValue;
         knora-base:subjectClassConstraint v:Resource.
 
 # anything:hasOtherThing

@@ -409,43 +409,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     // "create a text value with a comment" in { // XXX: needed?
 
-    "create a text value with standoff" in {
-      val valueHasString   = "Comment 1aa"
-      val resourceIri      = SharedTestDataV2.Anything.resource1.resourceIri
-      val propertyIri      = SharedTestDataV2.AnythingOntology.hasRichtextPropIriExternal
-      val resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIri
-      val standoff         = sampleStandoff
-
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      val valueIri = UnsafeZioRun
-        .runOrThrow(
-          createFormattedTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
-        )
-        .valueIri
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = valueIri,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: FormattedTextValueContentV2 =>
-          assert(savedValue.valueHasString.contains(valueHasString))
-          savedValue.standoff should ===(sampleStandoff)
-          assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
-          assert(savedValue.mapping.contains(StandoffConstants.standardMapping))
-
-        case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
-      }
-    }
-
     "not create a duplicate text value with standoff (even if the standoff is different)" in {
       val valueHasString   = "Comment 1aa"
       val resourceIri      = SharedTestDataV2.Anything.resource1.resourceIri
