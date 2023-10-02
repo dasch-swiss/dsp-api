@@ -38,7 +38,7 @@ final case class ConstructTransformer(
     optimisedPatterns <-
       ZIO.attempt(
         SparqlTransformer.moveBindToBeginning(
-          SparqlTransformer.optimiseIsDeletedWithFilter(
+          SparqlTransformer.optimiseIsDeletedWithMinus(
             SparqlTransformer.moveLuceneToBeginning(patterns)
           )
         )
