@@ -139,6 +139,10 @@ object SharedTestDataV2 {
       // v:hasInteger
       val hasIntegerPropIri: SmartIri         = ontologyIri.makeEntityIri("hasInteger")
       val hasIntegerPropIriExternal: SmartIri = hasIntegerPropIri.toOntologySchema(ApiV2Complex)
+
+      // v:hasUnformattedText
+      val hasUnformattedTextPropIri: SmartIri         = ontologyIri.makeEntityIri("hasUnformattedText")
+      val hasUnformattedTextPropIriExternal: SmartIri = hasUnformattedTextPropIri.toOntologySchema(ApiV2Complex)
     }
     object Data {
       object Resource1 {

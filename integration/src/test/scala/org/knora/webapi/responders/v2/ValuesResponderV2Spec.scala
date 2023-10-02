@@ -430,34 +430,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "create a text value without standoff" in {
-      val valueHasString             = "text value"
-      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal
-      val resourceClassIri: SmartIri = SharedTestDataV2.AnythingOntology.thingClassIri
-
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
-
-      val valueIri = UnsafeZioRun
-        .runOrThrow(createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1))
-        .valueIri
-
-      // Read the value back to check that it was added correctly.
-      val valueFromTriplestore = getValue(
-        resourceIri = aThingIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = valueIri,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: UnformattedTextValueContentV2 => assert(savedValue.valueHasString.contains(valueHasString))
-        case _                                         => throw AssertionException(s"Expected unformatted text value, got $valueFromTriplestore")
-      }
-
-    }
-
     "not create a duplicate text value without standoff" in {
       val valueHasString             = "text value"
       val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal

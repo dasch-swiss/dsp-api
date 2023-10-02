@@ -19,23 +19,33 @@ v:Resource
         rdf:type          owl:Class;
         rdfs:comment             "Resource class that may hold all kinds of values"@de;
         rdfs:label               "Resource Class"@en;
-        rdfs:subClassOf knora-base:Resource;
-        rdfs:subClassOf [ rdf:type             owl:Restriction;
+        rdfs:subClassOf knora-base:Resource ,
+                        [ rdf:type             owl:Restriction;
                          salsah-gui:guiOrder  "10"^^xsd:nonNegativeInteger;
                          owl:minCardinality   "0"^^xsd:nonNegativeInteger;
                          owl:onProperty       v:hasInteger
+                        ] ,
+                        [ rdf:type             owl:Restriction;
+                         salsah-gui:guiOrder  "10"^^xsd:nonNegativeInteger;
+                         owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                         owl:onProperty       v:hasUnformattedText
                         ] .
 
 v:hasInteger
-        rdf:type                         owl:ObjectProperty;
-        rdfs:label                       "Integer"@en;
-        rdfs:subPropertyOf               knora-base:hasValue;
-        knora-base:objectClassConstraint knora-base:IntValue;
+        rdf:type                          owl:ObjectProperty;
+        rdfs:label                        "Integer"@en;
+        rdfs:subPropertyOf                knora-base:hasValue;
+        knora-base:objectClassConstraint  knora-base:IntValue;
         knora-base:subjectClassConstraint v:Resource;
         salsah-gui:guiAttribute           "min=0" , "max=-1";
         salsah-gui:guiElement             salsah-gui:Spinbox .
                 
-
+v:hasUnformattedText
+        rdf:type                          owl:ObjectProperty;
+        rdfs:label                        "Unformatted Text"@en;
+        rdfs:subPropertyOf                knora-base:hasValue;
+        knora-base:objectClassConstraint  knora-base:UnformattedTextValue;
+        knora-base:subjectClassConstraint v:Resource.
 
 # anything:hasOtherThing
 #         rdf:type               owl:ObjectProperty;

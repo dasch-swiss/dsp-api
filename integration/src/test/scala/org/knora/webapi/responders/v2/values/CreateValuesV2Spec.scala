@@ -39,6 +39,7 @@ import dsp.errors.NotFoundException
 import java.time.Instant
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import dsp.errors.ForbiddenException
+import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValueContentV2
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -210,6 +211,21 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         doNotCreate[ForbiddenException](create, SharedTestDataADM.imagesUser01, randomUUID)
       }
 
+      "create a value with a comment" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val intValue                   = 202
+        val comment                    = Some("A Comment")
+
+        val valueContent        = IntegerValueContentV2(ApiV2Complex, intValue, comment)
+        val create              = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+        val createValueResponse = createValueOrThrow(create, anythingUser1, randomUUID)
+
+        val valueFromTriplestore = getValue(resourceIri, propertyIri, createValueResponse.valueIri, anythingUser1)
+        assertValueContent[IntegerValueContentV2](valueFromTriplestore)(_.valueHasInteger should ===(intValue))
+      }
+
     }
 
     "provided custom permissions" should {
@@ -317,24 +333,6 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         val response     = createValueOrThrow(create, anythingUser1, randomUUID)
 
         val valueFromTriplestore = getValue(resourceIri, propertyIri, response.valueIri, anythingUser1)
-        valueFromTriplestore.valueContent match {
-          case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-          case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-        }
-      }
-
-      "create an integer value with a comment" in {
-        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
-        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
-        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
-        val intValue                   = 43
-        val comment                    = Some("A Comment")
-
-        val valueContent        = IntegerValueContentV2(ApiV2Complex, intValue, comment)
-        val create              = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
-        val createValueResponse = createValueOrThrow(create, anythingUser1, randomUUID)
-
-        val valueFromTriplestore = getValue(resourceIri, propertyIri, createValueResponse.valueIri, anythingUser1)
         assertValueContent[IntegerValueContentV2](valueFromTriplestore)(_.valueHasInteger should ===(intValue))
       }
 
@@ -369,6 +367,22 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
 
     }
 
-  }
+    "creating unformatted text values" should {
 
+      "create an unformatted text value" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasUnformattedTextPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val txtValue                   = "text value"
+
+        val valueContent = UnformattedTextValueContentV2(ApiV2Complex, txtValue)
+        val create       = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+        val response     = createValueOrThrow(create, anythingUser1, randomUUID)
+
+        val valueFromTriplestore = getValue(resourceIri, propertyIri, response.valueIri, anythingUser1)
+        assertValueContent[UnformattedTextValueContentV2](valueFromTriplestore)(_.valueHasString should ===(txtValue))
+      }
+
+    }
+  }
 }
