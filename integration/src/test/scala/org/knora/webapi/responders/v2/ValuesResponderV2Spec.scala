@@ -407,8 +407,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    // "create a text value with a comment" in { // XXX: needed?
-
     "not create a duplicate text value with standoff (even if the standoff is different)" in {
       val valueHasString   = "Comment 1aa"
       val resourceIri      = SharedTestDataV2.Anything.resource1.resourceIri
