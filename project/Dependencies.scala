@@ -24,10 +24,10 @@ object Dependencies {
   val ZioHttpVersion              = "0.0.3"
   val ZioLoggingVersion           = "2.1.14"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.1.0"
-  val ZioPreludeVersion           = "1.0.0-RC20"
+  val ZioMetricsConnectorsVersion = "2.2.0"
+  val ZioPreludeVersion           = "1.0.0-RC21"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.16"
+  val ZioVersion                  = "2.0.18"
 
   // ZIO - all Scala 3 compatible
   val zio                           = "dev.zio"                       %% "zio"                               % ZioVersion
@@ -114,7 +114,7 @@ object Dependencies {
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
   val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.0"
-  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.0.4"
+  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.2.0"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
