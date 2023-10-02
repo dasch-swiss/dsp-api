@@ -8,12 +8,16 @@ package org.knora.webapi.responders.v2.values
 import akka.testkit.ImplicitSender
 import zio.Exit
 
+import java.time.Instant
 import java.util.UUID
 import java.util.UUID.randomUUID
 import scala.reflect.ClassTag
 
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -21,6 +25,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
@@ -29,17 +34,12 @@ import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueResponseV
 import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
-import org.knora.webapi.messages.util.PermissionUtilADM
-import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
-import java.time.Instant
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
-import dsp.errors.ForbiddenException
-import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValueContentV2
 
 class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -392,6 +392,14 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         val valueContent = UnformattedTextValueContentV2(ApiV2Complex, txtValue)
         val create       = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
         doNotCreate[DuplicateValueException](create, anythingUser1, randomUUID)
+      }
+
+    }
+
+    "creating formatted text values" should {
+
+      "create a formatted text value" in {
+        //
       }
 
     }

@@ -379,29 +379,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     case _                 => fail(s"Expected Exit.Failure with specific T.")
   }
 
-  private def createUnformattedTextValue(
-    valueHasString: String,
-    propertyIri: SmartIri,
-    resourceIri: IRI,
-    resourceClassIri: SmartIri,
-    user: UserADM,
-    comment: Option[String] = None
-  ) =
-    ValuesResponderV2.createValueV2(
-      CreateValueV2(
-        resourceIri = resourceIri,
-        resourceClassIri = resourceClassIri,
-        propertyIri = propertyIri,
-        valueContent = UnformattedTextValueContentV2(
-          ontologySchema = ApiV2Complex,
-          valueHasString = valueHasString,
-          comment = comment
-        )
-      ),
-      requestingUser = user,
-      apiRequestID = UUID.randomUUID
-    )
-
   private def createFormattedTextValue(
     valueHasString: String,
     standoff: Seq[StandoffTagV2],
@@ -430,7 +407,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    // "create a text value with a comment" in {
+    // "create a text value with a comment" in { // XXX: needed?
 
     "create a text value with standoff" in {
       val valueHasString   = "Comment 1aa"

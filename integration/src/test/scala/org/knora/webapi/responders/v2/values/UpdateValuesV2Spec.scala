@@ -13,6 +13,7 @@ import java.util.UUID.randomUUID
 import scala.reflect.ClassTag
 
 import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.CoreSpec
@@ -31,13 +32,12 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueResponseV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueResponseV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 
 class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
