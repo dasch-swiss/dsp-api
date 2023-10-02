@@ -22,13 +22,14 @@
         v:hasInteger                  <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/Z3VJyRLdTAmkQVDND1lCZw>;
         v:hasInteger                  <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/06Ab5GjMSzmIozDdxEcP4w>;
         v:hasInteger                  <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/r4swthLUS4GBhueBdliExg>;
+        v:hasUnformattedText          <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/vahL16BGTO2wWsU5ddcyLg>;
         knora-base:attachedToProject  <http://rdfh.ch/projects/0001>;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
         knora-base:creationDate       "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
         knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
         knora-base:isDeleted          false .
 
-# Resource 1 Value 1
+# Resource 1 Integer Value 1
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/uAdQoNrUR3iCY24IUa9JrA>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -40,7 +41,7 @@
         knora-base:valueHasString     "1";
         knora-base:valueHasUUID       "uAdQoNrUR3iCY24IUa9JrA" .
 
-# Resource 1 Value 2
+# Resource 1 Integer Value 2
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/9fB9e0uCSpSQtj8vPmpYSg>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -52,7 +53,7 @@
         knora-base:valueHasString     "2";
         knora-base:valueHasUUID       "9fB9e0uCSpSQtj8vPmpYSg" .
 
-# Resource 1 Value 3
+# Resource 1 Integer Value 3
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/PKh9WhhrSL2mFYLtJkNJDw>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -64,7 +65,7 @@
         knora-base:valueHasString     "3";
         knora-base:valueHasUUID       "PKh9WhhrSL2mFYLtJkNJDw" .
 
-# Resource 1 Value 4
+# Resource 1 Integer Value 4
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/BnrfmiVQRXeTLfK1wJoVAA>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -76,7 +77,7 @@
         knora-base:valueHasString     "4";
         knora-base:valueHasUUID       "BnrfmiVQRXeTLfK1wJoVAA" .
 
-# Resource 1 Value 5
+# Resource 1 Integer Value 5
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/RrFwcpKlR5y2spM4fnwrqw>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -89,7 +90,7 @@
         knora-base:valueHasString     "5";
         knora-base:valueHasUUID       "RrFwcpKlR5y2spM4fnwrqw" .
 
-# Resource 1 Value 6
+# Resource 1 Integer Value 6
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/px9HxJjER3a3b1gYXiBxAw>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -102,7 +103,7 @@
         knora-base:valueHasString     "6";
         knora-base:valueHasUUID       "px9HxJjER3a3b1gYXiBxAw" .
 
-# Resource 1 Value 7
+# Resource 1 Integer Value 7
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/Z3VJyRLdTAmkQVDND1lCZw>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -115,7 +116,7 @@
         knora-base:valueHasString     "7";
         knora-base:valueHasUUID       "Z3VJyRLdTAmkQVDND1lCZw" .
 
-# Resource 1 Value 8
+# Resource 1 Integer Value 8
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/06Ab5GjMSzmIozDdxEcP4w>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -128,7 +129,7 @@
         knora-base:valueHasString     "8";
         knora-base:valueHasUUID       "06Ab5GjMSzmIozDdxEcP4w" .
 
-# Resource 1 Value 9
+# Resource 1 Integer Value 9
 <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/r4swthLUS4GBhueBdliExg>
         rdf:type                      knora-base:IntValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -140,3 +141,14 @@
         knora-base:valueHasOrder      0;
         knora-base:valueHasString     "9";
         knora-base:valueHasUUID       "r4swthLUS4GBhueBdliExg" .
+
+# Resource 1 Unformatted Text Value 1
+<http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/vahL16BGTO2wWsU5ddcyLg>
+        rdf:type                      knora-base:UnformattedTextValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+        knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "unformatted text value 1";
+        knora-base:valueHasUUID       "vahL16BGTO2wWsU5ddcyLg" .

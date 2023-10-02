@@ -383,6 +383,19 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
         assertValueContent[UnformattedTextValueContentV2](valueFromTriplestore)(_.valueHasString should ===(txtValue))
       }
 
+      "not create a duplicate unformatted text value" in {
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasUnformattedTextPropIriExternal
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val txtValue                   = SharedTestDataV2.Values.Data.Resource1.UnformattedTextValue1.textValue
+
+        val valueContent = UnformattedTextValueContentV2(ApiV2Complex, txtValue)
+        val create       = CreateValueV2(resourceIri, resourceClassIri, propertyIri, valueContent)
+        doNotCreate[DuplicateValueException](create, anythingUser1, randomUUID)
+      }
+
     }
+
   }
+
 }

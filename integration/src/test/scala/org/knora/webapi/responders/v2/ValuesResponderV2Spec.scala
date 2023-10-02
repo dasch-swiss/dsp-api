@@ -430,47 +430,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "not create a duplicate text value without standoff" in {
-      val valueHasString             = "text value"
-      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal
-      val resourceClassIri: SmartIri = SharedTestDataV2.AnythingOntology.thingClassIri
-
-      val res = UnsafeZioRun.run(
-        createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1)
-      )
-      assertFailsWithA[DuplicateValueException](res)
-    }
-
-    "create a text value with a comment" in {
-      val valueHasString             = "text value with comment"
-      val propertyIri: SmartIri      = SharedTestDataV2.AnythingOntology.hasUnformattedTextPropIriExternal
-      val resourceClassIri: SmartIri = SharedTestDataV2.AnythingOntology.thingClassIri
-      val comment                    = Some("This is a comment")
-
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUser1)
-
-      val valueIri = UnsafeZioRun
-        .runOrThrow(
-          createUnformattedTextValue(valueHasString, propertyIri, aThingIri, resourceClassIri, anythingUser1, comment)
-        )
-        .valueIri
-
-      val valueFromTriplestore = getValue(
-        resourceIri = aThingIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = valueIri,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: UnformattedTextValueContentV2 =>
-          assert(savedValue.valueHasString.contains(valueHasString))
-          assert(savedValue.comment == comment)
-        case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
-      }
-    }
+    // "create a text value with a comment" in {
 
     "create a text value with standoff" in {
       val valueHasString   = "Comment 1aa"

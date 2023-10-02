@@ -212,6 +212,12 @@ object SharedTestDataV2 {
           val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
           val intValue    = 9
         }
+
+        object UnformattedTextValue1 {
+          val encodedUuid = "vahL16BGTO2wWsU5ddcyLg"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val textValue   = "unformatted text value 1"
+        }
       }
     }
   }
