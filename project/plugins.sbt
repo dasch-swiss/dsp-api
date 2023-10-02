@@ -8,7 +8,7 @@ resolvers ++= Seq(
 addSbtPlugin("com.github.sbt"    % "sbt-native-packager" % "1.9.16")
 addSbtPlugin("io.kamon"          % "sbt-aspectj-runner"  % "1.1.2")
 addSbtPlugin("com.typesafe.play" % "sbt-twirl"           % "1.6.1")
-addSbtPlugin("com.eed3si9n"      % "sbt-assembly"        % "2.1.1")
+addSbtPlugin("com.eed3si9n"      % "sbt-assembly"        % "2.1.3")
 addSbtPlugin("com.github.sbt"    % "sbt-javaagent"       % "0.1.7")
 // also update the scalac-scoverage-runtime version in build.sbt
 addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "2.0.9")
