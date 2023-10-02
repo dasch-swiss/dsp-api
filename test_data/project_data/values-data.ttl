@@ -19,6 +19,7 @@
         v:hasInteger                  <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/BnrfmiVQRXeTLfK1wJoVAA>;
         v:hasInteger                  <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/RrFwcpKlR5y2spM4fnwrqw>;
         v:hasInteger                  <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/px9HxJjER3a3b1gYXiBxAw>;
+        v:hasInteger                  <http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/Z3VJyRLdTAmkQVDND1lCZw>;
         knora-base:attachedToProject  <http://rdfh.ch/projects/0001>;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
         knora-base:creationDate       "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
@@ -98,3 +99,16 @@
         knora-base:valueHasOrder      0;
         knora-base:valueHasString     "6";
         knora-base:valueHasUUID       "px9HxJjER3a3b1gYXiBxAw" .
+
+# Resource 1 Value 7
+<http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/Z3VJyRLdTAmkQVDND1lCZw>
+        rdf:type                      knora-base:IntValue;
+        knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+        knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+        knora-base:isDeleted          false;
+        knora-base:valueCreationDate  "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
+        knora-base:valueHasComment    "existing comment";
+        knora-base:valueHasInteger    7;
+        knora-base:valueHasOrder      0;
+        knora-base:valueHasString     "7";
+        knora-base:valueHasUUID       "Z3VJyRLdTAmkQVDND1lCZw" .

@@ -35,6 +35,7 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV2
+import dsp.errors.BadRequestException
 
 class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -206,6 +207,31 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         assert(getValueUUID(valueIri).isEmpty)
         assert(updatedValue.permissions == valuePermissions)
         assert(getValuePermissions(valueIri).isEmpty)
+      }
+
+    }
+
+    "handling custom creation dates" should {
+
+      "not update a value whith a custom creation date that is earlier then the date of the current version" in {
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue7.valueIri
+        val intValue                   = -7
+        val customCreationDate         = SharedTestDataV2.Values.Data.Resource1.IntValue7.valueCreationDate.minusSeconds(1)
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue)
+        val updateValueContent =
+          UpdateValueContentV2(
+            resourceIri,
+            resourceClassIri,
+            propertyIri,
+            valueIri,
+            valueContent,
+            valueCreationDate = Some(customCreationDate)
+          )
+        val actual = UnsafeZioRun.run(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser1, randomUUID))
+        assertFailsWithA[BadRequestException](actual)
       }
 
     }

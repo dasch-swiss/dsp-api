@@ -430,32 +430,6 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   "The values responder" should {
 
-    "not update an integer value with a custom creation date that is earlier than the date of the current version" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 989
-      val valueCreationDate     = Instant.parse("2019-11-29T10:00:00Z")
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            valueCreationDate = Some(valueCreationDate)
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-      assertFailsWithA[BadRequestException](actual)
-    }
-
     "update an integer value with a custom creation date" in {
       val resourceIri: IRI                          = aThingIri
       val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri

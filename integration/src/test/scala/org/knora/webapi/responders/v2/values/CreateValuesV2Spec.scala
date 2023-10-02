@@ -17,9 +17,7 @@ import dsp.errors.DuplicateValueException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StandoffConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -27,13 +25,10 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages.CreateValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.FormattedTextValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
-import org.knora.webapi.messages.v2.responder.valuemessages.UnformattedTextValueContentV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -136,54 +131,54 @@ class CreateValuesV2Spec extends CoreSpec with ImplicitSender {
     case _                 => fail(s"Expected Exit.Failure with specific T.")
   }
 
-  private def createUnformattedTextValue(
-    valueHasString: String,
-    propertyIri: SmartIri,
-    resourceIri: IRI,
-    resourceClassIri: SmartIri,
-    user: UserADM,
-    comment: Option[String] = None
-  ) =
-    ValuesResponderV2.createValueV2(
-      CreateValueV2(
-        resourceIri = resourceIri,
-        resourceClassIri = resourceClassIri,
-        propertyIri = propertyIri,
-        valueContent = UnformattedTextValueContentV2(
-          ontologySchema = ApiV2Complex,
-          valueHasString = valueHasString,
-          comment = comment
-        )
-      ),
-      requestingUser = user,
-      apiRequestID = UUID.randomUUID
-    )
+  // private def createUnformattedTextValue(
+  //   valueHasString: String,
+  //   propertyIri: SmartIri,
+  //   resourceIri: IRI,
+  //   resourceClassIri: SmartIri,
+  //   user: UserADM,
+  //   comment: Option[String] = None
+  // ) =
+  //   ValuesResponderV2.createValueV2(
+  //     CreateValueV2(
+  //       resourceIri = resourceIri,
+  //       resourceClassIri = resourceClassIri,
+  //       propertyIri = propertyIri,
+  //       valueContent = UnformattedTextValueContentV2(
+  //         ontologySchema = ApiV2Complex,
+  //         valueHasString = valueHasString,
+  //         comment = comment
+  //       )
+  //     ),
+  //     requestingUser = user,
+  //     apiRequestID = UUID.randomUUID
+  //   )
 
-  private def createFormattedTextValue(
-    valueHasString: String,
-    standoff: Seq[StandoffTagV2],
-    propertyIri: SmartIri,
-    resourceIri: IRI,
-    resourceClassIri: SmartIri,
-    user: UserADM,
-    comment: Option[String] = None
-  ) = ValuesResponderV2.createValueV2(
-    CreateValueV2(
-      resourceIri = resourceIri,
-      resourceClassIri = resourceClassIri,
-      propertyIri = propertyIri,
-      valueContent = FormattedTextValueContentV2(
-        ontologySchema = ApiV2Complex,
-        valueHasString = valueHasString,
-        comment = comment,
-        mappingIri = OntologyConstants.KnoraBase.StandardMapping,
-        mapping = Some(StandoffConstants.standardMapping),
-        standoff = standoff
-      )
-    ),
-    requestingUser = user,
-    apiRequestID = UUID.randomUUID
-  )
+  // private def createFormattedTextValue(
+  //   valueHasString: String,
+  //   standoff: Seq[StandoffTagV2],
+  //   propertyIri: SmartIri,
+  //   resourceIri: IRI,
+  //   resourceClassIri: SmartIri,
+  //   user: UserADM,
+  //   comment: Option[String] = None
+  // ) = ValuesResponderV2.createValueV2(
+  //   CreateValueV2(
+  //     resourceIri = resourceIri,
+  //     resourceClassIri = resourceClassIri,
+  //     propertyIri = propertyIri,
+  //     valueContent = FormattedTextValueContentV2(
+  //       ontologySchema = ApiV2Complex,
+  //       valueHasString = valueHasString,
+  //       comment = comment,
+  //       mappingIri = OntologyConstants.KnoraBase.StandardMapping,
+  //       mapping = Some(StandoffConstants.standardMapping),
+  //       standoff = standoff
+  //     )
+  //   ),
+  //   requestingUser = user,
+  //   apiRequestID = UUID.randomUUID
+  // )
 
   private val anythingUser1 = SharedTestDataADM.anythingUser1
 
