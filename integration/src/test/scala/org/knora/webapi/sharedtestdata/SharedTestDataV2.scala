@@ -194,6 +194,20 @@ object SharedTestDataV2 {
           val valueUuid         = UuidUtil.base64Decode(encodedUuid).get
           val valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z")
         }
+
+        object IntValue8 {
+          val encodedUuid       = "06Ab5GjMSzmIozDdxEcP4w"
+          val valueIri          = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val intValue          = 8
+          val valueUuid         = UuidUtil.base64Decode(encodedUuid).get
+          val valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z")
+        }
+
+        object IntValue9 {
+          val encodedUuid = "r4swthLUS4GBhueBdliExg"
+          val valueIri    = s"http://rdfh.ch/0001/sNynjUbwS5eGqAFN3g0R6A/values/$encodedUuid"
+          val intValue    = 9
+        }
       }
     }
   }

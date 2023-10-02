@@ -254,6 +254,68 @@ class UpdateValuesV2Spec extends CoreSpec with ImplicitSender {
         doNotUpdate[BadRequestException](updateValueContent, anythingUser1, randomUUID)
       }
 
+      "update a value with a custom creation date" in {
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue8.valueIri
+        val intValue                   = -8
+        val customCreationDate         = SharedTestDataV2.Values.Data.Resource1.IntValue8.valueCreationDate.plusSeconds(1)
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue)
+        val updateValueContent =
+          UpdateValueContentV2(
+            resourceIri,
+            resourceClassIri,
+            propertyIri,
+            valueIri,
+            valueContent,
+            valueCreationDate = Some(customCreationDate)
+          )
+        val updateValueResponse = updateValueOrThrow(updateValueContent, anythingUser1, randomUUID)
+        val updatedValueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = updateValueResponse.valueIri,
+          requestingUser = anythingUser1
+        )
+        updatedValueFromTriplestore.valueCreationDate should ===(customCreationDate)
+        assertValueContent[IntegerValueContentV2](updatedValueFromTriplestore)(_.valueHasInteger should ===(intValue))
+      }
+
+    }
+
+    "handling custom version IRIs" should {
+
+      "update a value with a custom version IRI" in {
+        val resourceClassIri: SmartIri = SharedTestDataV2.Values.Ontology.resourceClassIriExternal
+        val propertyIri: SmartIri      = SharedTestDataV2.Values.Ontology.hasIntegerPropIriExternal
+        val resourceIri: IRI           = SharedTestDataV2.Values.Data.Resource1.resourceIri
+        val valueIri: IRI              = SharedTestDataV2.Values.Data.Resource1.IntValue9.valueIri
+        val intValue                   = -9
+        val customIri                  = stringFormatter.makeRandomValueIri(resourceIri)
+        val valueContent               = IntegerValueContentV2(ApiV2Complex, intValue)
+        val updateValueContent =
+          UpdateValueContentV2(
+            resourceIri,
+            resourceClassIri,
+            propertyIri,
+            valueIri,
+            valueContent,
+            newValueVersionIri = Some(customIri.toSmartIri)
+          )
+        val updateValueResponse = updateValueOrThrow(updateValueContent, anythingUser1, randomUUID)
+        val updatedValueFromTriplestore = getValue(
+          resourceIri = resourceIri,
+          propertyIriForGravsearch = propertyIri,
+          propertyIriInResult = propertyIri,
+          expectedValueIri = updateValueResponse.valueIri,
+          requestingUser = anythingUser1
+        )
+        updatedValueFromTriplestore.valueIri should ===(customIri)
+        assertValueContent[IntegerValueContentV2](updatedValueFromTriplestore)(_.valueHasInteger should ===(intValue))
+      }
+
     }
 
     "updating integer values" should {
