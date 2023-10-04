@@ -282,7 +282,16 @@ lazy val integration: Project = Project(id = "integration", base = file("integra
       "-Ymacro-annotations",
       "-Wunused:imports",
       // silence twirl templates unused imports warnings
-      "-Wconf:src=target/.*:s"
+      "-Wconf:src=target/.*:s",
+      // enable on demand
+      "-Wunused:privates",
+      "-Wunused:locals",
+      "-Wunused:explicits",
+      "-Wunused:implicits",
+      "-Wunused:params",
+      "-Wunused:patvars",
+      "-Wdead-code"
+      // "-Wvalue-discard"
     ),
     logLevel := Level.Info,
     javaAgents += Dependencies.aspectjweaver,

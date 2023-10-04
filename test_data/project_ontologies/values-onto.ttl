@@ -1,0 +1,80 @@
+@prefix v:    <http://www.knora.org/ontology/0001/values#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui:  <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff:    <http://www.knora.org/ontology/standoff#> .
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+
+<http://www.knora.org/ontology/0001/values>
+        rdf:type                        owl:Ontology;
+        rdfs:label                      "The values ontology";
+        knora-base:attachedToProject    <http://rdfh.ch/projects/0001>;
+        knora-base:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTime .
+
+v:Resource  
+        rdf:type          owl:Class;
+        rdfs:comment             "Resource class that may hold all kinds of values"@de;
+        rdfs:label               "Resource Class"@en;
+        rdfs:subClassOf knora-base:Resource ,
+                        [ rdf:type             owl:Restriction;
+                         salsah-gui:guiOrder  "10"^^xsd:nonNegativeInteger;
+                         owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                         owl:onProperty       v:hasInteger
+                        ] ,
+                        [ rdf:type             owl:Restriction;
+                         salsah-gui:guiOrder  "10"^^xsd:nonNegativeInteger;
+                         owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                         owl:onProperty       v:hasUnformattedText
+                        ] ,
+                        [ rdf:type             owl:Restriction;
+                         salsah-gui:guiOrder  "10"^^xsd:nonNegativeInteger;
+                         owl:minCardinality   "0"^^xsd:nonNegativeInteger;
+                         owl:onProperty       v:hasFormattedText
+                        ] .
+
+v:hasInteger
+        rdf:type                          owl:ObjectProperty;
+        rdfs:label                        "Integer"@en;
+        rdfs:subPropertyOf                knora-base:hasValue;
+        knora-base:objectClassConstraint  knora-base:IntValue;
+        knora-base:subjectClassConstraint v:Resource;
+        salsah-gui:guiAttribute           "min=0" , "max=-1";
+        salsah-gui:guiElement             salsah-gui:Spinbox .
+                
+v:hasUnformattedText
+        rdf:type                          owl:ObjectProperty;
+        rdfs:label                        "Unformatted Text"@en;
+        rdfs:subPropertyOf                knora-base:hasValue;
+        knora-base:objectClassConstraint  knora-base:UnformattedTextValue;
+        knora-base:subjectClassConstraint v:Resource.
+
+v:hasFormattedText
+        rdf:type                          owl:ObjectProperty;
+        rdfs:label                        "Formatted Text"@en;
+        rdfs:subPropertyOf                knora-base:hasValue;
+        knora-base:objectClassConstraint  knora-base:FormattedTextValue;
+        knora-base:subjectClassConstraint v:Resource.
+
+# anything:hasOtherThing
+#         rdf:type               owl:ObjectProperty;
+#         rdfs:label             "Ein anderes Ding"@de , "Une autre chose"@fr , "Un'altra cosa"@it , "Another thing"@en;
+#         rdfs:subPropertyOf     knora-base:hasLinkTo;
+#         knora-base:objectClassConstraint
+#                 anything:Thing;
+#         knora-base:subjectClassConstraint
+#                 anything:Thing;
+#         salsah-gui:guiElement  salsah-gui:Searchbox .
+
+# anything:hasOtherThingValue
+#         rdf:type               owl:ObjectProperty;
+#         rdfs:label             "Ein anderes Ding"@de , "Une autre chose"@fr , "Un'altra cosa"@it , "Another thing"@en;
+#         rdfs:subPropertyOf     knora-base:hasLinkToValue;
+#         knora-base:objectClassConstraint
+#                 knora-base:LinkValue;
+#         knora-base:subjectClassConstraint
+#                 anything:Thing;
+#         salsah-gui:guiElement  salsah-gui:Searchbox .
