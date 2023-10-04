@@ -1777,12 +1777,13 @@ final case class ResourcesResponderV2Live(
      * @param readResource the resource which is expected to hold the text value.
      * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
      */
-    def getTextValueFromReadResource(readResource: ReadResourceV2): TextValueContentV2 =
+    def getTextValueFromReadResource(readResource: ReadResourceV2): FormattedTextValueContentV2 =
       readResource.values.get(textProperty) match {
         case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
           // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
           valObjs.head.valueContent match {
-            case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty => textValWithStandoff
+            case textValWithStandoff: FormattedTextValueContentV2 if textValWithStandoff.standoff.nonEmpty =>
+              textValWithStandoff
 
             case _ =>
               throw BadRequestException(
@@ -1894,7 +1895,7 @@ final case class ResourcesResponderV2Live(
         }
 
       // get the value object representing the text value that is to be mapped to the body of the TEI document
-      bodyTextValue: TextValueContentV2 = getTextValueFromReadResource(resource)
+      bodyTextValue: FormattedTextValueContentV2 = getTextValueFromReadResource(resource)
 
       // the ext value is expected to have standoff markup
       _ = if (bodyTextValue.standoff.isEmpty)

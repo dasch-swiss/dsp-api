@@ -373,7 +373,7 @@ object InstanceCheckerSpec {
       |  "@type" : "anything:Thing",
       |  "anything:hasRichtext" : {
       |    "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg/values/VY4XodOeSaOdttZ6rEkFPg",
-      |    "@type" : "knora-api:TextValue",
+      |    "@type" : "knora-api:FormattedTextValue",
       |    "knora-api:attachedToUser" : {
       |      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
       |    },

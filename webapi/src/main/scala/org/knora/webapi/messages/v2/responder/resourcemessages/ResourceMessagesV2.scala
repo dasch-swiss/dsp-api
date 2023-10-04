@@ -327,7 +327,7 @@ case class TEIHeader(
  * @param teiMapping the mapping from standoff to TEI/XML.
  * @param bodyXSLT   the XSLT transformation that completes the generation of TEI/XML.
  */
-case class TEIBody(bodyInfo: TextValueContentV2, teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
+case class TEIBody(bodyInfo: FormattedTextValueContentV2, teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
 
   def toXML: String = {
     if (bodyInfo.standoff.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")

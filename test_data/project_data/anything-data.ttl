@@ -1557,21 +1557,29 @@
         knora-base:valueHasString     "2" .
 
 <http://rdfh.ch/0001/thing-with-history/values/2a>
-        rdf:type                      knora-base:TextValue;
+        rdf:type                      knora-base:FormattedTextValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
         knora-base:isDeleted          false;
         knora-base:valueCreationDate  "2019-02-10T10:05:10Z"^^xsd:dateTime;
+        knora-base:valueHasMapping    <http://rdfh.ch/standoff/mappings/StandardMapping>;
+        knora-base:valueHasMaxStandoffStartIndex
+                1;
         knora-base:valueHasOrder      0;
-        knora-base:valueHasString     "one" .
+        knora-base:valueHasStandoff   <http://rdfh.ch/0001/thing-with-history/values/2a/standoff/0> , <http://rdfh.ch/0001/thing-with-history/values/2a/standoff/1>;
+        knora-base:valueHasString     "one" .
 
 <http://rdfh.ch/0001/thing-with-history/values/2b>
-        rdf:type                      knora-base:TextValue;
+        rdf:type                      knora-base:FormattedTextValue;
         knora-base:attachedToUser     <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
         knora-base:isDeleted          false;
         knora-base:previousValue      <http://rdfh.ch/0001/thing-with-history/values/2a>;
         knora-base:valueCreationDate  "2019-02-11T10:05:10Z"^^xsd:dateTime;
+        knora-base:valueHasMapping    <http://rdfh.ch/standoff/mappings/StandardMapping>;
+        knora-base:valueHasMaxStandoffStartIndex
+                1;
         knora-base:valueHasOrder      0;
-        knora-base:valueHasString     "two" .
+        knora-base:valueHasStandoff   <http://rdfh.ch/0001/thing-with-history/values/2b/standoff/0> , <http://rdfh.ch/0001/thing-with-history/values/2b/standoff/1>;
+        knora-base:valueHasString     "two" .
 
 <http://rdfh.ch/0001/thing-with-history/values/3a>
         rdf:type                      knora-base:LinkValue;
@@ -2425,7 +2433,25 @@
         knora-base:standoffTagHasStart  0;
         knora-base:standoffTagHasStartIndex
                 0;
-        knora-base:standoffTagHasUUID   "M7bwkFglTpiAEPsdx4WyXQ" .
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .
+
+<http://rdfh.ch/0001/thing-with-history/values/2a/standoff/0>
+        rdf:type                        standoff:StandoffRootTag;
+        knora-base:standoffTagHasEnd    4;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                0;
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .
+
+<http://rdfh.ch/0001/thing-with-history/values/2a/standoff/1>
+        rdf:type                        standoff:StandoffParagraphTag;
+        knora-base:standoffTagHasEnd    3;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                1;
+        knora-base:standoffTagHasStartParent
+                <http://rdfh.ch/0001/thing-with-history/values/2a/standoff/0>;
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .
 
 <http://rdfh.ch/0001/thing-with-history/values/2c/standoff/0>
         rdf:type                        standoff:StandoffRootTag;
@@ -2433,7 +2459,7 @@
         knora-base:standoffTagHasStart  0;
         knora-base:standoffTagHasStartIndex
                 0;
-        knora-base:standoffTagHasUUID   "M7bwkFglTpiAEPsdx4WyXQ" .
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .
 
 <http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1/standoff/1>
         rdf:type                        standoff:StandoffParagraphTag;
@@ -2443,7 +2469,25 @@
                 1;
         knora-base:standoffTagHasStartParent
                 <http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1/standoff/0>;
-        knora-base:standoffTagHasUUID   "M7bwkFglTpiAEPsdx4WyXQ" .
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .
+
+<http://rdfh.ch/0001/thing-with-history/values/2b/standoff/0>
+        rdf:type                        standoff:StandoffRootTag;
+        knora-base:standoffTagHasEnd    4;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                0;
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .
+
+<http://rdfh.ch/0001/thing-with-history/values/2b/standoff/1>
+        rdf:type                        standoff:StandoffParagraphTag;
+        knora-base:standoffTagHasEnd    3;
+        knora-base:standoffTagHasStart  0;
+        knora-base:standoffTagHasStartIndex
+                1;
+        knora-base:standoffTagHasStartParent
+                <http://rdfh.ch/0001/thing-with-history/values/2b/standoff/0>;
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .
 
 <http://rdfh.ch/0001/thing-with-history/values/2c/standoff/1>
         rdf:type                        standoff:StandoffParagraphTag;
@@ -2453,4 +2497,4 @@
                 1;
         knora-base:standoffTagHasStartParent
                 <http://rdfh.ch/0001/thing-with-history/values/2c/standoff/0>;
-        knora-base:standoffTagHasUUID   "M7bwkFglTpiAEPsdx4WyXQ" .
+        knora-base:standoffTagHasUUID   "qQlZfmYlQgi8hh29zaTSZw" .

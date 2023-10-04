@@ -281,9 +281,9 @@ object OntologyConstants {
     val TimeBase: IRI     = KnoraBasePrefixExpansion + "TimeBase"
     val ColorBase: IRI    = KnoraBasePrefixExpansion + "ColorBase"
 
-    val TextValue: IRI                = KnoraBasePrefixExpansion + "TextValue"
+    val TextValue: IRI                = KnoraBasePrefixExpansion + "TextValue"         // TODO: remove
     val UnformattedTextValue: IRI     = KnoraBasePrefixExpansion + "UnformattedTextValue"
-    val StandoffTextValue: IRI        = KnoraBasePrefixExpansion + "StandoffTextValue"
+    val StandoffTextValue: IRI        = KnoraBasePrefixExpansion + "StandoffTextValue" // TODO: remove
     val FormattedTextValue: IRI       = KnoraBasePrefixExpansion + "FormattedTextValue"
     val CustomFormattedTextValue: IRI = KnoraBasePrefixExpansion + "CustomFormattedTextValue"
     val IntValue: IRI                 = KnoraBasePrefixExpansion + "IntValue"
@@ -316,6 +316,14 @@ object OntologyConstants {
       TextFileValue,
       DocumentFileValue,
       ArchiveFileValue
+    )
+
+    val TextValueClasses: Set[IRI] = Set(
+      TextValue,
+      UnformattedTextValue,
+      StandoffTextValue,
+      FormattedTextValue,
+      CustomFormattedTextValue
     )
 
     val ValueClasses: Set[IRI] = Set(
@@ -595,6 +603,18 @@ object OntologyConstants {
     val StandoffUnorderedListTag: IRI = StandoffPrefixExpansion + "StandoffUnorderedListTag"
     val StandoffListElementTag: IRI   = StandoffPrefixExpansion + "StandoffListElementTag"
     val StandoffStyleElementTag: IRI  = StandoffPrefixExpansion + "StandoffStyleTag"
+
+    val StandoffBlockquoteTag: IRI = StandoffPrefixExpansion + "StandoffBlockquoteTag"
+    val StandoffTableTag: IRI      = StandoffPrefixExpansion + "StandoffTableTag"
+    val StandoffTableRowTag: IRI   = StandoffPrefixExpansion + "StandoffTableRowTag"
+    val StandoffTableBodyTag: IRI  = StandoffPrefixExpansion + "StandoffTableBodyTag"
+    val StandoffTableCellTag: IRI  = StandoffPrefixExpansion + "StandoffTableCellTag"
+    val StandoffPreTag: IRI        = StandoffPrefixExpansion + "StandoffPreTag"
+    val StandoffCodeTag: IRI       = StandoffPrefixExpansion + "StandoffCodeTag"
+    val StandoffCiteTag: IRI       = StandoffPrefixExpansion + "StandoffCiteTag"
+    val StandoffLineTag: IRI       = StandoffPrefixExpansion + "StandoffLineTag"
+
+    val standoffRootTagHasDocumentType: IRI = StandoffPrefixExpansion + "standoffRootTagHasDocumentType"
   }
 
   object XPathFunctions {

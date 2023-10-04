@@ -156,19 +156,17 @@ final case class StandoffResponderV2Live(
             )
           )
 
-      textValueObj: ReadTextValueV2 =
+      (valueIri, standoff) =
         valueObj match {
-          case textVal: ReadTextValueV2 => textVal
+          case textVal: ReadFormattedTextValueV2       => (textVal.valueIri, textVal.valueContent.standoff)
+          case textVal: ReadCustomFormattedTextValueV2 => (textVal.valueIri, textVal.valueContent.standoff)
           case _ =>
             throw BadRequestException(
               s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value"
             )
         }
 
-    } yield GetStandoffResponseV2(
-      valueIri = textValueObj.valueIri,
-      standoff = textValueObj.valueContent.standoff
-    )
+    } yield GetStandoffResponseV2(valueIri, standoff)
 
   /**
    * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.

@@ -584,24 +584,6 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
 
     }
 
-    "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
-
-      appActor ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
-          received = response
-        )
-      }
-
-    }
-
     "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
       appActor ! ResourcesGetRequestV2(
@@ -981,21 +963,21 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             )
           )
         ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri -> Seq(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUnformattedText".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text without standoff")
+              valueHasString = "this is text without standoff"
             )
           )
         ),
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text with standoff"),
+              valueHasString = "this is text with standoff",
               standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           )
@@ -1254,23 +1236,23 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
+              valueHasString = "test title"
             )
           )
         ),
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 1")
+              valueHasString = "test publoc 1"
             )
           ),
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 2")
+              valueHasString = "test publoc 2"
             )
           )
         )
@@ -1301,17 +1283,17 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
+              valueHasString = "test title"
             )
           )
         ),
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test pagenum")
+              valueHasString = "test pagenum"
             )
           )
         )
@@ -1342,21 +1324,21 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
+              valueHasString = "test title 1"
             )
           ),
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 2")
+              valueHasString = "test title 2"
             )
           ),
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
+              valueHasString = "test title 1"
             )
           )
         )
@@ -1387,9 +1369,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
+              valueHasString = "test title"
             )
           )
         )
@@ -1489,11 +1471,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text with standoff"),
+              valueHasString = "this is text with standoff",
               standoff = standoffWithInvalidLink,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           )
@@ -1558,9 +1540,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("invalid text value")
+              valueHasString = "invalid text value"
             )
           )
         )
@@ -2121,11 +2103,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         propertyIri -> Seq(
           CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text with standoff"),
+              valueHasString = "this is text with standoff",
               standoff = sampleStandoffForErasingResource,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           )
@@ -2147,8 +2129,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
-      val outputResource: ReadResourceV2  = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
-      val firstTextValue: ReadTextValueV2 = outputResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
+      val outputResource: ReadResourceV2 = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+      val firstTextValue: ReadFormattedTextValueV2 =
+        outputResource.values(propertyIri).head.asInstanceOf[ReadFormattedTextValueV2]
       firstValueIriToErase.set(firstTextValue.valueIri)
 
       for (standoffTag <- firstTextValue.valueContent.standoff) {
@@ -2164,11 +2147,11 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = resourceClassIri,
             propertyIri = propertyIri,
             valueIri = firstValueIriToErase.get,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is some other text with standoff"),
+              valueHasString = "this is some other text with standoff",
               standoff = Vector(sampleStandoffForErasingResource.head),
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -2178,8 +2161,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
       secondValueIriToErase.set(updateValueResponse.valueIri)
 
-      val updatedResource                  = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
-      val secondTextValue: ReadTextValueV2 = updatedResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
+      val updatedResource = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+      val secondTextValue: ReadFormattedTextValueV2 =
+        updatedResource.values(propertyIri).head.asInstanceOf[ReadFormattedTextValueV2]
       secondValueIriToErase.set(secondTextValue.valueIri)
 
       for (standoffTag <- firstTextValue.valueContent.standoff) {
@@ -2517,10 +2501,10 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           CreateValueV2(
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
-            valueContent = TextValueContentV2(
+            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUnformattedText".toSmartIri,
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(testValue)
+              valueHasString = testValue
             ),
             valueIri = Some(newValueIri.toSmartIri),
             permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser")
@@ -2550,7 +2534,7 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
         .valueContent
       assert(createValuePayloadContent.isDefined)
       val payloadContent = createValuePayloadContent.get
-      assert(payloadContent.valueType == OntologyConstants.KnoraBase.TextValue.toSmartIri)
+      assert(payloadContent.valueType == OntologyConstants.KnoraBase.UnformattedTextValue.toSmartIri)
       assert(payloadContent.valueHasString == testValue)
     }
 
@@ -2565,9 +2549,9 @@ class ResourcesResponderV2Spec extends CoreSpec with ImplicitSender {
           DeleteValueV2(
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
+            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUnformattedText".toSmartIri,
             valueIri = valueToDelete,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+            valueTypeIri = OntologyConstants.KnoraApiV2Complex.UnformattedTextValue.toSmartIri,
             deleteComment = Some(deleteComment)
           ),
           anythingUserProfile,

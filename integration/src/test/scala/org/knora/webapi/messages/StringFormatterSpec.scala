@@ -343,8 +343,8 @@ class StringFormatterSpec extends CoreSpec {
       )
     }
 
-    "convert http://www.knora.org/ontology/knora-base#TextValue to http://www.w3.org/2001/XMLSchema#string" in {
-      val internalEntityIri = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri
+    "convert http://www.knora.org/ontology/knora-base#UnformattedTextValue to http://www.w3.org/2001/XMLSchema#string" in {
+      val internalEntityIri = "http://www.knora.org/ontology/knora-base#UnformattedTextValue".toSmartIri
       assert(
         internalEntityIri.getOntologySchema.contains(InternalSchema) &&
           internalEntityIri.isKnoraInternalEntityIri &&

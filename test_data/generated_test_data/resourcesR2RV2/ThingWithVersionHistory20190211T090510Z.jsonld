@@ -42,7 +42,9 @@
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
     "anything:hasText": {
-        "knora-api:valueAsString": "one",
+        "knora-api:textValueHasMapping": {
+            "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+        },
         "knora-api:arkUrl": {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO/W5fm67e0QDWxRZumcXcs6gs",
             "@type": "xsd:anyURI"
@@ -61,8 +63,9 @@
         },
         "knora-api:valueHasUUID": "W5fm67e0QDWxRZumcXcs6g",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
-        "@type": "knora-api:TextValue",
-        "@id": "http://rdfh.ch/0001/thing-with-history/values/2a"
+        "@id": "http://rdfh.ch/0001/thing-with-history/values/2a",
+        "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>one</p></text>",
+        "@type": "knora-api:FormattedTextValue"
     },
     "@type": "anything:Thing",
     "@id": "http://rdfh.ch/0001/thing-with-history",

@@ -37,7 +37,7 @@ object ResponseCheckerV2 {
    * @param receivedValue received value.
    */
   private def compareValues(expectedValue: JsonLDValue, receivedValue: JsonLDValue): Unit =
-    assert(expectedValue == receivedValue, s"expected $expectedValue, received $receivedValue")
+    assert(expectedValue == receivedValue, s"\nexpected $expectedValue, \nreceived $receivedValue")
 
   // TODO: recurse over target resource if it is a LinkValue
 
@@ -77,9 +77,12 @@ object ResponseCheckerV2 {
     )
 
     assert(
-      expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys,
-      s"property Iris are different for resource ${receivedResource
-          .value(JsonLDKeywords.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}"
+      expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys, {
+        val exp = expectedResource.value.keySet -- noPropertyKeys
+        val rec = receivedResource.value.keySet -- noPropertyKeys
+        s"property Iris are different for resource ${receivedResource
+            .value(JsonLDKeywords.ID)}: \nexpected ${exp}, \nreceived ${rec}\nexpected has ${exp -- rec}\nreceived has ${rec -- exp}"
+      }
     )
 
     (expectedResource.value -- noPropertyKeys).foreach { case (propIri: IRI, expectedValuesForProp: JsonLDValue) =>

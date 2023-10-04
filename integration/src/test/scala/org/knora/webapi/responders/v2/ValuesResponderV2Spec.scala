@@ -20,13 +20,12 @@ import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StandoffConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.CalendarNameGregorian
 import org.knora.webapi.messages.util.DatePrecisionYear
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -37,6 +36,7 @@ import org.knora.webapi.models.filemodels.FileModelUtil
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataV2
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.MutableTestIri
 
@@ -46,11 +46,9 @@ import org.knora.webapi.util.MutableTestIri
 class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
-  private val generationeIri   = "http://rdfh.ch/0803/c3f913666f"
-  private val aThingIri        = "http://rdfh.ch/0001/a-thing"
-  private val freetestWithAPropertyFromAnythingOntologyIri =
-    "http://rdfh.ch/0001/freetest-with-a-property-from-anything-ontology"
+  private val zeitglöckleinIri     = "http://rdfh.ch/0803/c5058f3a"
+  private val generationeIri       = "http://rdfh.ch/0803/c3f913666f"
+  private val aThingIri            = "http://rdfh.ch/0001/a-thing"
   private val aThingPictureIri     = "http://rdfh.ch/0001/a-thing-picture"
   private val sierraIri            = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
   private val thingPictureClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
@@ -90,12 +88,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
 
   private val firstIntValueVersionIri                   = new MutableTestIri
   private val intValueIri                               = new MutableTestIri
-  private val intValueIriForFreetest                    = new MutableTestIri
-  private val intValueIriWithCustomPermissions          = new MutableTestIri
   private val intValueForRsyncIri                       = new MutableTestIri
   private val zeitglöckleinCommentWithoutStandoffIri    = new MutableTestIri
   private val zeitglöckleinCommentWithStandoffIri       = new MutableTestIri
-  private val zeitglöckleinCommentWithCommentIri        = new MutableTestIri
   private val zeitglöckleinSecondCommentWithStandoffIri = new MutableTestIri
   private val lobComment1Iri                            = new MutableTestIri
   private val lobComment2Iri                            = new MutableTestIri
@@ -113,8 +108,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
   private val standoffLinkValueIri                      = new MutableTestIri
   private val stillImageFileValueIri                    = new MutableTestIri
 
-  private var integerValueUUID = randomUUID
-  private var linkValueUUID    = randomUUID
+  private var linkValueUUID = randomUUID
 
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(
     StandoffTagV2(
@@ -180,7 +174,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     )
   )
 
-  private var standardMapping: Option[MappingXMLtoStandoff] = None
+  private val standardMapping: Option[MappingXMLtoStandoff] = None
 
   private def getResourceWithValues(
     resourceIri: IRI,
@@ -380,1021 +374,50 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
   }
 
-  private def getValuePermissions(valueIri: IRI): Option[UUID] = {
-    val sparqlQuery =
-      s"""
-         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-         |
-         |SELECT ?valuePermissions WHERE {
-         |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
-         |}
-             """.stripMargin
-
-    appActor ! SparqlSelectRequest(sparqlQuery)
-
-    expectMsgPF(timeout) { case response: SparqlSelectResult =>
-      val rows = response.results.bindings
-
-      if (rows.isEmpty) {
-        None
-      } else if (rows.size > 1) {
-        throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
-      } else {
-        Some(UuidUtil.base64Decode(rows.head.rowMap("valuePermissions")).get)
-      }
-    }
-  }
-
   private def assertFailsWithA[T <: Throwable: ClassTag](actual: Exit[Throwable, _]) = actual match {
     case Exit.Failure(err) => err.squash shouldBe a[T]
     case _                 => fail(s"Expected Exit.Failure with specific T.")
   }
 
-  "Load test data" in {
-    appActor ! GetMappingRequestV2(
-      mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      requestingUser = KnoraSystemInstances.Users.SystemUser
-    )
-
-    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
-      standardMapping = Some(mappingResponse.mapping)
-    }
-  }
+  private def createFormattedTextValue(
+    valueHasString: String,
+    standoff: Seq[StandoffTagV2],
+    propertyIri: SmartIri,
+    resourceIri: IRI,
+    resourceClassIri: SmartIri,
+    user: UserADM,
+    comment: Option[String] = None
+  ) = ValuesResponderV2.createValueV2(
+    CreateValueV2(
+      resourceIri = resourceIri,
+      resourceClassIri = resourceClassIri,
+      propertyIri = propertyIri,
+      valueContent = FormattedTextValueContentV2(
+        ontologySchema = ApiV2Complex,
+        valueHasString = valueHasString,
+        comment = comment,
+        mappingIri = OntologyConstants.KnoraBase.StandardMapping,
+        mapping = standardMapping,
+        standoff = standoff
+      )
+    ),
+    requestingUser = user,
+    apiRequestID = UUID.randomUUID
+  )
 
   "The values responder" should {
-    "create an integer value" in {
-      // Add the value.
-
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue                                  = 4
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      intValueIri.set(createValueResponse.valueIri)
-      firstIntValueVersionIri.set(createValueResponse.valueIri)
-      integerValueUUID = createValueResponse.valueUUID
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-        case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-      }
-    }
-
-    "not create a duplicate integer value" in {
-      val resourceIri      = aThingIri
-      val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
-      val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intVal           = IntegerValueContentV2(ApiV2Complex, 4)
-      val duplicateValue   = CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal)
-
-      val actual = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID))
-      assertFailsWithA[DuplicateValueException](actual)
-    }
-
-    "update an integer value" in {
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      // Get the value before update.
-      val previousValueFromTriplestore: ReadValueV2 = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1,
-        checkLastModDateChanged = false
-      )
-
-      // Update the value.
-
-      val intValue = 5
-
-      val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-
-      intValueIri.set(updateValueResponse.valueIri)
-      assert(updateValueResponse.valueUUID == integerValueUUID)
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
-      )
-
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
-          updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
-
-        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-      }
-
-      // Check that the permissions and UUID were deleted from the previous version of the value.
-      assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
-      assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
-    }
-
-    "create an integer value that belongs to a property of another ontology" in {
-      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
-      val propertyIri: SmartIri =
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      // Create the value.
-      val intValue = 40
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri =
-              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      intValueIriForFreetest.set(createValueResponse.valueIri)
-      integerValueUUID = createValueResponse.valueUUID
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
-        case _                                 => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-      }
-    }
-
-    "update an integer value that belongs to a property of another ontology" in {
-      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
-      val propertyIri: SmartIri =
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
-
-      // Get the value before update.
-      val previousValueFromTriplestore: ReadValueV2 = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2,
-        checkLastModDateChanged = false
-      )
-
-      // Update the value.
-      val intValue: Int = 50
-
-      val updateValueContent: UpdateValueContentV2 = UpdateValueContentV2(
-        resourceIri = resourceIri,
-        resourceClassIri =
-          "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-        propertyIri = propertyIri,
-        valueIri = intValueIriForFreetest.get,
-        valueContent = IntegerValueContentV2(
-          ontologySchema = ApiV2Complex,
-          valueHasInteger = intValue
-        )
-      )
-
-      val updateValueResponse =
-        UnsafeZioRun.runOrThrow(ValuesResponderV2.updateValueV2(updateValueContent, anythingUser2, randomUUID))
-
-      intValueIriForFreetest.set(updateValueResponse.valueIri)
-      assert(updateValueResponse.valueUUID == previousValueFromTriplestore.valueHasUUID)
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2
-      )
-
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
-          updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
-
-        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-      }
-
-      // Check that the permissions and UUID were deleted from the previous version of the value.
-      assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
-      assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
-    }
-
-    "delete an integer value that belongs to a property of another ontology" in {
-      val resourceIri: IRI = freetestWithAPropertyFromAnythingOntologyIri
-      val propertyIri: SmartIri =
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasIntegerUsedByOtherOntologies".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser2)
-
-      UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.deleteValueV2(
-          DeleteValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri =
-              "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreetestWithAPropertyFromAnythingOntology".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIriForFreetest.get,
-            valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            deleteComment = Some("this value was incorrect")
-          ),
-          anythingUser2,
-          randomUUID
-        )
-      )
-
-      checkValueIsDeleted(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        valueIri = intValueIriForFreetest.get,
-        requestingUser = anythingUser2
-      )
-    }
-
-    "not update an integer value without a comment without changing it" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 5
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-      assertFailsWithA[DuplicateValueException](actual)
-    }
-
-    "update an integer value, adding a comment" in {
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-      val comment                                   = "Added a comment"
-
-      // Get the value before update.
-      val previousValueFromTriplestore: ReadValueV2 = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1,
-        checkLastModDateChanged = false
-      )
-
-      // Update the value.
-
-      val intValue = 5
-
-      val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment)
-            )
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-
-      intValueIri.set(updateValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
-      )
-
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
-          updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
-          assert(updatedValueFromTriplestore.valueContent.comment.contains(comment))
-
-        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-      }
-
-      // Check that the permissions and UUID were deleted from the previous version of the value.
-      assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
-      assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
-    }
-
-    "not update an integer value with a comment without changing it" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 5
-      val comment               = "Added a comment"
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment)
-            )
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-      assertFailsWithA[DuplicateValueException](actual)
-    }
-
-    "update an integer value with a comment, changing only the comment" in {
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-      val comment                                   = "An updated comment"
-
-      // Get the value before update.
-      val previousValueFromTriplestore: ReadValueV2 = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1,
-        checkLastModDateChanged = false
-      )
-
-      // Update the value.
-
-      val intValue = 5
-
-      val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment)
-            )
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-
-      intValueIri.set(updateValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
-      )
-
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
-          updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
-          assert(updatedValueFromTriplestore.valueContent.comment.contains(comment))
-
-        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-      }
-
-      // Check that the permissions and UUID were deleted from the previous version of the value.
-      assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
-      assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
-    }
-
-    "create an integer value with a comment" in {
-      // Add the value.
-
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue                                  = 8
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-      val comment                                   = "Initial comment"
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue,
-              comment = Some(comment)
-            )
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      intValueIri.set(createValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIri.get,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          assert(savedValue.comment.contains(comment))
-
-        case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-      }
-    }
-
-    "create an integer value with custom permissions" in {
-      // Add the value.
-
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue                                  = 1
-      val permissions                               = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            permissions = Some(permissions)
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueIriWithCustomPermissions.get,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          PermissionUtilADM.parsePermissions(valueFromTriplestore.permissions) should ===(
-            PermissionUtilADM.parsePermissions(permissions)
-          )
-
-        case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-      }
-    }
-
-    "not create an integer value with syntactically invalid custom permissions" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 1024
-      val permissions           = "M knora-admin:Creator,V knora-admin:KnownUser"
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            permissions = Some(permissions)
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      assertFailsWithA[BadRequestException](actual)
-    }
-
-    "not create an integer value with custom permissions referring to a nonexistent group" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 1024
-      val permissions           = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            permissions = Some(permissions)
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      assertFailsWithA[NotFoundException](actual)
-    }
-
-    "create an integer value with custom UUID and creation date" in {
-      // Add the value.
-
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue                                  = 987
-      val valueUUID                                 = randomUUID
-      val valueCreationDate                         = Instant.now
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            valueUUID = Some(valueUUID),
-            valueCreationDate = Some(valueCreationDate)
-          ),
-          requestingUser = anythingUser1,
-          apiRequestID = randomUUID
-        )
-      )
-
-      intValueForRsyncIri.set(createValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueForRsyncIri.get,
-        requestingUser = anythingUser1
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          valueFromTriplestore.valueHasUUID should ===(valueUUID)
-          valueFromTriplestore.valueCreationDate should ===(valueCreationDate)
-
-        case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
-      }
-    }
-
-    "not update an integer value with a custom creation date that is earlier than the date of the current version" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 989
-      val valueCreationDate     = Instant.parse("2019-11-29T10:00:00Z")
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            valueCreationDate = Some(valueCreationDate)
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-      assertFailsWithA[BadRequestException](actual)
-    }
-
-    "update an integer value with a custom creation date" in {
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      // Update the value.
-
-      val intValue          = 988
-      val valueCreationDate = Instant.now
-
-      val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            valueCreationDate = Some(valueCreationDate)
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-
-      intValueForRsyncIri.set(updateValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueForRsyncIri.get,
-        requestingUser = anythingUser1
-      )
-
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          updatedValueFromTriplestore.valueCreationDate should ===(valueCreationDate)
-
-        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-      }
-    }
-
-    "update an integer value with a custom new version IRI" in {
-      val resourceIri: IRI                          = aThingIri
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-      // Update the value.
-
-      val intValue                = 1000
-      val newValueVersionIri: IRI = stringFormatter.makeRandomValueIri(resourceIri)
-
-      val updateValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.updateValueV2(
-          UpdateValueContentV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueIri = intValueForRsyncIri.get,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            ),
-            newValueVersionIri = Some(newValueVersionIri.toSmartIri)
-          ),
-          anythingUser1,
-          randomUUID
-        )
-      )
-      intValueForRsyncIri.set(updateValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val updatedValueFromTriplestore = getValue(
-        resourceIri = resourceIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = intValueForRsyncIri.get,
-        requestingUser = anythingUser1
-      )
-
-      updatedValueFromTriplestore.valueContent match {
-        case savedValue: IntegerValueContentV2 =>
-          savedValue.valueHasInteger should ===(intValue)
-          updatedValueFromTriplestore.valueIri should ===(newValueVersionIri)
-
-        case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
-      }
-    }
-
-    "not create a value if the user does not have modify permission on the resource" in {
-      val resourceIri: IRI      = aThingIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val intValue              = 5
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = intValue
-            )
-          ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
-      )
-      assertFailsWithA[ForbiddenException](actual)
-    }
-
-    "create a text value without standoff" in {
-      val valueHasString                            = "Comment 1a"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
-          ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
-      )
-
-      zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = zeitglöckleinIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: TextValueContentV2 => assert(savedValue.valueHasString.contains(valueHasString))
-        case _                              => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
-      }
-    }
-
-    "not create a duplicate text value without standoff" in {
-      val valueHasString        = "Comment 1a"
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
-            )
-          ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
-      )
-      assertFailsWithA[DuplicateValueException](actual)
-    }
-
-    "create a text value with a comment" in {
-      val valueHasString                            = "this is a text value that has a comment"
-      val valueHasComment                           = "this is a comment"
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              comment = Some(valueHasComment)
-            )
-          ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
-      )
-
-      zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = zeitglöckleinIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = zeitglöckleinCommentWithCommentIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: TextValueContentV2 =>
-          assert(savedValue.valueHasString.contains(valueHasString))
-          savedValue.comment should ===(Some(valueHasComment))
-
-        case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
-      }
-    }
-
-    "create a text value with standoff" in {
-      val valueHasString = "Comment 1aa"
-
-      val propertyIri: SmartIri                     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-      val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
-
-      val createValueResponse = UnsafeZioRun.runOrThrow(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
-      )
-
-      zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
-
-      // Read the value back to check that it was added correctly.
-
-      val valueFromTriplestore = getValue(
-        resourceIri = zeitglöckleinIri,
-        maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
-        expectedValueIri = zeitglöckleinCommentWithStandoffIri.get,
-        requestingUser = incunabulaUser
-      )
-
-      valueFromTriplestore.valueContent match {
-        case savedValue: TextValueContentV2 =>
-          assert(savedValue.valueHasString.contains(valueHasString))
-          savedValue.standoff should ===(sampleStandoff)
-          assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
-          assert(savedValue.mapping == standardMapping)
-
-        case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
-      }
-    }
 
     "not create a duplicate text value with standoff (even if the standoff is different)" in {
-      val valueHasString = "Comment 1aa"
+      val valueHasString   = "Comment 1aa"
+      val resourceIri      = SharedTestDataV2.Anything.resource1.resourceIri
+      val propertyIri      = SharedTestDataV2.AnythingOntology.hasRichtextPropIriExternal
+      val resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIri
+      val standoff         = sampleStandoffModified // XXX: not yet adjusted
 
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-
-      val actual = UnsafeZioRun.run(
-        ValuesResponderV2.createValueV2(
-          CreateValueV2(
-            resourceIri = zeitglöckleinIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-            propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
-              standoff = sampleStandoffModified,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
-        )
+      val res = UnsafeZioRun.run(
+        createFormattedTextValue(valueHasString, standoff, propertyIri, resourceIri, resourceClassIri, anythingUser1)
       )
-      assertFailsWithA[DuplicateValueException](actual)
+      assertFailsWithA[DuplicateValueException](res)
     }
 
     "create a decimal value" in {
@@ -2220,26 +1243,27 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "not add a new value to a deleted resource" in {
-      val resourceIri: IRI      = "http://rdfh.ch/0803/9935159f67"
-      val valueHasString        = "Comment 2"
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+      val resourceIri: IRI      = SharedTestDataV2.Anything.deletedResourceIri
+      val valueHasString        = "Some String Value"
+      val propertyIri: SmartIri = SharedTestDataV2.AnythingOntology.hasTextPropIriExternal
 
-      val actual = UnsafeZioRun.run(
+      val res = UnsafeZioRun.run(
         ValuesResponderV2.createValueV2(
           CreateValueV2(
             resourceIri = resourceIri,
-            resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+            resourceClassIri = SharedTestDataV2.AnythingOntology.thingClassIriExternal,
             propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
+              valueHasString = valueHasString
             )
           ),
-          requestingUser = incunabulaUser,
-          apiRequestID = randomUUID
+          requestingUser = anythingUser1,
+          apiRequestID = UUID.randomUUID
         )
       )
-      assertFailsWithA[NotFoundException](actual)
+      assertFailsWithA[NotFoundException](res)
+
     }
 
     "not add a new value if the resource's rdf:type is not correctly given" in {
@@ -2275,9 +1299,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is not a date")
+              valueHasString = "this is not a date"
             )
           ),
           requestingUser = incunabulaUser,
@@ -2359,11 +1383,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+              valueHasString = valueHasString,
               standoff = standoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -2395,11 +1419,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       textValueFromTriplestore.valueContent match {
-        case savedTextValue: TextValueContentV2 =>
+        case savedTextValue: FormattedTextValueContentV2 =>
           assert(savedTextValue.valueHasString.contains(valueHasString))
           savedTextValue.standoff should ===(standoff)
           assert(savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
-          savedTextValue.mapping should ===(standardMapping)
+          assert(savedTextValue.mapping.contains(StandoffConstants.standardMapping))
 
         case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
       }
@@ -2455,11 +1479,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceIri = resourceIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+              valueHasString = valueHasString,
               standoff = standoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -2491,11 +1515,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       textValueFromTriplestore.valueContent match {
-        case savedTextValue: TextValueContentV2 =>
+        case savedTextValue: FormattedTextValueContentV2 =>
           assert(savedTextValue.valueHasString.contains(valueHasString))
           savedTextValue.standoff should ===(standoff)
           assert(savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
-          savedTextValue.mapping should ===(standardMapping)
+          assert(savedTextValue.mapping.contains(StandoffConstants.standardMapping))
 
         case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
       }
@@ -2845,9 +1869,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
             valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
+              valueHasString = valueHasString
             )
           ),
           incunabulaUser,
@@ -2868,8 +1892,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       valueFromTriplestore.valueContent match {
-        case savedValue: TextValueContentV2 => assert(savedValue.valueHasString.contains(valueHasString))
-        case _                              => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+        case savedValue: UnformattedTextValueContentV2 => assert(savedValue.valueHasString.contains(valueHasString))
+        case _                                         => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
       }
     }
 
@@ -2886,11 +1910,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
             valueIri = zeitglöckleinCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+              valueHasString = valueHasString,
               standoff = sampleStandoffWithLink,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -2912,7 +1936,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       valueFromTriplestore.valueContent match {
-        case savedValue: TextValueContentV2 =>
+        case savedValue: FormattedTextValueContentV2 =>
           assert(savedValue.valueHasString.contains(valueHasString))
           savedValue.standoff should ===(sampleStandoffWithLink)
           assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
@@ -2957,9 +1981,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
             valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
+              valueHasString = valueHasString
             )
           ),
           incunabulaUser,
@@ -2981,11 +2005,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceIri = zeitglöckleinIri,
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+              valueHasString = valueHasString,
               standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -3008,7 +2032,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       valueFromTriplestore.valueContent match {
-        case savedValue: TextValueContentV2 =>
+        case savedValue: FormattedTextValueContentV2 =>
           assert(savedValue.valueHasString.contains(valueHasString))
           savedValue.standoff should ===(sampleStandoff)
           assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
@@ -3030,11 +2054,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
             valueIri = zeitglöckleinCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+              valueHasString = valueHasString,
               standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -3058,11 +2082,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
             valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+              valueHasString = valueHasString,
               standoff = sampleStandoffModified,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -3085,7 +2109,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       )
 
       valueFromTriplestore.valueContent match {
-        case savedValue: TextValueContentV2 =>
+        case savedValue: FormattedTextValueContentV2 =>
           assert(savedValue.valueHasString.contains(valueHasString))
           savedValue.standoff should ===(sampleStandoffModified)
           assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
@@ -3107,11 +2131,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
             valueIri = zeitglöckleinCommentWithStandoffIri.get,
-            valueContent = TextValueContentV2(
+            valueContent = FormattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString),
+              valueHasString = valueHasString,
               standoff = sampleStandoffModified,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
               mapping = standardMapping
             )
           ),
@@ -3133,9 +2157,9 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
             resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
             propertyIri = propertyIri,
             valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
-            valueContent = TextValueContentV2(
+            valueContent = UnformattedTextValueContentV2(
               ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some(valueHasString)
+              valueHasString = valueHasString
             )
           ),
           incunabulaUser,
@@ -4339,7 +3363,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val deleteDate: Instant                       = Instant.now
     val deleteComment                             = Some("this value was incorrect")
 
-    val actual = UnsafeZioRun.run(
+    UnsafeZioRun.run(
       ValuesResponderV2.deleteValueV2(
         DeleteValueV2(
           resourceIri = resourceIri,
@@ -4603,11 +3627,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceIri = sierraIri,
           resourceClassIri = resourceClassIri,
           propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
+          valueContent = FormattedTextValueContentV2(
             ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 1 for UUID checking"),
+            valueHasString = "Comment 1 for UUID checking",
             standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+            mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
             mapping = standardMapping
           )
         ),
@@ -4644,11 +3668,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceIri = sierraIri,
           resourceClassIri = resourceClassIri,
           propertyIri = propertyIri,
-          valueContent = TextValueContentV2(
+          valueContent = FormattedTextValueContentV2(
             ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 2 for UUID checking"),
+            valueHasString = "Comment 2 for UUID checking",
             standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+            mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
             mapping = standardMapping
           )
         ),
@@ -4695,11 +3719,11 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
           resourceClassIri = resourceClassIri,
           propertyIri = propertyIri,
           valueIri = createValueResponse2.valueIri,
-          valueContent = TextValueContentV2(
+          valueContent = FormattedTextValueContentV2(
             ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some("Comment 3 for UUID checking"),
+            valueHasString = "Comment 3 for UUID checking",
             standoff = sampleStandoffWithLink,
-            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+            mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
             mapping = standardMapping
           )
         ),

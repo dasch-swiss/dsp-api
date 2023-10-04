@@ -739,7 +739,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |        "@id" : "anything:Thing"
            |      },
            |      "knora-api:objectType" : {
-           |        "@id" : "knora-api:TextValue"
+           |        "@id" : "knora-api:UnformattedTextValue"
            |      },
            |      "rdfs:comment" : [ {
            |        "@language" : "en",
@@ -2587,7 +2587,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "@id" : "useless:hasSharedName",
            |    "@type" : "owl:ObjectProperty",
            |    "knora-api:objectType" : {
-           |      "@id" : "knora-api:TextValue"
+           |      "@id" : "knora-api:UnformattedTextValue"
            |    },
            |    "rdfs:comment" : {
            |      "@language" : "en",
@@ -2703,7 +2703,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |        "@id" : "anything:TestClass"
            |      },
            |      "knora-api:objectType" : {
-           |        "@id" : "knora-api:TextValue"
+           |        "@id" : "knora-api:UnformattedTextValue"
            |      },
            |      "rdfs:comment" : {
            |        "@language" : "en",
@@ -3009,7 +3009,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           lastModificationDate = freetestLastModDate,
           propertyName = "hasBlueTestTextProp",
           subjectClassName = Some("BlueFreeTestClass"),
-          propertyType = PropertyValueType.TextValue,
+          propertyType = PropertyValueType.UnformattedTextValue,
           label = label1,
           comment = comment1
         )
@@ -3905,7 +3905,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |        "@id" : "anything:Thing"
          |      },
          |      "knora-api:objectType" : {
-         |        "@id" : "knora-api:TextValue"
+         |        "@id" : "knora-api:IntValue"
          |      } ,
          |      "rdfs:label" : [ {
          |        "@language" : "en",
@@ -3956,7 +3956,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |        "@id" : "anything:Thing"
          |      },
          |      "knora-api:objectType" : {
-         |        "@id" : "knora-api:TextValue"
+         |        "@id" : "knora-api:IntValue"
          |      } ,
          |      "rdfs:label" : [ {
          |        "@language" : "en",
