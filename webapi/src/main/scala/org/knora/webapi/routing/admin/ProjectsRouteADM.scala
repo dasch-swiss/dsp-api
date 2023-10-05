@@ -38,8 +38,28 @@ import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.model.ValuedEndpointOutput
 import zio.json.{DeriveJsonCodec, JsonCodec}
+
+final case class ToPekkoRoute()(implicit executionContext: ExecutionContext) {
+  private case class GenericErrorResponse(error: String)
+
+  private object GenericErrorResponse {
+    implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
+  }
+
+  private def customizedErrorResponse(m: String): ValuedEndpointOutput[_] =
+    ValuedEndpointOutput(zioJsonBody[GenericErrorResponse], GenericErrorResponse(m))
+
+  private val serverOptions =
+    PekkoHttpServerOptions.customiseInterceptors
+      .defaultHandlers(customizedErrorResponse)
+      .metricsInterceptor(ZioMetrics.default[Future]().metricsInterceptor())
+      .options
+
+  val interpreter: PekkoHttpServerInterpreter = PekkoHttpServerInterpreter(serverOptions)
+}
 
 final case class ProjectsRouteADM(projectsEndpointsHandlerF: ProjectsEndpointsHandlerF)(
   private implicit val runtime: Runtime[
@@ -48,17 +68,7 @@ final case class ProjectsRouteADM(projectsEndpointsHandlerF: ProjectsEndpointsHa
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {
 
-  case class GenericErrorResponse(error: String)
-  object GenericErrorResponse {
-    implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
-  }
-  private def customizedErrorResponse(m: String): ValuedEndpointOutput[_] =
-    ValuedEndpointOutput(zioJsonBody[GenericErrorResponse], GenericErrorResponse(m))
-
-  private val serverOptions =
-    PekkoHttpServerOptions.customiseInterceptors.defaultHandlers(customizedErrorResponse).options
-  private val interpreter = PekkoHttpServerInterpreter(serverOptions)
-
+  private val interpreter        = ToPekkoRoute().interpreter
   private val tapirRoutes: Route = projectsEndpointsHandlerF.handlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
 
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
