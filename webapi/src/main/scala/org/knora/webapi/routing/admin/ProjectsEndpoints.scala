@@ -108,15 +108,7 @@ final case class ProjectsEndpoints(
     .description("Creates a new project.")
     .tags(tags)
 
-  val getAdminProjectsByProjectIriMembers: PartialServerEndpoint[
-    String,
-    UserADM,
-    ProjectIdentifierADM.IriIdentifier,
-    RequestRejectedException,
-    ProjectMembersGetResponseADM,
-    Any,
-    Future
-  ] = baseEndpoints.securedEndpoint.get
+  val getAdminProjectsByProjectIriMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByIri / members)
     .out(sprayJsonBody[ProjectMembersGetResponseADM])
 

@@ -13,9 +13,13 @@ import zio.ZIO
 import zio.ZLayer
 
 import scala.concurrent.Future
-
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.routing.InputType.SecurityIn
+
+object InputType {
+  type SecurityIn = (Option[String], Option[String])
+}
 
 case class EndpointAndZioHandler[SECURITY_INPUT, INPUT, OUTPUT](
   endpoint: Endpoint[SECURITY_INPUT, INPUT, RequestRejectedException, OUTPUT, Any],
@@ -23,7 +27,15 @@ case class EndpointAndZioHandler[SECURITY_INPUT, INPUT, OUTPUT](
 )
 
 case class SecuredEndpointAndZioHandler[INPUT, OUTPUT](
-  endpoint: PartialServerEndpoint[String, UserADM, INPUT, RequestRejectedException, OUTPUT, Any, Future],
+  endpoint: PartialServerEndpoint[
+    SecurityIn,
+    UserADM,
+    INPUT,
+    RequestRejectedException,
+    OUTPUT,
+    Any,
+    Future
+  ],
   handler: UserADM => INPUT => Task[OUTPUT]
 )
 
@@ -31,7 +43,7 @@ final case class HandlerMapperF()(implicit val r: zio.Runtime[Any]) {
 
   def mapEndpointAndHandler[INPUT, OUTPUT](
     it: SecuredEndpointAndZioHandler[INPUT, OUTPUT]
-  ): Full[String, UserADM, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
+  ): Full[SecurityIn, UserADM, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
     it.endpoint.serverLogic(user => in => { runToFuture(it.handler(user)(in)) })
 
   def mapEndpointAndHandler[INPUT, OUTPUT](

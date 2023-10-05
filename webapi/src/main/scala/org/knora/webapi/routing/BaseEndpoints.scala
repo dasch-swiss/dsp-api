@@ -7,19 +7,13 @@ package org.knora.webapi.routing
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.EndpointOutput
-import sttp.tapir.auth
-import sttp.tapir.endpoint
+import sttp.tapir.{EndpointOutput, auth, cookie, endpoint, oneOf, oneOfVariant, statusCode}
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.oneOf
-import sttp.tapir.oneOfVariant
-import sttp.tapir.statusCode
 import zio.ZIO
 import zio.ZLayer
 
 import scala.concurrent.Future
-
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
@@ -47,8 +41,13 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
 
   val securedEndpoint = endpoint
     .errorOut(secureDefaultErrorOutputs)
-    .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
-    .serverSecurityLogic(authenticateJwt)
+    .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+    .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
+    .serverSecurityLogic {
+      case (Some(jwtToken), _) => authenticateJwt(jwtToken)
+      case (_, Some(cookie))   => authenticateJwt(cookie)
+      case _                   => Future.successful(Left(BadCredentialsException("No credentials provided.")))
+    }
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, UserADM]] =
     UnsafeZioRun.runToFuture(
