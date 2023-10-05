@@ -16,14 +16,13 @@ import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
 import org.apache.pekko.stream.IOResult
 import org.apache.pekko.stream.scaladsl.FileIO
-import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
+import sttp.tapir.server.pekkohttp.{PekkoHttpServerInterpreter, PekkoHttpServerOptions}
 import zio._
 
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Try
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
@@ -37,6 +36,10 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import sttp.tapir.generic.auto._
+import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import sttp.tapir.server.model.ValuedEndpointOutput
+import zio.json.{DeriveJsonCodec, JsonCodec}
 
 final case class ProjectsRouteADM(projectsEndpointsHandlerF: ProjectsEndpointsHandlerF)(
   private implicit val runtime: Runtime[
@@ -45,7 +48,17 @@ final case class ProjectsRouteADM(projectsEndpointsHandlerF: ProjectsEndpointsHa
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {
 
-  private val interpreter        = PekkoHttpServerInterpreter()
+  case class GenericErrorResponse(error: String)
+  object GenericErrorResponse {
+    implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
+  }
+  private def customizedErrorResponse(m: String): ValuedEndpointOutput[_] =
+    ValuedEndpointOutput(zioJsonBody[GenericErrorResponse], GenericErrorResponse(m))
+
+  private val serverOptions =
+    PekkoHttpServerOptions.customiseInterceptors.defaultHandlers(customizedErrorResponse).options
+  private val interpreter = PekkoHttpServerInterpreter(serverOptions)
+
   private val tapirRoutes: Route = projectsEndpointsHandlerF.handlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
 
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
