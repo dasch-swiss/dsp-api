@@ -19,7 +19,10 @@ import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
+import sttp.tapir.model.UsernamePassword
 
 final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
 
@@ -43,10 +46,12 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
     .errorOut(secureDefaultErrorOutputs)
     .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
     .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
+    .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
     .serverSecurityLogic {
-      case (Some(jwtToken), _) => authenticateJwt(jwtToken)
-      case (_, Some(cookie))   => authenticateJwt(cookie)
-      case _                   => Future.successful(Left(BadCredentialsException("No credentials provided.")))
+      case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
+      case (_, Some(cookie), _)   => authenticateJwt(cookie)
+      case (_, _, Some(basic))    => authenticateBasic(basic)
+      case _                      => Future.successful(Left(BadCredentialsException("No credentials provided.")))
     }
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, UserADM]] =
@@ -54,9 +59,15 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
       authenticator.verifyJwt(jwtToken).refineOrDie { case e: RequestRejectedException => e }.either
     )
 
-  private def authenticateBasic(basic: String): Future[Either[RequestRejectedException, UserADM]] =
+  private def authenticateBasic(basic: UsernamePassword): Future[Either[RequestRejectedException, UserADM]] =
     UnsafeZioRun.runToFuture(
-      ZIO.logError(s"Basic authentication $basic is not supported yet.") *> ZIO.die(new UnsupportedOperationException())
+      ZIO
+        .attempt(UserIdentifierADM(maybeEmail = Some(basic.username))(StringFormatter.getGeneralInstance))
+        .map(id => Some(KnoraPasswordCredentialsV2(id, basic.password.getOrElse(""))))
+        .flatMap(authenticator.getUserADMThroughCredentialsV2)
+        .orElseFail(BadCredentialsException("Invalid credentials."))
+        .refineOrDie { case e: RequestRejectedException => e }
+        .either
     )
 }
 
