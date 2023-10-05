@@ -201,19 +201,19 @@ final case class ProjectsRouteZ(
     for {
       iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      r             <- projectsService.getProjectAdmins(iriIdentifier, requestingUser)
+      r             <- projectsService.projectAdminMembersGetRequestADM(requestingUser, iriIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectAdminsByShortname(shortname: String, requestingUser: UserADM): Task[Response] =
     for {
       shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.getProjectAdmins(shortnameIdentifier, requestingUser)
+      r                   <- projectsService.projectAdminMembersGetRequestADM(requestingUser, shortnameIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectAdminsByShortcode(shortcode: String, requestingUser: UserADM): Task[Response] =
     for {
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.getProjectAdmins(shortcodeIdentifier, requestingUser)
+      r                   <- projectsService.projectAdminMembersGetRequestADM(requestingUser, shortcodeIdentifier)
     } yield Response.json(r.toJsValue.toString())
 
   private def getKeywords(): Task[Response] =

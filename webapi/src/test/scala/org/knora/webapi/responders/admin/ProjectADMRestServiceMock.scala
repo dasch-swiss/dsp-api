@@ -74,9 +74,9 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         ): Task[ProjectMembersGetResponseADM] =
           proxy(GetProjectMembers, (identifier, requestingUser))
 
-        def getProjectAdmins(
-          identifier: ProjectIdentifierADM,
-          requestingUser: UserADM
+        def projectAdminMembersGetRequestADM(
+          requestingUser: UserADM,
+          identifier: ProjectIdentifierADM
         ): Task[ProjectAdminMembersGetResponseADM] =
           proxy(GetProjectAdmins, (identifier, requestingUser))
 

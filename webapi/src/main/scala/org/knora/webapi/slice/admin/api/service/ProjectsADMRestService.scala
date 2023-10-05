@@ -52,9 +52,9 @@ trait ProjectADMRestService {
     requestingUser: UserADM,
     projectIdentifier: ProjectIdentifierADM
   ): Task[ProjectMembersGetResponseADM]
-  def getProjectAdmins(
-    projectIdentifier: ProjectIdentifierADM,
-    requestingUser: UserADM
+  def projectAdminMembersGetRequestADM(
+    requestingUser: UserADM,
+    projectIdentifier: ProjectIdentifierADM
   ): Task[ProjectAdminMembersGetResponseADM]
   def getKeywords(): Task[ProjectsKeywordsGetResponseADM]
   def getKeywordsByProjectIri(
@@ -208,7 +208,10 @@ final case class ProjectsADMRestServiceLive(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getProjectAdmins(id: ProjectIdentifierADM, user: UserADM): Task[ProjectAdminMembersGetResponseADM] =
+  def projectAdminMembersGetRequestADM(
+    user: UserADM,
+    id: ProjectIdentifierADM
+  ): Task[ProjectAdminMembersGetResponseADM] =
     responder.projectAdminMembersGetRequestADM(id, user)
 
   /**

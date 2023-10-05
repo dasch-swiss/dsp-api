@@ -90,6 +90,24 @@ final case class ProjectsEndpointsHandlerF(
       user => id => restService.getProjectMembers(user, id)
     )
 
+  val getAdminProjectsByProjectIriAdminMembersHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.getAdminProjectsByProjectIriAdminMembers,
+      user => id => restService.projectAdminMembersGetRequestADM(user, id)
+    )
+
+  val getAdminProjectsByProjectShortcodeAdminMembersHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.getAdminProjectsByProjectShortcodeAdminMembers,
+      user => id => restService.projectAdminMembersGetRequestADM(user, id)
+    )
+
+  val getAdminProjectsByProjectShortnameAdminMembersHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.getAdminProjectsByProjectShortnameAdminMembers,
+      user => id => restService.projectAdminMembersGetRequestADM(user, id)
+    )
+
   val handlers =
     List(
       getAdminProjectsHandler,
@@ -106,7 +124,10 @@ final case class ProjectsEndpointsHandlerF(
   val secureHandlers = List(
     getAdminProjectsByProjectIriMembersHandler,
     getAdminProjectsByProjectShortcodeMembersHandler,
-    getAdminProjectsByProjectShortnameMembersHandler
+    getAdminProjectsByProjectShortnameMembersHandler,
+    getAdminProjectsByProjectIriAdminMembersHandler,
+    getAdminProjectsByProjectShortcodeAdminMembersHandler,
+    getAdminProjectsByProjectShortnameAdminMembersHandler
   ).map(mapper.mapEndpointAndHandler(_))
 }
 

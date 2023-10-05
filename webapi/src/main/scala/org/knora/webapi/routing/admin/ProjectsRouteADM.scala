@@ -5,37 +5,30 @@
 
 package org.knora.webapi.routing.admin
 
-import org.apache.pekko.Done
-import org.apache.pekko.http.scaladsl.model.ContentTypes
-import org.apache.pekko.http.scaladsl.model.HttpEntity
-import org.apache.pekko.http.scaladsl.model.headers.ContentDispositionTypes
-import org.apache.pekko.http.scaladsl.model.headers.`Content-Disposition`
-import org.apache.pekko.http.scaladsl.server.Directives._
-import org.apache.pekko.http.scaladsl.server.PathMatcher
-import org.apache.pekko.http.scaladsl.server.RequestContext
-import org.apache.pekko.http.scaladsl.server.Route
-import org.apache.pekko.stream.IOResult
-import org.apache.pekko.stream.scaladsl.FileIO
-import zio._
-
-import java.nio.file.Files
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.util.Try
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
+import org.apache.pekko.Done
+import org.apache.pekko.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
+import org.apache.pekko.http.scaladsl.model.{ContentTypes, HttpEntity}
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.{PathMatcher, Route}
+import org.apache.pekko.stream.IOResult
+import org.apache.pekko.stream.scaladsl.FileIO
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM._
-import org.knora.webapi.routing._
+import org.knora.webapi.routing.{Authenticator, _}
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import zio._
+
+import java.nio.file.Files
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 final case class ProjectsRouteADM(
   interpreter: TapirToPekkoInterpreter,
@@ -59,9 +52,6 @@ final case class ProjectsRouteADM(
       addProject() ~
       changeProject() ~
       deleteProject() ~
-      getProjectAdminMembersByIri() ~
-      getProjectAdminMembersByShortname() ~
-      getProjectAdminMembersByShortcode() ~
       getProjectData() ~
       postExportProject
 
@@ -120,38 +110,6 @@ final case class ProjectsRouteADM(
         } yield ProjectChangeRequestADM(iri, payload, user, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
-    }
-
-  /**
-   * Returns all admin members of a project identified through the IRI.
-   */
-  private def getProjectAdminMembersByIri(): Route =
-    path(projectsBasePath / "iri" / Segment / "admin-members") { value =>
-      get(getProjectAdminMembers(IriIdentifier.fromString(value).toZIO, _))
-    }
-
-  private def getProjectAdminMembers(idTask: Task[ProjectIdentifierADM], requestContext: RequestContext) = {
-    val requestTask = for {
-      id             <- idTask.mapError(e => BadRequestException(e.getMessage))
-      requestingUser <- Authenticator.getUserADM(requestContext)
-    } yield ProjectAdminMembersGetRequestADM(id, requestingUser)
-    runJsonRouteZ(requestTask, requestContext)
-  }
-
-  /**
-   * Returns all admin members of a project identified through the shortname.
-   */
-  private def getProjectAdminMembersByShortname(): Route =
-    path(projectsBasePath / "shortname" / Segment / "admin-members") { value =>
-      get(getProjectAdminMembers(ShortnameIdentifier.fromString(value).toZIO, _))
-    }
-
-  /**
-   * Returns all admin members of a project identified through shortcode.
-   */
-  private def getProjectAdminMembersByShortcode(): Route =
-    path(projectsBasePath / "shortcode" / Segment / "admin-members") { value =>
-      get(getProjectAdminMembers(ShortcodeIdentifier.fromString(value).toZIO, _))
     }
 
   private val projectDataHeader =
