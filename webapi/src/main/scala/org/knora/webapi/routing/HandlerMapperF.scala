@@ -6,6 +6,7 @@
 package org.knora.webapi.routing
 
 import sttp.tapir.Endpoint
+import sttp.tapir.server.PartialServerEndpoint
 import sttp.tapir.server.ServerEndpoint.Full
 import zio.Task
 import zio.ZIO
@@ -14,26 +15,32 @@ import zio.ZLayer
 import scala.concurrent.Future
 
 import dsp.errors.RequestRejectedException
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
-case class EndpointAndZioHandler[INPUT, OUTPUT](
-  endpoint: Endpoint[Unit, INPUT, RequestRejectedException, OUTPUT, Any],
+case class EndpointAndZioHandler[SECURITY_INPUT, INPUT, OUTPUT](
+  endpoint: Endpoint[SECURITY_INPUT, INPUT, RequestRejectedException, OUTPUT, Any],
   handler: INPUT => Task[OUTPUT]
+)
+
+case class SecuredEndpointAndZioHandler[INPUT, OUTPUT](
+  endpoint: PartialServerEndpoint[String, UserADM, INPUT, RequestRejectedException, OUTPUT, Any, Future],
+  handler: UserADM => INPUT => Task[OUTPUT]
 )
 
 final case class HandlerMapperF()(implicit val r: zio.Runtime[Any]) {
 
   def mapEndpointAndHandler[INPUT, OUTPUT](
-    it: EndpointAndZioHandler[INPUT, OUTPUT]
+    it: SecuredEndpointAndZioHandler[INPUT, OUTPUT]
+  ): Full[String, UserADM, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
+    it.endpoint.serverLogic(user => in => { runToFuture(it.handler(user)(in)) })
+
+  def mapEndpointAndHandler[INPUT, OUTPUT](
+    it: EndpointAndZioHandler[Unit, INPUT, OUTPUT]
   ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
-    it.endpoint.serverLogic[Future](handlerFromZio(it.handler))
+    it.endpoint.serverLogic[Future](input => runToFuture(it.handler(input)))
 
-  private def runToFuture[OUTPUT](zio: Task[OUTPUT]): Future[Either[RequestRejectedException, OUTPUT]] =
+  def runToFuture[OUTPUT](zio: Task[OUTPUT]): Future[Either[RequestRejectedException, OUTPUT]] =
     UnsafeZioRun.runToFuture(zio.refineOrDie { case e: RequestRejectedException => e }.either)
-
-  private def handlerFromZio[INPUT, OUTPUT](
-    zio: INPUT => Task[OUTPUT]
-  ): INPUT => Future[Either[RequestRejectedException, OUTPUT]] =
-    input => runToFuture(zio.apply(input))
 }
 
 object HandlerMapperF {

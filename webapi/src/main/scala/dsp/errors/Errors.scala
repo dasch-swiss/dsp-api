@@ -103,12 +103,20 @@ object BadRequestException {
  */
 case class BadCredentialsException(message: String) extends RequestRejectedException(message)
 
+object BadCredentialsException {
+  implicit val codec: JsonCodec[BadCredentialsException] = DeriveJsonCodec.gen[BadCredentialsException]
+}
+
 /**
  * An exception indicating that a user has made a request for which the user lacks the necessary permission.
  *
  * @param message a description of the error.
  */
 case class ForbiddenException(message: String) extends RequestRejectedException(message)
+
+object ForbiddenException {
+  implicit val codec: JsonCodec[ForbiddenException] = DeriveJsonCodec.gen[ForbiddenException]
+}
 
 /**
  * An exception indicating that the requested data was not found.

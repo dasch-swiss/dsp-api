@@ -194,7 +194,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectMembers(identifier, SystemUser)
+               .getProjectMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -207,7 +207,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectMembers(identifier, SystemUser)
+               .getProjectMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -220,7 +220,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectMembers(identifier, SystemUser)
+               .getProjectMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }

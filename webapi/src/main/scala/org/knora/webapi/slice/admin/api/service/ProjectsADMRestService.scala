@@ -49,8 +49,8 @@ trait ProjectADMRestService {
   def importProject(shortcode: String, requestingUser: UserADM): Task[ProjectImportResponse]
   def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]]
   def getProjectMembers(
-    projectIdentifier: ProjectIdentifierADM,
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    projectIdentifier: ProjectIdentifierADM
   ): Task[ProjectMembersGetResponseADM]
   def getProjectAdmins(
     projectIdentifier: ProjectIdentifierADM,
@@ -194,7 +194,7 @@ final case class ProjectsADMRestServiceLive(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIdentifierADM]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def getProjectMembers(id: ProjectIdentifierADM, user: UserADM): Task[ProjectMembersGetResponseADM] =
+  def getProjectMembers(user: UserADM, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM] =
     responder.projectMembersGetRequestADM(id, user)
 
   /**

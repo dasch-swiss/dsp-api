@@ -182,19 +182,19 @@ final case class ProjectsRouteZ(
     for {
       iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      r             <- projectsService.getProjectMembers(iriIdentifier, requestingUser)
+      r             <- projectsService.getProjectMembers(requestingUser, iriIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectMembersByShortname(shortname: String, requestingUser: UserADM): Task[Response] =
     for {
       shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.getProjectMembers(shortnameIdentifier, requestingUser)
+      r                   <- projectsService.getProjectMembers(requestingUser, shortnameIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectMembersByShortcode(shortcode: String, requestingUser: UserADM): Task[Response] =
     for {
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.getProjectMembers(shortcodeIdentifier, requestingUser)
+      r                   <- projectsService.getProjectMembers(requestingUser, shortcodeIdentifier)
     } yield Response.json(r.toJsValue.toString())
 
   private def getProjectAdminsByIri(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =

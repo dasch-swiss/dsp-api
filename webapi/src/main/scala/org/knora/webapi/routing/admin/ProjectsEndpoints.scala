@@ -8,14 +8,23 @@ package org.knora.webapi.routing.admin
 import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
+import sttp.tapir.server.PartialServerEndpoint
 import zio.ZLayer
 
+import scala.concurrent.Future
+
+import dsp.errors.RequestRejectedException
+import org.knora.webapi.messages.admin.responder.projectsmessages.CreateProjectApiRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectMembersGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.BaseEndpoints
 import org.knora.webapi.routing.PathVariables.projectIri
 import org.knora.webapi.routing.PathVariables.projectShortcode
@@ -25,13 +34,17 @@ final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints
 ) extends ProjectsADMJsonProtocol {
 
-  private val projectsBase           = "admin" / "projects"
-  private val projectsByIri          = projectsBase / "iri" / projectIri
-  private val projectsByShortcode    = projectsBase / "shortcode" / projectShortcode
-  private val projectsByShortname    = projectsBase / "shortname" / projectShortname
+  private val projectsBase        = "admin" / "projects"
+  private val projectsByIri       = projectsBase / "iri" / projectIri
+  private val projectsByShortcode = projectsBase / "shortcode" / projectShortcode
+  private val projectsByShortname = projectsBase / "shortname" / projectShortname
+
+  // other path elements
   private val keywords               = "Keywords"
+  private val members                = "members"
   private val restrictedViewSettings = "RestrictedViewSettings"
-  private val tags                   = List("Projects", "Admin API")
+
+  private val tags = List("Projects", "Admin API")
 
   val getAdminProjects = baseEndpoints.publicEndpoint.get
     .in(projectsBase)
@@ -86,6 +99,35 @@ final case class ProjectsEndpoints(
     .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
     .description("Returns the project's restricted view settings identified through the shortname.")
     .tags(tags)
+
+  // secured endpoints
+  val postAdminProjects = baseEndpoints.securedEndpoint.post
+    .in(projectsBase)
+    .in(sprayJsonBody[CreateProjectApiRequestADM])
+    .out(sprayJsonBody[ProjectOperationResponseADM])
+    .description("Creates a new project.")
+    .tags(tags)
+
+  val getAdminProjectsByProjectIriMembers: PartialServerEndpoint[
+    String,
+    UserADM,
+    ProjectIdentifierADM.IriIdentifier,
+    RequestRejectedException,
+    ProjectMembersGetResponseADM,
+    Any,
+    Future
+  ] = baseEndpoints.securedEndpoint.get
+    .in(projectsByIri / members)
+    .out(sprayJsonBody[ProjectMembersGetResponseADM])
+
+  val getAdminProjectsByProjectShortcodeMembers = baseEndpoints.securedEndpoint.get
+    .in(projectsByShortcode / members)
+    .out(sprayJsonBody[ProjectMembersGetResponseADM])
+
+  val getAdminProjectsByProjectShortnameMembers = baseEndpoints.securedEndpoint.get
+    .in(projectsByShortname / members)
+    .out(sprayJsonBody[ProjectMembersGetResponseADM])
+
 }
 
 object ProjectsEndpoints {

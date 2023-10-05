@@ -48,17 +48,17 @@ final case class ProjectsRouteADM(
 ) extends ProjectsADMJsonProtocol {
 
   private val tapirRoutes: Route = projectsEndpointsHandlerF.handlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
+  private val tapirSecureRoutes: Route =
+    projectsEndpointsHandlerF.secureHandlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
 
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
 
   def makeRoute: Route =
     tapirRoutes ~
+      tapirSecureRoutes ~
       addProject() ~
       changeProject() ~
       deleteProject() ~
-      getProjectMembersByIri() ~
-      getProjectMembersByShortname() ~
-      getProjectMembersByShortcode() ~
       getProjectAdminMembersByIri() ~
       getProjectAdminMembersByShortname() ~
       getProjectAdminMembersByShortcode() ~
@@ -120,38 +120,6 @@ final case class ProjectsRouteADM(
         } yield ProjectChangeRequestADM(iri, payload, user, uuid)
         runJsonRouteZ(requestTask, requestContext)
       }
-    }
-
-  /**
-   * Returns all members of a project identified through the IRI.
-   */
-  private def getProjectMembersByIri(): Route =
-    path(projectsBasePath / "iri" / Segment / "members") { value =>
-      get(getProjectMembers(IriIdentifier.fromString(value).toZIO, _))
-    }
-
-  private def getProjectMembers(idTask: Task[ProjectIdentifierADM], requestContext: RequestContext) = {
-    val requestTask = for {
-      id             <- idTask.mapError(e => BadRequestException(e.getMessage))
-      requestingUser <- Authenticator.getUserADM(requestContext)
-    } yield ProjectMembersGetRequestADM(id, requestingUser)
-    runJsonRouteZ(requestTask, requestContext)
-  }
-
-  /**
-   * Returns all members of a project identified through the shortname.
-   */
-  private def getProjectMembersByShortname(): Route =
-    path(projectsBasePath / "shortname" / Segment / "members") { value =>
-      get(getProjectMembers(ShortnameIdentifier.fromString(value).toZIO, _))
-    }
-
-  /**
-   * Returns all members of a project identified through the shortcode.
-   */
-  private def getProjectMembersByShortcode(): Route =
-    path(projectsBasePath / "shortcode" / Segment / "members") { value =>
-      get(getProjectMembers(ShortcodeIdentifier.fromString(value).toZIO, _))
     }
 
   /**

@@ -81,6 +81,9 @@ trait Authenticator {
    *         [[AuthenticationException]] when the IRI can not be found inside the token, which is probably a bug.
    */
   def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2]): Task[UserADM]
+  def verifyJwt(jwtToken: String): Task[UserADM] = getUserADMThroughCredentialsV2(
+    Some(KnoraJWTTokenCredentialsV2(jwtToken))
+  )
 
   /**
    * Used to logout the user, i.e. returns a header deleting the cookie and puts the token on the 'invalidated' list.

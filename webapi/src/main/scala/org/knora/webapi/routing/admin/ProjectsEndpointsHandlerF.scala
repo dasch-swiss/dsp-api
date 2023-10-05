@@ -12,6 +12,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.routing.EndpointAndZioHandler
 import org.knora.webapi.routing.HandlerMapperF
+import org.knora.webapi.routing.SecuredEndpointAndZioHandler
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 final case class ProjectsEndpointsHandlerF(
@@ -71,6 +72,24 @@ final case class ProjectsEndpointsHandlerF(
       (id: ShortnameIdentifier) => restService.getProjectRestrictedViewSettings(id)
     )
 
+  val getAdminProjectsByProjectIriMembersHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.getAdminProjectsByProjectIriMembers,
+      user => id => restService.getProjectMembers(user, id)
+    )
+
+  val getAdminProjectsByProjectShortcodeMembersHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.getAdminProjectsByProjectShortcodeMembers,
+      user => id => restService.getProjectMembers(user, id)
+    )
+
+  val getAdminProjectsByProjectShortnameMembersHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.getAdminProjectsByProjectShortnameMembers,
+      user => id => restService.getProjectMembers(user, id)
+    )
+
   val handlers =
     List(
       getAdminProjectsHandler,
@@ -83,6 +102,12 @@ final case class ProjectsEndpointsHandlerF(
       getAdminProjectByProjectShortcodeRestrictedViewSettingsHandler,
       getAdminProjectByProjectShortnameRestrictedViewSettingsHandler
     ).map(mapper.mapEndpointAndHandler(_))
+
+  val secureHandlers = List(
+    getAdminProjectsByProjectIriMembersHandler,
+    getAdminProjectsByProjectShortcodeMembersHandler,
+    getAdminProjectsByProjectShortnameMembersHandler
+  ).map(mapper.mapEndpointAndHandler(_))
 }
 
 object ProjectsEndpointsHandlerF {
