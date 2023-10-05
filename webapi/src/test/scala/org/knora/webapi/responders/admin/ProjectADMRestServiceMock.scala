@@ -52,7 +52,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         ): Task[ProjectOperationResponseADM] =
           proxy(CreateProject, (payload, requestingUser))
 
-        def deleteProject(iri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM] =
+        def deleteProject(iri: ProjectIdentifierADM.IriIdentifier, requestingUser: UserADM): Task[ProjectOperationResponseADM] =
           proxy(DeleteProject, (iri, requestingUser))
 
         def updateProject(

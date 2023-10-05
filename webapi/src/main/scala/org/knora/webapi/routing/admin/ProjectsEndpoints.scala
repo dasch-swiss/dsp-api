@@ -125,6 +125,12 @@ final case class ProjectsEndpoints(
     .out(sprayJsonBody[ProjectAdminMembersGetResponseADM])
     .description("Returns all admin members of a project identified through the shortname.")
     .tags(tags)
+
+  val deleteAdminProjectsByIri = baseEndpoints.securedEndpoint.delete
+    .in(projectsByIri)
+    .out(sprayJsonBody[ProjectOperationResponseADM])
+    .description("Deletes a project identified through the IRI.")
+    .tags(tags)
 }
 
 object ProjectsEndpoints {

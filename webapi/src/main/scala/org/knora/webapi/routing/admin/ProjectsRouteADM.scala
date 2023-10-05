@@ -8,7 +8,6 @@ package org.knora.webapi.routing.admin
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project._
 import org.apache.pekko.Done
 import org.apache.pekko.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import org.apache.pekko.http.scaladsl.model.{ContentTypes, HttpEntity}
@@ -51,7 +50,6 @@ final case class ProjectsRouteADM(
       tapirSecureRoutes ~
       addProject() ~
       changeProject() ~
-      deleteProject() ~
       getProjectData() ~
       postExportProject
 
@@ -92,23 +90,6 @@ final case class ProjectsRouteADM(
           } yield ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
           runJsonRouteZ(requestTask, requestContext)
         }
-      }
-    }
-
-  /**
-   * Updates project status to false.
-   */
-  private def deleteProject(): Route =
-    path(projectsBasePath / "iri" / Segment) { value =>
-      delete { requestContext =>
-        val requestTask = for {
-          iri    <- ProjectIri.make(value).toZIO.orElseFail(BadRequestException(s"Invalid Project IRI $value"))
-          status <- ProjectStatus.make(false).toZIO.orElseFail(BadRequestException(s"Invalid Project Status"))
-          payload = ProjectUpdatePayloadADM(status = Some(status))
-          user   <- Authenticator.getUserADM(requestContext)
-          uuid   <- RouteUtilZ.randomUuid()
-        } yield ProjectChangeRequestADM(iri, payload, user, uuid)
-        runJsonRouteZ(requestTask, requestContext)
       }
     }
 

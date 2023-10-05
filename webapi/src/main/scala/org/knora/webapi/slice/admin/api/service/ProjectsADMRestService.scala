@@ -5,26 +5,19 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio._
-import zio.macros.accessible
-
-import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
+import dsp.errors.{BadRequestException, NotFoundException}
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project
-import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.Project.{ProjectStatus, Shortcode}
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
-import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
-import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectExportService
-import org.knora.webapi.slice.admin.domain.service.ProjectImportService
+import org.knora.webapi.slice.admin.api.model.{ProjectDataGetResponseADM, ProjectExportInfoResponse, ProjectImportResponse}
+import org.knora.webapi.slice.admin.domain.service.{KnoraProjectRepo, ProjectExportService, ProjectImportService}
 import org.knora.webapi.slice.common.api.RestPermissionService
+import zio._
+import zio.macros.accessible
 
 @accessible
 trait ProjectADMRestService {
@@ -35,7 +28,7 @@ trait ProjectADMRestService {
     payload: ProjectCreatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
-  def deleteProject(projectIri: ProjectIri, requestingUser: UserADM): Task[ProjectOperationResponseADM]
+  def deleteProject(id: IriIdentifier, requestingUser: UserADM): Task[ProjectOperationResponseADM]
   def updateProject(
     projectIri: ProjectIri,
     payload: ProjectUpdatePayloadADM,
@@ -119,7 +112,7 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Deletes the project by its [[ProjectIri]].
    *
-   * @param projectIri           the [[ProjectIri]] of the project
+   * @param id           the [[ProjectIri]] of the project
    * @param user                 the [[UserADM]] making the request
    * @return
    *     '''success''': a [[ProjectOperationResponseADM]]
@@ -127,23 +120,13 @@ final case class ProjectsADMRestServiceLive(
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def deleteProject(projectIri: ProjectIri, user: UserADM): Task[ProjectOperationResponseADM] =
+  def deleteProject(id: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM] = {
+    val updatePayload = ProjectUpdatePayloadADM(status = Some(ProjectStatus.deleted))
     for {
-      projectStatus <-
-        Project.ProjectStatus.make(false).toZIO.orElseFail(BadRequestException("Invalid project status."))
-      updatePayload = ProjectUpdatePayloadADM(status = Some(projectStatus))
-      response     <- changeBasicInformationRequestADM(projectIri, updatePayload, user)
+      apiId    <- Random.nextUUID
+      response <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
     } yield response
-
-  private def changeBasicInformationRequestADM(
-    projectIri: ProjectIri,
-    payload: ProjectUpdatePayloadADM,
-    user: UserADM
-  ): Task[ProjectOperationResponseADM] =
-    for {
-      id       <- ZIO.random.flatMap(_.nextUUID)
-      response <- responder.changeBasicInformationRequestADM(projectIri, payload, user, id)
-    } yield response
+  }
 
   /**
    * Updates a project, identified by its [[ProjectIri]].
@@ -161,9 +144,11 @@ final case class ProjectsADMRestServiceLive(
     projectIri: ProjectIri,
     payload: ProjectUpdatePayloadADM,
     user: UserADM
-  ): Task[ProjectOperationResponseADM] = for {
-    response <- changeBasicInformationRequestADM(projectIri, payload, user)
-  } yield response
+  ): Task[ProjectOperationResponseADM] =
+    for {
+      id       <- Random.nextUUID
+      response <- responder.changeBasicInformationRequestADM(projectIri, payload, user, id)
+    } yield response
 
   /**
    * Returns all data of a specific project, identified by its [[ProjectIri]].

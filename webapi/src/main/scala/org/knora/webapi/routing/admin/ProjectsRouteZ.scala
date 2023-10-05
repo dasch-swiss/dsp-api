@@ -134,9 +134,9 @@ final case class ProjectsRouteZ(
   private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      r          <- projectsService.deleteProject(projectIri, requestingUser)
-    } yield Response.json(r.toJsValue.toString())
+      id         <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      response   <- projectsService.deleteProject(id, requestingUser)
+    } yield Response.json(response.toJsValue.toString())
 
   private def updateProject(iriUrlEncoded: String, request: Request, requestingUser: UserADM): Task[Response] =
     for {

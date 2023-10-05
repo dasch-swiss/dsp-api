@@ -482,10 +482,7 @@ final case class ProjectsResponderADMLive(
       if (!requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin) {
         ZIO.fail(ForbiddenException("Project's information can only be changed by a project or system admin."))
       } else {
-        for {
-          result <- updateProjectADM(projectIri = projectIri, projectUpdatePayload = projectUpdatePayload)
-
-        } yield result
+        updateProjectADM(projectIri, projectUpdatePayload)
       }
 
     val task = changeProjectTask(projectIri, updatePayload, user)
