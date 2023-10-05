@@ -69,11 +69,12 @@ object ApiRoutes {
   ] =
     ZLayer {
       for {
-        sys             <- ZIO.service[ActorSystem]
-        router          <- ZIO.service[AppRouter]
-        appConfig       <- ZIO.service[AppConfig]
-        projectsHandler <- ZIO.service[ProjectsEndpointsHandlerF]
-        routeData       <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        sys              <- ZIO.service[ActorSystem]
+        router           <- ZIO.service[AppRouter]
+        appConfig        <- ZIO.service[AppConfig]
+        projectsHandler  <- ZIO.service[ProjectsEndpointsHandlerF]
+        routeData        <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        tapirToPekkoRoute = TapirToPekkoInterpreter()(sys.system.dispatcher)
         runtime <- ZIO.runtime[
                      AppConfig
                        with IriConverter
@@ -87,7 +88,7 @@ object ApiRoutes {
                        with core.State
                        with routing.Authenticator
                    ]
-      } yield ApiRoutesImpl(routeData, projectsHandler, appConfig, runtime)
+      } yield ApiRoutesImpl(routeData, projectsHandler, tapirToPekkoRoute, appConfig, runtime)
     }
 }
 
@@ -99,9 +100,10 @@ object ApiRoutes {
  * The FIRST matching route is used for handling a request.
  */
 private final case class ApiRoutesImpl(
-  val routeData: KnoraRouteData,
-  val projectsHandler: ProjectsEndpointsHandlerF,
-  val appConfig: AppConfig,
+  routeData: KnoraRouteData,
+  projectsHandler: ProjectsEndpointsHandlerF,
+  tapirToPekkoRoute: TapirToPekkoInterpreter,
+  appConfig: AppConfig,
   implicit val runtime: Runtime[
     AppConfig
       with IriConverter
@@ -143,7 +145,7 @@ private final case class ApiRoutesImpl(
                 GroupsRouteADM(routeData, runtime).makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
-                ProjectsRouteADM(projectsHandler).makeRoute ~
+                ProjectsRouteADM(tapirToPekkoRoute, projectsHandler).makeRoute ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
                 UsersRouteADM().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute

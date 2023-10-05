@@ -16,13 +16,13 @@ import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
 import org.apache.pekko.stream.IOResult
 import org.apache.pekko.stream.scaladsl.FileIO
-import sttp.tapir.server.pekkohttp.{PekkoHttpServerInterpreter, PekkoHttpServerOptions}
 import zio._
 
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Try
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
@@ -36,39 +36,17 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import sttp.tapir.generic.auto._
-import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
-import sttp.tapir.server.metrics.zio.ZioMetrics
-import sttp.tapir.server.model.ValuedEndpointOutput
-import zio.json.{DeriveJsonCodec, JsonCodec}
 
-final case class ToPekkoRoute()(implicit executionContext: ExecutionContext) {
-  private case class GenericErrorResponse(error: String)
-
-  private object GenericErrorResponse {
-    implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
-  }
-
-  private def customizedErrorResponse(m: String): ValuedEndpointOutput[_] =
-    ValuedEndpointOutput(zioJsonBody[GenericErrorResponse], GenericErrorResponse(m))
-
-  private val serverOptions =
-    PekkoHttpServerOptions.customiseInterceptors
-      .defaultHandlers(customizedErrorResponse)
-      .metricsInterceptor(ZioMetrics.default[Future]().metricsInterceptor())
-      .options
-
-  val interpreter: PekkoHttpServerInterpreter = PekkoHttpServerInterpreter(serverOptions)
-}
-
-final case class ProjectsRouteADM(projectsEndpointsHandlerF: ProjectsEndpointsHandlerF)(
+final case class ProjectsRouteADM(
+  interpreter: TapirToPekkoInterpreter,
+  projectsEndpointsHandlerF: ProjectsEndpointsHandlerF
+)(
   private implicit val runtime: Runtime[
     org.knora.webapi.routing.Authenticator with StringFormatter with MessageRelay with ProjectADMRestService
   ],
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {
 
-  private val interpreter        = ToPekkoRoute().interpreter
   private val tapirRoutes: Route = projectsEndpointsHandlerF.handlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
 
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
