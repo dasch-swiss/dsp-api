@@ -488,6 +488,9 @@ object ProjectIdentifierADM {
    */
   final case class IriIdentifier(value: ProjectIri) extends ProjectIdentifierADM
   object IriIdentifier {
+
+    def from(projectIri: ProjectIri): IriIdentifier = IriIdentifier(projectIri)
+
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
       ProjectIri.make(value).map {
         IriIdentifier(_)

@@ -5,29 +5,35 @@
 
 package org.knora.webapi.routing.admin
 
+import org.apache.pekko.Done
+import org.apache.pekko.http.scaladsl.model.ContentTypes
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.headers.ContentDispositionTypes
+import org.apache.pekko.http.scaladsl.model.headers.`Content-Disposition`
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.stream.IOResult
+import org.apache.pekko.stream.scaladsl.FileIO
+import zio._
+
+import java.nio.file.Files
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Try
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
-import org.apache.pekko.Done
-import org.apache.pekko.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
-import org.apache.pekko.http.scaladsl.model.{ContentTypes, HttpEntity}
-import org.apache.pekko.http.scaladsl.server.Directives._
-import org.apache.pekko.http.scaladsl.server.{PathMatcher, Route}
-import org.apache.pekko.stream.IOResult
-import org.apache.pekko.stream.scaladsl.FileIO
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilADM._
-import org.knora.webapi.routing.{Authenticator, _}
+import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import zio._
-
-import java.nio.file.Files
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 final case class ProjectsRouteADM(
   interpreter: TapirToPekkoInterpreter,

@@ -7,22 +7,30 @@ package org.knora.webapi.routing
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.{EndpointOutput, auth, cookie, endpoint, oneOf, oneOfVariant, statusCode}
+import sttp.tapir.EndpointOutput
+import sttp.tapir.auth
+import sttp.tapir.cookie
+import sttp.tapir.endpoint
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.model.UsernamePassword
+import sttp.tapir.oneOf
+import sttp.tapir.oneOfVariant
+import sttp.tapir.statusCode
 import zio.ZIO
 import zio.ZLayer
 
 import scala.concurrent.Future
+
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import sttp.tapir.model.UsernamePassword
 
 final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
 

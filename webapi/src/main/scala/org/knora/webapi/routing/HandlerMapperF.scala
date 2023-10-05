@@ -6,6 +6,7 @@
 package org.knora.webapi.routing
 
 import sttp.tapir.Endpoint
+import sttp.tapir.model.UsernamePassword
 import sttp.tapir.server.PartialServerEndpoint
 import sttp.tapir.server.ServerEndpoint.Full
 import zio.Task
@@ -13,10 +14,10 @@ import zio.ZIO
 import zio.ZLayer
 
 import scala.concurrent.Future
+
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.InputType.SecurityIn
-import sttp.tapir.model.UsernamePassword
 
 object InputType {
   type SecurityIn = (Option[String], Option[String], Option[UsernamePassword])

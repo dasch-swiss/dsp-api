@@ -11,6 +11,7 @@ import zio.mock._
 
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.RestrictedViewSize
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
@@ -22,11 +23,10 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
   object GetSingleProject extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
   object CreateProject    extends Effect[(ProjectCreatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
-  object DeleteProject    extends Effect[(ProjectIri, UserADM), Throwable, ProjectOperationResponseADM]
+  object DeleteProject    extends Effect[(IriIdentifier, UserADM), Throwable, ProjectOperationResponseADM]
   object UpdateProject
       extends Effect[(ProjectIri, ProjectUpdatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
-  object GetAllProjectData
-      extends Effect[(ProjectIdentifierADM.IriIdentifier, UserADM), Throwable, ProjectDataGetResponseADM]
+  object GetAllProjectData       extends Effect[(IriIdentifier, UserADM), Throwable, ProjectDataGetResponseADM]
   object GetProjectMembers       extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectMembersGetResponseADM]
   object GetProjectAdmins        extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectAdminMembersGetResponseADM]
   object GetKeywords             extends Effect[Unit, Throwable, ProjectsKeywordsGetResponseADM]
@@ -52,7 +52,10 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         ): Task[ProjectOperationResponseADM] =
           proxy(CreateProject, (payload, requestingUser))
 
-        def deleteProject(iri: ProjectIdentifierADM.IriIdentifier, requestingUser: UserADM): Task[ProjectOperationResponseADM] =
+        def deleteProject(
+          iri: ProjectIdentifierADM.IriIdentifier,
+          requestingUser: UserADM
+        ): Task[ProjectOperationResponseADM] =
           proxy(DeleteProject, (iri, requestingUser))
 
         def updateProject(

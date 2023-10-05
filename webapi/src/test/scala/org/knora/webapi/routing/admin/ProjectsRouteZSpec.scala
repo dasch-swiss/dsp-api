@@ -18,6 +18,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -285,7 +286,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
       val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .DeleteProject(
-          assertion = Assertion.equalTo(projectIri, user),
+          assertion = Assertion.equalTo(IriIdentifier.from(projectIri), user),
           result = expectedResult
         )
         .toLayer

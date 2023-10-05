@@ -5,13 +5,16 @@
 
 package org.knora.webapi.routing.admin
 
-import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.routing.BaseEndpoints
-import org.knora.webapi.routing.PathVariables.{projectIri, projectShortcode, projectShortname}
 import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
 import zio.ZLayer
+
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.routing.BaseEndpoints
+import org.knora.webapi.routing.PathVariables.projectIri
+import org.knora.webapi.routing.PathVariables.projectShortcode
+import org.knora.webapi.routing.PathVariables.projectShortname
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints

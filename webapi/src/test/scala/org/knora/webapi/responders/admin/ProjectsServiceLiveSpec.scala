@@ -13,6 +13,7 @@ import dsp.valueobjects.V2._
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
@@ -155,7 +156,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
                         assertion = Assertion.equalTo(projectIri, projectUpdatePayload, SystemUser, uuid),
                         result = Expectation.value(ProjectOperationResponseADM(projectADM))
                       )
-      _ <- ProjectADMRestService.deleteProject(projectIri, SystemUser).provide(projectServiceLayer(mockResponder))
+      _ <- ProjectADMRestService
+             .deleteProject(IriIdentifier.from(projectIri), SystemUser)
+             .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
