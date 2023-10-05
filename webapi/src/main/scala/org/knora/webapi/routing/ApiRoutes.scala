@@ -58,6 +58,7 @@ object ApiRoutes {
       with KnoraProjectRepo
       with MessageRelay
       with ProjectADMRestService
+      with ProjectsEndpointsHandlerF
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
@@ -68,10 +69,11 @@ object ApiRoutes {
   ] =
     ZLayer {
       for {
-        sys       <- ZIO.service[ActorSystem]
-        router    <- ZIO.service[AppRouter]
-        appConfig <- ZIO.service[AppConfig]
-        routeData <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        sys             <- ZIO.service[ActorSystem]
+        router          <- ZIO.service[AppRouter]
+        appConfig       <- ZIO.service[AppConfig]
+        projectsHandler <- ZIO.service[ProjectsEndpointsHandlerF]
+        routeData       <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
                      AppConfig
                        with IriConverter
@@ -85,7 +87,7 @@ object ApiRoutes {
                        with core.State
                        with routing.Authenticator
                    ]
-      } yield ApiRoutesImpl(routeData, runtime, appConfig)
+      } yield ApiRoutesImpl(routeData, projectsHandler, appConfig, runtime)
     }
 }
 
@@ -97,8 +99,10 @@ object ApiRoutes {
  * The FIRST matching route is used for handling a request.
  */
 private final case class ApiRoutesImpl(
-  private val routeData: KnoraRouteData,
-  private implicit val runtime: Runtime[
+  val routeData: KnoraRouteData,
+  val projectsHandler: ProjectsEndpointsHandlerF,
+  val appConfig: AppConfig,
+  implicit val runtime: Runtime[
     AppConfig
       with IriConverter
       with KnoraProjectRepo
@@ -110,8 +114,7 @@ private final case class ApiRoutesImpl(
       with ValuesResponderV2
       with core.State
       with routing.Authenticator
-  ],
-  private val appConfig: AppConfig
+  ]
 ) extends ApiRoutes
     with AroundDirectives {
 
@@ -140,7 +143,7 @@ private final case class ApiRoutesImpl(
                 GroupsRouteADM(routeData, runtime).makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
-                ProjectsRouteADM().makeRoute ~
+                ProjectsRouteADM(projectsHandler).makeRoute ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
                 UsersRouteADM().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute

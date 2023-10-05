@@ -478,6 +478,9 @@ sealed trait ProjectIdentifierADM { self =>
 
 object ProjectIdentifierADM {
 
+  def from(projectIri: ProjectIri): ProjectIdentifierADM =
+    IriIdentifier(projectIri)
+
   /**
    * Represents [[IriIdentifier]] identifier.
    *

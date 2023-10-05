@@ -29,6 +29,8 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
+import org.knora.webapi.routing.admin.ProjectsEndpoints
+import org.knora.webapi.routing.admin.ProjectsEndpointsHandlerF
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
@@ -131,11 +133,13 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
+      HandlerMapperF.layer,
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
+      BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
@@ -157,6 +161,7 @@ object LayersTest {
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
+      OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
@@ -168,6 +173,8 @@ object LayersTest {
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
+      ProjectsEndpoints.layer,
+      ProjectsEndpointsHandlerF.layer,
       ProjectsResponderADMLive.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,
@@ -181,7 +188,6 @@ object LayersTest {
       RestResourceInfoService.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
-      OntologyInferencer.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,

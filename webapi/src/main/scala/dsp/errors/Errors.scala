@@ -8,6 +8,8 @@ package dsp.errors
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.SerializationException
 import org.apache.commons.lang3.SerializationUtils
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
 /*
 
@@ -90,6 +92,8 @@ object BadRequestException {
     BadRequestException(s"Invalid value for query parameter '$key'")
   def missingQueryParamValue(key: String): BadRequestException =
     BadRequestException(s"Missing query parameter '$key'")
+
+  implicit val codec: JsonCodec[BadRequestException] = DeriveJsonCodec.gen[BadRequestException]
 }
 
 /**
@@ -113,7 +117,9 @@ case class ForbiddenException(message: String) extends RequestRejectedException(
  */
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 object NotFoundException {
-  val notFound = NotFoundException("The requested data was not found")
+  val notFound: NotFoundException = NotFoundException("The requested data was not found")
+
+  implicit val codec: JsonCodec[NotFoundException] = DeriveJsonCodec.gen[NotFoundException]
 }
 
 /**
