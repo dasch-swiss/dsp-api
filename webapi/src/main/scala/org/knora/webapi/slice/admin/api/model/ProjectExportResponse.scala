@@ -5,7 +5,9 @@
 
 package org.knora.webapi.slice.admin.api.model
 
+import zio.json.DeriveJsonCodec
 import zio.json.DeriveJsonEncoder
+import zio.json.JsonCodec
 import zio.json.JsonEncoder
 
 import org.knora.webapi.slice.admin.domain.service.ProjectExportInfo
@@ -20,5 +22,5 @@ object ProjectExportInfoResponse {
   def apply(info: ProjectExportInfo) =
     new ProjectExportInfoResponse(info.projectShortname, info.path.toFile.toPath.toAbsolutePath.toString)
 
-  implicit val jsonEncoder: JsonEncoder[ProjectExportInfoResponse] = DeriveJsonEncoder.gen[ProjectExportInfoResponse]
+  implicit val codec: JsonCodec[ProjectExportInfoResponse] = DeriveJsonCodec.gen[ProjectExportInfoResponse]
 }

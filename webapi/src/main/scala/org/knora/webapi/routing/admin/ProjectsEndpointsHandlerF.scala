@@ -122,6 +122,12 @@ final case class ProjectsEndpointsHandlerF(
       user => (id: IriIdentifier) => restService.deleteProject(id, user)
     )
 
+  val getAdminProjectsExportsHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.getAdminProjectsExports,
+      user => (_: Unit) => restService.listExports(user)
+    )
+
   val postAdminProjectsByShortcodeExportHandler =
     SecuredEndpointAndZioHandler(
       projectsEndpoints.postAdminProjectsByShortcodeExport,
@@ -186,6 +192,7 @@ final case class ProjectsEndpointsHandlerF(
     getAdminProjectsByProjectShortcodeAdminMembersHandler,
     getAdminProjectsByProjectShortnameAdminMembersHandler,
     deleteAdminProjectsByIriHandler,
+    getAdminProjectsExportsHandler,
     postAdminProjectsByShortcodeExportHandler,
     postAdminProjectsHandler,
     putAdminProjectsByIriHandler

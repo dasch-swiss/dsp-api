@@ -10,6 +10,8 @@ import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
+import sttp.tapir.json.zio.{jsonBody => zioJsonBody}
+import zio.Chunk
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -17,6 +19,7 @@ import org.knora.webapi.routing.BaseEndpoints
 import org.knora.webapi.routing.PathVariables.projectIri
 import org.knora.webapi.routing.PathVariables.projectShortcode
 import org.knora.webapi.routing.PathVariables.projectShortname
+import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints
@@ -29,6 +32,7 @@ final case class ProjectsEndpoints(
 
   // other path elements
   private val keywords               = "Keywords"
+  private val export                 = "export"
   private val members                = "members"
   private val adminMembers           = "admin-members"
   private val restrictedViewSettings = "RestrictedViewSettings"
@@ -130,8 +134,14 @@ final case class ProjectsEndpoints(
     .description("Deletes a project identified by the IRI.")
     .tags(tags)
 
+  val getAdminProjectsExports = baseEndpoints.securedEndpoint.get
+    .in(projectsBase / export)
+    .out(zioJsonBody[Chunk[ProjectExportInfoResponse]])
+    .description("Lists existing exports of all projects.")
+    .tags(tags)
+
   val postAdminProjectsByShortcodeExport = baseEndpoints.securedEndpoint.post
-    .in(projectsByShortcode / "export")
+    .in(projectsByShortcode / export)
     .out(statusCode(StatusCode.Accepted))
     .description("Trigger an export of a project identified by the shortcode.")
     .tags(tags)
