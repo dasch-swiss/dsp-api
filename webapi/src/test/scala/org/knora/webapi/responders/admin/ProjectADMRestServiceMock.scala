@@ -10,9 +10,8 @@ import zio._
 import zio.mock._
 
 import dsp.valueobjects.Iri._
-import dsp.valueobjects.Project.Shortcode
-import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
@@ -23,10 +22,10 @@ import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]
   object GetSingleProject extends Effect[ProjectIdentifierADM, Throwable, ProjectGetResponseADM]
-  object CreateProject    extends Effect[(ProjectCreatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
+  object CreateProject    extends Effect[(ProjectCreateRequest, UserADM), Throwable, ProjectOperationResponseADM]
   object DeleteProject    extends Effect[(IriIdentifier, UserADM), Throwable, ProjectOperationResponseADM]
   object UpdateProject
-      extends Effect[(ProjectIri, ProjectUpdatePayloadADM, UserADM), Throwable, ProjectOperationResponseADM]
+      extends Effect[(IriIdentifier, ProjectUpdateRequest, UserADM), Throwable, ProjectOperationResponseADM]
   object GetAllProjectData       extends Effect[(IriIdentifier, UserADM), Throwable, ProjectDataGetResponseADM]
   object GetProjectMembers       extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectMembersGetResponseADM]
   object GetProjectAdmins        extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectAdminMembersGetResponseADM]
@@ -48,23 +47,23 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
           proxy(GetSingleProject, identifier)
 
         def createProject(
-          payload: ProjectCreatePayloadADM,
+          payload: ProjectCreateRequest,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
           proxy(CreateProject, (payload, requestingUser))
 
         def deleteProject(
-          iriIdentifier: ProjectIdentifierADM.IriIdentifier,
+          id: ProjectIdentifierADM.IriIdentifier,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
-          proxy(DeleteProject, (iriIdentifier, requestingUser))
+          proxy(DeleteProject, (id, requestingUser))
 
         def updateProject(
-          projectIri: ProjectIri,
-          payload: ProjectUpdatePayloadADM,
+          id: IriIdentifier,
+          updateRequest: ProjectUpdateRequest,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
-          proxy(UpdateProject, (projectIri, payload, requestingUser))
+          proxy(UpdateProject, (id, updateRequest, requestingUser))
 
         def getAllProjectData(
           id: ProjectIdentifierADM.IriIdentifier,
@@ -99,7 +98,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
 
         override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[Unit] = ???
 
-        override def exportProject(shortcode: Shortcode, requestingUser: UserADM): Task[Unit] = ???
+        override def exportProject(shortcode: ShortcodeIdentifier, requestingUser: UserADM): Task[Unit] = ???
 
         override def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse] = ???
 
@@ -108,7 +107,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         override def updateProjectRestrictedViewSettings(
           id: ProjectIdentifierADM,
           user: UserADM,
-          size: RestrictedViewSize
+          size: ProjectSetRestrictedViewSizePayload
         ): Task[ProjectRestrictedViewSizeResponseADM] = ???
       }
     }

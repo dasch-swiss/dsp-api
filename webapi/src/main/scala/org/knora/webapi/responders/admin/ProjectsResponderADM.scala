@@ -146,7 +146,7 @@ trait ProjectsResponderADM {
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   def projectCreateRequestADM(
-    createPayload: ProjectCreatePayloadADM,
+    createPayload: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -164,7 +164,7 @@ trait ProjectsResponderADM {
    */
   def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdatePayloadADM,
+    updatePayload: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -465,7 +465,7 @@ final case class ProjectsResponderADMLive(
    */
   override def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdatePayloadADM,
+    updatePayload: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -475,7 +475,7 @@ final case class ProjectsResponderADMLive(
      */
     def changeProjectTask(
       projectIri: Iri.ProjectIri,
-      projectUpdatePayload: ProjectUpdatePayloadADM,
+      projectUpdatePayload: ProjectUpdateRequest,
       requestingUser: UserADM
     ): Task[ProjectOperationResponseADM] =
       // check if the requesting user is allowed to perform updates
@@ -501,7 +501,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[NotFoundException]] In the case that the project's IRI is not found.
    */
-  private def updateProjectADM(projectIri: Iri.ProjectIri, projectUpdatePayload: ProjectUpdatePayloadADM) = {
+  private def updateProjectADM(projectIri: Iri.ProjectIri, projectUpdatePayload: ProjectUpdateRequest) = {
 
     val areAllParamsNone: Boolean = projectUpdatePayload.productIterator.forall {
       case param: Option[Any] => param.isEmpty
@@ -510,7 +510,7 @@ final case class ProjectsResponderADMLive(
 
     if (areAllParamsNone) { ZIO.fail(BadRequestException("No data would be changed. Aborting update request.")) }
     else {
-      val projectId = IriIdentifier(projectIri)
+      val projectId = IriIdentifier.from(projectIri)
       for {
         _ <- projectService
                .findByProjectIdentifier(projectId)
@@ -562,7 +562,7 @@ final case class ProjectsResponderADMLive(
    */
   private def checkProjectUpdate(
     updatedProject: ProjectADM,
-    projectUpdatePayload: ProjectUpdatePayloadADM
+    projectUpdatePayload: ProjectUpdateRequest
   ): Task[Unit] = ZIO.attempt {
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.shortname
@@ -663,7 +663,7 @@ final case class ProjectsResponderADMLive(
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   override def projectCreateRequestADM(
-    createPayload: ProjectCreatePayloadADM,
+    createPayload: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -747,7 +747,7 @@ final case class ProjectsResponderADMLive(
       } yield ()
 
     def projectCreateTask(
-      createProjectRequest: ProjectCreatePayloadADM,
+      createProjectRequest: ProjectCreateRequest,
       requestingUser: UserADM
     ): Task[ProjectOperationResponseADM] =
       for {

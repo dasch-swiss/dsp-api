@@ -35,9 +35,9 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object ProjectRestrictedViewSettingsGetRequestADM
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsGetResponseADM]
   object ProjectCreateRequestADM
-      extends Effect[(ProjectCreatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
+      extends Effect[(ProjectCreateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
-      extends Effect[(Iri.ProjectIri, ProjectUpdatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
+      extends Effect[(Iri.ProjectIri, ProjectUpdateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
 
   val compose: URLayer[mock.Proxy, ProjectsResponderADM] =
     ZLayer {
@@ -73,14 +73,14 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
         ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
         override def projectCreateRequestADM(
-          createPayload: ProjectCreatePayloadADM,
+          createPayload: ProjectCreateRequest,
           requestingUser: UserADM,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
           proxy(ProjectCreateRequestADM, (createPayload, requestingUser, apiRequestID))
         override def changeBasicInformationRequestADM(
           projectIri: Iri.ProjectIri,
-          updatePayload: ProjectUpdatePayloadADM,
+          updatePayload: ProjectUpdateRequest,
           user: UserADM,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =

@@ -33,19 +33,15 @@ trait ProjectADMRestService {
 
   def findProject(id: ProjectIdentifierADM): Task[ProjectGetResponseADM]
 
-  def createProject(payload: ProjectCreatePayloadADM, user: UserADM): Task[ProjectOperationResponseADM]
-  def createProject(createReq: CreateProjectApiRequestADM, user: UserADM): Task[ProjectOperationResponseADM] =
-    ProjectCreatePayloadADM.make(createReq).toZIO.flatMap(createProject(_, user))
+  def createProject(createReq: ProjectCreateRequest, user: UserADM): Task[ProjectOperationResponseADM]
 
-  def updateProject(iri: ProjectIri, payload: ProjectUpdatePayloadADM, user: UserADM): Task[ProjectOperationResponseADM]
   def updateProject(
     id: IriIdentifier,
-    updateReq: UpdateProjectRequest,
+    updateRequest: ProjectUpdateRequest,
     user: UserADM
-  ): Task[ProjectOperationResponseADM] =
-    ProjectUpdatePayloadADM.make(updateReq).toZIO.flatMap(updateProject(id.value, _, user))
+  ): Task[ProjectOperationResponseADM]
 
-  def deleteProject(iriIdentifier: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM]
+  def deleteProject(id: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM]
 
   def getAllProjectData(id: IriIdentifier, user: UserADM): Task[ProjectDataGetResponseADM]
 
@@ -109,16 +105,16 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Creates a project from the given payload.
    *
-   * @param payload         the [[ProjectCreatePayloadADM]] from which to create the project
-   * @param user  the [[UserADM]] making the request
+   * @param payload the [[ProjectCreateRequest]] from which to create the project
+   * @param user    the [[UserADM]] making the request
    * @return
    *     '''success''': information about the created project as a [[ProjectOperationResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]]
-   *                    can be found, if one was provided with the [[ProjectCreatePayloadADM]]
+   *                    can be found, if one was provided with the [[ProjectCreateRequest]]
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def createProject(payload: ProjectCreatePayloadADM, user: UserADM): Task[ProjectOperationResponseADM] =
+  def createProject(payload: ProjectCreateRequest, user: UserADM): Task[ProjectOperationResponseADM] =
     ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(payload, user, _))
 
   /**
@@ -133,7 +129,7 @@ final case class ProjectsADMRestServiceLive(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def deleteProject(id: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM] = {
-    val updatePayload = ProjectUpdatePayloadADM(status = Some(ProjectStatus.deleted))
+    val updatePayload = ProjectUpdateRequest(status = Some(ProjectStatus.deleted))
     for {
       apiId    <- Random.nextUUID
       response <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
@@ -143,8 +139,8 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Updates a project, identified by its [[ProjectIri]].
    *
-   * @param iri           the [[ProjectIri]] of the project
-   * @param payload              the [[ProjectUpdatePayloadADM]]
+   * @param id           the [[ProjectIri]] of the project
+   * @param updateRequest              the [[ProjectUpdateRequest]]
    * @param user       the [[UserADM]] making the request
    * @return
    *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
@@ -153,14 +149,11 @@ final case class ProjectsADMRestServiceLive(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def updateProject(
-    iri: ProjectIri,
-    payload: ProjectUpdatePayloadADM,
+    id: IriIdentifier,
+    updateRequest: ProjectUpdateRequest,
     user: UserADM
   ): Task[ProjectOperationResponseADM] =
-    for {
-      id       <- Random.nextUUID
-      response <- responder.changeBasicInformationRequestADM(iri, payload, user, id)
-    } yield response
+    Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateRequest, user, _))
 
   /**
    * Returns all data of a specific project, identified by its [[ProjectIri]].

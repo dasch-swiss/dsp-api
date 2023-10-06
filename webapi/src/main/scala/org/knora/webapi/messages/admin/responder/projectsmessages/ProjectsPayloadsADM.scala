@@ -6,16 +6,14 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import zio.json._
-import zio.prelude.Validation
 
-import dsp.errors.ValidationException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 
 /**
  * Project creation payload
  */
-final case class ProjectCreatePayloadADM(
+final case class ProjectCreateRequest(
   id: Option[ProjectIri] = None,
   shortname: Shortname,
   shortcode: Shortcode,
@@ -27,30 +25,14 @@ final case class ProjectCreatePayloadADM(
   selfjoin: ProjectSelfJoin
 )
 
-object ProjectCreatePayloadADM {
-
-  implicit val codec: JsonCodec[ProjectCreatePayloadADM] = DeriveJsonCodec.gen[ProjectCreatePayloadADM]
-
-  def make(apiRequest: CreateProjectApiRequestADM): Validation[Throwable, ProjectCreatePayloadADM] = {
-    val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
-    val shortname: Validation[Throwable, Shortname]            = Shortname.make(apiRequest.shortname)
-    val shortcode: Validation[Throwable, Shortcode]            = Shortcode.make(apiRequest.shortcode)
-    val longname: Validation[Throwable, Option[Name]]          = Name.make(apiRequest.longname)
-    val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
-    val keywords: Validation[Throwable, Keywords]              = Keywords.make(apiRequest.keywords)
-    val logo: Validation[Throwable, Option[Logo]]              = Logo.make(apiRequest.logo)
-    val status: Validation[Throwable, ProjectStatus]           = ProjectStatus.make(apiRequest.status)
-    val selfjoin: Validation[Throwable, ProjectSelfJoin]       = ProjectSelfJoin.make(apiRequest.selfjoin)
-    Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(
-      ProjectCreatePayloadADM.apply
-    )
-  }
+object ProjectCreateRequest {
+  implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]
 }
 
 /**
  * Project update payload
  */
-final case class ProjectUpdatePayloadADM(
+final case class ProjectUpdateRequest(
   shortname: Option[Shortname] = None,
   longname: Option[Name] = None,
   description: Option[ProjectDescription] = None,
@@ -60,24 +42,8 @@ final case class ProjectUpdatePayloadADM(
   selfjoin: Option[ProjectSelfJoin] = None
 )
 
-object ProjectUpdatePayloadADM {
-
-  implicit val codec: JsonCodec[ProjectUpdatePayloadADM] = DeriveJsonCodec.gen[ProjectUpdatePayloadADM]
-
-  def make(apiRequest: UpdateProjectRequest): Validation[Throwable, ProjectUpdatePayloadADM] = {
-    val shortname: Validation[ValidationException, Option[Shortname]] = Shortname.make(apiRequest.shortname)
-    val longname: Validation[Throwable, Option[Name]]                 = Name.make(apiRequest.longname)
-    val description: Validation[Throwable, Option[ProjectDescription]] =
-      ProjectDescription.make(apiRequest.description)
-    val keywords: Validation[Throwable, Option[Keywords]]        = Keywords.make(apiRequest.keywords)
-    val logo: Validation[Throwable, Option[Logo]]                = Logo.make(apiRequest.logo)
-    val status: Validation[Throwable, Option[ProjectStatus]]     = ProjectStatus.make(apiRequest.status)
-    val selfjoin: Validation[Throwable, Option[ProjectSelfJoin]] = ProjectSelfJoin.make(apiRequest.selfjoin)
-
-    Validation.validateWith(shortname, longname, description, keywords, logo, status, selfjoin)(
-      ProjectUpdatePayloadADM.apply
-    )
-  }
+object ProjectUpdateRequest {
+  implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]
 }
 
 final case class ProjectSetRestrictedViewSizePayload(size: String)

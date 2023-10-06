@@ -15,15 +15,14 @@ import java.nio.file.Files
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
-import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequest
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRestrictedViewSizePayload
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdatePayloadADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdateRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
@@ -127,7 +126,7 @@ final case class ProjectsRouteZ(
   private def createProject(request: Request, requestingUser: UserADM): Task[Response] =
     for {
       body    <- request.body.asString
-      payload <- ZIO.fromEither(body.fromJson[ProjectCreatePayloadADM]).mapError(e => BadRequestException(e))
+      payload <- ZIO.fromEither(body.fromJson[ProjectCreateRequest]).mapError(e => BadRequestException(e))
       r       <- projectsService.createProject(payload, requestingUser)
     } yield Response.json(r.toJsValue.toString)
 
@@ -141,9 +140,9 @@ final case class ProjectsRouteZ(
   private def updateProject(iriUrlEncoded: String, request: Request, requestingUser: UserADM): Task[Response] =
     for {
       iriDecoded <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
-      projectIri <- ProjectIri.make(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
+      projectIri <- ProjectIri.make(iriDecoded).toZIO.mapBoth(e => BadRequestException(e.msg), IriIdentifier.from)
       body       <- request.body.asString
-      payload    <- ZIO.fromEither(body.fromJson[ProjectUpdatePayloadADM]).mapError(e => BadRequestException(e))
+      payload    <- ZIO.fromEither(body.fromJson[ProjectUpdateRequest]).mapError(e => BadRequestException(e))
       r          <- projectsService.updateProject(projectIri, payload, requestingUser)
     } yield Response.json(r.toJsValue.toString)
 

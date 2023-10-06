@@ -118,7 +118,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   )
 
   val createProjectSpec: Spec[Any, Throwable] = test("create a project") {
-    val payload = ProjectCreatePayloadADM(
+    val payload = ProjectCreateRequest(
       None,
       TestDataFactory.projectShortname("newproject"),
       TestDataFactory.projectShortcode("3333"),
@@ -148,7 +148,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val iri                  = "http://rdfh.ch/projects/0001"
     val projectIri           = TestDataFactory.projectIri(iri)
     val projectStatus        = Some(TestDataFactory.projectStatus(false))
-    val projectUpdatePayload = ProjectUpdatePayloadADM(status = projectStatus)
+    val projectUpdatePayload = ProjectUpdateRequest(status = projectStatus)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
       _    <- TestRandom.feedUUIDs(uuid)
@@ -165,7 +165,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val updateProjectSpec: Spec[Any, Throwable] = test("update a project") {
     val iri        = "http://rdfh.ch/projects/0001"
     val projectIri = TestDataFactory.projectIri(iri)
-    val projectUpdatePayload = ProjectUpdatePayloadADM(
+    val projectUpdatePayload = ProjectUpdateRequest(
       Some(TestDataFactory.projectShortname("usn")),
       Some(TestDataFactory.projectName("updated project longname")),
       Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
@@ -182,7 +182,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
                         result = Expectation.value(ProjectOperationResponseADM(projectADM))
                       )
       _ <- ProjectADMRestService
-             .updateProject(projectIri, projectUpdatePayload, SystemUser)
+             .updateProject(IriIdentifier.from(projectIri), projectUpdatePayload, SystemUser)
              .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }

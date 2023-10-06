@@ -9,7 +9,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
@@ -17,24 +16,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
  */
 class ProjectsMessagesADMSpec extends CoreSpec {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  "The ChangeProjectApiRequestADM case class" should {
-    "return a 'BadRequest' when everything is 'None" in {
-      assertThrows[BadRequestException](
-        UpdateProjectRequest(
-          shortname = None,
-          longname = None,
-          description = None,
-          keywords = None,
-          logo = None,
-          status = None,
-          selfjoin = None
-        )
-      )
-    }
-  }
-
   "The ProjectADM case class" should {
     "return a 'OntologyConstraintException' when project description is not supplied" in {
       assertThrows[OntologyConstraintException](

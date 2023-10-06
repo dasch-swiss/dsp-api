@@ -212,7 +212,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val status      = TestDataFactory.projectStatus(true)
       val selfJoin    = TestDataFactory.projectSelfJoin(false)
 
-      val projectCreatePayload = ProjectCreatePayloadADM(
+      val projectCreatePayload = ProjectCreateRequest(
         id = None,
         shortname = shortname,
         shortcode = shortcode,
@@ -319,7 +319,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val projectStatus      = TestDataFactory.projectStatus(true)
       val selfJoin           = TestDataFactory.projectSelfJoin(true)
 
-      val projectUpdatePayload = ProjectUpdatePayloadADM(
+      val projectUpdatePayload = ProjectUpdateRequest(
         shortname = Some(updatedShortname),
         longname = Some(updatedLongname),
         description = Some(updatedDescription),
@@ -348,7 +348,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
       val mockService = ProjectADMRestServiceMock
         .UpdateProject(
-          assertion = Assertion.equalTo((projectIri, projectUpdatePayload, user)),
+          assertion = Assertion.equalTo((IriIdentifier.from(projectIri), projectUpdatePayload, user)),
           result = expectedResult
         )
         .toLayer

@@ -164,7 +164,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "CREATE a project and return the project info if the supplied shortname is unique" in {
         val shortcode = "111c"
         appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreatePayloadADM(
+          createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make(shortcode).fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
@@ -259,7 +259,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
         appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreatePayloadADM(
+          createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
             longname = Some(Name.make("project longname").fold(error => throw error.head, value => value)),
@@ -291,7 +291,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val descriptionWithSpecialCharacter = "project \\\"description\\\""
         val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
         appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreatePayloadADM(
+          createRequest = ProjectCreateRequest(
             shortname = Shortname.make("project_with_char").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
@@ -323,7 +323,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
         appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreatePayloadADM(
+          createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
@@ -343,7 +343,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         appActor ! ProjectCreateRequestADM(
-          createRequest = ProjectCreatePayloadADM(
+          createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
@@ -374,7 +374,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
-          projectUpdatePayload = ProjectUpdatePayloadADM(
+          projectUpdatePayload = ProjectUpdateRequest(
             shortname = None,
             longname = Some(updatedLongname),
             description = Some(updatedDescription),
@@ -409,7 +409,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val iri      = ITTestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
-          projectUpdatePayload = ProjectUpdatePayloadADM(longname = Some(longname)),
+          projectUpdatePayload = ProjectUpdateRequest(longname = Some(longname)),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -420,12 +420,6 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             )
           )
         )
-      }
-
-      "return 'BadRequest' if nothing would be changed during the update" in {
-
-        an[BadRequestException] should be thrownBy UpdateProjectRequest(None, None, None, None, None, None, None)
-
       }
     }
 
