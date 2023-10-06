@@ -7,6 +7,8 @@ package org.knora.webapi.routing.admin
 
 import zio.ZLayer
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.CreateProjectApiRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
@@ -111,7 +113,19 @@ final case class ProjectsEndpointsHandlerF(
   val deleteAdminProjectsByIriHandler =
     SecuredEndpointAndZioHandler(
       projectsEndpoints.deleteAdminProjectsByIri,
-      user => id => restService.deleteProject(id, user)
+      user => (id: IriIdentifier) => restService.deleteProject(id, user)
+    )
+
+  val postAdminProjectsByShortcodeExportHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.postAdminProjectsByShortcodeExport,
+      user => (id: ShortcodeIdentifier) => restService.exportProject(id, user)
+    )
+
+  val postAdminProjectsHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.postAdminProjects,
+      user => (createReq: CreateProjectApiRequestADM) => restService.createProjectADMRequest(createReq, user)
     )
 
   val handlers =
@@ -134,7 +148,9 @@ final case class ProjectsEndpointsHandlerF(
     getAdminProjectsByProjectIriAdminMembersHandler,
     getAdminProjectsByProjectShortcodeAdminMembersHandler,
     getAdminProjectsByProjectShortnameAdminMembersHandler,
-    deleteAdminProjectsByIriHandler
+    deleteAdminProjectsByIriHandler,
+    postAdminProjectsByShortcodeExportHandler,
+    postAdminProjectsHandler
   ).map(mapper.mapEndpointAndHandler(_))
 }
 

@@ -10,6 +10,7 @@ import zio._
 import zio.mock._
 
 import dsp.valueobjects.Iri._
+import dsp.valueobjects.Project.Shortcode
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -97,6 +98,8 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
           proxy(GetRestrictedViewSettings, identifier)
 
         override def exportProject(projectIri: IRI, requestingUser: UserADM): Task[Unit] = ???
+
+        override def exportProject(shortcode: Shortcode, requestingUser: UserADM): Task[Unit] = ???
 
         override def importProject(projectIri: IRI, requestingUser: UserADM): Task[ProjectImportResponse] = ???
 

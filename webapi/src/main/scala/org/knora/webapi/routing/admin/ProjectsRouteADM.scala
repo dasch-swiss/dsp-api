@@ -54,26 +54,8 @@ final case class ProjectsRouteADM(
   def makeRoute: Route =
     tapirRoutes ~
       tapirSecureRoutes ~
-      addProject() ~
       changeProject() ~
-      getProjectData() ~
-      postExportProject
-
-  /**
-   * Creates a new project.
-   */
-  private def addProject(): Route = path(projectsBasePath) {
-    post {
-      entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
-        val requestTask = for {
-          projectCreatePayload <- ProjectCreatePayloadADM.make(apiRequest).toZIO
-          requestingUser       <- Authenticator.getUserADM(requestContext)
-          uuid                 <- RouteUtilZ.randomUuid()
-        } yield ProjectCreateRequestADM(projectCreatePayload, requestingUser, uuid)
-        runJsonRouteZ(requestTask, requestContext)
-      }
-    }
-  }
+      getProjectData()
 
   /**
    * Updates a project identified by the IRI.
@@ -129,15 +111,4 @@ final case class ProjectsRouteADM(
       requestTask.flatMap(response => ZIO.fromFuture(_ => requestContext.complete(response)))
     }
   }
-
-  private def postExportProject: Route =
-    path(projectsBasePath / "iri" / Segment / "export") { projectIri =>
-      post { ctx =>
-        val requestTask = for {
-          requestingUser <- Authenticator.getUserADM(ctx)
-          _              <- ProjectADMRestService.exportProject(projectIri, requestingUser)
-        } yield RouteUtilADM.acceptedResponse("work in progress")
-        RouteUtilADM.completeContext(ctx, requestTask)
-      }
-    }
 }

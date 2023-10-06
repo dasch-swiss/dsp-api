@@ -5,6 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
+import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.spray.{jsonBody => sprayJsonBody}
@@ -88,13 +89,6 @@ final case class ProjectsEndpoints(
     .tags(tags)
 
   // secured endpoints
-  val postAdminProjects = baseEndpoints.securedEndpoint.post
-    .in(projectsBase)
-    .in(sprayJsonBody[CreateProjectApiRequestADM])
-    .out(sprayJsonBody[ProjectOperationResponseADM])
-    .description("Creates a new project.")
-    .tags(tags)
-
   val getAdminProjectsByProjectIriMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByIri / members)
     .out(sprayJsonBody[ProjectMembersGetResponseADM])
@@ -133,6 +127,19 @@ final case class ProjectsEndpoints(
     .in(projectsByIri)
     .out(sprayJsonBody[ProjectOperationResponseADM])
     .description("Deletes a project identified through the IRI.")
+    .tags(tags)
+
+  val postAdminProjectsByShortcodeExport = baseEndpoints.securedEndpoint.post
+    .in(projectsByShortcode / "export")
+    .out(statusCode(StatusCode.Accepted))
+    .description("Trigger an export of a project identified through the shortcode.")
+    .tags(tags)
+
+  val postAdminProjects = baseEndpoints.securedEndpoint.post
+    .in(projectsBase)
+    .in(sprayJsonBody[CreateProjectApiRequestADM])
+    .out(sprayJsonBody[ProjectOperationResponseADM])
+    .description("Creates a new project.")
     .tags(tags)
 }
 

@@ -35,6 +35,11 @@ trait ProjectADMRestService {
     payload: ProjectCreatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
+  def createProjectADMRequest(
+    createReq: CreateProjectApiRequestADM,
+    requestingUser: UserADM
+  ): Task[ProjectOperationResponseADM] =
+    ProjectCreatePayloadADM.make(createReq).toZIO.flatMap(createProjectADMRequest(_, requestingUser))
   def deleteProject(id: IriIdentifier, requestingUser: UserADM): Task[ProjectOperationResponseADM]
   def updateProject(
     projectIri: ProjectIri,
@@ -46,6 +51,9 @@ trait ProjectADMRestService {
     requestingUser: UserADM
   ): Task[ProjectDataGetResponseADM]
   def exportProject(shortcode: String, requestingUser: UserADM): Task[Unit]
+  def exportProject(shortcode: Shortcode, requestingUser: UserADM): Task[Unit]
+  def exportProject(id: ShortcodeIdentifier, requestingUser: UserADM): Task[Unit] =
+    exportProject(id.value, requestingUser)
   def importProject(shortcode: String, requestingUser: UserADM): Task[ProjectImportResponse]
   def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]]
   def getProjectMembers(
@@ -262,8 +270,12 @@ final case class ProjectsADMRestServiceLive(
   override def exportProject(shortcodeStr: String, requestingUser: UserADM): Task[Unit] = for {
     _         <- permissionService.ensureSystemAdmin(requestingUser)
     shortcode <- convertStringToShortcode(shortcodeStr)
-    project   <- projectRepo.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found."))
-    _         <- projectExportService.exportProject(project).logError.forkDaemon
+    _         <- exportProject(shortcode, requestingUser)
+  } yield ()
+
+  override def exportProject(shortcode: Shortcode, requestingUser: UserADM): Task[Unit] = for {
+    project <- projectRepo.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found."))
+    _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
   private def convertStringToShortcode(shortcodeStr: String): IO[BadRequestException, Shortcode] =
