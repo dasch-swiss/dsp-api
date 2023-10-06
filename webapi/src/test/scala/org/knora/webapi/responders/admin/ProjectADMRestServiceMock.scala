@@ -41,23 +41,23 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         proxy <- ZIO.service[Proxy]
       } yield new ProjectADMRestService {
 
-        def getProjectsADMRequest(): Task[ProjectsGetResponseADM] =
+        def listAllProjects(): Task[ProjectsGetResponseADM] =
           proxy(GetProjects)
 
-        def getSingleProjectADMRequest(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
+        def findProject(identifier: ProjectIdentifierADM): Task[ProjectGetResponseADM] =
           proxy(GetSingleProject, identifier)
 
-        def createProjectADMRequest(
+        def createProject(
           payload: ProjectCreatePayloadADM,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
           proxy(CreateProject, (payload, requestingUser))
 
         def deleteProject(
-          iri: ProjectIdentifierADM.IriIdentifier,
+          iriIdentifier: ProjectIdentifierADM.IriIdentifier,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
-          proxy(DeleteProject, (iri, requestingUser))
+          proxy(DeleteProject, (iriIdentifier, requestingUser))
 
         def updateProject(
           projectIri: ProjectIri,
@@ -67,10 +67,10 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
           proxy(UpdateProject, (projectIri, payload, requestingUser))
 
         def getAllProjectData(
-          iri: ProjectIdentifierADM.IriIdentifier,
-          requestingUser: UserADM
+          id: ProjectIdentifierADM.IriIdentifier,
+          user: UserADM
         ): Task[ProjectDataGetResponseADM] =
-          proxy(GetAllProjectData, (iri, requestingUser))
+          proxy(GetAllProjectData, (id, user))
 
         def getProjectMembers(
           requestingUser: UserADM,
@@ -78,13 +78,13 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         ): Task[ProjectMembersGetResponseADM] =
           proxy(GetProjectMembers, (identifier, requestingUser))
 
-        def projectAdminMembersGetRequestADM(
+        def getProjectAdminMembers(
           requestingUser: UserADM,
           identifier: ProjectIdentifierADM
         ): Task[ProjectAdminMembersGetResponseADM] =
           proxy(GetProjectAdmins, (identifier, requestingUser))
 
-        def getKeywords(): Task[ProjectsKeywordsGetResponseADM] =
+        def listAllKeywords(): Task[ProjectsKeywordsGetResponseADM] =
           proxy(GetKeywords)
 
         def getKeywordsByProjectIri(
@@ -105,7 +105,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
 
         override def listExports(requestingUser: UserADM): Task[Chunk[ProjectExportInfoResponse]] = ???
 
-        override def setProjectRestrictedViewSettings(
+        override def updateProjectRestrictedViewSettings(
           id: ProjectIdentifierADM,
           user: UserADM,
           size: RestrictedViewSize

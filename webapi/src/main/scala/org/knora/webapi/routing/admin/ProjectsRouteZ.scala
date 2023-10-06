@@ -102,33 +102,33 @@ final case class ProjectsRouteZ(
 
   private def getProjects(): Task[Response] =
     for {
-      r <- projectsService.getProjectsADMRequest()
+      r <- projectsService.listAllProjects()
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectByIri(iriUrlEncoded: String): Task[Response] =
     for {
       iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      r             <- projectsService.getSingleProjectADMRequest(iriIdentifier)
+      r             <- projectsService.findProject(iriIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectByShortname(shortname: String): Task[Response] =
     for {
       shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.getSingleProjectADMRequest(shortnameIdentifier)
+      r                   <- projectsService.findProject(shortnameIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectByShortcode(shortcode: String): Task[Response] =
     for {
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.getSingleProjectADMRequest(shortcodeIdentifier)
+      r                   <- projectsService.findProject(shortcodeIdentifier)
     } yield Response.json(r.toJsValue.toString())
 
   private def createProject(request: Request, requestingUser: UserADM): Task[Response] =
     for {
       body    <- request.body.asString
       payload <- ZIO.fromEither(body.fromJson[ProjectCreatePayloadADM]).mapError(e => BadRequestException(e))
-      r       <- projectsService.createProjectADMRequest(payload, requestingUser)
+      r       <- projectsService.createProject(payload, requestingUser)
     } yield Response.json(r.toJsValue.toString)
 
   private def deleteProject(iriUrlEncoded: String, requestingUser: UserADM): Task[Response] =
@@ -201,24 +201,24 @@ final case class ProjectsRouteZ(
     for {
       iriDecoded    <- RouteUtilZ.urlDecode(iriUrlEncoded, s"Failed to URL decode IRI parameter $iriUrlEncoded.")
       iriIdentifier <- IriIdentifier.fromString(iriDecoded).toZIO.mapError(e => BadRequestException(e.msg))
-      r             <- projectsService.projectAdminMembersGetRequestADM(requestingUser, iriIdentifier)
+      r             <- projectsService.getProjectAdminMembers(requestingUser, iriIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectAdminsByShortname(shortname: String, requestingUser: UserADM): Task[Response] =
     for {
       shortnameIdentifier <- ShortnameIdentifier.fromString(shortname).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.projectAdminMembersGetRequestADM(requestingUser, shortnameIdentifier)
+      r                   <- projectsService.getProjectAdminMembers(requestingUser, shortnameIdentifier)
     } yield Response.json(r.toJsValue.toString)
 
   private def getProjectAdminsByShortcode(shortcode: String, requestingUser: UserADM): Task[Response] =
     for {
       shortcodeIdentifier <- ShortcodeIdentifier.fromString(shortcode).toZIO.mapError(e => BadRequestException(e.msg))
-      r                   <- projectsService.projectAdminMembersGetRequestADM(requestingUser, shortcodeIdentifier)
+      r                   <- projectsService.getProjectAdminMembers(requestingUser, shortcodeIdentifier)
     } yield Response.json(r.toJsValue.toString())
 
   private def getKeywords(): Task[Response] =
     for {
-      r <- projectsService.getKeywords()
+      r <- projectsService.listAllKeywords()
     } yield Response.json(r.toJsValue.toString)
 
   private def getKeywordsByProjectIri(iriUrlEncoded: String): Task[Response] =
@@ -265,7 +265,7 @@ final case class ProjectsRouteZ(
       body     <- body.asString
       payload  <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizePayload]).mapError(BadRequestException(_))
       size     <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
-      response <- projectsService.setProjectRestrictedViewSettings(id, user, size)
+      response <- projectsService.updateProjectRestrictedViewSettings(id, user, size)
     } yield Response.json(response.toJson)
 }
 

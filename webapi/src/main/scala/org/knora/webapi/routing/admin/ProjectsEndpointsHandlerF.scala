@@ -7,12 +7,12 @@ package org.knora.webapi.routing.admin
 
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ChangeProjectApiRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.CreateProjectApiRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.UpdateProjectRequest
 import org.knora.webapi.routing.EndpointAndZioHandler
 import org.knora.webapi.routing.HandlerMapperF
 import org.knora.webapi.routing.SecuredEndpointAndZioHandler
@@ -25,30 +25,30 @@ final case class ProjectsEndpointsHandlerF(
 ) {
 
   val getAdminProjectsHandler =
-    EndpointAndZioHandler(projectsEndpoints.getAdminProjects, (_: Unit) => restService.getProjectsADMRequest())
+    EndpointAndZioHandler(projectsEndpoints.getAdminProjects, (_: Unit) => restService.listAllProjects())
 
   val getAdminProjectsKeywordsHandler =
     EndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsKeywords,
-      (_: Unit) => restService.getKeywords()
+      (_: Unit) => restService.listAllKeywords()
     )
 
   val getAdminProjectsByProjectIriHandler =
     EndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsByProjectIri,
-      (id: IriIdentifier) => restService.getSingleProjectADMRequest(id)
+      (id: IriIdentifier) => restService.findProject(id)
     )
 
   val getAdminProjectsByProjectShortcodeHandler =
     EndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsByProjectShortcode,
-      (id: ShortcodeIdentifier) => restService.getSingleProjectADMRequest(id)
+      (id: ShortcodeIdentifier) => restService.findProject(id)
     )
 
   val getAdminProjectsByProjectShortnameHandler =
     EndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsByProjectShortname,
-      (id: ShortnameIdentifier) => restService.getSingleProjectADMRequest(id)
+      (id: ShortnameIdentifier) => restService.findProject(id)
     )
 
   val getAdminProjectsKeywordsByProjectIriHandler =
@@ -96,19 +96,19 @@ final case class ProjectsEndpointsHandlerF(
   val getAdminProjectsByProjectIriAdminMembersHandler =
     SecuredEndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsByProjectIriAdminMembers,
-      user => id => restService.projectAdminMembersGetRequestADM(user, id)
+      user => id => restService.getProjectAdminMembers(user, id)
     )
 
   val getAdminProjectsByProjectShortcodeAdminMembersHandler =
     SecuredEndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsByProjectShortcodeAdminMembers,
-      user => id => restService.projectAdminMembersGetRequestADM(user, id)
+      user => id => restService.getProjectAdminMembers(user, id)
     )
 
   val getAdminProjectsByProjectShortnameAdminMembersHandler =
     SecuredEndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsByProjectShortnameAdminMembers,
-      user => id => restService.projectAdminMembersGetRequestADM(user, id)
+      user => id => restService.getProjectAdminMembers(user, id)
     )
 
   val deleteAdminProjectsByIriHandler =
@@ -126,13 +126,13 @@ final case class ProjectsEndpointsHandlerF(
   val postAdminProjectsHandler =
     SecuredEndpointAndZioHandler(
       projectsEndpoints.postAdminProjects,
-      user => (createReq: CreateProjectApiRequestADM) => restService.createProjectADMRequest(createReq, user)
+      user => (createReq: CreateProjectApiRequestADM) => restService.createProject(createReq, user)
     )
 
   val putAdminProjectsByIriHandler =
-    SecuredEndpointAndZioHandler[(IriIdentifier, ChangeProjectApiRequestADM), ProjectOperationResponseADM](
+    SecuredEndpointAndZioHandler[(IriIdentifier, UpdateProjectRequest), ProjectOperationResponseADM](
       projectsEndpoints.putAdminProjectsByIri,
-      user => { case (id: IriIdentifier, changeReq: ChangeProjectApiRequestADM) =>
+      user => { case (id: IriIdentifier, changeReq: UpdateProjectRequest) =>
         restService.updateProject(id, changeReq, user)
       }
     )

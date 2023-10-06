@@ -77,7 +77,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val expectedResponse = ProjectsGetResponseADM(Seq(projectADM))
     val mockResponder    = ProjectsResponderADMMock.ProjectsGetRequestADM(Expectation.value(expectedResponse))
     for {
-      _ <- ProjectADMRestService.getProjectsADMRequest().provide(projectServiceLayer(mockResponder))
+      _ <- ProjectADMRestService.listAllProjects().provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -90,7 +90,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- ProjectADMRestService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
+        _ <- ProjectADMRestService.findProject(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project by shortname") {
@@ -101,7 +101,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- ProjectADMRestService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
+        _ <- ProjectADMRestService.findProject(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project by shortcode") {
@@ -112,7 +112,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- ProjectADMRestService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
+        _ <- ProjectADMRestService.findProject(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
   )
@@ -139,7 +139,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           result = Expectation.value(ProjectOperationResponseADM(projectADM))
         )
       _ <-
-        ProjectADMRestService.createProjectADMRequest(payload, SystemUser).provide(projectServiceLayer(mockResponder))
+        ProjectADMRestService.createProject(payload, SystemUser).provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -239,7 +239,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .projectAdminMembersGetRequestADM(SystemUser, identifier)
+               .getProjectAdminMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -252,7 +252,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .projectAdminMembersGetRequestADM(SystemUser, identifier)
+               .getProjectAdminMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -265,7 +265,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .projectAdminMembersGetRequestADM(SystemUser, identifier)
+               .getProjectAdminMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
@@ -277,7 +277,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     )
     for {
       _ <- ProjectADMRestService
-             .getKeywords()
+             .listAllKeywords()
              .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }

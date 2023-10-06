@@ -424,7 +424,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'BadRequest' if nothing would be changed during the update" in {
 
-        an[BadRequestException] should be thrownBy ChangeProjectApiRequestADM(None, None, None, None, None, None, None)
+        an[BadRequestException] should be thrownBy UpdateProjectRequest(None, None, None, None, None, None, None)
 
       }
     }

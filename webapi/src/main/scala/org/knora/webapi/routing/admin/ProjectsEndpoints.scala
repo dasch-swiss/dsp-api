@@ -144,7 +144,7 @@ final case class ProjectsEndpoints(
 
   val putAdminProjectsByIri = baseEndpoints.securedEndpoint.put
     .in(projectsByIri)
-    .in(sprayJsonBody[ChangeProjectApiRequestADM])
+    .in(sprayJsonBody[UpdateProjectRequest])
     .out(sprayJsonBody[ProjectOperationResponseADM])
     .description("Updates a project identified by the IRI.")
     .tags(tags)

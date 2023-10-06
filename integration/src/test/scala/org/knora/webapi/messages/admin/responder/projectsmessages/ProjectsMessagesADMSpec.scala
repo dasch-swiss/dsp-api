@@ -22,7 +22,7 @@ class ProjectsMessagesADMSpec extends CoreSpec {
   "The ChangeProjectApiRequestADM case class" should {
     "return a 'BadRequest' when everything is 'None" in {
       assertThrows[BadRequestException](
-        ChangeProjectApiRequestADM(
+        UpdateProjectRequest(
           shortname = None,
           longname = None,
           description = None,

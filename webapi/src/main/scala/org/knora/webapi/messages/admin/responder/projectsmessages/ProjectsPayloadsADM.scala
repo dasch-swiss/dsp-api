@@ -64,7 +64,7 @@ object ProjectUpdatePayloadADM {
 
   implicit val codec: JsonCodec[ProjectUpdatePayloadADM] = DeriveJsonCodec.gen[ProjectUpdatePayloadADM]
 
-  def make(apiRequest: ChangeProjectApiRequestADM): Validation[Throwable, ProjectUpdatePayloadADM] = {
+  def make(apiRequest: UpdateProjectRequest): Validation[Throwable, ProjectUpdatePayloadADM] = {
     val shortname: Validation[ValidationException, Option[Shortname]] = Shortname.make(apiRequest.shortname)
     val longname: Validation[Throwable, Option[Name]]                 = Name.make(apiRequest.longname)
     val description: Validation[Throwable, Option[ProjectDescription]] =

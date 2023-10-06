@@ -78,7 +78,7 @@ case class CreateProjectApiRequestADM(
  * @param status      the new project's status.
  * @param selfjoin    the new project's self-join status.
  */
-case class ChangeProjectApiRequestADM(
+case class UpdateProjectRequest(
   shortname: Option[String] = None,
   longname: Option[String] = None,
   description: Option[Seq[V2.StringLiteralV2]] = None,
@@ -105,7 +105,7 @@ case class ChangeProjectApiRequestADM(
   def toJsValue: JsValue = changeProjectApiRequestADMFormat.write(this)
 
   /* validates and escapes the given values.*/
-  def validateAndEscape: ChangeProjectApiRequestADM = {
+  def validateAndEscape: UpdateProjectRequest = {
 
     val validatedShortname: Option[String] =
       shortname.map(v =>
@@ -601,10 +601,10 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       )
     )
   )
-  implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(
+  implicit val changeProjectApiRequestADMFormat: RootJsonFormat[UpdateProjectRequest] = rootFormat(
     lazyFormat(
       jsonFormat(
-        ChangeProjectApiRequestADM,
+        UpdateProjectRequest,
         "shortname",
         "longname",
         "description",
