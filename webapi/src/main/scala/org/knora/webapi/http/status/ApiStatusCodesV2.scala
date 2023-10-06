@@ -34,7 +34,7 @@ object ApiStatusCodesV2 {
       case OntologyConstraintException(_) => StatusCodes.BadRequest
       case EditConflictException(_)       => StatusCodes.Conflict
       case BadRequestException(_)         => StatusCodes.BadRequest
-      case ValidationException(_, _)      => StatusCodes.BadRequest
+      case ValidationException(_)         => StatusCodes.BadRequest
       case RequestRejectedException(_)    => StatusCodes.BadRequest
       // RequestRejectedException must be the last one in this group
 

@@ -5,7 +5,11 @@
 
 package org.knora.webapi.routing.admin
 
+import org.apache.pekko.stream.scaladsl.FileIO
 import zio.ZLayer
+
+import java.nio.file.Files
+import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.CreateProjectApiRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
@@ -13,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.UpdateProjectRequest
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.EndpointAndZioHandler
 import org.knora.webapi.routing.HandlerMapperF
 import org.knora.webapi.routing.SecuredEndpointAndZioHandler
@@ -137,6 +142,29 @@ final case class ProjectsEndpointsHandlerF(
       }
     )
 
+  val getAdminProjectsByIriAllDataHandler = {
+    implicit val ec: ExecutionContext = ExecutionContext.global
+    projectsEndpoints.getAdminProjectsByIriAllData.serverLogic((user: UserADM) =>
+      (iri: IriIdentifier) =>
+        // Future[Either[RequestRejectedException, (String, String, PekkoStreams.BinaryStream]]
+        mapper.runToFuture(
+          restService
+            .getAllProjectData(iri, user)
+            .map { result =>
+              val path = result.projectDataFile
+//            On Pekko use pekko-streams to stream the file, but when running on zio-http we use ZStream:
+//            val stream = ZStream
+//              .fromPath(path)
+//              .ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
+              val stream = FileIO
+                .fromPath(path)
+                .watchTermination() { case (_, result) => result.onComplete(_ => Files.deleteIfExists(path)) }
+              (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
+            }
+        )
+    )
+  }
+
   val handlers =
     List(
       getAdminProjectsHandler,
@@ -150,7 +178,7 @@ final case class ProjectsEndpointsHandlerF(
       getAdminProjectByProjectShortnameRestrictedViewSettingsHandler
     ).map(mapper.mapEndpointAndHandler(_))
 
-  val secureHandlers = List(
+  val secureHandlers = getAdminProjectsByIriAllDataHandler :: List(
     getAdminProjectsByProjectIriMembersHandler,
     getAdminProjectsByProjectShortcodeMembersHandler,
     getAdminProjectsByProjectShortnameMembersHandler,

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.routing.admin
 
+import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.generic.auto._
@@ -147,6 +148,14 @@ final case class ProjectsEndpoints(
     .in(sprayJsonBody[UpdateProjectRequest])
     .out(sprayJsonBody[ProjectOperationResponseADM])
     .description("Updates a project identified by the IRI.")
+    .tags(tags)
+
+  val getAdminProjectsByIriAllData = baseEndpoints.securedEndpoint.get
+    .in(projectsByIri / "AllData")
+    .out(header[String]("Content-Disposition"))
+    .out(header[String]("Content-Type"))
+    .out(streamBinaryBody(PekkoStreams)(CodecFormat.OctetStream()))
+    .description("Returns all ontologies, data, and configuration belonging to a project identified by the IRI.")
     .tags(tags)
 }
 

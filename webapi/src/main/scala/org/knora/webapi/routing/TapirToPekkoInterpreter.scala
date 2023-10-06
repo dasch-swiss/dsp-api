@@ -33,5 +33,6 @@ final case class TapirToPekkoInterpreter()(implicit executionContext: ExecutionC
 
   private val interpreter: PekkoHttpServerInterpreter = PekkoHttpServerInterpreter(serverOptions)
 
-  def toRoute(endpoint: ServerEndpoint[PekkoStreams with WebSockets, Future]): Route = interpreter.toRoute(endpoint)
+  def toRoute(endpoint: ServerEndpoint[PekkoStreams with WebSockets, Future]): Route =
+    interpreter.toRoute(endpoint)
 }

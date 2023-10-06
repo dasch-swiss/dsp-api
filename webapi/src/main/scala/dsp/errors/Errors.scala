@@ -138,6 +138,10 @@ object NotFoundException {
 case class DuplicateValueException(message: String = "Duplicate values are not permitted")
     extends RequestRejectedException(message)
 
+object DuplicateValueException {
+  implicit val codec: JsonCodec[DuplicateValueException] = DeriveJsonCodec.gen[DuplicateValueException]
+}
+
 /**
  * An exception indicating that a requested update is not allowed because it would violate an ontology constraint,
  * e.g. an `knora-base:objectClassConstraint` or an OWL cardinality restriction.
@@ -197,7 +201,11 @@ case class InvalidRdfException(msg: String, cause: Throwable = null) extends Req
  * @param msg   a description of the error.
  * @param cause the cause for the error
  */
-case class ValidationException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
+case class ValidationException(msg: String) extends RequestRejectedException(msg)
+
+object ValidationException {
+  implicit val codec: JsonCodec[ValidationException] = DeriveJsonCodec.gen[ValidationException]
+}
 
 /**
  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.

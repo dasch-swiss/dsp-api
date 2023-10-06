@@ -132,23 +132,24 @@ private final case class ApiRoutesImpl(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
-              HealthRoute().makeRoute ~
-                VersionRoute().makeRoute ~
-                RejectingRoute(appConfig, runtime).makeRoute ~
-                OntologiesRouteV2().makeRoute ~
-                SearchRouteV2(appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
-                ResourcesRouteV2(appConfig).makeRoute ~
-                ValuesRouteV2().makeRoute ~
-                StandoffRouteV2().makeRoute ~
-                ListsRouteV2().makeRoute ~
+              val adminProjectsRoutes = projectsHandler.allHanders.map(tapirToPekkoRoute.toRoute(_)).reduce(_ ~ _)
+              adminProjectsRoutes ~
                 AuthenticationRouteV2().makeRoute ~
+                FilesRouteADM(routeData, runtime).makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~
+                HealthRoute().makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~
+                ListsRouteV2().makeRoute ~
+                OntologiesRouteV2().makeRoute ~
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
-                ProjectsRouteADM(tapirToPekkoRoute, projectsHandler).routes ~
+                RejectingRoute(appConfig, runtime).makeRoute ~
+                ResourcesRouteV2(appConfig).makeRoute ~
+                SearchRouteV2(appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
+                StandoffRouteV2().makeRoute ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
                 UsersRouteADM().makeRoute ~
-                FilesRouteADM(routeData, runtime).makeRoute
+                ValuesRouteV2().makeRoute ~
+                VersionRoute().makeRoute
             }
           }
         }
