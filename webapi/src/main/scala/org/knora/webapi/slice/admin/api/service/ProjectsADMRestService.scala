@@ -46,6 +46,12 @@ trait ProjectADMRestService {
     payload: ProjectUpdatePayloadADM,
     requestingUser: UserADM
   ): Task[ProjectOperationResponseADM]
+  def updateProject(
+    iri: IriIdentifier,
+    updateReq: ChangeProjectApiRequestADM,
+    requestingUser: UserADM
+  ): Task[ProjectOperationResponseADM] =
+    ProjectUpdatePayloadADM.make(updateReq).toZIO.flatMap(updateProject(iri.value, _, requestingUser))
   def getAllProjectData(
     iriIdentifier: IriIdentifier,
     requestingUser: UserADM

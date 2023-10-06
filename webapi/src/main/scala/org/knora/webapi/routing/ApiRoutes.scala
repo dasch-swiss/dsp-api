@@ -145,7 +145,7 @@ private final case class ApiRoutesImpl(
                 GroupsRouteADM(routeData, runtime).makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
-                ProjectsRouteADM(tapirToPekkoRoute, projectsHandler).makeRoute ~
+                ProjectsRouteADM(tapirToPekkoRoute, projectsHandler).routes ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
                 UsersRouteADM().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute

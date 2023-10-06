@@ -7,11 +7,12 @@ package org.knora.webapi.routing.admin
 
 import zio.ZLayer
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ChangeProjectApiRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.CreateProjectApiRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
 import org.knora.webapi.routing.EndpointAndZioHandler
 import org.knora.webapi.routing.HandlerMapperF
 import org.knora.webapi.routing.SecuredEndpointAndZioHandler
@@ -128,6 +129,14 @@ final case class ProjectsEndpointsHandlerF(
       user => (createReq: CreateProjectApiRequestADM) => restService.createProjectADMRequest(createReq, user)
     )
 
+  val putAdminProjectsByIriHandler =
+    SecuredEndpointAndZioHandler[(IriIdentifier, ChangeProjectApiRequestADM), ProjectOperationResponseADM](
+      projectsEndpoints.putAdminProjectsByIri,
+      user => { case (id: IriIdentifier, changeReq: ChangeProjectApiRequestADM) =>
+        restService.updateProject(id, changeReq, user)
+      }
+    )
+
   val handlers =
     List(
       getAdminProjectsHandler,
@@ -150,8 +159,11 @@ final case class ProjectsEndpointsHandlerF(
     getAdminProjectsByProjectShortnameAdminMembersHandler,
     deleteAdminProjectsByIriHandler,
     postAdminProjectsByShortcodeExportHandler,
-    postAdminProjectsHandler
+    postAdminProjectsHandler,
+    putAdminProjectsByIriHandler
   ).map(mapper.mapEndpointAndHandler(_))
+
+  val allHanders = handlers ++ secureHandlers
 }
 
 object ProjectsEndpointsHandlerF {

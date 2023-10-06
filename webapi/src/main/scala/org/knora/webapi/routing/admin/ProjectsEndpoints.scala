@@ -49,19 +49,19 @@ final case class ProjectsEndpoints(
   val getAdminProjectsByProjectIri = baseEndpoints.publicEndpoint.get
     .in(projectsByIri)
     .out(sprayJsonBody[ProjectGetResponseADM])
-    .description("Returns a single project identified through the IRI.")
+    .description("Returns a single project identified by the IRI.")
     .tags(tags)
 
   val getAdminProjectsByProjectShortcode = baseEndpoints.publicEndpoint.get
     .in(projectsByShortcode)
     .out(sprayJsonBody[ProjectGetResponseADM])
-    .description("Returns a single project identified through the shortcode.")
+    .description("Returns a single project identified by the shortcode.")
     .tags(tags)
 
   val getAdminProjectsByProjectShortname = baseEndpoints.publicEndpoint.get
     .in(projectsByShortname)
     .out(sprayJsonBody[ProjectGetResponseADM])
-    .description("Returns a single project identified through the shortname.")
+    .description("Returns a single project identified by the shortname.")
     .tags(tags)
 
   val getAdminProjectsKeywordsByProjectIri = baseEndpoints.publicEndpoint.get
@@ -73,38 +73,38 @@ final case class ProjectsEndpoints(
   val getAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.publicEndpoint.get
     .in(projectsByIri / restrictedViewSettings)
     .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-    .description("Returns the project's restricted view settings identified through the IRI.")
+    .description("Returns the project's restricted view settings identified by the IRI.")
     .tags(tags)
 
   val getAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.publicEndpoint.get
     .in(projectsByShortcode / restrictedViewSettings)
     .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-    .description("Returns the project's restricted view settings identified through the shortcode.")
+    .description("Returns the project's restricted view settings identified by the shortcode.")
     .tags(tags)
 
   val getAdminProjectsByProjectShortnameRestrictedViewSettings = baseEndpoints.publicEndpoint.get
     .in(projectsByShortname / restrictedViewSettings)
     .out(sprayJsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-    .description("Returns the project's restricted view settings identified through the shortname.")
+    .description("Returns the project's restricted view settings identified by the shortname.")
     .tags(tags)
 
   // secured endpoints
   val getAdminProjectsByProjectIriMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByIri / members)
     .out(sprayJsonBody[ProjectMembersGetResponseADM])
-    .description("Returns all project members of a project identified through the IRI.")
+    .description("Returns all project members of a project identified by the IRI.")
     .tags(tags)
 
   val getAdminProjectsByProjectShortcodeMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByShortcode / members)
     .out(sprayJsonBody[ProjectMembersGetResponseADM])
-    .description("Returns all project members of a project identified through the shortcode.")
+    .description("Returns all project members of a project identified by the shortcode.")
     .tags(tags)
 
   val getAdminProjectsByProjectShortnameMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByShortname / members)
     .out(sprayJsonBody[ProjectMembersGetResponseADM])
-    .description("Returns all project members of a project identified through the shortname.")
+    .description("Returns all project members of a project identified by the shortname.")
     .tags(tags)
 
   val getAdminProjectsByProjectIriAdminMembers = baseEndpoints.securedEndpoint.get
@@ -114,25 +114,25 @@ final case class ProjectsEndpoints(
   val getAdminProjectsByProjectShortcodeAdminMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByShortcode / adminMembers)
     .out(sprayJsonBody[ProjectAdminMembersGetResponseADM])
-    .description("Returns all admin members of a project identified through the shortcode.")
+    .description("Returns all admin members of a project identified by the shortcode.")
     .tags(tags)
 
   val getAdminProjectsByProjectShortnameAdminMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByShortname / adminMembers)
     .out(sprayJsonBody[ProjectAdminMembersGetResponseADM])
-    .description("Returns all admin members of a project identified through the shortname.")
+    .description("Returns all admin members of a project identified by the shortname.")
     .tags(tags)
 
   val deleteAdminProjectsByIri = baseEndpoints.securedEndpoint.delete
     .in(projectsByIri)
     .out(sprayJsonBody[ProjectOperationResponseADM])
-    .description("Deletes a project identified through the IRI.")
+    .description("Deletes a project identified by the IRI.")
     .tags(tags)
 
   val postAdminProjectsByShortcodeExport = baseEndpoints.securedEndpoint.post
     .in(projectsByShortcode / "export")
     .out(statusCode(StatusCode.Accepted))
-    .description("Trigger an export of a project identified through the shortcode.")
+    .description("Trigger an export of a project identified by the shortcode.")
     .tags(tags)
 
   val postAdminProjects = baseEndpoints.securedEndpoint.post
@@ -140,6 +140,13 @@ final case class ProjectsEndpoints(
     .in(sprayJsonBody[CreateProjectApiRequestADM])
     .out(sprayJsonBody[ProjectOperationResponseADM])
     .description("Creates a new project.")
+    .tags(tags)
+
+  val putAdminProjectsByIri = baseEndpoints.securedEndpoint.put
+    .in(projectsByIri)
+    .in(sprayJsonBody[ChangeProjectApiRequestADM])
+    .out(sprayJsonBody[ProjectOperationResponseADM])
+    .description("Updates a project identified by the IRI.")
     .tags(tags)
 }
 

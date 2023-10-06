@@ -22,16 +22,12 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Try
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.ProjectIri
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
@@ -45,41 +41,11 @@ final case class ProjectsRouteADM(
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {
 
-  private val tapirRoutes: Route = projectsEndpointsHandlerF.handlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
-  private val tapirSecureRoutes: Route =
-    projectsEndpointsHandlerF.secureHandlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
+  private val tapirRoutes: Route = projectsEndpointsHandlerF.allHanders.map(interpreter.toRoute(_)).reduce(_ ~ _)
 
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
 
-  def makeRoute: Route =
-    tapirRoutes ~
-      tapirSecureRoutes ~
-      changeProject() ~
-      getProjectData()
-
-  /**
-   * Updates a project identified by the IRI.
-   */
-  private def changeProject(): Route =
-    path(projectsBasePath / "iri" / Segment) { value =>
-      put {
-        entity(as[ChangeProjectApiRequestADM]) { apiRequest => requestContext =>
-          val getProjectIri =
-            ZIO
-              .fromOption(Iri.validateAndEscapeProjectIri(value))
-              .orElseFail(BadRequestException(s"Invalid project IRI $value"))
-              .flatMap(ProjectIri.make(_).toZIO)
-
-          val requestTask = for {
-            projectIri           <- getProjectIri
-            projectUpdatePayload <- ProjectUpdatePayloadADM.make(apiRequest).toZIO
-            requestingUser       <- Authenticator.getUserADM(requestContext)
-            uuid                 <- RouteUtilZ.randomUuid()
-          } yield ProjectChangeRequestADM(projectIri, projectUpdatePayload, requestingUser, uuid)
-          runJsonRouteZ(requestTask, requestContext)
-        }
-      }
-    }
+  def routes: Route = tapirRoutes ~ getProjectData
 
   private val projectDataHeader =
     `Content-Disposition`(ContentDispositionTypes.attachment, Map(("filename", "project-data.trig")))
@@ -87,7 +53,7 @@ final case class ProjectsRouteADM(
   /**
    * Returns all ontologies, data, and configuration belonging to a project.
    */
-  private def getProjectData(): Route =
+  private def getProjectData: Route =
     path(projectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
       get(respondWithHeaders(projectDataHeader)(getProjectDataEntity(projectIri)))
     }
