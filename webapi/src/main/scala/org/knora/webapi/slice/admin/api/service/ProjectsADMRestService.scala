@@ -55,6 +55,9 @@ trait ProjectADMRestService {
 
   def importProject(shortcode: String, user: UserADM): Task[ProjectImportResponse]
 
+  def importProject(shortcode: ShortcodeIdentifier, user: UserADM): Task[ProjectImportResponse] =
+    importProject(shortcode.value.value, user)
+
   def listExports(user: UserADM): Task[Chunk[ProjectExportInfoResponse]]
 
   def getProjectMembers(user: UserADM, id: ProjectIdentifierADM): Task[ProjectMembersGetResponseADM]

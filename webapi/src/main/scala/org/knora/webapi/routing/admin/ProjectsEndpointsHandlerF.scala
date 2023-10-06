@@ -157,6 +157,12 @@ final case class ProjectsEndpointsHandlerF(
       user => (id: ShortcodeIdentifier) => restService.exportProject(id, user)
     )
 
+  val postAdminProjectsByShortcodeImportHandler =
+    SecuredEndpointAndZioHandler(
+      projectsEndpoints.postAdminProjectsByShortcodeImport,
+      user => (id: ShortcodeIdentifier) => restService.importProject(id, user)
+    )
+
   val postAdminProjectsHandler =
     SecuredEndpointAndZioHandler(
       projectsEndpoints.postAdminProjects,
@@ -219,6 +225,7 @@ final case class ProjectsEndpointsHandlerF(
     deleteAdminProjectsByIriHandler,
     getAdminProjectsExportsHandler,
     postAdminProjectsByShortcodeExportHandler,
+    postAdminProjectsByShortcodeImportHandler,
     postAdminProjectsHandler,
     putAdminProjectsByIriHandler
   ).map(mapper.mapEndpointAndHandler(_))

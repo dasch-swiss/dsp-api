@@ -20,6 +20,7 @@ import org.knora.webapi.routing.PathVariables.projectIri
 import org.knora.webapi.routing.PathVariables.projectShortcode
 import org.knora.webapi.routing.PathVariables.projectShortname
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
+import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints
@@ -158,6 +159,12 @@ final case class ProjectsEndpoints(
     .in(projectsByShortcode / `export`)
     .out(statusCode(StatusCode.Accepted))
     .description("Trigger an export of a project identified by the shortcode.")
+    .tags(tags)
+
+  val postAdminProjectsByShortcodeImport = baseEndpoints.securedEndpoint.post
+    .in(projectsByShortcode / "import")
+    .out(zioJsonBody[ProjectImportResponse])
+    .description("Trigger an import of a project identified by the shortcode.")
     .tags(tags)
 
   val postAdminProjects = baseEndpoints.securedEndpoint.post
