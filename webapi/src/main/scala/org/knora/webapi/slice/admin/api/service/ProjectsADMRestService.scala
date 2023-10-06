@@ -50,8 +50,7 @@ trait ProjectADMRestService {
   def getAllProjectData(id: IriIdentifier, user: UserADM): Task[ProjectDataGetResponseADM]
 
   def exportProject(shortcode: String, user: UserADM): Task[Unit]
-  def exportProject(shortcode: Shortcode, user: UserADM): Task[Unit]
-  def exportProject(id: ShortcodeIdentifier, user: UserADM): Task[Unit] = exportProject(id.value, user)
+  def exportProject(id: ShortcodeIdentifier, user: UserADM): Task[Unit]
 
   def importProject(shortcode: String, user: UserADM): Task[ProjectImportResponse]
 
@@ -266,29 +265,27 @@ final case class ProjectsADMRestServiceLive(
       _       <- projectRepo.setProjectRestrictedViewSize(project, size)
     } yield ProjectRestrictedViewSizeResponseADM(size)
 
-  override def exportProject(shortcodeStr: String, user: UserADM): Task[Unit] = for {
-    _         <- permissionService.ensureSystemAdmin(user)
-    shortcode <- convertStringToShortcode(shortcodeStr)
-    _         <- exportProject(shortcode, user)
-  } yield ()
+  override def exportProject(shortcodeStr: String, user: UserADM): Task[Unit] =
+    convertStringToShortcodeId(shortcodeStr).flatMap(exportProject(_, user))
 
-  override def exportProject(shortcode: Shortcode, user: UserADM): Task[Unit] = for {
-    project <- projectRepo.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found."))
+  override def exportProject(id: ShortcodeIdentifier, user: UserADM): Task[Unit] = for {
+    _       <- permissionService.ensureSystemAdmin(user)
+    project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project $id not found."))
     _       <- projectExportService.exportProject(project).logError.forkDaemon
   } yield ()
 
-  private def convertStringToShortcode(shortcodeStr: String): IO[BadRequestException, Shortcode] =
-    Shortcode.make(shortcodeStr).toZIO.mapError(err => BadRequestException(err.msg))
+  private def convertStringToShortcodeId(shortcodeStr: String): IO[BadRequestException, ShortcodeIdentifier] =
+    Shortcode.make(shortcodeStr).toZIO.mapBoth(err => BadRequestException(err.msg), ShortcodeIdentifier.from)
 
   override def importProject(
     shortcodeStr: String,
     user: UserADM
   ): Task[ProjectImportResponse] = for {
     _         <- permissionService.ensureSystemAdmin(user)
-    shortcode <- convertStringToShortcode(shortcodeStr)
+    shortcode <- convertStringToShortcodeId(shortcodeStr)
     path <-
       projectImportService
-        .importProject(shortcode, user)
+        .importProject(shortcode.value, user)
         .flatMap {
           case Some(export) => export.toAbsolutePath.map(_.toString)
           case None         => ZIO.fail(NotFoundException(s"Project export for ${shortcode.value} not found."))

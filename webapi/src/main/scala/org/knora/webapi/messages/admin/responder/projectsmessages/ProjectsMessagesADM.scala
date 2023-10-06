@@ -504,6 +504,7 @@ object ProjectIdentifierADM {
    */
   final case class ShortcodeIdentifier(value: Shortcode) extends ProjectIdentifierADM
   object ShortcodeIdentifier {
+    def from(shortcode: Shortcode): ShortcodeIdentifier = ShortcodeIdentifier(shortcode)
     def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
       Shortcode.make(value).map {
         ShortcodeIdentifier(_)
