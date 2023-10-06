@@ -68,9 +68,6 @@ nav:
               - Consistency Checking: 05-internals/design/principles/consistency-checking.md
               - Authentication: 05-internals/design/principles/authentication.md
               - RDF Processing API: 05-internals/design/principles/rdf-api.md
-          - DSP-API V1 Design:
-              - How to Add an API v1 Route: 05-internals/design/api-v1/how-to-add-a-route.md
-              - JSON in API v1: 05-internals/design/api-v1/json.md
           - DSP-API V2 Design:
               - API v2 Design Overview: 05-internals/design/api-v2/overview.md
               - Ontology Schemas: 05-internals/design/api-v2/ontology-schemas.md
