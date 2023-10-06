@@ -16,8 +16,6 @@ import org.apache.pekko.http.scaladsl.model.HttpMethods.POST
 import org.apache.pekko.http.scaladsl.model.HttpMethods.PUT
 import zio._
 
-import scala.concurrent.ExecutionContext
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -120,8 +118,7 @@ private final case class ApiRoutesImpl(
 ) extends ApiRoutes
     with AroundDirectives {
 
-  private implicit val system: actor.ActorSystem          = routeData.system
-  private implicit val executionContext: ExecutionContext = system.dispatcher
+  private implicit val system: actor.ActorSystem = routeData.system
 
   val routes: Route =
     logDuration {

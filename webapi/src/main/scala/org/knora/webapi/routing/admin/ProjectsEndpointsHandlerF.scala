@@ -16,6 +16,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSizeResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRestrictedViewSizePayload
 import org.knora.webapi.messages.admin.responder.projectsmessages.UpdateProjectRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.EndpointAndZioHandler
@@ -78,6 +80,27 @@ final case class ProjectsEndpointsHandlerF(
     EndpointAndZioHandler(
       projectsEndpoints.getAdminProjectsByProjectShortnameRestrictedViewSettings,
       (id: ShortnameIdentifier) => restService.getProjectRestrictedViewSettings(id)
+    )
+
+  // secured endpoints
+  val setAdminProjectsByProjectIriRestrictedViewSettingsHandler =
+    SecuredEndpointAndZioHandler[
+      (IriIdentifier, ProjectSetRestrictedViewSizePayload),
+      ProjectRestrictedViewSizeResponseADM
+    ](
+      projectsEndpoints.setAdminProjectsByProjectIriRestrictedViewSettings,
+      user => { case (id, payload) => restService.updateProjectRestrictedViewSettings(id, user, payload) }
+    )
+
+  val setAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler =
+    SecuredEndpointAndZioHandler[
+      (ShortcodeIdentifier, ProjectSetRestrictedViewSizePayload),
+      ProjectRestrictedViewSizeResponseADM
+    ](
+      projectsEndpoints.setAdminProjectsByProjectShortcodeRestrictedViewSettings,
+      user => { case (id, payload) =>
+        restService.updateProjectRestrictedViewSettings(id, user, payload)
+      }
     )
 
   val getAdminProjectsByProjectIriMembersHandler =
@@ -185,6 +208,8 @@ final case class ProjectsEndpointsHandlerF(
     ).map(mapper.mapEndpointAndHandler(_))
 
   val secureHandlers = getAdminProjectsByIriAllDataHandler :: List(
+    setAdminProjectsByProjectIriRestrictedViewSettingsHandler,
+    setAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler,
     getAdminProjectsByProjectIriMembersHandler,
     getAdminProjectsByProjectShortcodeMembersHandler,
     getAdminProjectsByProjectShortnameMembersHandler,

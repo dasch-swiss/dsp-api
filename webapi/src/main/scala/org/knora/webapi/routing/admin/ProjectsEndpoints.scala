@@ -32,7 +32,7 @@ final case class ProjectsEndpoints(
 
   // other path elements
   private val keywords               = "Keywords"
-  private val export                 = "export"
+  private val `export`               = "export"
   private val members                = "members"
   private val adminMembers           = "admin-members"
   private val restrictedViewSettings = "RestrictedViewSettings"
@@ -94,6 +94,20 @@ final case class ProjectsEndpoints(
     .tags(tags)
 
   // secured endpoints
+  val setAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.post
+    .in(projectsByIri / restrictedViewSettings)
+    .in(zioJsonBody[ProjectSetRestrictedViewSizePayload])
+    .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
+    .description("Sets the project's restricted view settings identified by the IRI.")
+    .tags(tags)
+
+  val setAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
+    .in(projectsByShortcode / restrictedViewSettings)
+    .in(zioJsonBody[ProjectSetRestrictedViewSizePayload])
+    .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
+    .description("Sets the project's restricted view settings identified by the shortcode.")
+    .tags(tags)
+
   val getAdminProjectsByProjectIriMembers = baseEndpoints.securedEndpoint.get
     .in(projectsByIri / members)
     .out(sprayJsonBody[ProjectMembersGetResponseADM])
@@ -135,13 +149,13 @@ final case class ProjectsEndpoints(
     .tags(tags)
 
   val getAdminProjectsExports = baseEndpoints.securedEndpoint.get
-    .in(projectsBase / export)
+    .in(projectsBase / `export`)
     .out(zioJsonBody[Chunk[ProjectExportInfoResponse]])
     .description("Lists existing exports of all projects.")
     .tags(tags)
 
   val postAdminProjectsByShortcodeExport = baseEndpoints.securedEndpoint.post
-    .in(projectsByShortcode / export)
+    .in(projectsByShortcode / `export`)
     .out(statusCode(StatusCode.Accepted))
     .description("Trigger an export of a project identified by the shortcode.")
     .tags(tags)

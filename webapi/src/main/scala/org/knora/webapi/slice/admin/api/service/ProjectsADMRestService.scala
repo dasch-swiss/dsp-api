@@ -70,6 +70,15 @@ trait ProjectADMRestService {
   def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: UserADM,
+    payload: ProjectSetRestrictedViewSizePayload
+  ): Task[ProjectRestrictedViewSizeResponseADM] = ZIO
+    .fromEither(RestrictedViewSize.make(payload.size))
+    .mapError(BadRequestException(_))
+    .flatMap(updateProjectRestrictedViewSettings(id, user, _))
+
+  def updateProjectRestrictedViewSettings(
+    id: ProjectIdentifierADM,
+    user: UserADM,
     size: RestrictedViewSize
   ): Task[ProjectRestrictedViewSizeResponseADM]
 }
