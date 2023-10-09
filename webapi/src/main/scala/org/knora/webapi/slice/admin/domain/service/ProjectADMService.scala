@@ -7,10 +7,14 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio._
 
+import dsp.errors.NotFoundException
 import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.getId
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -25,6 +29,7 @@ trait ProjectADMService {
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]]
+  def setProjectRestrictedViewSize(id: IriIdentifier, size: RestrictedViewSize): Task[Unit]
 }
 
 object ProjectADMService {
@@ -100,6 +105,11 @@ final case class ProjectADMServiceLive(
       .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
       .map(_ :+ projectGraph)
   }
+
+  override def setProjectRestrictedViewSize(id: IriIdentifier, size: RestrictedViewSize): Task[Unit] = for {
+    project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
+    _       <- projectRepo.setProjectRestrictedViewSize(project, size)
+  } yield ()
 }
 
 object ProjectADMServiceLive {

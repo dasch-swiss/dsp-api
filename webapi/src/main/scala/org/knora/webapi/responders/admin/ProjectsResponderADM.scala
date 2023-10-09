@@ -11,6 +11,7 @@ import java.util.UUID
 
 import dsp.errors._
 import dsp.valueobjects.Iri
+import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -814,10 +815,9 @@ final case class ProjectsResponderADMLive(
                              )
                            )
         // create permissions for admins and members of the new group
-        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-//      TODO: DEV-2626 add default value here
-//        defaultSize = ""
-//        _          <- setProjectRestrictedViewSettings(id.value, requestingUser, defaultSize)
+        _          <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
+        defaultSize = RestrictedViewSize.default
+        _          <- projectService.setProjectRestrictedViewSize(id, defaultSize)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
