@@ -77,5 +77,5 @@ final case class FileChecksumServiceLive(assetInfos: AssetInfoService) extends F
 
 object FileChecksumServiceLive {
   val layer: URLayer[AssetInfoService, FileChecksumService] =
-    ZLayer.fromFunction(FileChecksumServiceLive.apply _)
+    ZLayer.derive[FileChecksumServiceLive]
 }

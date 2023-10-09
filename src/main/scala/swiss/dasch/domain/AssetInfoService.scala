@@ -145,6 +145,7 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
     _                  <- storageService.saveJsonFile(infoFile, content)
   } yield ()
 }
+
 object AssetInfoServiceLive {
-  val layer = ZLayer.fromFunction(AssetInfoServiceLive.apply _)
+  val layer = ZLayer.derive[AssetInfoServiceLive]
 }

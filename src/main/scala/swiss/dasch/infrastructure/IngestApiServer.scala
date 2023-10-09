@@ -4,38 +4,35 @@
  */
 
 package swiss.dasch.infrastructure
-
-import swiss.dasch.api.{ IngestEndpoint, * }
-import swiss.dasch.api.IngestEndpoint.*
-import swiss.dasch.api.monitoring.{ HealthEndpoint, InfoEndpoint, MetricsEndpoint }
+import sttp.tapir.server.interceptor.cors.CORSConfig.AllowedOrigin
+import sttp.tapir.server.interceptor.cors.{ CORSConfig, CORSInterceptor }
+import sttp.tapir.server.metrics.zio.ZioMetrics
+import sttp.tapir.server.ziohttp
+import sttp.tapir.server.ziohttp.{ ZioHttpInterpreter, ZioHttpServerOptions }
+import swiss.dasch.Endpoints
 import swiss.dasch.config.Configuration.ServiceConfig
 import swiss.dasch.version.BuildInfo
+import zio.*
 import zio.http.*
-import zio.http.internal.middlewares.Cors.CorsConfig
-import zio.{ URLayer, ZIO, ZLayer }
 
 object IngestApiServer {
 
-  private val serviceApps    =
-    (ExportEndpoint.app ++
-      ImportEndpoint.app ++
-      IngestEndpoint.app ++
-      ListProjectsEndpoint.app ++
-      ReportEndpoint.app ++
-      MaintenanceEndpointRoutes.app) @@ Authenticator.middleware
-  private val managementApps = HealthEndpoint.app ++ InfoEndpoint.app ++ MetricsEndpoint.app
-  private val app            = ((managementApps ++ serviceApps)
-    @@ HttpRoutesMiddlewares.dropTrailingSlash)
-    @@ HttpRoutesMiddlewares.cors(CorsConfig())
+  private val serverOptions = ZioHttpServerOptions
+    .customiseInterceptors
+    .metricsInterceptor(ZioMetrics.default[Task]().metricsInterceptor())
+    .corsInterceptor(
+      CORSInterceptor.customOrThrow(CORSConfig.default.copy(allowedOrigin = AllowedOrigin.All).exposeAllHeaders)
+    )
+    .options
 
-  def startup() =
-    ZIO.logInfo(s"Starting ${BuildInfo.name}") *>
-      Server.install(app) *>
-      ZIO.serviceWithZIO[ServiceConfig](c =>
-        ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version} on http://${c.host}:${c.port}/info")
-      )
-      *>
-      ZIO.never
+  def startup(): ZIO[ServiceConfig with Server with Endpoints, Nothing, Unit] = for {
+    _   <- ZIO.logInfo(s"Starting ${BuildInfo.name}")
+    app <- ZIO.serviceWith[Endpoints](_.endpoints).map(ZioHttpInterpreter(serverOptions).toHttp(_))
+    _   <- Server.install(app.withDefaultErrorResponse)
+    _   <- ZIO.serviceWithZIO[ServiceConfig](c =>
+             ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs")
+           )
+  } yield ()
 
   val layer: URLayer[ServiceConfig, Server] = ZLayer
     .service[ServiceConfig]

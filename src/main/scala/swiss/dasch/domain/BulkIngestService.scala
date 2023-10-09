@@ -109,5 +109,5 @@ final case class BulkIngestServiceLive(
 }
 
 object BulkIngestServiceLive {
-  val layer = ZLayer.fromFunction(BulkIngestServiceLive.apply _)
+  val layer = ZLayer.derive[BulkIngestServiceLive]
 }

@@ -17,9 +17,10 @@ object SpecJwtTokens {
   def tokenWithInvalidSignature(): URIO[JwtConfig, String]       = createToken(secret = Some("invalid-secret"))
   def tokenWithInvalidAudience(): URIO[JwtConfig, String]        = createToken(audience = Some(Set("invalid-audience")))
   def tokenWithInvalidIssuer(): URIO[JwtConfig, String]          = createToken(issuer = Some("invalid-issuer"))
+  def tokenWithMissingSubject(): URIO[JwtConfig, String]         = createToken(subject = None)
   def createToken(
       issuer: Option[String] = None,
-      subject: Option[String] = None,
+      subject: Option[String] = Some("some-subject"),
       audience: Option[Set[String]] = None,
       expiration: Option[Instant] = None,
       secret: Option[String] = None,
@@ -29,7 +30,7 @@ object SpecJwtTokens {
       jwtConfig <- ZIO.service[JwtConfig]
       claim      = JwtClaim(
                      issuer = issuer.orElse(Some(jwtConfig.issuer)),
-                     subject = subject.orElse(Some("some-subject")),
+                     subject = subject,
                      audience = audience.orElse(Some(Set(jwtConfig.audience))),
                      issuedAt = Some(now.getEpochSecond),
                      expiration = expiration.orElse(Some(now.plusSeconds(3600))).map(_.getEpochSecond),

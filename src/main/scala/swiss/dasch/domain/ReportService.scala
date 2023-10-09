@@ -14,23 +14,30 @@ object Report {
 }
 
 trait ReportService  {
-  def checksumReport(projectShortcode: ProjectShortcode): Task[Report]
+  def checksumReport(projectShortcode: ProjectShortcode): Task[Option[Report]]
 }
 object ReportService {
-  def checksumReport(projectShortcode: ProjectShortcode): RIO[ReportService, Report] =
+  def checksumReport(projectShortcode: ProjectShortcode): RIO[ReportService, Option[Report]] =
     ZIO.serviceWithZIO[ReportService](_.checksumReport(projectShortcode))
 }
 
 final case class ReportServiceLive(projectService: ProjectService, assetService: FileChecksumService)
     extends ReportService {
-  override def checksumReport(projectShortcode: ProjectShortcode): Task[Report] =
+  override def checksumReport(projectShortcode: ProjectShortcode): Task[Option[Report]] =
     projectService
-      .findAssetInfosOfProject(projectShortcode)
-      .mapZIOPar(StorageService.maxParallelism())(info => assetService.verifyChecksum(info).map((info, _)))
-      .runCollect
-      .map(_.toMap)
-      .map(Report.make)
+      .findProject(projectShortcode)
+      .flatMap {
+        case Some(_) =>
+          projectService
+            .findAssetInfosOfProject(projectShortcode)
+            .mapZIOPar(StorageService.maxParallelism())(info => assetService.verifyChecksum(info).map((info, _)))
+            .runCollect
+            .map(_.toMap)
+            .map(Report.make)
+            .map(Some(_))
+        case None    => ZIO.none
+      }
 }
 object ReportServiceLive  {
-  val layer = ZLayer.fromFunction(ReportServiceLive.apply _)
+  val layer = ZLayer.derive[ReportServiceLive]
 }

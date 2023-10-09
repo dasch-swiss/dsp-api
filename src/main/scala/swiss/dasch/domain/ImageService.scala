@@ -75,5 +75,5 @@ final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoS
 }
 
 object ImageServiceLive {
-  val layer = ZLayer.fromFunction(ImageServiceLive.apply _)
+  val layer = ZLayer.derive[ImageServiceLive]
 }

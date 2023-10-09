@@ -120,5 +120,5 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
   }
 }
 object StorageServiceLive {
-  val layer: URLayer[StorageConfig, StorageService] = ZLayer.fromFunction(StorageServiceLive.apply _)
+  val layer: URLayer[StorageConfig, StorageService] = ZLayer.derive[StorageServiceLive]
 }

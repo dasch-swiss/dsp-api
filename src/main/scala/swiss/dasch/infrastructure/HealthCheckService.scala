@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package swiss.dasch.api.monitoring
+package swiss.dasch.infrastructure
 
-import swiss.dasch.infrastructure.FileSystemCheck
-import zio.{ UIO, URIO, URLayer, ZIO, ZLayer }
+import zio.{ UIO, URIO, ZIO, ZLayer }
 
 trait HealthCheckService  {
   def check: UIO[Health]
@@ -15,7 +14,7 @@ object HealthCheckService {
   def check: URIO[HealthCheckService, Health] = ZIO.serviceWithZIO(_.check)
 }
 
-final class HealthCheckServiceLive(filesystemCheck: FileSystemCheck) extends HealthCheckService {
+final case class HealthCheckServiceLive(filesystemCheck: FileSystemCheck) extends HealthCheckService {
   override def check: UIO[Health] =
     filesystemCheck.checkExpectedFoldersExist().map {
       case true  => Health.up()
@@ -24,5 +23,5 @@ final class HealthCheckServiceLive(filesystemCheck: FileSystemCheck) extends Hea
 }
 
 object HealthCheckServiceLive {
-  val layer: URLayer[FileSystemCheck, HealthCheckServiceLive] = ZLayer.fromFunction(HealthCheckServiceLive(_))
+  val layer = ZLayer.derive[HealthCheckServiceLive]
 }

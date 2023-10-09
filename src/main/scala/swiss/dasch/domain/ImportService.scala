@@ -96,5 +96,5 @@ final case class ImportServiceLive(
 object ImportServiceLive {
   val layer
       : ZLayer[FileChecksumService with AssetInfoService with ProjectService with StorageService, Nothing, ImportService] =
-    ZLayer.fromFunction(ImportServiceLive.apply _)
+    ZLayer.derive[ImportServiceLive]
 }

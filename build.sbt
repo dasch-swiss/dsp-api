@@ -1,5 +1,7 @@
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{ Docker, dockerRepository }
 import com.typesafe.sbt.packager.docker.Cmd
+
+import scala.collection.immutable.Seq
 import sys.process.*
 
 addCommandAlias("fmt", "scalafmt; Test / scalafmt;")
@@ -7,6 +9,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
+val tapirVersion                = "1.7.5"
 val zioVersion                  = "2.0.18"
 val zioJsonVersion              = "0.6.2"
 val zioConfigVersion            = "3.0.7"
@@ -28,6 +31,18 @@ ThisBuild / fork              := true
 ThisBuild / semanticdbEnabled := true
 
 scalacOptions ++= Seq("-old-syntax", "-rewrite")
+
+val tapir   = Seq(
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.2.10",
+)
+val metrics = Seq(
+  "dev.zio"                     %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
+  "dev.zio"                     %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % "1.6.4",
+)
 
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
@@ -51,7 +66,7 @@ lazy val root = (project in file("."))
            |""".stripMargin
       )
     ),
-    libraryDependencies ++= Seq(
+    libraryDependencies ++= tapir ++ metrics ++ Seq(
       "dev.zio"              %% "zio"                               % zioVersion,
       "dev.zio"              %% "zio-config"                        % zioConfigVersion,
       "dev.zio"              %% "zio-config-magnolia"               % zioConfigVersion,

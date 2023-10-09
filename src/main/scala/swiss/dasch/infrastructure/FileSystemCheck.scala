@@ -37,5 +37,5 @@ final case class FileSystemCheckLive(config: StorageConfig) extends FileSystemCh
 }
 
 object FileSystemCheckLive {
-  val layer: URLayer[StorageConfig, FileSystemCheck] = ZLayer.fromFunction(FileSystemCheckLive.apply _)
+  val layer: URLayer[StorageConfig, FileSystemCheck] = ZLayer.derive[FileSystemCheckLive]
 }

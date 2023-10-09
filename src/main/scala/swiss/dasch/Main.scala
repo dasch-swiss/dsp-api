@@ -6,11 +6,10 @@
 package swiss.dasch
 
 import swiss.dasch.api.*
-import swiss.dasch.api.monitoring.*
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.{ JwtConfig, ServiceConfig, StorageConfig }
 import swiss.dasch.domain.*
-import swiss.dasch.infrastructure.{ FileSystemCheck, FileSystemCheckLive, IngestApiServer, Logger }
+import swiss.dasch.infrastructure.*
 import zio.*
 import zio.config.*
 import zio.http.*
@@ -23,10 +22,16 @@ object Main extends ZIOAppDefault {
     Configuration.layer >+> Logger.layer
 
   override val run: ZIO[Any, Any, Nothing] =
-    (FileSystemCheck.smokeTestOrDie() *> IngestApiServer.startup())
+    (FileSystemCheck.smokeTestOrDie() *>
+      IngestApiServer.startup() *>
+      ZIO.never)
       .provide(
+        BaseEndpoints.layer,
+        MonitoringEndpoints.layer,
+        MonitoringEndpointsHandler.layer,
+        Endpoints.layer,
         AssetInfoServiceLive.layer,
-        AuthenticatorLive.layer,
+        AuthServiceLive.layer,
         BulkIngestServiceLive.layer,
         Configuration.layer,
         FileChecksumServiceLive.layer,
@@ -35,7 +40,12 @@ object Main extends ZIOAppDefault {
         ImportServiceLive.layer,
         ImageServiceLive.layer,
         IngestApiServer.layer,
+        MaintenanceEndpoints.layer,
+        MaintenanceEndpointsHandler.layer,
+        MaintenanceActionsLive.layer,
         Metrics.layer,
+        ProjectsEndpoints.layer,
+        ProjectsEndpointsHandler.layer,
         ProjectServiceLive.layer,
         ReportServiceLive.layer,
         SipiClientLive.layer,

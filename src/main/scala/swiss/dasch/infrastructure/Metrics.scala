@@ -3,20 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package swiss.dasch.api.monitoring
+package swiss.dasch.infrastructure
 
-import zio.*
-import zio.http.*
+import zio.{ durationInt, ZLayer }
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.connectors.{ MetricsConfig, prometheus }
 import zio.metrics.jvm.DefaultJvmMetrics
-
-object MetricsEndpoint {
-  val app = Http.collectZIO[Request] {
-    case Method.GET -> Root / "metrics" =>
-      ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
-  }
-}
 
 object Metrics {
   val layer: ZLayer[Any, Nothing, PrometheusPublisher] =

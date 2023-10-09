@@ -23,7 +23,7 @@ object SpecConstants {
   }
   extension (s: String) {
     def toProjectShortcode: ProjectShortcode = ProjectShortcode
-      .make(s)
+      .from(s)
       .fold(err => throw new IllegalArgumentException(err), identity)
     def toAssetId: AssetId                   = AssetId
       .make(s)

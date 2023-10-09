@@ -6,7 +6,7 @@
 package swiss.dasch.test
 
 import org.apache.commons.io.FileUtils
-import swiss.dasch.config.Configuration.{ JwtConfig, StorageConfig }
+import swiss.dasch.config.Configuration.{ IngestConfig, JwtConfig, StorageConfig }
 import zio.nio.file.Files
 import zio.{ Layer, ULayer, ZIO, ZLayer }
 
@@ -16,6 +16,11 @@ object SpecConfigurations {
 
   val jwtConfigLayer: ULayer[JwtConfig] =
     ZLayer.succeed(JwtConfig("secret-key", "https://dsp-ingest.dev.dasch.swiss", "https://admin.dev.dasch.swiss"))
+
+  val jwtConfigDisableAuthLayer: ULayer[JwtConfig] =
+    ZLayer.succeed(
+      JwtConfig("secret-key", "https://dsp-ingest.dev.dasch.swiss", "https://admin.dev.dasch.swiss", disableAuth = true)
+    )
 
   val storageConfigLayer: Layer[IOException, StorageConfig] = ZLayer.scoped {
     for {
@@ -27,4 +32,6 @@ object SpecConfigurations {
       _       <- ZIO.attemptBlockingIO(FileUtils.copyDirectory(SpecPaths.testFolder.toFile, assetDir.toFile))
     } yield StorageConfig(assetDir.toString, tempDir.toString)
   }
+
+  val ingestConfigLayer = ZLayer.succeed(IngestConfig(2))
 }

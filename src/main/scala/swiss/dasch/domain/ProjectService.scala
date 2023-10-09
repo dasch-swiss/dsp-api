@@ -5,8 +5,7 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.refineV
+import eu.timepit.refined.api.{ Refined, RefinedTypeOps }
 import eu.timepit.refined.string.MatchesRegex
 import org.apache.commons.io.FileUtils
 import zio.*
@@ -18,17 +17,12 @@ import zio.stream.ZStream
 
 import java.io.IOException
 
-opaque type ProjectShortcode = String Refined MatchesRegex["""^\p{XDigit}{4,4}$"""]
+type ProjectShortcode = String Refined MatchesRegex["""^\p{XDigit}{4,4}$"""]
 
-object ProjectShortcode {
-
-  def make(shortcode: String): Either[String, ProjectShortcode] = refineV(shortcode.toUpperCase)
-
-  extension (c: ProjectShortcode) { def value: String = c.toString }
-
-  given schema: Schema[ProjectShortcode] = Schema[String].transformOrFail(ProjectShortcode.make, id => Right(id.value))
-
-  given codec: JsonCodec[ProjectShortcode] = JsonCodec[String].transformOrFail(ProjectShortcode.make, _.value)
+object ProjectShortcode extends RefinedTypeOps[ProjectShortcode, String] {
+  override def from(str: String): Either[String, ProjectShortcode] = super.from(str.toUpperCase)
+  given schema: Schema[ProjectShortcode]                           = Schema[String].transformOrFail(ProjectShortcode.from, id => Right(id.value))
+  given codec: JsonCodec[ProjectShortcode]                         = JsonCodec[String].transformOrFail(ProjectShortcode.from, _.value)
 }
 
 trait ProjectService {
@@ -77,7 +71,7 @@ final case class ProjectServiceLive(
       .map(_.isDefined)
 
   private val toProjectShortcodes: Chunk[Path] => Chunk[ProjectShortcode] =
-    _.map(_.filename.toString).sorted.flatMap(ProjectShortcode.make(_).toOption)
+    _.map(_.filename.toString).sorted.flatMap(ProjectShortcode.from(_).toOption)
 
   override def findProject(shortcode: ProjectShortcode): IO[IOException, Option[Path]] =
     storage.getProjectDirectory(shortcode).flatMap(path => ZIO.whenZIO(Files.isDirectory(path))(ZIO.succeed(path)))
@@ -107,5 +101,5 @@ final case class ProjectServiceLive(
 
 object ProjectServiceLive {
   val layer: ZLayer[AssetInfoService with StorageService with FileChecksumService, Nothing, ProjectService] =
-    ZLayer.fromFunction(ProjectServiceLive.apply _)
+    ZLayer.derive[ProjectServiceLive]
 }

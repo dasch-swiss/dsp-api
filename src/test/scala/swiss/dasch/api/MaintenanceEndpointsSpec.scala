@@ -5,7 +5,7 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.api.MaintenanceEndpoint.MappingEntry
+import sttp.tapir.server.ziohttp.{ ZioHttpInterpreter, ZioHttpServerOptions }
 import swiss.dasch.domain.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.domain.SipiImageFormat.Jpg
@@ -19,10 +19,17 @@ import zio.nio.file
 import zio.nio.file.Files
 import zio.test.*
 
-object MaintenanceEndpointSpec extends ZIOSpecDefault {
+object MaintenanceEndpointsSpec extends ZIOSpecDefault {
 
   private def awaitTrue[R, E](awaitThis: ZIO[R, E, Boolean], timeout: Duration = 1.seconds): ZIO[R, E, Boolean] =
     awaitThis.repeatUntil(identity).timeout(timeout).map(_.getOrElse(false))
+
+  private def executeRequest(request: Request) = for {
+    app      <- ZIO.serviceWith[MaintenanceEndpointsHandler](handler =>
+                  ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
+                )
+    response <- app.runZIO(request).logError
+  } yield response
 
   private val createOriginalsSuite = {
     def createOriginalsRequest(
@@ -31,25 +38,28 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
       ) =
       Request
         .post(Body.fromString(body.toJson), URL(Root / "maintenance" / "create-originals" / shortcode.toString))
-        .updateHeaders(_.addHeader(Header.ContentType(MediaType.application.json)))
+        .updateHeaders(
+          _.addHeader(Header.ContentType(MediaType.application.json))
+            .addHeader(Header.Authorization.name, "Bearer fakeToken")
+        )
 
     suite("/maintenance/create-originals")(
       test("should return 404 for a non-existent project") {
         val request = createOriginalsRequest(nonExistentProject)
         for {
-          response <- MaintenanceEndpointRoutes.app.runZIO(request).logError
+          response <- executeRequest(request)
         } yield assertTrue(response.status == Status.NotFound)
       },
       test("should return 400 for an invalid project shortcode") {
         val request = createOriginalsRequest("invalid-shortcode")
         for {
-          response <- MaintenanceEndpointRoutes.app.runZIO(request).logError
+          response <- executeRequest(request)
         } yield assertTrue(response.status == Status.BadRequest)
       },
       test("should return 204 for a project shortcode ") {
         val request = createOriginalsRequest(existingProject)
         for {
-          response <- MaintenanceEndpointRoutes.app.runZIO(request).logError
+          response <- executeRequest(request)
         } yield assertTrue(response.status == Status.Accepted)
       },
       test("should return 204 for a project shortcode and create originals for jp2 and jpx assets") {
@@ -71,7 +81,7 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
         val request     = createOriginalsRequest(existingProject, List(testMapping))
 
         for {
-          response         <- MaintenanceEndpointRoutes.app.runZIO(request).logError
+          response         <- executeRequest(request)
           newOrigExistsJpx <- doesOrigExist(assetJpx, SipiImageFormat.Jpg)
           newOrigExistsJp2 <- doesOrigExist(assetJp2, SipiImageFormat.Tif)
           assetInfoJpx     <- loadAssetInfo(assetJpx)
@@ -96,16 +106,20 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
   private val needsOriginalsSuite =
     suite("/maintenance/needs-originals should")(
       test("should return 204 and create a report") {
-        val request = Request.get(URL(Root / "maintenance" / "needs-originals"))
+        val request = Request
+          .get(URL(Root / "maintenance" / "needs-originals"))
+          .addHeader(Header.Authorization.name, "Bearer fakeToken")
         for {
-          response <- MaintenanceEndpointRoutes.app.runZIO(request).logError
+          response <- executeRequest(request)
           projects <- loadReport("needsOriginals_images_only.json")
         } yield assertTrue(response.status == Status.Accepted, projects == Chunk("0001"))
       },
-      test("should return 204 and create a extended report") {
-        val request = Request.get(URL(Root / "maintenance" / "needs-originals").withQueryParams("imagesOnly=false"))
+      test("should return 204 and create an extended report") {
+        val request = Request
+          .get(URL(Root / "maintenance" / "needs-originals").withQueryParams("imagesOnly=false"))
+          .addHeader(Header.Authorization.name, "Bearer fakeToken")
         for {
-          response <- MaintenanceEndpointRoutes.app.runZIO(request).logError
+          response <- executeRequest(request)
           projects <- loadReport("needsOriginals.json")
         } yield assertTrue(response.status == Status.Accepted, projects == Chunk("0001"))
       },
@@ -120,10 +134,12 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
   private val needsTopleftCorrectionSuite =
     suite("/maintenance/needs-top-left-correction should")(
       test("should return 204 and create a report") {
-        val request = Request.get(URL(Root / "maintenance" / "needs-top-left-correction"))
+        val request = Request
+          .get(URL(Root / "maintenance" / "needs-top-left-correction"))
+          .addHeader(Header.Authorization.name, "Bearer fakeToken")
         for {
           _        <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
-          response <- MaintenanceEndpointRoutes.app.runZIO(request).logError
+          response <- executeRequest(request)
           projects <- loadReport("needsTopLeftCorrection.json")
         } yield assertTrue(response.status == Status.Accepted, projects == Chunk("0001"))
       }
@@ -132,11 +148,17 @@ object MaintenanceEndpointSpec extends ZIOSpecDefault {
   val spec = suite("MaintenanceEndpoint")(createOriginalsSuite, needsOriginalsSuite, needsTopleftCorrectionSuite)
     .provide(
       AssetInfoServiceLive.layer,
+      AuthServiceLive.layer,
       FileChecksumServiceLive.layer,
       ImageServiceLive.layer,
+      BaseEndpoints.layer,
+      MaintenanceActionsLive.layer,
+      MaintenanceEndpoints.layer,
+      MaintenanceEndpointsHandler.layer,
       ProjectServiceLive.layer,
-      SpecConfigurations.storageConfigLayer,
-      StorageServiceLive.layer,
       SipiClientMock.layer,
+      SpecConfigurations.storageConfigLayer,
+      SpecConfigurations.jwtConfigDisableAuthLayer,
+      StorageServiceLive.layer,
     )
 }

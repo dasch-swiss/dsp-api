@@ -11,10 +11,10 @@ import zio.http.*
 import zio.http.endpoint.*
 import zio.test.{ TestAspect, ZIOSpecDefault, assertTrue }
 
-object AuthenticatorMiddlewareSpec extends ZIOSpecDefault {
+object AuthServiceMiddlewareSpec extends ZIOSpecDefault {
 
   private val app =
-    Endpoint.get("hello").out[String].implement(_ => ZIO.succeed("test")).toApp @@ Authenticator.middleware
+    Endpoint.get("hello").out[String].implement(_ => ZIO.succeed("test")).toApp @@ AuthService.middleware
 
   private val request = Request.get(URL(Root / "hello"))
 
@@ -22,7 +22,7 @@ object AuthenticatorMiddlewareSpec extends ZIOSpecDefault {
     test("valid token should be accepted") {
       for {
         token    <- SpecJwtTokens.validToken()
-        _        <- Authenticator.authenticate(token)
+        _        <- AuthService.authenticate(token)
         response <- app.runZIO(request.updateHeaders(_.addHeader(Header.Authorization.Bearer(token))))
         body     <- response.body.asString
       } yield assertTrue(response.status == Status.Ok, body == "\"test\"")
@@ -38,5 +38,5 @@ object AuthenticatorMiddlewareSpec extends ZIOSpecDefault {
         response <- app.runZIO(request.updateHeaders(_.addHeader(Header.Authorization.Bearer(token))))
       } yield assertTrue(response.status == Status.Unauthorized, response.body == Body.empty)
     },
-  ).provide(jwtConfigLayer, AuthenticatorLive.layer) @@ TestAspect.withLiveClock
+  ).provide(jwtConfigLayer, AuthServiceLive.layer) @@ TestAspect.withLiveClock
 }
