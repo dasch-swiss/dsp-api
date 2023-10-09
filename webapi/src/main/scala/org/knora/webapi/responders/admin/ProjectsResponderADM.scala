@@ -808,16 +808,14 @@ final case class ProjectsResponderADMLive(
 
         newProjectADM <- projectService
                            .findByProjectIdentifier(id)
-                           .flatMap(ZIO.fromOption(_))
-                           .orElseFail(
+                           .someOrFail(
                              UpdateNotPerformedException(
                                s"Project $newProjectIRI was not created. Please report this as a possible bug."
                              )
                            )
         // create permissions for admins and members of the new group
-        _          <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-        defaultSize = RestrictedViewSize.default
-        _          <- projectService.setProjectRestrictedViewSize(id, defaultSize)
+        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
+        _ <- projectService.setProjectRestrictedViewSize(id, RestrictedViewSize.default)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
