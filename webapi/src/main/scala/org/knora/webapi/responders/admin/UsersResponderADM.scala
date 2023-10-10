@@ -190,6 +190,7 @@ final case class UsersResponderADMLive(
       usersResponse <- triplestoreService.sparqlHttpExtendedConstruct(sparqlQueryString)
 
       statements = usersResponse.statements.toList
+      _          = println(s"statements: $statements")
 
       users: Seq[UserADM] = statements.map { case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
                               UserADM(

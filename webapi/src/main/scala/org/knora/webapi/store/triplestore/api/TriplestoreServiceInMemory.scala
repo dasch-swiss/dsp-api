@@ -71,6 +71,7 @@ import org.knora.webapi.store.triplestore.errors.TriplestoreUnsupportedFeatureEx
 import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
+import java.io.StringWriter
 
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService {
@@ -99,9 +100,25 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   }
 
   private def getReadTransactionQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
-    def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
+    def acquire(query: String, ds: Dataset) =
+      ZIO
+        .attempt(QueryExecutionFactory.create(query, ds))
+        .tap(q => zio.Console.printLine(s"query string\n: ${q.getQueryString()}"))
+        .tap(q => zio.Console.printLine(s"dataset\n: ${debug(q.getDataset())}"))
     def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
     getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
+  }
+  private def debug(dataset: Dataset): Dataset = {
+    println("Dataset:")
+    println(s"  default: ${dataset.getDefaultModel.size()}")
+    println(s"  union: ${dataset.getUnionModel.size()}")
+    // dataset.listNames().asScala.foreach { name =>
+    //   println(s"     $name: ${dataset.getNamedModel(name).size()}")
+    // }
+    // val sw = new StringWriter()
+    // dataset.getUnionModel.write(sw, "TRIG")
+    // println(sw.toString)
+    dataset
   }
 
   private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
@@ -170,9 +187,11 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
   }
 
   private def execConstruct(query: String): ZIO[Any with Scope, Throwable, Model] = {
-    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
+    def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct)
     def closeModel(model: Model)            = ZIO.succeed(model.close())
-    getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeModel))
+    getReadTransactionQueryExecution("CONSTRUCT {?s ?p ?o} WHERE {?s ?p ?o} LIMIT 1").flatMap(qExec =>
+      ZIO.acquireRelease(executeQuery(qExec))(closeModel)
+    )
   }
 
   private def modelToTurtle(model: Model): ZIO[Any with Scope, Throwable, String] =
