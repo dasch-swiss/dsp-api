@@ -13,10 +13,13 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.model.ValuedEndpointOutput
-import sttp.tapir.server.pekkohttp.{PekkoHttpServerInterpreter, PekkoHttpServerOptions}
-import zio.json.{DeriveJsonCodec, JsonCodec}
+import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
+import sttp.tapir.server.pekkohttp.PekkoHttpServerOptions
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 final case class TapirToPekkoInterpreter()(implicit executionContext: ExecutionContext) {
   private case class GenericErrorResponse(error: String)

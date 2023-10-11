@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio._
+
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
@@ -29,12 +30,16 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
-import org.knora.webapi.slice.admin.api.{ProjectsEndpoints, ProjectsEndpointsHandlerF}
+import org.knora.webapi.slice.admin.api.ProjectsEndpoints
+import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandlerF
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.api.{BaseEndpoints, HandlerMapperF, RestPermissionService, RestPermissionServiceLive}
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.HandlerMapperF
+import org.knora.webapi.slice.common.api.RestPermissionService
+import org.knora.webapi.slice.common.api.RestPermissionServiceLive
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive

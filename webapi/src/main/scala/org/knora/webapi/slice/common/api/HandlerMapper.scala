@@ -5,17 +5,20 @@
 
 package org.knora.webapi.slice.common.api
 
-import dsp.errors.RequestRejectedException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.slice.common.api.InputType.SecurityIn
 import sttp.tapir.Endpoint
 import sttp.tapir.model.UsernamePassword
 import sttp.tapir.server.PartialServerEndpoint
 import sttp.tapir.server.ServerEndpoint.Full
-import zio.{Task, ZIO, ZLayer}
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 
 import scala.concurrent.Future
+
+import dsp.errors.RequestRejectedException
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.common.api.InputType.SecurityIn
 
 object InputType {
   type SecurityIn = (Option[String], Option[String], Option[UsernamePassword])
