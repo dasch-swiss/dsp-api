@@ -4,12 +4,7 @@
  */
 
 package org.knora.webapi.store.triplestore.api
-import org.apache.jena.query.Dataset
-import org.apache.jena.query.QueryExecution
-import org.apache.jena.query.QueryExecutionFactory
-import org.apache.jena.query.QuerySolution
-import org.apache.jena.query.ReadWrite
-import org.apache.jena.query.ResultSet
+import org.apache.jena.query._
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.tdb2.TDB2Factory
@@ -19,9 +14,11 @@ import zio.Ref
 import zio.Scope
 import zio.Task
 import zio.UIO
+import zio.ULayer
 import zio.URIO
 import zio.ZIO
 import zio.ZLayer
+import zio.macros.accessible
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -33,15 +30,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.util.rdf.QuadFormat
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.messages.util.rdf.RdfFormatUtil
-import org.knora.webapi.messages.util.rdf.RdfStringSource
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
-import org.knora.webapi.messages.util.rdf.SparqlSelectResultHeader
-import org.knora.webapi.messages.util.rdf.Turtle
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -59,8 +48,14 @@ import org.knora.webapi.util.ZScopedJavaIoStreams.byteArrayOutputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileInputStream
 import org.knora.webapi.util.ZScopedJavaIoStreams.fileOutputStream
 
+@accessible
+trait TestTripleStore extends TriplestoreService {
+  def setDataset(ds: Dataset): UIO[Unit]
+}
+
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
-    extends TriplestoreService {
+    extends TriplestoreService
+    with TestTripleStore {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   override def query(query: Select): Task[SparqlSelectResult] = {
@@ -240,6 +235,9 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
 
   override def uploadRepository(inputFile: Path): Task[Unit] =
     ZIO.fail(new UnsupportedOperationException("Not implemented in TriplestoreServiceInMemory."))
+
+  override def setDataset(ds: Dataset): UIO[Unit] =
+    datasetRef.set(ds)
 }
 
 object TriplestoreServiceInMemory {
@@ -252,6 +250,8 @@ object TriplestoreServiceInMemory {
    */
   val createEmptyDataset: UIO[Dataset] = ZIO.succeed(TDB2Factory.createDataset())
 
-  val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TriplestoreService] =
+  val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
+
+  val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TestTripleStore with TriplestoreService] =
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
 }

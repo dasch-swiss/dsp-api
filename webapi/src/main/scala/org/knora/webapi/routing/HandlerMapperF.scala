@@ -44,14 +44,14 @@ case class SecuredEndpointAndZioHandler[INPUT, OUTPUT](
 final case class HandlerMapperF()(implicit val r: zio.Runtime[Any]) {
 
   def mapEndpointAndHandler[INPUT, OUTPUT](
-    it: SecuredEndpointAndZioHandler[INPUT, OUTPUT]
+    handlerAndEndpoint: SecuredEndpointAndZioHandler[INPUT, OUTPUT]
   ): Full[SecurityIn, UserADM, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
-    it.endpoint.serverLogic(user => in => { runToFuture(it.handler(user)(in)) })
+    handlerAndEndpoint.endpoint.serverLogic(user => in => { runToFuture(handlerAndEndpoint.handler(user)(in)) })
 
   def mapEndpointAndHandler[INPUT, OUTPUT](
-    it: EndpointAndZioHandler[Unit, INPUT, OUTPUT]
+    handlerAndEndpoint: EndpointAndZioHandler[Unit, INPUT, OUTPUT]
   ): Full[Unit, Unit, INPUT, RequestRejectedException, OUTPUT, Any, Future] =
-    it.endpoint.serverLogic[Future](input => runToFuture(it.handler(input)))
+    handlerAndEndpoint.endpoint.serverLogic[Future](in => runToFuture(handlerAndEndpoint.handler(in)))
 
   def runToFuture[OUTPUT](zio: Task[OUTPUT]): Future[Either[RequestRejectedException, OUTPUT]] =
     UnsafeZioRun.runToFuture(zio.refineOrDie { case e: RequestRejectedException => e }.either)

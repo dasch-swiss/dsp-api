@@ -52,6 +52,9 @@ object Project {
     implicit val encoder: JsonEncoder[Shortcode] =
       JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
+    def unsafeFrom(str: String) = make(str)
+      .getOrElse(throw new IllegalArgumentException(s"Invalid project shortcode: $str"))
+
     def make(value: String): Validation[ValidationException, Shortcode] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
