@@ -16,6 +16,8 @@ import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
 import org.knora.webapi.slice.admin.domain.repo.service.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.service.MaintenanceService
+import org.knora.webapi.slice.admin.domain.service.MaintenanceServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -29,6 +31,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory.emptyDa
 object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
 
   private val testProject              = TestDataFactory.someProject
+  private val createProject            = ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(testProject))
   private val projectDataNamedGraphIri = ProjectADMService.projectDataNamedGraphV2(testProject).value
   private val testAssetId              = AssetId.unsafeFrom("some-asset-id")
   private val expectedDimension        = Dimensions(5202, 3602)
@@ -73,15 +76,21 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
 
   val spec = suite("MaintenanceServiceLive")(
     test("fixTopLeftDimensions should not fail for an empty report") {
-      MaintenanceService.fixTopLeftDimensions(ProjectsWithBakfilesReport(Chunk.empty)).as(assertCompletes)
+      createProject *>
+        saveStillImageFileValueWithDimensions(width = expectedDimension.height, height = expectedDimension.width) *>
+        MaintenanceService.fixTopLeftDimensions(ProjectsWithBakfilesReport(Chunk.empty)).as(assertCompletes)
     },
     test("fixTopLeftDimensions should not fail if no StillImageFileValue is found") {
+      createProject *>
+        MaintenanceService.fixTopLeftDimensions(testReport).as(assertCompletes)
+    },
+    test("fixTopLeftDimensions should not fail if project is not found") {
       MaintenanceService.fixTopLeftDimensions(testReport).as(assertCompletes)
     },
     test("fixTopLeftDimensions should transpose dimension for an existing StillImageFileValue") {
       for {
         // given
-        _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(testProject))
+        _ <- createProject
         _ <- saveStillImageFileValueWithDimensions(width = expectedDimension.height, height = expectedDimension.width)
         // when
         _ <- MaintenanceService.fixTopLeftDimensions(testReport)
@@ -89,10 +98,12 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
         actualDimension <- queryForDim()
       } yield assertTrue(actualDimension == expectedDimension)
     },
-    test("fixTopLeftDimensions not should transpose dimension for an existing StillImageFileValue") {
+    test(
+      "fixTopLeftDimensions should not transpose dimension for an existing StillImageFileValue if the dimensions are correct"
+    ) {
       for {
         // given
-        _ <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(testProject))
+        _ <- createProject
         _ <- saveStillImageFileValueWithDimensions(width = expectedDimension.width, height = expectedDimension.height)
         // when
         _ <- MaintenanceService.fixTopLeftDimensions(testReport)

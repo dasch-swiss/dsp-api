@@ -28,10 +28,9 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v2._
-import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandlerF
+import org.knora.webapi.slice.admin.api.AdminApiRoutes
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -52,13 +51,13 @@ object ApiRoutes {
    */
   val layer: URLayer[
     ActorSystem
+      with AdminApiRoutes
       with AppConfig
       with AppRouter
       with IriConverter
       with KnoraProjectRepo
       with MessageRelay
       with ProjectADMRestService
-      with ProjectsEndpointsHandlerF
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
@@ -69,12 +68,11 @@ object ApiRoutes {
   ] =
     ZLayer {
       for {
-        sys              <- ZIO.service[ActorSystem]
-        router           <- ZIO.service[AppRouter]
-        appConfig        <- ZIO.service[AppConfig]
-        projectsHandler  <- ZIO.service[ProjectsEndpointsHandlerF]
-        routeData        <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
-        tapirToPekkoRoute = TapirToPekkoInterpreter()(sys.system.dispatcher)
+        sys            <- ZIO.service[ActorSystem]
+        router         <- ZIO.service[AppRouter]
+        appConfig      <- ZIO.service[AppConfig]
+        adminApiRoutes <- ZIO.service[AdminApiRoutes]
+        routeData      <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
                      AppConfig
                        with IriConverter
@@ -88,7 +86,7 @@ object ApiRoutes {
                        with core.State
                        with routing.Authenticator
                    ]
-      } yield ApiRoutesImpl(routeData, projectsHandler, tapirToPekkoRoute, appConfig, runtime)
+      } yield ApiRoutesImpl(routeData, adminApiRoutes, appConfig, runtime)
     }
 }
 
@@ -101,8 +99,7 @@ object ApiRoutes {
  */
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
-  projectsHandler: ProjectsEndpointsHandlerF,
-  tapirToPekkoRoute: TapirToPekkoInterpreter,
+  adminApiRoutes: AdminApiRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
     AppConfig
@@ -131,8 +128,7 @@ private final case class ApiRoutesImpl(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
-              val adminProjectsRoutes = projectsHandler.allHanders.map(tapirToPekkoRoute.toRoute(_)).reduce(_ ~ _)
-              adminProjectsRoutes ~
+              adminApiRoutes.routes.reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~

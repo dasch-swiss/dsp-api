@@ -30,8 +30,12 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.admin.api.AdminApiRoutes
+import org.knora.webapi.slice.admin.api.MaintenanceEndpoints
+import org.knora.webapi.slice.admin.api.MaintenanceEndpointsHandlers
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
-import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandlerF
+import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
@@ -40,6 +44,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapperF
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
@@ -135,7 +140,7 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
-      HandlerMapperF.layer,
+      AdminApiRoutes.layer,
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
@@ -151,6 +156,7 @@ object LayersTest {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
+      HandlerMapperF.layer,
       HttpServer.layer,
       HttpServerZ.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -160,6 +166,10 @@ object LayersTest {
       KnoraProjectRepoLive.layer,
       ListsResponderADMLive.layer,
       ListsResponderV2Live.layer,
+      MaintenanceEndpoints.layer,
+      MaintenanceEndpointsHandlers.layer,
+      MaintenanceRestService.layer,
+      MaintenanceServiceLive.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
@@ -176,7 +186,7 @@ object LayersTest {
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsEndpoints.layer,
-      ProjectsEndpointsHandlerF.layer,
+      ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,
@@ -194,6 +204,7 @@ object LayersTest {
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
+      TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,

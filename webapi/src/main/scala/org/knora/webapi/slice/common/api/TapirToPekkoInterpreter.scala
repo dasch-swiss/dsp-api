@@ -15,13 +15,17 @@ import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.model.ValuedEndpointOutput
 import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
 import sttp.tapir.server.pekkohttp.PekkoHttpServerOptions
+import zio.ZLayer
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-final case class TapirToPekkoInterpreter()(implicit executionContext: ExecutionContext) {
+import org.knora.webapi.core.ActorSystem
+
+final case class TapirToPekkoInterpreter()(actorSystem: ActorSystem) {
+  implicit val executionContext: ExecutionContext = actorSystem.system.dispatcher
   private case class GenericErrorResponse(error: String)
   private object GenericErrorResponse {
     implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
@@ -40,4 +44,8 @@ final case class TapirToPekkoInterpreter()(implicit executionContext: ExecutionC
 
   def toRoute(endpoint: ServerEndpoint[PekkoStreams with WebSockets, Future]): Route =
     interpreter.toRoute(endpoint)
+}
+
+object TapirToPekkoInterpreter {
+  val layer = ZLayer.derive[TapirToPekkoInterpreter]
 }

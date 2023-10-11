@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.admin.api.service
+package org.knora.webapi.slice.admin.domain.service
 
 import zio.Task
 import zio.ZIO
@@ -11,14 +11,8 @@ import zio.ZLayer
 import zio.macros.accessible
 import zio.stream.ZStream
 
-import dsp.valueobjects.Project.Shortcode
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.Dimensions
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectsWithBakfilesReport
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ReportAsset
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -38,29 +32,42 @@ final case class MaintenanceServiceLive(
   mapper: PredicateObjectMapper
 ) extends MaintenanceService {
   override def doNothing: Task[Unit] = ZIO.unit
-  override def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] =
-    ZStream
-      .fromIterable(report.projects)
-      .flatMap { project =>
+  override def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
+    def processProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, Unit] =
+      getKnoraProject(project).flatMap { knoraProject =>
         ZStream
           .fromIterable(project.assetIds)
-          .flatMapPar(5)(assetId =>
-            ZStream.fromZIOOption(
-              fixAsset(project.id, assetId)
-                // None.type errors are just a sign that the assetId should be ignored. Some.type errors are real errors.
-                .tapSomeError { case Some(e) => ZIO.logError(s"Error while processing ${project.id}, $assetId: $e") }
-                // We have logged real errors above, from here on out ignore all errors so that the stream can continue.
-                .orElseFail(None)
-            )
-          )
+          .flatMapPar(5)(processSingleAsset(knoraProject, _))
       }
-      .runDrain
 
-  private def fixAsset(shortcode: Shortcode, asset: ReportAsset): ZIO[Any, Option[Throwable], Unit] =
+    def getKnoraProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, KnoraProject] = {
+      val getProjectZio: ZIO[Any, Option[Throwable], KnoraProject] = projectRepo
+        .findByShortcode(project.id)
+        .some
+        .tapSomeError { case None => ZIO.logInfo(s"Project ${project.id} not found, skipping.") }
+      ZStream.fromZIOOption(getProjectZio)
+    }
+
+    def processSingleAsset(knoraProject: KnoraProject, assetId: ReportAsset): ZStream[Any, Nothing, Unit] =
+      ZStream.fromZIOOption(
+        fixAsset(knoraProject, assetId)
+          // None.type errors are just a sign that the assetId should be ignored. Some.type errors are real errors.
+          .tapSomeError { case Some(e) => ZIO.logError(s"Error while processing ${knoraProject.id}, $assetId: $e") }
+          // We have logged real errors above, from here on out ignore all errors so that the stream can continue.
+          .orElseFail(None)
+      )
+
+    ZIO.logInfo(s"Starting fix top left maintenance") *>
+      ZStream.fromIterable(report.projects).flatMap(processProject).runDrain *>
+      ZIO.logInfo(s"Finished fix top left maintenance")
+  }
+
+  private def fixAsset(project: KnoraProject, asset: ReportAsset): ZIO[Any, Option[Throwable], Unit] =
     for {
-      project                <- projectRepo.findByShortcode(shortcode).some
+      _                      <- ZIO.logInfo(s"Checking asset $asset.")
       stillImageFileValueIri <- checkDimensions(project, asset)
       _                      <- transposeImageDimensions(project, stillImageFileValueIri)
+      _                      <- ZIO.logInfo(s"Transposed dimensions for asset $asset.")
     } yield ()
 
   private def checkDimensions(
@@ -68,9 +75,13 @@ final case class MaintenanceServiceLive(
     asset: ReportAsset
   ): ZIO[Any, Option[Throwable], InternalIri] =
     for {
-      res       <- getDimensionAndStillImageValueIri(project, asset)
-      (dim, iri) = res
-      _         <- ZIO.when(dim == asset.dimensions)(ZIO.fail(None))
+      result <- getDimensionAndStillImageValueIri(project, asset).tapSomeError { case None =>
+                  ZIO.logInfo(s"No StillImageFileValue found for $asset, skipping.")
+                }
+      (actualDimensions, iri) = result
+      _ <- ZIO.when(actualDimensions == asset.dimensions)(
+             ZIO.logInfo(s"Dimensions for $asset already correct, skipping.") *> ZIO.fail(None)
+           )
     } yield iri
 
   private def getDimensionAndStillImageValueIri(
