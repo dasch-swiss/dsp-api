@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.common.api
 
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.capabilities.WebSockets
@@ -13,13 +13,10 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.model.ValuedEndpointOutput
-import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
-import sttp.tapir.server.pekkohttp.PekkoHttpServerOptions
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
+import sttp.tapir.server.pekkohttp.{PekkoHttpServerInterpreter, PekkoHttpServerOptions}
+import zio.json.{DeriveJsonCodec, JsonCodec}
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 final case class TapirToPekkoInterpreter()(implicit executionContext: ExecutionContext) {
   private case class GenericErrorResponse(error: String)

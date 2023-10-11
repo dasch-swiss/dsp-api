@@ -34,7 +34,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.api.{BaseEndpoints, RestPermissionService, RestPermissionServiceLive}
+import org.knora.webapi.slice.common.api.{BaseEndpoints, HandlerMapperF, RestPermissionService, RestPermissionServiceLive}
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
