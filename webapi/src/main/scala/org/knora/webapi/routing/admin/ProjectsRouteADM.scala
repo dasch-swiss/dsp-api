@@ -5,7 +5,17 @@
 
 package org.knora.webapi.routing.admin
 
-import org.apache.pekko
+import org.apache.pekko.Done
+import org.apache.pekko.http.scaladsl.model.ContentTypes
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.headers.ContentDispositionTypes
+import org.apache.pekko.http.scaladsl.model.headers.`Content-Disposition`
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.stream.IOResult
+import org.apache.pekko.stream.scaladsl.FileIO
 import zio._
 
 import java.nio.file.Files
@@ -27,35 +37,23 @@ import org.knora.webapi.routing.RouteUtilADM._
 import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
-import pekko.Done
-import pekko.http.scaladsl.model.ContentTypes
-import pekko.http.scaladsl.model.HttpEntity
-import pekko.http.scaladsl.model.headers.ContentDispositionTypes
-import pekko.http.scaladsl.model.headers.`Content-Disposition`
-import pekko.http.scaladsl.server.Directives._
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.Route
-import pekko.stream.IOResult
-import pekko.stream.scaladsl.FileIO
-
-final case class ProjectsRouteADM()(
+final case class ProjectsRouteADM(
+  interpreter: TapirToPekkoInterpreter,
+  projectsEndpointsHandlerF: ProjectsEndpointsHandlerF
+)(
   private implicit val runtime: Runtime[
     org.knora.webapi.routing.Authenticator with StringFormatter with MessageRelay with ProjectADMRestService
   ],
   private implicit val executionContext: ExecutionContext
 ) extends ProjectsADMJsonProtocol {
 
+  private val tapirRoutes: Route = projectsEndpointsHandlerF.handlers.map(interpreter.toRoute(_)).reduce(_ ~ _)
+
   private val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
 
   def makeRoute: Route =
-    getProjects() ~
+    tapirRoutes ~
       addProject() ~
-      getKeywords() ~
-      getProjectKeywords() ~
-      getProjectByIri() ~
-      getProjectByShortname() ~
-      getProjectByShortcode() ~
       changeProject() ~
       deleteProject() ~
       getProjectMembersByIri() ~
@@ -64,18 +62,8 @@ final case class ProjectsRouteADM()(
       getProjectAdminMembersByIri() ~
       getProjectAdminMembersByShortname() ~
       getProjectAdminMembersByShortcode() ~
-      getProjectRestrictedViewSettingsByIri() ~
-      getProjectRestrictedViewSettingsByShortname() ~
-      getProjectRestrictedViewSettingsByShortcode() ~
       getProjectData() ~
       postExportProject
-
-  /**
-   * Returns all projects.
-   */
-  private def getProjects(): Route = path(projectsBasePath) {
-    get(runJsonRoute(ProjectsGetRequestADM(), _))
-  }
 
   /**
    * Creates a new project.
@@ -92,57 +80,6 @@ final case class ProjectsRouteADM()(
       }
     }
   }
-
-  /**
-   * Returns all unique keywords for all projects as a list.
-   */
-  private def getKeywords(): Route = path(projectsBasePath / "Keywords") {
-    get(runJsonRoute(ProjectsKeywordsGetRequestADM(), _))
-  }
-
-  /**
-   * Returns all keywords for a single project.
-   */
-  private def getProjectKeywords(): Route =
-    path(projectsBasePath / "iri" / Segment / "Keywords") { projectIri =>
-      get { requestContext =>
-        val requestTask =
-          ProjectIri
-            .make(projectIri)
-            .toZIO
-            .mapBoth(_ => BadRequestException(s"Invalid project IRI $projectIri"), ProjectKeywordsGetRequestADM)
-        runJsonRouteZ(requestTask, requestContext)
-      }
-    }
-
-  /**
-   * Returns a single project identified through the IRI.
-   */
-  private def getProjectByIri(): Route =
-    path(projectsBasePath / "iri" / Segment) { value =>
-      get(getProject(IriIdentifier.fromString(value).toZIO, _))
-    }
-
-  private def getProject(idTask: Task[ProjectIdentifierADM], requestContext: RequestContext) = {
-    val requestTask = idTask.mapBoth(e => BadRequestException(e.getMessage), id => ProjectGetRequestADM(id))
-    runJsonRouteZ(requestTask, requestContext)
-  }
-
-  /**
-   * Returns a single project identified through the shortname.
-   */
-  private def getProjectByShortname(): Route =
-    path(projectsBasePath / "shortname" / Segment) { value =>
-      get(getProject(ShortnameIdentifier.fromString(value).toZIO, _))
-    }
-
-  /**
-   * Returns a single project identified through the shortcode.
-   */
-  private def getProjectByShortcode(): Route =
-    path(projectsBasePath / "shortcode" / Segment) { value =>
-      get(getProject(ShortcodeIdentifier.fromString(value).toZIO, _))
-    }
 
   /**
    * Updates a project identified by the IRI.
@@ -247,38 +184,6 @@ final case class ProjectsRouteADM()(
   private def getProjectAdminMembersByShortcode(): Route =
     path(projectsBasePath / "shortcode" / Segment / "admin-members") { value =>
       get(getProjectAdminMembers(ShortcodeIdentifier.fromString(value).toZIO, _))
-    }
-
-  /**
-   * Returns the project's restricted view settings identified through the IRI.
-   */
-  private def getProjectRestrictedViewSettingsByIri(): Route =
-    path(projectsBasePath / "iri" / Segment / "RestrictedViewSettings") { value: String =>
-      get(getProjectRestrictedViewSettings(IriIdentifier.fromString(value).toZIO, _))
-    }
-
-  private def getProjectRestrictedViewSettings(idTask: Task[ProjectIdentifierADM], requestContext: RequestContext) = {
-    val requestTask = for {
-      id     <- idTask.mapError(e => BadRequestException(e.getMessage))
-      request = ProjectRestrictedViewSettingsGetRequestADM(id)
-    } yield request
-    runJsonRouteZ(requestTask, requestContext)
-  }
-
-  /**
-   * Returns the project's restricted view settings identified through the shortname.
-   */
-  private def getProjectRestrictedViewSettingsByShortname(): Route =
-    path(projectsBasePath / "shortname" / Segment / "RestrictedViewSettings") { value: String =>
-      get(getProjectRestrictedViewSettings(ShortnameIdentifier.fromString(value).toZIO, _))
-    }
-
-  /**
-   * Returns the project's restricted view settings identified through shortcode.
-   */
-  private def getProjectRestrictedViewSettingsByShortcode(): Route =
-    path(projectsBasePath / "shortcode" / Segment / "RestrictedViewSettings") { value: String =>
-      get(getProjectRestrictedViewSettings(ShortcodeIdentifier.fromString(value).toZIO, _))
     }
 
   private val projectDataHeader =

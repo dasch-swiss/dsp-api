@@ -29,6 +29,8 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
+import org.knora.webapi.routing.admin.ProjectsEndpoints
+import org.knora.webapi.routing.admin.ProjectsEndpointsHandlerF
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
@@ -136,6 +138,7 @@ object LayersLive {
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
+      BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
@@ -145,6 +148,7 @@ object LayersLive {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
+      HandlerMapperF.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFRequestMessageHandlerLive.layer,
@@ -159,6 +163,7 @@ object LayersLive {
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
+      OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
@@ -170,6 +175,8 @@ object LayersLive {
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
+      ProjectsEndpoints.layer,
+      ProjectsEndpointsHandlerF.layer,
       ProjectsResponderADMLive.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,
@@ -183,7 +190,6 @@ object LayersLive {
       RestResourceInfoService.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
-      OntologyInferencer.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,

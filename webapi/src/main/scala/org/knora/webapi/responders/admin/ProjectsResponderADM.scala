@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+import zio.macros.accessible
 
 import java.util.UUID
 
@@ -48,6 +49,7 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Returns information about projects.
  */
+@accessible
 trait ProjectsResponderADM {
 
   /**
@@ -390,8 +392,7 @@ final case class ProjectsResponderADMLive(
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService
                     .findProjectKeywordsBy(id)
-                    .flatMap(ZIO.fromOption(_))
-                    .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+                    .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
     } yield keywords
 
   /**

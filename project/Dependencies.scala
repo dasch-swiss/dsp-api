@@ -7,6 +7,8 @@ package org.knora
 
 import sbt.*
 
+import scala.collection.immutable.Seq
+
 object Dependencies {
 
   val fusekiImage =
@@ -30,21 +32,19 @@ object Dependencies {
   val ZioVersion                  = "2.0.18"
 
   // ZIO - all Scala 3 compatible
-  val zio                           = "dev.zio"                       %% "zio"                               % ZioVersion
-  val zioConfig                     = "dev.zio"                       %% "zio-config"                        % ZioConfigVersion
-  val zioConfigMagnolia             = "dev.zio"                       %% "zio-config-magnolia"               % ZioConfigVersion
-  val zioConfigTypesafe             = "dev.zio"                       %% "zio-config-typesafe"               % ZioConfigVersion
-  val zioHttpOld                    = "io.d11"                        %% "zhttp"                             % ZioHttpVersionOld
-  val zioHttp                       = "dev.zio"                       %% "zio-http"                          % ZioHttpVersion
-  val zioJson                       = "dev.zio"                       %% "zio-json"                          % "0.6.2"
-  val zioLogging                    = "dev.zio"                       %% "zio-logging"                       % ZioLoggingVersion
-  val zioLoggingSlf4jBridge         = "dev.zio"                       %% "zio-logging-slf4j2-bridge"         % ZioLoggingVersion
-  val zioNio                        = "dev.zio"                       %% "zio-nio"                           % ZioNioVersion
-  val zioMacros                     = "dev.zio"                       %% "zio-macros"                        % ZioVersion
-  val zioMetricsConnectors          = "dev.zio"                       %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion
-  val zioMetricsPrometheusConnector = "dev.zio"                       %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion
-  val zioPrelude                    = "dev.zio"                       %% "zio-prelude"                       % ZioPreludeVersion
-  val zioSttp                       = "com.softwaremill.sttp.client3" %% "zio"                               % "3.9.0"
+  val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
+  val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
+  val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
+  val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
+  val zioHttpOld            = "io.d11"                        %% "zhttp"                     % ZioHttpVersionOld
+  val zioHttp               = "dev.zio"                       %% "zio-http"                  % ZioHttpVersion
+  val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.6.2"
+  val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
+  val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
+  val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
+  val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
+  val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.0"
 
   // refined
   val refined = Seq(
@@ -125,6 +125,22 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
 
+  val tapirVersion = "1.7.6"
+
+  val tapir = Seq(
+    "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
+//    "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.2.10"
+  )
+  val metrics = Seq(
+    "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
+    "dev.zio"                     %% "zio-metrics-connectors-prometheus" % ZioMetricsConnectorsVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % tapirVersion
+  )
+
   val integrationTestDependencies = Seq(
     pekkoHttpTestkit,
     pekkoStreamTestkit,
@@ -178,10 +194,8 @@ object Dependencies {
     zioLogging,
     zioLoggingSlf4jBridge,
     zioMacros,
-    zioMetricsConnectors,
-    zioMetricsPrometheusConnector,
     zioNio,
     zioPrelude,
     zioSttp
-  )
+  ) ++ metrics ++ tapir
 }
