@@ -16,7 +16,8 @@ abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[List[Ent
    * @param entity The entity to be saved.
    * @return the saved entity.
    */
-  override def save(entity: Entity): Task[Entity] = entities.update(entity :: _).as(entity)
+  override def save(entity: Entity): Task[Entity] =
+    entities.update(entity :: _).as(entity)
 
   /**
    * Deletes a given entity.
