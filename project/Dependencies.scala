@@ -46,6 +46,12 @@ object Dependencies {
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
   val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.0"
 
+  // refined
+  val refined = Seq(
+    "eu.timepit" %% "refined"                  % "0.11.0",
+    "dev.zio"    %% "zio-json-interop-refined" % "0.6.2"
+  )
+
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
@@ -151,7 +157,7 @@ object Dependencies {
 
   val webapiTestDependencies = Seq(zioTest, zioTestSbt, zioMock, wiremock).map(_ % Test)
 
-  val webapiDependencies = Seq(
+  val webapiDependencies = refined ++ Seq(
     pekkoActor,
     pekkoHttp,
     pekkoHttpCors,
