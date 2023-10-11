@@ -22,8 +22,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 @accessible
 trait MaintenanceService {
   def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit]
-
-  def doNothing: Task[Unit]
 }
 
 final case class MaintenanceServiceLive(
@@ -31,7 +29,7 @@ final case class MaintenanceServiceLive(
   triplestoreService: TriplestoreService,
   mapper: PredicateObjectMapper
 ) extends MaintenanceService {
-  override def doNothing: Task[Unit] = ZIO.unit
+
   override def fixTopLeftDimensions(report: ProjectsWithBakfilesReport): Task[Unit] = {
     def processProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, Unit] =
       getKnoraProject(project).flatMap { knoraProject =>
