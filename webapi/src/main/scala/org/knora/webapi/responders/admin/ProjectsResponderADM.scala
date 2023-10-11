@@ -391,8 +391,7 @@ final case class ProjectsResponderADMLive(
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService
                     .findProjectKeywordsBy(id)
-                    .some
-                    .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+                    .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
     } yield keywords
 
   /**
