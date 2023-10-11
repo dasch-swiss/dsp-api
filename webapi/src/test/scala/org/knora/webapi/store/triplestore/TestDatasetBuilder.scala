@@ -5,9 +5,12 @@
 
 package org.knora.webapi.store.triplestore
 
+import org.apache.commons.io.IOUtils
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.ReadWrite
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.riot.Lang
+import org.apache.jena.riot.RDFDataMgr
 import zio._
 
 import java.io.StringReader
@@ -31,6 +34,14 @@ object TestDatasetBuilder {
 
   private def datasetFromTurtle(turtle: String): Task[Dataset] =
     createEmptyDataset.flatMap(transactionalWrite(readToModel(turtle)))
+
+  def datasetFromTriG(trig: String): Task[Dataset] =
+    for {
+      ds         <- createEmptyDataset
+      is          = IOUtils.toInputStream(trig, "UTF-8")
+      r: Runnable = () => { RDFDataMgr.read(ds, is, Lang.TRIG) }
+      _          <- ZIO.attempt(ds.executeWrite(r))
+    } yield ds
 
   private def asLayer(ds: Task[Dataset]): TaskLayer[Ref[Dataset]] = ZLayer.fromZIO(ds.flatMap(Ref.make[Dataset](_)))
 
