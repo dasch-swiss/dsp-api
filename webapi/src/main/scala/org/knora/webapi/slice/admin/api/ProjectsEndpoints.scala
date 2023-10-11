@@ -6,9 +6,9 @@
 package org.knora.webapi.slice.admin.api
 
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.routing.BaseEndpoints
 import org.knora.webapi.routing.PathVariables.{projectIri, projectShortcode, projectShortname}
 import org.knora.webapi.slice.admin.api.model.{ProjectExportInfoResponse, ProjectImportResponse}
+import org.knora.webapi.slice.common.api.BaseEndpoints
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.StatusCode
 import sttp.tapir._

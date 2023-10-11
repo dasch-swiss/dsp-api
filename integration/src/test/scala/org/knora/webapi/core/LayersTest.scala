@@ -7,7 +7,6 @@ package org.knora.webapi.core
 
 import org.apache.pekko
 import zio._
-
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
@@ -35,8 +34,7 @@ import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.api.RestPermissionService
-import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.api.{BaseEndpoints, RestPermissionService, RestPermissionServiceLive}
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
