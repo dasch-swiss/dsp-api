@@ -3,27 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing.admin
+package org.knora.webapi.slice.admin.api
 
 import org.apache.pekko.stream.scaladsl.FileIO
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.{IriIdentifier, ShortcodeIdentifier, ShortnameIdentifier}
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.routing.{EndpointAndZioHandler, HandlerMapperF, SecuredEndpointAndZioHandler}
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import zio.ZLayer
 
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
-
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequest
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectOperationResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSizeResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRestrictedViewSizePayload
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdateRequest
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.routing.EndpointAndZioHandler
-import org.knora.webapi.routing.HandlerMapperF
-import org.knora.webapi.routing.SecuredEndpointAndZioHandler
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 final case class ProjectsEndpointsHandlerF(
   projectsEndpoints: ProjectsEndpoints,

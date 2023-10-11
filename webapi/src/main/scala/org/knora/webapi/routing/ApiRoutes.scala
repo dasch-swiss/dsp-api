@@ -15,7 +15,6 @@ import org.apache.pekko.http.scaladsl.model.HttpMethods.PATCH
 import org.apache.pekko.http.scaladsl.model.HttpMethods.POST
 import org.apache.pekko.http.scaladsl.model.HttpMethods.PUT
 import zio._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -28,12 +27,12 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v2._
+import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandlerF
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
 import pekko.actor
 import pekko.http.scaladsl.server.Directives._
 import pekko.http.scaladsl.server.Route

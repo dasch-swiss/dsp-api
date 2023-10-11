@@ -29,9 +29,8 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
-import org.knora.webapi.routing.admin.ProjectsEndpoints
-import org.knora.webapi.routing.admin.ProjectsEndpointsHandlerF
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.admin.api.{ProjectsEndpoints, ProjectsEndpointsHandlerF}
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
