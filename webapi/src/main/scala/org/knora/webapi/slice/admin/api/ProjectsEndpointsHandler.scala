@@ -6,19 +6,20 @@
 package org.knora.webapi.slice.admin.api
 
 import org.apache.pekko.stream.scaladsl.FileIO
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.{
-  IriIdentifier,
-  ShortcodeIdentifier,
-  ShortnameIdentifier
-}
-import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.common.api.{EndpointAndZioHandler, HandlerMapperF, SecuredEndpointAndZioHandler}
 import zio.ZLayer
 
 import java.nio.file.Files
 import scala.concurrent.ExecutionContext
+
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.common.api.EndpointAndZioHandler
+import org.knora.webapi.slice.common.api.HandlerMapperF
+import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
 final case class ProjectsEndpointsHandlerF(
   projectsEndpoints: ProjectsEndpoints,
