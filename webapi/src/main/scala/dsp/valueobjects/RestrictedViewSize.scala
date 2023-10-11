@@ -35,6 +35,8 @@ object RestrictedViewSize {
   def unsafeFrom(value: String): RestrictedViewSize =
     make(value).fold(s => throw new IllegalArgumentException(s), identity)
 
+  def default: RestrictedViewSize = new RestrictedViewSize("!512,512") {}
+
   implicit val codec: JsonCodec[RestrictedViewSize] =
     JsonCodec[String].transformOrFail(RestrictedViewSize.make, _.value)
 }

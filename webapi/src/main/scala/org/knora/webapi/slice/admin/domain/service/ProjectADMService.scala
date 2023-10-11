@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio._
 
 import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -25,6 +26,7 @@ trait ProjectADMService {
   def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM]
   def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]]
   def getNamedGraphsForProject(project: KnoraProject): Task[List[InternalIri]]
+  def setProjectRestrictedViewSize(project: ProjectADM, size: RestrictedViewSize): Task[Unit]
 }
 
 object ProjectADMService {
@@ -80,6 +82,20 @@ final case class ProjectADMServiceLive(
       ontologies = ontologyIris.map(_.value)
     ).unescape
 
+  private def toKnoraProject(project: ProjectADM): KnoraProject =
+    KnoraProject(
+      id = InternalIri.apply(project.id),
+      shortname = project.shortname,
+      shortcode =
+        Shortcode.make(project.shortcode).getOrElse(throw new IllegalArgumentException("Should not happened.")),
+      longname = project.longname,
+      description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
+      keywords = project.keywords.toList,
+      logo = project.logo,
+      status = project.status,
+      selfjoin = project.selfjoin
+    )
+
   override def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
     for {
       projects <- projectRepo.findAll()
@@ -100,6 +116,9 @@ final case class ProjectADMServiceLive(
       .map(_.map(_.ontologyMetadata.ontologyIri.toInternalIri))
       .map(_ :+ projectGraph)
   }
+
+  override def setProjectRestrictedViewSize(project: ProjectADM, size: RestrictedViewSize): Task[Unit] =
+    projectRepo.setProjectRestrictedViewSize(toKnoraProject(project), size)
 }
 
 object ProjectADMServiceLive {
