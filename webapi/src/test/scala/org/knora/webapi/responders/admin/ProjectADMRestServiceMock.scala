@@ -17,6 +17,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
@@ -47,10 +50,10 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
           proxy(GetSingleProject, identifier)
 
         def createProject(
-          payload: ProjectCreateRequest,
+          createReq: ProjectCreateRequest,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
-          proxy(CreateProject, (payload, requestingUser))
+          proxy(CreateProject, (createReq, requestingUser))
 
         def deleteProject(
           id: ProjectIdentifierADM.IriIdentifier,
@@ -60,10 +63,10 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
 
         def updateProject(
           id: IriIdentifier,
-          updateRequest: ProjectUpdateRequest,
+          updateReq: ProjectUpdateRequest,
           requestingUser: UserADM
         ): Task[ProjectOperationResponseADM] =
-          proxy(UpdateProject, (id, updateRequest, requestingUser))
+          proxy(UpdateProject, (id, updateReq, requestingUser))
 
         def getAllProjectData(
           id: ProjectIdentifierADM.IriIdentifier,
@@ -107,7 +110,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         override def updateProjectRestrictedViewSettings(
           id: ProjectIdentifierADM,
           user: UserADM,
-          size: ProjectSetRestrictedViewSizePayload
+          setSizeReq: ProjectSetRestrictedViewSizeRequest
         ): Task[ProjectRestrictedViewSizeResponseADM] = ???
       }
     }

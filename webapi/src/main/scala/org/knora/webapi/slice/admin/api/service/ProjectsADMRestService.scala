@@ -21,6 +21,9 @@ import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
@@ -37,7 +40,7 @@ trait ProjectADMRestService {
 
   def updateProject(
     id: IriIdentifier,
-    updateRequest: ProjectUpdateRequest,
+    updateReq: ProjectUpdateRequest,
     user: UserADM
   ): Task[ProjectOperationResponseADM]
 
@@ -68,7 +71,7 @@ trait ProjectADMRestService {
   def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: UserADM,
-    payload: ProjectSetRestrictedViewSizePayload
+    setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM]
 }
 
@@ -105,8 +108,8 @@ final case class ProjectsADMRestServiceLive(
   /**
    * Creates a project from the given payload.
    *
-   * @param payload the [[ProjectCreateRequest]] from which to create the project
-   * @param user    the [[UserADM]] making the request
+   * @param createReq the [[ProjectCreateRequest]] from which to create the project
+   * @param user      the [[UserADM]] making the request
    * @return
    *     '''success''': information about the created project as a [[ProjectOperationResponseADM]]
    *
@@ -114,8 +117,8 @@ final case class ProjectsADMRestServiceLive(
    *                    can be found, if one was provided with the [[ProjectCreateRequest]]
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def createProject(payload: ProjectCreateRequest, user: UserADM): Task[ProjectOperationResponseADM] =
-    ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(payload, user, _))
+  def createProject(createReq: ProjectCreateRequest, user: UserADM): Task[ProjectOperationResponseADM] =
+    ZIO.random.flatMap(_.nextUUID).flatMap(responder.projectCreateRequestADM(createReq, user, _))
 
   /**
    * Deletes the project by its [[ProjectIri]].
@@ -140,7 +143,7 @@ final case class ProjectsADMRestServiceLive(
    * Updates a project, identified by its [[ProjectIri]].
    *
    * @param id           the [[ProjectIri]] of the project
-   * @param updateRequest              the [[ProjectUpdateRequest]]
+   * @param updateReq              the [[ProjectUpdateRequest]]
    * @param user       the [[UserADM]] making the request
    * @return
    *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
@@ -150,10 +153,10 @@ final case class ProjectsADMRestServiceLive(
    */
   def updateProject(
     id: IriIdentifier,
-    updateRequest: ProjectUpdateRequest,
+    updateReq: ProjectUpdateRequest,
     user: UserADM
   ): Task[ProjectOperationResponseADM] =
-    Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateRequest, user, _))
+    Random.nextUUID.flatMap(responder.changeBasicInformationRequestADM(id.value, updateReq, user, _))
 
   /**
    * Returns all data of a specific project, identified by its [[ProjectIri]].
@@ -243,16 +246,16 @@ final case class ProjectsADMRestServiceLive(
    *
    * @param id the project's id represented by iri, shortcode or shortname,
    * @param user requesting user,
-   * @param payload value to be set,
+   * @param setSizeReq value to be set,
    * @return [[ProjectRestrictedViewSizeResponseADM]].
    */
   override def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: UserADM,
-    payload: ProjectSetRestrictedViewSizePayload
+    setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
-      size    <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
+      size    <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
       project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
       _       <- projectRepo.setProjectRestrictedViewSize(project, size)

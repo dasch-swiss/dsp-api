@@ -1,16 +1,13 @@
 package org.knora.webapi.slice.admin.api.service
 
-import zio.IO
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-import zio.json.{DecoderOps, JsonDecoder}
-import zio.json.ast.Json
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.ProjectsWithBakfilesReport
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.common.api.RestPermissionService
+import zio.{IO, Task, ZIO, ZLayer}
+import zio.json.JsonDecoder
+import zio.json.ast.Json
 
 final case class MaintenanceRestService(
   securityService: RestPermissionService,

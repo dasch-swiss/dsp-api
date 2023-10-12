@@ -5,13 +5,13 @@ import zio.json.ast.Json
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
-import org.knora.webapi.slice.common.api.HandlerMapperF
+import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
 final case class MaintenanceEndpointsHandlers(
   endpoints: MaintenanceEndpoints,
   restService: MaintenanceRestService,
-  mapper: HandlerMapperF
+  mapper: HandlerMapper
 ) {
 
   private val postMaintenanceHandler =

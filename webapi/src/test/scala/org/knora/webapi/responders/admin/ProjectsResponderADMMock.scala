@@ -18,6 +18,8 @@ import java.util.UUID
 import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 
 object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
 
@@ -73,18 +75,18 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
         ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
         override def projectCreateRequestADM(
-          createPayload: ProjectCreateRequest,
-          requestingUser: UserADM,
-          apiRequestID: UUID
+                                              createReq: ProjectCreateRequest,
+                                              requestingUser: UserADM,
+                                              apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
-          proxy(ProjectCreateRequestADM, (createPayload, requestingUser, apiRequestID))
+          proxy(ProjectCreateRequestADM, (createReq, requestingUser, apiRequestID))
         override def changeBasicInformationRequestADM(
-          projectIri: Iri.ProjectIri,
-          updatePayload: ProjectUpdateRequest,
-          user: UserADM,
-          apiRequestID: UUID
+                                                       projectIri: Iri.ProjectIri,
+                                                       updateReq: ProjectUpdateRequest,
+                                                       user: UserADM,
+                                                       apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
-          proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
+          proxy(ChangeBasicInformationRequestADM, (projectIri, updateReq, user, apiRequestID))
       }
     }
 }

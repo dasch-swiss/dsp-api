@@ -5,46 +5,43 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio._
-import zio.macros.accessible
-
-import java.util.UUID
-
 import dsp.errors._
-import dsp.valueobjects.Iri
-import dsp.valueobjects.RestrictedViewSize
-import dsp.valueobjects.V2
+import dsp.valueobjects.{Iri, RestrictedViewSize, V2}
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserGetADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.{
+  UserADM,
+  UserGetADM,
+  UserIdentifierADM,
+  UserInformationTypeADM
+}
+import org.knora.webapi.messages.store.cacheservicemessages.{
+  CacheServiceFlushDB,
+  CacheServiceGetProjectADM,
+  CacheServicePutProjectADM
+}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.{IriLocker, IriService, Responder}
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectUpdateRequest}
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Update}
 import org.knora.webapi.util.ZioHelper
+import zio._
+import zio.macros.accessible
+
+import java.util.UUID
 
 /**
  * Returns information about projects.
@@ -135,7 +132,7 @@ trait ProjectsResponderADM {
   /**
    * Creates a project.
    *
-   * @param createPayload the new project's information.
+   * @param createReq            the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -147,7 +144,7 @@ trait ProjectsResponderADM {
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   def projectCreateRequestADM(
-    createPayload: ProjectCreateRequest,
+    createReq: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -155,17 +152,17 @@ trait ProjectsResponderADM {
   /**
    * Update project's basic information.
    *
-   * @param projectIri           the IRI of the project.
-   * @param updatePayload the update payload.
-   * @param user       the user making the request.
-   * @param apiRequestID         the unique api request ID.
+   * @param projectIri    the IRI of the project.
+   * @param updateReq     the update payload.
+   * @param user          the user making the request.
+   * @param apiRequestID  the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdateRequest,
+    updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -392,8 +389,7 @@ final case class ProjectsResponderADMLive(
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService
                     .findProjectKeywordsBy(id)
-                    .some
-                    .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+                    .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
     } yield keywords
 
   /**
@@ -456,17 +452,17 @@ final case class ProjectsResponderADMLive(
   /**
    * Update project's basic information.
    *
-   * @param projectIri           the IRI of the project.
-   * @param updatePayload the update payload.
-   * @param user       the user making the request.
-   * @param apiRequestID         the unique api request ID.
+   * @param projectIri    the IRI of the project.
+   * @param updateReq     the update payload.
+   * @param user          the user making the request.
+   * @param apiRequestID  the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   override def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdateRequest,
+    updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -476,17 +472,17 @@ final case class ProjectsResponderADMLive(
      */
     def changeProjectTask(
       projectIri: Iri.ProjectIri,
-      projectUpdatePayload: ProjectUpdateRequest,
+      updateReq: ProjectUpdateRequest,
       requestingUser: UserADM
     ): Task[ProjectOperationResponseADM] =
       // check if the requesting user is allowed to perform updates
       if (!requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin) {
         ZIO.fail(ForbiddenException("Project's information can only be changed by a project or system admin."))
       } else {
-        updateProjectADM(projectIri, projectUpdatePayload)
+        updateProjectADM(projectIri, updateReq)
       }
 
-    val task = changeProjectTask(projectIri, updatePayload, user)
+    val task = changeProjectTask(projectIri, updateReq, user)
     IriLocker.runWithIriLock(apiRequestID, projectIri.value, task)
   }
 
@@ -651,8 +647,7 @@ final case class ProjectsResponderADMLive(
   /**
    * Creates a project.
    *
-   * @param createPayload the new project's information.
-   *
+   * @param createReq            the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -664,7 +659,7 @@ final case class ProjectsResponderADMLive(
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   override def projectCreateRequestADM(
-    createPayload: ProjectCreateRequest,
+    createReq: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -818,7 +813,7 @@ final case class ProjectsResponderADMLive(
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
-    val task = projectCreateTask(createPayload, requestingUser)
+    val task = projectCreateTask(createReq, requestingUser)
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 
