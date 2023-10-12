@@ -31,7 +31,7 @@ import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api.ProjectsEndpoints
-import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandlerF
+import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
@@ -178,7 +178,7 @@ object LayersLive {
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsEndpoints.layer,
-      ProjectsEndpointsHandlerF.layer,
+      ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,

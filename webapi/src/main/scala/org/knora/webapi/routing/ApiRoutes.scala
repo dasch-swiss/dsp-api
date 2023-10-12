@@ -15,7 +15,6 @@ import org.apache.pekko.http.scaladsl.model.HttpMethods.PATCH
 import org.apache.pekko.http.scaladsl.model.HttpMethods.POST
 import org.apache.pekko.http.scaladsl.model.HttpMethods.PUT
 import zio._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -28,18 +27,19 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v2._
-import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandlerF
+import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
 import pekko.actor
 import pekko.http.scaladsl.server.Directives._
 import pekko.http.scaladsl.server.Route
 import pekko.http.cors.scaladsl.settings.CorsSettings
+
+import scala.concurrent.ExecutionContextExecutor
 
 trait ApiRoutes {
   val routes: Route
@@ -58,7 +58,7 @@ object ApiRoutes {
       with KnoraProjectRepo
       with MessageRelay
       with ProjectADMRestService
-      with ProjectsEndpointsHandlerF
+      with ProjectsEndpointsHandler
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
@@ -72,7 +72,7 @@ object ApiRoutes {
         sys              <- ZIO.service[ActorSystem]
         router           <- ZIO.service[AppRouter]
         appConfig        <- ZIO.service[AppConfig]
-        projectsHandler  <- ZIO.service[ProjectsEndpointsHandlerF]
+        projectsHandler  <- ZIO.service[ProjectsEndpointsHandler]
         routeData        <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         tapirToPekkoRoute = TapirToPekkoInterpreter()(sys.system.dispatcher)
         runtime <- ZIO.runtime[
@@ -101,7 +101,7 @@ object ApiRoutes {
  */
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
-  projectsHandler: ProjectsEndpointsHandlerF,
+  projectsHandler: ProjectsEndpointsHandler,
   tapirToPekkoRoute: TapirToPekkoInterpreter,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
@@ -120,7 +120,8 @@ private final case class ApiRoutesImpl(
 ) extends ApiRoutes
     with AroundDirectives {
 
-  private implicit val system: actor.ActorSystem = routeData.system
+  implicit val system: actor.ActorSystem                  = routeData.system
+  implicit val executionContext: ExecutionContextExecutor = routeData.system.dispatcher
 
   val routes: Route =
     logDuration {

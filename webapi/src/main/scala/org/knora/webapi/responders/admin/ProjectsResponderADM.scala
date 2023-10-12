@@ -12,6 +12,7 @@ import java.util.UUID
 
 import dsp.errors._
 import dsp.valueobjects.Iri
+import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -391,8 +392,7 @@ final case class ProjectsResponderADMLive(
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService
                     .findProjectKeywordsBy(id)
-                    .some
-                    .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+                    .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
     } yield keywords
 
   /**
@@ -806,17 +806,14 @@ final case class ProjectsResponderADMLive(
 
         newProjectADM <- projectService
                            .findByProjectIdentifier(id)
-                           .flatMap(ZIO.fromOption(_))
-                           .orElseFail(
+                           .someOrFail(
                              UpdateNotPerformedException(
                                s"Project $newProjectIRI was not created. Please report this as a possible bug."
                              )
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-//      TODO: DEV-2626 add default value here
-//        defaultSize = ""
-//        _          <- setProjectRestrictedViewSettings(id.value, requestingUser, defaultSize)
+        _ <- projectService.setProjectRestrictedViewSize(newProjectADM, RestrictedViewSize.default)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 

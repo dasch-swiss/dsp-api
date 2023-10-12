@@ -21,7 +21,7 @@ import org.knora.webapi.slice.common.api.EndpointAndZioHandler
 import org.knora.webapi.slice.common.api.HandlerMapperF
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
-final case class ProjectsEndpointsHandlerF(
+final case class ProjectsEndpointsHandler(
   projectsEndpoints: ProjectsEndpoints,
   restService: ProjectADMRestService,
   mapper: HandlerMapperF
@@ -229,6 +229,6 @@ final case class ProjectsEndpointsHandlerF(
   val allHanders = handlers ++ secureHandlers
 }
 
-object ProjectsEndpointsHandlerF {
-  val layer = ZLayer.derive[ProjectsEndpointsHandlerF]
+object ProjectsEndpointsHandler {
+  val layer = ZLayer.derive[ProjectsEndpointsHandler]
 }
