@@ -74,11 +74,11 @@ final case class MaintenanceServiceLive(
   ): ZIO[Any, Option[Throwable], InternalIri] =
     for {
       result <- getDimensionAndStillImageValueIri(project, asset).tapSomeError { case None =>
-                  ZIO.logInfo(s"No StillImageFileValue found for $asset, skipping.")
+                  ZIO.logDebug(s"No StillImageFileValue with dimensions found for $asset, skipping.")
                 }
       (actualDimensions, iri) = result
       _ <- ZIO.when(actualDimensions == asset.dimensions)(
-             ZIO.logInfo(s"Dimensions for $asset already correct, skipping.") *> ZIO.fail(None)
+             ZIO.logDebug(s"Dimensions for $asset already correct, skipping.") *> ZIO.fail(None)
            )
     } yield iri
 
@@ -149,6 +149,5 @@ final case class MaintenanceServiceLive(
 }
 
 object MaintenanceServiceLive {
-
   val layer = ZLayer.derive[MaintenanceServiceLive]
 }

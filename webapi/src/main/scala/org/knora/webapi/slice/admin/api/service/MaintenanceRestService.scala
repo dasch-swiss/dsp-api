@@ -34,12 +34,14 @@ final case class MaintenanceRestService(
 
   private def executeTopLeftAction(topLeftParams: Option[Json]): IO[BadRequestException, Unit] =
     for {
-      json <- ZIO
-                .fromOption(topLeftParams)
-                .orElseFail(BadRequestException(s"Missing arguments for $fixTopLeftAction"))
       report <- ZIO
-                  .fromEither(JsonDecoder[ProjectsWithBakfilesReport].fromJsonAST(json))
-                  .mapError(e => BadRequestException(s"Invalid arguments for $fixTopLeftAction: $e.getMessage"))
+                  .fromOption(topLeftParams)
+                  .orElseFail(BadRequestException(s"Missing arguments for $fixTopLeftAction"))
+                  .flatMap(json =>
+                    ZIO
+                      .fromEither(JsonDecoder[ProjectsWithBakfilesReport].fromJsonAST(json))
+                      .mapError(e => BadRequestException(s"Invalid arguments for $fixTopLeftAction: $e.getMessage"))
+                  )
       _ <- maintenanceService.fixTopLeftDimensions(report).logError.forkDaemon
     } yield ()
 }
