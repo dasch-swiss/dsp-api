@@ -10,9 +10,9 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
 import swiss.dasch.api.ProjectsEndpoints.shortcodePathVar
-import zio.json.{ DeriveJsonCodec, JsonCodec }
-import zio.schema.{ DeriveSchema, Schema }
-import zio.{ Chunk, ZLayer }
+import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.schema.{DeriveSchema, Schema}
+import zio.{Chunk, ZLayer}
 
 final case class MappingEntry(internalFilename: String, originalFilename: String)
 
@@ -25,40 +25,30 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
 
   private val maintenance = "maintenance"
 
-  val applyTopLeftCorrectionEndpoint = base
-    .secureEndpoint
-    .post
+  val applyTopLeftCorrectionEndpoint = base.secureEndpoint.post
     .in(maintenance / "apply-top-left-correction" / shortcodePathVar)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
 
-  val needsTopLeftCorrectionEndpoint = base
-    .secureEndpoint
-    .get
+  val needsTopLeftCorrectionEndpoint = base.secureEndpoint.get
     .in(maintenance / "needs-top-left-correction")
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
 
-  val wasTopLeftCorrectionAppliedEndpoint = base
-    .secureEndpoint
-    .get
+  val wasTopLeftCorrectionAppliedEndpoint = base.secureEndpoint.get
     .in(maintenance / "was-top-left-correction-applied")
     .out(stringBody)
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
 
-  val createOriginalsEndpoint = base
-    .secureEndpoint
-    .post
+  val createOriginalsEndpoint = base.secureEndpoint.post
     .in(maintenance / "create-originals" / shortcodePathVar)
     .in(jsonBody[Chunk[MappingEntry]])
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
 
-  val needsOriginalsEndpoint = base
-    .secureEndpoint
-    .get
+  val needsOriginalsEndpoint = base.secureEndpoint.get
     .in(maintenance / "needs-originals")
     .in(query[Option[Boolean]]("imagesOnly"))
     .out(stringBody)
@@ -69,7 +59,7 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     applyTopLeftCorrectionEndpoint,
     createOriginalsEndpoint,
     needsTopLeftCorrectionEndpoint,
-    needsOriginalsEndpoint,
+    needsOriginalsEndpoint
   )
 }
 

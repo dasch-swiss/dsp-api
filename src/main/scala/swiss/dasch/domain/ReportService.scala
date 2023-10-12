@@ -13,7 +13,7 @@ object Report {
   def make(map: Map[AssetInfo, Chunk[ChecksumResult]]): Report = Report(map, map.size)
 }
 
-trait ReportService  {
+trait ReportService {
   def checksumReport(projectShortcode: ProjectShortcode): Task[Option[Report]]
 }
 object ReportService {
@@ -35,9 +35,9 @@ final case class ReportServiceLive(projectService: ProjectService, assetService:
             .map(_.toMap)
             .map(Report.make)
             .map(Some(_))
-        case None    => ZIO.none
+        case None => ZIO.none
       }
 }
-object ReportServiceLive  {
+object ReportServiceLive {
   val layer = ZLayer.derive[ReportServiceLive]
 }

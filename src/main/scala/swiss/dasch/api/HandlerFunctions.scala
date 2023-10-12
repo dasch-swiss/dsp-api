@@ -5,7 +5,7 @@
 
 package swiss.dasch.api
 
-import swiss.dasch.api.ApiProblem.{ InternalServerError, NotFound }
+import swiss.dasch.api.ApiProblem.{InternalServerError, NotFound}
 import swiss.dasch.domain.ProjectShortcode
 
 trait HandlerFunctions {

@@ -5,13 +5,13 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.api.{ Refined, RefinedTypeOps }
+import eu.timepit.refined.api.{Refined, RefinedTypeOps}
 import eu.timepit.refined.string.MatchesRegex
 import org.apache.commons.io.FileUtils
 import zio.*
 import zio.json.JsonCodec
-import zio.nio.file.Files.{ isDirectory, newDirectoryStream }
-import zio.nio.file.{ Files, Path }
+import zio.nio.file.Files.{isDirectory, newDirectoryStream}
+import zio.nio.file.{Files, Path}
 import zio.schema.Schema
 import zio.stream.ZStream
 
@@ -34,23 +34,23 @@ trait ProjectService {
 }
 
 object ProjectService {
-  def listAllProjects(): ZIO[ProjectService, IOException, Chunk[ProjectShortcode]]                        =
+  def listAllProjects(): ZIO[ProjectService, IOException, Chunk[ProjectShortcode]] =
     ZIO.serviceWithZIO[ProjectService](_.listAllProjects())
-  def findProject(shortcode: ProjectShortcode): ZIO[ProjectService, IOException, Option[Path]]            =
+  def findProject(shortcode: ProjectShortcode): ZIO[ProjectService, IOException, Option[Path]] =
     ZIO.serviceWithZIO[ProjectService](_.findProject(shortcode))
   def findAssetInfosOfProject(shortcode: ProjectShortcode): ZStream[ProjectService, Throwable, AssetInfo] =
     ZStream.serviceWithStream[ProjectService](_.findAssetInfosOfProject(shortcode))
-  def zipProject(shortcode: ProjectShortcode): ZIO[ProjectService, Throwable, Option[Path]]               =
+  def zipProject(shortcode: ProjectShortcode): ZIO[ProjectService, Throwable, Option[Path]] =
     ZIO.serviceWithZIO[ProjectService](_.zipProject(shortcode))
-  def deleteProject(shortcode: ProjectShortcode): ZIO[ProjectService, IOException, Unit]                  =
+  def deleteProject(shortcode: ProjectShortcode): ZIO[ProjectService, IOException, Unit] =
     ZIO.serviceWithZIO[ProjectService](_.deleteProject(shortcode))
 }
 
 final case class ProjectServiceLive(
-    assetInfos: AssetInfoService,
-    storage: StorageService,
-    checksum: FileChecksumService,
-  ) extends ProjectService {
+  assetInfos: AssetInfoService,
+  storage: StorageService,
+  checksum: FileChecksumService
+) extends ProjectService {
 
   override def listAllProjects(): IO[IOException, Chunk[ProjectShortcode]] =
     ZStream
@@ -64,11 +64,11 @@ final case class ProjectServiceLive(
 
   private def directoryContainsNonHiddenRegularFile(path: Path) =
     Files.isDirectory(path) &&
-    Files
-      .walk(path, maxDepth = 3)
-      .filterZIO(FileFilters.isNonHiddenRegularFile)
-      .runHead
-      .map(_.isDefined)
+      Files
+        .walk(path, maxDepth = 3)
+        .filterZIO(FileFilters.isNonHiddenRegularFile)
+        .runHead
+        .map(_.isDefined)
 
   private val toProjectShortcodes: Chunk[Path] => Chunk[ProjectShortcode] =
     _.map(_.filename.toString).sorted.flatMap(ProjectShortcode.from(_).toOption)

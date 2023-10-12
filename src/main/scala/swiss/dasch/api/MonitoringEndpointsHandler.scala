@@ -13,17 +13,16 @@ import zio.metrics.connectors.prometheus.PrometheusPublisher
 import scala.util.chaining.*
 
 case class MonitoringEndpointsHandler(
-    monitoringEndpoints: MonitoringEndpoints,
-    healthService: HealthCheckService,
-    metrics: PrometheusPublisher,
-  ) {
+  monitoringEndpoints: MonitoringEndpoints,
+  healthService: HealthCheckService,
+  metrics: PrometheusPublisher
+) {
 
   val infoEndpoint: ZServerEndpoint[Any, Any] =
     monitoringEndpoints.infoEndpoint.zServerLogic(_ => ZIO.succeed(InfoEndpointResponse.instance))
 
   val healthEndpoint: ZServerEndpoint[Any, Any] =
-    monitoringEndpoints
-      .healthEndpoint
+    monitoringEndpoints.healthEndpoint
       .zServerLogic(_ =>
         healthService.check.flatMap {
           case it if it.isHealthy => ZIO.succeed(it)

@@ -7,20 +7,19 @@ package swiss.dasch.api
 
 import sttp.tapir.ztapir.ZServerEndpoint
 import swiss.dasch.domain.*
-import zio.{ ZIO, ZLayer }
+import zio.{ZIO, ZLayer}
 
 final case class MaintenanceEndpointsHandler(
-    maintenanceEndpoints: MaintenanceEndpoints,
-    maintenanceActions: MaintenanceActions,
-    projectService: ProjectService,
-    fileChecksumService: FileChecksumService,
-    sipiClient: SipiClient,
-    imageService: ImageService,
-  ) extends HandlerFunctions {
+  maintenanceEndpoints: MaintenanceEndpoints,
+  maintenanceActions: MaintenanceActions,
+  projectService: ProjectService,
+  fileChecksumService: FileChecksumService,
+  sipiClient: SipiClient,
+  imageService: ImageService
+) extends HandlerFunctions {
 
-  val applyTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints
-    .applyTopLeftCorrectionEndpoint
-    .serverLogic { _ => shortcode =>
+  val applyTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] =
+    maintenanceEndpoints.applyTopLeftCorrectionEndpoint.serverLogic { _ => shortcode =>
       projectService
         .findProject(shortcode)
         .some
@@ -35,8 +34,7 @@ final case class MaintenanceEndpointsHandler(
         .unit
     }
 
-  val createOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints
-    .createOriginalsEndpoint
+  val createOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.createOriginalsEndpoint
     .serverLogic(_ =>
       (shortcode, mappings) =>
         projectService
@@ -53,8 +51,7 @@ final case class MaintenanceEndpointsHandler(
           .unit
     )
 
-  val needsOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints
-    .needsOriginalsEndpoint
+  val needsOriginalsEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.needsOriginalsEndpoint
     .serverLogic(_ =>
       imagesOnlyMaybe =>
         maintenanceActions
@@ -64,8 +61,7 @@ final case class MaintenanceEndpointsHandler(
           .as("work in progress")
     )
 
-  val needsTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints
-    .needsTopLeftCorrectionEndpoint
+  val needsTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints.needsTopLeftCorrectionEndpoint
     .serverLogic(_ =>
       _ =>
         maintenanceActions
@@ -75,16 +71,16 @@ final case class MaintenanceEndpointsHandler(
           .as("work in progress")
     )
 
-  val wasTopLeftCorrectionAppliedEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints
-    .wasTopLeftCorrectionAppliedEndpoint
-    .serverLogic(_ =>
-      _ =>
-        maintenanceActions
-          .createWasTopLeftCorrectionAppliedReport()
-          .forkDaemon
-          .logError
-          .as("work in progress")
-    )
+  val wasTopLeftCorrectionAppliedEndpoint: ZServerEndpoint[Any, Any] =
+    maintenanceEndpoints.wasTopLeftCorrectionAppliedEndpoint
+      .serverLogic(_ =>
+        _ =>
+          maintenanceActions
+            .createWasTopLeftCorrectionAppliedReport()
+            .forkDaemon
+            .logError
+            .as("work in progress")
+      )
 
   val endpoints: List[ZServerEndpoint[Any, Any]] =
     List(
@@ -92,7 +88,7 @@ final case class MaintenanceEndpointsHandler(
       createOriginalsEndpoint,
       needsOriginalsEndpoint,
       needsTopLeftCorrectionEndpoint,
-      wasTopLeftCorrectionAppliedEndpoint,
+      wasTopLeftCorrectionAppliedEndpoint
     )
 }
 

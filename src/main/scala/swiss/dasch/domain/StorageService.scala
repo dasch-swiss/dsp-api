@@ -5,21 +5,21 @@
 
 package swiss.dasch.domain
 
-import org.apache.commons.io.{ FileUtils, FilenameUtils }
+import org.apache.commons.io.{FileUtils, FilenameUtils}
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.*
-import zio.json.{ DecoderOps, EncoderOps, JsonDecoder, JsonEncoder }
-import zio.nio.file.{ Files, Path }
+import zio.json.{DecoderOps, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.nio.file.{Files, Path}
 import zio.stream.ZStream
 
-import java.io.{ FileNotFoundException, IOException }
+import java.io.{FileNotFoundException, IOException}
 import java.nio.file.StandardOpenOption.*
-import java.nio.file.{ OpenOption, StandardOpenOption }
+import java.nio.file.{OpenOption, StandardOpenOption}
 import java.text.ParseException
 import java.time.format.DateTimeFormatter
-import java.time.{ ZoneId, ZoneOffset }
+import java.time.{ZoneId, ZoneOffset}
 
-trait StorageService  {
+trait StorageService {
   def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path]
   def getAssetDirectory(asset: Asset): UIO[Path]
   def getAssetDirectory(): UIO[Path]
@@ -32,28 +32,30 @@ trait StorageService  {
 }
 object StorageService {
   def findInPath(
-      path: Path,
-      filter: FileFilter,
-      maxDepth: Int = Int.MaxValue,
-    ): ZStream[Any, IOException, Path] =
+    path: Path,
+    filter: FileFilter,
+    maxDepth: Int = Int.MaxValue
+  ): ZStream[Any, IOException, Path] =
     Files.walk(path, maxDepth).filterZIO(filter)
-  def maxParallelism(): Int                                                                                           = 10
-  def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, Path]                              =
+  def maxParallelism(): Int = 10
+  def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getProjectDirectory(projectShortcode))
-  def getAssetDirectory(asset: Asset): RIO[StorageService, Path]                                                      =
+  def getAssetDirectory(asset: Asset): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory(asset))
-  def getAssetDirectory(): RIO[StorageService, Path]                                                                  =
+  def getAssetDirectory(): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory())
-  def createOriginalFileInAssetDir(file: Path, asset: Asset): ZIO[StorageService, IOException, OriginalFile]          =
+  def createOriginalFileInAssetDir(file: Path, asset: Asset): ZIO[StorageService, IOException, OriginalFile] =
     ZIO.serviceWithZIO[StorageService](_.createOriginalFileInAssetDir(file, asset))
-  def getTempDirectory(): RIO[StorageService, Path]                                                                   =
+  def getTempDirectory(): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getTempDirectory())
-  def getBulkIngestImportFolder(project: ProjectShortcode): RIO[StorageService, Path]                                 =
+  def getBulkIngestImportFolder(project: ProjectShortcode): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getBulkIngestImportFolder(project))
-  def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None)
-      : ZIO[Scope with StorageService, IOException, Path] =
+  def createTempDirectoryScoped(
+    directoryName: String,
+    prefix: Option[String] = None
+  ): ZIO[Scope with StorageService, IOException, Path] =
     ZIO.serviceWithZIO[StorageService](_.createTempDirectoryScoped(directoryName, prefix))
-  def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): ZIO[StorageService, Throwable, A]                =
+  def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): ZIO[StorageService, Throwable, A] =
     ZIO.serviceWithZIO[StorageService](_.loadJsonFile(file)(decoder))
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): ZIO[StorageService, Throwable, Unit] =
     ZIO.serviceWithZIO[StorageService](_.saveJsonFile(file, content)(encoder))
@@ -62,10 +64,10 @@ object StorageService {
 final case class StorageServiceLive(config: StorageConfig) extends StorageService {
 
   override def createOriginalFileInAssetDir(file: Path, asset: Asset): IO[IOException, OriginalFile] = for {
-    _           <- ZIO.logInfo(s"Creating original from $file, $asset")
-    _           <- ZIO
-                     .fail(new FileNotFoundException(s"File $file is not a regular file"))
-                     .whenZIO(FileFilters.isNonHiddenRegularFile(file).negate)
+    _ <- ZIO.logInfo(s"Creating original from $file, $asset")
+    _ <- ZIO
+           .fail(new FileNotFoundException(s"File $file is not a regular file"))
+           .whenZIO(FileFilters.isNonHiddenRegularFile(file).negate)
     assetDir    <- getAssetDirectory(asset).tap(Files.createDirectories(_))
     originalPath = assetDir / s"${asset.id}.${FilenameUtils.getExtension(file.filename.toString)}.orig"
     _           <- Files.copy(file, originalPath)
@@ -93,8 +95,10 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
     Path(segment1.toLowerCase, segment2.toLowerCase)
   }
 
-  override def createTempDirectoryScoped(directoryName: String, prefix: Option[String])
-      : ZIO[Scope, IOException, Path] = {
+  override def createTempDirectoryScoped(
+    directoryName: String,
+    prefix: Option[String]
+  ): ZIO[Scope, IOException, Path] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss") withZone ZoneId.from(ZoneOffset.UTC)
     Clock.instant.flatMap { now =>
       val basePath      = prefix.map(config.tempPath / _).getOrElse(config.tempPath)

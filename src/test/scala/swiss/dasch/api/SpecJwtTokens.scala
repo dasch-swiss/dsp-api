@@ -19,21 +19,21 @@ object SpecJwtTokens {
   def tokenWithInvalidIssuer(): URIO[JwtConfig, String]          = createToken(issuer = Some("invalid-issuer"))
   def tokenWithMissingSubject(): URIO[JwtConfig, String]         = createToken(subject = None)
   def createToken(
-      issuer: Option[String] = None,
-      subject: Option[String] = Some("some-subject"),
-      audience: Option[Set[String]] = None,
-      expiration: Option[Instant] = None,
-      secret: Option[String] = None,
-    ): URIO[JwtConfig, String] =
+    issuer: Option[String] = None,
+    subject: Option[String] = Some("some-subject"),
+    audience: Option[Set[String]] = None,
+    expiration: Option[Instant] = None,
+    secret: Option[String] = None
+  ): URIO[JwtConfig, String] =
     for {
       now       <- Clock.instant
       jwtConfig <- ZIO.service[JwtConfig]
-      claim      = JwtClaim(
-                     issuer = issuer.orElse(Some(jwtConfig.issuer)),
-                     subject = subject,
-                     audience = audience.orElse(Some(Set(jwtConfig.audience))),
-                     issuedAt = Some(now.getEpochSecond),
-                     expiration = expiration.orElse(Some(now.plusSeconds(3600))).map(_.getEpochSecond),
-                   )
+      claim = JwtClaim(
+                issuer = issuer.orElse(Some(jwtConfig.issuer)),
+                subject = subject,
+                audience = audience.orElse(Some(Set(jwtConfig.audience))),
+                issuedAt = Some(now.getEpochSecond),
+                expiration = expiration.orElse(Some(now.plusSeconds(3600))).map(_.getEpochSecond)
+              )
     } yield JwtZIOJson.encode(claim, secret.getOrElse(jwtConfig.secret), JwtAlgorithm.HS256)
 }

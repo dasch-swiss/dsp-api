@@ -6,13 +6,13 @@
 package swiss.dasch.api
 
 import pdi.jwt.*
-import swiss.dasch.api.AuthenticationError.{ InvalidAudience, InvalidIssuer, JwtProblem, SubjectMissing }
+import swiss.dasch.api.AuthenticationError.{InvalidAudience, InvalidIssuer, JwtProblem, SubjectMissing}
 import swiss.dasch.api.SpecJwtTokens.*
 import swiss.dasch.config.Configuration.JwtConfig
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConfigurations.jwtConfigLayer
 import zio.*
-import zio.test.{ TestAspect, ZIOSpecDefault, assertTrue }
+import zio.test.{TestAspect, ZIOSpecDefault, assertTrue}
 
 import java.time.temporal.ChronoUnit
 
@@ -80,7 +80,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
       } yield assertTrue(
         result == Exit.fail(NonEmptyChunk(SubjectMissing("Subject is missing.")))
       )
-    },
+    }
   ).provide(jwtConfigLayer, AuthServiceLive.layer) @@ TestAspect.withLiveClock
 
 }

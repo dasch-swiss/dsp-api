@@ -5,7 +5,7 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.domain.SipiCommand.{ FormatArgument, QueryArgument, TopLeftArgument }
+import swiss.dasch.domain.SipiCommand.{FormatArgument, QueryArgument, TopLeftArgument}
 import zio.*
 import zio.nio.file.*
 import zio.test.*
@@ -30,6 +30,6 @@ object SipiCommandSpec extends ZIOSpecDefault {
         for {
           cmd <- TopLeftArgument(Path("/tmp/example"), Path("/tmp/example2")).render()
         } yield assertTrue(cmd == s"--topleft /tmp/example /tmp/example2")
-      },
+      }
     )
 }

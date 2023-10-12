@@ -10,10 +10,10 @@ import swiss.dasch.domain
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import swiss.dasch.domain.SipiImageFormat.Tif
 import zio.*
-import zio.json.{ DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder }
+import zio.json.{DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder}
 import zio.nio.file
-import zio.nio.file.{ Files, Path }
-import zio.stream.{ ZSink, ZStream }
+import zio.nio.file.{Files, Path}
+import zio.stream.{ZSink, ZStream}
 
 import java.io.IOException
 
@@ -26,23 +26,23 @@ trait MaintenanceActions {
   def createOriginals(projectPath: Path, mapping: Map[String, String]): Task[Int]
 }
 
-object MaintenanceActions     {
-  def createNeedsOriginalsReport(imagesOnly: Boolean): ZIO[MaintenanceActions, Throwable, Unit]                 =
+object MaintenanceActions {
+  def createNeedsOriginalsReport(imagesOnly: Boolean): ZIO[MaintenanceActions, Throwable, Unit] =
     ZIO.serviceWithZIO[MaintenanceActions](_.createNeedsOriginalsReport(imagesOnly))
-  def createNeedsTopLeftCorrectionReport(): ZIO[MaintenanceActions, Throwable, Unit]                            =
+  def createNeedsTopLeftCorrectionReport(): ZIO[MaintenanceActions, Throwable, Unit] =
     ZIO.serviceWithZIO[MaintenanceActions](_.createNeedsTopLeftCorrectionReport())
-  def applyTopLeftCorrections(projectPath: Path): ZIO[MaintenanceActions, Throwable, Int]                       =
+  def applyTopLeftCorrections(projectPath: Path): ZIO[MaintenanceActions, Throwable, Int] =
     ZIO.serviceWithZIO[MaintenanceActions](_.applyTopLeftCorrections(projectPath))
   def createOriginals(projectPath: Path, mapping: Map[String, String]): ZIO[MaintenanceActions, Throwable, Int] =
     ZIO.serviceWithZIO[MaintenanceActions](_.createOriginals(projectPath, mapping))
 }
 
 final case class MaintenanceActionsLive(
-    imageService: ImageService,
-    projectService: ProjectService,
-    sipiClient: SipiClient,
-    storageService: StorageService,
-  ) extends MaintenanceActions {
+  imageService: ImageService,
+  projectService: ProjectService,
+  sipiClient: SipiClient,
+  storageService: StorageService
+) extends MaintenanceActions {
 
   def createNeedsOriginalsReport(imagesOnly: Boolean): Task[Unit] = {
     val reportName = if (imagesOnly) "needsOriginals_images_only" else "needsOriginals"
@@ -51,18 +51,18 @@ final case class MaintenanceActionsLive(
       assetDir          <- storageService.getAssetDirectory()
       tmpDir            <- storageService.getTempDirectory()
       projectShortcodes <- projectService.listAllProjects()
-      _                 <- ZIO
-                             .foreach(projectShortcodes)(shortcode =>
-                               Files
-                                 .walk(assetDir / shortcode.toString)
-                                 .mapZIOPar(8)(originalNotPresent(imagesOnly))
-                                 .filter(identity)
-                                 .as(shortcode)
-                                 .runHead
-                             )
-                             .map(_.flatten.map(_.toString))
-                             .flatMap(saveReport(tmpDir, reportName, _))
-                             .zipLeft(ZIO.logInfo(s"Created $reportName.json"))
+      _ <- ZIO
+             .foreach(projectShortcodes)(shortcode =>
+               Files
+                 .walk(assetDir / shortcode.toString)
+                 .mapZIOPar(8)(originalNotPresent(imagesOnly))
+                 .filter(identity)
+                 .as(shortcode)
+                 .runHead
+             )
+             .map(_.flatten.map(_.toString))
+             .flatMap(saveReport(tmpDir, reportName, _))
+             .zipLeft(ZIO.logInfo(s"Created $reportName.json"))
 
     } yield ()
   }
@@ -86,11 +86,10 @@ final case class MaintenanceActionsLive(
   }
 
   private def saveReport[A](
-      tmpDir: Path,
-      name: String,
-      report: A,
-    )(implicit encoder: JsonEncoder[A]
-    ): Task[Unit] =
+    tmpDir: Path,
+    name: String,
+    report: A
+  )(implicit encoder: JsonEncoder[A]): Task[Unit] =
     Files.createDirectories(tmpDir / "reports") *>
       Files.deleteIfExists(tmpDir / "reports" / s"$name.json") *>
       Files.createFile(tmpDir / "reports" / s"$name.json") *>
@@ -102,7 +101,7 @@ final case class MaintenanceActionsLive(
       assetDir          <- storageService.getAssetDirectory()
       tmpDir            <- storageService.getTempDirectory()
       projectShortcodes <- projectService.listAllProjects()
-      _                 <-
+      _ <-
         ZIO
           .foreach(projectShortcodes)(shortcode =>
             Files
@@ -119,11 +118,11 @@ final case class MaintenanceActionsLive(
     } yield ()
 
   case class ReportAsset(id: AssetId, dimensions: Dimensions)
-  object ReportAsset                {
+  object ReportAsset {
     given codec: JsonCodec[ReportAsset] = DeriveJsonCodec.gen[ReportAsset]
   }
   case class ProjectWithBakFiles(id: ProjectShortcode, assetIds: Chunk[ReportAsset])
-  object ProjectWithBakFiles        {
+  object ProjectWithBakFiles {
     given codec: JsonCodec[ProjectWithBakFiles] = DeriveJsonCodec.gen[ProjectWithBakFiles]
   }
   case class ProjectsWithBakfilesReport(projects: Chunk[ProjectWithBakFiles])
@@ -137,7 +136,7 @@ final case class MaintenanceActionsLive(
       assetDir          <- storageService.getAssetDirectory()
       tmpDir            <- storageService.getTempDirectory()
       projectShortcodes <- projectService.listAllProjects()
-      assetsWithBak     <-
+      assetsWithBak <-
         ZIO
           .foreach(projectShortcodes) { shortcode =>
             Files
@@ -147,21 +146,21 @@ final case class MaintenanceActionsLive(
               .map { assetIdDimensions =>
                 ProjectWithBakFiles(
                   shortcode,
-                  assetIdDimensions.map { case (id: AssetId, dim: Dimensions) => ReportAsset(id, dim) },
+                  assetIdDimensions.map { case (id: AssetId, dim: Dimensions) => ReportAsset(id, dim) }
                 )
               }
           }
-      report             = ProjectsWithBakfilesReport(assetsWithBak.filter(_.assetIds.nonEmpty))
-      _                 <- saveReport(tmpDir, "wasTopLeftCorrectionApplied", report)
-      _                 <- ZIO.logInfo(s"Created wasTopLeftCorrectionApplied.json")
+      report = ProjectsWithBakfilesReport(assetsWithBak.filter(_.assetIds.nonEmpty))
+      _     <- saveReport(tmpDir, "wasTopLeftCorrectionApplied", report)
+      _     <- ZIO.logInfo(s"Created wasTopLeftCorrectionApplied.json")
     } yield ()
 
   private def hasBeenTopLeftTransformed(path: Path): ZStream[Any, Throwable, (AssetId, Dimensions)] = {
     val zioTask: ZIO[Any, Option[Throwable], (AssetId, Dimensions)] = for {
       // must be a .bak file
-      bakFile           <- ZIO.succeed(path).whenZIO(FileFilters.isBakFile(path)).some
+      bakFile <- ZIO.succeed(path).whenZIO(FileFilters.isBakFile(path)).some
       // must have an AssetId
-      assetId           <- ZIO.fromOption(AssetId.makeFromPath(bakFile))
+      assetId <- ZIO.fromOption(AssetId.makeFromPath(bakFile))
       // must have a corresponding Jpeg2000 derivative
       bakFilename        = bakFile.filename.toString
       derivativeFilename = bakFilename.substring(0, bakFilename.length - ".bak".length)
@@ -169,7 +168,7 @@ final case class MaintenanceActionsLive(
       _                 <- ZIO.fail(None).whenZIO(FileFilters.isJpeg2000(derivativeFile).negate.asSomeError)
       jpxDerivative      = JpxDerivativeFile.unsafeFrom(derivativeFile)
       // get the dimensions
-      dimensions        <- imageService.getDimensions(jpxDerivative).asSomeError
+      dimensions <- imageService.getDimensions(jpxDerivative).asSomeError
     } yield (assetId, dimensions)
 
     ZStream.fromZIOOption(
@@ -198,31 +197,33 @@ final case class MaintenanceActionsLive(
       .run(ZSink.sum)
 
   final private case class CreateOriginalFor(
-      assetId: AssetId,
-      jpxPath: Path,
-      targetFormat: SipiImageFormat,
-      originalFilename: String,
-    ) {
+    assetId: AssetId,
+    jpxPath: Path,
+    targetFormat: SipiImageFormat,
+    originalFilename: String
+  ) {
     def originalPath: Path = jpxPath.parent.map(_ / s"$assetId.${targetFormat.extension}.orig").orNull
   }
 
-  private def findAssetsWithoutOriginal(jpxPath: Path, mapping: Map[String, String])
-      : ZStream[Any, Throwable, CreateOriginalFor] =
+  private def findAssetsWithoutOriginal(
+    jpxPath: Path,
+    mapping: Map[String, String]
+  ): ZStream[Any, Throwable, CreateOriginalFor] =
     AssetId.makeFromPath(jpxPath) match {
       case Some(assetId) => filterWithoutOriginal(assetId, jpxPath, mapping)
       case None          => ZStream.logWarning(s"Not an assetId: $jpxPath") *> ZStream.empty
     }
 
   private def filterWithoutOriginal(
-      assetId: AssetId,
-      jpxPath: Path,
-      mapping: Map[String, String],
-    ): ZStream[Any, Throwable, CreateOriginalFor] = {
+    assetId: AssetId,
+    jpxPath: Path,
+    mapping: Map[String, String]
+  ): ZStream[Any, Throwable, CreateOriginalFor] = {
     val createThis = makeCreateOriginalFor(assetId, jpxPath, mapping)
     ZStream
       .fromZIO(Files.exists(createThis.originalPath))
       .flatMap {
-        case true  =>
+        case true =>
           ZStream.logInfo(s"Original for $jpxPath present, skipping ${createThis.originalPath}") *> ZStream.empty
         case false =>
           ZStream.logDebug(s"Original for $jpxPath not present") *> ZStream.succeed(createThis)
@@ -230,19 +231,18 @@ final case class MaintenanceActionsLive(
   }
 
   private def makeCreateOriginalFor(
-      assetId: AssetId,
-      jpxPath: Path,
-      mapping: Map[String, String],
-    ) = {
+    assetId: AssetId,
+    jpxPath: Path,
+    mapping: Map[String, String]
+  ) = {
     val fallBackFormat             = Tif
     val originalFilenameMaybe      = mapping.get(jpxPath.filename.toString)
     val originalFileExtensionMaybe = originalFilenameMaybe.map(FilenameUtils.getExtension).filter(_ != null)
     val targetFormat               = originalFileExtensionMaybe.flatMap(SipiImageFormat.fromExtension).getOrElse(fallBackFormat)
-    val originalFilename           = originalFilenameMaybe
-      .map { fileName =>
-        if (fileName.endsWith(targetFormat.extension)) fileName
-        else fileName.replace(FilenameUtils.getExtension(fileName), targetFormat.extension)
-      }
+    val originalFilename = originalFilenameMaybe.map { fileName =>
+      if (fileName.endsWith(targetFormat.extension)) fileName
+      else fileName.replace(FilenameUtils.getExtension(fileName), targetFormat.extension)
+    }
       .getOrElse(s"$assetId.${targetFormat.extension}")
 
     CreateOriginalFor(assetId, jpxPath, targetFormat, originalFilename)
@@ -278,7 +278,7 @@ final case class MaintenanceActionsLive(
       originalInternalFilename = c.originalPath.filename.toString,
       originalFilename = c.originalFilename,
       checksumOriginal = checksumOriginal.toString,
-      checksumDerivative = checksumDerivative.toString,
+      checksumDerivative = checksumDerivative.toString
     )
 }
 object MaintenanceActionsLive {

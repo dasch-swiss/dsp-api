@@ -10,12 +10,13 @@ import eu.timepit.refined.string.MatchesRegex
 
 import java.util.UUID
 
-/** [[Base62EncodedUuid]] is a valid subset of [[AssetId]]s that is used for creating new ids. A 23 character long
-  * String that contains only the characters a-z, A-Z, 0-9 and a single hyphen. The hyphen separates the most and least
-  * significant bits of the UUID. The first 11 characters are the most significant bits of the UUID. The last 11
-  * characters are the least significant bits of the UUID. This encoding is URL safe and can be used as a path parameter
-  * in a URL.
-  */
+/**
+ * [[Base62EncodedUuid]] is a valid subset of [[AssetId]]s that is used for creating new ids. A 23 character long
+ * String that contains only the characters a-z, A-Z, 0-9 and a single hyphen. The hyphen separates the most and least
+ * significant bits of the UUID. The first 11 characters are the most significant bits of the UUID. The last 11
+ * characters are the least significant bits of the UUID. This encoding is URL safe and can be used as a path parameter
+ * in a URL.
+ */
 type Base62EncodedUuid = String Refined MatchesRegex["^[a-zA-Z0-9]{11}-[a-zA-Z0-9]{11}$"]
 
 object Base62 {
@@ -73,10 +74,9 @@ object Base62 {
     val base           = BigInt(Base62Alphabet.length)
     val reversedString = base62String.reverse
 
-    reversedString.zipWithIndex.foldLeft(BigInt(0)) {
-      case (acc, (char, index)) =>
-        val value = Base62Alphabet.indexOf(char)
-        acc + (BigInt(value) * base.pow(index))
+    reversedString.zipWithIndex.foldLeft(BigInt(0)) { case (acc, (char, index)) =>
+      val value = Base62Alphabet.indexOf(char)
+      acc + (BigInt(value) * base.pow(index))
     }
   }
 

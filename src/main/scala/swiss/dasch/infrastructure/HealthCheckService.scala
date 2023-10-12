@@ -5,9 +5,9 @@
 
 package swiss.dasch.infrastructure
 
-import zio.{ UIO, URIO, ZIO, ZLayer }
+import zio.{UIO, URIO, ZIO, ZLayer}
 
-trait HealthCheckService  {
+trait HealthCheckService {
   def check: UIO[Health]
 }
 object HealthCheckService {

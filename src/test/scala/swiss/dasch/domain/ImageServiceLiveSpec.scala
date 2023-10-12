@@ -10,15 +10,15 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.*
 import eu.timepit.refined.numeric.Greater.greaterValidate
 import swiss.dasch.api.SipiClientMockMethodInvocation.ApplyTopLeftCorrection
-import swiss.dasch.api.{ SipiClientMock, SipiClientMockMethodInvocation }
+import swiss.dasch.api.{SipiClientMock, SipiClientMockMethodInvocation}
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.domain.RefinedHelper.positiveFrom
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import zio.Exit
-import zio.nio.file.{ Files, Path }
+import zio.nio.file.{Files, Path}
 import zio.test.*
-import zio.test.Assertion.{ equalTo, fails, hasMessage, isSubtype }
+import zio.test.Assertion.{equalTo, fails, hasMessage, isSubtype}
 
 import java.io.IOException
 
@@ -32,21 +32,21 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
     suite("ImageServiceLiveSpec")(
       test("apply top left should apply correction, create backup and update info file") {
         for {
-          _                 <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
-          image             <- imageFile
-          backup            <- backupFile
-          info              <- AssetInfoService.findByAsset(asset)
-          infoFile          <- AssetInfoService.getInfoFilePath(asset)
-          _                 <- StorageService.saveJsonFile[AssetInfoFileContent](
-                                 infoFile,
-                                 AssetInfoFileContent(
-                                   internalFilename = info.derivative.file.filename.toString,
-                                   originalInternalFilename = info.original.file.filename.toString,
-                                   originalFilename = info.originalFilename.toString,
-                                   checksumOriginal = info.original.checksum.toString,
-                                   checksumDerivative = "this-should-be-updated",
-                                 ),
-                               )
+          _        <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
+          image    <- imageFile
+          backup   <- backupFile
+          info     <- AssetInfoService.findByAsset(asset)
+          infoFile <- AssetInfoService.getInfoFilePath(asset)
+          _ <- StorageService.saveJsonFile[AssetInfoFileContent](
+                 infoFile,
+                 AssetInfoFileContent(
+                   internalFilename = info.derivative.file.filename.toString,
+                   originalInternalFilename = info.original.file.filename.toString,
+                   originalFilename = info.originalFilename.toString,
+                   checksumOriginal = info.original.checksum.toString,
+                   checksumDerivative = "this-should-be-updated"
+                 )
+               )
           _                 <- ImageService.applyTopLeftCorrection(image)
           backupExists      <- Files.exists(backup)
           correctionApplied <- SipiClientMock.wasInvoked(ApplyTopLeftCorrection(image, image))
@@ -98,14 +98,14 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
         } yield assert(actual)(
           fails(isSubtype[IOException](hasMessage(equalTo("Could not get dimensions from 'images/some-file.jp2'"))))
         )
-      },
+      }
     ).provide(
       AssetInfoServiceLive.layer,
       FileChecksumServiceLive.layer,
       ImageServiceLive.layer,
       SipiClientMock.layer,
       SpecConfigurations.storageConfigLayer,
-      StorageServiceLive.layer,
+      StorageServiceLive.layer
     )
 }
 

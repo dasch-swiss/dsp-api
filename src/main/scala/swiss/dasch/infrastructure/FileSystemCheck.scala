@@ -7,18 +7,18 @@ package swiss.dasch.infrastructure
 
 import swiss.dasch.config.Configuration.StorageConfig
 import zio.nio.file.Files
-import zio.{ UIO, URLayer, ZIO, ZLayer }
+import zio.{UIO, URLayer, ZIO, ZLayer}
 
 import java.io.IOException
 
-trait FileSystemCheck  {
+trait FileSystemCheck {
   def checkExpectedFoldersExist(): ZIO[Any, Nothing, Boolean]
   def smokeTest(): ZIO[Any, IOException, Unit]
 }
 object FileSystemCheck {
   def checkExpectedFoldersExist(): ZIO[FileSystemCheck, Nothing, Boolean] =
     ZIO.serviceWithZIO[FileSystemCheck](_.checkExpectedFoldersExist())
-  def smokeTestOrDie(): ZIO[FileSystemCheck, IOException, Unit]           =
+  def smokeTestOrDie(): ZIO[FileSystemCheck, IOException, Unit] =
     ZIO.serviceWithZIO[FileSystemCheck](_.smokeTest())
 }
 

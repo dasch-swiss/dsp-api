@@ -5,7 +5,7 @@
 
 package swiss.dasch.infrastructure
 
-import zio.json.{ DeriveJsonCodec, JsonCodec, JsonDecoder, JsonEncoder }
+import zio.json.{DeriveJsonCodec, JsonCodec, JsonDecoder, JsonEncoder}
 
 sealed trait Status { self =>
   private def jsonString: String = {

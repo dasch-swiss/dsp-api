@@ -10,7 +10,7 @@ import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import sttp.tapir.{ Codec, EndpointOutput, PublicEndpoint, oneOf, oneOfVariant, statusCode }
+import sttp.tapir.{Codec, EndpointOutput, PublicEndpoint, oneOf, oneOfVariant, statusCode}
 import swiss.dasch.api.BaseEndpoints.defaultErrorOutputs
 import zio.ZLayer
 
@@ -32,7 +32,7 @@ case class BaseEndpoints(authService: AuthService) {
     .some
     .mapBoth(
       e => ApiProblem.Unauthorized(e.map(_.map(_.message).mkString(", ")).getOrElse("")),
-      subject => UserSession(subject),
+      subject => UserSession(subject)
     )
 }
 
@@ -46,6 +46,6 @@ object BaseEndpoints {
       oneOfVariant(statusCode(StatusCode.InternalServerError).and(jsonBody[ApiProblem.InternalServerError])),
       oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[ApiProblem.NotFound])),
       oneOfVariant(statusCode(StatusCode.ServiceUnavailable).and(jsonBody[ApiProblem.Unhealthy])),
-      oneOfVariant(statusCode(StatusCode.Unauthorized).and(jsonBody[ApiProblem.Unauthorized])),
+      oneOfVariant(statusCode(StatusCode.Unauthorized).and(jsonBody[ApiProblem.Unauthorized]))
     )
 }

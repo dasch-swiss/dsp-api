@@ -18,24 +18,26 @@ case object EmptyFile            extends ImportFailed
 case object NoZipFile            extends ImportFailed
 case object InvalidChecksums     extends ImportFailed
 
-trait ImportService      {
+trait ImportService {
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit]
   def importZipFile(shortcode: ProjectShortcode, tempFile: Path): IO[ImportFailed, Unit]
 }
-object ImportService     {
-  def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte])
-      : ZIO[ImportService, ImportFailed, Unit] =
+object ImportService {
+  def importZipStream(
+    shortcode: ProjectShortcode,
+    stream: ZStream[Any, Nothing, Byte]
+  ): ZIO[ImportService, ImportFailed, Unit] =
     ZIO.serviceWithZIO[ImportService](_.importZipStream(shortcode, stream))
   def importZipFile(shortcode: ProjectShortcode, tempFile: Path): ZIO[ImportService, ImportFailed, Unit] =
     ZIO.serviceWithZIO[ImportService](_.importZipFile(shortcode, tempFile))
 }
 
 final case class ImportServiceLive(
-    assetService: FileChecksumService,
-    assetInfos: AssetInfoService,
-    projectService: ProjectService,
-    storageService: StorageService,
-  ) extends ImportService {
+  assetService: FileChecksumService,
+  assetInfos: AssetInfoService,
+  projectService: ProjectService,
+  storageService: StorageService
+) extends ImportService {
 
   def importZipStream(shortcode: ProjectShortcode, stream: ZStream[Any, Nothing, Byte]): IO[ImportFailed, Unit] =
     ZIO.scoped(saveStreamToFile(shortcode, stream).flatMap(importZipFile(shortcode, _)))
@@ -56,33 +58,33 @@ final case class ImportServiceLive(
   override def importZipFile(shortcode: ProjectShortcode, zipFile: Path): IO[ImportFailed, Unit] = ZIO.scoped {
     for {
       unzippedFolder <- validateZipFile(shortcode, zipFile)
-      _              <- importProject(shortcode, unzippedFolder)
-                          .logError(s"Error while importing project $shortcode")
-                          .mapError(IoError(_))
+      _ <- importProject(shortcode, unzippedFolder)
+             .logError(s"Error while importing project $shortcode")
+             .mapError(IoError(_))
     } yield ()
   }
 
-  private def validateZipFile(shortcode: ProjectShortcode, zipFile: Path): ZIO[Scope, ImportFailed, Path]         =
+  private def validateZipFile(shortcode: ProjectShortcode, zipFile: Path): ZIO[Scope, ImportFailed, Path] =
     for {
       _            <- checkIsNotEmptyFile(zipFile)
       _            <- checkIsZipFile(zipFile)
       unzippedPath <- unzipAndVerifyChecksums(shortcode, zipFile)
     } yield unzippedPath
-  private def checkIsNotEmptyFile(zipFile: Path): IO[ImportFailed, Unit]                                          =
+  private def checkIsNotEmptyFile(zipFile: Path): IO[ImportFailed, Unit] =
     ZIO.fail(EmptyFile).whenZIO(Files.size(zipFile).mapBoth(IoError(_), _ == 0)).unit
-  private def checkIsZipFile(zipFile: Path): IO[NoZipFile.type, Unit]                                             = ZIO.scoped {
+  private def checkIsZipFile(zipFile: Path): IO[NoZipFile.type, Unit] = ZIO.scoped {
     ZIO.fromAutoCloseable(ZIO.attemptBlockingIO(new ZipFile(zipFile.toFile))).orElseFail(NoZipFile).unit
   }
   private def unzipAndVerifyChecksums(shortcode: ProjectShortcode, zipFile: Path): ZIO[Scope, ImportFailed, Path] =
     for {
       tempDir <- storageService.createTempDirectoryScoped(s"${shortcode}_import").mapError(IoError(_))
       _       <- ZipUtility.unzipFile(zipFile, tempDir).mapError(IoError(_))
-      checks  <- assetInfos
-                   .findAllInPath(tempDir, shortcode)
-                   .mapZIOPar(StorageService.maxParallelism())(assetService.verifyChecksum)
-                   .runCollect
-                   .mapBoth(IoError(_), _.flatten)
-      _       <- ZIO.fail(InvalidChecksums).when(checks.exists(!_.checksumMatches))
+      checks <- assetInfos
+                  .findAllInPath(tempDir, shortcode)
+                  .mapZIOPar(StorageService.maxParallelism())(assetService.verifyChecksum)
+                  .runCollect
+                  .mapBoth(IoError(_), _.flatten)
+      _ <- ZIO.fail(InvalidChecksums).when(checks.exists(!_.checksumMatches))
     } yield tempDir
 
   private def importProject(shortcode: ProjectShortcode, unzippedFolder: Path): IO[Throwable, Unit] =
@@ -94,7 +96,10 @@ final case class ImportServiceLive(
     }
 }
 object ImportServiceLive {
-  val layer
-      : ZLayer[FileChecksumService with AssetInfoService with ProjectService with StorageService, Nothing, ImportService] =
+  val layer: ZLayer[
+    FileChecksumService with AssetInfoService with ProjectService with StorageService,
+    Nothing,
+    ImportService
+  ] =
     ZLayer.derive[ImportServiceLive]
 }

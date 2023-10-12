@@ -5,13 +5,13 @@
 
 package swiss.dasch.api
 
-import sttp.tapir.server.ziohttp.{ ZioHttpInterpreter, ZioHttpServerOptions }
+import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import swiss.dasch.domain.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.domain.SipiImageFormat.Jpg
 import swiss.dasch.test.SpecConstants.*
-import swiss.dasch.test.SpecConstants.Projects.{ existingProject, nonExistentProject }
-import swiss.dasch.test.{ SpecConfigurations, SpecConstants }
+import swiss.dasch.test.SpecConstants.Projects.{existingProject, nonExistentProject}
+import swiss.dasch.test.{SpecConfigurations, SpecConstants}
 import zio.*
 import zio.http.*
 import zio.json.EncoderOps
@@ -25,17 +25,17 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
     awaitThis.repeatUntil(identity).timeout(timeout).map(_.getOrElse(false))
 
   private def executeRequest(request: Request) = for {
-    app      <- ZIO.serviceWith[MaintenanceEndpointsHandler](handler =>
-                  ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
-                )
+    app <- ZIO.serviceWith[MaintenanceEndpointsHandler](handler =>
+             ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
+           )
     response <- app.runZIO(request).logError
   } yield response
 
   private val createOriginalsSuite = {
     def createOriginalsRequest(
-        shortcode: ProjectShortcode | String,
-        body: List[MappingEntry] = List.empty,
-      ) =
+      shortcode: ProjectShortcode | String,
+      body: List[MappingEntry] = List.empty
+    ) =
       Request
         .post(Body.fromString(body.toJson), URL(Root / "maintenance" / "create-originals" / shortcode.toString))
         .updateHeaders(
@@ -97,9 +97,9 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
           newOrigExistsJp2,
           assetInfoJpx.originalFilename.toString == "ORIGINAL.jpg",
           assetInfoJp2.originalFilename.toString == s"${assetJp2.id}.tif",
-          checksumsCorrect,
+          checksumsCorrect
         )
-      },
+      }
     ) @@ TestAspect.withLiveClock
   }
 
@@ -122,7 +122,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
           response <- executeRequest(request)
           projects <- loadReport("needsOriginals.json")
         } yield assertTrue(response.status == Status.Accepted, projects == Chunk("0001"))
-      },
+      }
     ) @@ TestAspect.withLiveClock
 
   private def loadReport(name: String) =
@@ -159,6 +159,6 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
       SipiClientMock.layer,
       SpecConfigurations.storageConfigLayer,
       SpecConfigurations.jwtConfigDisableAuthLayer,
-      StorageServiceLive.layer,
+      StorageServiceLive.layer
     )
 }

@@ -8,7 +8,7 @@ package swiss.dasch.domain
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Assets.*
 import swiss.dasch.test.SpecPaths.pathFromResource
-import zio.test.{ ZIOSpecDefault, assertTrue }
+import zio.test.{ZIOSpecDefault, assertTrue}
 
 object FileChecksumServiceLiveSpec extends ZIOSpecDefault {
 
@@ -43,11 +43,11 @@ object FileChecksumServiceLiveSpec extends ZIOSpecDefault {
         assetInfo      <- AssetInfoService.findByAsset(existingAsset)
         checksumResult <- FileChecksumService.verifyChecksum(assetInfo)
       } yield assertTrue(checksumResult.forall(_.checksumMatches == true))
-    },
+    }
   ).provide(
     AssetInfoServiceLive.layer,
     FileChecksumServiceLive.layer,
     StorageServiceLive.layer,
-    SpecConfigurations.storageConfigLayer,
+    SpecConfigurations.storageConfigLayer
   )
 }

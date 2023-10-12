@@ -5,9 +5,9 @@
 
 package swiss.dasch.infrastructure
 
-import zio.{ durationInt, ZLayer }
+import zio.{durationInt, ZLayer}
 import zio.metrics.connectors.prometheus.PrometheusPublisher
-import zio.metrics.connectors.{ MetricsConfig, prometheus }
+import zio.metrics.connectors.{MetricsConfig, prometheus}
 import zio.metrics.jvm.DefaultJvmMetrics
 
 object Metrics {
@@ -16,6 +16,6 @@ object Metrics {
       ZLayer.succeed(MetricsConfig(interval = 5.seconds)),
       prometheus.publisherLayer,
       prometheus.prometheusLayer,
-      DefaultJvmMetrics.live.unit.orDie,
+      DefaultJvmMetrics.live.unit.orDie
     )
 }

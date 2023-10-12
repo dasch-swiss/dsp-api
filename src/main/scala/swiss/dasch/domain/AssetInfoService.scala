@@ -7,32 +7,32 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import zio.*
-import zio.json.{ DeriveJsonCodec, JsonCodec }
-import zio.nio.file.{ Files, Path }
+import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.nio.file.{Files, Path}
 import zio.prelude.Validation
 import zio.stream.ZStream
 
 final private case class AssetInfoFileContent(
-    internalFilename: String,
-    originalInternalFilename: String,
-    originalFilename: String,
-    checksumOriginal: String,
-    checksumDerivative: String,
-  ) {
+  internalFilename: String,
+  originalInternalFilename: String,
+  originalFilename: String,
+  checksumOriginal: String,
+  checksumDerivative: String
+) {
   def withDerivativeChecksum(checksum: Sha256Hash): AssetInfoFileContent = copy(checksumDerivative = checksum.toString)
 }
 private object AssetInfoFileContent {
   def make(
-      imageAsset: ImageAsset,
-      originalChecksum: Sha256Hash,
-      derivativeChecksum: Sha256Hash,
-    ): AssetInfoFileContent =
+    imageAsset: ImageAsset,
+    originalChecksum: Sha256Hash,
+    derivativeChecksum: Sha256Hash
+  ): AssetInfoFileContent =
     AssetInfoFileContent(
       imageAsset.derivativeFilename,
       imageAsset.originalInternalFilename,
       imageAsset.originalFilename.value,
       originalChecksum.toString,
-      derivativeChecksum.toString,
+      derivativeChecksum.toString
     )
 
   given codec: JsonCodec[AssetInfoFileContent] = DeriveJsonCodec.gen[AssetInfoFileContent]
@@ -40,13 +40,13 @@ private object AssetInfoFileContent {
 
 final case class FileAndChecksum(file: Path, checksum: Sha256Hash)
 final case class AssetInfo(
-    asset: Asset,
-    original: FileAndChecksum,
-    originalFilename: NonEmptyString,
-    derivative: FileAndChecksum,
-  )
+  asset: Asset,
+  original: FileAndChecksum,
+  originalFilename: NonEmptyString,
+  derivative: FileAndChecksum
+)
 
-trait AssetInfoService  {
+trait AssetInfoService {
   def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo]
   def getInfoFilePath(asset: Asset): UIO[Path]
   def findByAsset(asset: Asset): Task[AssetInfo]
@@ -55,15 +55,15 @@ trait AssetInfoService  {
   def createAssetInfo(asset: ImageAsset): Task[Unit]
 }
 object AssetInfoService {
-  def findByAsset(asset: Asset): ZIO[AssetInfoService, Throwable, AssetInfo]                                       =
+  def findByAsset(asset: Asset): ZIO[AssetInfoService, Throwable, AssetInfo] =
     ZIO.serviceWithZIO[AssetInfoService](_.findByAsset(asset))
   def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): ZIO[AssetInfoService, Throwable, AssetInfo] =
     ZIO.serviceWithZIO[AssetInfoService](_.loadFromFilesystem(infoFile, shortcode))
-  def updateAssetInfoForDerivative(derivative: Path): ZIO[AssetInfoService, Throwable, Unit]                       =
+  def updateAssetInfoForDerivative(derivative: Path): ZIO[AssetInfoService, Throwable, Unit] =
     ZIO.serviceWithZIO[AssetInfoService](_.updateAssetInfoForDerivative(derivative))
-  def getInfoFilePath(asset: Asset): ZIO[AssetInfoService, Nothing, Path]                                          =
+  def getInfoFilePath(asset: Asset): ZIO[AssetInfoService, Nothing, Path] =
     ZIO.serviceWithZIO[AssetInfoService](_.getInfoFilePath(asset))
-  def createAssetInfo(asset: ImageAsset): ZIO[AssetInfoService, Throwable, Unit]                                   =
+  def createAssetInfo(asset: ImageAsset): ZIO[AssetInfoService, Throwable, Unit] =
     ZIO.serviceWithZIO[AssetInfoService](_.createAssetInfo(asset))
 }
 
@@ -91,26 +91,26 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
     storageService.loadJsonFile[AssetInfoFileContent](infoFile).flatMap(toAssetInfo(_, infoFile.parent.orNull, asset))
 
   private def toAssetInfo(
-      raw: AssetInfoFileContent,
-      infoFileDirectory: Path,
-      asset: Asset,
-    ): Task[AssetInfo] =
+    raw: AssetInfoFileContent,
+    infoFileDirectory: Path,
+    asset: Asset
+  ): Task[AssetInfo] =
     Validation
       .validateWith(
         Validation.fromEither(Sha256Hash.make(raw.checksumOriginal)),
         Validation.fromEither(Sha256Hash.make(raw.checksumDerivative)),
-        Validation.fromEither(NonEmptyString.from(raw.originalFilename)),
+        Validation.fromEither(NonEmptyString.from(raw.originalFilename))
       ) {
         (
-            origChecksum,
-            derivativeChecksum,
-            origFilename,
-          ) =>
+          origChecksum,
+          derivativeChecksum,
+          origFilename
+        ) =>
           AssetInfo(
             asset = asset,
             original = FileAndChecksum(infoFileDirectory / raw.originalInternalFilename, origChecksum),
             originalFilename = origFilename,
-            derivative = FileAndChecksum(infoFileDirectory / raw.internalFilename, derivativeChecksum),
+            derivative = FileAndChecksum(infoFileDirectory / raw.internalFilename, derivativeChecksum)
           )
       }
       .toZIO

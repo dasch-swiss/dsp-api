@@ -14,15 +14,14 @@ import swiss.dasch.domain.SipiImageFormat.Jpx
 import swiss.dasch.infrastructure.Base62
 import zio.json.JsonCodec
 import zio.nio.file.Path
-import zio.{ Random, UIO }
+import zio.{Random, UIO}
 
 opaque type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-_]{4,}$"]
 
 object AssetId {
   def make(id: String): Either[String, AssetId] = refineV(id)
 
-  def makeNew: UIO[AssetId] = Random
-    .nextUUID
+  def makeNew: UIO[AssetId] = Random.nextUUID
     .map(uuid =>
       // the unsafeApply is safe here because the [[Base62EncodedUuid]] is valid subset of AssetId
       Refined.unsafeApply(Base62.encode(uuid).value)
@@ -50,20 +49,20 @@ object Asset {
 
 final case class SimpleAsset(id: AssetId, belongsToProject: ProjectShortcode) extends Asset {
   def makeImageAsset(
-      originalFilename: NonEmptyString,
-      original: OriginalFile,
-      derivative: JpxDerivativeFile,
-    ): ImageAsset =
+    originalFilename: NonEmptyString,
+    original: OriginalFile,
+    derivative: JpxDerivativeFile
+  ): ImageAsset =
     ImageAsset(id, belongsToProject, originalFilename, original, derivative)
 }
 
 final case class ImageAsset(
-    id: AssetId,
-    belongsToProject: ProjectShortcode,
-    originalFilename: NonEmptyString,
-    original: OriginalFile,
-    derivative: JpxDerivativeFile,
-  ) extends Asset {
+  id: AssetId,
+  belongsToProject: ProjectShortcode,
+  originalFilename: NonEmptyString,
+  original: OriginalFile,
+  derivative: JpxDerivativeFile
+) extends Asset {
   def originalInternalFilename: String = original.filename
   def derivativeFilename: String       = derivative.filename
 }
@@ -100,10 +99,10 @@ opaque type JpxDerivativeFile = Path
 object JpxDerivativeFile {
   def from(file: Path): Option[JpxDerivativeFile] =
     file match {
-      case hidden if hidden.filename.toString.startsWith(".")                                     => None
+      case hidden if hidden.filename.toString.startsWith(".") => None
       case derivative if Jpx.acceptsExtension(FilenameUtils.getExtension(file.filename.toString)) =>
         hasAssetIdInFilename(derivative)
-      case _                                                                                      => None
+      case _ => None
     }
 
   def unsafeFrom(file: Path): JpxDerivativeFile =

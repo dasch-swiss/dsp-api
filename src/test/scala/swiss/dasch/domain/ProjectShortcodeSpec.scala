@@ -31,6 +31,6 @@ object ProjectShortcodeSpec extends ZIOSpecDefault {
       check(Gen.fromZIO(randomFourDigitHexString)) { shortcode =>
         assertTrue(ProjectShortcode.from(shortcode.toUpperCase) == ProjectShortcode.from(shortcode.toLowerCase()))
       }
-    },
+    }
   ) @@ TestAspect.withLiveRandom
 }

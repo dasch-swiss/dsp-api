@@ -8,7 +8,7 @@ package swiss.dasch.domain
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
-import zio.nio.file.{ Files, Path }
+import zio.nio.file.{Files, Path}
 
 import java.io.IOException
 
@@ -27,6 +27,6 @@ object FileFilters {
 
   def hasFileExtension(extension: List[String]): FileFilter = (path: Path) =>
     isNonHiddenRegularFile(path) &&
-    ZIO.succeed(extension.contains(FilenameUtils.getExtension(path.filename.toString).toLowerCase))
+      ZIO.succeed(extension.contains(FilenameUtils.getExtension(path.filename.toString).toLowerCase))
 
 }

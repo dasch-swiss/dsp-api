@@ -23,12 +23,12 @@ object ZipUtilitySpec extends ZIOSpecDefault {
   } yield tmp
 
   private def verifyUnzipped(path: Path) = for {
-    folderExists         <- Files.isDirectory(path / testFolderName)
-    _                    <- ZIO.logError(s"Folder does not exist: ${path / testFolderName}").when(!folderExists)
-    expectedFile          = path / testFolderName / testFileName
+    folderExists <- Files.isDirectory(path / testFolderName)
+    _            <- ZIO.logError(s"Folder does not exist: ${path / testFolderName}").when(!folderExists)
+    expectedFile  = path / testFolderName / testFileName
     fileContentIsCorrect <-
       Files.isRegularFile(expectedFile) && Files.readAllLines(expectedFile).map(_ == testFileContent)
-    _                    <- ZIO.logError(s"File content $expectedFile is not correct").when(!fileContentIsCorrect)
+    _ <- ZIO.logError(s"File content $expectedFile is not correct").when(!fileContentIsCorrect)
   } yield folderExists && fileContentIsCorrect
 
   override val spec = suite("ZipUtility")(
@@ -47,6 +47,6 @@ object ZipUtilitySpec extends ZIOSpecDefault {
         unzipped    <- ZipUtility.unzipFile(zipped, tmpUnzipped)
         result      <- verifyUnzipped(unzipped)
       } yield assertTrue(result)
-    },
+    }
   )
 }

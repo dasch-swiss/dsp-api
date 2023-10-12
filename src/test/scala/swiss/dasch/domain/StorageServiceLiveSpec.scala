@@ -12,7 +12,7 @@ import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.existingProject
 import zio.*
-import zio.json.{ DeriveJsonCodec, JsonCodec }
+import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.nio.file.Files
 import zio.test.*
 import zio.test.Assertion.failsWithA
@@ -20,7 +20,7 @@ import zio.test.Assertion.failsWithA
 import java.nio.file.NoSuchFileException
 import java.text.ParseException
 import java.time.format.DateTimeFormatter
-import java.time.{ ZoneId, ZoneOffset }
+import java.time.{ZoneId, ZoneOffset}
 
 object StorageServiceLiveSpec extends ZIOSpecDefault {
 
@@ -34,27 +34,27 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       ZIO.scoped {
         for {
           // given
-          tmp       <- Files.createTempDirectoryScoped(Some("test"), List())
-          essence    = tmp / "test.txt"
-          _         <- Files.createFile(essence)
-          assetId   <- AssetId.makeNew
-          asset      = SimpleAsset(assetId, "0001".toProjectShortcode)
+          tmp     <- Files.createTempDirectoryScoped(Some("test"), List())
+          essence  = tmp / "test.txt"
+          _       <- Files.createFile(essence)
+          assetId <- AssetId.makeNew
+          asset    = SimpleAsset(assetId, "0001".toProjectShortcode)
           // when
-          original  <- StorageService.createOriginalFileInAssetDir(essence, asset)
+          original <- StorageService.createOriginalFileInAssetDir(essence, asset)
           // then
           fileExist <- Files.exists(original.toPath)
           assetDir  <- StorageService.getAssetDirectory(asset)
         } yield assertTrue(
           fileExist,
           original.filename == s"${assetId.toString}.txt.orig",
-          original.toPath.parent.contains(assetDir),
+          original.toPath.parent.contains(assetDir)
         )
       }
     },
     test("should return the path of the folder where the asset is stored") {
       for {
         assetPath <- ZIO.serviceWith[StorageConfig](_.assetPath)
-        actual    <-
+        actual <-
           StorageService.getAssetDirectory(SimpleAsset("FGiLaT4zzuV-CqwbEDFAFeS".toAssetId, "0001".toProjectShortcode))
       } yield assertTrue(actual == assetPath / "0001" / "fg" / "il")
     },
@@ -87,34 +87,33 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       val name  = NonEmptyString.unsafeFrom("250x250.jp2")
       for {
         projectPath <- ZIO.serviceWith[StorageConfig](_.assetPath).map(_ / asset.belongsToProject.toString)
-        expected     = AssetInfo(
-                         asset = asset,
-                         original = FileAndChecksum(
-                           projectPath / "fg" / "il" / s"${asset.id.toString}.jp2.orig",
-                           "fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c".toSha256Hash,
-                         ),
-                         originalFilename = name,
-                         derivative = FileAndChecksum(
-                           projectPath / "fg" / "il" / s"${asset.id.toString}.jp2",
-                           "0ce405c9b183fb0d0a9998e9a49e39c93b699e0f8e2a9ac3496c349e5cea09cc".toSha256Hash,
-                         ),
-                       )
-        actual      <- AssetInfoService.findByAsset(asset)
+        expected = AssetInfo(
+                     asset = asset,
+                     original = FileAndChecksum(
+                       projectPath / "fg" / "il" / s"${asset.id.toString}.jp2.orig",
+                       "fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c".toSha256Hash
+                     ),
+                     originalFilename = name,
+                     derivative = FileAndChecksum(
+                       projectPath / "fg" / "il" / s"${asset.id.toString}.jp2",
+                       "0ce405c9b183fb0d0a9998e9a49e39c93b699e0f8e2a9ac3496c349e5cea09cc".toSha256Hash
+                     )
+                   )
+        actual <- AssetInfoService.findByAsset(asset)
       } yield assertTrue(expected == actual)
     },
     suite("create temp directory scoped")(
       test("should create a temp directory") {
         ZIO.scoped {
           for {
-            now                <- Clock.instant
-            _                  <- TestClock.setTime(now)
-            testDirName        <- Random.nextUUID.map(_.toString)
-            tempDir            <- StorageService.createTempDirectoryScoped(testDirName)
-            exists             <- Files.isDirectory(tempDir)
-            containsName        = tempDir.filename.toString == testDirName
+            now         <- Clock.instant
+            _           <- TestClock.setTime(now)
+            testDirName <- Random.nextUUID.map(_.toString)
+            tempDir     <- StorageService.createTempDirectoryScoped(testDirName)
+            exists      <- Files.isDirectory(tempDir)
+            containsName = tempDir.filename.toString == testDirName
             parentNameIsCorrect =
-              tempDir
-                .parent
+              tempDir.parent
                 .exists(
                   _.filename.toString == DateTimeFormatter
                     .ofPattern("yyyyMMdd_HHmmss")
@@ -127,13 +126,13 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       test("Should remove directory and content after scope") {
         for {
           testDirName <- Random.nextUUID.map(_.toString)
-          tempDir     <-
+          tempDir <-
             ZIO.scoped(
               StorageService.createTempDirectoryScoped(testDirName).tap(p => Files.createFile(p / "test.txt"))
             )
-          isRemoved   <- Files.notExists(tempDir)
+          isRemoved <- Files.notExists(tempDir)
         } yield assertTrue(isRemoved)
-      },
+      }
     ),
     suite("load and save json files")(
       test("should overwrite (i.e. create new) and load a json file") {
@@ -177,7 +176,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
             actual  <- StorageService.loadJsonFile[SomeJsonContent](testFile).exit
           } yield assert(actual)(failsWithA[ParseException])
         }
-      },
-    ),
+      }
+    )
   ).provide(AssetInfoServiceLive.layer, StorageServiceLive.layer, SpecConfigurations.storageConfigLayer)
 }

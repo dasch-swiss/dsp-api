@@ -9,7 +9,7 @@ import swiss.dasch.test.SpecConfigurations.jwtConfigLayer
 import zio.*
 import zio.http.*
 import zio.http.endpoint.*
-import zio.test.{ TestAspect, ZIOSpecDefault, assertTrue }
+import zio.test.{TestAspect, ZIOSpecDefault, assertTrue}
 
 object AuthServiceMiddlewareSpec extends ZIOSpecDefault {
 
@@ -37,6 +37,6 @@ object AuthServiceMiddlewareSpec extends ZIOSpecDefault {
         token    <- SpecJwtTokens.tokenWithInvalidSignature()
         response <- app.runZIO(request.updateHeaders(_.addHeader(Header.Authorization.Bearer(token))))
       } yield assertTrue(response.status == Status.Unauthorized, response.body == Body.empty)
-    },
+    }
   ).provide(jwtConfigLayer, AuthServiceLive.layer) @@ TestAspect.withLiveClock
 }

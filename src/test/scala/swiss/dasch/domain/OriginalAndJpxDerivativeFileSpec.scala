@@ -6,7 +6,7 @@
 package swiss.dasch.domain
 
 import zio.nio.file.Path
-import zio.test.{ Gen, ZIOSpecDefault, assertTrue, check }
+import zio.test.{Gen, ZIOSpecDefault, assertTrue, check}
 
 object OriginalAndJpxDerivativeFileSpec extends ZIOSpecDefault {
 
@@ -36,7 +36,7 @@ object OriginalAndJpxDerivativeFileSpec extends ZIOSpecDefault {
         val path: Path = Path(s"/tmp/$filename")
         assertTrue(JpxDerivativeFile.from(path).isEmpty)
       }
-    },
+    }
   )
 
   private val originalFileSpec = suite("OriginalFile")(
@@ -61,7 +61,7 @@ object OriginalAndJpxDerivativeFileSpec extends ZIOSpecDefault {
         val path: Path = Path(s"/tmp/$filename")
         assertTrue(OriginalFile.from(path).isEmpty)
       }
-    },
+    }
   )
 
   val spec = suite("OriginalAndDerivativeFileSpec")(derivativeFileSuite, originalFileSpec)

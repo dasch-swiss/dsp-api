@@ -5,23 +5,23 @@
 
 package swiss.dasch.api
 
-import sttp.tapir.server.ziohttp.{ ZioHttpInterpreter, ZioHttpServerOptions }
-import swiss.dasch.infrastructure.{ Health, HealthCheckService, Metrics }
+import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
+import swiss.dasch.infrastructure.{Health, HealthCheckService, Metrics}
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
 import zio.*
 import zio.http.*
-import zio.json.{ EncoderOps, DecoderOps }
+import zio.json.{EncoderOps, DecoderOps}
 import zio.json.ast.Json
-import zio.test.{ ZIOSpecDefault, assertTrue }
+import zio.test.{ZIOSpecDefault, assertTrue}
 
 object MonitoringEndpointsSpec extends ZIOSpecDefault {
 
   private def executeRequest(request: Request) =
     for {
-      app      <- ZIO.serviceWith[MonitoringEndpointsHandler](handler =>
-                    ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
-                  )
+      app <- ZIO.serviceWith[MonitoringEndpointsHandler](handler =>
+               ZioHttpInterpreter(ZioHttpServerOptions.default).toHttp(handler.endpoints)
+             )
       response <- app.runZIO(request).logError
     } yield response
 
@@ -33,7 +33,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
         bodyJson <- response.body.asString
       } yield assertTrue(
         response.status == Status.Ok,
-        bodyJson.fromJson[Json] == "{\"status\":\"UP\"}".fromJson[Json],
+        bodyJson.fromJson[Json] == "{\"status\":\"UP\"}".fromJson[Json]
       )
     },
     test("when unhealthy should return status DOWN") {
@@ -43,11 +43,11 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
         bodyJson <- response.body.asString
       } yield assertTrue(
         response.status == Status.ServiceUnavailable,
-        bodyJson.fromJson[Json] == "{\"status\":\"DOWN\"}".fromJson[Json],
+        bodyJson.fromJson[Json] == "{\"status\":\"DOWN\"}".fromJson[Json]
       )
-    },
+    }
   )
-  val infoEndpointSuite            = suite("get /info")(
+  val infoEndpointSuite = suite("get /info")(
     test("should return 200") {
       for {
         response     <- executeRequest(Request.get(URL(Root / "info")))
@@ -60,8 +60,8 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
           scalaVersion = BuildInfo.scalaVersion,
           sbtVersion = BuildInfo.sbtVersion,
           buildTime = BuildInfo.builtAtString,
-          gitCommit = BuildInfo.gitCommit,
-        ).toJson,
+          gitCommit = BuildInfo.gitCommit
+        ).toJson
       )
     }
   )
@@ -74,7 +74,7 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
       BaseEndpoints.layer,
       AuthServiceLive.layer,
       SpecConfigurations.jwtConfigLayer,
-      Metrics.layer,
+      Metrics.layer
     )
 }
 

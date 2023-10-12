@@ -16,25 +16,25 @@ import zio.nio.file.Path
 
 object Configuration {
   final private case class ApplicationConf(
-      jwt: JwtConfig,
-      service: ServiceConfig,
-      storage: StorageConfig,
-      sipi: SipiConfig,
-      ingest: IngestConfig,
-    )
+    jwt: JwtConfig,
+    service: ServiceConfig,
+    storage: StorageConfig,
+    sipi: SipiConfig,
+    ingest: IngestConfig
+  )
 
   final case class JwtConfig(
-      secret: String,
-      audience: String,
-      issuer: String,
-      disableAuth: Boolean = false,
-    )
+    secret: String,
+    audience: String,
+    issuer: String,
+    disableAuth: Boolean = false
+  )
 
   final case class ServiceConfig(
-      host: String,
-      port: Int,
-      logFormat: String,
-    )
+    host: String,
+    port: Int,
+    logFormat: String
+  )
 
   final case class SipiConfig(useLocalDev: Boolean)
 
@@ -50,7 +50,7 @@ object Configuration {
   val layer: Layer[ReadError[String], AllConfigs] = {
     val applicationConf = ZConfig.fromTypesafeConfig(
       ZIO.attempt(ConfigFactory.defaultApplication().resolve()),
-      descriptor[ApplicationConf].mapKey(toKebabCase),
+      descriptor[ApplicationConf].mapKey(toKebabCase)
     )
     applicationConf.project(_.service) ++
       applicationConf.project(_.storage) ++

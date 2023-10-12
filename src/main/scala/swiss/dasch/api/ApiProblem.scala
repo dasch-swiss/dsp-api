@@ -8,10 +8,10 @@ package swiss.dasch.api
 import swiss.dasch.api.ApiProblem.BadRequest.Argument
 import swiss.dasch.infrastructure.Status.DOWN
 import swiss.dasch.domain.ProjectShortcode
-import swiss.dasch.infrastructure.{ HealthResponse, Status }
+import swiss.dasch.infrastructure.{HealthResponse, Status}
 import zio.http.Header.ContentType
-import zio.json.{ DeriveJsonCodec, JsonCodec }
-import zio.schema.{ DeriveSchema, Schema }
+import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.schema.{DeriveSchema, Schema}
 
 sealed trait ApiProblem
 
@@ -46,16 +46,16 @@ object ApiProblem {
       invalidHeader("Content-Type", actual.toString, s"expected '$expected'")
 
     def invalidHeader(
-        key: String,
-        value: String,
-        reason: String,
-      ): BadRequest = BadRequest(s"Header: '$key''", s"'$value' is invalid: $reason")
+      key: String,
+      value: String,
+      reason: String
+    ): BadRequest = BadRequest(s"Header: '$key''", s"'$value' is invalid: $reason")
 
     def invalidPathVariable(
-        key: String,
-        value: String,
-        reason: String,
-      ): BadRequest = BadRequest(s"Path variable: '$key''", s"'$value' is invalid: $reason")
+      key: String,
+      value: String,
+      reason: String
+    ): BadRequest = BadRequest(s"Path variable: '$key''", s"'$value' is invalid: $reason")
   }
 
   case class InternalServerError(errorMessage: String) extends ApiProblem

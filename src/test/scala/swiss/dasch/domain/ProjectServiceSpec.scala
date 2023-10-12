@@ -10,12 +10,12 @@ import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
 import swiss.dasch.test.SpecConstants.Projects.*
 import zio.nio.file.Path
-import zio.test.{ Spec, TestEnvironment, ZIOSpecDefault, assertTrue }
-import zio.{ Chunk, Scope, ZIO, ZLayer }
+import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
+import zio.{Chunk, Scope, ZIO, ZLayer}
 
 object ProjectServiceSpec extends ZIOSpecDefault {
 
-  private val listAllProjectsSuite                         = suite("listAllProjects")(
+  private val listAllProjectsSuite = suite("listAllProjects")(
     test("should list all projects which contain assets in the asset directory") {
       for {
         projects <- ProjectService.listAllProjects()
@@ -35,7 +35,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           for {
             project <- ProjectService.findProject(nonExistentProject)
           } yield assertTrue(project.isEmpty)
-        },
+        }
       ),
       suite("findAssetsOfProject path")(
         test("should find asset infos from existing project") {
@@ -47,7 +47,7 @@ object ProjectServiceSpec extends ZIOSpecDefault {
           for {
             infos <- ProjectService.findAssetInfosOfProject(nonExistentProject).runCollect
           } yield assertTrue(infos.isEmpty)
-        },
+        }
       ),
       suite("zipping a project")(
         test("given it does not exist, should return None") {
@@ -60,13 +60,13 @@ object ProjectServiceSpec extends ZIOSpecDefault {
             tempDir <- ZIO.serviceWith[StorageConfig](_.tempPath)
             zip     <- ProjectService.zipProject(existingProject)
           } yield assertTrue(zip.contains(tempDir / "zipped" / "0001.zip"))
-        },
-      ),
+        }
+      )
     ).provide(
       AssetInfoServiceLive.layer,
       FileChecksumServiceLive.layer,
       ProjectServiceLive.layer,
       SpecConfigurations.storageConfigLayer,
-      StorageServiceLive.layer,
+      StorageServiceLive.layer
     )
 }

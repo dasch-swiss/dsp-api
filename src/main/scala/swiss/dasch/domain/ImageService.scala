@@ -10,8 +10,8 @@ import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
-import zio.json.{ DeriveJsonCodec, JsonCodec }
-import zio.nio.file.{ Files, Path }
+import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.nio.file.{Files, Path}
 import zio.json.interop.refined.*
 
 import java.io.IOException
@@ -23,17 +23,18 @@ object Dimensions {
 
 trait ImageService {
 
-  /** Apply top left correction to the image if needed.
-    *
-    * Creates a backup of the original image "${image.filename}.bak" in the same directory.
-    *
-    * Updates the asset info for the derivative.
-    *
-    * @param image
-    *   the image to apply the correction to
-    * @return
-    *   the path to the corrected image or None if no correction was needed
-    */
+  /**
+   * Apply top left correction to the image if needed.
+   *
+   * Creates a backup of the original image "${image.filename}.bak" in the same directory.
+   *
+   * Updates the asset info for the derivative.
+   *
+   * @param image
+   *   the image to apply the correction to
+   * @return
+   *   the path to the corrected image or None if no correction was needed
+   */
   def applyTopLeftCorrection(image: Path): Task[Option[Path]]
 
   def needsTopLeftCorrection(image: Path): IO[IOException, Boolean]
@@ -44,13 +45,13 @@ trait ImageService {
 }
 
 object ImageService {
-  def applyTopLeftCorrection(image: Path): ZIO[ImageService, Throwable, Option[Path]]           =
+  def applyTopLeftCorrection(image: Path): ZIO[ImageService, Throwable, Option[Path]] =
     ZIO.serviceWithZIO[ImageService](_.applyTopLeftCorrection(image))
-  def needsTopLeftCorrection(image: Path): ZIO[ImageService, IOException, Boolean]              =
+  def needsTopLeftCorrection(image: Path): ZIO[ImageService, IOException, Boolean] =
     ZIO.serviceWithZIO[ImageService](_.needsTopLeftCorrection(image))
   def createDerivative(original: OriginalFile): ZIO[ImageService, Throwable, JpxDerivativeFile] =
     ZIO.serviceWithZIO[ImageService](_.createDerivative(original))
-  def getDimensions(file: JpxDerivativeFile): ZIO[ImageService, Throwable, Dimensions]          =
+  def getDimensions(file: JpxDerivativeFile): ZIO[ImageService, Throwable, Dimensions] =
     ZIO.serviceWithZIO[ImageService](_.getDimensions(file))
 }
 
@@ -66,15 +67,15 @@ final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoS
 
   override def needsTopLeftCorrection(image: Path): IO[IOException, Boolean] =
     FileFilters.isImage(image) &&
-    sipiClient
-      .queryImageFile(image)
-      .map(_.stdOut.split('\n'))
-      .map { lines =>
-        // check if the image has an orientation tag and if it is not horizontal
-        lines
-          .filter(_.startsWith(Exif.Image.Orientation))
-          .exists(_.lastOption.exists(_ != Exif.Image.OrientationValue.Horizontal.value))
-      }
+      sipiClient
+        .queryImageFile(image)
+        .map(_.stdOut.split('\n'))
+        .map { lines =>
+          // check if the image has an orientation tag and if it is not horizontal
+          lines
+            .filter(_.startsWith(Exif.Image.Orientation))
+            .exists(_.lastOption.exists(_ != Exif.Image.OrientationValue.Horizontal.value))
+        }
 
   override def createDerivative(original: OriginalFile): Task[JpxDerivativeFile] = {
     val imagePath      = original.toPath
@@ -99,7 +100,7 @@ final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoS
             .flatMap(_.split('=').lastOption.map(_.trim))
             .flatMap(_.toIntOption)
             .flatMap(i => refineV[Positive](i).toOption)
-        val dim                                                       = for {
+        val dim = for {
           width  <- getPositiveInt("nx")
           height <- getPositiveInt("ny")
         } yield Dimensions(width, height)

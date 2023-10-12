@@ -8,10 +8,10 @@ package swiss.dasch.api
 import pdi.jwt.*
 import swiss.dasch.config.Configuration.JwtConfig
 import zio.*
-import zio.http.{ HttpAppMiddleware, RequestHandlerMiddleware }
+import zio.http.{HttpAppMiddleware, RequestHandlerMiddleware}
 import zio.prelude.Validation
 
-trait AuthService  {
+trait AuthService {
   def authenticate(jwtToken: String): ZIO[Any, NonEmptyChunk[AuthenticationError], JwtClaim]
 }
 object AuthService {
@@ -24,17 +24,17 @@ object AuthService {
 }
 
 sealed trait AuthenticationError { def message: String }
-object AuthenticationError       {
+object AuthenticationError {
   final case class JwtProblem(message: String)      extends AuthenticationError
   final case class InvalidAudience(message: String) extends AuthenticationError
   final case class InvalidIssuer(message: String)   extends AuthenticationError
   final case class SubjectMissing(message: String)  extends AuthenticationError
-  def jwtProblem(e: Throwable): AuthenticationError              = JwtProblem(e.getMessage)
+  def jwtProblem(e: Throwable): AuthenticationError = JwtProblem(e.getMessage)
   def invalidAudience(jwtConfig: JwtConfig): AuthenticationError =
     InvalidAudience(s"Invalid audience: expected ${jwtConfig.audience}")
-  def invalidIssuer(jwtConfig: JwtConfig): AuthenticationError   =
+  def invalidIssuer(jwtConfig: JwtConfig): AuthenticationError =
     InvalidIssuer(s"Invalid issuer: expected ${jwtConfig.issuer}")
-  def subjectMissing(): AuthenticationError                      =
+  def subjectMissing(): AuthenticationError =
     SubjectMissing(s"Subject is missing.")
 }
 
@@ -67,10 +67,10 @@ final case class AuthServiceLive(jwtConfig: JwtConfig) extends AuthService {
       Validation
         .validateWith(issVal, audVal, subVal)(
           (
-              _,
-              _,
-              _,
-            ) => claim
+            _,
+            _,
+            _
+          ) => claim
         )
         .toEither
     )

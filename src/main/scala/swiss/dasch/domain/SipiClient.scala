@@ -5,15 +5,15 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.config.Configuration.{ SipiConfig, StorageConfig }
-import swiss.dasch.domain.SipiCommand.{ FormatArgument, QueryArgument, TopLeftArgument }
+import swiss.dasch.config.Configuration.{SipiConfig, StorageConfig}
+import swiss.dasch.domain.SipiCommand.{FormatArgument, QueryArgument, TopLeftArgument}
 import zio.*
 import zio.metrics.Metric
 import zio.nio.file.Path
 
 import java.io.IOException
 import java.time.temporal.ChronoUnit
-import scala.sys.process.{ ProcessLogger, stringToProcess }
+import scala.sys.process.{ProcessLogger, stringToProcess}
 
 sealed trait SipiCommand {
   def flag(): String
@@ -22,17 +22,17 @@ sealed trait SipiCommand {
 
 object SipiCommand {
   final case class QueryArgument(fileIn: Path) extends SipiCommand {
-    def flag(): String        = "--query"
+    def flag(): String = "--query"
     def render(): UIO[String] =
       fileIn.toAbsolutePath.orDie.map(abs => s"${flag()} $abs")
   }
 
   final case class FormatArgument(
-      outputFormat: SipiImageFormat,
-      fileIn: Path,
-      fileOut: Path,
-    ) extends SipiCommand {
-    def flag(): String        = "--format"
+    outputFormat: SipiImageFormat,
+    fileIn: Path,
+    fileOut: Path
+  ) extends SipiCommand {
+    def flag(): String = "--format"
     def render(): UIO[String] =
       (for {
         abs1 <- fileIn.toAbsolutePath
@@ -40,24 +40,25 @@ object SipiCommand {
       } yield s"${flag()} ${outputFormat.toCliString} $abs1 $abs2").orDie
   }
 
-  /** Applies the top-left correction to the image.
-    *
-    * @param fileIn
-    *   the image file to be corrected
-    * @param fileOut
-    *   the corrected image file,
-    *
-    * will be created if it does not exist,
-    *
-    * will be overwritten if it exists,
-    *
-    * if fileOut is the same as fileIn, the file will be overwritten
-    */
+  /**
+   * Applies the top-left correction to the image.
+   *
+   * @param fileIn
+   *   the image file to be corrected
+   * @param fileOut
+   *   the corrected image file,
+   *
+   * will be created if it does not exist,
+   *
+   * will be overwritten if it exists,
+   *
+   * if fileOut is the same as fileIn, the file will be overwritten
+   */
   final case class TopLeftArgument(
-      fileIn: Path,
-      fileOut: Path,
-    ) extends SipiCommand {
-    def flag(): String        = "--topleft"
+    fileIn: Path,
+    fileOut: Path
+  ) extends SipiCommand {
+    def flag(): String = "--topleft"
     def render(): UIO[String] =
       (for {
         abs1 <- fileIn.toAbsolutePath
@@ -74,10 +75,10 @@ trait SipiClient {
   def queryImageFile(file: Path): IO[IOException, SipiOutput]
 
   def transcodeImageFile(
-      fileIn: Path,
-      fileOut: Path,
-      outputFormat: SipiImageFormat,
-    ): UIO[SipiOutput]
+    fileIn: Path,
+    fileOut: Path,
+    outputFormat: SipiImageFormat
+  ): UIO[SipiOutput]
 }
 
 object SipiClient {
@@ -89,10 +90,10 @@ object SipiClient {
     ZIO.serviceWithZIO[SipiClient](_.queryImageFile(file))
 
   def transcodeImageFile(
-      fileIn: Path,
-      fileOut: Path,
-      outputFormat: SipiImageFormat,
-    ): RIO[SipiClient, SipiOutput] =
+    fileIn: Path,
+    fileOut: Path,
+    outputFormat: SipiImageFormat
+  ): RIO[SipiClient, SipiOutput] =
     ZIO.serviceWithZIO[SipiClient](_.transcodeImageFile(fileIn, fileOut, outputFormat))
 }
 
@@ -118,10 +119,10 @@ final case class SipiClientLive(prefix: String) extends SipiClient {
     execute(TopLeftArgument(fileIn, fileOut))
 
   override def transcodeImageFile(
-      fileIn: Path,
-      fileOut: Path,
-      outputFormat: SipiImageFormat,
-    ): UIO[SipiOutput] =
+    fileIn: Path,
+    fileOut: Path,
+    outputFormat: SipiImageFormat
+  ): UIO[SipiOutput] =
     execute(FormatArgument(outputFormat, fileIn, fileOut))
 
   override def queryImageFile(file: Path): UIO[SipiOutput] =
@@ -148,8 +149,8 @@ object SipiClientLive {
     for {
       config            <- ZIO.service[SipiConfig]
       absoluteAssetPath <- ZIO.serviceWithZIO[StorageConfig](_.assetPath.toAbsolutePath).orDie
-      prefix             = if (config.useLocalDev) { dockerPrefix(absoluteAssetPath) }
-                           else { sipiPrefix }
+      prefix = if (config.useLocalDev) { dockerPrefix(absoluteAssetPath) }
+               else { sipiPrefix }
     } yield SipiClientLive(prefix)
   }
 }

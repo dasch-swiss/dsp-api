@@ -6,18 +6,18 @@
 package swiss.dasch.api
 
 import sttp.capabilities.zio.ZioStreams
-import sttp.model.{ HeaderNames, StatusCode }
+import sttp.model.{HeaderNames, StatusCode}
 import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
-import sttp.tapir.{ CodecFormat, EndpointInput }
+import sttp.tapir.{CodecFormat, EndpointInput}
 import swiss.dasch.api.ProjectsEndpoints.shortcodePathVar
-import swiss.dasch.api.ProjectsEndpointsResponses.{ AssetCheckResultResponse, ProjectResponse, UploadResponse }
-import swiss.dasch.domain.{ AssetInfo, ChecksumResult, ProjectShortcode, Report }
-import zio.json.{ DeriveJsonCodec, JsonCodec }
-import zio.schema.{ DeriveSchema, Schema }
-import zio.{ Chunk, ZLayer }
+import swiss.dasch.api.ProjectsEndpointsResponses.{AssetCheckResultResponse, ProjectResponse, UploadResponse}
+import swiss.dasch.domain.{AssetInfo, ChecksumResult, ProjectShortcode, Report}
+import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.schema.{DeriveSchema, Schema}
+import zio.{Chunk, ZLayer}
 
 object ProjectsEndpointsResponses {
   final case class ProjectResponse(id: String)
@@ -41,10 +41,10 @@ object ProjectsEndpointsResponses {
   }
 
   final case class AssetCheckResultEntry(
-      assetId: String,
-      originalFilename: String,
-      results: List[SingleFileCheckResultResponse],
-    )
+    assetId: String,
+    originalFilename: String,
+    results: List[SingleFileCheckResultResponse]
+  )
 
   private object AssetCheckResultEntry {
 
@@ -52,7 +52,7 @@ object ProjectsEndpointsResponses {
       AssetCheckResultEntry(
         assetInfo.asset.id.toString,
         assetInfo.originalFilename.toString,
-        results.map(SingleFileCheckResultResponse.make).toList,
+        results.map(SingleFileCheckResultResponse.make).toList
       )
 
     given codec: JsonCodec[AssetCheckResultEntry] = DeriveJsonCodec.gen[AssetCheckResultEntry]
@@ -61,10 +61,10 @@ object ProjectsEndpointsResponses {
   }
 
   final case class AssetCheckResultSummary(
-      numberOfAssets: Int,
-      numberOfFiles: Int,
-      numberOfChecksumMatches: Int,
-    )
+    numberOfAssets: Int,
+    numberOfFiles: Int,
+    numberOfChecksumMatches: Int
+  )
 
   private object AssetCheckResultSummary {
     given codec: JsonCodec[AssetCheckResultSummary] = DeriveJsonCodec.gen[AssetCheckResultSummary]
@@ -82,10 +82,10 @@ object ProjectsEndpointsResponses {
     def make(report: Report): AssetCheckResultResponse = {
       val reportResults = report.results
       val results       = reportResults.map { case (info, checksum) => AssetCheckResultEntry.make(info, checksum) }.toList
-      val summary       = AssetCheckResultSummary(
+      val summary = AssetCheckResultSummary(
         reportResults.keys.size,
         reportResults.values.map(_.size).sum,
-        reportResults.values.map(_.count(_.checksumMatches)).sum,
+        reportResults.values.map(_.count(_.checksumMatches)).sum
       )
       AssetCheckResultResponse(summary, results)
     }
@@ -104,31 +104,23 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
 
   private val projects = "projects"
 
-  val getProjectsEndpoint = base
-    .secureEndpoint
-    .get
+  val getProjectsEndpoint = base.secureEndpoint.get
     .in(projects)
     .out(jsonBody[Chunk[ProjectResponse]])
     .out(header[String](HeaderNames.ContentRange))
     .tag(projects)
 
-  val getProjectByShortcodeEndpoint = base
-    .secureEndpoint
-    .get
+  val getProjectByShortcodeEndpoint = base.secureEndpoint.get
     .in(projects / shortcodePathVar)
     .out(jsonBody[ProjectResponse])
     .tag(projects)
 
-  val getProjectsChecksumReport = base
-    .secureEndpoint
-    .get
+  val getProjectsChecksumReport = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "checksumreport")
     .out(jsonBody[AssetCheckResultResponse])
     .tag(projects)
 
-  val postBulkIngest = base
-    .secureEndpoint
-    .post
+  val postBulkIngest = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest")
     .out(jsonBody[ProjectResponse].example(ProjectResponse("0001")))
     .out(statusCode(StatusCode.Accepted))
@@ -139,17 +131,14 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     )
     .tag(projects)
 
-  val postExport = base
-    .secureEndpoint
-    .post
+  val postExport = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "export")
     .out(header[String]("Content-Disposition"))
     .out(header[String]("Content-Type"))
     .out(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
     .tag(projects)
 
-  val getImport = base
-    .secureEndpoint
+  val getImport = base.secureEndpoint
     .in(projects / shortcodePathVar / "import")
     .in(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
     .in(header("Content-Type", "application/zip"))
@@ -163,7 +152,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       getProjectsChecksumReport,
       postBulkIngest,
       postExport,
-      getImport,
+      getImport
     )
 }
 

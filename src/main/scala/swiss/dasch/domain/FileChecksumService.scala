@@ -11,7 +11,7 @@ import eu.timepit.refined.string.MatchesRegex
 import zio.*
 import zio.nio.file.Path
 
-import java.io.{ FileInputStream, FileNotFoundException }
+import java.io.{FileInputStream, FileNotFoundException}
 
 opaque type Sha256Hash = String Refined MatchesRegex["^[A-Fa-f0-9]{64}$"]
 object Sha256Hash {
@@ -19,15 +19,15 @@ object Sha256Hash {
 }
 final case class ChecksumResult(file: Path, checksumMatches: Boolean)
 
-trait FileChecksumService  {
+trait FileChecksumService {
   def verifyChecksumOrig(asset: Asset): Task[Boolean]
   def verifyChecksumDerivative(asset: Asset): Task[Boolean]
   def verifyChecksum(assetInfo: AssetInfo): Task[Chunk[ChecksumResult]]
 }
 object FileChecksumService {
-  def verifyChecksumOrig(asset: Asset): ZIO[FileChecksumService, Throwable, Boolean]                   =
+  def verifyChecksumOrig(asset: Asset): ZIO[FileChecksumService, Throwable, Boolean] =
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksumOrig(asset))
-  def verifyChecksumDerivative(asset: Asset): ZIO[FileChecksumService, Throwable, Boolean]             =
+  def verifyChecksumDerivative(asset: Asset): ZIO[FileChecksumService, Throwable, Boolean] =
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksumDerivative(asset))
   def verifyChecksum(assetInfo: AssetInfo): ZIO[FileChecksumService, Throwable, Chunk[ChecksumResult]] =
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksum(assetInfo))
@@ -43,7 +43,7 @@ object FileChecksumService {
       bytesRead = fis.read(buffer)
       bytesRead != -1
     }) digest.update(buffer, 0, bytesRead)
-    val sb        = new StringBuilder
+    val sb = new StringBuilder
     for (byte <- digest.digest()) sb.append(String.format("%02x", Byte.box(byte)))
     ZIO.fromEither(Sha256Hash.make(sb.toString())).mapError(IllegalStateException(_)).orDie
   }

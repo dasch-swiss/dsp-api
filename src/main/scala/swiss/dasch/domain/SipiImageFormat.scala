@@ -5,10 +5,11 @@
 
 package swiss.dasch.domain
 
-/** Defines the output format of the image. Used with the `--format` option.
-  *
-  * https://sipi.io/running/#command-line-options
-  */
+/**
+ * Defines the output format of the image. Used with the `--format` option.
+ *
+ * https://sipi.io/running/#command-line-options
+ */
 sealed trait SipiImageFormat {
   def extension: String
   def toCliString: String                          = extension

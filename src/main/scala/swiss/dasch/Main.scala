@@ -7,7 +7,7 @@ package swiss.dasch
 
 import swiss.dasch.api.*
 import swiss.dasch.config.Configuration
-import swiss.dasch.config.Configuration.{ JwtConfig, ServiceConfig, StorageConfig }
+import swiss.dasch.config.Configuration.{JwtConfig, ServiceConfig, StorageConfig}
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.*
 import zio.*
@@ -49,7 +49,7 @@ object Main extends ZIOAppDefault {
         ProjectServiceLive.layer,
         ReportServiceLive.layer,
         SipiClientLive.layer,
-        StorageServiceLive.layer,
+        StorageServiceLive.layer
 //        ZLayer.Debug.mermaid ,
       )
 }

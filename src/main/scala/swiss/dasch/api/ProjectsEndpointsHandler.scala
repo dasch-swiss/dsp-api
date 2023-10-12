@@ -9,22 +9,21 @@ import sttp.capabilities.zio.ZioStreams
 import sttp.model.headers.ContentRange
 import sttp.tapir.ztapir.ZServerEndpoint
 import swiss.dasch.api.*
-import swiss.dasch.api.ApiProblem.{ BadRequest, InternalServerError }
-import swiss.dasch.api.ProjectsEndpointsResponses.{ AssetCheckResultResponse, ProjectResponse, UploadResponse }
+import swiss.dasch.api.ApiProblem.{BadRequest, InternalServerError}
+import swiss.dasch.api.ProjectsEndpointsResponses.{AssetCheckResultResponse, ProjectResponse, UploadResponse}
 import swiss.dasch.domain.*
 import zio.stream.ZStream
-import zio.{ ZIO, ZLayer, stream }
+import zio.{ZIO, ZLayer, stream}
 
 final case class ProjectsEndpointsHandler(
-    bulkIngestService: BulkIngestService,
-    importService: ImportService,
-    projectEndpoints: ProjectsEndpoints,
-    projectService: ProjectService,
-    reportService: ReportService,
-  ) extends HandlerFunctions {
+  bulkIngestService: BulkIngestService,
+  importService: ImportService,
+  projectEndpoints: ProjectsEndpoints,
+  projectService: ProjectService,
+  reportService: ReportService
+) extends HandlerFunctions {
 
-  val getProjectsEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints
-    .getProjectsEndpoint
+  val getProjectsEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsEndpoint
     .serverLogic(_ =>
       _ =>
         projectService
@@ -36,8 +35,7 @@ final case class ProjectsEndpointsHandler(
           )
     )
 
-  val getProjectByShortcodeEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints
-    .getProjectByShortcodeEndpoint
+  val getProjectByShortcodeEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectByShortcodeEndpoint
     .serverLogic(_ =>
       shortcode =>
         projectService
@@ -45,12 +43,11 @@ final case class ProjectsEndpointsHandler(
           .some
           .mapBoth(
             projectNotFoundOrServerError(_, shortcode),
-            _ => ProjectResponse.make(shortcode),
+            _ => ProjectResponse.make(shortcode)
           )
     )
 
-  val getProjectChecksumReportEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints
-    .getProjectsChecksumReport
+  val getProjectChecksumReportEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsChecksumReport
     .serverLogic(_ =>
       shortcode =>
         reportService
@@ -58,18 +55,16 @@ final case class ProjectsEndpointsHandler(
           .some
           .mapBoth(
             projectNotFoundOrServerError(_, shortcode),
-            AssetCheckResultResponse.make,
+            AssetCheckResultResponse.make
           )
     )
 
-  val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints
-    .postBulkIngest
+  val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
     .serverLogic(_ =>
       code => bulkIngestService.startBulkIngest(code).logError.forkDaemon.as(ProjectResponse.make(code))
     )
 
-  val postExportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints
-    .postExport
+  val postExportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postExport
     .serverLogic(_ =>
       shortcode =>
         projectService
@@ -86,8 +81,7 @@ final case class ProjectsEndpointsHandler(
           )
     )
 
-  val getImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints
-    .getImport
+  val getImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.getImport
     .serverLogic(_ =>
       (shortcode, stream) =>
         importService
@@ -99,7 +93,7 @@ final case class ProjectsEndpointsHandler(
               case NoZipFile        => BadRequest.invalidBody("The uploaded file is not a zip file.")
               case InvalidChecksums => BadRequest.invalidBody("The uploaded file contains invalid checksums.")
             },
-            _ => UploadResponse(),
+            _ => UploadResponse()
           )
     )
 
@@ -110,7 +104,7 @@ final case class ProjectsEndpointsHandler(
       getProjectChecksumReportEndpoint,
       postBulkIngestEndpoint,
       postExportEndpoint,
-      getImportEndpoint,
+      getImportEndpoint
     )
 }
 

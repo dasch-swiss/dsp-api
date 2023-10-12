@@ -8,15 +8,15 @@ package swiss.dasch
 import sttp.capabilities.zio.ZioStreams
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import sttp.tapir.ztapir.ZServerEndpoint
-import swiss.dasch.api.{ MaintenanceEndpointsHandler, MonitoringEndpointsHandler, ProjectsEndpointsHandler }
+import swiss.dasch.api.{MaintenanceEndpointsHandler, MonitoringEndpointsHandler, ProjectsEndpointsHandler}
 import swiss.dasch.version.BuildInfo
-import zio.{ Task, ZLayer }
+import zio.{Task, ZLayer}
 
 final case class Endpoints(
-    private val monitoring: MonitoringEndpointsHandler,
-    private val projects: ProjectsEndpointsHandler,
-    private val maintenance: MaintenanceEndpointsHandler,
-  ) {
+  private val monitoring: MonitoringEndpointsHandler,
+  private val projects: ProjectsEndpointsHandler,
+  private val maintenance: MaintenanceEndpointsHandler
+) {
 
   val endpoints: List[ZServerEndpoint[Any, ZioStreams]] = {
     val api  = monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints

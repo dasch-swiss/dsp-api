@@ -6,7 +6,7 @@
 package swiss.dasch.infrastructure
 
 import zio.ZIO
-import zio.test.{ Gen, ZIOSpecDefault, assertTrue, check }
+import zio.test.{Gen, ZIOSpecDefault, assertTrue, check}
 
 import java.util.UUID
 
