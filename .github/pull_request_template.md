@@ -8,11 +8,6 @@
 
 Issue Number: DEV-
 
-### Basic Requirements
-
-- [ ] Tests for the changes have been added (for bug fixes / features)
-- [ ] Docs have been added / updated (for bug fixes / features)
-
 ### PR Type
 
 - [ ] fix: represents bug fixes
@@ -22,6 +17,11 @@ Issue Number: DEV-
 - [ ] chore: maintenance tasks (no production code change)
 - [ ] test: all about tests: adding, refactoring tests (no production code change)
 - [ ] other... Please describe:
+
+### Basic Requirements for bug fixes and features
+
+- [ ] Tests for the changes have been added
+- [ ] Docs have been added / updated
 
 ### Does this PR introduce a breaking change?
 
