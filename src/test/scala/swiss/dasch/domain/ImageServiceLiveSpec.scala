@@ -5,13 +5,22 @@
 
 package swiss.dasch.domain
 
+import eu.timepit.refined.*
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.*
+import eu.timepit.refined.numeric.Greater.greaterValidate
 import swiss.dasch.api.SipiClientMockMethodInvocation.ApplyTopLeftCorrection
 import swiss.dasch.api.{ SipiClientMock, SipiClientMockMethodInvocation }
 import swiss.dasch.domain.Exif.Image.OrientationValue
+import swiss.dasch.domain.RefinedHelper.positiveFrom
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.*
-import zio.nio.file.Files
+import zio.Exit
+import zio.nio.file.{ Files, Path }
 import zio.test.*
+import zio.test.Assertion.{ equalTo, fails, hasMessage, isSubtype }
+
+import java.io.IOException
 
 object ImageServiceLiveSpec extends ZIOSpecDefault {
 
@@ -76,6 +85,20 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           actual   <- ImageService.createDerivative(OriginalFile.unsafeFrom(image)).exit
         } yield assertTrue(actual.isFailure)
       },
+      test("getDimensions should return Dimensions if Sipi returns them") {
+        val dim = Dimensions(positiveFrom(100), positiveFrom(100))
+        for {
+          _      <- SipiClientMock.setQueryImageDimensions(dim)
+          actual <- ImageService.getDimensions(JpxDerivativeFile.unsafeFrom(Path("images/some-file.jp2")))
+        } yield assertTrue(actual == dim)
+      },
+      test("getDimensions should fail Dimensions if Sipi does not return them") {
+        for {
+          actual <- ImageService.getDimensions(JpxDerivativeFile.unsafeFrom(Path("images/some-file.jp2"))).exit
+        } yield assert(actual)(
+          fails(isSubtype[IOException](hasMessage(equalTo("Could not get dimensions from 'images/some-file.jp2'"))))
+        )
+      },
     ).provide(
       AssetInfoServiceLive.layer,
       FileChecksumServiceLive.layer,
@@ -84,4 +107,9 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
     )
+}
+
+object RefinedHelper {
+  def positiveFrom(in: Int): Int Refined Positive =
+    refineV(in).toOption.getOrElse(throw new IllegalArgumentException(s"$in is not positive"))
 }

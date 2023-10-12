@@ -75,12 +75,24 @@ final case class MaintenanceEndpointsHandler(
           .as("work in progress")
     )
 
+  val wasTopLeftCorrectionAppliedEndpoint: ZServerEndpoint[Any, Any] = maintenanceEndpoints
+    .wasTopLeftCorrectionAppliedEndpoint
+    .serverLogic(_ =>
+      _ =>
+        maintenanceActions
+          .createWasTopLeftCorrectionAppliedReport()
+          .forkDaemon
+          .logError
+          .as("work in progress")
+    )
+
   val endpoints: List[ZServerEndpoint[Any, Any]] =
     List(
       applyTopLeftCorrectionEndpoint,
       createOriginalsEndpoint,
       needsOriginalsEndpoint,
       needsTopLeftCorrectionEndpoint,
+      wasTopLeftCorrectionAppliedEndpoint,
     )
 }
 

@@ -12,6 +12,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import swiss.dasch.infrastructure.Base62
+import zio.json.JsonCodec
 import zio.nio.file.Path
 import zio.{ Random, UIO }
 
@@ -34,6 +35,8 @@ object AssetId {
       case false => None
     }
   }
+
+  given codec: JsonCodec[AssetId] = JsonCodec[String].transformOrFail(AssetId.make, _.toString)
 }
 
 sealed trait Asset {

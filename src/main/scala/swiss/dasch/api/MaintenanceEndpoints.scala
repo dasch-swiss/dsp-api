@@ -40,6 +40,14 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
 
+  val wasTopLeftCorrectionAppliedEndpoint = base
+    .secureEndpoint
+    .get
+    .in(maintenance / "was-top-left-correction-applied")
+    .out(stringBody)
+    .out(statusCode(StatusCode.Accepted))
+    .tag(maintenance)
+
   val createOriginalsEndpoint = base
     .secureEndpoint
     .post

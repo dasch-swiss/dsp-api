@@ -7,7 +7,7 @@ package swiss.dasch.api
 
 import swiss.dasch.api.SipiClientMockMethodInvocation.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
-import swiss.dasch.domain.{ Exif, SipiClient, SipiImageFormat, SipiOutput }
+import swiss.dasch.domain.{ Dimensions, Exif, SipiClient, SipiImageFormat, SipiOutput }
 import zio.*
 import zio.nio.file.*
 
@@ -26,7 +26,7 @@ object SipiClientMockMethodInvocation {
 
 final case class SipiClientMock(
     invocations: Ref[List[SipiClientMockMethodInvocation]],
-    imageOrientation: Ref[OrientationValue],
+    queryImageFileReturnValue: Ref[SipiOutput],
     dontTranscode: Ref[Boolean],
   ) extends SipiClient {
 
@@ -50,9 +50,9 @@ final case class SipiClientMock(
         .as(SipiOutput("", ""))
 
   override def queryImageFile(file: Path): UIO[SipiOutput] = for {
-    orientation <- imageOrientation.get.map(_.value)
-    _           <- invocations.update(_.appended(QueryImageFile(file)))
-  } yield SipiOutput(s"Exif.Image.Orientation                       0x0112 Short       1  $orientation", "")
+    response <- queryImageFileReturnValue.get
+    _        <- invocations.update(_.appended(QueryImageFile(file)))
+  } yield response
 
   def getInvocations(): UIO[List[SipiClientMockMethodInvocation]] = invocations.get
 
@@ -61,7 +61,21 @@ final case class SipiClientMock(
 
   def noInteractions(): UIO[Boolean] = getInvocations().map(_.isEmpty)
 
-  def setOrientation(orientation: OrientationValue): UIO[Unit] = imageOrientation.set(orientation)
+  def setQueryImageFileOrientation(orientation: OrientationValue): UIO[Unit] = queryImageFileReturnValue.set(
+    SipiOutput(s"Exif.Image.Orientation                       0x0112 Short       ${orientation.value}", "")
+  )
+
+  def setQueryImageDimensions(dimension: Dimensions): UIO[Unit] = queryImageFileReturnValue.set(
+    SipiOutput(
+      s"""
+        |
+        |SipiImage with the following parameters:
+        |nx    = ${dimension.width} 
+        |ny    = ${dimension.height}
+        |""".stripMargin,
+      "",
+    )
+  )
 
   def setDontTranscode(newState: Boolean): UIO[Unit] = this.dontTranscode.set(newState)
 }
@@ -90,14 +104,17 @@ object SipiClientMock {
     ZIO.serviceWithZIO[SipiClientMock](_.noInteractions())
 
   def setOrientation(orientation: OrientationValue): RIO[SipiClientMock, Unit] =
-    ZIO.serviceWithZIO[SipiClientMock](_.setOrientation(orientation))
+    ZIO.serviceWithZIO[SipiClientMock](_.setQueryImageFileOrientation(orientation))
+
+  def setQueryImageDimensions(dimension: Dimensions): RIO[SipiClientMock, Unit] =
+    ZIO.serviceWithZIO[SipiClientMock](_.setQueryImageDimensions(dimension))
 
   def dontTranscode(): RIO[SipiClientMock, Unit] =
     ZIO.serviceWithZIO[SipiClientMock](_.setDontTranscode(true))
 
   val layer: ULayer[SipiClientMock] = ZLayer.fromZIO(for {
     invocations  <- Ref.make(List.empty[SipiClientMockMethodInvocation])
-    orientation  <- Ref.make[OrientationValue](OrientationValue.Horizontal)
+    querySipiOut <- Ref.make[SipiOutput](SipiOutput("", ""))
     failSilently <- Ref.make[Boolean](false)
-  } yield SipiClientMock(invocations, orientation, failSilently))
+  } yield SipiClientMock(invocations, querySipiOut, failSilently))
 }

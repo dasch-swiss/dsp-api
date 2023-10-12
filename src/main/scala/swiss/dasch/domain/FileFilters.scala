@@ -21,6 +21,8 @@ object FileFilters {
 
   val isNonHiddenRegularFile: FileFilter = (path: Path) => Files.isRegularFile(path) && Files.isHidden(path).negate
 
+  val isBakFile: FileFilter = hasFileExtension(List("bak"))
+
   def hasFileExtension(extension: String): FileFilter = hasFileExtension(List(extension))
 
   def hasFileExtension(extension: List[String]): FileFilter = (path: Path) =>
