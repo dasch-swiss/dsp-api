@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
+import zio.IO
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -39,7 +40,7 @@ final case class MaintenanceServiceLive(
       }
 
     def getKnoraProject(project: ProjectWithBakFiles): ZStream[Any, Throwable, KnoraProject] = {
-      val getProjectZio: ZIO[Any, Option[Throwable], KnoraProject] = projectRepo
+      val getProjectZio: IO[Option[Throwable], KnoraProject] = projectRepo
         .findByShortcode(project.id)
         .some
         .tapSomeError { case None => ZIO.logInfo(s"Project ${project.id} not found, skipping.") }
@@ -60,7 +61,7 @@ final case class MaintenanceServiceLive(
       ZIO.logInfo(s"Finished fix top left maintenance")
   }
 
-  private def fixAsset(project: KnoraProject, asset: ReportAsset): ZIO[Any, Option[Throwable], Unit] =
+  private def fixAsset(project: KnoraProject, asset: ReportAsset): IO[Option[Throwable], Unit] =
     for {
       _                      <- ZIO.logInfo(s"Checking asset $asset.")
       stillImageFileValueIri <- checkDimensions(project, asset)
@@ -71,7 +72,7 @@ final case class MaintenanceServiceLive(
   private def checkDimensions(
     project: KnoraProject,
     asset: ReportAsset
-  ): ZIO[Any, Option[Throwable], InternalIri] =
+  ): IO[Option[Throwable], InternalIri] =
     for {
       result <- getDimensionAndStillImageValueIri(project, asset).tapSomeError { case None =>
                   ZIO.logDebug(s"No StillImageFileValue with dimensions found for $asset, skipping.")
@@ -85,7 +86,7 @@ final case class MaintenanceServiceLive(
   private def getDimensionAndStillImageValueIri(
     project: KnoraProject,
     asset: ReportAsset
-  ): ZIO[Any, Option[Throwable], (Dimensions, InternalIri)] =
+  ): IO[Option[Throwable], (Dimensions, InternalIri)] =
     for {
       result <- triplestoreService.query(checkDimensionsQuery(project, asset.id)).asSomeError
       rowMap <- ZIO.fromOption(result.results.bindings.headOption.map(_.rowMap))
@@ -116,7 +117,7 @@ final case class MaintenanceServiceLive(
   private def transposeImageDimensions(
     project: KnoraProject,
     stillImageFileValueIri: InternalIri
-  ): ZIO[Any, Option[Throwable], Unit] =
+  ): IO[Option[Throwable], Unit] =
     triplestoreService.query(transposeUpdate(project, stillImageFileValueIri)).asSomeError
 
   private def transposeUpdate(project: KnoraProject, stillImageFileValueIri: InternalIri) = {
