@@ -10,7 +10,6 @@ import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
-import org.knora.webapi.http.middleware.AuthenticationMiddleware
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.search.QueryTraverser
@@ -28,8 +27,6 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
-import org.knora.webapi.routing.admin.AuthenticatorService
-import org.knora.webapi.routing.admin.ProjectsRouteZ
 import org.knora.webapi.slice.admin.api._
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
@@ -135,9 +132,7 @@ object LayersLive {
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
-      AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
-      AuthenticatorService.layer,
       BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
@@ -182,7 +177,6 @@ object LayersLive {
       ProjectsEndpoints.layer,
       ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
-      ProjectsRouteZ.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,

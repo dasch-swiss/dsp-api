@@ -7,7 +7,6 @@ package org.knora.webapi.instrumentation.prometheus
 
 import zio._
 import zio.http._
-import zio.http.model._
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 
 /**
@@ -17,11 +16,10 @@ final case class PrometheusApp() {
 
   val route: HttpApp[PrometheusPublisher, Nothing] =
     Http
-      .collectZIO[Request] { case Method.GET -> !! / "metrics" =>
+      .collectZIO[Request] { case Method.GET -> Root / "metrics" =>
         ZIO.serviceWithZIO[PrometheusPublisher](_.get.map(Response.text))
       }
 }
 object PrometheusApp {
-  val layer =
-    ZLayer.succeed(PrometheusApp())
+  val layer = ZLayer.succeed(PrometheusApp())
 }

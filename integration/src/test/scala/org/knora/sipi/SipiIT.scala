@@ -12,8 +12,8 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
 import zio._
+import zio.http.Status
 import zio.http._
-import zio.http.model.Status
 import zio.json.DecoderOps
 import zio.json.ast.Json
 import zio.test._
@@ -67,8 +67,17 @@ object SipiIT extends ZIOSpecDefault {
               .map { url =>
                 Request
                   .get(url)
-                  .withCookie(
-                    s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie=anotherValueShouldBeIgnored; KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt"
+                  .addHeaders(
+                    Headers(
+                      Header.Cookie(
+                        NonEmptyChunk(
+                          Cookie.Request(
+                            s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie",
+                            "anotherValueShouldBeIgnored; KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt"
+                          )
+                        )
+                      )
+                    )
                   )
               }
               .flatMap(Client.request(_))
@@ -88,7 +97,15 @@ object SipiIT extends ZIOSpecDefault {
           response <-
             SipiTestContainer
               .resolveUrl(s"/$prefix/$imageTestfile/file")
-              .map(url => Request.get(url).withCookie(s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt"))
+              .map(url =>
+                Request
+                  .get(url)
+                  .addHeaders(
+                    Headers(
+                      Header.Cookie(NonEmptyChunk(Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt)))
+                    )
+                  )
+              )
               .flatMap(Client.request(_))
           requestToDspApiContainsJwt <- MockDspApiServer.verifyAuthBearerTokenReceived(jwt)
         } yield assertTrue(response.status == Status.Ok, requestToDspApiContainsJwt)

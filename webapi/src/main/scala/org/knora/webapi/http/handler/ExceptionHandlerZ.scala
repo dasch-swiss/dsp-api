@@ -7,6 +7,7 @@ package org.knora.webapi.http.handler
 
 import org.slf4j.LoggerFactory
 import spray.json._
+import zio.ZIO
 import zio.http._
 
 import dsp.errors.RequestRejectedException
@@ -22,8 +23,7 @@ object ExceptionHandlerZ {
 
   private val logger = LoggerFactory.getLogger(ExceptionHandlerZ.getClass)
 
-  def exceptionToJsonHttpResponseZ(ex: Throwable, appConfig: AppConfig): Http[Any, Nothing, Any, Response] = {
-
+  def exceptionToJsonHttpResponseZ(ex: Throwable, appConfig: AppConfig): ZIO[Any, Nothing, Response] = {
     // Get the HTTP status code that corresponds to the exception.
     val httpStatus = ApiStatusCodesZ.fromExceptionZ(ex)
     if (httpStatus.code == 500) {
@@ -38,7 +38,7 @@ object ExceptionHandlerZ {
     val json = JsObject(responseFields).compactPrint
 
     // ... and the HTTP status code.
-    Http.response(Response.json(json).setStatus(httpStatus))
+    ZIO.succeed(Response.json(json).withStatus(httpStatus))
   }
 
   /**

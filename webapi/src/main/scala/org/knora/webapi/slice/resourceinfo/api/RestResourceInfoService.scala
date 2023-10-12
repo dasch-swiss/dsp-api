@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.resourceinfo.api
 
 import zio._
-import zio.http.model.HttpError
+import zio.http.HttpError
 
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order

@@ -40,7 +40,7 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
   def port: Int    = container.getFirstMappedPort
   def sipiBaseUrl: URL = {
     val urlString = s"http://$host:$port"
-    URL.fromString(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+    URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
   }
 }
 
@@ -48,7 +48,7 @@ object SipiTestContainer {
   def port: ZIO[SipiTestContainer, Nothing, Int] = ZIO.serviceWith[SipiTestContainer](_.port)
 
   def resolveUrl(path: String): URIO[SipiTestContainer, URL] =
-    ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.setPath(path))
+    ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.withPath(path))
 
   def copyFileToImageFolderInContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
     ZIO.serviceWithZIO[SipiTestContainer](_.copyFileToImageFolderInContainer(prefix, filename))
