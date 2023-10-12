@@ -110,7 +110,7 @@ object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
         override def updateProjectRestrictedViewSettings(
           id: ProjectIdentifierADM,
           user: UserADM,
-          size: ProjectSetRestrictedViewSizeRequest
+          setSizeReq: ProjectSetRestrictedViewSizeRequest
         ): Task[ProjectRestrictedViewSizeResponseADM] = ???
       }
     }

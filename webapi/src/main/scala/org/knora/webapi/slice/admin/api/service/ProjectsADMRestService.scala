@@ -71,7 +71,7 @@ trait ProjectADMRestService {
   def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: UserADM,
-    payload: ProjectSetRestrictedViewSizeRequest
+    setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM]
 }
 
@@ -246,16 +246,16 @@ final case class ProjectsADMRestServiceLive(
    *
    * @param id the project's id represented by iri, shortcode or shortname,
    * @param user requesting user,
-   * @param payload value to be set,
+   * @param setSizeReq value to be set,
    * @return [[ProjectRestrictedViewSizeResponseADM]].
    */
   override def updateProjectRestrictedViewSettings(
     id: ProjectIdentifierADM,
     user: UserADM,
-    payload: ProjectSetRestrictedViewSizeRequest
+    setSizeReq: ProjectSetRestrictedViewSizeRequest
   ): Task[ProjectRestrictedViewSizeResponseADM] =
     for {
-      size    <- ZIO.fromEither(RestrictedViewSize.make(payload.size)).mapError(BadRequestException(_))
+      size    <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
       project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
       _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
       _       <- projectRepo.setProjectRestrictedViewSize(project, size)

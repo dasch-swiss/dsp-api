@@ -137,7 +137,7 @@ trait ProjectsResponderADM {
   /**
    * Creates a project.
    *
-   * @param projectCreate the new project's information.
+   * @param createReq            the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -149,7 +149,7 @@ trait ProjectsResponderADM {
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   def projectCreateRequestADM(
-    projectCreate: ProjectCreateRequest,
+    createReq: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -157,17 +157,17 @@ trait ProjectsResponderADM {
   /**
    * Update project's basic information.
    *
-   * @param projectIri           the IRI of the project.
-   * @param projectUpdate the update payload.
-   * @param user       the user making the request.
-   * @param apiRequestID         the unique api request ID.
+   * @param projectIri    the IRI of the project.
+   * @param updateReq     the update payload.
+   * @param user          the user making the request.
+   * @param apiRequestID  the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    projectUpdate: ProjectUpdateRequest,
+    updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -457,17 +457,17 @@ final case class ProjectsResponderADMLive(
   /**
    * Update project's basic information.
    *
-   * @param projectIri           the IRI of the project.
-   * @param projectUpdate the update payload.
-   * @param user       the user making the request.
-   * @param apiRequestID         the unique api request ID.
+   * @param projectIri    the IRI of the project.
+   * @param updateReq     the update payload.
+   * @param user          the user making the request.
+   * @param apiRequestID  the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   override def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    projectUpdate: ProjectUpdateRequest,
+    updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -477,17 +477,17 @@ final case class ProjectsResponderADMLive(
      */
     def changeProjectTask(
       projectIri: Iri.ProjectIri,
-      projectUpdatePayload: ProjectUpdateRequest,
+      updateReq: ProjectUpdateRequest,
       requestingUser: UserADM
     ): Task[ProjectOperationResponseADM] =
       // check if the requesting user is allowed to perform updates
       if (!requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin) {
         ZIO.fail(ForbiddenException("Project's information can only be changed by a project or system admin."))
       } else {
-        updateProjectADM(projectIri, projectUpdatePayload)
+        updateProjectADM(projectIri, updateReq)
       }
 
-    val task = changeProjectTask(projectIri, projectUpdate, user)
+    val task = changeProjectTask(projectIri, updateReq, user)
     IriLocker.runWithIriLock(apiRequestID, projectIri.value, task)
   }
 
@@ -652,8 +652,7 @@ final case class ProjectsResponderADMLive(
   /**
    * Creates a project.
    *
-   * @param projectCreate the new project's information.
-   *
+   * @param createReq            the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -665,7 +664,7 @@ final case class ProjectsResponderADMLive(
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   override def projectCreateRequestADM(
-    projectCreate: ProjectCreateRequest,
+    createReq: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -819,7 +818,7 @@ final case class ProjectsResponderADMLive(
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
-    val task = projectCreateTask(projectCreate, requestingUser)
+    val task = projectCreateTask(createReq, requestingUser)
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 

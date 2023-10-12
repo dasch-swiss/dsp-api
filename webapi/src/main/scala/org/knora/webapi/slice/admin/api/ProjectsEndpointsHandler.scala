@@ -21,13 +21,13 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectS
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.common.api.EndpointAndZioHandler
-import org.knora.webapi.slice.common.api.HandlerMapperF
+import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
 final case class ProjectsEndpointsHandler(
   projectsEndpoints: ProjectsEndpoints,
   restService: ProjectADMRestService,
-  mapper: HandlerMapperF
+  mapper: HandlerMapper
 ) {
 
   val getAdminProjectsHandler =
@@ -199,7 +199,7 @@ final case class ProjectsEndpointsHandler(
     )
   }
 
-  val handlers =
+  private val handlers =
     List(
       getAdminProjectsHandler,
       getAdminProjectsKeywordsHandler,
@@ -212,7 +212,7 @@ final case class ProjectsEndpointsHandler(
       getAdminProjectByProjectShortnameRestrictedViewSettingsHandler
     ).map(mapper.mapEndpointAndHandler(_))
 
-  val secureHandlers = getAdminProjectsByIriAllDataHandler :: List(
+  private val secureHandlers = getAdminProjectsByIriAllDataHandler :: List(
     setAdminProjectsByProjectIriRestrictedViewSettingsHandler,
     setAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler,
     getAdminProjectsByProjectIriMembersHandler,

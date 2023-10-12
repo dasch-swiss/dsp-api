@@ -75,18 +75,18 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
         ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
         override def projectCreateRequestADM(
-          createPayload: ProjectCreateRequest,
+          createReq: ProjectCreateRequest,
           requestingUser: UserADM,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
-          proxy(ProjectCreateRequestADM, (createPayload, requestingUser, apiRequestID))
+          proxy(ProjectCreateRequestADM, (createReq, requestingUser, apiRequestID))
         override def changeBasicInformationRequestADM(
           projectIri: Iri.ProjectIri,
-          updatePayload: ProjectUpdateRequest,
+          updateReq: ProjectUpdateRequest,
           user: UserADM,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
-          proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
+          proxy(ChangeBasicInformationRequestADM, (projectIri, updateReq, user, apiRequestID))
       }
     }
 }

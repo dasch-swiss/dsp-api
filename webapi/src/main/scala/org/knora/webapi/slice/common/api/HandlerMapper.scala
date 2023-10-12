@@ -42,7 +42,7 @@ case class SecuredEndpointAndZioHandler[INPUT, OUTPUT](
   handler: UserADM => INPUT => Task[OUTPUT]
 )
 
-final case class HandlerMapperF()(implicit val r: zio.Runtime[Any]) {
+final case class HandlerMapper()(implicit val r: zio.Runtime[Any]) {
 
   def mapEndpointAndHandler[INPUT, OUTPUT](
     handlerAndEndpoint: SecuredEndpointAndZioHandler[INPUT, OUTPUT]
@@ -58,6 +58,6 @@ final case class HandlerMapperF()(implicit val r: zio.Runtime[Any]) {
     UnsafeZioRun.runToFuture(zio.refineOrDie { case e: RequestRejectedException => e }.either)
 }
 
-object HandlerMapperF {
-  val layer = ZLayer.fromZIO(ZIO.runtime[Any].map(HandlerMapperF()(_)))
+object HandlerMapper {
+  val layer = ZLayer.fromZIO(ZIO.runtime[Any].map(HandlerMapper()(_)))
 }
