@@ -16,7 +16,7 @@ import org.apache.pekko.http.scaladsl.model.HttpMethods.POST
 import org.apache.pekko.http.scaladsl.model.HttpMethods.PUT
 import zio._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
@@ -30,8 +30,10 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v2._
+import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -58,7 +60,7 @@ object ApiRoutes {
       with KnoraProjectRepo
       with MessageRelay
       with ProjectADMRestService
-      with ProjectsEndpointsHandlerF
+      with ProjectsEndpointsHandler
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
@@ -72,7 +74,7 @@ object ApiRoutes {
         sys              <- ZIO.service[ActorSystem]
         router           <- ZIO.service[AppRouter]
         appConfig        <- ZIO.service[AppConfig]
-        projectsHandler  <- ZIO.service[ProjectsEndpointsHandlerF]
+        projectsHandler  <- ZIO.service[ProjectsEndpointsHandler]
         routeData        <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         tapirToPekkoRoute = TapirToPekkoInterpreter()(sys.system.dispatcher)
         runtime <- ZIO.runtime[
@@ -101,7 +103,7 @@ object ApiRoutes {
  */
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
-  projectsHandler: ProjectsEndpointsHandlerF,
+  projectsHandler: ProjectsEndpointsHandler,
   tapirToPekkoRoute: TapirToPekkoInterpreter,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
@@ -120,8 +122,8 @@ private final case class ApiRoutesImpl(
 ) extends ApiRoutes
     with AroundDirectives {
 
-  private implicit val system: actor.ActorSystem          = routeData.system
-  private implicit val executionContext: ExecutionContext = system.dispatcher
+  implicit val system: actor.ActorSystem                  = routeData.system
+  implicit val executionContext: ExecutionContextExecutor = routeData.system.dispatcher
 
   val routes: Route =
     logDuration {
@@ -132,23 +134,24 @@ private final case class ApiRoutesImpl(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
-              HealthRoute().makeRoute ~
-                VersionRoute().makeRoute ~
-                RejectingRoute(appConfig, runtime).makeRoute ~
-                OntologiesRouteV2().makeRoute ~
-                SearchRouteV2(appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
-                ResourcesRouteV2(appConfig).makeRoute ~
-                ValuesRouteV2().makeRoute ~
-                StandoffRouteV2().makeRoute ~
-                ListsRouteV2().makeRoute ~
+              val adminProjectsRoutes = projectsHandler.allHanders.map(tapirToPekkoRoute.toRoute(_)).reduce(_ ~ _)
+              adminProjectsRoutes ~
                 AuthenticationRouteV2().makeRoute ~
+                FilesRouteADM(routeData, runtime).makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~
+                HealthRoute().makeRoute ~
                 ListsRouteADM(routeData, runtime).makeRoute ~
+                ListsRouteV2().makeRoute ~
+                OntologiesRouteV2().makeRoute ~
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
-                ProjectsRouteADM(tapirToPekkoRoute, projectsHandler).makeRoute ~
+                RejectingRoute(appConfig, runtime).makeRoute ~
+                ResourcesRouteV2(appConfig).makeRoute ~
+                SearchRouteV2(appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
+                StandoffRouteV2().makeRoute ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
                 UsersRouteADM().makeRoute ~
-                FilesRouteADM(routeData, runtime).makeRoute
+                ValuesRouteV2().makeRoute ~
+                VersionRoute().makeRoute
             }
           }
         }

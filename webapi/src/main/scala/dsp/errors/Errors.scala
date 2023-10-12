@@ -103,12 +103,20 @@ object BadRequestException {
  */
 case class BadCredentialsException(message: String) extends RequestRejectedException(message)
 
+object BadCredentialsException {
+  implicit val codec: JsonCodec[BadCredentialsException] = DeriveJsonCodec.gen[BadCredentialsException]
+}
+
 /**
  * An exception indicating that a user has made a request for which the user lacks the necessary permission.
  *
  * @param message a description of the error.
  */
 case class ForbiddenException(message: String) extends RequestRejectedException(message)
+
+object ForbiddenException {
+  implicit val codec: JsonCodec[ForbiddenException] = DeriveJsonCodec.gen[ForbiddenException]
+}
 
 /**
  * An exception indicating that the requested data was not found.
@@ -129,6 +137,10 @@ object NotFoundException {
  */
 case class DuplicateValueException(message: String = "Duplicate values are not permitted")
     extends RequestRejectedException(message)
+
+object DuplicateValueException {
+  implicit val codec: JsonCodec[DuplicateValueException] = DeriveJsonCodec.gen[DuplicateValueException]
+}
 
 /**
  * An exception indicating that a requested update is not allowed because it would violate an ontology constraint,
@@ -189,7 +201,11 @@ case class InvalidRdfException(msg: String, cause: Throwable = null) extends Req
  * @param msg   a description of the error.
  * @param cause the cause for the error
  */
-case class ValidationException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
+case class ValidationException(msg: String) extends RequestRejectedException(msg)
+
+object ValidationException {
+  implicit val codec: JsonCodec[ValidationException] = DeriveJsonCodec.gen[ValidationException]
+}
 
 /**
  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.

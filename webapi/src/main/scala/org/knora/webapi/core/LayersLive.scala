@@ -29,13 +29,15 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
-import org.knora.webapi.routing.admin.ProjectsEndpoints
-import org.knora.webapi.routing.admin.ProjectsEndpointsHandlerF
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.admin.api.ProjectsEndpoints
+import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.HandlerMapperF
 import org.knora.webapi.slice.common.api.RestPermissionService
 import org.knora.webapi.slice.common.api.RestPermissionServiceLive
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
@@ -176,7 +178,7 @@ object LayersLive {
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
       ProjectsEndpoints.layer,
-      ProjectsEndpointsHandlerF.layer,
+      ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,

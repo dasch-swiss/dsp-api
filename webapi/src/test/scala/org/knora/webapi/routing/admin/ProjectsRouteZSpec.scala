@@ -18,6 +18,7 @@ import dsp.valueobjects.V2
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -25,6 +26,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.admin.ProjectADMRestServiceMock
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 object ProjectsRouteZSpec extends ZIOSpecDefault {
@@ -211,7 +214,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val status      = TestDataFactory.projectStatus(true)
       val selfJoin    = TestDataFactory.projectSelfJoin(false)
 
-      val projectCreatePayload = ProjectCreatePayloadADM(
+      val projectCreatePayload = ProjectCreateRequest(
         id = None,
         shortname = shortname,
         shortcode = shortcode,
@@ -285,7 +288,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
       val mockService: ULayer[ProjectADMRestService] = ProjectADMRestServiceMock
         .DeleteProject(
-          assertion = Assertion.equalTo(projectIri, user),
+          assertion = Assertion.equalTo(IriIdentifier.from(projectIri), user),
           result = expectedResult
         )
         .toLayer
@@ -318,7 +321,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val projectStatus      = TestDataFactory.projectStatus(true)
       val selfJoin           = TestDataFactory.projectSelfJoin(true)
 
-      val projectUpdatePayload = ProjectUpdatePayloadADM(
+      val projectUpdatePayload = ProjectUpdateRequest(
         shortname = Some(updatedShortname),
         longname = Some(updatedLongname),
         description = Some(updatedDescription),
@@ -347,7 +350,7 @@ object ProjectsRouteZSpec extends ZIOSpecDefault {
       val expectedResult = Expectation.value[ProjectOperationResponseADM](ProjectOperationResponseADM(getProjectADM()))
       val mockService = ProjectADMRestServiceMock
         .UpdateProject(
-          assertion = Assertion.equalTo((projectIri, projectUpdatePayload, user)),
+          assertion = Assertion.equalTo((IriIdentifier.from(projectIri), projectUpdatePayload, user)),
           result = expectedResult
         )
         .toLayer

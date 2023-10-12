@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.common.api
 
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.capabilities.WebSockets
@@ -38,5 +38,6 @@ final case class TapirToPekkoInterpreter()(implicit executionContext: ExecutionC
 
   private val interpreter: PekkoHttpServerInterpreter = PekkoHttpServerInterpreter(serverOptions)
 
-  def toRoute(endpoint: ServerEndpoint[PekkoStreams with WebSockets, Future]): Route = interpreter.toRoute(endpoint)
+  def toRoute(endpoint: ServerEndpoint[PekkoStreams with WebSockets, Future]): Route =
+    interpreter.toRoute(endpoint)
 }

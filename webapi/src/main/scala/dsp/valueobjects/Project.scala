@@ -222,6 +222,10 @@ object Project {
    */
   sealed abstract case class ProjectStatus private (value: Boolean)
   object ProjectStatus { self =>
+
+    val deleted = new ProjectStatus(false) {}
+    val active  = new ProjectStatus(true) {}
+
     implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { case value =>
       ProjectStatus.make(value).toEitherWith(e => e.head.getMessage())
     }

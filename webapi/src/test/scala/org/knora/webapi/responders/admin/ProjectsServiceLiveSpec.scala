@@ -13,9 +13,12 @@ import dsp.valueobjects.V2._
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
@@ -76,7 +79,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val expectedResponse = ProjectsGetResponseADM(Seq(projectADM))
     val mockResponder    = ProjectsResponderADMMock.ProjectsGetRequestADM(Expectation.value(expectedResponse))
     for {
-      _ <- ProjectADMRestService.getProjectsADMRequest().provide(projectServiceLayer(mockResponder))
+      _ <- ProjectADMRestService.listAllProjects().provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -89,7 +92,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- ProjectADMRestService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
+        _ <- ProjectADMRestService.findProject(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project by shortname") {
@@ -100,7 +103,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- ProjectADMRestService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
+        _ <- ProjectADMRestService.findProject(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
     test("get project by shortcode") {
@@ -111,13 +114,13 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
         result = Expectation.value(ProjectGetResponseADM(projectADM))
       )
       for {
-        _ <- ProjectADMRestService.getSingleProjectADMRequest(identifier).provide(projectServiceLayer(mockResponder))
+        _ <- ProjectADMRestService.findProject(identifier).provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
   )
 
   val createProjectSpec: Spec[Any, Throwable] = test("create a project") {
-    val payload = ProjectCreatePayloadADM(
+    val payload = ProjectCreateRequest(
       None,
       TestDataFactory.projectShortname("newproject"),
       TestDataFactory.projectShortcode("3333"),
@@ -138,7 +141,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
           result = Expectation.value(ProjectOperationResponseADM(projectADM))
         )
       _ <-
-        ProjectADMRestService.createProjectADMRequest(payload, SystemUser).provide(projectServiceLayer(mockResponder))
+        ProjectADMRestService.createProject(payload, SystemUser).provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
@@ -147,7 +150,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val iri                  = "http://rdfh.ch/projects/0001"
     val projectIri           = TestDataFactory.projectIri(iri)
     val projectStatus        = Some(TestDataFactory.projectStatus(false))
-    val projectUpdatePayload = ProjectUpdatePayloadADM(status = projectStatus)
+    val projectUpdatePayload = ProjectUpdateRequest(status = projectStatus)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
       _    <- TestRandom.feedUUIDs(uuid)
@@ -155,14 +158,16 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
                         assertion = Assertion.equalTo(projectIri, projectUpdatePayload, SystemUser, uuid),
                         result = Expectation.value(ProjectOperationResponseADM(projectADM))
                       )
-      _ <- ProjectADMRestService.deleteProject(projectIri, SystemUser).provide(projectServiceLayer(mockResponder))
+      _ <- ProjectADMRestService
+             .deleteProject(IriIdentifier.from(projectIri), SystemUser)
+             .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
 
   val updateProjectSpec: Spec[Any, Throwable] = test("update a project") {
     val iri        = "http://rdfh.ch/projects/0001"
     val projectIri = TestDataFactory.projectIri(iri)
-    val projectUpdatePayload = ProjectUpdatePayloadADM(
+    val projectUpdatePayload = ProjectUpdateRequest(
       Some(TestDataFactory.projectShortname("usn")),
       Some(TestDataFactory.projectName("updated project longname")),
       Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
@@ -179,7 +184,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
                         result = Expectation.value(ProjectOperationResponseADM(projectADM))
                       )
       _ <- ProjectADMRestService
-             .updateProject(projectIri, projectUpdatePayload, SystemUser)
+             .updateProject(IriIdentifier.from(projectIri), projectUpdatePayload, SystemUser)
              .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
@@ -194,7 +199,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectMembers(identifier, SystemUser)
+               .getProjectMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -207,7 +212,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectMembers(identifier, SystemUser)
+               .getProjectMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -220,7 +225,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectMembers(identifier, SystemUser)
+               .getProjectMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
@@ -236,7 +241,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectAdmins(identifier, SystemUser)
+               .getProjectAdminMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -249,7 +254,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectAdmins(identifier, SystemUser)
+               .getProjectAdminMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     },
@@ -262,7 +267,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       )
       for {
         _ <- ProjectADMRestService
-               .getProjectAdmins(identifier, SystemUser)
+               .getProjectAdminMembers(SystemUser, identifier)
                .provide(projectServiceLayer(mockResponder))
       } yield assertCompletes
     }
@@ -274,7 +279,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     )
     for {
       _ <- ProjectADMRestService
-             .getKeywords()
+             .listAllKeywords()
              .provide(projectServiceLayer(mockResponder))
     } yield assertCompletes
   }
