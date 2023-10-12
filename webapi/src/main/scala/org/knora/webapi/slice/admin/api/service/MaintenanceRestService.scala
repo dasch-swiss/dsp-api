@@ -32,17 +32,22 @@ final case class MaintenanceRestService(
       }
     }
 
+  private def getParamsAs[A](paramsMaybe: Option[Json], actionName: String)(implicit
+    a: JsonDecoder[A]
+  ): IO[BadRequestException, A] = {
+    val missingArgsMsg                 = s"Missing arguments for $actionName"
+    def invalidArgsMsg(reason: String) = s"Invalid arguments for $actionName: $reason"
+    for {
+      json   <- ZIO.fromOption(paramsMaybe).orElseFail(BadRequestException(missingArgsMsg))
+      parsed  = JsonDecoder[A].fromJsonAST(json)
+      result <- ZIO.fromEither(parsed).mapError(e => BadRequestException(invalidArgsMsg(e)))
+    } yield result
+  }
+
   private def executeTopLeftAction(topLeftParams: Option[Json]): IO[BadRequestException, Unit] =
     for {
-      report <- ZIO
-                  .fromOption(topLeftParams)
-                  .orElseFail(BadRequestException(s"Missing arguments for $fixTopLeftAction"))
-                  .flatMap(json =>
-                    ZIO
-                      .fromEither(JsonDecoder[ProjectsWithBakfilesReport].fromJsonAST(json))
-                      .mapError(e => BadRequestException(s"Invalid arguments for $fixTopLeftAction: $e.getMessage"))
-                  )
-      _ <- maintenanceService.fixTopLeftDimensions(report).logError.forkDaemon
+      report <- getParamsAs[ProjectsWithBakfilesReport](topLeftParams, fixTopLeftAction)
+      _      <- maintenanceService.fixTopLeftDimensions(report).logError.forkDaemon
     } yield ()
 }
 
