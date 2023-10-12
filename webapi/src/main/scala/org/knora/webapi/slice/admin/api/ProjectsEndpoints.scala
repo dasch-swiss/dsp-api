@@ -20,6 +20,9 @@ import org.knora.webapi.routing.PathVariables.projectShortcode
 import org.knora.webapi.routing.PathVariables.projectShortname
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ProjectsEndpoints(
@@ -100,14 +103,14 @@ final case class ProjectsEndpoints(
   object Secured {
     val setAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByIri / restrictedViewSettings)
-      .in(zioJsonBody[ProjectSetRestrictedViewSizePayload])
+      .in(zioJsonBody[ProjectSetRestrictedViewSizeRequest])
       .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
       .description("Sets the project's restricted view settings identified by the IRI.")
       .tags(tags)
 
     val setAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
       .in(projectsByShortcode / restrictedViewSettings)
-      .in(zioJsonBody[ProjectSetRestrictedViewSizePayload])
+      .in(zioJsonBody[ProjectSetRestrictedViewSizeRequest])
       .out(zioJsonBody[ProjectRestrictedViewSizeResponseADM])
       .description("Sets the project's restricted view settings identified by the shortcode.")
       .tags(tags)

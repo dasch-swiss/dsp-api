@@ -38,6 +38,8 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -135,7 +137,7 @@ trait ProjectsResponderADM {
   /**
    * Creates a project.
    *
-   * @param createPayload the new project's information.
+   * @param projectCreate the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -147,7 +149,7 @@ trait ProjectsResponderADM {
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   def projectCreateRequestADM(
-    createPayload: ProjectCreateRequest,
+    projectCreate: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -156,7 +158,7 @@ trait ProjectsResponderADM {
    * Update project's basic information.
    *
    * @param projectIri           the IRI of the project.
-   * @param updatePayload the update payload.
+   * @param projectUpdate the update payload.
    * @param user       the user making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -165,7 +167,7 @@ trait ProjectsResponderADM {
    */
   def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdateRequest,
+    projectUpdate: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -456,7 +458,7 @@ final case class ProjectsResponderADMLive(
    * Update project's basic information.
    *
    * @param projectIri           the IRI of the project.
-   * @param updatePayload the update payload.
+   * @param projectUpdate the update payload.
    * @param user       the user making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -465,7 +467,7 @@ final case class ProjectsResponderADMLive(
    */
   override def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdateRequest,
+    projectUpdate: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -485,7 +487,7 @@ final case class ProjectsResponderADMLive(
         updateProjectADM(projectIri, projectUpdatePayload)
       }
 
-    val task = changeProjectTask(projectIri, updatePayload, user)
+    val task = changeProjectTask(projectIri, projectUpdate, user)
     IriLocker.runWithIriLock(apiRequestID, projectIri.value, task)
   }
 
@@ -650,7 +652,7 @@ final case class ProjectsResponderADMLive(
   /**
    * Creates a project.
    *
-   * @param createPayload the new project's information.
+   * @param projectCreate the new project's information.
    *
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
@@ -663,7 +665,7 @@ final case class ProjectsResponderADMLive(
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   override def projectCreateRequestADM(
-    createPayload: ProjectCreateRequest,
+    projectCreate: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -817,7 +819,7 @@ final case class ProjectsResponderADMLive(
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
-    val task = projectCreateTask(createPayload, requestingUser)
+    val task = projectCreateTask(projectCreate, requestingUser)
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 

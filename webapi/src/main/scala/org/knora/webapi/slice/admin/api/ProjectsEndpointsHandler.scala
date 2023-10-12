@@ -16,6 +16,9 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.common.api.EndpointAndZioHandler
 import org.knora.webapi.slice.common.api.HandlerMapperF
@@ -81,7 +84,7 @@ final case class ProjectsEndpointsHandler(
   // secured endpoints
   val setAdminProjectsByProjectIriRestrictedViewSettingsHandler =
     SecuredEndpointAndZioHandler[
-      (IriIdentifier, ProjectSetRestrictedViewSizePayload),
+      (IriIdentifier, ProjectSetRestrictedViewSizeRequest),
       ProjectRestrictedViewSizeResponseADM
     ](
       projectsEndpoints.Secured.setAdminProjectsByProjectIriRestrictedViewSettings,
@@ -90,7 +93,7 @@ final case class ProjectsEndpointsHandler(
 
   val setAdminProjectsByProjectShortcodeRestrictedViewSettingsHandler =
     SecuredEndpointAndZioHandler[
-      (ShortcodeIdentifier, ProjectSetRestrictedViewSizePayload),
+      (ShortcodeIdentifier, ProjectSetRestrictedViewSizeRequest),
       ProjectRestrictedViewSizeResponseADM
     ](
       projectsEndpoints.Secured.setAdminProjectsByProjectShortcodeRestrictedViewSettings,

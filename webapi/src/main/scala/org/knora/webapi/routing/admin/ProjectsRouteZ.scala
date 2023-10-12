@@ -18,13 +18,13 @@ import dsp.valueobjects.Iri._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.handler.ExceptionHandlerZ
 import org.knora.webapi.http.middleware.AuthenticationMiddleware
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectCreateRequest
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectSetRestrictedViewSizePayload
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectUpdateRequest
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 
 final case class ProjectsRouteZ(
@@ -262,7 +262,7 @@ final case class ProjectsRouteZ(
   private def handleRestrictedViewSizeRequest(id: ProjectIdentifierADM, body: Body, user: UserADM) =
     for {
       body     <- body.asString
-      payload  <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizePayload]).mapError(BadRequestException(_))
+      payload  <- ZIO.fromEither(body.fromJson[ProjectSetRestrictedViewSizeRequest]).mapError(BadRequestException(_))
       response <- projectsService.updateProjectRestrictedViewSettings(id, user, payload)
     } yield Response.json(response.toJson)
 }

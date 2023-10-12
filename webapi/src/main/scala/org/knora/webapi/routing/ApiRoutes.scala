@@ -15,6 +15,9 @@ import org.apache.pekko.http.scaladsl.model.HttpMethods.PATCH
 import org.apache.pekko.http.scaladsl.model.HttpMethods.POST
 import org.apache.pekko.http.scaladsl.model.HttpMethods.PUT
 import zio._
+
+import scala.concurrent.ExecutionContextExecutor
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -34,12 +37,11 @@ import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+
 import pekko.actor
 import pekko.http.scaladsl.server.Directives._
 import pekko.http.scaladsl.server.Route
 import pekko.http.cors.scaladsl.settings.CorsSettings
-
-import scala.concurrent.ExecutionContextExecutor
 
 trait ApiRoutes {
   val routes: Route
