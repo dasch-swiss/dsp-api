@@ -37,10 +37,14 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
     )
   }
 
-  def port: Int = container.getFirstMappedPort
-  def sipiBaseUrl: URL = {
+  val port: Int = container.getFirstMappedPort
+
+  val sipiBaseUrl: URL = {
     val urlString = s"http://localhost:$port"
-    URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+    println(s"SIPI URL String: $urlString")
+    val url = URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+    println(s"SIPI URL: $url")
+    url
   }
 }
 
