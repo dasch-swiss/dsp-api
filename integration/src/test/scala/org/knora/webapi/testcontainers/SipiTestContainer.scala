@@ -10,6 +10,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
 import zio._
+import zio.http
 import zio.http.URL
 import zio.nio.file.Path
 
@@ -36,10 +37,9 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
     )
   }
 
-  def host: String = container.getHost
-  def port: Int    = container.getFirstMappedPort
+  def port: Int = container.getFirstMappedPort
   def sipiBaseUrl: URL = {
-    val urlString = s"http://$host:$port"
+    val urlString = s"http://localhost:$port"
     URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
   }
 }
@@ -47,7 +47,7 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
 object SipiTestContainer {
   def port: ZIO[SipiTestContainer, Nothing, Int] = ZIO.serviceWith[SipiTestContainer](_.port)
 
-  def resolveUrl(path: String): URIO[SipiTestContainer, URL] =
+  def resolveUrl(path: http.Path): URIO[SipiTestContainer, URL] =
     ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.withPath(path))
 
   def copyFileToImageFolderInContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
@@ -67,6 +67,7 @@ object SipiTestContainer {
       .headOption
       .getOrElse(throw new UnknownHostException("No suitable network interface found"))
 
+//    val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:latest")
     val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
     val sipiContainer                  = new GenericContainer(sipiImageName)
     sipiContainer.withExposedPorts(1024)
