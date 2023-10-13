@@ -43,8 +43,9 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
-import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoEndpoints
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
@@ -145,7 +146,6 @@ object LayersTest {
       GroupsResponderADMLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
-      HttpServerZ.layer,
       IIIFRequestMessageHandlerLive.layer,
       InferenceOptimizationService.layer,
       IriConverter.layer,
@@ -178,7 +178,8 @@ object LayersTest {
       QueryTraverser.layer,
       RepositoryUpdater.layer,
       ResourceInfoRepo.layer,
-      ResourceInfoRoute.layer,
+      ResourceInfoRoutes.layer,
+      ResourceInfoEndpoints.layer,
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,

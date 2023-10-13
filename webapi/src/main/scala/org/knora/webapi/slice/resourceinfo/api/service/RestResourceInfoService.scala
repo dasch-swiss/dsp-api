@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.api
+package org.knora.webapi.slice.resourceinfo.api.service
 
 import zio._
-import zio.http.HttpError
+import zio.macros.accessible
 
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
+import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
 
+@accessible
 trait RestResourceInfoService {
 
   /**
@@ -21,7 +21,8 @@ trait RestResourceInfoService {
    * List can be sorted determined by the ordering.
    * @param projectIri an external IRI for the project
    * @param resourceClass an external IRI to the resource class to retrieve
-   * @param ordering sort by which property ascending or descending
+   * @param order    sort by property
+   * @param orderBy  sort by ascending or descending
    * @return
    *     success: the [[ListResponseDto]] for the project and resource class
    *     failure:
@@ -31,15 +32,11 @@ trait RestResourceInfoService {
   def findByProjectAndResourceClass(
     projectIri: IRI,
     resourceClass: IRI,
-    ordering: (OrderBy, Order)
-  ): IO[HttpError, ListResponseDto]
+    order: Order,
+    orderBy: OrderBy
+  ): Task[ListResponseDto]
 }
 
 object RestResourceInfoService {
-
-  def findByProjectAndResourceClass(projectIri: IRI, resourceClass: IRI, ordering: (OrderBy, Order)) =
-    ZIO.service[RestResourceInfoService].flatMap(_.findByProjectAndResourceClass(projectIri, resourceClass, ordering))
-
-  val layer: ZLayer[ResourceInfoRepo with IriConverter, Nothing, RestResourceInfoService] =
-    ZLayer.fromFunction(RestResourceInfoServiceLive(_, _))
+  val layer = ZLayer.derive[RestResourceInfoServiceLive]
 }

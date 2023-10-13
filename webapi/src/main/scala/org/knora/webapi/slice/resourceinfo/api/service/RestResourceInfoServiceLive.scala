@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.api
+package org.knora.webapi.slice.resourceinfo.api.service
 
 import zio.IO
 import zio.http.HttpError
@@ -11,7 +11,9 @@ import zio.http.HttpError
 import java.time.Instant
 
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive._
+import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
+import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
@@ -30,7 +32,7 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
       case DESC => one.compareTo(two) > 0
     }
 
-  private def sort(resources: List[ResourceInfoDto], ordering: (OrderBy, Order)) = ordering match {
+  private def sort(resources: List[ResourceInfoDto], order: Order, orderBy: OrderBy) = (orderBy, order) match {
     case (`lastModificationDate`, order) => resources.sortWith(lastModificationDateSort(order))
     case (`creationDate`, order)         => resources.sortWith(creationDateSort(order))
   }
@@ -38,7 +40,8 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
   override def findByProjectAndResourceClass(
     projectIri: IRI,
     resourceClass: IRI,
-    ordering: (OrderBy, Order)
+    order: Order,
+    orderBy: OrderBy
   ): IO[HttpError, ListResponseDto] =
     for {
       p <- iriConverter
@@ -50,37 +53,8 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
       resources <- repo
                      .findByProjectAndResourceClass(p, rc)
                      .mapBoth(err => HttpError.InternalServerError(err.getMessage), _.map(ResourceInfoDto(_)))
-      sorted = sort(resources, ordering)
+      sorted = sort(resources, order, orderBy)
     } yield ListResponseDto(sorted)
 }
 
-object RestResourceInfoServiceLive {
-
-  sealed trait OrderBy
-
-  case object creationDate extends OrderBy
-
-  case object lastModificationDate extends OrderBy
-
-  object OrderBy {
-    def make(str: String): Option[OrderBy] = str match {
-      case "creationDate"         => Some(creationDate)
-      case "lastModificationDate" => Some(lastModificationDate)
-      case _                      => None
-    }
-  }
-
-  sealed trait Order
-
-  case object ASC extends Order
-
-  case object DESC extends Order
-
-  object Order {
-    def make(str: String): Option[Order] = str match {
-      case "ASC"  => Some(ASC)
-      case "DESC" => Some(DESC)
-      case _      => None
-    }
-  }
-}
+object RestResourceInfoServiceLive {}

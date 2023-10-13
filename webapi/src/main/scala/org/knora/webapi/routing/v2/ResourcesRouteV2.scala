@@ -6,11 +6,10 @@
 package org.knora.webapi.routing.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.pekko
-import zio.Exit.Failure
-import zio.Exit.Success
+import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio._
-import zio.json._
 
 import java.time.Instant
 
@@ -33,22 +32,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.Order
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.OrderBy
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
-import pekko.http.scaladsl.model.ContentTypes.`application/json`
-import pekko.http.scaladsl.model.HttpEntity
-import pekko.http.scaladsl.model.HttpResponse
-import pekko.http.scaladsl.model.StatusCodes.InternalServerError
-import pekko.http.scaladsl.model.StatusCodes.OK
-import pekko.http.scaladsl.server.Directives._
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
@@ -83,7 +68,6 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       getResourceHistory() ~
       getResourceHistoryEvents() ~
       getProjectResourceAndValueHistory() ~
-      getResourcesInfo ~
       getResources() ~
       getResourcesPreview() ~
       getResourcesTei() ~
@@ -264,49 +248,6 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       }
     }
 
-  private def getQueryParamsMap(requestContext: RequestContext): Map[String, String] =
-    requestContext.request.uri.query().toMap
-
-  private def getStringQueryParam(requestContext: RequestContext, key: String): Option[String] =
-    getQueryParamsMap(requestContext).get(key)
-
-  private def unsafeRunZioAndMapJsonResponse[R, E, A](
-    zioAction: ZIO[R, E, A]
-  )(implicit r: Runtime[R], encoder: JsonEncoder[A]) =
-    unsafeRunZio(zioAction) match {
-      case Failure(cause) => logger.error(cause.prettyPrint); HttpResponse(InternalServerError)
-      case Success(dto)   => HttpResponse(status = OK, entity = HttpEntity(`application/json`, dto.toJson))
-    }
-
-  private def unsafeRunZio[R, E, A](zioAction: ZIO[R, E, A])(implicit r: Runtime[R]): Exit[E, A] =
-    Unsafe.unsafe(implicit u => r.unsafe.run(zioAction))
-
-  private def getResourcesInfo: Route = path(resourcesBasePath / "info") {
-    get { ctx =>
-      val getResourceClassIri = ZIO
-        .fromOption(getStringQueryParam(ctx, "resourceClass"))
-        .orElseFail(BadRequestException(s"This route requires the parameter 'resourceClass'"))
-      val getOrderBy: ZIO[Any, BadRequestException, OrderBy] = getStringQueryParam(ctx, "orderBy") match {
-        case None => ZIO.succeed(lastModificationDate)
-        case Some(s) =>
-          ZIO.fromOption(OrderBy.make(s)).orElseFail(BadRequestException(s"Invalid value '$s', for orderBy"))
-      }
-      val getOrder: IO[BadRequestException, Order] = getStringQueryParam(ctx, "order") match {
-        case None => ZIO.succeed(ASC)
-        case Some(s) =>
-          ZIO.fromOption(Order.make(s)).orElseFail(BadRequestException(s"Invalid value '$s', for order"))
-      }
-      val action = for {
-        resourceClassIri <- getResourceClassIri
-        orderBy          <- getOrderBy
-        order            <- getOrder
-        projectIri       <- RouteUtilV2.getRequiredProjectIri(ctx)
-        result <-
-          RestResourceInfoService.findByProjectAndResourceClass(projectIri.toIri, resourceClassIri, (orderBy, order))
-      } yield result
-      ctx.complete(unsafeRunZioAndMapJsonResponse(action))
-    }
-  }
   private def getResources(): Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
     get { requestContext =>
       val targetSchemaTask      = RouteUtilV2.getOntologySchema(requestContext)
