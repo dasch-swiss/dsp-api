@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.2.2...v0.3.0) (2023-10-13)
+
+
+### Enhancements
+
+* Add report listing all assets per project which have a .bak file DEV-2795 ([#110](https://github.com/dasch-swiss/dsp-ingest/issues/110)) ([e5b9346](https://github.com/dasch-swiss/dsp-ingest/commit/e5b9346fdee5e8b42d9e8849888258de46028848))
+
+
+### Maintenance
+
+* Add Java 21 to build and test DEV-2769 ([#99](https://github.com/dasch-swiss/dsp-ingest/issues/99)) ([a1b2397](https://github.com/dasch-swiss/dsp-ingest/commit/a1b2397f42eb4fb8c313c7be7d084f42f04d8491))
+* Add Scala Steward configuration ([#109](https://github.com/dasch-swiss/dsp-ingest/issues/109)) ([dacb81f](https://github.com/dasch-swiss/dsp-ingest/commit/dacb81fbbd52e045666d752a050d858927fe68f8))
+* Replace zio-http endpoints with tapir endpoints DEV-2746 ([#95](https://github.com/dasch-swiss/dsp-ingest/issues/95)) ([9f7c790](https://github.com/dasch-swiss/dsp-ingest/commit/9f7c790e77a0daba990a707a956243a823f346ce))
+* Update commons-io to 2.14.0 ([#104](https://github.com/dasch-swiss/dsp-ingest/issues/104)) ([58a953e](https://github.com/dasch-swiss/dsp-ingest/commit/58a953e1e4f49395878289cbadea2c3bf508f627))
+* Update formatter, use the same .scalafmt as in dsp-api ([#111](https://github.com/dasch-swiss/dsp-ingest/issues/111)) ([4428f35](https://github.com/dasch-swiss/dsp-ingest/commit/4428f35855f12c9026dc95170f163b7a8f5e694f))
+* Update zio-metrics-connectors, ... to 2.2.0 ([#106](https://github.com/dasch-swiss/dsp-ingest/issues/106)) ([b1ae6a7](https://github.com/dasch-swiss/dsp-ingest/commit/b1ae6a75a2831fe13dc7f40064e45398fb8c34e0))
+* Update zio-prelude to 1.0.0-RC21 ([#107](https://github.com/dasch-swiss/dsp-ingest/issues/107)) ([9dcfc52](https://github.com/dasch-swiss/dsp-ingest/commit/9dcfc52a09fe11a08ecacd53d69f250b1b28dd03))
+* Update zio, zio-streams, zio-test, ... to 2.0.18 ([#105](https://github.com/dasch-swiss/dsp-ingest/issues/105)) ([ed4d6e2](https://github.com/dasch-swiss/dsp-ingest/commit/ed4d6e2495da4b4be1fe1653e4e7a2f218cdd149))
+
 ## [0.2.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.2.1...v0.2.2) (2023-09-28)
 
 
