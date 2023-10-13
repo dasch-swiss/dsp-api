@@ -73,8 +73,9 @@ object SipiIT extends ZIOSpecDefault {
                         NonEmptyChunk(
                           Cookie.Request(
                             s"KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999aSecondCookie",
-                            "anotherValueShouldBeIgnored; KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999=$jwt"
-                          )
+                            "anotherValueShouldBeIgnored"
+                          ),
+                          Cookie.Request("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999", jwt)
                         )
                       )
                     )
