@@ -6,11 +6,7 @@
 package org.knora.webapi.slice.resourceinfo.domain
 
 import zio.Task
-import zio.ZLayer
 import zio.macros.accessible
-
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoLive
-import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 @accessible
 trait ResourceInfoRepo {

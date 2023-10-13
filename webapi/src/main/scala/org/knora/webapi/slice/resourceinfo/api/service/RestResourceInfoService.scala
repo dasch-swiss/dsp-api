@@ -6,14 +6,17 @@
 package org.knora.webapi.slice.resourceinfo.api.service
 
 import zio._
-import zio.macros.accessible
-import org.knora.webapi.IRI
-import org.knora.webapi.slice.resourceinfo.api.model.{ListResponseDto, ResourceInfoDto}
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
-import org.knora.webapi.slice.resourceinfo.domain.{IriConverter, ResourceInfoRepo}
 import zio.http.HttpError
+import zio.macros.accessible
 
 import java.time.Instant
+
+import org.knora.webapi.IRI
+import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
+import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
 @accessible
 trait RestResourceInfoService {

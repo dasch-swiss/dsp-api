@@ -5,42 +5,59 @@
 
 package org.knora.webapi.core
 
+import zio.ULayer
+import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.{ConstructTransformer, OntologyInferencer}
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
-import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, StandoffTagUtilV2Live}
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v2._
-import org.knora.webapi.responders.v2.ontology.{CardinalityHandler, CardinalityHandlerLive, OntologyHelpers, OntologyHelpersLive}
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.slice.admin.api._
-import org.knora.webapi.slice.admin.api.service.{MaintenanceRestService, ProjectADMRestService, ProjectsADMRestServiceLive}
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
+import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.ontology.api.service.{RestCardinalityService, RestCardinalityServiceLive}
-import org.knora.webapi.slice.ontology.domain.service.{CardinalityService, OntologyRepo}
-import org.knora.webapi.slice.ontology.repo.service.{OntologyCache, OntologyCacheLive, OntologyRepoLive, PredicateRepositoryLive}
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
+import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
+import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
+import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
-import org.knora.webapi.slice.resourceinfo.api.service.{RestResourceInfoService, RestResourceInfoServiceLive}
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
+import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.cache.{CacheServiceRequestMessageHandler, CacheServiceRequestMessageHandlerLive}
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
+import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.iiif.{IIIFRequestMessageHandler, IIIFRequestMessageHandlerLive}
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import zio.{ULayer, ZLayer}
 
 object LayersLive {
 
