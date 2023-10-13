@@ -13,7 +13,6 @@ import zio.test._
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
 import java.util.UUID.randomUUID
-
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.ASC
@@ -21,7 +20,7 @@ import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.DESC
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.creationDate
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.lastModificationDate
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
-import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.api.service.{RestResourceInfoService, RestResourceInfoServiceLive}
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
@@ -137,7 +136,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
     ).provide(
       IriConverter.layer,
       StringFormatter.test,
-      RestResourceInfoService.layer,
+      RestResourceInfoServiceLive.layer,
       ResourceInfoRepoFake.layer
     )
 }

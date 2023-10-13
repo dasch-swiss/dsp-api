@@ -43,3 +43,7 @@ final case class ResourceInfoRepoLive(triplestore: TriplestoreService) extends R
     )
   }
 }
+
+object ResourceInfoRepoLive {
+  val layer = ZLayer.derive[ResourceInfoRepoLive]
+}

@@ -19,8 +19,3 @@ trait ResourceInfoRepo {
     resourceClass: InternalIri
   ): Task[List[ResourceInfo]]
 }
-
-object ResourceInfoRepo {
-  val layer: ZLayer[TriplestoreService, Nothing, ResourceInfoRepo] =
-    ZLayer.fromFunction(ResourceInfoRepoLive(_))
-}

@@ -7,11 +7,13 @@ package org.knora.webapi.slice.resourceinfo.api.service
 
 import zio._
 import zio.macros.accessible
-
 import org.knora.webapi.IRI
-import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
+import org.knora.webapi.slice.resourceinfo.api.model.{ListResponseDto, ResourceInfoDto}
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
+import org.knora.webapi.slice.resourceinfo.domain.{IriConverter, ResourceInfoRepo}
+import zio.http.HttpError
+
+import java.time.Instant
 
 @accessible
 trait RestResourceInfoService {
@@ -37,6 +39,46 @@ trait RestResourceInfoService {
   ): Task[ListResponseDto]
 }
 
-object RestResourceInfoService {
+final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverter: IriConverter)
+    extends RestResourceInfoService {
+
+  private def lastModificationDateSort(order: Order)(one: ResourceInfoDto, two: ResourceInfoDto) =
+    instant(order)(one.lastModificationDate, two.lastModificationDate)
+
+  private def creationDateSort(order: Order)(one: ResourceInfoDto, two: ResourceInfoDto) =
+    instant(order)(one.creationDate, two.creationDate)
+
+  private def instant(order: Order)(one: Instant, two: Instant) =
+    order match {
+      case ASC  => two.compareTo(one) > 0
+      case DESC => one.compareTo(two) > 0
+    }
+
+  private def sort(resources: List[ResourceInfoDto], order: Order, orderBy: OrderBy) = (orderBy, order) match {
+    case (`lastModificationDate`, order) => resources.sortWith(lastModificationDateSort(order))
+    case (`creationDate`, order)         => resources.sortWith(creationDateSort(order))
+  }
+
+  override def findByProjectAndResourceClass(
+    projectIri: IRI,
+    resourceClass: IRI,
+    order: Order,
+    orderBy: OrderBy
+  ): IO[HttpError, ListResponseDto] =
+    for {
+      p <- iriConverter
+             .asInternalIri(projectIri)
+             .mapError(err => HttpError.BadRequest(s"Invalid projectIri: ${err.getMessage}"))
+      rc <- iriConverter
+              .asInternalIri(resourceClass)
+              .mapError(err => HttpError.BadRequest(s"Invalid resourceClass: ${err.getMessage}"))
+      resources <- repo
+                     .findByProjectAndResourceClass(p, rc)
+                     .mapBoth(err => HttpError.InternalServerError(err.getMessage), _.map(ResourceInfoDto(_)))
+      sorted = sort(resources, order, orderBy)
+    } yield ListResponseDto(sorted)
+}
+
+object RestResourceInfoServiceLive {
   val layer = ZLayer.derive[RestResourceInfoServiceLive]
 }
