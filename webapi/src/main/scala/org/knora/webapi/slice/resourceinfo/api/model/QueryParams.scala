@@ -13,62 +13,42 @@ import dsp.errors.BadRequestException
 
 object QueryParams {
 
-  sealed trait OrderBy {
-    def urlParam: String
+  sealed trait WithUrlParam { self =>
+    def urlParam: String = self.getClass.getSimpleName.stripSuffix("$")
   }
 
-  case object creationDate extends OrderBy {
-    override val urlParam: String = "creationDate"
-  }
+  private def decode[A <: WithUrlParam](value: String, allValues: List[A]): DecodeResult[A] =
+    allValues
+      .find(_.urlParam.equalsIgnoreCase(value))
+      .fold[DecodeResult[A]](
+        DecodeResult.Error(value, BadRequestException(s"Expected one of ${allValues.map(_.urlParam.mkString)}"))
+      )(DecodeResult.Value(_))
 
-  case object lastModificationDate extends OrderBy {
-    override val urlParam: String = "lastModificationDate"
-  }
+  sealed trait OrderBy             extends WithUrlParam
+  case object CreationDate         extends OrderBy
+  case object LastModificationDate extends OrderBy
 
   object OrderBy {
+
     val queryParamKey = "orderBy"
 
-    def fromString(str: String): Either[String, OrderBy] = str match {
-      case creationDate.urlParam         => Right(creationDate)
-      case lastModificationDate.urlParam => Right(lastModificationDate)
-      case _                             => Left(s"Unknown $queryParamKey parameter: $str")
-    }
+    private val allValues = List(CreationDate, LastModificationDate)
 
     implicit val tapirCodec: Codec[String, OrderBy, TextPlain] =
-      Codec.string.mapDecode(str =>
-        OrderBy
-          .fromString(str)
-          .fold(err => DecodeResult.Error(err, BadRequestException(err)), DecodeResult.Value(_))
-      )(_.urlParam)
+      Codec.string.mapDecode(decode[OrderBy](_, allValues))(_.urlParam)
   }
 
-  sealed trait Order {
-    def urlParam: String
-  }
-
-  case object ASC extends Order {
-    override val urlParam: String = "ASC"
-  }
-
-  case object DESC extends Order {
-    override val urlParam: String = "DESC"
-  }
+  sealed trait Order extends WithUrlParam
+  case object Asc    extends Order
+  case object Desc   extends Order
 
   object Order {
 
     val queryParamKey = "order"
 
-    def fromString(str: String): Either[String, Order] = str match {
-      case ASC.urlParam  => Right(ASC)
-      case DESC.urlParam => Right(DESC)
-      case _             => Left(s"Unknown $queryParamKey parameter: $str")
-    }
+    private val allValues = List(Asc, Desc)
 
     implicit val tapirCodec: Codec[String, Order, TextPlain] =
-      Codec.string.mapDecode(str =>
-        Order
-          .fromString(str)
-          .fold(err => DecodeResult.Error(err, BadRequestException(err)), DecodeResult.Value(_))
-      )(_.urlParam)
+      Codec.string.mapDecode(decode[Order](_, allValues))(_.urlParam)
   }
 }

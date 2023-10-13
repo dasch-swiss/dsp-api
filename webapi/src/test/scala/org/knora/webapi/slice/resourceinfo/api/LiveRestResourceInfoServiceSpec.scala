@@ -15,10 +15,10 @@ import java.util.UUID.randomUUID
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.ASC
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.DESC
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.creationDate
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.CreationDate
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Desc
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.LastModificationDate
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoServiceLive
@@ -39,8 +39,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
                       .findByProjectAndResourceClass(
                         knownProjectIRI,
                         "invalid-resource-class",
-                        ASC,
-                        lastModificationDate
+                        Asc,
+                        LastModificationDate
                       )
                       .exit
         } yield assertTrue(
@@ -53,8 +53,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
             RestResourceInfoService.findByProjectAndResourceClass(
               unknownProjectIRI,
               "http://unknown-resource-class",
-              ASC,
-              lastModificationDate
+              Asc,
+              LastModificationDate
             )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -63,8 +63,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
                       knownProjectIRI,
                       "http://unknown-resource-class",
-                      ASC,
-                      lastModificationDate
+                      Asc,
+                      LastModificationDate
                     )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -74,8 +74,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
             RestResourceInfoService.findByProjectAndResourceClass(
               unknownProjectIRI,
               knownResourceClass.value,
-              ASC,
-              lastModificationDate
+              Asc,
+              LastModificationDate
             )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -94,8 +94,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
             RestResourceInfoService.findByProjectAndResourceClass(
               knownProjectIRI,
               knownResourceClass.value,
-              ASC,
-              lastModificationDate
+              Asc,
+              LastModificationDate
             )
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.lastModificationDate)
@@ -116,8 +116,8 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
                       knownProjectIRI,
                       knownResourceClass.value,
-                      DESC,
-                      creationDate
+                      Desc,
+                      CreationDate
                     )
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.creationDate).reverse

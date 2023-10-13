@@ -50,13 +50,13 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
 
   private def instant(order: Order)(one: Instant, two: Instant) =
     order match {
-      case ASC  => two.compareTo(one) > 0
-      case DESC => one.compareTo(two) > 0
+      case Asc  => two.compareTo(one) > 0
+      case Desc => one.compareTo(two) > 0
     }
 
   private def sort(resources: List[ResourceInfoDto], order: Order, orderBy: OrderBy) = (orderBy, order) match {
-    case (`lastModificationDate`, order) => resources.sortWith(lastModificationDateSort(order))
-    case (`creationDate`, order)         => resources.sortWith(creationDateSort(order))
+    case (LastModificationDate, order) => resources.sortWith(lastModificationDateSort(order))
+    case (CreationDate, order)         => resources.sortWith(creationDateSort(order))
   }
 
   override def findByProjectAndResourceClass(

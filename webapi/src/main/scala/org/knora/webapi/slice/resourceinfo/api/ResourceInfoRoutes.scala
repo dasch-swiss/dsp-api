@@ -13,10 +13,10 @@ import org.knora.webapi.slice.common.api.EndpointAndZioHandler
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.ASC
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.LastModificationDate
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.lastModificationDate
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 
 final case class ResourceInfoRoutes(
@@ -33,8 +33,8 @@ final case class ResourceInfoRoutes(
         resourceInfoService.findByProjectAndResourceClass(
           projectIri,
           resourceClass,
-          order.getOrElse(ASC),
-          orderBy.getOrElse(lastModificationDate)
+          order.getOrElse(Asc),
+          orderBy.getOrElse(LastModificationDate)
         )
       }
     )
