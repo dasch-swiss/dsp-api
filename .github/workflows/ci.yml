@@ -16,7 +16,7 @@ jobs:
     name: Build and Run Tests
     strategy:
       matrix:
-        java-version: [ 17 ]
+        java-version: [ 17, 21 ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current branch
