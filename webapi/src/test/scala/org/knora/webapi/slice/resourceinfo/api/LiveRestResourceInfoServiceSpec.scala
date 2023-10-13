@@ -5,15 +5,14 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zio.http.HttpError.BadRequest
-import zio.test.Assertion.equalTo
-import zio.test.Assertion.fails
+import zio.Exit
 import zio.test._
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
 import java.util.UUID.randomUUID
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.ASC
@@ -28,41 +27,31 @@ import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownProjectIRI
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownResourceClass
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.unknownProjectIRI
 
 object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
+
   override def spec =
     suite("LiveRestResourceInfoServiceSpec")(
-      test("should fail with bad request given an invalid projectIri") {
-        for {
-          result <- RestResourceInfoService
-                      .findByProjectAndResourceClass(
-                        "invalid-project",
-                        knownResourceClass.value,
-                        ASC,
-                        lastModificationDate
-                      )
-                      .exit
-        } yield assert(result)(fails(equalTo(BadRequest("Invalid projectIri: Couldn't parse IRI: invalid-project"))))
-      },
       test("should fail with bad request given an invalid resourceClass") {
         for {
-          result <- RestResourceInfoService
+          actual <- RestResourceInfoService
                       .findByProjectAndResourceClass(
-                        knownProjectIRI.value,
+                        knownProjectIRI,
                         "invalid-resource-class",
                         ASC,
                         lastModificationDate
                       )
                       .exit
-        } yield assert(result)(
-          fails(equalTo(BadRequest("Invalid resourceClass: Couldn't parse IRI: invalid-resource-class")))
+        } yield assertTrue(
+          actual == Exit.fail(BadRequestException("Invalid resourceClass: Couldn't parse IRI: invalid-resource-class"))
         )
       },
       test("should return empty list if no resources found // unknown project and resourceClass") {
         for {
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
-              "http://unknown-project",
+              unknownProjectIRI,
               "http://unknown-resource-class",
               ASC,
               lastModificationDate
@@ -72,7 +61,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
       test("should return empty list if no resources found // unknown resourceClass") {
         for {
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
-                      knownProjectIRI.value,
+                      knownProjectIRI,
                       "http://unknown-resource-class",
                       ASC,
                       lastModificationDate
@@ -83,7 +72,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         for {
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
-              "http://unknown-project",
+              unknownProjectIRI,
               knownResourceClass.value,
               ASC,
               lastModificationDate
@@ -103,7 +92,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           _ <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
-              knownProjectIRI.value,
+              knownProjectIRI,
               knownResourceClass.value,
               ASC,
               lastModificationDate
@@ -125,7 +114,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         for {
           _ <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
-                      knownProjectIRI.value,
+                      knownProjectIRI,
                       knownResourceClass.value,
                       DESC,
                       creationDate

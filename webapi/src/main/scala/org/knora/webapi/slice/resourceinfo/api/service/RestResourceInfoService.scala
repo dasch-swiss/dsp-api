@@ -6,12 +6,13 @@
 package org.knora.webapi.slice.resourceinfo.api.service
 
 import zio._
-import zio.http.HttpError
 import zio.macros.accessible
 
 import java.time.Instant
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
@@ -28,14 +29,10 @@ trait RestResourceInfoService {
    * @param resourceClass an external IRI to the resource class to retrieve
    * @param order    sort by property
    * @param orderBy  sort by ascending or descending
-   * @return
-   *     success: the [[ListResponseDto]] for the project and resource class
-   *     failure:
-   *         * with an [[HttpError.BadRequest]] if projectIri or resource class are invalid
-   *         * with an [[HttpError.InternalServerError]] if the repo causes a problem
+   * @return the [[ListResponseDto]] for the project and resource class
    */
   def findByProjectAndResourceClass(
-    projectIri: IRI,
+    projectIri: IriIdentifier,
     resourceClass: IRI,
     order: Order,
     orderBy: OrderBy
@@ -63,23 +60,17 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
   }
 
   override def findByProjectAndResourceClass(
-    projectIri: IRI,
+    projectIri: IriIdentifier,
     resourceClass: IRI,
     order: Order,
     orderBy: OrderBy
-  ): IO[HttpError, ListResponseDto] =
+  ): Task[ListResponseDto] =
     for {
-      p <- iriConverter
-             .asInternalIri(projectIri)
-             .mapError(err => HttpError.BadRequest(s"Invalid projectIri: ${err.getMessage}"))
       rc <- iriConverter
               .asInternalIri(resourceClass)
-              .mapError(err => HttpError.BadRequest(s"Invalid resourceClass: ${err.getMessage}"))
-      resources <- repo
-                     .findByProjectAndResourceClass(p, rc)
-                     .mapBoth(err => HttpError.InternalServerError(err.getMessage), _.map(ResourceInfoDto(_)))
-      sorted = sort(resources, order, orderBy)
-    } yield ListResponseDto(sorted)
+              .mapError(err => BadRequestException(s"Invalid resourceClass: ${err.getMessage}"))
+      resources <- repo.findByProjectAndResourceClass(projectIri, rc).map(_.map(ResourceInfoDto(_)))
+    } yield ListResponseDto(sort(resources, order, orderBy))
 }
 
 object RestResourceInfoServiceLive {

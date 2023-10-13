@@ -8,10 +8,9 @@ package org.knora.webapi.slice.resourceinfo.domain
 import zio.Task
 import zio.macros.accessible
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+
 @accessible
 trait ResourceInfoRepo {
-  def findByProjectAndResourceClass(
-    projectIri: InternalIri,
-    resourceClass: InternalIri
-  ): Task[List[ResourceInfo]]
+  def findByProjectAndResourceClass(projectIri: IriIdentifier, resourceClass: InternalIri): Task[List[ResourceInfo]]
 }
