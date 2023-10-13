@@ -42,7 +42,11 @@ object SipiIT extends ZIOSpecDefault {
   )
 
   private def getWithoutAuthorization(path: Path) =
-    SipiTestContainer.resolveUrl(path).map(Request.get).flatMap(Client.request(_))
+    SipiTestContainer
+      .resolveUrl(path)
+      .tap(url => Console.printLine(s"SIPI URL resolved: GET $url"))
+      .map(Request.get)
+      .flatMap(Client.request(_))
 
   private val getToken = JwtService
     .createJwt(SystemUser)
