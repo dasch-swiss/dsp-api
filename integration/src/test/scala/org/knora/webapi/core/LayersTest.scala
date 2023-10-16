@@ -30,12 +30,13 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.admin.api._
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.api.RestPermissionService
-import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
@@ -131,11 +132,13 @@ object LayersTest {
 
   private val commonLayersForAllIntegrationTests =
     ZLayer.makeSome[CommonR0, CommonR](
+      AdminApiRoutes.layer,
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
+      BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
@@ -145,6 +148,7 @@ object LayersTest {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
+      HandlerMapper.layer,
       HttpServer.layer,
       HttpServerZ.layer,
       IIIFRequestMessageHandlerLive.layer,
@@ -154,9 +158,14 @@ object LayersTest {
       KnoraProjectRepoLive.layer,
       ListsResponderADMLive.layer,
       ListsResponderV2Live.layer,
+      MaintenanceEndpoints.layer,
+      MaintenanceEndpointsHandlers.layer,
+      MaintenanceRestService.layer,
+      MaintenanceServiceLive.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
+      OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
@@ -168,6 +177,8 @@ object LayersTest {
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
+      ProjectsEndpoints.layer,
+      ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,
@@ -181,11 +192,11 @@ object LayersTest {
       RestResourceInfoService.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
-      OntologyInferencer.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
+      TapirToPekkoInterpreter.layer,
       TestClientService.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,

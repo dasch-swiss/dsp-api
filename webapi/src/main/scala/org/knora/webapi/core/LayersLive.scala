@@ -30,12 +30,13 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin.AuthenticatorService
 import org.knora.webapi.routing.admin.ProjectsRouteZ
+import org.knora.webapi.slice.admin.api._
+import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service._
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.api.RestPermissionService
-import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.api._
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
@@ -130,12 +131,14 @@ object LayersLive {
   val dspLayersLive: ULayer[DspEnvironmentLive] =
     ZLayer.make[DspEnvironmentLive](
       ActorSystem.layer,
+      AdminApiRoutes.layer,
       ApiRoutes.layer,
       AppConfig.layer,
       AppRouter.layer,
       AuthenticationMiddleware.layer,
       AuthenticatorLive.layer,
       AuthenticatorService.layer,
+      BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
       CardinalityHandlerLive.layer,
@@ -145,6 +148,7 @@ object LayersLive {
       DspIngestClientLive.layer,
       GravsearchTypeInspectionRunner.layer,
       GroupsResponderADMLive.layer,
+      HandlerMapper.layer,
       HttpServer.layer,
       HttpServerZ.layer, // this is the new ZIO HTTP server layer
       IIIFRequestMessageHandlerLive.layer,
@@ -156,9 +160,14 @@ object LayersLive {
       KnoraProjectRepoLive.layer,
       ListsResponderADMLive.layer,
       ListsResponderV2Live.layer,
+      MaintenanceEndpoints.layer,
+      MaintenanceEndpointsHandlers.layer,
+      MaintenanceRestService.layer,
+      MaintenanceServiceLive.layer,
       MessageRelayLive.layer,
       OntologyCacheLive.layer,
       OntologyHelpersLive.layer,
+      OntologyInferencer.layer,
       OntologyRepoLive.layer,
       OntologyResponderV2Live.layer,
       PermissionUtilADMLive.layer,
@@ -170,6 +179,8 @@ object LayersLive {
       ProjectExportStorageServiceLive.layer,
       ProjectImportServiceLive.layer,
       ProjectsADMRestServiceLive.layer,
+      ProjectsEndpoints.layer,
+      ProjectsEndpointsHandler.layer,
       ProjectsResponderADMLive.layer,
       ProjectsRouteZ.layer,
       QueryTraverser.layer,
@@ -183,12 +194,12 @@ object LayersLive {
       RestResourceInfoService.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
-      OntologyInferencer.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
       StoresResponderADMLive.layer,
       StringFormatter.live,
+      TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
       ValuesResponderV2Live.layer

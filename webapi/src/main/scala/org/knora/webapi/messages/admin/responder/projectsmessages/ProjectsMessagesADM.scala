@@ -17,7 +17,6 @@ import zio.prelude.Validation
 
 import java.util.UUID
 
-import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
@@ -33,134 +32,10 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
-
-/**
- * Represents an API request payload that asks the Knora API server to create a new project.
- *
- * @param id          the optional IRI of the project to be created.
- * @param shortname   the shortname of the project to be created (unique).
- * @param shortcode   the shortcode of the project to be creates (unique)
- * @param longname    the longname of the project to be created.
- * @param description the description of the project to be created.
- * @param keywords    the keywords of the project to be created (optional).
- * @param logo        the logo of the project to be created.
- * @param status      the status of the project to be created (active = true, inactive = false).
- * @param selfjoin    the status of self-join of the project to be created.
- */
-case class CreateProjectApiRequestADM(
-  id: Option[IRI] = None,
-  shortname: String,
-  shortcode: String,
-  longname: Option[String],
-  description: Seq[V2.StringLiteralV2],
-  keywords: Seq[String],
-  logo: Option[String],
-  status: Boolean,
-  selfjoin: Boolean
-) extends ProjectsADMJsonProtocol {
-  /* Convert to Json */
-  def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to update an existing project.
- *
- * @param shortname   the new project's shortname.
- * @param longname    the new project's longname.
- * @param description the new project's description.
- * @param keywords    the new project's keywords.
- * @param logo        the new project's logo.
- * @param status      the new project's status.
- * @param selfjoin    the new project's self-join status.
- */
-case class ChangeProjectApiRequestADM(
-  shortname: Option[String] = None,
-  longname: Option[String] = None,
-  description: Option[Seq[V2.StringLiteralV2]] = None,
-  keywords: Option[Seq[String]] = None,
-  logo: Option[String] = None,
-  status: Option[Boolean] = None,
-  selfjoin: Option[Boolean] = None
-) extends ProjectsADMJsonProtocol {
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  val parametersCount: Int = List(
-    shortname,
-    longname,
-    description,
-    keywords,
-    logo,
-    status,
-    selfjoin
-  ).flatten.size
-
-  // something needs to be sent, i.e. everything 'None' is not allowed
-  if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-  def toJsValue: JsValue = changeProjectApiRequestADMFormat.write(this)
-
-  /* validates and escapes the given values.*/
-  def validateAndEscape: ChangeProjectApiRequestADM = {
-
-    val validatedShortname: Option[String] =
-      shortname.map(v =>
-        validateAndEscapeProjectShortname(v)
-          .getOrElse(throw BadRequestException(s"The supplied short name: '$v' is not valid."))
-      )
-
-    val validatedLongName: Option[String] =
-      longname.map(l =>
-        Iri
-          .toSparqlEncodedString(l)
-          .getOrElse(throw BadRequestException(s"The supplied longname: '$l' is not valid."))
-      )
-
-    val validatedLogo: Option[String] =
-      logo.map(l =>
-        Iri
-          .toSparqlEncodedString(l)
-          .getOrElse(throw BadRequestException(s"The supplied logo: '$l' is not valid."))
-      )
-
-    val validatedDescriptions: Option[Seq[V2.StringLiteralV2]] = description match {
-      case Some(descriptions: Seq[V2.StringLiteralV2]) =>
-        val escapedDescriptions = descriptions.map { des =>
-          val escapedValue =
-            Iri
-              .toSparqlEncodedString(des.value)
-              .getOrElse(throw BadRequestException(s"The supplied description: '${des.value}' is not valid."))
-          V2.StringLiteralV2(value = escapedValue, language = des.language)
-        }
-        Some(escapedDescriptions)
-      case None => None
-    }
-
-    val validatedKeywords: Option[Seq[String]] = keywords match {
-      case Some(givenKeywords: Seq[String]) =>
-        val escapedKeywords = givenKeywords.map(keyword =>
-          Iri
-            .toSparqlEncodedString(keyword)
-            .getOrElse(
-              throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")
-            )
-        )
-        Some(escapedKeywords)
-      case None => None
-    }
-    copy(
-      shortname = validatedShortname,
-      longname = validatedLongName,
-      description = validatedDescriptions,
-      keywords = validatedKeywords,
-      logo = validatedLogo
-    )
-  }
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -253,12 +128,12 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
 /**
  * Requests the creation of a new project.
  *
- * @param createRequest        the [[ProjectCreatePayloadADM]] information for the creation of a new project.
- * @param requestingUser       the user making the request.
- * @param apiRequestID         the ID of the API request.
+ * @param createRequest  the [[ProjectCreateRequest]] information for the creation of a new project.
+ * @param requestingUser the user making the request.
+ * @param apiRequestID   the ID of the API request.
  */
 case class ProjectCreateRequestADM(
-  createRequest: ProjectCreatePayloadADM,
+  createRequest: ProjectCreateRequest,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
@@ -267,13 +142,13 @@ case class ProjectCreateRequestADM(
  * Requests updating an existing project.
  *
  * @param projectIri            the IRI of the project to be updated.
- * @param projectUpdatePayload  the [[ProjectUpdatePayloadADM]]
+ * @param projectUpdatePayload  the [[ProjectUpdateRequest]]
  * @param requestingUser        the user making the request.
  * @param apiRequestID          the ID of the API request.
  */
 case class ProjectChangeRequestADM(
   projectIri: ProjectIri,
-  projectUpdatePayload: ProjectUpdatePayloadADM,
+  projectUpdatePayload: ProjectUpdateRequest,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
@@ -478,6 +353,9 @@ sealed trait ProjectIdentifierADM { self =>
 
 object ProjectIdentifierADM {
 
+  def from(projectIri: ProjectIri): ProjectIdentifierADM =
+    IriIdentifier(projectIri)
+
   /**
    * Represents [[IriIdentifier]] identifier.
    *
@@ -485,10 +363,11 @@ object ProjectIdentifierADM {
    */
   final case class IriIdentifier(value: ProjectIri) extends ProjectIdentifierADM
   object IriIdentifier {
+
+    def from(projectIri: ProjectIri): IriIdentifier = IriIdentifier(projectIri)
+
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
-      ProjectIri.make(value).map {
-        IriIdentifier(_)
-      }
+      ProjectIri.make(value).map(IriIdentifier(_))
   }
 
   /**
@@ -498,6 +377,7 @@ object ProjectIdentifierADM {
    */
   final case class ShortcodeIdentifier(value: Shortcode) extends ProjectIdentifierADM
   object ShortcodeIdentifier {
+    def from(shortcode: Shortcode): ShortcodeIdentifier = ShortcodeIdentifier(shortcode)
     def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
       Shortcode.make(value).map {
         ShortcodeIdentifier(_)
@@ -578,36 +458,6 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   )
   implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members"))
-  )
-  implicit val createProjectApiRequestADMFormat: RootJsonFormat[CreateProjectApiRequestADM] = rootFormat(
-    lazyFormat(
-      jsonFormat(
-        CreateProjectApiRequestADM,
-        "id",
-        "shortname",
-        "shortcode",
-        "longname",
-        "description",
-        "keywords",
-        "logo",
-        "status",
-        "selfjoin"
-      )
-    )
-  )
-  implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(
-    lazyFormat(
-      jsonFormat(
-        ChangeProjectApiRequestADM,
-        "shortname",
-        "longname",
-        "description",
-        "keywords",
-        "logo",
-        "status",
-        "selfjoin"
-      )
-    )
   )
   implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] =
     jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")

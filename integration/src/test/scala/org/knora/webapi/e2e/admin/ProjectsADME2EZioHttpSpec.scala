@@ -776,7 +776,7 @@ class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol {
       }
     }
 
-    if (baseApiUrl.contains("5555")) "used to set RestrictedViewSize by project IRI" should {
+    "used to set RestrictedViewSize by project IRI" should {
       "return requested value to be set with 200 Response Status" in {
         val encodedIri = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
         val payload    = """{"size":"pct:1"}"""
@@ -823,9 +823,8 @@ class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol {
         assert(response.status === StatusCodes.Forbidden)
       }
     }
-    else "used to set RestrictedViewSize by project IRI" ignore ()
 
-    if (baseApiUrl.contains("5555")) "used to set RestrictedViewSize by project Shortcode" should {
+    "used to set RestrictedViewSize by project Shortcode" should {
       "return requested value to be set with 200 Response Status" in {
         val shortcode = SharedTestDataADM.imagesProject.shortcode
         val payload   = """{"size":"pct:1"}"""
@@ -872,6 +871,5 @@ class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol {
         assert(response.status === StatusCodes.Forbidden)
       }
     }
-    else "used to set RestrictedViewSize by project Shortcode" ignore ()
   }
 }

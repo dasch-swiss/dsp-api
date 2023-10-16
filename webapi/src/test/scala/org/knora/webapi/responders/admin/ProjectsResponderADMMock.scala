@@ -18,6 +18,8 @@ import java.util.UUID
 import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 
 object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
 
@@ -35,9 +37,9 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object ProjectRestrictedViewSettingsGetRequestADM
       extends Effect[ProjectIdentifierADM, Throwable, ProjectRestrictedViewSettingsGetResponseADM]
   object ProjectCreateRequestADM
-      extends Effect[(ProjectCreatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
+      extends Effect[(ProjectCreateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
-      extends Effect[(Iri.ProjectIri, ProjectUpdatePayloadADM, UserADM, UUID), Throwable, ProjectOperationResponseADM]
+      extends Effect[(Iri.ProjectIri, ProjectUpdateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
 
   val compose: URLayer[mock.Proxy, ProjectsResponderADM] =
     ZLayer {
@@ -73,18 +75,18 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
         ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
           proxy(ProjectRestrictedViewSettingsGetRequestADM, id)
         override def projectCreateRequestADM(
-          createPayload: ProjectCreatePayloadADM,
+          createReq: ProjectCreateRequest,
           requestingUser: UserADM,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
-          proxy(ProjectCreateRequestADM, (createPayload, requestingUser, apiRequestID))
+          proxy(ProjectCreateRequestADM, (createReq, requestingUser, apiRequestID))
         override def changeBasicInformationRequestADM(
           projectIri: Iri.ProjectIri,
-          updatePayload: ProjectUpdatePayloadADM,
+          updateReq: ProjectUpdateRequest,
           user: UserADM,
           apiRequestID: UUID
         ): Task[ProjectOperationResponseADM] =
-          proxy(ChangeBasicInformationRequestADM, (projectIri, updatePayload, user, apiRequestID))
+          proxy(ChangeBasicInformationRequestADM, (projectIri, updateReq, user, apiRequestID))
       }
     }
 }

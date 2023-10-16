@@ -1,5 +1,38 @@
 # Changelog
 
+## [30.4.0](https://github.com/dasch-swiss/dsp-api/compare/v30.3.0...v30.4.0) (2023-10-12)
+
+
+### Enhancements
+
+* add default value of projectRestrictedViewSize (DEV-2626) ([#2873](https://github.com/dasch-swiss/dsp-api/issues/2873)) ([ff4d3a1](https://github.com/dasch-swiss/dsp-api/commit/ff4d3a14f9c803e56b7b4d294e9f314e512ecf6f))
+* Add maintenance service for fixing top-left dimension values DEV-2803 ([#2876](https://github.com/dasch-swiss/dsp-api/issues/2876)) ([82b715a](https://github.com/dasch-swiss/dsp-api/commit/82b715a3791ec295de49be168347c59557e04a5b))
+* Add route that sets projectRestrictedViewSetting size (DEV-2304) ([#2794](https://github.com/dasch-swiss/dsp-api/issues/2794)) ([738ab1c](https://github.com/dasch-swiss/dsp-api/commit/738ab1ccd524d6cc52e6674676ecb74e4e875723))
+* Introduce /admin/maintenance and expose fix top left maintenance action DEV-2805 ([#2877](https://github.com/dasch-swiss/dsp-api/issues/2877)) ([a6b8c2f](https://github.com/dasch-swiss/dsp-api/commit/a6b8c2f8210ea106e1cdfdb1804a46145b7ba1a2))
+
+
+### Bug Fixes
+
+* Improve performance for Gravsearch queries ([#2857](https://github.com/dasch-swiss/dsp-api/issues/2857)) ([86cc4f2](https://github.com/dasch-swiss/dsp-api/commit/86cc4f26f0ce93f7a0b51121e26a15890b7f815c))
+
+
+### Maintenance
+
+* Configure Scala Steward to produce PR with compatible title ([#2867](https://github.com/dasch-swiss/dsp-api/issues/2867)) ([fbbe5ec](https://github.com/dasch-swiss/dsp-api/commit/fbbe5ec792d0cfeb4581ad93d6fbcc85174d44c5))
+* Do not log warn message for 405 and 404 status code responses ([#2854](https://github.com/dasch-swiss/dsp-api/issues/2854)) ([d9fd81c](https://github.com/dasch-swiss/dsp-api/commit/d9fd81ce523a80c15129392eb7b535ec1d4b6c01))
+* Introduce tapir on Pekko ([#2870](https://github.com/dasch-swiss/dsp-api/issues/2870)) ([08accab](https://github.com/dasch-swiss/dsp-api/commit/08accabf8b0c5d02fe7147ffe44023878c39d047))
+* Migrate secure admin/projects endpoints to Tapir ([#2872](https://github.com/dasch-swiss/dsp-api/issues/2872)) ([9f98f7e](https://github.com/dasch-swiss/dsp-api/commit/9f98f7e1d3872b2ff273f783b4374adbfeae2b79))
+* Update dependencies DEV-2742 ([#2868](https://github.com/dasch-swiss/dsp-api/issues/2868)) ([8ba3bb5](https://github.com/dasch-swiss/dsp-api/commit/8ba3bb5c089a97249cf92b06101e2cf042c0b3ab))
+* Update dependencies fuseki and app ([#2856](https://github.com/dasch-swiss/dsp-api/issues/2856)) ([8123dbd](https://github.com/dasch-swiss/dsp-api/commit/8123dbd4667abd6191a87efcf0b5f595cdeaa69e))
+* Update Fuseki DEV-2743 ([#2869](https://github.com/dasch-swiss/dsp-api/issues/2869)) ([14f1911](https://github.com/dasch-swiss/dsp-api/commit/14f1911287ccbb819d5799b94f82d6b1242f07f9))
+* update PR template ([#2878](https://github.com/dasch-swiss/dsp-api/issues/2878)) ([6c04101](https://github.com/dasch-swiss/dsp-api/commit/6c04101c3c4e9a9b39460c9e0748eadb04ef0468))
+* Update spring-security-core to 6.1.4 ([#2865](https://github.com/dasch-swiss/dsp-api/issues/2865)) ([b75edaf](https://github.com/dasch-swiss/dsp-api/commit/b75edaf724c880ef1a4333523300468dcfa26308))
+
+
+### Documentation
+
+* remove inexisting pages from navigation bar ([#2871](https://github.com/dasch-swiss/dsp-api/issues/2871)) ([dd2dfe6](https://github.com/dasch-swiss/dsp-api/commit/dd2dfe61810bd3b1ad38731893e244ad15e30441))
+
 ## [30.3.0](https://github.com/dasch-swiss/dsp-api/compare/v30.2.1...v30.3.0) (2023-09-28)
 
 

@@ -52,6 +52,9 @@ object Project {
     implicit val encoder: JsonEncoder[Shortcode] =
       JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
+    def unsafeFrom(str: String) = make(str)
+      .getOrElse(throw new IllegalArgumentException(s"Invalid project shortcode: $str"))
+
     def make(value: String): Validation[ValidationException, Shortcode] =
       if (value.isEmpty) {
         Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
@@ -219,6 +222,10 @@ object Project {
    */
   sealed abstract case class ProjectStatus private (value: Boolean)
   object ProjectStatus { self =>
+
+    val deleted = new ProjectStatus(false) {}
+    val active  = new ProjectStatus(true) {}
+
     implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { case value =>
       ProjectStatus.make(value).toEitherWith(e => e.head.getMessage())
     }

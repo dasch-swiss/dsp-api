@@ -194,15 +194,6 @@ values can be used:
       - usage: used as a value for the *knora-base:hasPermissions*
         property.
 
-3.  Ontology Administration Permissions:
-
-    1)  **ProjectAdminOntologyAllPermission**:
-
-      - description: gives the user the permission to administrate
-        the project ontologies
-      - usage: used as a value for the *knora-base:hasPermissions*
-        property.
-
 The administrative permissions are stored in a compact format in a
 single string, which is the object of the predicate
 `knora-base:hasPermissions` attached to an instance of the
@@ -462,8 +453,7 @@ and the same as RDF:
                                 ProjectAdminAllPermission|
                                 ProjectAdminGroupAllPermission|
                                 ProjectAdminGroupRestrictedPermission "<http://rdfh.ch/groups/[shortcode]/[UUID]>, <http://rdfh.ch/groups/[shortcode]/[UUID]>"|
-                                ProjectAdminRightsAllPermission|
-                                ProjectAdminOntologyAllPermission"^^xsd:string .
+                                ProjectAdminRightsAllPermission"^^xsd:string .
 ```
 
 **Default Object Access Permission Structure**:

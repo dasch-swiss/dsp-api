@@ -6,11 +6,13 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio._
+import zio.macros.accessible
 
 import java.util.UUID
 
 import dsp.errors._
 import dsp.valueobjects.Iri
+import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
@@ -36,6 +38,8 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -47,6 +51,7 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Returns information about projects.
  */
+@accessible
 trait ProjectsResponderADM {
 
   /**
@@ -132,7 +137,7 @@ trait ProjectsResponderADM {
   /**
    * Creates a project.
    *
-   * @param createPayload the new project's information.
+   * @param createReq            the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -144,7 +149,7 @@ trait ProjectsResponderADM {
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   def projectCreateRequestADM(
-    createPayload: ProjectCreatePayloadADM,
+    createReq: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -152,17 +157,17 @@ trait ProjectsResponderADM {
   /**
    * Update project's basic information.
    *
-   * @param projectIri           the IRI of the project.
-   * @param updatePayload the update payload.
-   * @param user       the user making the request.
-   * @param apiRequestID         the unique api request ID.
+   * @param projectIri    the IRI of the project.
+   * @param updateReq     the update payload.
+   * @param user          the user making the request.
+   * @param apiRequestID  the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdatePayloadADM,
+    updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM]
@@ -389,8 +394,7 @@ final case class ProjectsResponderADMLive(
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService
                     .findProjectKeywordsBy(id)
-                    .flatMap(ZIO.fromOption(_))
-                    .orElseFail(NotFoundException(s"Project '${projectIri.value}' not found."))
+                    .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
     } yield keywords
 
   /**
@@ -453,17 +457,17 @@ final case class ProjectsResponderADMLive(
   /**
    * Update project's basic information.
    *
-   * @param projectIri           the IRI of the project.
-   * @param updatePayload the update payload.
-   * @param user       the user making the request.
-   * @param apiRequestID         the unique api request ID.
+   * @param projectIri    the IRI of the project.
+   * @param updateReq     the update payload.
+   * @param user          the user making the request.
+   * @param apiRequestID  the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
    *
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   override def changeBasicInformationRequestADM(
     projectIri: Iri.ProjectIri,
-    updatePayload: ProjectUpdatePayloadADM,
+    updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -473,20 +477,17 @@ final case class ProjectsResponderADMLive(
      */
     def changeProjectTask(
       projectIri: Iri.ProjectIri,
-      projectUpdatePayload: ProjectUpdatePayloadADM,
+      updateReq: ProjectUpdateRequest,
       requestingUser: UserADM
     ): Task[ProjectOperationResponseADM] =
       // check if the requesting user is allowed to perform updates
       if (!requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin) {
         ZIO.fail(ForbiddenException("Project's information can only be changed by a project or system admin."))
       } else {
-        for {
-          result <- updateProjectADM(projectIri = projectIri, projectUpdatePayload = projectUpdatePayload)
-
-        } yield result
+        updateProjectADM(projectIri, updateReq)
       }
 
-    val task = changeProjectTask(projectIri, updatePayload, user)
+    val task = changeProjectTask(projectIri, updateReq, user)
     IriLocker.runWithIriLock(apiRequestID, projectIri.value, task)
   }
 
@@ -502,7 +503,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[NotFoundException]] In the case that the project's IRI is not found.
    */
-  private def updateProjectADM(projectIri: Iri.ProjectIri, projectUpdatePayload: ProjectUpdatePayloadADM) = {
+  private def updateProjectADM(projectIri: Iri.ProjectIri, projectUpdatePayload: ProjectUpdateRequest) = {
 
     val areAllParamsNone: Boolean = projectUpdatePayload.productIterator.forall {
       case param: Option[Any] => param.isEmpty
@@ -511,7 +512,7 @@ final case class ProjectsResponderADMLive(
 
     if (areAllParamsNone) { ZIO.fail(BadRequestException("No data would be changed. Aborting update request.")) }
     else {
-      val projectId = IriIdentifier(projectIri)
+      val projectId = IriIdentifier.from(projectIri)
       for {
         _ <- projectService
                .findByProjectIdentifier(projectId)
@@ -563,7 +564,7 @@ final case class ProjectsResponderADMLive(
    */
   private def checkProjectUpdate(
     updatedProject: ProjectADM,
-    projectUpdatePayload: ProjectUpdatePayloadADM
+    projectUpdatePayload: ProjectUpdateRequest
   ): Task[Unit] = ZIO.attempt {
     if (projectUpdatePayload.shortname.nonEmpty) {
       projectUpdatePayload.shortname
@@ -651,8 +652,7 @@ final case class ProjectsResponderADMLive(
   /**
    * Creates a project.
    *
-   * @param createPayload the new project's information.
-   *
+   * @param createReq            the new project's information.
    * @param requestingUser       the user that is making the request.
    * @param apiRequestID         the unique api request ID.
    * @return A [[ProjectOperationResponseADM]].
@@ -664,7 +664,7 @@ final case class ProjectsResponderADMLive(
    *         [[BadRequestException]]     In the case when the shortcode is invalid.
    */
   override def projectCreateRequestADM(
-    createPayload: ProjectCreatePayloadADM,
+    createReq: ProjectCreateRequest,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[ProjectOperationResponseADM] = {
@@ -748,7 +748,7 @@ final case class ProjectsResponderADMLive(
       } yield ()
 
     def projectCreateTask(
-      createProjectRequest: ProjectCreatePayloadADM,
+      createProjectRequest: ProjectCreateRequest,
       requestingUser: UserADM
     ): Task[ProjectOperationResponseADM] =
       for {
@@ -807,21 +807,18 @@ final case class ProjectsResponderADMLive(
 
         newProjectADM <- projectService
                            .findByProjectIdentifier(id)
-                           .flatMap(ZIO.fromOption(_))
-                           .orElseFail(
+                           .someOrFail(
                              UpdateNotPerformedException(
                                s"Project $newProjectIRI was not created. Please report this as a possible bug."
                              )
                            )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
-//      TODO: DEV-2626 add default value here
-//        defaultSize = ""
-//        _          <- setProjectRestrictedViewSettings(id.value, requestingUser, defaultSize)
+        _ <- projectService.setProjectRestrictedViewSize(newProjectADM, RestrictedViewSize.default)
 
       } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
-    val task = projectCreateTask(createPayload, requestingUser)
+    val task = projectCreateTask(createReq, requestingUser)
     IriLocker.runWithIriLock(apiRequestID, PROJECTS_GLOBAL_LOCK_IRI, task)
   }
 
