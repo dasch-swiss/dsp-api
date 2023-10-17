@@ -45,7 +45,7 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
 
   val port: Int = container.getFirstMappedPort
 
-  val host = {
+  val host: String = {
     val localhost = InetAddress.getLocalHost
     if (localhost.isInstanceOf[Inet6Address]) {
       s"[${localhost.getHostAddress}]"
@@ -64,9 +64,9 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
 }
 
 object SipiTestContainer {
-  def port: ZIO[SipiTestContainer, Nothing, Int] = ZIO.serviceWith[SipiTestContainer](_.port)
-  def portAndHost: ZIO[SipiTestContainer, Nothing, (Int, String)] =
-    ZIO.serviceWith[SipiTestContainer](c => (c.port, c.host))
+  def port: ZIO[SipiTestContainer, Nothing, Int]                  = ZIO.serviceWith[SipiTestContainer](_.port)
+  def host: ZIO[SipiTestContainer, Nothing, String]               = ZIO.serviceWith[SipiTestContainer](_.host)
+  def portAndHost: ZIO[SipiTestContainer, Nothing, (Int, String)] = port <*> host
 
   def resolveUrl(path: http.Path): URIO[SipiTestContainer, URL] =
     ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.withPath(path))
