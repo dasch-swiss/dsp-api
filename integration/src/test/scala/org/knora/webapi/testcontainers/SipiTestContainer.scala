@@ -9,7 +9,12 @@ import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
-import zio._
+import zio.Task
+import zio.UIO
+import zio.URIO
+import zio.ZIO
+import zio.ZLayer
+import zio.http
 import zio.http.URL
 import zio.nio.file.Path
 
@@ -19,6 +24,8 @@ import java.net.NetworkInterface
 import java.net.UnknownHostException
 import java.nio.file.Paths
 import scala.jdk.CollectionConverters._
+
+import org.knora.webapi.http.version.BuildInfo
 
 final case class SipiTestContainer(container: GenericContainer[Nothing]) {
   def copyFileToImageFolderInContainer(prefix: String, filename: String): Task[Unit] = {
@@ -46,6 +53,7 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
       localhost.getHostAddress
     }
   }
+
   val sipiBaseUrl: URL = {
     val urlString = s"http://$host:$port"
     println(s"SIPI URL String: $urlString")
