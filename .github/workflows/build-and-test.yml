@@ -7,6 +7,14 @@ on:
       - "release-*"
 
 jobs:
+  sipi-it-test-only:
+    name: SipiIT testOnly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Run SipiIT test only
+        run:  make docker-build-sipi-image && sbt "integration/testOnly org.knora.sipi.SipiIT"
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
