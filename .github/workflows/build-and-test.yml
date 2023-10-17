@@ -43,8 +43,6 @@ jobs:
     strategy:
       matrix:
         java: [ '17', '21' ]
-    concurrency:
-      group: ${{ github.ref }}-it
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@0cf9b1e714fd2a76ac890102a0734454dc31aa01
