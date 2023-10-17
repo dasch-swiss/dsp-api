@@ -2,7 +2,7 @@ name: PR Title
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    types: [ opened, edited, synchronize, reopened ]
 
 jobs:
   test:
@@ -11,5 +11,5 @@ jobs:
     steps:
       - uses: deepakputhraya/action-pr-title@master
         with:
-          regex: '^(feat|fix|build|chore|test|refactor|docs)(\(.+\))?!?: .+$'
+          regex: '^(feat|fix|build|chore|test|refactor|docs)(\(.+\))?!?: [A-Z].+$'
           max_length: 140
