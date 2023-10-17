@@ -5,15 +5,24 @@
 
 package org.knora.webapi.testcontainers
 
-import org.knora.webapi.http.version.BuildInfo
-import org.testcontainers.containers.{BindMode, GenericContainer}
-import org.testcontainers.utility.{DockerImageName, MountableFile}
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.utility.DockerImageName
+import org.testcontainers.utility.MountableFile
+import zio.Task
+import zio.UIO
+import zio.URIO
+import zio.ZIO
+import zio.ZLayer
+import zio.http
 import zio.http.URL
 import zio.nio.file.Path
-import zio.{Task, UIO, URIO, ZIO, ZLayer, http}
 
-import java.net.{Inet6Address, InetAddress}
+import java.net.Inet6Address
+import java.net.InetAddress
 import java.nio.file.Paths
+
+import org.knora.webapi.http.version.BuildInfo
 
 final case class SipiTestContainer(container: GenericContainer[Nothing]) {
   def copyFileToImageFolderInContainer(prefix: String, filename: String): Task[Unit] = {
