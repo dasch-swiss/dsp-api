@@ -1,6 +1,11 @@
 name: "Preparation"
 description: "Preparation steps to run tests"
 
+inputs:
+  java:
+    description: "Java version to use"
+    required: false
+    default: "17"
 runs:
   using: "composite"
   steps:

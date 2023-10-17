@@ -117,28 +117,18 @@ jobs:
   test-client-test-data:
     name: Test client-test-data
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java: [ '17' ]
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        with:
-          java: ${{ matrix.java }}
       - name: Create client-test-data
         run: make client-test-data
 
   test-repository-upgrade:
     name: Test repository upgrade
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java: [ '17' ]
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        with:
-          java: ${{ matrix.java }}
       - name: Test repository upgrade
         run: make test-repository-upgrade
       - name: Dump docker logs
@@ -162,13 +152,8 @@ jobs:
   check-formatting:
     name: Check formatting
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java: [ '17' ]
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        with:
-          java: ${{ matrix.java }}
       - name: Check formatting
         run: make check
