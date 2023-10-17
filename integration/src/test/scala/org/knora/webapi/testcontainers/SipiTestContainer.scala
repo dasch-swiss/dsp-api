@@ -5,13 +5,18 @@
 
 package org.knora.webapi.testcontainers
 
-import org.testcontainers.containers.{BindMode, GenericContainer}
-import org.testcontainers.utility.{DockerImageName, MountableFile}
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.utility.DockerImageName
+import org.testcontainers.utility.MountableFile
 import zio._
 import zio.http.URL
 import zio.nio.file.Path
 
-import java.net.{Inet6Address, InetAddress, NetworkInterface, UnknownHostException}
+import java.net.Inet6Address
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.net.UnknownHostException
 import java.nio.file.Paths
 import scala.jdk.CollectionConverters._
 
@@ -75,9 +80,9 @@ object SipiTestContainer {
       .headOption
       .getOrElse(throw new UnknownHostException("No suitable network interface found"))
 
-    val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:latest")
-//    val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
-    val sipiContainer = new GenericContainer(sipiImageName)
+//    val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:latest")
+    val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
+    val sipiContainer                  = new GenericContainer(sipiImageName)
     sipiContainer.withExposedPorts(1024)
     sipiContainer.withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST", "0.0.0.0")
     sipiContainer.withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT", "3333")
