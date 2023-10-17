@@ -1,4 +1,4 @@
-import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{ Docker, dockerRepository }
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.Cmd
 
 import scala.collection.immutable.Seq
@@ -9,7 +9,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-val tapirVersion                = "1.7.5"
+val tapirVersion                = "1.7.6"
 val zioVersion                  = "2.0.18"
 val zioJsonVersion              = "0.6.2"
 val zioConfigVersion            = "3.0.7"
@@ -32,34 +32,34 @@ ThisBuild / semanticdbEnabled := true
 
 scalacOptions ++= Seq("-old-syntax", "-rewrite")
 
-val tapir   = Seq(
+val tapir = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.2.10",
+  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.2.13"
 )
 val metrics = Seq(
   "dev.zio"                     %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
   "dev.zio"                     %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % "1.6.4",
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % "1.6.4"
 )
 
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
   .settings(
-    buildInfoKeys    := Seq[BuildInfoKey](
+    buildInfoKeys := Seq[BuildInfoKey](
       name,
       version,
       scalaVersion,
       sbtVersion,
-      BuildInfoKey.action("gitCommit")(gitCommit),
+      BuildInfoKey.action("gitCommit")(gitCommit)
     ),
     buildInfoOptions += BuildInfoOption.BuildTime,
-    buildInfoPackage := "swiss.dasch.version",
+    buildInfoPackage := "swiss.dasch.version"
   )
   .settings(
-    name                                 := "dsp-ingest",
-    headerLicense                        := Some(
+    name := "dsp-ingest",
+    headerLicense := Some(
       HeaderLicense.Custom(
         """|Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
            |SPDX-License-Identifier: Apache-2.0
@@ -86,7 +86,7 @@ lazy val root = (project in file("."))
       // resolves problems when `sbt doc` failed with
       // [error] -- Error: typesafe/shared/src/main/scala/zio/config/typesafe/TypesafeConfigSource.scala:15:0
       // [error] undefined: new com.github.ghik.silencer.silent #
-      "com.github.ghik"       % "silencer-lib_2.13.11"              % "1.17.13",
+      "com.github.ghik" % "silencer-lib_2.13.11" % "1.17.13",
 
       // logging
       "dev.zio" %% "zio-logging"               % zioLoggingVersion,
@@ -98,7 +98,7 @@ lazy val root = (project in file("."))
       "dev.zio"      %% "zio-test-junit"         % zioVersion     % Test,
       "dev.zio"      %% "zio-mock"               % zioMockVersion % Test,
       "dev.zio"      %% "zio-test-magnolia"      % zioVersion     % Test,
-      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.9"        % Test,
+      "org.scoverage" % "sbt-scoverage_2.12_1.0" % "2.0.9"        % Test
     ),
     testFrameworks                       := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     Docker / dockerRepository            := Some("daschswiss"),
@@ -114,10 +114,10 @@ lazy val root = (project in file("."))
     ),
     dockerCommands += Cmd(
       "RUN",
-      "apt-get update && apt-get install -y openjdk-17-jre-headless && apt-get clean",
+      "apt-get update && apt-get install -y openjdk-17-jre-headless && apt-get clean"
     ),
-    dockerCommands                       := dockerCommands.value.filterNot {
+    dockerCommands := dockerCommands.value.filterNot {
       case Cmd("USER", args @ _*) => true
       case cmd                    => false
-    },
+    }
   )
