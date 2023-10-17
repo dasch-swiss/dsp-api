@@ -11,25 +11,20 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
-import zio._
-import zio.http.Status
-import zio.http._
-import zio.json.DecoderOps
-import zio.json.ast.Json
-import zio.test._
-
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
 import org.knora.sipi.MockDspApiServer.verify._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.routing.{JwtService, JwtServiceLive}
 import org.knora.webapi.testcontainers.SipiTestContainer
+import zio._
+import zio.http._
+import zio.json.DecoderOps
+import zio.json.ast.Json
+import zio.test._
+
+import scala.util.{Failure, Success, Try}
 
 object SipiIT extends ZIOSpecDefault {
 
@@ -126,10 +121,10 @@ object SipiIT extends ZIOSpecDefault {
               "when getting the file, " +
               "then Sipi responds with Ok"
           ) {
-            def expectedJson(port: Int) =
+            def expectedJson(port: Int, host: String) =
               s"""{
                  |  "@context":"http://sipi.io/api/file/3/context.json",
-                 |  "id":"http://localhost:$port/0001/FGiLaT4zzuV-CqwbEDFAFeS.jp2",
+                 |  "id":"http://$host:$port/0001/FGiLaT4zzuV-CqwbEDFAFeS.jp2",
                  |  "checksumOriginal":"fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c",
                  |  "checksumDerivative":"0ce405c9b183fb0d0a9998e9a49e39c93b699e0f8e2a9ac3496c349e5cea09cc",
                  |  "width":250,
@@ -143,7 +138,7 @@ object SipiIT extends ZIOSpecDefault {
               _        <- copyTestFilesToSipi
               response <- getWithoutAuthorization(Root / prefix / imageTestfile / "knora.json")
               json     <- response.body.asString.map(_.fromJson[Json])
-              expected <- SipiTestContainer.port.map(expectedJson)
+              expected <- SipiTestContainer.portAndHost.map { case (port, host) => expectedJson(port, host) }
             } yield assertTrue(
               response.status == Status.Ok,
               json == expected
