@@ -8,7 +8,7 @@ runs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up JDK  ${{ inputs.java }}
+    - name: Set up JDK ${{ inputs.java }}
       uses: actions/setup-java@v3
       with:
         distribution: "temurin"
