@@ -9,6 +9,7 @@ include vars.mk
 #################################
 # Documentation targets
 #################################
+SBTX = ./sbtx
 
 .PHONY: docs-build
 docs-build: ## build docs into the local 'site' folder
@@ -41,23 +42,23 @@ structurizer: ## starts the structurizer and serves c4 architecture docs
 build: docker-build ## build all targets (excluding docs)
 
 # add DOCKER_BUILDKIT=1 to enable buildkit logging as info
-# https://github.com/sbt/sbt-native-packager/issues/1371
+# https://github.com/$(SBTX)/$(SBTX)-native-packager/issues/1371
 
 .PHONY: docker-build-dsp-api-image
 docker-build-dsp-api-image: # build and publish dsp-api docker image locally
-	export DOCKER_BUILDKIT=1; sbt "webapi / Docker / publishLocal"
+	export DOCKER_BUILDKIT=1; $(SBTX) "webapi / Docker / publishLocal"
 
 .PHONY: docker-publish-dsp-api-image
 docker-publish-dsp-api-image: # publish dsp-api image to Dockerhub
-	export DOCKER_BUILDKIT=1; sbt "webapi / Docker / publish"
+	export DOCKER_BUILDKIT=1; $(SBTX) "webapi / Docker / publish"
 
 .PHONY: docker-build-sipi-image
 docker-build-sipi-image: # build and publish sipi docker image locally
-	 export DOCKER_BUILDKIT=1; sbt "sipi / Docker / publishLocal"
+	 export DOCKER_BUILDKIT=1; $(SBTX) "sipi / Docker / publishLocal"
 
 .PHONY: docker-publish-sipi-image
 docker-publish-sipi-image: # publish sipi image to Dockerhub
-	export DOCKER_BUILDKIT=1; sbt "sipi / Docker / publish"
+	export DOCKER_BUILDKIT=1; $(SBTX) "sipi / Docker / publish"
 
 .PHONY: docker-build
 docker-build: docker-build-dsp-api-image docker-build-sipi-image ## build and publish all Docker images locally
@@ -67,7 +68,7 @@ docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image ## publis
 
 .PHONY: docker-image-tag
 docker-image-tag: ## prints the docker image tag
-	@sbt -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
+	@$(SBTX) -Dsbt.log.noformat=true -Dsbt.supershell=false -Dsbt.ci=true -error "print dockerImageTag"
 
 #################################
 ## Docker-Compose targets
@@ -190,7 +191,7 @@ stack-db-only: env-file  ## starts only fuseki.
 client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
 client-test-data: build ## runs the dsp-api e2e and r2r tests and generates client-test-data.
 	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
-	sbt -v "integration/testOnly *E2ESpec *E2EZioHttpSpec *R2RSpec"
+	$(SBTX) -v "integration/testOnly *E2ESpec *E2EZioHttpSpec *R2RSpec"
 	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
 
 .PHONY: test-repository-upgrade
@@ -211,15 +212,15 @@ test-all: test integration-test zio-http-test
 
 .PHONY: test
 test: ## runs all unit tests
-	sbt -v coverage "webapi/test" coverageAggregate
+	$(SBTX) -v coverage "webapi/test" coverageAggregate
 
 .PHONY: integration-test
 integration-test: docker-build-sipi-image ## runs all integration tests
-	sbt -v coverage "integration/test" coverageAggregate
+	$(SBTX) -v coverage "integration/test" coverageAggregate
 
 .PHONY: zio-http-test
 zio-http-test: ## runs tests against ZIO HTTP routes
-	sbt -v coverage "integration/testOnly *ZioHttpSpec" -Dkey=zio coverageAggregate
+	$(SBTX) -v coverage "integration/testOnly *ZioHttpSpec" -Dkey=zio coverageAggregate
 
 
 #################################
@@ -331,7 +332,7 @@ clean-metals: ## clean SBT and Metals related stuff
 	@rm -rf .bsp
 	@rm -rf .metals
 	@rm -rf target
-	@sbt "clean"
+	@$(SBTX) "clean"
 
 
 .PHONY: clean
@@ -351,11 +352,11 @@ clean-sipi-projects: ## deletes all files uploaded within a project
 
 .PHONY: check
 check: ## Run code formatting check 
-	@sbt "check"
+	@$(SBTX) "check"
 
 .PHONY: fmt
 fmt: ## Run code formatting fix
-	@sbt "fmt"
+	@$(SBTX) "fmt"
 
 
 .PHONY: help
