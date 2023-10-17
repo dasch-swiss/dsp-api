@@ -15,7 +15,7 @@ jobs:
         java: [ '17', '21' ]
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@0cf9b1e714fd2a76ac890102a0734454dc31aa01
         with:
           java: ${{ matrix.java }}
       - name: Run all tests
@@ -48,7 +48,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@0cf9b1e714fd2a76ac890102a0734454dc31aa01
         with:
           java: ${{ matrix.java }}
       - name: add packages
