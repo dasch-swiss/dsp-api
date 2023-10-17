@@ -6,9 +6,16 @@
 
 # Building and Running
 
+## Setting up Docker
+
+1. Install [Docker](https://www.docker.com/)
+2. Go to Docker preferences and increase the memory allocation.
+   ![screenshot 'Docker Desktop'](figures/dockerPreferences.png)
+   The stack's memory usage is limited to ~20GB, though it should only use that much during heavy workloads. You should be good to go in any case if you allocate 22GB or more.
+
 ## Running the stack
 
-With [Docker](https://www.docker.com/) installed,
+With Docker installed and configured,
 
 1. Run the following:
 
@@ -16,7 +23,7 @@ With [Docker](https://www.docker.com/) installed,
     $ make init-db-test
     ```
 
-    to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki). 
+    to create the knora-test repository and initialize it with loading some test data into the triplestore (Fuseki).
 
 1. Start the entire knora-stack (fuseki (db), sipi, api, salsah1) with the following command:
 
@@ -26,14 +33,14 @@ With [Docker](https://www.docker.com/) installed,
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
 
-**_Note_**: To delete the existing containers and for a clean start, before creating the knora-test repository explained 
+**_Note_**: To delete the existing containers and for a clean start, before creating the knora-test repository explained
 in the first step above, run the following:
 
 ```
 $ make stack-down-delete-volumes
 ```
 
-This stops the knora-stack and deletes any created volumes (deletes the database!). 
+This stops the knora-stack and deletes any created volumes (deletes the database!).
 
 To only shut down the Knora-Stack without deleting the containers:
 
@@ -47,7 +54,7 @@ To restart the knora-api use the following command:
 $ make stack-restart-api
 ```
 
-If a change is made to knora-api code, only its image needs to be rebuilt. In that case, use 
+If a change is made to knora-api code, only its image needs to be rebuilt. In that case, use
 
 ```
 $ make stack-up-fast
@@ -66,38 +73,38 @@ This data can then be consumed from `localhost:3333/v2/metadata/http%3A%2F%2Frdf
 
 ## Managing Containers in Docker Dashboard
 
-The Docker Desktop is installed on your computer during the installation of docker, it enables easy management of docker 
+The Docker Desktop is installed on your computer during the installation of docker, it enables easy management of docker
 containers and access to Docker Hub. To manage your docker containers, docker desktop provides a dashbord.
 
 ![screenshot 'Docker Desktop'](figures/dockerDesktop.png)
- 
-In docker dashboard, you can see all the running containers, stop, start, restart, or completely delete them. For example, when 
+
+In docker dashboard, you can see all the running containers, stop, start, restart, or completely delete them. For example, when
 you start the knora-stack as explained above, in the docker dashboard you will see following:
 
 ![screenshot 'Docker Dashboard'](figures/dockerDashboard.png)
- 
+
 ### Access the logs
-To read information logged out of any container (db, api, etc.), click on the container in the dashboard and choose 
+To read information logged out of any container (db, api, etc.), click on the container in the dashboard and choose
 `logs`. The example, below shows the logs of the database (db) container that includes the last SPARQL query sent to the
- triplestore. 
+ triplestore.
 
 ![screenshot 'Docker Logs'](figures/DockerLog.png)
- 
-Note that, you can also print out the log information directly from the command line. For example, the same logs of the 
+
+Note that, you can also print out the log information directly from the command line. For example, the same logs of the
 database container can be printed out using the following command:
 
 ```
 $ make stack-logs-db
 ```
 Similarly, the logs of the other containers can be printed out by running make with `stack-logs-api` or `stack-logs-sipi`.
-These commands print out and follow the logs, to only print the logs out without following, use 
+These commands print out and follow the logs, to only print the logs out without following, use
 `-no-follow` version of the commands for example:
 
  ```
  $ make stack-logs-db-no-follow
  ```
 
-Lastly, to print out the entire logs of the running knora-stack, use 
+Lastly, to print out the entire logs of the running knora-stack, use
 
 ```
 $ make stack-logs
@@ -117,7 +124,7 @@ To run all test targets, use the following in the command line:
 $ make test-all
 ```
 
-To run a single test from the command line, for example `SearchV1R2RSpec`, 
+To run a single test from the command line, for example `SearchV1R2RSpec`,
 run the following:
 
  ```bash
@@ -138,13 +145,13 @@ Then, to build docs into the local `site` folder, run the following command:
 ```
 $ make docs-build
 ```
-At this point, you can serve the docs to view them locally using 
+At this point, you can serve the docs to view them locally using
 
 ```
 $ make docs-serve
 ```
 
-Lastly, to build and publish docs to Github Pages, use 
+Lastly, to build and publish docs to Github Pages, use
 
 ```
 $ make docs-publish
@@ -155,7 +162,7 @@ $ make docs-publish
 To build and publish all Docker images locally
 
 ```
-$ make docker-build 
+$ make docker-build
 ```
 To publish all Docker images to Dockerhub
 
