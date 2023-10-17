@@ -22,6 +22,10 @@ services:
       - TZ=Europe/Zurich
       - ADMIN_PASSWORD=test
       - JVM_ARGS=-Xmx3G
+    deploy:
+      resources:
+        limits:
+          memory: 8G
 
   sipi:
     image: daschswiss/knora-sipi:latest
@@ -53,6 +57,10 @@ services:
     # entrypoint: [ "valgrind", "--leak-check=yes", "/sipi/sipi" ] ## uncomment to run SIPI under valgrind
     # command: --config=/sipi/config/sipi.docker-test-config.lua ## command variant to start the sipi container with test routes enabled
     command: --config=/sipi/config/sipi.docker-config.lua
+    deploy:
+      resources:
+        limits:
+          memory: 4G
 
   ingest:
     image: daschswiss/dsp-ingest:latest
@@ -72,6 +80,10 @@ services:
       - JWT_SECRET=UP 4888, nice 4-8-4 steam engine
       - SIPI_USE_LOCAL_DEV=false
 #      - JWT_DISABLE_AUTH=true # Uncomment this line if you want to disable authentication for the ingest service
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
   api:
     image: daschswiss/knora-api:latest
@@ -100,6 +112,10 @@ services:
       - KNORA_WEBAPI_DSP_INGEST_AUDIENCE=http://localhost:3340
       - KNORA_WEBAPI_DSP_INGEST_BASE_URL=http://ingest:3340
       # - DSP_API_LOG_APPENDER=JSON # if this variable is set, JSON logs are activated locally
+    deploy:
+      resources:
+        limits:
+          memory: 6G
 
 networks:
   knora-net:
