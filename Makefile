@@ -42,7 +42,7 @@ structurizer: ## starts the structurizer and serves c4 architecture docs
 build: docker-build ## build all targets (excluding docs)
 
 # add DOCKER_BUILDKIT=1 to enable buildkit logging as info
-# https://github.com/$(SBTX)/$(SBTX)-native-packager/issues/1371
+# https://github.com/sbt/sbt-native-packager/issues/1371
 
 .PHONY: docker-build-dsp-api-image
 docker-build-dsp-api-image: # build and publish dsp-api docker image locally
