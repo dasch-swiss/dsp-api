@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java: ${{ matrix.java }}
       - name: Run all tests
         run: sbt -v coverage "webapi/test" coverageAggregate
       - name: WebApi Unit Test Report
@@ -47,6 +49,8 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java: ${{ matrix.java }}
       - name: add packages
         run: |
           echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
@@ -89,6 +93,8 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java: ${{ matrix.java }}
       - name: Run all ZioHttp tests
         run: make zio-http-test
       - name: ZIO-Http Routes Test Report
@@ -117,6 +123,8 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java: ${{ matrix.java }}
       - name: Create client-test-data
         run: make client-test-data
 
@@ -129,6 +137,8 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java: ${{ matrix.java }}
       - name: Test repository upgrade
         run: make test-repository-upgrade
       - name: Dump docker logs
@@ -158,5 +168,7 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java: ${{ matrix.java }}
       - name: Check formatting
         run: make check
