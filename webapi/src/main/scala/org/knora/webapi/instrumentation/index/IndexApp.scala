@@ -8,7 +8,6 @@ package org.knora.webapi.instrumentation.index
 import zio._
 import zio.http._
 import zio.http.html.Html
-import zio.http.model._
 
 /**
  * Provides the '/' endpoint serving a small index page.
@@ -16,7 +15,7 @@ import zio.http.model._
 final case class IndexApp() {
 
   val route: HttpApp[Any, Nothing] =
-    Http.collect[Request] { case Method.GET -> !! => Response.html(Html.fromString(indexPage)) }
+    Http.collect[Request] { case Method.GET -> Root => Response.html(Html.fromString(indexPage)) }
 
   private val indexPage =
     """<html>

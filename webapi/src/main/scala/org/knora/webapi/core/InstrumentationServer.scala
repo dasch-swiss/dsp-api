@@ -32,15 +32,13 @@ object InstrumentationServer {
       .service[AppConfig]
       .flatMap { config =>
         val port          = config.instrumentationServerConfig.port
-        val serverConfig  = ServerConfig.default.port(port)
         val interval      = config.instrumentationServerConfig.interval
         val metricsConfig = MetricsConfig(interval)
         ZIO.logInfo(s"Starting instrumentation http server on port: $port") *>
-          ZIO.debug(s"$serverConfig, $metricsConfig") *>
           instrumentationServer
             .provideSome[State](
               // HTTP Server
-              ZLayer.succeed(serverConfig) >>> Server.live,
+              Server.defaultWithPort(port),
               // HTTP routes
               IndexApp.layer,
               HealthRouteZ.layer,

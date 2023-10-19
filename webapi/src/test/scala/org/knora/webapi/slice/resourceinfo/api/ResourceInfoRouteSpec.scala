@@ -8,7 +8,6 @@ package org.knora.webapi.slice.resourceinfo.api
 import zio.Chunk
 import zio.ZIO
 import zio.http._
-import zio.http.model._
 import zio.test.ZIOSpecDefault
 import zio.test._
 
@@ -29,14 +28,10 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
 
   private val testResourceClass = "http://test-resource-class/" + randomUUID
   private val testProjectIri    = "http://test-project/" + randomUUID
-  private val baseUrl           = URL(!! / "v2" / "resources" / "info")
+  private val baseUrl           = URL(Root / "v2" / "resources" / "info")
   private val projectHeader     = Headers("x-knora-accept-project", testProjectIri)
 
-  private def sendRequest(req: Request) =
-    for {
-      route    <- ZIO.service[ResourceInfoRoute].map(_.route)
-      response <- route(req)
-    } yield response
+  private def sendRequest(req: Request) = ZIO.serviceWithZIO[ResourceInfoRoute](_.route.runZIO(req))
 
   def spec =
     suite("ResourceInfoRoute /v2/resources/info")(
@@ -48,28 +43,28 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
       },
       test("given more than one resource class should respond with BadRequest") {
         val params  = QueryParams(("resourceClass", Chunk(testResourceClass, "http://anotherResourceClass")))
-        val url     = baseUrl.setQueryParams(params)
+        val url     = baseUrl.withQueryParams(params)
         val request = Request.get(url = url).setHeaders(projectHeader)
         for {
           response <- sendRequest(request)
         } yield assertTrue(response.status == Status.BadRequest)
       },
       test("given no projectIri should respond with BadRequest") {
-        val url     = baseUrl.setQueryParams(QueryParams(("resourceClass", testResourceClass)))
+        val url     = baseUrl.withQueryParams(QueryParams(("resourceClass", testResourceClass)))
         val request = Request.get(url = url)
         for {
           response <- sendRequest(request)
         } yield assertTrue(response.status == Status.BadRequest)
       },
       test("given all mandatory parameters should respond with OK") {
-        val url     = baseUrl.setQueryParams(QueryParams(("resourceClass", testResourceClass)))
+        val url     = baseUrl.withQueryParams(QueryParams(("resourceClass", testResourceClass)))
         val request = Request.get(url = url).setHeaders(headers = projectHeader)
         for {
           response <- sendRequest(request)
         } yield assertTrue(response.status == Status.Ok)
       },
       test("given all parameters rest service should be called with default order") {
-        val url     = baseUrl.setQueryParams(QueryParams(("resourceClass", testResourceClass)))
+        val url     = baseUrl.withQueryParams(QueryParams(("resourceClass", testResourceClass)))
         val request = Request.get(url = url).setHeaders(projectHeader)
         for {
           expectedResourceClassIri <- IriConverter.asInternalIri(testResourceClass).map(_.value)
@@ -85,7 +80,7 @@ object ResourceInfoRouteSpec extends ZIOSpecDefault {
         )
       },
       test("given all parameters rest service should be called with correct parameters") {
-        val url = baseUrl.setQueryParams(
+        val url = baseUrl.withQueryParams(
           QueryParams(
             ("resourceClass", testResourceClass),
             ("orderBy", "creationDate"),

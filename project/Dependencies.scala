@@ -22,8 +22,6 @@ object Dependencies {
   val JenaVersion       = "4.8.0"
 
   val ZioConfigVersion            = "3.0.7"
-  val ZioHttpVersionOld           = "2.0.0-RC11"
-  val ZioHttpVersion              = "0.0.3"
   val ZioLoggingVersion           = "2.1.14"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.2.0"
@@ -36,8 +34,6 @@ object Dependencies {
   val zioConfig             = "dev.zio"                       %% "zio-config"                % ZioConfigVersion
   val zioConfigMagnolia     = "dev.zio"                       %% "zio-config-magnolia"       % ZioConfigVersion
   val zioConfigTypesafe     = "dev.zio"                       %% "zio-config-typesafe"       % ZioConfigVersion
-  val zioHttpOld            = "io.d11"                        %% "zhttp"                     % ZioHttpVersionOld
-  val zioHttp               = "dev.zio"                       %% "zio-http"                  % ZioHttpVersion
   val zioJson               = "dev.zio"                       %% "zio-json"                  % "0.6.2"
   val zioLogging            = "dev.zio"                       %% "zio-logging"               % ZioLoggingVersion
   val zioLoggingSlf4jBridge = "dev.zio"                       %% "zio-logging-slf4j2-bridge" % ZioLoggingVersion
@@ -129,7 +125,7 @@ object Dependencies {
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
-//    "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
@@ -189,7 +185,6 @@ object Dependencies {
     zioConfig,
     zioConfigMagnolia,
     zioConfigTypesafe,
-    zioHttp,
     zioJson,
     zioLogging,
     zioLoggingSlf4jBridge,

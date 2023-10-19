@@ -6,9 +6,8 @@
 package org.knora.webapi.slice.resourceinfo.api
 
 import zio.ZLayer
+import zio.http.HttpError.BadRequest
 import zio.http._
-import zio.http.model.HttpError.BadRequest
-import zio.http.model._
 import zio.json.EncoderOps
 import zio.prelude.Validation
 
@@ -22,7 +21,7 @@ import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastM
 final case class ResourceInfoRoute(restService: RestResourceInfoService) {
 
   val route: HttpApp[Any, Nothing] =
-    Http.collectZIO[Request] { case req @ Method.GET -> !! / "v2" / "resources" / "info" =>
+    Http.collectZIO[Request] { case req @ Method.GET -> Root / "v2" / "resources" / "info" =>
       (for {
         p      <- getParameters(req)
         result <- restService.findByProjectAndResourceClass(p._1, p._2, (p._3, p._4))
@@ -74,9 +73,9 @@ final case class ResourceInfoRoute(restService: RestResourceInfoService) {
   }
 
   private def getProjectIri(headers: Headers) = {
-    val projectIri: Validation[BadRequest, IRI] = headers.header(RouteUtilV2.PROJECT_HEADER) match {
-      case None         => Validation.fail(BadRequest(s"Header ${RouteUtilV2.PROJECT_HEADER} may not be empty"))
-      case Some(header) => Validation.succeed(header.value.toString)
+    val projectIri: Validation[BadRequest, IRI] = headers.get(RouteUtilV2.PROJECT_HEADER) match {
+      case None        => Validation.fail(BadRequest(s"Header ${RouteUtilV2.PROJECT_HEADER} may not be empty"))
+      case Some(value) => Validation.succeed(value)
     }
     projectIri
   }
