@@ -28,7 +28,7 @@ trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {
 
   def baseUrl: URL = {
     val urlString = s"http://$getHost:$getFirstMappedPort"
-    URL.fromString(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+    URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
   }
 
   def credentials: (String, String) = ("admin", FusekiTestContainer.adminPassword)
@@ -48,7 +48,7 @@ trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {
                       .map(_.map(line => line.replace("@REPOSITORY@", repositoryName)).mkString("\n"))
     request = HttpRequest
                 .newBuilder()
-                .uri(baseUrl.setPath("/$/datasets").toJavaURI)
+                .uri(baseUrl.withPath("/$/datasets").toJavaURI)
                 .POST(BodyPublishers.ofString(fusekiConfig))
                 .header("Content-Type", "text/turtle; charset=utf-8")
                 .build()

@@ -16,9 +16,11 @@ import zio.ZIO
 import zio.ZLayer
 import zio.http.Body
 import zio.http.Client
+import zio.http.Header
+import zio.http.Headers
+import zio.http.MediaType
 import zio.http.Request
 import zio.http.URL
-import zio.http.model.Headers
 import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -61,12 +63,16 @@ final case class DspIngestClientLive(
 
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
     for {
-      importUrl <- ZIO.fromEither(URL.fromString(s"${projectsPath(shortcode)}/import"))
+      importUrl <- ZIO.fromEither(URL.decode(s"${projectsPath(shortcode)}/import"))
       token     <- jwtService.createJwtForDspIngest()
       request = Request
                   .post(Body.fromFile(fileToImport.toFile), importUrl)
-                  .updateHeaders(_.addHeaders(Headers.bearerAuthorizationHeader(token.jwtString)))
-                  .updateHeaders(_.addHeaders(Headers.contentType("application/zip")))
+                  .addHeaders(
+                    Headers(
+                      Header.Authorization.Bearer(token.jwtString),
+                      Header.ContentType(MediaType.application.zip)
+                    )
+                  )
       response     <- Client.request(request).provideSomeLayer[Scope](Client.default)
       bodyAsString <- response.body.asString
       _            <- ZIO.logInfo(s"Response code: ${response.status} body $bodyAsString")

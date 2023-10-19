@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.resourceinfo.api
 
 import zio._
-import zio.http.model.HttpError
+import zio.http.HttpError
 
 import org.knora.webapi.IRI
 import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceSpy.orderingKey
@@ -35,7 +35,7 @@ object RestResourceInfoServiceSpy {
   val resourceClassKey = "resourceClass"
   val orderingKey      = "ordering"
   def lastInvocation: ZIO[RestResourceInfoServiceSpy, Nothing, Map[String, Any]] =
-    ZIO.service[RestResourceInfoServiceSpy].flatMap(_.lastInvocation.get)
+    ZIO.serviceWithZIO[RestResourceInfoServiceSpy](_.lastInvocation.get)
 
   val layer: ZLayer[IriConverter with ResourceInfoRepoFake, Nothing, RestResourceInfoServiceSpy] = ZLayer.fromZIO {
     for {

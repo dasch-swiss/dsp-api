@@ -9,14 +9,18 @@ import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
-import zio._
+import zio.Task
+import zio.UIO
+import zio.URIO
+import zio.ZIO
+import zio.ZLayer
+import zio.http
 import zio.http.URL
 import zio.nio.file.Path
 
-import java.net.NetworkInterface
-import java.net.UnknownHostException
+import java.net.Inet6Address
+import java.net.InetAddress
 import java.nio.file.Paths
-import scala.jdk.CollectionConverters._
 
 import org.knora.webapi.http.version.BuildInfo
 
@@ -36,19 +40,36 @@ final case class SipiTestContainer(container: GenericContainer[Nothing]) {
     )
   }
 
-  def host: String = container.getHost
-  def port: Int    = container.getFirstMappedPort
-  def sipiBaseUrl: URL = {
+  val port: Int = container.getFirstMappedPort
+
+  val host: String = SipiTestContainer.localHostAddress
+
+  val sipiBaseUrl: URL = {
     val urlString = s"http://$host:$port"
-    URL.fromString(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+    println(s"SIPI URL String: $urlString")
+    val url = URL.decode(urlString).getOrElse(throw new IllegalStateException(s"Invalid URL $urlString"))
+    println(s"SIPI URL: $url")
+    url
   }
 }
 
 object SipiTestContainer {
-  def port: ZIO[SipiTestContainer, Nothing, Int] = ZIO.serviceWith[SipiTestContainer](_.port)
 
-  def resolveUrl(path: String): URIO[SipiTestContainer, URL] =
-    ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.setPath(path))
+  val localHostAddress: String = {
+    val localhost = InetAddress.getLocalHost
+    if (localhost.isInstanceOf[Inet6Address]) {
+      s"[${localhost.getHostAddress}]"
+    } else {
+      localhost.getHostAddress
+    }
+  }
+
+  def port: ZIO[SipiTestContainer, Nothing, Int]                  = ZIO.serviceWith[SipiTestContainer](_.port)
+  def host: ZIO[SipiTestContainer, Nothing, String]               = ZIO.serviceWith[SipiTestContainer](_.host)
+  def portAndHost: ZIO[SipiTestContainer, Nothing, (Int, String)] = port <*> host
+
+  def resolveUrl(path: http.Path): URIO[SipiTestContainer, URL] =
+    ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.withPath(path))
 
   def copyFileToImageFolderInContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
     ZIO.serviceWithZIO[SipiTestContainer](_.copyFileToImageFolderInContainer(prefix, filename))
@@ -60,13 +81,8 @@ object SipiTestContainer {
    * A functional effect that initiates a Sipi Testcontainer
    */
   val acquire: UIO[GenericContainer[Nothing]] = ZIO.attemptBlocking {
-    // get local IP address, which we need for SIPI
-    val localIpAddress: String = NetworkInterface.getNetworkInterfaces.asScala.toSeq
-      .filter(!_.isLoopback)
-      .flatMap(_.getInetAddresses.asScala.toSeq.filter(_.getAddress.length == 4).map(_.toString))
-      .headOption
-      .getOrElse(throw new UnknownHostException("No suitable network interface found"))
-
+    // Uncomment the following line to use the latest version of Sipi for local development:
+    // val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:latest")
     val sipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
     val sipiContainer                  = new GenericContainer(sipiImageName)
     sipiContainer.withExposedPorts(1024)
@@ -75,7 +91,7 @@ object SipiTestContainer {
     sipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
     sipiContainer.withEnv("SIPI_EXTERNAL_HOSTNAME", "0.0.0.0")
     sipiContainer.withEnv("SIPI_EXTERNAL_PORT", "1024")
-    sipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", localIpAddress)
+    sipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", SipiTestContainer.localHostAddress)
     sipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
     sipiContainer.withEnv("CLEAN_TMP_DIR_USER", "clean_tmp_dir_user")
     sipiContainer.withEnv("CLEAN_TMP_DIR_PW", "clean_tmp_dir_pw")
