@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '17', '21' ]
+        java: [ "17", "21" ]
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@ecb4a08708255d657ed3b801c339909c4bc61a79
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ matrix.java }}
       - name: Run all tests
@@ -42,13 +42,13 @@ jobs:
     runs-on: actuated
     strategy:
       matrix:
-        java: [ '17', '21' ]
+        java: [ "17", "21" ]
     concurrency:
       group: ${{ github.ref }}-${{ matrix.java }}-it
       cancel-in-progress: true
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@ecb4a08708255d657ed3b801c339909c4bc61a79
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ matrix.java }}
       - name: Run all integration tests
@@ -75,10 +75,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '17', '21' ]
+        java: [ "17", "21" ]
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@ecb4a08708255d657ed3b801c339909c4bc61a79
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
         with:
           java-version: ${{ matrix.java }}
       - name: Run all ZioHttp tests
