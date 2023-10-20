@@ -55,11 +55,11 @@ object GravsearchQueryOptimisationFactory {
   ): GravsearchQueryOptimisationFeature =
     new GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
       override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-        new ReorderPatternsByDependencyOptimisationFeature(this.typeInspectionResult, this.querySchema)
+        new ReorderPatternsByDependencyOptimisationFeature(this.typeInspectionResult, querySchema)
           .optimiseQueryPatterns(
-            new RemoveEntitiesInferredFromPropertyOptimisationFeature(this.typeInspectionResult, this.querySchema)
+            new RemoveEntitiesInferredFromPropertyOptimisationFeature(this.typeInspectionResult, querySchema)
               .optimiseQueryPatterns(
-                new RemoveRedundantKnoraApiResourceOptimisationFeature(this.typeInspectionResult, this.querySchema)
+                new RemoveRedundantKnoraApiResourceOptimisationFeature(this.typeInspectionResult, querySchema)
                   .optimiseQueryPatterns(patterns)
               )
           )
