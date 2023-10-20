@@ -9,6 +9,7 @@ import org.apache.pekko.http.scaladsl.server.Route
 import org.knora.webapi.core.ActorSystem
 import sttp.capabilities.WebSockets
 import sttp.capabilities.pekko.PekkoStreams
+import sttp.model.Method._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.ServerEndpoint
@@ -32,7 +33,7 @@ final case class TapirToPekkoInterpreter()(actorSystem: ActorSystem) {
     ValuedEndpointOutput(jsonBody[GenericErrorResponse], GenericErrorResponse(m))
 
   private val corsInterceptor =
-    CORSInterceptor.customOrThrow[Future](CORSConfig.default.allowAllOrigins.allowAllMethods)
+    CORSInterceptor.customOrThrow[Future](CORSConfig.default.allowMethods(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
   private val serverOptions =
     PekkoHttpServerOptions.customiseInterceptors
       .corsInterceptor(Some(corsInterceptor))
