@@ -10,11 +10,16 @@ jobs:
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ "17", "21" ]
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: ${{ matrix.java }}
       - name: Run all tests
-        run: sbt -v coverage "webapi/test" coverageAggregate
+        run: ./sbtx -v coverage "webapi/test" coverageAggregate
       - name: WebApi Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
@@ -35,20 +40,17 @@ jobs:
   integration-test:
     name: Build and integration-test
     runs-on: actuated
+    strategy:
+      matrix:
+        java: [ "17", "21" ]
     concurrency:
-      group: ${{ github.ref }}-it
+      group: ${{ github.ref }}-${{ matrix.java }}-it
       cancel-in-progress: true
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-      - name: add packages
-        run: |
-          echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
-          echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
-          curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo -H gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
-          sudo chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
-          sudo apt-get update
-          sudo apt install -qyyy --no-install-recommends sbt
+        with:
+          java-version: ${{ matrix.java }}
       - name: Run all integration tests
         run: make integration-test
       - name: WebApi Integration Test Report
@@ -71,9 +73,14 @@ jobs:
   zio-http-test:
     name: Build and zio-http-test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ "17", "21" ]
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+        with:
+          java-version: ${{ matrix.java }}
       - name: Run all ZioHttp tests
         run: make zio-http-test
       - name: ZIO-Http Routes Test Report

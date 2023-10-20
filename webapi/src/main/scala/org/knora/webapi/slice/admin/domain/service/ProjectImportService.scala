@@ -46,7 +46,7 @@ final case class ProjectImportServiceLive(
   private val fusekiBaseUrl: URL = {
     val str      = config.host + ":" + config.fuseki.port
     val protocol = if (config.useHttps) "https://" else "http://"
-    URL.fromString(protocol + str).getOrElse(throw new IllegalStateException(s"Invalid fuseki url: $str"))
+    URL.decode(protocol + str).getOrElse(throw new IllegalStateException(s"Invalid fuseki url: $str"))
   }
   private val httpClient = {
     val basicAuth = new Authenticator {
@@ -60,7 +60,7 @@ final case class ProjectImportServiceLive(
     def acquire(fusekiUrl: URL, httpClient: HttpClient) =
       ZIO.attempt(RDFConnectionFuseki.service(fusekiUrl.encode).httpClient(httpClient).build())
     def release(connection: RDFConnection) = ZIO.attempt(connection.close()).logError.ignore
-    ZIO.acquireRelease(acquire(fusekiBaseUrl.setPath(s"/${config.fuseki.repositoryName}"), httpClient))(release)
+    ZIO.acquireRelease(acquire(fusekiBaseUrl.withPath(s"/${config.fuseki.repositoryName}"), httpClient))(release)
   }
 
   override def importTrigFile(file: Path): Task[Unit] = ZIO.scoped {
