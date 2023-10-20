@@ -6,21 +6,26 @@
 package org.knora.webapi.slice.common.api
 
 import org.apache.pekko.http.scaladsl.server.Route
-import org.knora.webapi.core.ActorSystem
 import sttp.capabilities.WebSockets
 import sttp.capabilities.pekko.PekkoStreams
 import sttp.model.Method._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.interceptor.cors.{CORSConfig, CORSInterceptor}
+import sttp.tapir.server.interceptor.cors.CORSConfig
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.metrics.zio.ZioMetrics
 import sttp.tapir.server.model.ValuedEndpointOutput
-import sttp.tapir.server.pekkohttp.{PekkoHttpServerInterpreter, PekkoHttpServerOptions}
+import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
+import sttp.tapir.server.pekkohttp.PekkoHttpServerOptions
 import zio.ZLayer
-import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.json.DeriveJsonCodec
+import zio.json.JsonCodec
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import org.knora.webapi.core.ActorSystem
 
 final case class TapirToPekkoInterpreter()(actorSystem: ActorSystem) {
   implicit val executionContext: ExecutionContext = actorSystem.system.dispatcher
