@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.resourceinfo.api
+package org.knora.webapi.slice.resourceinfo.api.model
 
 import zio.json._
 
@@ -20,8 +20,7 @@ object ListResponseDto {
     case list => ListResponseDto(list, list.size)
   }
 
-  implicit val encoder: JsonEncoder[ListResponseDto] =
-    DeriveJsonEncoder.gen[ListResponseDto]
+  implicit val codec: JsonCodec[ListResponseDto] = DeriveJsonCodec.gen[ListResponseDto]
 }
 
 final case class ResourceInfoDto private (
@@ -41,6 +40,5 @@ object ResourceInfoDto {
       info.isDeleted
     )
 
-  implicit val encoder: JsonEncoder[ResourceInfoDto] =
-    DeriveJsonEncoder.gen[ResourceInfoDto]
+  implicit val codec: JsonCodec[ResourceInfoDto] = DeriveJsonCodec.gen[ResourceInfoDto]
 }

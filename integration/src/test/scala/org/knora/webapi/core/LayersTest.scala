@@ -43,10 +43,9 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheLive
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
-import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoute
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
@@ -109,7 +108,6 @@ object LayersTest {
       with ProjectsResponderADM
       with QueryTraverser
       with RepositoryUpdater
-      with ResourceInfoRepo
       with ResourceUtilV2
       with ResourcesResponderV2
       with RestCardinalityService
@@ -145,7 +143,6 @@ object LayersTest {
       GroupsResponderADMLive.layer,
       HandlerMapper.layer,
       HttpServer.layer,
-      HttpServerZ.layer,
       IIIFRequestMessageHandlerLive.layer,
       InferenceOptimizationService.layer,
       IriConverter.layer,
@@ -177,13 +174,11 @@ object LayersTest {
       ProjectsResponderADMLive.layer,
       QueryTraverser.layer,
       RepositoryUpdater.layer,
-      ResourceInfoRepo.layer,
-      ResourceInfoRoute.layer,
+      ResourceInfoLayers.live,
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
       RestPermissionServiceLive.layer,
-      RestResourceInfoService.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV2Live.layer,

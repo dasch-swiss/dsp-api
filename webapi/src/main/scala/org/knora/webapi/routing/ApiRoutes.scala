@@ -30,7 +30,8 @@ import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 trait ApiRoutes {
@@ -52,6 +53,7 @@ object ApiRoutes {
       with MessageRelay
       with ProjectADMRestService
       with ProjectsEndpointsHandler
+      with ResourceInfoRoutes
       with RestCardinalityService
       with RestResourceInfoService
       with StringFormatter
@@ -62,11 +64,12 @@ object ApiRoutes {
   ] =
     ZLayer {
       for {
-        sys            <- ZIO.service[ActorSystem]
-        router         <- ZIO.service[AppRouter]
-        appConfig      <- ZIO.service[AppConfig]
-        adminApiRoutes <- ZIO.service[AdminApiRoutes]
-        routeData      <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
+        sys                <- ZIO.service[ActorSystem]
+        router             <- ZIO.service[AppRouter]
+        appConfig          <- ZIO.service[AppConfig]
+        adminApiRoutes     <- ZIO.service[AdminApiRoutes]
+        resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
+        routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
                      AppConfig
                        with IriConverter
@@ -80,7 +83,7 @@ object ApiRoutes {
                        with core.State
                        with routing.Authenticator
                    ]
-      } yield ApiRoutesImpl(routeData, adminApiRoutes, appConfig, runtime)
+      } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, appConfig, runtime)
     }
 }
 
@@ -94,6 +97,7 @@ object ApiRoutes {
 private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
   adminApiRoutes: AdminApiRoutes,
+  resourceInfoRoutes: ResourceInfoRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
     AppConfig
@@ -122,7 +126,7 @@ private final case class ApiRoutesImpl(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
-              adminApiRoutes.routes.reduce(_ ~ _) ~
+              (adminApiRoutes.routes ++ resourceInfoRoutes.routes).reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~

@@ -13,53 +13,55 @@ import zio.URIO
 import zio.ZIO
 import zio.ZLayer
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.resourceinfo.domain
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
 
-final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(InternalIri, InternalIri), List[ResourceInfo]]])
+final case class ResourceInfoRepoFake(entitiesRef: Ref[Map[(IriIdentifier, InternalIri), List[ResourceInfo]]])
     extends ResourceInfoRepo {
 
   override def findByProjectAndResourceClass(
-    projectIri: InternalIri,
+    projectIri: IriIdentifier,
     resourceClass: InternalIri
   ): Task[List[ResourceInfo]] =
     entitiesRef.get.map(_.getOrElse((projectIri, resourceClass), List.empty))
 
-  def add(entity: ResourceInfo, projectIRI: InternalIri, resourceClass: InternalIri): UIO[Unit] = {
+  def add(entity: ResourceInfo, projectIRI: IriIdentifier, resourceClass: InternalIri): UIO[Unit] = {
     val key = (projectIRI, resourceClass)
     entitiesRef.getAndUpdate(entities => entities + (key -> (entity :: entities.getOrElse(key, Nil)))).unit
   }
 
-  def addAll(entities: List[ResourceInfo], projectIri: InternalIri, resourceClass: InternalIri): UIO[Unit] =
+  def addAll(entities: List[ResourceInfo], projectIri: IriIdentifier, resourceClass: InternalIri): UIO[Unit] =
     entities.map(add(_, projectIri, resourceClass)).reduce(_ *> _)
 
   def removeAll(): UIO[Unit] =
-    entitiesRef.set(Map.empty[(InternalIri, InternalIri), List[ResourceInfo]])
+    entitiesRef.set(Map.empty[(IriIdentifier, InternalIri), List[ResourceInfo]])
 }
 
 object ResourceInfoRepoFake {
 
-  val knownProjectIRI    = domain.InternalIri("http://some-project-iri")
+  val knownProjectIRI    = IriIdentifier.unsafeFrom("http://rdfh.ch/projects/0001")
+  val unknownProjectIRI  = IriIdentifier.unsafeFrom("http://rdfh.ch/projects/0002")
   val knownResourceClass = domain.InternalIri("http://some-resource-class")
 
   def findByProjectAndResourceClass(
-    projectIri: InternalIri,
+    projectIri: IriIdentifier,
     resourceClass: InternalIri
   ): ZIO[ResourceInfoRepoFake, Throwable, List[ResourceInfo]] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.findByProjectAndResourceClass(projectIri, resourceClass))
 
   def addAll(
     items: List[ResourceInfo],
-    projectIri: InternalIri,
+    projectIri: IriIdentifier,
     resourceClass: InternalIri
   ): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.addAll(items, projectIri, resourceClass))
 
   def add(
     entity: ResourceInfo,
-    projectIri: InternalIri,
+    projectIri: IriIdentifier,
     resourceClass: InternalIri
   ): URIO[ResourceInfoRepoFake, Unit] =
     ZIO.service[ResourceInfoRepoFake].flatMap(_.add(entity, projectIri, resourceClass))
@@ -68,5 +70,5 @@ object ResourceInfoRepoFake {
     ZIO.service[ResourceInfoRepoFake].flatMap(_.removeAll())
 
   val layer: ULayer[ResourceInfoRepoFake] =
-    ZLayer.fromZIO(Ref.make(Map.empty[(InternalIri, InternalIri), List[ResourceInfo]]).map(ResourceInfoRepoFake(_)))
+    ZLayer.fromZIO(Ref.make(Map.empty[(IriIdentifier, InternalIri), List[ResourceInfo]]).map(ResourceInfoRepoFake(_)))
 }
