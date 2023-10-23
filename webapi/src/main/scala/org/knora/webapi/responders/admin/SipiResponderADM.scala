@@ -84,10 +84,6 @@ final case class SipiResponderADMLive(
 
       _ = if (queryResponse.statements.isEmpty)
             throw NotFoundException(s"No file value was found for filename ${request.filename}")
-      _ = if (queryResponse.statements.size > 1)
-            throw InconsistentRepositoryDataException(
-              s"Filename ${request.filename} is used in more than one file value"
-            )
 
       fileValueIriSubject = queryResponse.statements.keys.head match {
                               case iriSubject: IriSubjectV2 => iriSubject
