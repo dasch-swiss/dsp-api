@@ -5,69 +5,66 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
-import zio.http.model.HttpError.BadRequest
-import zio.test.Assertion.equalTo
-import zio.test.Assertion.fails
+import zio.Exit
 import zio.test._
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
 import java.util.UUID.randomUUID
 
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.ASC
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.DESC
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.creationDate
-import org.knora.webapi.slice.resourceinfo.api.RestResourceInfoServiceLive.lastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Asc
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.CreationDate
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Desc
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.LastModificationDate
+import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
+import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfo
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownProjectIRI
 import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.knownResourceClass
+import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.unknownProjectIRI
 
 object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
+
   override def spec =
     suite("LiveRestResourceInfoServiceSpec")(
-      test("should fail with bad request given an invalid projectIri") {
-        for {
-          result <- RestResourceInfoService
-                      .findByProjectAndResourceClass(
-                        "invalid-project",
-                        knownResourceClass.value,
-                        (lastModificationDate, ASC)
-                      )
-                      .exit
-        } yield assert(result)(fails(equalTo(BadRequest("Invalid projectIri: Couldn't parse IRI: invalid-project"))))
-      },
       test("should fail with bad request given an invalid resourceClass") {
         for {
-          result <- RestResourceInfoService
+          actual <- RestResourceInfoService
                       .findByProjectAndResourceClass(
-                        knownProjectIRI.value,
+                        knownProjectIRI,
                         "invalid-resource-class",
-                        (lastModificationDate, ASC)
+                        Asc,
+                        LastModificationDate
                       )
                       .exit
-        } yield assert(result)(
-          fails(equalTo(BadRequest("Invalid resourceClass: Couldn't parse IRI: invalid-resource-class")))
+        } yield assertTrue(
+          actual == Exit.fail(BadRequestException("Invalid resourceClass: Couldn't parse IRI: invalid-resource-class"))
         )
       },
       test("should return empty list if no resources found // unknown project and resourceClass") {
         for {
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
-              "http://unknown-project",
+              unknownProjectIRI,
               "http://unknown-resource-class",
-              (lastModificationDate, ASC)
+              Asc,
+              LastModificationDate
             )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
       test("should return empty list if no resources found // unknown resourceClass") {
         for {
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
-                      knownProjectIRI.value,
+                      knownProjectIRI,
                       "http://unknown-resource-class",
-                      (lastModificationDate, ASC)
+                      Asc,
+                      LastModificationDate
                     )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -75,9 +72,10 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         for {
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
-              "http://unknown-project",
+              unknownProjectIRI,
               knownResourceClass.value,
-              (lastModificationDate, ASC)
+              Asc,
+              LastModificationDate
             )
         } yield assertTrue(actual == ListResponseDto.empty)
       },
@@ -94,13 +92,14 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
           _ <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <-
             RestResourceInfoService.findByProjectAndResourceClass(
-              knownProjectIRI.value,
+              knownProjectIRI,
               knownResourceClass.value,
-              (lastModificationDate, ASC)
+              Asc,
+              LastModificationDate
             )
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.lastModificationDate)
-          assertTrue(actual == ListResponseDto(items))
+          assertTrue(actual == model.ListResponseDto(items))
         }
       },
       test(
@@ -115,19 +114,20 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
         for {
           _ <- ResourceInfoRepoFake.addAll(List(given1, given2), knownProjectIRI, knownResourceClass)
           actual <- RestResourceInfoService.findByProjectAndResourceClass(
-                      knownProjectIRI.value,
+                      knownProjectIRI,
                       knownResourceClass.value,
-                      ordering = (creationDate, DESC)
+                      Desc,
+                      CreationDate
                     )
         } yield {
           val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.creationDate).reverse
-          assertTrue(actual == ListResponseDto(items))
+          assertTrue(actual == model.ListResponseDto(items))
         }
       }
     ).provide(
       IriConverter.layer,
       StringFormatter.test,
-      RestResourceInfoService.layer,
+      RestResourceInfoServiceLive.layer,
       ResourceInfoRepoFake.layer
     )
 }

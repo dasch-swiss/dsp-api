@@ -60,7 +60,7 @@ class ProjectsADME2EZioHttpSpec extends E2ESpec with ProjectsADMJsonProtocol {
     )
   )
 
-  s"The Projects Route ($baseApiUrl -> 'admin/projects')" when {
+  s"The Projects Route 'admin/projects'" when {
     "used to query for project information" should {
       "return all projects excluding built-in system projects" in {
         val request  = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))

@@ -15,15 +15,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 
 object PathVariables {
 
-  private val projectIriCodec: Codec[String, IriIdentifier, TextPlain] =
-    Codec.string.mapDecode(str =>
-      IriIdentifier
-        .fromString(str)
-        .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_))
-    )(_.value.value)
-
   val projectIri: EndpointInput.PathCapture[IriIdentifier] =
-    path[IriIdentifier](projectIriCodec)
+    path[IriIdentifier]
       .name("projectIri")
       .description("The IRI of a project. Must be URL-encoded.")
       .example(IriIdentifier.fromString("http://rdfh.ch/projects/0001").fold(e => throw e.head, identity))

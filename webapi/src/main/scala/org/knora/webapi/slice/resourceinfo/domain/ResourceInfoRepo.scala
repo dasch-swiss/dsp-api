@@ -6,21 +6,11 @@
 package org.knora.webapi.slice.resourceinfo.domain
 
 import zio.Task
-import zio.ZLayer
 import zio.macros.accessible
 
-import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoLive
-import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 
 @accessible
 trait ResourceInfoRepo {
-  def findByProjectAndResourceClass(
-    projectIri: InternalIri,
-    resourceClass: InternalIri
-  ): Task[List[ResourceInfo]]
-}
-
-object ResourceInfoRepo {
-  val layer: ZLayer[TriplestoreService, Nothing, ResourceInfoRepo] =
-    ZLayer.fromFunction(ResourceInfoRepoLive(_))
+  def findByProjectAndResourceClass(projectIri: IriIdentifier, resourceClass: InternalIri): Task[List[ResourceInfo]]
 }
