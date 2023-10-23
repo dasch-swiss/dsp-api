@@ -25,7 +25,6 @@ import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
@@ -62,8 +61,6 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   private def projectServiceLayer(exp: Expectation[ProjectsResponderADM]): ULayer[ProjectADMRestService] =
     ZLayer.make[ProjectADMRestService](
-      TriplestoreServiceLive.layer,
-      StringFormatter.test,
       ProjectsADMRestServiceLive.layer,
       exp.toLayer,
       org.knora.webapi.slice.common.api.RestPermissionServiceLive.layer,
