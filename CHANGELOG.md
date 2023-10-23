@@ -1,5 +1,18 @@
 # Changelog
 
+## [30.4.1](https://github.com/dasch-swiss/dsp-api/compare/v30.4.0...v30.4.1) (2023-10-17)
+
+
+### Maintenance
+
+* **docker:** Set container memory limits in local stack (DEV-2718) ([#2874](https://github.com/dasch-swiss/dsp-api/issues/2874)) ([783d4fd](https://github.com/dasch-swiss/dsp-api/commit/783d4fdd33110a3885d0ae2ebff5754c5412d3c8))
+* Improve PR title check ([#2882](https://github.com/dasch-swiss/dsp-api/issues/2882)) ([6f4b962](https://github.com/dasch-swiss/dsp-api/commit/6f4b96248dd9876906c54b419f75c9178ba2e387))
+
+
+### Documentation
+
+* Remove invalid ProjectAdminOntologyAllPermission (DEV-2814) ([#2881](https://github.com/dasch-swiss/dsp-api/issues/2881)) ([1796d52](https://github.com/dasch-swiss/dsp-api/commit/1796d52a68085d47f351f405db680905f5ff8360))
+
 ## [30.4.0](https://github.com/dasch-swiss/dsp-api/compare/v30.3.0...v30.4.0) (2023-10-12)
 
 
