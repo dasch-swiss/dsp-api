@@ -7,7 +7,6 @@ package org.knora.webapi.instrumentation.health
 
 import zio._
 import zio.http._
-import zio.http.model._
 import zio.json._
 
 import org.knora.webapi.core.State
@@ -19,7 +18,7 @@ import org.knora.webapi.core.domain.AppState
 final case class HealthRouteZ() {
 
   val route: HttpApp[State, Nothing] =
-    Http.collectZIO[Request] { case Method.GET -> !! / "health" =>
+    Http.collectZIO[Request] { case Method.GET -> Root / "health" =>
       State.getAppState.map(toHealthCheckResult).flatMap(createResponse)
     }
 
@@ -61,7 +60,7 @@ final case class HealthRouteZ() {
     ZIO.succeed(
       Response
         .json(result.toJson)
-        .setStatus(statusCode(result.status))
+        .withStatus(statusCode(result.status))
     )
 
   /**

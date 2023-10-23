@@ -11,12 +11,16 @@ import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat.TextPlain
+import sttp.tapir.DecodeResult
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.prelude.Validation
 
 import java.util.UUID
 
+import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
@@ -365,9 +369,21 @@ object ProjectIdentifierADM {
   object IriIdentifier {
 
     def from(projectIri: ProjectIri): IriIdentifier = IriIdentifier(projectIri)
+    def unsafeFrom(projectIri: String): IriIdentifier =
+      fromString(projectIri).fold(
+        err => throw new IllegalArgumentException(s"Invalid project IRI: $projectIri: ${err.head.msg}"),
+        identity
+      )
 
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
       ProjectIri.make(value).map(IriIdentifier(_))
+
+    implicit val tapirCodec: Codec[String, IriIdentifier, TextPlain] =
+      Codec.string.mapDecode(str =>
+        IriIdentifier
+          .fromString(str)
+          .fold(err => DecodeResult.Error(str, BadRequestException(err.head.msg)), DecodeResult.Value(_))
+      )(_.value.value)
   }
 
   /**
