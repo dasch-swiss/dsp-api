@@ -20,36 +20,33 @@ object InstrumentationServer {
 
   private val instrumentationServer =
     for {
-      index      <- ZIO.service[IndexApp].map(_.route)
-      health     <- ZIO.service[HealthRouteZ].map(_.route)
-      prometheus <- ZIO.service[PrometheusApp].map(_.route)
+      index      <- ZIO.serviceWith[IndexApp](_.route)
+      health     <- ZIO.serviceWith[HealthRouteZ](_.route)
+      prometheus <- ZIO.serviceWith[PrometheusApp](_.route)
       app         = index ++ health ++ prometheus
-      _          <- Server.serve(app)
+      _          <- Server.serve(app).forkDaemon
     } yield ()
 
-  val make: ZIO[State with AppConfig, Throwable, Fiber.Runtime[Throwable, Unit]] =
-    ZIO
-      .service[AppConfig]
-      .flatMap { config =>
-        val port          = config.instrumentationServerConfig.port
-        val interval      = config.instrumentationServerConfig.interval
-        val metricsConfig = MetricsConfig(interval)
-        ZIO.logInfo(s"Starting instrumentation http server on port: $port") *>
-          instrumentationServer
-            .provideSome[State](
-              // HTTP Server
-              Server.defaultWithPort(port),
-              // HTTP routes
-              IndexApp.layer,
-              HealthRouteZ.layer,
-              PrometheusApp.layer,
-              // Metrics dependencies
-              prometheus.publisherLayer,
-              ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
-              Runtime.enableRuntimeMetrics,
-              Runtime.enableFiberRoots,
-              DefaultJvmMetrics.live.unit
-            )
-            .forkDaemon
-      }
+  val make: ZIO[State with AppConfig, Throwable, Unit] =
+    ZIO.serviceWithZIO[AppConfig] { config =>
+      val port          = config.instrumentationServerConfig.port
+      val interval      = config.instrumentationServerConfig.interval
+      val metricsConfig = MetricsConfig(interval)
+      ZIO.logInfo(s"Starting instrumentation http server on port: $port") *>
+        instrumentationServer
+          .provideSome[State](
+            // HTTP Server
+            Server.defaultWithPort(port),
+            // HTTP routes
+            IndexApp.layer,
+            HealthRouteZ.layer,
+            PrometheusApp.layer,
+            // Metrics dependencies
+            prometheus.publisherLayer,
+            ZLayer.succeed(metricsConfig) >>> prometheus.prometheusLayer,
+            Runtime.enableRuntimeMetrics,
+            Runtime.enableFiberRoots,
+            DefaultJvmMetrics.live.unit
+          )
+    }
 }
