@@ -1,5 +1,15 @@
 # Changelog
 
+## [30.4.2](https://github.com/dasch-swiss/dsp-api/compare/v30.4.1...v30.4.2) (2023-10-23)
+
+
+### Maintenance
+
+* Add missing component to release please GitHub action ([#2896](https://github.com/dasch-swiss/dsp-api/issues/2896)) ([8751d52](https://github.com/dasch-swiss/dsp-api/commit/8751d5212329efa1a008e97ef6d55aa7f2982926))
+* Update PR title template ([#2897](https://github.com/dasch-swiss/dsp-api/issues/2897)) ([3c3c45f](https://github.com/dasch-swiss/dsp-api/commit/3c3c45f63c54d565ac022231cba18b08a4527fe8))
+* Update tapir-refined from 1.2.10 to 1.2.13 ([#2886](https://github.com/dasch-swiss/dsp-api/issues/2886)) ([05d519a](https://github.com/dasch-swiss/dsp-api/commit/05d519a15752364c46d8592534783d3bfd535bb5))
+* Use correct syntax in release please configuration ([#2895](https://github.com/dasch-swiss/dsp-api/issues/2895)) ([e8eced4](https://github.com/dasch-swiss/dsp-api/commit/e8eced45f022059056afa1a1761f4bd2ac191014))
+
 ## [30.4.1](https://github.com/dasch-swiss/dsp-api/compare/v30.4.0...v30.4.1) (2023-10-17)
 
 
