@@ -216,6 +216,31 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Queries without type inference
 
+    "perform a Gravsearch query using simple schema which allows to sort the results by external link" in {
+      val query =
+        """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?res knora-api:isMainResource true .
+          |  ?res anything:hasUri ?exLink .
+          |} WHERE {
+          |  ?res a knora-api:Resource .
+          |  ?res a anything:Thing .
+          |  ?res anything:hasUri ?exLink .
+          |}
+          |ORDER BY (?exLink)
+          |""".stripMargin
+
+      Post(
+        "/v2/searchextended",
+        HttpEntity(SparqlQueryConstants.`application/sparql-query`, query)
+      ) ~> searchPath ~> check {
+        val respone = responseAs[String]
+        assert(status == StatusCodes.OK, respone)
+      }
+    }
+
     "perform a Gravsearch query using complex schema which allows to sort the results by external link" in {
       val query =
         """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
