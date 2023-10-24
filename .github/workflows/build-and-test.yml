@@ -70,36 +70,6 @@ jobs:
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
 
-  zio-http-test:
-    name: Build and zio-http-test
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        java: [ "17", "21" ]
-    steps:
-      - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-        with:
-          java-version: ${{ matrix.java }}
-      - name: Run all ZioHttp tests
-        run: make zio-http-test
-      - name: ZIO-Http Routes Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: ZIO-Http Routes Test Report
-          path: ./integration/target/test-reports/TEST-*.xml
-          reporter: java-junit
-      - name: Upload coverage data to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
-      - name: Upload coverage data to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./target/scala-2.13/coverage-report/cobertura.xml
-
   test-client-test-data:
     name: Test client-test-data
     runs-on: ubuntu-latest
