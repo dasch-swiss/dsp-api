@@ -19,13 +19,13 @@ import org.knora.webapi.instrumentation.prometheus.PrometheusApp
 object InstrumentationServer {
 
   private val instrumentationServer =
-    for {
+    (for {
       index      <- ZIO.serviceWith[IndexApp](_.route)
       health     <- ZIO.serviceWith[HealthRouteZ](_.route)
       prometheus <- ZIO.serviceWith[PrometheusApp](_.route)
       app         = index ++ health ++ prometheus
-      _          <- Server.serve(app)
-    } yield ()
+      _          <- Server.install(app)
+    } yield ()) *> ZIO.never
 
   val make: ZIO[State with AppConfig, Throwable, Unit] =
     ZIO.serviceWithZIO[AppConfig] { config =>
