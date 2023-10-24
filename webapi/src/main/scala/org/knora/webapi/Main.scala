@@ -30,5 +30,5 @@ object Main extends ZIOApp {
    *  Entrypoint of our Application
    */
   override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
-    InstrumentationServer.make *> AppServer.make *> ZIO.never
+    AppServer.make *> InstrumentationServer.make
 }
