@@ -235,10 +235,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       Post(
         "/v2/searchextended",
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, query)
-      ) ~> searchPath ~> check {
-        val respone = responseAs[String]
-        assert(status == StatusCodes.OK, respone)
-      }
+      ) ~> searchPath ~> check(assert(status == StatusCodes.OK))
     }
 
     "perform a Gravsearch query using complex schema which allows to sort the results by external link" in {
@@ -260,10 +257,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       Post(
         "/v2/searchextended",
         HttpEntity(SparqlQueryConstants.`application/sparql-query`, query)
-      ) ~> searchPath ~> check {
-        val respone = responseAs[String]
-        assert(status == StatusCodes.OK, respone)
-      }
+      ) ~> searchPath ~> check(assert(status == StatusCodes.OK))
     }
 
     "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
