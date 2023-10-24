@@ -24,7 +24,7 @@ object InstrumentationServer {
       health     <- ZIO.serviceWith[HealthRouteZ](_.route)
       prometheus <- ZIO.serviceWith[PrometheusApp](_.route)
       app         = index ++ health ++ prometheus
-      _          <- Server.serve(app).forkDaemon
+      _          <- Server.serve(app)
     } yield ()
 
   val make: ZIO[State with AppConfig, Throwable, Unit] =
@@ -32,7 +32,7 @@ object InstrumentationServer {
       val port          = config.instrumentationServerConfig.port
       val interval      = config.instrumentationServerConfig.interval
       val metricsConfig = MetricsConfig(interval)
-      ZIO.logInfo(s"Starting instrumentation http server on port: $port") *>
+      ZIO.logInfo(s"Starting instrumentation http server on http://localhost:$port") *>
         instrumentationServer
           .provideSome[State](
             // HTTP Server
