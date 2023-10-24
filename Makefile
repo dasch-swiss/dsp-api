@@ -208,7 +208,7 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
 .PHONY: test-all
-test-all: test integration-test zio-http-test
+test-all: test integration-test
 
 .PHONY: test
 test: ## runs all unit tests
@@ -217,10 +217,6 @@ test: ## runs all unit tests
 .PHONY: integration-test
 integration-test: docker-build-sipi-image ## runs all integration tests
 	$(SBTX) -v coverage "integration/test" coverageAggregate
-
-.PHONY: zio-http-test
-zio-http-test: ## runs tests against ZIO HTTP routes
-	$(SBTX) -v coverage "integration/testOnly *ZioHttpSpec" -Dkey=zio coverageAggregate
 
 
 #################################
