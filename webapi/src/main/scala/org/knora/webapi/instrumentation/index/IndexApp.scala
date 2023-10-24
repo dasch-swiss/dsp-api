@@ -20,10 +20,12 @@ final case class IndexApp() {
   private val indexPage =
     """<html>
       |<title>Simple Server</title>
-      |<body>
-      |<p><a href="/metrics">Prometheus Metrics</a></p>
-      |</body
-      |</html>""".stripMargin
+      |  <body>
+      |    <p><a href="/metrics">Metrics</a></p>
+      |    <p><a href="/health">Health</a></p>
+      |  </body
+      |</html>
+      |""".stripMargin
 }
 object IndexApp {
   val layer: ULayer[IndexApp] =
