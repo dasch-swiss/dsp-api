@@ -799,6 +799,7 @@ abstract class AbstractPrequeryGenerator(
     OntologyConstants.Xsd.Decimal                    -> OntologyConstants.KnoraBase.ValueHasDecimal,
     OntologyConstants.Xsd.Boolean                    -> OntologyConstants.KnoraBase.ValueHasBoolean,
     OntologyConstants.Xsd.String                     -> OntologyConstants.KnoraBase.ValueHasString,
+    OntologyConstants.Xsd.Uri                        -> OntologyConstants.KnoraBase.ValueHasUri,
     OntologyConstants.KnoraApiV2Simple.Date          -> OntologyConstants.KnoraBase.ValueHasStartJDN,
     OntologyConstants.KnoraApiV2Simple.Color         -> OntologyConstants.KnoraBase.ValueHasColor,
     OntologyConstants.KnoraApiV2Simple.Geoname       -> OntologyConstants.KnoraBase.ValueHasGeonameCode,
@@ -809,7 +810,8 @@ abstract class AbstractPrequeryGenerator(
     OntologyConstants.KnoraApiV2Complex.BooleanValue -> OntologyConstants.KnoraBase.ValueHasBoolean,
     OntologyConstants.KnoraApiV2Complex.DateValue    -> OntologyConstants.KnoraBase.ValueHasStartJDN,
     OntologyConstants.KnoraApiV2Complex.ColorValue   -> OntologyConstants.KnoraBase.ValueHasColor,
-    OntologyConstants.KnoraApiV2Complex.GeonameValue -> OntologyConstants.KnoraBase.ValueHasGeonameCode
+    OntologyConstants.KnoraApiV2Complex.GeonameValue -> OntologyConstants.KnoraBase.ValueHasGeonameCode,
+    OntologyConstants.KnoraApiV2Complex.UriValue     -> OntologyConstants.KnoraBase.ValueHasUri
   )
 
   /**
