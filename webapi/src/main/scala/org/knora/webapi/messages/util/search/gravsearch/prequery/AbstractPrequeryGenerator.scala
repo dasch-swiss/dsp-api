@@ -795,21 +795,23 @@ abstract class AbstractPrequeryGenerator(
   // that point to literals. This is used only for generating additional statements for ORDER BY clauses, so it only needs to include
   // types that have a meaningful order.
   private val valueTypesToValuePredsForOrderBy: Map[IRI, IRI] = Map(
-    OntologyConstants.Xsd.Integer                    -> OntologyConstants.KnoraBase.ValueHasInteger,
-    OntologyConstants.Xsd.Decimal                    -> OntologyConstants.KnoraBase.ValueHasDecimal,
-    OntologyConstants.Xsd.Boolean                    -> OntologyConstants.KnoraBase.ValueHasBoolean,
-    OntologyConstants.Xsd.String                     -> OntologyConstants.KnoraBase.ValueHasString,
-    OntologyConstants.KnoraApiV2Simple.Date          -> OntologyConstants.KnoraBase.ValueHasStartJDN,
-    OntologyConstants.KnoraApiV2Simple.Color         -> OntologyConstants.KnoraBase.ValueHasColor,
-    OntologyConstants.KnoraApiV2Simple.Geoname       -> OntologyConstants.KnoraBase.ValueHasGeonameCode,
-    OntologyConstants.KnoraApiV2Complex.TextValue    -> OntologyConstants.KnoraBase.ValueHasString,
-    OntologyConstants.KnoraApiV2Complex.IntValue     -> OntologyConstants.KnoraBase.ValueHasInteger,
-    OntologyConstants.KnoraApiV2Complex.DecimalValue -> OntologyConstants.KnoraBase.ValueHasDecimal,
-    OntologyConstants.KnoraApiV2Complex.TimeValue    -> OntologyConstants.KnoraBase.ValueHasTimeStamp,
     OntologyConstants.KnoraApiV2Complex.BooleanValue -> OntologyConstants.KnoraBase.ValueHasBoolean,
-    OntologyConstants.KnoraApiV2Complex.DateValue    -> OntologyConstants.KnoraBase.ValueHasStartJDN,
     OntologyConstants.KnoraApiV2Complex.ColorValue   -> OntologyConstants.KnoraBase.ValueHasColor,
-    OntologyConstants.KnoraApiV2Complex.GeonameValue -> OntologyConstants.KnoraBase.ValueHasGeonameCode
+    OntologyConstants.KnoraApiV2Complex.DateValue    -> OntologyConstants.KnoraBase.ValueHasStartJDN,
+    OntologyConstants.KnoraApiV2Complex.DecimalValue -> OntologyConstants.KnoraBase.ValueHasDecimal,
+    OntologyConstants.KnoraApiV2Complex.GeonameValue -> OntologyConstants.KnoraBase.ValueHasGeonameCode,
+    OntologyConstants.KnoraApiV2Complex.IntValue     -> OntologyConstants.KnoraBase.ValueHasInteger,
+    OntologyConstants.KnoraApiV2Complex.TextValue    -> OntologyConstants.KnoraBase.ValueHasString,
+    OntologyConstants.KnoraApiV2Complex.TimeValue    -> OntologyConstants.KnoraBase.ValueHasTimeStamp,
+    OntologyConstants.KnoraApiV2Complex.UriValue     -> OntologyConstants.KnoraBase.ValueHasUri,
+    OntologyConstants.KnoraApiV2Simple.Color         -> OntologyConstants.KnoraBase.ValueHasColor,
+    OntologyConstants.KnoraApiV2Simple.Date          -> OntologyConstants.KnoraBase.ValueHasStartJDN,
+    OntologyConstants.KnoraApiV2Simple.Geoname       -> OntologyConstants.KnoraBase.ValueHasGeonameCode,
+    OntologyConstants.Xsd.Boolean                    -> OntologyConstants.KnoraBase.ValueHasBoolean,
+    OntologyConstants.Xsd.Decimal                    -> OntologyConstants.KnoraBase.ValueHasDecimal,
+    OntologyConstants.Xsd.Integer                    -> OntologyConstants.KnoraBase.ValueHasInteger,
+    OntologyConstants.Xsd.String                     -> OntologyConstants.KnoraBase.ValueHasString,
+    OntologyConstants.Xsd.Uri                        -> OntologyConstants.KnoraBase.ValueHasUri
   )
 
   /**
