@@ -1,5 +1,24 @@
 # Changelog
 
+## [30.5.0](https://github.com/dasch-swiss/dsp-api/compare/v30.4.2...v30.5.0) (2023-10-27)
+
+
+### Enhancements
+
+* **Gravsearch:** Enable ORDER BY external link (DEV-2704) ([#2902](https://github.com/dasch-swiss/dsp-api/issues/2902)) ([1b7e02a](https://github.com/dasch-swiss/dsp-api/commit/1b7e02a9ba30b917da596466dca42a45640b52d5))
+
+
+### Bug Fixes
+
+* Startup and keep instrumentation server running ([#2901](https://github.com/dasch-swiss/dsp-api/issues/2901)) ([a11af40](https://github.com/dasch-swiss/dsp-api/commit/a11af40805d8e90ae4ab1e13c6fcacdc6b305ce9))
+
+
+### Maintenance
+
+* Remove GitHub action which tests zio-http routes  ([#2903](https://github.com/dasch-swiss/dsp-api/issues/2903)) ([1999b22](https://github.com/dasch-swiss/dsp-api/commit/1999b221632a8094a74e55155831183987754eca))
+* Remove/Fix some compiler warnings ([#2899](https://github.com/dasch-swiss/dsp-api/issues/2899)) ([cb5dec6](https://github.com/dasch-swiss/dsp-api/commit/cb5dec6b19049d239b2ab989bd19ac8151be64ec))
+* Update dependencies ([#2905](https://github.com/dasch-swiss/dsp-api/issues/2905)) ([855eb02](https://github.com/dasch-swiss/dsp-api/commit/855eb02d13e9fd37af948780ffb9b0a4521bdc1e))
+
 ## [30.4.2](https://github.com/dasch-swiss/dsp-api/compare/v30.4.1...v30.4.2) (2023-10-23)
 
 
