@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1](https://github.com/dasch-swiss/dsp-ingest/compare/v0.3.0...v0.3.1) (2023-10-23)
+
+
+### Maintenance
+
+* Force PR titles to start with an upper case letter ([#115](https://github.com/dasch-swiss/dsp-ingest/issues/115)) ([1bfeb16](https://github.com/dasch-swiss/dsp-ingest/commit/1bfeb16709374b896f42171cc2b5246415bc0c5a))
+* Minor/major updates ([#113](https://github.com/dasch-swiss/dsp-ingest/issues/113)) ([05f996a](https://github.com/dasch-swiss/dsp-ingest/commit/05f996abb3d0a07c1614b7ce812a1ffd3c093a59))
+* Patch updates ([#112](https://github.com/dasch-swiss/dsp-ingest/issues/112)) ([6a26ec2](https://github.com/dasch-swiss/dsp-ingest/commit/6a26ec23d4760954118d7d46eca1e850c455a10a))
+* Update release PR title template ([#116](https://github.com/dasch-swiss/dsp-ingest/issues/116)) ([18720ba](https://github.com/dasch-swiss/dsp-ingest/commit/18720bae9b520987a22c293624296ff012f05ea3))
+
 ## [0.3.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.2.2...v0.3.0) (2023-10-13)
 
 
