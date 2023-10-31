@@ -94,7 +94,7 @@ object Project {
    * Project Name value object.
    * (Formerly `Longname`)
    */
-  // TODO-BL: [domain-model] this should be multi-lang-string, I suppose; needs real validation once value constraints are defined
+  // TODO-BL: [domain-model] this should be multi-lang-string,
   sealed abstract case class Name private (value: String)
   object Name { self =>
     implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { value =>
@@ -103,12 +103,12 @@ object Project {
     implicit val encoder: JsonEncoder[Name] =
       JsonEncoder[String].contramap((name: Name) => name.value)
 
+    private def isLengthCorrect(name: String): Boolean = name.length > 2 && name.length < 257
+
     def make(value: String): Validation[ValidationException, Name] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
-      } else {
-        Validation.succeed(new Name(value) {})
-      }
+      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ProjectErrorMessages.NameInvalid))
+      else Validation.succeed(new Name(value) {})
 
     def make(value: Option[String]): Validation[ValidationException, Option[Name]] =
       value match {
@@ -249,7 +249,7 @@ object ProjectErrorMessages {
   val ShortnameMissing           = "Shortname cannot be empty."
   val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
   val NameMissing                = "Name cannot be empty."
-  val NameInvalid                = (v: String) => s"Name is invalid: $v"
+  val NameInvalid                = "Name can be 3 to 256 characters long."
   val ProjectDescriptionsMissing = "Description cannot be empty."
   val ProjectDescriptionsInvalid = (v: String) => s"Description is invalid: $v"
   val KeywordsMissing            = "Keywords cannot be empty."

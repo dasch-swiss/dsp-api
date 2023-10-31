@@ -9,6 +9,7 @@ import zio._
 import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
+
 import dsp.errors.ValidationException
 import dsp.valueobjects.Project._
 
@@ -19,6 +20,11 @@ object ProjectSpec extends ZIOSpecDefault {
   private val validShortcode   = "1234"
   private val invalidShortcode = "12345"
   private val validName        = "That is the project longname"
+  private val tooShortName     = "Ab"
+  private val tooLongName =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore " +
+      "magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea " +
+      "commodo consequat. Duis aute irure dolor ino"
   private val validDescription = Seq(
     V2.StringLiteralV2(value = "Valid project description", language = Some("en"))
   )
@@ -109,6 +115,12 @@ object ProjectSpec extends ZIOSpecDefault {
       assertTrue(
         Name.make("") == Validation.fail(ValidationException(ProjectErrorMessages.NameMissing)),
         Name.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
+      )
+    },
+    test("pass invalid Name and expect an error to be returned") {
+      assertTrue(
+        Name.make(tooShortName) == Validation.fail(ValidationException(ProjectErrorMessages.NameInvalid)),
+        Name.make(tooLongName) == Validation.fail(ValidationException(ProjectErrorMessages.NameInvalid))
       )
     },
     test("pass a valid value and successfully create value object") {
