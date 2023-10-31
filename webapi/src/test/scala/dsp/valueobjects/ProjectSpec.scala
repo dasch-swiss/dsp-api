@@ -9,29 +9,26 @@ import zio._
 import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
-
 import dsp.errors.ValidationException
 import dsp.valueobjects.Project._
+import scala.util.Random
 
 /**
  * This spec is used to test the [[Project]] value objects creation.
  */
 object ProjectSpec extends ZIOSpecDefault {
-  private val validShortcode   = "1234"
-  private val invalidShortcode = "12345"
-  private val validName        = "That is the project longname"
-  private val tooShortName     = "Ab"
-  private val tooLongName =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore " +
-      "magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea " +
-      "commodo consequat. Duis aute irure dolor ino"
-  private val validDescription = Seq(
-    V2.StringLiteralV2(value = "Valid project description", language = Some("en"))
-  )
-  private val validKeywords    = Seq("key", "word")
-  private val tooShortKeywords = Seq("de", "key", "word")
-  private val tooLongKeywords  = Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "key", "word")
-  private val validLogo        = "/fu/bar/baz.jpg"
+  private val validShortcode      = "1234"
+  private val invalidShortcode    = "12345"
+  private val validName           = "That is valid project longname"
+  private val tooShortName        = "Ab"
+  private val tooLongName         = new Random().nextString(257)
+  private val validDescription    = Seq(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
+  private val tooShortDescription = Seq(V2.StringLiteralV2("Ab", Some("en")))
+  private val tooLongDescription  = Seq(V2.StringLiteralV2(new Random().nextString(40961), Some("en")))
+  private val validKeywords       = Seq("key", "word")
+  private val tooShortKeywords    = Seq("de", "key", "word")
+  private val tooLongKeywords     = Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "key", "word")
+  private val validLogo           = "/fu/bar/baz.jpg"
 
   def spec = suite("ProjectSpec")(
     shortcodeTest,
@@ -142,6 +139,16 @@ object ProjectSpec extends ZIOSpecDefault {
         ),
         ProjectDescription.make(Some(Seq.empty)) == Validation.fail(
           ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing)
+        )
+      )
+    },
+    test("pass an object containing invalid Description and expect an error to be returned") {
+      assertTrue(
+        ProjectDescription.make(tooShortDescription) == Validation.fail(
+          ValidationException(ProjectErrorMessages.ProjectDescriptionsInvalid)
+        ),
+        ProjectDescription.make(tooLongDescription) == Validation.fail(
+          ValidationException(ProjectErrorMessages.ProjectDescriptionsInvalid)
         )
       )
     },

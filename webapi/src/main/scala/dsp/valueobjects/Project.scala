@@ -122,7 +122,7 @@ object Project {
    */
   // TODO-BL: [domain-model] should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
   // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
-  sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
+  sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2])
   object ProjectDescription { self =>
     implicit val decoder: JsonDecoder[ProjectDescription] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail { value =>
       ProjectDescription.make(value).toEitherWith(e => e.head.getMessage)
@@ -130,12 +130,16 @@ object Project {
     implicit val encoder: JsonEncoder[ProjectDescription] =
       JsonEncoder[Seq[V2.StringLiteralV2]].contramap((description: ProjectDescription) => description.value)
 
+    private def isLengthCorrect(descriptionsToCheck: Seq[V2.StringLiteralV2]): Boolean = {
+      val checked = descriptionsToCheck.filter(d => d.value.length > 2 && d.value.length < 40961)
+      descriptionsToCheck == checked
+    }
+
     def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, ProjectDescription] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing))
-      } else {
-        Validation.succeed(new ProjectDescription(value) {})
-      }
+      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing))
+      else if (!isLengthCorrect(value))
+        Validation.fail((ValidationException(ProjectErrorMessages.ProjectDescriptionsInvalid)))
+      else Validation.succeed(new ProjectDescription(value) {})
 
     def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[ProjectDescription]] =
       value match {
@@ -249,11 +253,11 @@ object ProjectErrorMessages {
   val ShortnameMissing           = "Shortname cannot be empty."
   val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
   val NameMissing                = "Name cannot be empty."
-  val NameInvalid                = "Name can be 3 to 256 characters long."
+  val NameInvalid                = "Name must be 3 to 256 characters long."
   val ProjectDescriptionsMissing = "Description cannot be empty."
-  val ProjectDescriptionsInvalid = (v: String) => s"Description is invalid: $v"
+  val ProjectDescriptionsInvalid = "Description must be 3 to 40960 characters long."
   val KeywordsMissing            = "Keywords cannot be empty."
-  val KeywordsInvalid            = "Keywords can be 3 to 64 characters long."
+  val KeywordsInvalid            = "Keywords must be 3 to 64 characters long."
   val LogoMissing                = "Logo cannot be empty."
   val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
 }
