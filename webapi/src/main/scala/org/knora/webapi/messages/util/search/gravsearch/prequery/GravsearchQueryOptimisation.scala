@@ -5,47 +5,28 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import org.knora.webapi.ApiV2Schema
+import scalax.collection.Graph
+import scalax.collection.GraphEdge.DiHyperEdge
+
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
-import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, TypeableEntity}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
-
-/**
- * Represents optimisation algorithms that transform Gravsearch input queries.
- */
-trait GravsearchQueryOptimisationFeature {
-
-  /**
-   * Performs the optimisation.
-   *
-   * @param patterns the query patterns.
-   * @return the optimised query patterns.
-   */
-  def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern]
-}
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
 
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
  */
-object GravsearchQueryOptimisationFactory {
+object GravsearchQueryOptimisation {
 
-  /**
-   * Returns a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations, depending
-   * on the feature factory configuration.
-   *
-   * @param typeInspectionResult the type inspection result.
-   * @param querySchema the query schema.
-   * @return a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations.
-   */
   def optimiseQueryPatterns(
-    typeInspectionResult: GravsearchTypeInspectionResult,
-    querySchema: ApiV2Schema
-  ) = {
+    patterns: Seq[QueryPattern],
+    typeInspectionResult: GravsearchTypeInspectionResult
+  ): Seq[QueryPattern] = {
     val removedRedundant = removeRedundantKnoraApiResource(patterns)
     val removedEntities  = removeEntitiesInferredFromProperty(removedRedundant, typeInspectionResult)
     reorderPatternsByDependency(removedEntities)
@@ -56,7 +37,7 @@ object GravsearchQueryOptimisationFactory {
  * Removes a statement with rdf:type knora-api:Resource if there is another rdf:type statement with the same subject
  * and a different type.
  */
-object RemoveRedundantKnoraApiResource {
+private object RemoveRedundantKnoraApiResource {
 
   /**
    * If the specified statement has rdf:type with an IRI as object, returns that IRI, otherwise None.

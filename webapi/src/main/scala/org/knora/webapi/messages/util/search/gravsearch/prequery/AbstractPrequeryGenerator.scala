@@ -17,7 +17,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.search.CompareExpressionOperator
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
@@ -146,14 +145,7 @@ abstract class AbstractPrequeryGenerator(
    * @return the optimised query patterns.
    */
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Task[Seq[QueryPattern]] =
-    ZIO.attempt(
-      GravsearchQueryOptimisationFactory
-        .getGravsearchQueryOptimisationFeature(
-          typeInspectionResult = typeInspectionResult,
-          querySchema = querySchema
-        )
-        .optimiseQueryPatterns(patterns)
-    )
+    ZIO.attempt(GravsearchQueryOptimisation.optimiseQueryPatterns(patterns, typeInspectionResult))
 
   /**
    * Transforms a [[org.knora.webapi.messages.util.search.FilterPattern]] in a WHERE clause into zero or more statement patterns.
