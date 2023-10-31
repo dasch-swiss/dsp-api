@@ -34,26 +34,24 @@ object Project {
    * @param shortname string to be checked.
    * @return the same string.
    */
-  def validateAndEscapeProjectShortname(shortname: String): Option[String] =
+  private def validateAndEscapeProjectShortname(shortname: String): Option[String] =
     shortnameRegex
       .findFirstIn(shortname)
       .flatMap(Iri.toSparqlEncodedString)
-
-  // TODO-mpro: longname, description, keywords, logo are missing enhanced validation
 
   /**
    * Project Shortcode value object.
    */
   sealed abstract case class Shortcode private (value: String)
   object Shortcode { self =>
-    implicit val decoder: JsonDecoder[Shortcode] = JsonDecoder[String].mapOrFail { case value =>
-      Shortcode.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Shortcode] = JsonDecoder[String].mapOrFail { value =>
+      Shortcode.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Shortcode] =
       JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
     def unsafeFrom(str: String) = make(str)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid project shortcode: $str"))
+      .getOrElse(throw new IllegalArgumentException(ProjectErrorMessages.ShortcodeInvalid(str)))
 
     def make(value: String): Validation[ValidationException, Shortcode] =
       if (value.isEmpty) {
@@ -99,8 +97,8 @@ object Project {
   // TODO-BL: [domain-model] this should be multi-lang-string, I suppose; needs real validation once value constraints are defined
   sealed abstract case class Name private (value: String)
   object Name { self =>
-    implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { case value =>
-      Name.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { value =>
+      Name.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Name] =
       JsonEncoder[String].contramap((name: Name) => name.value)
@@ -126,9 +124,8 @@ object Project {
   // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
   sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
   object ProjectDescription { self =>
-    implicit val decoder: JsonDecoder[ProjectDescription] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail {
-      case value =>
-        ProjectDescription.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[ProjectDescription] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail { value =>
+      ProjectDescription.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[ProjectDescription] =
       JsonEncoder[Seq[V2.StringLiteralV2]].contramap((description: ProjectDescription) => description.value)
@@ -180,8 +177,8 @@ object Project {
    */
   sealed abstract case class Logo private (value: String)
   object Logo { self =>
-    implicit val decoder: JsonDecoder[Logo] = JsonDecoder[String].mapOrFail { case value =>
-      Logo.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Logo] = JsonDecoder[String].mapOrFail { value =>
+      Logo.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Logo] =
       JsonEncoder[String].contramap((logo: Logo) => logo.value)
@@ -204,8 +201,8 @@ object Project {
    */
   sealed abstract case class ProjectSelfJoin private (value: Boolean)
   object ProjectSelfJoin { self =>
-    implicit val decoder: JsonDecoder[ProjectSelfJoin] = JsonDecoder[Boolean].mapOrFail { case value =>
-      ProjectSelfJoin.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[ProjectSelfJoin] = JsonDecoder[Boolean].mapOrFail { value =>
+      ProjectSelfJoin.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[ProjectSelfJoin] =
       JsonEncoder[Boolean].contramap((selfJoin: ProjectSelfJoin) => selfJoin.value)
@@ -229,8 +226,8 @@ object Project {
     val deleted = new ProjectStatus(false) {}
     val active  = new ProjectStatus(true) {}
 
-    implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { case value =>
-      ProjectStatus.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { value =>
+      ProjectStatus.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[ProjectStatus] =
       JsonEncoder[Boolean].contramap((status: ProjectStatus) => status.value)
@@ -248,7 +245,7 @@ object Project {
 
 object ProjectErrorMessages {
   val ShortcodeMissing           = "Shortcode cannot be empty."
-  val ShortcodeInvalid           = (v: String) => s"Shortcode is invalid: $v"
+  val ShortcodeInvalid           = (v: String) => s"Invalid project shortcode: $v"
   val ShortnameMissing           = "Shortname cannot be empty."
   val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
   val NameMissing                = "Name cannot be empty."
