@@ -39,6 +39,21 @@ object Project {
       .findFirstIn(shortname)
       .flatMap(Iri.toSparqlEncodedString)
 
+  object ErrorMessages {
+    val ShortcodeMissing           = "Shortcode cannot be empty."
+    val ShortcodeInvalid           = (v: String) => s"Invalid project shortcode: $v"
+    val ShortnameMissing           = "Shortname cannot be empty."
+    val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
+    val NameMissing                = "Name cannot be empty."
+    val NameInvalid                = "Name must be 3 to 256 characters long."
+    val ProjectDescriptionsMissing = "Description cannot be empty."
+    val ProjectDescriptionsInvalid = "Description must be 3 to 40960 characters long."
+    val KeywordsMissing            = "Keywords cannot be empty."
+    val KeywordsInvalid            = "Keywords must be 3 to 64 characters long."
+    val LogoMissing                = "Logo cannot be empty."
+    val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
+  }
+
   /**
    * Project Shortcode value object.
    */
@@ -51,17 +66,15 @@ object Project {
       JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
     def unsafeFrom(str: String) = make(str)
-      .getOrElse(throw new IllegalArgumentException(ProjectErrorMessages.ShortcodeInvalid(str)))
+      .getOrElse(throw new IllegalArgumentException(ErrorMessages.ShortcodeInvalid(str)))
 
     def make(value: String): Validation[ValidationException, Shortcode] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortcodeMissing))
+      else
         ProjectIDRegex.matches(value.toUpperCase) match {
-          case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeInvalid(value)))
+          case false => Validation.fail(ValidationException(ErrorMessages.ShortcodeInvalid(value)))
           case true  => Validation.succeed(new Shortcode(value.toUpperCase) {})
         }
-      }
   }
 
   /**
@@ -76,11 +89,11 @@ object Project {
       JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
 
     def make(value: String): Validation[ValidationException, Shortname] =
-      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing))
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortnameMissing))
       else
         Validation
           .fromOption(validateAndEscapeProjectShortname(value))
-          .mapError(_ => ValidationException(ProjectErrorMessages.ShortnameInvalid(value)))
+          .mapError(_ => ValidationException(ErrorMessages.ShortnameInvalid(value)))
           .map(new Shortname(_) {})
 
     def make(value: Option[String]): Validation[ValidationException, Option[Shortname]] =
@@ -106,8 +119,8 @@ object Project {
     private def isLengthCorrect(name: String): Boolean = name.length > 2 && name.length < 257
 
     def make(value: String): Validation[ValidationException, Name] =
-      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
-      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ProjectErrorMessages.NameInvalid))
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.NameMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.NameInvalid))
       else Validation.succeed(new Name(value) {})
 
     def make(value: Option[String]): Validation[ValidationException, Option[Name]] =
@@ -136,9 +149,9 @@ object Project {
     }
 
     def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, ProjectDescription] =
-      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing))
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionsMissing))
       else if (!isLengthCorrect(value))
-        Validation.fail((ValidationException(ProjectErrorMessages.ProjectDescriptionsInvalid)))
+        Validation.fail((ValidationException(ErrorMessages.ProjectDescriptionsInvalid)))
       else Validation.succeed(new ProjectDescription(value) {})
 
     def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[ProjectDescription]] =
@@ -165,8 +178,8 @@ object Project {
     }
 
     def make(value: Seq[String]): Validation[ValidationException, Keywords] =
-      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
-      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ProjectErrorMessages.KeywordsInvalid))
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.KeywordsMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.KeywordsInvalid))
       else Validation.succeed(new Keywords(value) {})
 
     def make(value: Option[Seq[String]]): Validation[ValidationException, Option[Keywords]] =
@@ -188,9 +201,9 @@ object Project {
       JsonEncoder[String].contramap((logo: Logo) => logo.value)
 
     def make(value: String): Validation[ValidationException, Logo] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.LogoMissing))
-      } else {
+      if (value.isEmpty)
+        Validation.fail(ValidationException(ErrorMessages.LogoMissing))
+      else {
         Validation.succeed(new Logo(value) {})
       }
     def make(value: Option[String]): Validation[ValidationException, Option[Logo]] =
@@ -245,19 +258,4 @@ object Project {
         case None    => Validation.succeed(None)
       }
   }
-}
-
-object ProjectErrorMessages {
-  val ShortcodeMissing           = "Shortcode cannot be empty."
-  val ShortcodeInvalid           = (v: String) => s"Invalid project shortcode: $v"
-  val ShortnameMissing           = "Shortname cannot be empty."
-  val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
-  val NameMissing                = "Name cannot be empty."
-  val NameInvalid                = "Name must be 3 to 256 characters long."
-  val ProjectDescriptionsMissing = "Description cannot be empty."
-  val ProjectDescriptionsInvalid = "Description must be 3 to 40960 characters long."
-  val KeywordsMissing            = "Keywords cannot be empty."
-  val KeywordsInvalid            = "Keywords must be 3 to 64 characters long."
-  val LogoMissing                = "Logo cannot be empty."
-  val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
 }
