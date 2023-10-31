@@ -40,18 +40,17 @@ object Project {
       .flatMap(Iri.toSparqlEncodedString)
 
   object ErrorMessages {
-    val ShortcodeMissing           = "Shortcode cannot be empty."
-    val ShortcodeInvalid           = (v: String) => s"Invalid project shortcode: $v"
-    val ShortnameMissing           = "Shortname cannot be empty."
-    val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
-    val NameMissing                = "Name cannot be empty."
-    val NameInvalid                = "Name must be 3 to 256 characters long."
-    val ProjectDescriptionsMissing = "Description cannot be empty."
-    val ProjectDescriptionsInvalid = "Description must be 3 to 40960 characters long."
-    val KeywordsMissing            = "Keywords cannot be empty."
-    val KeywordsInvalid            = "Keywords must be 3 to 64 characters long."
-    val LogoMissing                = "Logo cannot be empty."
-    val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
+    val ShortcodeMissing          = "Shortcode cannot be empty."
+    val ShortcodeInvalid          = (v: String) => s"Invalid project shortcode: $v"
+    val ShortnameMissing          = "Shortname cannot be empty."
+    val ShortnameInvalid          = (v: String) => s"Shortname is invalid: $v"
+    val NameMissing               = "Name cannot be empty."
+    val NameInvalid               = "Name must be 3 to 256 characters long."
+    val ProjectDescriptionMissing = "Description cannot be empty."
+    val ProjectDescriptionInvalid = "Description must be 3 to 40960 characters long."
+    val KeywordsMissing           = "Keywords cannot be empty."
+    val KeywordsInvalid           = "Keywords must be 3 to 64 characters long."
+    val LogoMissing               = "Logo cannot be empty."
   }
 
   /**
@@ -131,30 +130,29 @@ object Project {
   }
 
   /**
-   * ProjectDescription value object.
+   * Description value object.
    */
-  // TODO-BL: [domain-model] should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
+  // TODO-BL: [domain-model] should probably be MultiLangString.
   // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
-  sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2])
-  object ProjectDescription { self =>
-    implicit val decoder: JsonDecoder[ProjectDescription] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail { value =>
-      ProjectDescription.make(value).toEitherWith(e => e.head.getMessage)
+  sealed abstract case class Description private (value: Seq[V2.StringLiteralV2])
+  object Description { self =>
+    implicit val decoder: JsonDecoder[Description] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail { value =>
+      Description.make(value).toEitherWith(e => e.head.getMessage)
     }
-    implicit val encoder: JsonEncoder[ProjectDescription] =
-      JsonEncoder[Seq[V2.StringLiteralV2]].contramap((description: ProjectDescription) => description.value)
+    implicit val encoder: JsonEncoder[Description] =
+      JsonEncoder[Seq[V2.StringLiteralV2]].contramap((description: Description) => description.value)
 
-    private def isLengthCorrect(descriptionsToCheck: Seq[V2.StringLiteralV2]): Boolean = {
-      val checked = descriptionsToCheck.filter(d => d.value.length > 2 && d.value.length < 40961)
-      descriptionsToCheck == checked
+    private def isLengthCorrect(descriptionToCheck: Seq[V2.StringLiteralV2]): Boolean = {
+      val checked = descriptionToCheck.filter(d => d.value.length > 2 && d.value.length < 40961)
+      descriptionToCheck == checked
     }
 
-    def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, ProjectDescription] =
-      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionsMissing))
-      else if (!isLengthCorrect(value))
-        Validation.fail((ValidationException(ErrorMessages.ProjectDescriptionsInvalid)))
-      else Validation.succeed(new ProjectDescription(value) {})
+    def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, Description] =
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionInvalid))
+      else Validation.succeed(new Description(value) {})
 
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[ProjectDescription]] =
+    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[Description]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)

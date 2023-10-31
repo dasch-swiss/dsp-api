@@ -9,9 +9,11 @@ import zio._
 import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
+
+import scala.util.Random
+
 import dsp.errors.ValidationException
 import dsp.valueobjects.Project._
-import scala.util.Random
 
 /**
  * This spec is used to test the [[Project]] value objects creation.
@@ -34,7 +36,7 @@ object ProjectSpec extends ZIOSpecDefault {
     shortcodeTest,
     shortnameTest,
     nameTest,
-    projectDescriptionsTest,
+    descriptionTest,
     keywordsTest,
     logoTest,
     projectStatusTest,
@@ -131,39 +133,37 @@ object ProjectSpec extends ZIOSpecDefault {
     }
   )
 
-  private val projectDescriptionsTest = suite("ProjectDescriptions")(
+  private val descriptionTest = suite("Description")(
     test("pass an empty object and return an error") {
       assertTrue(
-        ProjectDescription.make(Seq.empty) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionsMissing)
-        ),
-        ProjectDescription.make(Some(Seq.empty)) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionsMissing)
+        Description.make(Seq.empty) == Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing)),
+        Description.make(Some(Seq.empty)) == Validation.fail(
+          ValidationException(ErrorMessages.ProjectDescriptionMissing)
         )
       )
     },
     test("pass an object containing invalid Description and expect an error to be returned") {
       assertTrue(
-        ProjectDescription.make(tooShortDescription) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionsInvalid)
+        Description.make(tooShortDescription) == Validation.fail(
+          ValidationException(ErrorMessages.ProjectDescriptionInvalid)
         ),
-        ProjectDescription.make(tooLongDescription) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionsInvalid)
+        Description.make(tooLongDescription) == Validation.fail(
+          ValidationException(ErrorMessages.ProjectDescriptionInvalid)
         )
       )
     },
     test("pass a valid object and successfully create value object") {
       for {
-        description           <- ProjectDescription.make(validDescription).toZIO
-        optionalDescription   <- ProjectDescription.make(Option(validDescription)).toZIO
+        description           <- Description.make(validDescription).toZIO
+        optionalDescription   <- Description.make(Option(validDescription)).toZIO
         descriptionFromOption <- ZIO.fromOption(optionalDescription)
       } yield assertTrue(description.value == validDescription) &&
-        assert(optionalDescription)(isSome(isSubtype[ProjectDescription](Assertion.anything))) &&
+        assert(optionalDescription)(isSome(isSubtype[Description](Assertion.anything))) &&
         assertTrue(descriptionFromOption.value == validDescription)
     },
     test("successfully validate passing None") {
       assertTrue(
-        ProjectDescription.make(None) == Validation.succeed(None)
+        Description.make(None) == Validation.succeed(None)
       )
     }
   )
