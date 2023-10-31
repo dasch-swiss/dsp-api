@@ -5,18 +5,14 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
-
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
+import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, TypeableEntity}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import scalax.collection.Graph
+import scalax.collection.GraphEdge.DiHyperEdge
 
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
@@ -29,7 +25,8 @@ object GravsearchQueryOptimisation {
   ): Seq[QueryPattern] = {
     val removedRedundant = removeRedundantKnoraApiResource(patterns)
     val removedEntities  = removeEntitiesInferredFromProperty(removedRedundant, typeInspectionResult)
-    reorderPatternsByDependency(removedEntities)
+    val result           = reorderPatternsByDependency(removedEntities)
+    result
   }
 }
 
@@ -355,12 +352,9 @@ object ReorderPatternsByDependency {
   def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
     // Separate the statement patterns from the other patterns.
     val (statementPatterns: Seq[StatementPattern], otherPatterns: Seq[QueryPattern]) =
-      patterns.foldLeft((Vector.empty[StatementPattern], Vector.empty[QueryPattern])) {
-        case ((statementPatternAcc, otherPatternAcc), pattern: QueryPattern) =>
-          pattern match {
-            case statementPattern: StatementPattern => (statementPatternAcc :+ statementPattern, otherPatternAcc)
-            case _                                  => (statementPatternAcc, otherPatternAcc :+ pattern)
-          }
+      patterns.partition {
+        case _: StatementPattern => true
+        case _                   => false
       }
 
     val sortedStatementPatterns: Seq[QueryPattern] = createAndSortGraph(statementPatterns)
