@@ -4,12 +4,9 @@ import { check, sleep } from "k6";
 import encoding from "k6/encoding";
 
 export const options = {
-  stages: [
-    { duration: "10s", target: 1 },
-    { duration: "10s", target: 10 },
-  ],
+  //  stages: [{ duration: "30s", target: 1 }],
   thresholds: {
-    http_req_duration: ["p(90)<130", "p(95)<150"],
+    http_req_duration: ["p(90)<400", "p(95)<370"],
   },
 };
 
@@ -17,22 +14,27 @@ const fusekiUrl = __ENV.FUSEKI_URL;
 const credentials = __ENV.FUSEKI_USER + ":" + __ENV.FUSEKI_PASSWORD;
 const encodedCredentials = encoding.b64encode(credentials);
 const query = `
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT ?valueIri ?dimX ?dimY
-  FROM <http://www.knora.org/data/0801/beol>
+CONSTRUCT {
+  ?projectIri ?projP ?projO .
+  ?projectIri knora-base:belongsToOntology ?ontologyIri .
+}
 WHERE {
-  ?valueIri a knora-base:StillImageFileValue .
-  ?valueIri knora-base:internalFilename ?filename .
-  FILTER (strstarts(str(?filename), "Jdjk3ZU01nt-GKOaaSJ3Ahx"))
-  ?valueIri knora-base:dimX ?dimX .
-  ?valueIri knora-base:dimY ?dimY .
+  ?ontologyIri a                            owl:Ontology ;
+               knora-base:attachedToProject ?projectIri .
+  ?projectIri  a                            knora-admin:knoraProject .
+  ?projectIri  ?projP                       ?projO .
 }
 `;
+
 const auth = {
   headers: {
     Authorization: `Basic ${encodedCredentials}`,
+    Accept: `application/trig`,
   },
 };
 
@@ -40,9 +42,14 @@ export default function () {
   const url = new URL(fusekiUrl);
   url.searchParams.append("query", query);
   const res = http.get(url.toString(), auth);
-  // console.log(JSON.stringify(res));
+  console.log(res.body);
+  //  console.log({
+  //    length: res.body.split("\n").length,
+  //    out: res,
+  //  });
   check(res, {
     "status was 200": (r) => r.status == 200,
+    "body contains xxx lines": (r) => res.body.split("\n").length == 415,
   });
   sleep(1);
 }
