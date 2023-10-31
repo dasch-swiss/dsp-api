@@ -9,7 +9,6 @@ import zio._
 import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
-
 import dsp.errors.ValidationException
 import dsp.valueobjects.Project._
 
@@ -23,8 +22,10 @@ object ProjectSpec extends ZIOSpecDefault {
   private val validDescription = Seq(
     V2.StringLiteralV2(value = "Valid project description", language = Some("en"))
   )
-  private val validKeywords = Seq("key", "word")
-  private val validLogo     = "/fu/bar/baz.jpg"
+  private val validKeywords    = Seq("key", "word")
+  private val tooShortKeywords = Seq("de", "key", "word")
+  private val tooLongKeywords  = Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "key", "word")
+  private val validLogo        = "/fu/bar/baz.jpg"
 
   def spec = suite("ProjectSpec")(
     shortcodeTest,
@@ -105,8 +106,8 @@ object ProjectSpec extends ZIOSpecDefault {
 
   private val nameTest = suite("ProjectSpec - Name")(
     test("pass an empty value and return an error") {
-      assertTrue(Name.make("") == Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))) &&
       assertTrue(
+        Name.make("") == Validation.fail(ValidationException(ProjectErrorMessages.NameMissing)),
         Name.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
       )
     },
@@ -151,14 +152,14 @@ object ProjectSpec extends ZIOSpecDefault {
   private val keywordsTest = suite("ProjectSpec - Keywords")(
     test("pass an empty object and return an error") {
       assertTrue(
-        Keywords.make(Seq.empty) == Validation.fail(
-          ValidationException(ProjectErrorMessages.KeywordsMissing)
-        )
-      ) &&
+        Keywords.make(Seq.empty) == Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing)),
+        Keywords.make(Some(Seq.empty)) == Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
+      )
+    },
+    test("pass invalid keywords and return an error") {
       assertTrue(
-        Keywords.make(Some(Seq.empty)) == Validation.fail(
-          ValidationException(ProjectErrorMessages.KeywordsMissing)
-        )
+        Keywords.make(tooShortKeywords) == Validation.fail(ValidationException(ProjectErrorMessages.KeywordsInvalid)),
+        Keywords.make(tooLongKeywords) == Validation.fail(ValidationException(ProjectErrorMessages.KeywordsInvalid))
       )
     },
     test("pass a valid object and successfully create value object") {
@@ -180,14 +181,8 @@ object ProjectSpec extends ZIOSpecDefault {
   private val logoTest = suite("ProjectSpec - Logo")(
     test("pass an empty object and return an error") {
       assertTrue(
-        Logo.make("") == Validation.fail(
-          ValidationException(ProjectErrorMessages.LogoMissing)
-        )
-      ) &&
-      assertTrue(
-        Logo.make(Some("")) == Validation.fail(
-          ValidationException(ProjectErrorMessages.LogoMissing)
-        )
+        Logo.make("") == Validation.fail(ValidationException(ProjectErrorMessages.LogoMissing)),
+        Logo.make(Some("")) == Validation.fail(ValidationException(ProjectErrorMessages.LogoMissing))
       )
     },
     test("pass a valid object and successfully create value object") {

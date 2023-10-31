@@ -152,18 +152,21 @@ object Project {
    */
   sealed abstract case class Keywords private (value: Seq[String])
   object Keywords { self =>
-    implicit val decoder: JsonDecoder[Keywords] = JsonDecoder[Seq[String]].mapOrFail { case value =>
-      Keywords.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Keywords] = JsonDecoder[Seq[String]].mapOrFail { value =>
+      Keywords.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Keywords] =
       JsonEncoder[Seq[String]].contramap((keywords: Keywords) => keywords.value)
 
+    private def isLengthCorrect(keywordsToCheck: Seq[String]): Boolean = {
+      val checked = keywordsToCheck.filter(k => k.length > 2 && k.length < 65)
+      keywordsToCheck == checked
+    }
+
     def make(value: Seq[String]): Validation[ValidationException, Keywords] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
-      } else {
-        Validation.succeed(new Keywords(value) {})
-      }
+      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ProjectErrorMessages.KeywordsInvalid))
+      else Validation.succeed(new Keywords(value) {})
 
     def make(value: Option[Seq[String]]): Validation[ValidationException, Option[Keywords]] =
       value match {
@@ -253,7 +256,7 @@ object ProjectErrorMessages {
   val ProjectDescriptionsMissing = "Description cannot be empty."
   val ProjectDescriptionsInvalid = (v: String) => s"Description is invalid: $v"
   val KeywordsMissing            = "Keywords cannot be empty."
-  val KeywordsInvalid            = (v: String) => s"Keywords are invalid: $v"
+  val KeywordsInvalid            = "Keywords can be 3 to 64 characters long."
   val LogoMissing                = "Logo cannot be empty."
   val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
 }
