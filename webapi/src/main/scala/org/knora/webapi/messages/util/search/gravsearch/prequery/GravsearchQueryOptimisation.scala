@@ -9,7 +9,11 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
-import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, TypeableEntity}
+import org.knora.webapi.messages.util.search.gravsearch.types.{
+  GravsearchTypeInspectionResult,
+  GravsearchTypeInspectionUtil,
+  TypeableEntity
+}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
@@ -98,7 +102,7 @@ private object RemoveRedundantKnoraApiResource {
  * use with a property that can only be used with that type (unless the property
  * statement is in an `OPTIONAL` block).
  */
-object RemoveEntitiesInferredFromProperty {
+private object RemoveEntitiesInferredFromProperty {
 
   /**
    * Performs the optimisation.
@@ -181,7 +185,7 @@ object RemoveEntitiesInferredFromProperty {
 /**
  * Optimises query patterns by reordering them on the basis of dependencies between subjects and objects.
  */
-object ReorderPatternsByDependency {
+private object ReorderPatternsByDependency {
 
   /**
    * Converts a sequence of query patterns into DAG representing dependencies between
