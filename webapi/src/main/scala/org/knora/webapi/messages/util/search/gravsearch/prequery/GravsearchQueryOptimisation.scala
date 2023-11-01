@@ -9,7 +9,11 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
-import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, TypeableEntity}
+import org.knora.webapi.messages.util.search.gravsearch.types.{
+  GravsearchTypeInspectionResult,
+  GravsearchTypeInspectionUtil,
+  TypeableEntity
+}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
@@ -360,23 +364,14 @@ private object ReorderPatternsByDependency {
     val sortedStatementPatterns: Seq[QueryPattern] = createAndSortGraph(statementPatterns)
 
     val sortedOtherPatterns: Seq[QueryPattern] = otherPatterns.map {
-      // sort statements inside each UnionPattern block
       case unionPattern: UnionPattern =>
         UnionPattern(unionPattern.blocks.map(reorderPatternsByDependency))
-
-      // sort statements inside OptionalPattern
       case optionalPattern: OptionalPattern =>
         OptionalPattern(reorderPatternsByDependency(optionalPattern.patterns))
-
-      // sort statements inside MinusPattern
       case minusPattern: MinusPattern =>
         MinusPattern(reorderPatternsByDependency(minusPattern.patterns))
-
-      // sort statements inside FilterNotExistsPattern
       case filterNotExistsPattern: FilterNotExistsPattern =>
         FilterNotExistsPattern(reorderPatternsByDependency(filterNotExistsPattern.patterns))
-
-      // return any other query pattern as it is
       case pattern: QueryPattern => pattern
     }
 
