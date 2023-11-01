@@ -91,7 +91,7 @@ case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariable
 
   val outputVariable: QueryVariable = QueryVariable(outputVariableName)
 
-  val distinctAsStr: String = if (distinct) {
+  private val distinctAsStr: String = if (distinct) {
     "DISTINCT"
   } else {
     ""
@@ -109,13 +109,6 @@ case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariable
  * @param iri the IRI.
  */
 case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) extends Entity {
-
-  /**
-   * If this is a knora-api entity IRI, converts it to an internal entity IRI.
-   *
-   * @return the equivalent internal entity IRI.
-   */
-  def toInternalEntityIri: IriRef = IriRef(iri.toOntologySchema(InternalSchema))
 
   override def toSparql: String =
     if (propertyPathOperator.nonEmpty) {
