@@ -106,7 +106,6 @@ object Project {
    * Project Name value object.
    * (Formerly `Longname`)
    */
-  // TODO-BL: [domain-model] this should be multi-lang-string,
   sealed abstract case class Name private (value: String)
   object Name { self =>
     implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { value =>
@@ -132,8 +131,6 @@ object Project {
   /**
    * Description value object.
    */
-  // TODO-BL: [domain-model] should probably be MultiLangString.
-  // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
   sealed abstract case class Description private (value: Seq[V2.StringLiteralV2])
   object Description { self =>
     implicit val decoder: JsonDecoder[Description] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail { value =>
