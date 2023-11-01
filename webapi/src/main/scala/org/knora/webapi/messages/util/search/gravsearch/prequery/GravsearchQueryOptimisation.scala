@@ -5,18 +5,14 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
-
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
+import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, TypeableEntity}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import scalax.collection.Graph
+import scalax.collection.GraphEdge.DiHyperEdge
 
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
@@ -366,25 +362,19 @@ private object ReorderPatternsByDependency {
     val sortedOtherPatterns: Seq[QueryPattern] = otherPatterns.map {
       // sort statements inside each UnionPattern block
       case unionPattern: UnionPattern =>
-        val sortedUnionBlocks: Seq[Seq[QueryPattern]] =
-          unionPattern.blocks.map(block => reorderPatternsByDependency(block))
-        UnionPattern(blocks = sortedUnionBlocks)
+        UnionPattern(unionPattern.blocks.map(reorderPatternsByDependency))
 
       // sort statements inside OptionalPattern
       case optionalPattern: OptionalPattern =>
-        val sortedOptionalPatterns: Seq[QueryPattern] = reorderPatternsByDependency(optionalPattern.patterns)
-        OptionalPattern(patterns = sortedOptionalPatterns)
+        OptionalPattern(reorderPatternsByDependency(optionalPattern.patterns))
 
       // sort statements inside MinusPattern
       case minusPattern: MinusPattern =>
-        val sortedMinusPatterns: Seq[QueryPattern] = reorderPatternsByDependency(minusPattern.patterns)
-        MinusPattern(patterns = sortedMinusPatterns)
+        MinusPattern(reorderPatternsByDependency(minusPattern.patterns))
 
       // sort statements inside FilterNotExistsPattern
       case filterNotExistsPattern: FilterNotExistsPattern =>
-        val sortedFilterNotExistsPatterns: Seq[QueryPattern] =
-          reorderPatternsByDependency(filterNotExistsPattern.patterns)
-        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns)
+        FilterNotExistsPattern(reorderPatternsByDependency(filterNotExistsPattern.patterns))
 
       // return any other query pattern as it is
       case pattern: QueryPattern => pattern
