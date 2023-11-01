@@ -384,8 +384,6 @@ case class ListNodeGetResponseADM(node: NodeADM) extends ListItemGetResponseADM(
 
 /**
  * Provides basic information about any node (root or child) without it's children.
- *
- * @param nodeinfo the basic information about a node.
  */
 abstract class NodeInfoGetResponseADM() extends KnoraResponseADM with ListADMJsonProtocol
 
