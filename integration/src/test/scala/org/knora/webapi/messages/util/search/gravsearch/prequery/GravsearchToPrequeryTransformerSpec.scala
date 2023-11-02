@@ -1019,23 +1019,23 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
           pred = IriRef(
-            iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
-          )
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "book"),
-          pred = IriRef(
             iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
             propertyPathOperator = None
           ),
           obj = IriRef(
             iri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
             propertyPathOperator = None
+          )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "book"),
+          pred = IriRef(
+            iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
           )
         )
       ),
