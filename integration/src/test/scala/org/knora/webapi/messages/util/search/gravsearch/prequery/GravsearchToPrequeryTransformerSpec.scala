@@ -1192,14 +1192,6 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
           pred = IriRef(
-            iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "bookLabel")
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "book"),
-          pred = IriRef(
             iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
             propertyPathOperator = None
           ),
@@ -1207,6 +1199,14 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
             iri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
             propertyPathOperator = None
           )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "book"),
+          pred = IriRef(
+            iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "bookLabel")
         ),
         FilterPattern(
           expression = RegexFunction(
