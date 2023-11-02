@@ -5,18 +5,14 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
-
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
+import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionResult, GravsearchTypeInspectionUtil, TypeableEntity}
+import scalax.collection.Graph
+import scalax.collection.GraphEdge.DiHyperEdge
 
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
@@ -326,7 +322,8 @@ private object ReorderPatternsByDependency {
       if (topologicalOrder.nonEmpty) {
         // Yes. Sort the statement patterns according to the reverse topological order.
         topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
-          statementPatterns.filter(_.obj.toSparql.equals(node.value)).toVector ++ sortedStatements
+          val nextStatements = statementPatterns.filter(_.obj.toSparql.equals(node.value)).toVector
+          nextStatements ++ sortedStatements
         }
       } else {
         // No topological order found.
