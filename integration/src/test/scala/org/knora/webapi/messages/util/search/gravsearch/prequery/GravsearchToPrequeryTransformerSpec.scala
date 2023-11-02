@@ -2510,44 +2510,6 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
     whereClause = WhereClause(
       patterns = Vector(
         StatementPattern(
-          subj = QueryVariable(variableName = "standoffParagraphTag"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = IriRef(
-            iri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri,
-            propertyPathOperator = None
-          )
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "standoffDateTag"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#standoffTagHasStartAncestor".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "standoffParagraphTag")
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "standoffDateTag"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#StandoffDateTag".toSmartIri,
-            propertyPathOperator = None
-          )
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "text"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#valueHasStandoff".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "standoffDateTag")
-        ),
-        StatementPattern(
           subj = QueryVariable(variableName = "thing"),
           pred = IriRef(
             iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
@@ -2575,6 +2537,44 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
           obj = XsdLiteral(
             value = "false",
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "text"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#valueHasStandoff".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "standoffDateTag")
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "standoffDateTag"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#StandoffDateTag".toSmartIri,
+            propertyPathOperator = None
+          )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "standoffDateTag"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#standoffTagHasStartAncestor".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "standoffParagraphTag")
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "standoffParagraphTag"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/standoff#StandoffParagraphTag".toSmartIri,
+            propertyPathOperator = None
           )
         ),
         StatementPattern(
