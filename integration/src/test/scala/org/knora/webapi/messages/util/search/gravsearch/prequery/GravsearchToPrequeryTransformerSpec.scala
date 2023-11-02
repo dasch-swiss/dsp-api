@@ -2330,44 +2330,6 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
           blocks = Vector(
             Vector(
               StatementPattern(
-                subj = QueryVariable(variableName = "int"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = XsdLiteral(
-                  value = "1",
-                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
-                )
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "thing"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = QueryVariable(variableName = "int")
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "int"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = XsdLiteral(
-                  value = "false",
-                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                )
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "int"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = QueryVariable(variableName = "int__valueHasInteger")
-              ),
-              StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
@@ -2387,6 +2349,44 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
                 )
               ),
               StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "int")
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "int"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = XsdLiteral(
+                  value = "false",
+                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                )
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "int"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "int__valueHasInteger")
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "int"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = XsdLiteral(
+                  value = "1",
+                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                )
+              ),
+              StatementPattern(
                 subj = QueryVariable(variableName = "richtext"),
                 pred = IriRef(OntologyConstants.Fuseki.luceneQueryPredicate.toSmartIri),
                 obj = XsdLiteral(
@@ -2397,14 +2397,22 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
             ),
             Vector(
               StatementPattern(
-                subj = QueryVariable(variableName = "int"),
+                subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
+                  iri = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "text")
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "text"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
                   propertyPathOperator = None
                 ),
                 obj = XsdLiteral(
-                  value = "3",
-                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                  value = "false",
+                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
                 )
               ),
               StatementPattern(
@@ -2435,22 +2443,14 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
                 obj = QueryVariable(variableName = "int__valueHasInteger")
               ),
               StatementPattern(
-                subj = QueryVariable(variableName = "thing"),
+                subj = QueryVariable(variableName = "int"),
                 pred = IriRef(
-                  iri = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = QueryVariable(variableName = "text")
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "text"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
                   propertyPathOperator = None
                 ),
                 obj = XsdLiteral(
-                  value = "false",
-                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                  value = "3",
+                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
                 )
               ),
               StatementPattern(
