@@ -9,10 +9,10 @@ import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
 import org.knora.webapi.messages.util.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil}
+import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 import zio.ZIO
@@ -931,13 +931,10 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
                 pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
                   propertyPathOperator = None
                 ),
-                obj = XsdLiteral(
-                  value = "false",
-                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-                )
+                obj = QueryVariable(variableName = "decimal__valueHasDecimal")
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
@@ -946,14 +943,6 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
                   propertyPathOperator = None
                 ),
                 obj = QueryVariable(variableName = "decimalVal")
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "decimal"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = QueryVariable(variableName = "decimal__valueHasDecimal")
               ),
               FilterPattern(expression =
                 CompareExpression(
@@ -2708,7 +2697,6 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
 
     "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
       val transformedQuery = transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-      // TODO: user provided statements and statement generated for sorting should be unified (https://github.com/dhlab-basel/Knora/issues/1195)
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
     }
 

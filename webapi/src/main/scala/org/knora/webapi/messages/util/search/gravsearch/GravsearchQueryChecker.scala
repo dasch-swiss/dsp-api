@@ -23,7 +23,7 @@ object GravsearchQueryChecker {
    * Checks that the correct schema is used in a statement pattern and that the predicate is allowed in Gravsearch.
    * If the statement is in the CONSTRUCT clause in the complex schema, non-property variables may refer only to resources or Knora values.
    *
-   * @param statementPattern     the statement pattern to be checked.
+   * @param      the statement pattern to be checked.
    * @param querySchema          the API v2 ontology schema used in the query.
    * @param typeInspectionResult the type inspection result.
    * @param inConstructClause    `true` if the statement is in the CONSTRUCT clause.
