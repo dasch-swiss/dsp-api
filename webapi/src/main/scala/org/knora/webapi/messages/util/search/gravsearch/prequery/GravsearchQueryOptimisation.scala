@@ -324,13 +324,9 @@ private object ReorderPatternsByDependency {
 
       // Was a topological order found?
       if (topologicalOrder.nonEmpty) {
-        // Start from the end of the ordered list (the nodes with lowest degree).
-        // For each node, find statements which have the node as object and bring them to top.
+        // Yes. Sort the statement patterns according to the reverse topological order.
         topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
-          val statementsOfNode: Set[QueryPattern] = statementPatterns
-            .filter(p => p.obj.toSparql.equals(node.value))
-            .toSet[QueryPattern]
-          sortedStatements ++ statementsOfNode.toVector
+          statementPatterns.filter(_.obj.toSparql.equals(node.value)).toVector ++ sortedStatements
         }
       } else {
         // No topological order found.
