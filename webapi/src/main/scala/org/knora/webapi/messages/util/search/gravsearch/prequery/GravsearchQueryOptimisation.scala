@@ -8,76 +8,37 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
-import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
+import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
+import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
 
 /**
- * Represents optimisation algorithms that transform Gravsearch input queries.
- *
- * @param typeInspectionResult the type inspection result.
- * @param querySchema the query schema.
- */
-abstract class GravsearchQueryOptimisationFeature(
-  protected val typeInspectionResult: GravsearchTypeInspectionResult,
-  protected val querySchema: ApiV2Schema
-) {
-
-  /**
-   * Performs the optimisation.
-   *
-   * @param patterns the query patterns.
-   * @return the optimised query patterns.
-   */
-  def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern]
-}
-
-/**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
  */
-object GravsearchQueryOptimisationFactory {
+object GravsearchQueryOptimisation {
 
-  /**
-   * Returns a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations, depending
-   * on the feature factory configuration.
-   *
-   * @param typeInspectionResult the type inspection result.
-   * @param querySchema the query schema.
-   * @return a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations.
-   */
-  def getGravsearchQueryOptimisationFeature(
-    typeInspectionResult: GravsearchTypeInspectionResult,
-    querySchema: ApiV2Schema
-  ): GravsearchQueryOptimisationFeature =
-    new GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
-      override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-        new ReorderPatternsByDependencyOptimisationFeature(this.typeInspectionResult, querySchema)
-          .optimiseQueryPatterns(
-            new RemoveEntitiesInferredFromPropertyOptimisationFeature(this.typeInspectionResult, querySchema)
-              .optimiseQueryPatterns(
-                new RemoveRedundantKnoraApiResourceOptimisationFeature(this.typeInspectionResult, querySchema)
-                  .optimiseQueryPatterns(patterns)
-              )
-          )
-
-    }
+  def optimiseQueryPatterns(
+    patterns: Seq[QueryPattern],
+    typeInspectionResult: GravsearchTypeInspectionResult
+  ): Seq[QueryPattern] = {
+    val removedRedundant = removeRedundantKnoraApiResource(patterns)
+    val removedEntities  = removeEntitiesInferredFromProperty(removedRedundant, typeInspectionResult)
+    val result           = reorderPatternsByDependency(removedEntities)
+    result
+  }
 }
 
 /**
  * Removes a statement with rdf:type knora-api:Resource if there is another rdf:type statement with the same subject
  * and a different type.
- *
- * @param typeInspectionResult the type inspection result.
- * @param querySchema the query schema.
  */
-class RemoveRedundantKnoraApiResourceOptimisationFeature(
-  typeInspectionResult: GravsearchTypeInspectionResult,
-  querySchema: ApiV2Schema
-) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
+private object RemoveRedundantKnoraApiResource {
 
   /**
    * If the specified statement has rdf:type with an IRI as object, returns that IRI, otherwise None.
@@ -97,7 +58,7 @@ class RemoveRedundantKnoraApiResourceOptimisationFeature(
       case _ => None
     }
 
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+  def removeRedundantKnoraApiResource(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
     // Make a Set of subjects that have rdf:type statements whose objects are not knora-api:Resource.
     val rdfTypesBySubj: Set[Entity] = patterns
       .foldLeft(Set.empty[Entity]) { case (acc, queryPattern: QueryPattern) =>
@@ -141,10 +102,7 @@ class RemoveRedundantKnoraApiResourceOptimisationFeature(
  * use with a property that can only be used with that type (unless the property
  * statement is in an `OPTIONAL` block).
  */
-class RemoveEntitiesInferredFromPropertyOptimisationFeature(
-  typeInspectionResult: GravsearchTypeInspectionResult,
-  querySchema: ApiV2Schema
-) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
+private object RemoveEntitiesInferredFromProperty {
 
   /**
    * Performs the optimisation.
@@ -152,7 +110,10 @@ class RemoveEntitiesInferredFromPropertyOptimisationFeature(
    * @param patterns the query patterns.
    * @return the optimised query patterns.
    */
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+  def removeEntitiesInferredFromProperty(
+    patterns: Seq[QueryPattern],
+    typeInspectionResult: GravsearchTypeInspectionResult
+  ): Seq[QueryPattern] = {
 
     // Collect all entities which are used as subject or object of an OptionalPattern.
     val optionalEntities: Seq[TypeableEntity] = patterns.collect { case optionalPattern: OptionalPattern =>
@@ -224,10 +185,7 @@ class RemoveEntitiesInferredFromPropertyOptimisationFeature(
 /**
  * Optimises query patterns by reordering them on the basis of dependencies between subjects and objects.
  */
-class ReorderPatternsByDependencyOptimisationFeature(
-  typeInspectionResult: GravsearchTypeInspectionResult,
-  querySchema: ApiV2Schema
-) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
+private object ReorderPatternsByDependency {
 
   /**
    * Converts a sequence of query patterns into DAG representing dependencies between
@@ -395,43 +353,24 @@ class ReorderPatternsByDependencyOptimisationFeature(
    * @param patterns the query patterns.
    * @return the optimised query patterns.
    */
-  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    // Separate the statement patterns from the other patterns.
+  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
     val (statementPatterns: Seq[StatementPattern], otherPatterns: Seq[QueryPattern]) =
-      patterns.foldLeft((Vector.empty[StatementPattern], Vector.empty[QueryPattern])) {
-        case ((statementPatternAcc, otherPatternAcc), pattern: QueryPattern) =>
-          pattern match {
-            case statementPattern: StatementPattern => (statementPatternAcc :+ statementPattern, otherPatternAcc)
-            case _                                  => (statementPatternAcc, otherPatternAcc :+ pattern)
-          }
+      patterns.partition {
+        case _: StatementPattern => true
+        case _                   => false
       }
 
-    val sortedStatementPatterns: Seq[QueryPattern] = createAndSortGraph(statementPatterns)
+    val sortedStatementPatterns = createAndSortGraph(statementPatterns)
 
-    val sortedOtherPatterns: Seq[QueryPattern] = otherPatterns.map {
-      // sort statements inside each UnionPattern block
+    val sortedOtherPatterns = otherPatterns.map {
       case unionPattern: UnionPattern =>
-        val sortedUnionBlocks: Seq[Seq[QueryPattern]] =
-          unionPattern.blocks.map(block => optimiseQueryPatterns(block))
-        UnionPattern(blocks = sortedUnionBlocks)
-
-      // sort statements inside OptionalPattern
+        UnionPattern(unionPattern.blocks.map(reorderPatternsByDependency))
       case optionalPattern: OptionalPattern =>
-        val sortedOptionalPatterns: Seq[QueryPattern] = optimiseQueryPatterns(optionalPattern.patterns)
-        OptionalPattern(patterns = sortedOptionalPatterns)
-
-      // sort statements inside MinusPattern
+        OptionalPattern(reorderPatternsByDependency(optionalPattern.patterns))
       case minusPattern: MinusPattern =>
-        val sortedMinusPatterns: Seq[QueryPattern] = optimiseQueryPatterns(minusPattern.patterns)
-        MinusPattern(patterns = sortedMinusPatterns)
-
-      // sort statements inside FilterNotExistsPattern
+        MinusPattern(reorderPatternsByDependency(minusPattern.patterns))
       case filterNotExistsPattern: FilterNotExistsPattern =>
-        val sortedFilterNotExistsPatterns: Seq[QueryPattern] =
-          optimiseQueryPatterns(filterNotExistsPattern.patterns)
-        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns)
-
-      // return any other query pattern as it is
+        FilterNotExistsPattern(reorderPatternsByDependency(filterNotExistsPattern.patterns))
       case pattern: QueryPattern => pattern
     }
 
