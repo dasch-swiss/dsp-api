@@ -104,12 +104,6 @@ private object RemoveRedundantKnoraApiResource {
  */
 private object RemoveEntitiesInferredFromProperty {
 
-  /**
-   * Performs the optimisation.
-   *
-   * @param patterns the query patterns.
-   * @return the optimised query patterns.
-   */
   def removeEntitiesInferredFromProperty(
     patterns: Seq[QueryPattern],
     typeInspectionResult: GravsearchTypeInspectionResult
