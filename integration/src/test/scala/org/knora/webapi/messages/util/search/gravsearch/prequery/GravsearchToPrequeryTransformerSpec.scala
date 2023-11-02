@@ -1907,6 +1907,132 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
     whereClause = WhereClause(
       patterns = Vector(
         StatementPattern(
+          subj = QueryVariable(variableName = "thing2"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          )
+        ),
+
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing2"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "thing")
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing2"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue")
+        ),
+
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#LinkValue".toSmartIri,
+            propertyPathOperator = None
+          )
+        ),
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          )
+        ),
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "thing")
+        ),
+
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          )
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "thing1")
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj =
+            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue")
+        ),
+
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#LinkValue".toSmartIri,
+            propertyPathOperator = None
+          )
+        ),
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          )
+        ),
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "thing1")
+        ),
+        StatementPattern(
           subj = QueryVariable(variableName = "thing1"),
           pred = IriRef(
             iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
@@ -1967,128 +2093,9 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
           ),
           obj = QueryVariable(variableName = "thing2")
         ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing2"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          )
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          )
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "thing1")
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj =
-            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue")
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#LinkValue".toSmartIri,
-            propertyPathOperator = None
-          )
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          )
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing__httpwwwknoraorgontology0001anythinghasOtherThing__thing1__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "thing1")
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing2"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "thing")
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing2"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue")
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#LinkValue".toSmartIri,
-            propertyPathOperator = None
-          )
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          )
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "thing")
-        )
+
+
+
       ),
       positiveEntities = Set(),
       querySchema = None
