@@ -44,8 +44,8 @@ object ITTestDataFactory {
       .make(name)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Name $name."))
 
-  def projectDescription(description: Seq[V2.StringLiteralV2]): ProjectDescription =
-    ProjectDescription
+  def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
+    Description
       .make(description)
       .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectDescription $description."))
 
