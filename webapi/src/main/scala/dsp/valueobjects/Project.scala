@@ -80,11 +80,11 @@ object Project {
       if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortnameMissing))
       else
         Validation
-          .fromOption(validateAndEscapeProjectShortname(value))
+          .fromOption(validateAndEscape(value))
           .mapError(_ => ValidationException(ErrorMessages.ShortnameInvalid(value)))
           .map(new Shortname(_) {})
 
-    private def validateAndEscapeProjectShortname(shortname: String): Option[String] = {
+    private def validateAndEscape(shortname: String): Option[String] = {
       val defaultSharedOntologiesProject = "DefaultSharedOntologiesProject"
       if (shortname == defaultSharedOntologiesProject) {
         Some(defaultSharedOntologiesProject)
