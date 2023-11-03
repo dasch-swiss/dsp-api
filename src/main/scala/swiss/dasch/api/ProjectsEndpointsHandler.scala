@@ -76,7 +76,7 @@ final case class ProjectsEndpointsHandler(
               (
                 s"attachment; filename=export-$shortcode.zip",
                 "application/zip",
-                ZStream.fromFile(path.toFile).orDie,
+                ZStream.fromFile(path.toFile).orDie
               ),
           )
     )

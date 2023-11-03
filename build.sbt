@@ -15,7 +15,7 @@ val zioJsonVersion              = "0.6.2"
 val zioConfigVersion            = "3.0.7"
 val zioLoggingVersion           = "2.1.14"
 val testContainersVersion       = "0.40.15"
-val zioMetricsConnectorsVersion = "2.2.0"
+val zioMetricsConnectorsVersion = "2.2.1"
 val zioMockVersion              = "1.0.0-RC11"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC21"
@@ -41,7 +41,7 @@ val tapir = Seq(
 val metrics = Seq(
   "dev.zio"                     %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
   "dev.zio"                     %% "zio-metrics-connectors-prometheus" % zioMetricsConnectorsVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % "1.8.1"
+  "com.softwaremill.sttp.tapir" %% "tapir-zio-metrics"                 % "1.8.4"
 )
 
 lazy val root = (project in file("."))
