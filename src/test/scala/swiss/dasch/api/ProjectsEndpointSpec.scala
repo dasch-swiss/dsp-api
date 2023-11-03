@@ -6,12 +6,12 @@
 package swiss.dasch.api
 
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
-import ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
-import swiss.dasch.test.{SpecConfigurations, SpecPaths}
 import swiss.dasch.test.SpecConstants.Projects.{emptyProject, existingProject, nonExistentProject}
-import zio.http.{Body, Header, Headers, MediaType, Request, Root, Status, URL}
+import swiss.dasch.test.{SpecConfigurations, SpecPaths}
+import zio.http.*
 import zio.json.*
 import zio.nio.file.Files
 import zio.test.{ZIOSpecDefault, assertTrue}
@@ -29,7 +29,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
   private val projectExportSuite = {
     def postExport(shortcode: String | ProjectShortcode) = {
       val request = Request
-        .post(Body.empty, URL(Root / "projects" / shortcode.toString / "export"))
+        .post(URL(Root / "projects" / shortcode.toString / "export"), Body.empty)
         .updateHeaders(_.addHeader("Authorization", "Bearer fakeToken"))
       executeRequest(request)
     }
@@ -37,23 +37,33 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       test("given the project does not exist, return 404") {
         for {
           response <- postExport(nonExistentProject)
-        } yield assertTrue(response.status == Status.NotFound)
+          status    = response.status
+        } yield {
+          assertTrue(status == Status.NotFound)
+        }
       },
       test("given the project shortcode is invalid, return 400") {
         for {
           response <- postExport("invalid-short-code")
-        } yield assertTrue(response.status == Status.BadRequest)
+          status    = response.status
+        } yield {
+          assertTrue(status == Status.BadRequest)
+        }
       },
       test("given the project is valid, return 200 with correct headers") {
         for {
           response <- postExport(existingProject)
-        } yield assertTrue(
-          response.status == Status.Ok,
-          response.headers
-            .get("Content-Disposition")
-            .contains(s"attachment; filename=export-${existingProject.toString}.zip"),
-          response.headers.get("Content-Type").contains("application/zip")
-        )
+          status    = response.status
+          headers   = response.headers
+        } yield {
+          assertTrue(
+            status == Status.Ok,
+            headers
+              .get("Content-Disposition")
+              .contains(s"attachment; filename=export-${existingProject.toString}.zip"),
+            headers.get("Content-Type").contains("application/zip")
+          )
+        }
       }
     )
   }
@@ -69,7 +79,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       headers: Headers
     ) = {
       val url     = URL(Root / "projects" / shortcode.toString / "import")
-      val request = Request.post(body, url).updateHeaders(_ => headers.addHeader("Authorization", "Bearer fakeToken"))
+      val request = Request.post(url, body).updateHeaders(_ => headers.addHeader("Authorization", "Bearer fakeToken"))
       executeRequest(request)
     }
 
@@ -85,20 +95,33 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     suite("POST /projects/{shortcode}/import should")(
       test("given the shortcode is invalid, return 400")(for {
         response <- postImport("invalid-shortcode", bodyFromZipFile, validContentTypeHeaders)
-      } yield assertTrue(response.status == Status.BadRequest)),
-      test("given the Content-Type header is invalid/not-present, return correct error")(
+        status    = response.status
+      } yield {
+        assertTrue(status == Status.BadRequest)
+      }),
+      test("given the Content-Type header is invalid, return correct error")(
         for {
-          responseNoHeader <- postImport(existingProject, bodyFromZipFile, Headers.empty)
           responseWrongHeader <-
             postImport(emptyProject, bodyFromZipFile, Headers(Header.ContentType(MediaType.application.json)))
-        } yield assertTrue(
-          responseNoHeader.status == Status.BadRequest,
-          responseWrongHeader.status == Status.UnsupportedMediaType
-        )
+          status = responseWrongHeader.status
+        } yield {
+          assertTrue(status == Status.UnsupportedMediaType)
+        }
+      ),
+      test("given the Content-Type header is not-present, return correct error")(
+        for {
+          responseNoHeader <- postImport(existingProject, bodyFromZipFile, Headers.empty)
+          status            = responseNoHeader.status
+        } yield {
+          assertTrue(status == Status.BadRequest)
+        }
       ),
       test("given the Body is empty, return 400")(for {
         response <- postImport(emptyProject, Body.empty, validContentTypeHeaders)
-      } yield assertTrue(response.status == Status.BadRequest)),
+        status    = response.status
+      } yield {
+        assertTrue(status == Status.BadRequest)
+      }),
       test("given the Body is a zip, return 200")(
         for {
           storageConfig <- ZIO.service[StorageConfig]
@@ -109,14 +132,20 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
                       )
           importExists <- Files.isDirectory(storageConfig.assetPath / emptyProject.toString)
                             && Files.isDirectory(storageConfig.assetPath / emptyProject.toString / "fg")
-        } yield assertTrue(response.status == Status.Ok, importExists)
+          status = response.status
+        } yield {
+          assertTrue(status == Status.Ok, importExists)
+        }
       ),
       test("given the Body is not a zip, will return 400") {
         for {
           storageConfig      <- ZIO.service[StorageConfig]
           response           <- postImport(emptyProject, nonEmptyChunkBody, validContentTypeHeaders)
           importDoesNotExist <- validateImportedProjectExists(storageConfig, emptyProject).map(!_)
-        } yield assertTrue(response.status == Status.BadRequest, importDoesNotExist)
+          status              = response.status
+        } yield {
+          assertTrue(status == Status.BadRequest, importDoesNotExist)
+        }
       }
     )
   }
@@ -129,10 +158,13 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
       for {
         response <- executeRequest(req)
         body     <- response.body.asString
-      } yield assertTrue(
-        response.status == Status.Ok,
-        body == Chunk(ProjectResponse("0001")).toJson
-      )
+        status    = response.status
+      } yield {
+        assertTrue(
+          status == Status.Ok,
+          body == Chunk(ProjectResponse("0001")).toJson
+        )
+      }
     }
   ).provide(
     AssetInfoServiceLive.layer,

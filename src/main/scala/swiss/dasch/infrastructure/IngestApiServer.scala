@@ -27,7 +27,7 @@ object IngestApiServer {
   def startup(): ZIO[ServiceConfig with Server with Endpoints, Nothing, Unit] = for {
     _   <- ZIO.logInfo(s"Starting ${BuildInfo.name}")
     app <- ZIO.serviceWith[Endpoints](_.endpoints).map(ZioHttpInterpreter(serverOptions).toHttp(_))
-    _   <- Server.install(app.withDefaultErrorResponse)
+    _   <- Server.install(app)
     _ <- ZIO.serviceWithZIO[ServiceConfig](c =>
            ZIO.logInfo(s"Started ${BuildInfo.name}/${BuildInfo.version}, see http://${c.host}:${c.port}/docs")
          )

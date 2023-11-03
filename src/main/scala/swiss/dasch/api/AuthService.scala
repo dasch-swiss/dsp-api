@@ -8,17 +8,13 @@ package swiss.dasch.api
 import pdi.jwt.*
 import swiss.dasch.config.Configuration.JwtConfig
 import zio.*
-import zio.http.{HttpAppMiddleware, RequestHandlerMiddleware}
 import zio.prelude.Validation
 
 trait AuthService {
   def authenticate(jwtToken: String): ZIO[Any, NonEmptyChunk[AuthenticationError], JwtClaim]
 }
+
 object AuthService {
-
-  val middleware: RequestHandlerMiddleware[Nothing, AuthService, Nothing, Any] =
-    HttpAppMiddleware.bearerAuthZIO(token => AuthService.authenticate(token).fold(_ => false, _ => true))
-
   def authenticate(token: String): ZIO[AuthService, NonEmptyChunk[AuthenticationError], JwtClaim] =
     ZIO.serviceWithZIO[AuthService](_.authenticate(token))
 }
@@ -81,7 +77,7 @@ object AuthServiceLive {
   val layer =
     ZLayer.fromZIO(ZIO.serviceWithZIO[JwtConfig] { config =>
       ZIO
-        .logWarning("Authentication is disabled => Development flag JWT_DISABLE_AUTH set to true ")
+        .logWarning("Authentication is disabled => Development flag JWT_DISABLE_AUTH set to true.")
         .when(config.disableAuth) *>
         ZIO.succeed(AuthServiceLive(config))
     })

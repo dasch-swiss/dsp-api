@@ -31,13 +31,16 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
     response <- app.runZIO(request).logError
   } yield response
 
+  private def executeRequestAndAssertStatus(request: Request, expectedStatus: Status) =
+    executeRequest(request).map(_.status).map(status => assertTrue(status == expectedStatus))
+
   private val createOriginalsSuite = {
     def createOriginalsRequest(
       shortcode: ProjectShortcode | String,
       body: List[MappingEntry] = List.empty
     ) =
       Request
-        .post(Body.fromString(body.toJson), URL(Root / "maintenance" / "create-originals" / shortcode.toString))
+        .post(URL(Root / "maintenance" / "create-originals" / shortcode.toString), Body.fromString(body.toJson))
         .updateHeaders(
           _.addHeader(Header.ContentType(MediaType.application.json))
             .addHeader(Header.Authorization.name, "Bearer fakeToken")
@@ -45,22 +48,22 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
 
     suite("/maintenance/create-originals")(
       test("should return 404 for a non-existent project") {
-        val request = createOriginalsRequest(nonExistentProject)
-        for {
-          response <- executeRequest(request)
-        } yield assertTrue(response.status == Status.NotFound)
+        executeRequestAndAssertStatus(
+          createOriginalsRequest(nonExistentProject),
+          Status.NotFound
+        )
       },
       test("should return 400 for an invalid project shortcode") {
-        val request = createOriginalsRequest("invalid-shortcode")
-        for {
-          response <- executeRequest(request)
-        } yield assertTrue(response.status == Status.BadRequest)
+        executeRequestAndAssertStatus(
+          createOriginalsRequest("invalid-shortcode"),
+          Status.BadRequest
+        )
       },
       test("should return 204 for a project shortcode ") {
-        val request = createOriginalsRequest(existingProject)
-        for {
-          response <- executeRequest(request)
-        } yield assertTrue(response.status == Status.Accepted)
+        executeRequestAndAssertStatus(
+          createOriginalsRequest(existingProject),
+          Status.Accepted
+        )
       },
       test("should return 204 for a project shortcode and create originals for jp2 and jpx assets") {
         def doesOrigExist(asset: Asset, format: SipiImageFormat) = StorageService.getAssetDirectory(asset).flatMap {
@@ -91,8 +94,9 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
               .map(_ ++ _)
               .filterOrFail(_.size == 4)(new AssertionError("Expected four checksum results"))
               .map(_.forall(_.checksumMatches == true))
+          status = response.status
         } yield assertTrue(
-          response.status == Status.Accepted,
+          status == Status.Accepted,
           newOrigExistsJpx,
           newOrigExistsJp2,
           assetInfoJpx.originalFilename.toString == "ORIGINAL.jpg",
@@ -112,16 +116,22 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
         for {
           response <- executeRequest(request)
           projects <- loadReport("needsOriginals_images_only.json")
-        } yield assertTrue(response.status == Status.Accepted, projects == Chunk("0001"))
+          status    = response.status
+        } yield {
+          assertTrue(status == Status.Accepted, projects == Chunk("0001"))
+        }
       },
       test("should return 204 and create an extended report") {
         val request = Request
-          .get(URL(Root / "maintenance" / "needs-originals").withQueryParams("imagesOnly=false"))
+          .get(URL(Root / "maintenance" / "needs-originals").queryParams("imagesOnly=false"))
           .addHeader(Header.Authorization.name, "Bearer fakeToken")
         for {
           response <- executeRequest(request)
           projects <- loadReport("needsOriginals.json")
-        } yield assertTrue(response.status == Status.Accepted, projects == Chunk("0001"))
+          status    = response.status
+        } yield {
+          assertTrue(status == Status.Accepted, projects == Chunk("0001"))
+        }
       }
     ) @@ TestAspect.withLiveClock
 
@@ -141,7 +151,10 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
           _        <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
           response <- executeRequest(request)
           projects <- loadReport("needsTopLeftCorrection.json")
-        } yield assertTrue(response.status == Status.Accepted, projects == Chunk("0001"))
+          status    = response.status
+        } yield {
+          assertTrue(status == Status.Accepted, projects == Chunk("0001"))
+        }
       }
     ) @@ TestAspect.withLiveClock
 

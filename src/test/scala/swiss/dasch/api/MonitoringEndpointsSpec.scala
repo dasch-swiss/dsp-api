@@ -9,11 +9,11 @@ import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import swiss.dasch.infrastructure.{Health, HealthCheckService, Metrics}
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.version.BuildInfo
-import zio.*
-import zio.http.*
-import zio.json.{EncoderOps, DecoderOps}
+import zio.http.{Request, Root, Status, URL}
 import zio.json.ast.Json
+import zio.json.{DecoderOps, EncoderOps}
 import zio.test.{ZIOSpecDefault, assertTrue}
+import zio.{Ref, UIO, ULayer, ZIO, ZLayer}
 
 object MonitoringEndpointsSpec extends ZIOSpecDefault {
 
@@ -31,8 +31,9 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
         _        <- MockHealthCheckService.setHealthUp()
         response <- executeRequest(Request.get(URL(Root / "health")))
         bodyJson <- response.body.asString
+        status    = response.status
       } yield assertTrue(
-        response.status == Status.Ok,
+        status == Status.Ok,
         bodyJson.fromJson[Json] == "{\"status\":\"UP\"}".fromJson[Json]
       )
     },
@@ -41,10 +42,13 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
         _        <- MockHealthCheckService.setHealthDown()
         response <- executeRequest(Request.get(URL(Root / "health")))
         bodyJson <- response.body.asString
-      } yield assertTrue(
-        response.status == Status.ServiceUnavailable,
-        bodyJson.fromJson[Json] == "{\"status\":\"DOWN\"}".fromJson[Json]
-      )
+        status    = response.status
+      } yield {
+        assertTrue(
+          status == Status.ServiceUnavailable,
+          bodyJson.fromJson[Json] == "{\"status\":\"DOWN\"}".fromJson[Json]
+        )
+      }
     }
   )
   val infoEndpointSuite = suite("get /info")(
@@ -52,17 +56,20 @@ object MonitoringEndpointsSpec extends ZIOSpecDefault {
       for {
         response     <- executeRequest(Request.get(URL(Root / "info")))
         bodyAsString <- response.body.asString
-      } yield assertTrue(
-        response.status == Status.Ok,
-        bodyAsString == InfoEndpointResponse(
-          name = BuildInfo.name,
-          version = BuildInfo.version,
-          scalaVersion = BuildInfo.scalaVersion,
-          sbtVersion = BuildInfo.sbtVersion,
-          buildTime = BuildInfo.builtAtString,
-          gitCommit = BuildInfo.gitCommit
-        ).toJson
-      )
+        status        = response.status
+      } yield {
+        assertTrue(
+          status == Status.Ok,
+          bodyAsString == InfoEndpointResponse(
+            name = BuildInfo.name,
+            version = BuildInfo.version,
+            scalaVersion = BuildInfo.scalaVersion,
+            sbtVersion = BuildInfo.sbtVersion,
+            buildTime = BuildInfo.builtAtString,
+            gitCommit = BuildInfo.gitCommit
+          ).toJson
+        )
+      }
     }
   )
 

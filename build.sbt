@@ -9,7 +9,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-val tapirVersion                = "1.7.6"
+val tapirVersion                = "1.8.4"
 val zioVersion                  = "2.0.18"
 val zioJsonVersion              = "0.6.2"
 val zioConfigVersion            = "3.0.7"
@@ -36,7 +36,7 @@ val tapir = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server"   % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.2.13"
+  "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.8.4"
 )
 val metrics = Seq(
   "dev.zio"                     %% "zio-metrics-connectors"            % zioMetricsConnectorsVersion,
@@ -80,7 +80,7 @@ lazy val root = (project in file("."))
       "dev.zio"              %% "zio-prelude"                       % zioPreludeVersion,
       "dev.zio"              %% "zio-streams"                       % zioVersion,
       "eu.timepit"           %% "refined"                           % "0.11.0",
-      "commons-io"            % "commons-io"                        % "2.14.0",
+      "commons-io"            % "commons-io"                        % "2.15.0",
       "com.github.jwt-scala" %% "jwt-zio-json"                      % "9.4.4",
       // add the silencer lib for scala 2.13 in order to compile with scala 3.3.0 until https://github.com/zio/zio-config/pull/1171 is merged
       // resolves problems when `sbt doc` failed with
