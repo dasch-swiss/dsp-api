@@ -17,7 +17,6 @@ Issue Number: DEV-
 - [ ] perf: performance improvements
 - [ ] refactor: represents production code refactoring
 - [ ] test: all about tests: adding, refactoring tests (no production code change)
-- [ ] other... Please describe:
 
 ### Basic Requirements for bug fixes and features
 
