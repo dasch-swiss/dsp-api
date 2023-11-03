@@ -4,17 +4,18 @@
  */
 
 package org.knora.webapi.slice.admin.domain.service
+import zio.Task
+
 import dsp.valueobjects.Project.Shortcode
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.common.repo.service.Repository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import zio.Task
 
 trait KnoraProjectRepo extends Repository[KnoraProject, InternalIri] {
   def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]]
-  def findByShortcode(code: Shortcode): Task[Option[KnoraProject]]=
+  def findByShortcode(code: Shortcode): Task[Option[KnoraProject]] =
     findById(ProjectIdentifierADM.ShortcodeIdentifier(code))
   def setProjectRestrictedViewSize(project: KnoraProject, size: RestrictedViewSize): Task[Unit]
 }

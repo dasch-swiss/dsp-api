@@ -5,14 +5,19 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import dsp.valueobjects.Project.{Shortcode, Shortname}
+import zio._
+
+import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.Project.Shortname
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectKeywordsGetResponseADM, ProjectsKeywordsGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import zio._
 
 trait ProjectADMService {
   def findAll: Task[List[ProjectADM]]
@@ -34,8 +39,8 @@ object ProjectADMService {
    * @return the [[InternalIri]] of the project's data named graph.
    */
   def projectDataNamedGraphV2(project: ProjectADM): InternalIri = {
-    val shortcode = Shortcode .unsafeFrom(project.shortcode)
-    val shortname= Shortname.unsafeFrom(project.shortname)
+    val shortcode = Shortcode.unsafeFrom(project.shortcode)
+    val shortname = Shortname.unsafeFrom(project.shortname)
     projectDataNamedGraphV2(shortcode, shortname)
   }
 

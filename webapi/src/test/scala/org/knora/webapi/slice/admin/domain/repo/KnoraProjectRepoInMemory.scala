@@ -5,14 +5,20 @@
 
 package org.knora.webapi.slice.admin.domain.repo
 
+import zio.Ref
+import zio.Task
+import zio.ULayer
+import zio.ZLayer
+
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.{IriIdentifier, ShortcodeIdentifier, ShortnameIdentifier}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import zio.{Ref, Task, ULayer, ZLayer}
 
 final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
     extends AbstractInMemoryCrudRepository[KnoraProject, InternalIri](projects, _.id)

@@ -60,8 +60,8 @@ final case class KnoraProjectRepoLive(
     val propsMap   = subjectPropsTuple._2
     for {
       shortname <- mapper
-        .getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap)
-        .flatMap(it => Project.Shortname.make(it.value).toZIO)
+                     .getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap)
+                     .flatMap(it => Project.Shortname.make(it.value).toZIO)
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap)
                      .flatMap(it => Project.Shortcode.make(it.value).toZIO)

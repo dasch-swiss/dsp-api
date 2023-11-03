@@ -5,11 +5,12 @@
 
 package dsp.valueobjects
 
-import dsp.errors.ValidationException
 import zio.json._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
+
+import dsp.errors.ValidationException
 
 object Project {
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
@@ -25,8 +26,6 @@ object Project {
    * - cannot start with number nor allowed special characters.
    */
   private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
-
-
 
   object ErrorMessages {
     val ShortcodeMissing          = "Shortcode cannot be empty."
@@ -53,7 +52,7 @@ object Project {
     implicit val encoder: JsonEncoder[Shortcode] =
       JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
-    def unsafeFrom(str: String): Shortcode = make(str).fold(e=> throw e.head, identity)
+    def unsafeFrom(str: String): Shortcode = make(str).fold(e => throw e.head, identity)
 
     def make(value: String): Validation[ValidationException, Shortcode] =
       if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortcodeMissing))
@@ -75,7 +74,7 @@ object Project {
     implicit val encoder: JsonEncoder[Shortname] =
       JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
 
-    def unsafeFrom(str: String): Shortname = make(str).fold(e=> throw e.head, identity)
+    def unsafeFrom(str: String): Shortname = make(str).fold(e => throw e.head, identity)
 
     def make(value: String): Validation[ValidationException, Shortname] =
       if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortnameMissing))
