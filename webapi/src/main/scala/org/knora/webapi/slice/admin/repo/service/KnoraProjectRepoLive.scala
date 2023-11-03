@@ -5,28 +5,34 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import dsp.valueobjects.{Project, RestrictedViewSize, V2}
+import play.twirl.api.TxtFormat
+import zio._
+
+import dsp.valueobjects.Project
+import dsp.valueobjects.RestrictedViewSize
+import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages.{BooleanLiteralV2, IriLiteralV2, StringLiteralV2, SubjectV2}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Construct, Update}
-import play.twirl.api.TxtFormat
-import zio._
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
-  private val mapper: PredicateObjectMapper
+  private val mapper: PredicateObjectMapper,
+  private implicit val sf: StringFormatter
 ) extends KnoraProjectRepo {
-  implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   override def findById(id: InternalIri): Task[Option[KnoraProject]] =
     findOneByQuery(sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
@@ -102,6 +108,5 @@ final case class KnoraProjectRepoLive(
 }
 
 object KnoraProjectRepoLive {
-  val layer: URLayer[TriplestoreService with OntologyRepo with PredicateObjectMapper, KnoraProjectRepoLive] =
-    ZLayer.fromFunction(KnoraProjectRepoLive.apply _)
+  val layer = ZLayer.derive[KnoraProjectRepoLive]
 }
