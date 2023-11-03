@@ -101,11 +101,6 @@ object ProjectSpec extends ZIOSpecDefault {
           Shortname.make(param).map(_.value) == Validation.succeed(param)
         ) && assert(Shortname.make(param).toOption)(isSome(isSubtype[Shortname](Assertion.anything)))
       }
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Shortname.make(None) == Validation.succeed(None)
-      )
     }
   )
 

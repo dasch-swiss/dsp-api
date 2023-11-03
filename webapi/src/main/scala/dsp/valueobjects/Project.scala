@@ -94,12 +94,6 @@ object Project {
           .flatMap(Iri.toSparqlEncodedString)
       }
     }
-
-    def make(value: Option[String]): Validation[ValidationException, Option[Shortname]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
   }
 
   /**
