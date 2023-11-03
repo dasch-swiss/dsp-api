@@ -5,13 +5,11 @@
 
 package dsp.valueobjects
 
+import dsp.errors.ValidationException
 import zio.json._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-
-import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
 
 object Project {
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
@@ -28,16 +26,7 @@ object Project {
    */
   private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
-  /**
-   * Check that the string represents a valid project shortname.
-   *
-   * @param shortname string to be checked.
-   * @return the same string.
-   */
-  private def validateAndEscapeProjectShortname(shortname: String): Option[String] =
-    shortnameRegex
-      .findFirstIn(shortname)
-      .flatMap(Iri.toSparqlEncodedString)
+
 
   object ErrorMessages {
     val ShortcodeMissing          = "Shortcode cannot be empty."
@@ -64,8 +53,7 @@ object Project {
     implicit val encoder: JsonEncoder[Shortcode] =
       JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
-    def unsafeFrom(str: String) = make(str)
-      .getOrElse(throw new IllegalArgumentException(ErrorMessages.ShortcodeInvalid(str)))
+    def unsafeFrom(str: String): Shortcode = make(str).fold(e=> throw e.head, identity)
 
     def make(value: String): Validation[ValidationException, Shortcode] =
       if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortcodeMissing))
@@ -87,6 +75,8 @@ object Project {
     implicit val encoder: JsonEncoder[Shortname] =
       JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
 
+    def unsafeFrom(str: String): Shortname = make(str).fold(e=> throw e.head, identity)
+
     def make(value: String): Validation[ValidationException, Shortname] =
       if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortnameMissing))
       else
@@ -94,6 +84,17 @@ object Project {
           .fromOption(validateAndEscapeProjectShortname(value))
           .mapError(_ => ValidationException(ErrorMessages.ShortnameInvalid(value)))
           .map(new Shortname(_) {})
+
+    private def validateAndEscapeProjectShortname(shortname: String): Option[String] = {
+      val defaultSharedOntologiesProject = "DefaultSharedOntologiesProject"
+      if (shortname == defaultSharedOntologiesProject) {
+        Some(defaultSharedOntologiesProject)
+      } else {
+        shortnameRegex
+          .findFirstIn(shortname)
+          .flatMap(Iri.toSparqlEncodedString)
+      }
+    }
 
     def make(value: Option[String]): Validation[ValidationException, Option[Shortname]] =
       value match {

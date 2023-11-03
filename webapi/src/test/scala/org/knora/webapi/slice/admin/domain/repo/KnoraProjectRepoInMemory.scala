@@ -3,21 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.admin.domain.service
-
-import zio.Ref
-import zio.Task
-import zio.ULayer
-import zio.ZLayer
+package org.knora.webapi.slice.admin.domain.repo
 
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.{IriIdentifier, ShortcodeIdentifier, ShortnameIdentifier}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import zio.{Ref, Task, ULayer, ZLayer}
 
 final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
     extends AbstractInMemoryCrudRepository[KnoraProject, InternalIri](projects, _.id)
@@ -26,13 +21,10 @@ final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = projects.get.map(
     _.find(id match {
       case ShortcodeIdentifier(shortcode) => _.shortcode == shortcode
-      case ShortnameIdentifier(shortname) => _.shortname == shortname.value
+      case ShortnameIdentifier(shortname) => _.shortname == shortname
       case IriIdentifier(iri)             => _.id.value == iri.value
     })
   )
-
-  override def findOntologies(project: KnoraProject): Task[List[InternalIri]] =
-    throw new UnsupportedOperationException("not yet implemented")
 
   override def setProjectRestrictedViewSize(project: KnoraProject, size: RestrictedViewSize): Task[Unit] = ???
 }

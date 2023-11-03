@@ -5,17 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio.NonEmptyChunk
-import zio.test.Spec
-import zio.test.ZIOSpecDefault
-import zio.test.assertTrue
-
-import dsp.valueobjects.Project
+import dsp.valueobjects.Project.{Shortcode, Shortname}
 import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
+import org.knora.webapi.slice.resourceinfo.domain.{InternalIri, IriTestConstants}
+import zio.NonEmptyChunk
+import zio.test.{Spec, ZIOSpecDefault, assertTrue}
 
 object ProjectADMServiceSpec extends ZIOSpecDefault {
 
@@ -41,24 +37,25 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
         )
       },
       test("a KnoraProject") {
-        val shortcode = Project.Shortcode.make("0002").getOrElse(throw new Exception("shortcode not valid"))
+        val shortcode = "0002"
         val shortname = "someOtherProject"
         val p: KnoraProject = KnoraProject(
           id = InternalIri(IriTestConstants.Project.TestProject),
-          shortname = shortname,
-          shortcode = shortcode,
+          shortname = Shortname.unsafeFrom(shortname),
+          shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,
           description =
             NonEmptyChunk(StringLiteralV2("description not used in test but is required by constructor", None)),
           keywords = List.empty,
           logo = None,
           status = true,
-          selfjoin = true
+          selfjoin = true,
+          List.empty
         )
         assertTrue(
           ProjectADMService
             .projectDataNamedGraphV2(p)
-            .value == s"http://www.knora.org/data/${shortcode.value}/$shortname"
+            .value == s"http://www.knora.org/data/$shortcode/$shortname"
         )
       }
     )
