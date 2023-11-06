@@ -21,23 +21,31 @@
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-CONSTRUCT { ?s ?p ?o . }
-
+CONSTRUCT {
+  ?project ?p ?o .
+  ?project knora-admin:belongsToOntology ?ontology .
+}
 WHERE {
 
     @if(maybeIri.nonEmpty) {
-        BIND(IRI("@maybeIri") as ?s)
+        BIND(IRI("@maybeIri") as ?project)
     }
 
     @if(maybeShortname.nonEmpty) {
-        ?s knora-admin:projectShortname "@maybeShortname.get"^^xsd:string .
+        ?project knora-admin:projectShortname "@maybeShortname.get"^^xsd:string .
     }
 
     @if(maybeShortcode.nonEmpty) {
-        ?s knora-admin:projectShortcode "@maybeShortcode.get"^^xsd:string .
+        ?project knora-admin:projectShortcode "@maybeShortcode.get"^^xsd:string .
     }
 
-    ?s rdf:type knora-admin:knoraProject .
-    ?s ?p ?o .
+    ?project a knora-admin:knoraProject .
+    OPTIONAL{
+        ?ontology a owl:Ontology .
+        ?ontology knora-base:attachedToProject ?project .
+    }
+    ?project ?p ?o .
 }

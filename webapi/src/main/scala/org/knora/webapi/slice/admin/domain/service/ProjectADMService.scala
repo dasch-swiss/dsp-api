@@ -8,6 +8,7 @@ package org.knora.webapi.slice.admin.domain.service
 import zio._
 
 import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.Project.Shortname
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -38,10 +39,9 @@ object ProjectADMService {
    * @return the [[InternalIri]] of the project's data named graph.
    */
   def projectDataNamedGraphV2(project: ProjectADM): InternalIri = {
-    val shortcode = Shortcode
-      .make(project.shortcode)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid project shortcode: ${project.shortcode}"))
-    projectDataNamedGraphV2(shortcode, project.shortname)
+    val shortcode = Shortcode.unsafeFrom(project.shortcode)
+    val shortname = Shortname.unsafeFrom(project.shortname)
+    projectDataNamedGraphV2(shortcode, shortname)
   }
 
   /**
@@ -53,8 +53,8 @@ object ProjectADMService {
   def projectDataNamedGraphV2(project: KnoraProject): InternalIri =
     projectDataNamedGraphV2(project.shortcode, project.shortname)
 
-  private def projectDataNamedGraphV2(shortcode: Shortcode, projectShortname: String) =
-    InternalIri(s"${OntologyConstants.NamedGraphs.DataNamedGraphStart}/${shortcode.value}/$projectShortname")
+  private def projectDataNamedGraphV2(shortcode: Shortcode, shortname: Shortname) =
+    InternalIri(s"${OntologyConstants.NamedGraphs.DataNamedGraphStart}/${shortcode.value}/${shortname.value}")
 }
 
 final case class ProjectADMServiceLive(
@@ -67,33 +67,33 @@ final case class ProjectADMServiceLive(
     projectRepo.findById(projectId).flatMap(ZIO.foreach(_)(toProjectADM))
 
   private def toProjectADM(knoraProject: KnoraProject): Task[ProjectADM] =
-    for {
-      ontologyIris <- projectRepo.findOntologies(knoraProject)
-    } yield ProjectADM(
-      id = knoraProject.id.value,
-      shortname = knoraProject.shortname,
-      shortcode = knoraProject.shortcode.value,
-      longname = knoraProject.longname,
-      description = knoraProject.description,
-      keywords = knoraProject.keywords,
-      logo = knoraProject.logo,
-      status = knoraProject.status,
-      selfjoin = knoraProject.selfjoin,
-      ontologies = ontologyIris.map(_.value)
-    ).unescape
+    ZIO.attempt(
+      ProjectADM(
+        id = knoraProject.id.value,
+        shortname = knoraProject.shortname.value,
+        shortcode = knoraProject.shortcode.value,
+        longname = knoraProject.longname,
+        description = knoraProject.description,
+        keywords = knoraProject.keywords,
+        logo = knoraProject.logo,
+        status = knoraProject.status,
+        selfjoin = knoraProject.selfjoin,
+        ontologies = knoraProject.ontologies.map(_.value)
+      ).unescape
+    )
 
   private def toKnoraProject(project: ProjectADM): KnoraProject =
     KnoraProject(
       id = InternalIri.apply(project.id),
-      shortname = project.shortname,
-      shortcode =
-        Shortcode.make(project.shortcode).getOrElse(throw new IllegalArgumentException("Should not happened.")),
+      shortname = Shortname.unsafeFrom(project.shortname),
+      shortcode = Shortcode.unsafeFrom(project.shortcode),
       longname = project.longname,
       description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
       keywords = project.keywords.toList,
       logo = project.logo,
       status = project.status,
-      selfjoin = project.selfjoin
+      selfjoin = project.selfjoin,
+      ontologies = project.ontologies.map(InternalIri.apply).toList
     )
 
   override def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
