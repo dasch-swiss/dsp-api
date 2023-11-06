@@ -10,7 +10,7 @@ Issue Number: DEV-
 
 ### PR Type
 
-- [ ] chore: maintenance tasks (no production code change)
+- [ ] build/chore: maintenance tasks (no production code change)
 - [ ] docs: documentation changes (no production code change)
 - [ ] feat: represents a new feature
 - [ ] fix: represents bug fixes
