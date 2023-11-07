@@ -13,9 +13,9 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.1.2" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.8.1" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.8.3" // base image the knora-sipi image is created from
 
-  val ScalaVersion = "2.13.11"
+  val ScalaVersion = "2.13.12"
 
   val PekkoActorVersion = "1.0.1"
   val PekkoHttpVersion  = "1.0.0"
@@ -24,7 +24,7 @@ object Dependencies {
   val ZioConfigVersion            = "3.0.7"
   val ZioLoggingVersion           = "2.1.14"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.2.0"
+  val ZioMetricsConnectorsVersion = "2.2.1"
   val ZioPreludeVersion           = "1.0.0-RC21"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.18"
@@ -70,8 +70,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.4" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.4" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.5" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.5" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -81,7 +81,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.1.4" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.1.5" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.76"
 
   // caching
@@ -93,7 +93,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "73.2"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.4.1"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.7"

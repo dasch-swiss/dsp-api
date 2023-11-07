@@ -11,7 +11,6 @@ import zio.prelude.Validation
 import scala.util.matching.Regex
 
 import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
 
 object Project {
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
@@ -28,42 +27,40 @@ object Project {
    */
   private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
-  /**
-   * Check that the string represents a valid project shortname.
-   *
-   * @param shortname string to be checked.
-   * @return the same string.
-   */
-  def validateAndEscapeProjectShortname(shortname: String): Option[String] =
-    shortnameRegex
-      .findFirstIn(shortname)
-      .flatMap(Iri.toSparqlEncodedString)
-
-  // TODO-mpro: longname, description, keywords, logo are missing enhanced validation
+  object ErrorMessages {
+    val ShortcodeMissing          = "Shortcode cannot be empty."
+    val ShortcodeInvalid          = (v: String) => s"Invalid project shortcode: $v"
+    val ShortnameMissing          = "Shortname cannot be empty."
+    val ShortnameInvalid          = (v: String) => s"Shortname is invalid: $v"
+    val NameMissing               = "Name cannot be empty."
+    val NameInvalid               = "Name must be 3 to 256 characters long."
+    val ProjectDescriptionMissing = "Description cannot be empty."
+    val ProjectDescriptionInvalid = "Description must be 3 to 40960 characters long."
+    val KeywordsMissing           = "Keywords cannot be empty."
+    val KeywordsInvalid           = "Keywords must be 3 to 64 characters long."
+    val LogoMissing               = "Logo cannot be empty."
+  }
 
   /**
    * Project Shortcode value object.
    */
   sealed abstract case class Shortcode private (value: String)
   object Shortcode { self =>
-    implicit val decoder: JsonDecoder[Shortcode] = JsonDecoder[String].mapOrFail { case value =>
-      Shortcode.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Shortcode] = JsonDecoder[String].mapOrFail { value =>
+      Shortcode.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Shortcode] =
       JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
 
-    def unsafeFrom(str: String) = make(str)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid project shortcode: $str"))
+    def unsafeFrom(str: String): Shortcode = make(str).fold(e => throw e.head, identity)
 
     def make(value: String): Validation[ValidationException, Shortcode] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeMissing))
-      } else {
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortcodeMissing))
+      else
         ProjectIDRegex.matches(value.toUpperCase) match {
-          case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeInvalid(value)))
+          case false => Validation.fail(ValidationException(ErrorMessages.ShortcodeInvalid(value)))
           case true  => Validation.succeed(new Shortcode(value.toUpperCase) {})
         }
-      }
   }
 
   /**
@@ -77,40 +74,46 @@ object Project {
     implicit val encoder: JsonEncoder[Shortname] =
       JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
 
+    def unsafeFrom(str: String): Shortname = make(str).fold(e => throw e.head, identity)
+
     def make(value: String): Validation[ValidationException, Shortname] =
-      if (value.isEmpty) Validation.fail(ValidationException(ProjectErrorMessages.ShortnameMissing))
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortnameMissing))
       else
         Validation
-          .fromOption(validateAndEscapeProjectShortname(value))
-          .mapError(_ => ValidationException(ProjectErrorMessages.ShortnameInvalid(value)))
+          .fromOption(validateAndEscape(value))
+          .mapError(_ => ValidationException(ErrorMessages.ShortnameInvalid(value)))
           .map(new Shortname(_) {})
 
-    def make(value: Option[String]): Validation[ValidationException, Option[Shortname]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+    private def validateAndEscape(shortname: String): Option[String] = {
+      val defaultSharedOntologiesProject = "DefaultSharedOntologiesProject"
+      if (shortname == defaultSharedOntologiesProject) {
+        Some(defaultSharedOntologiesProject)
+      } else {
+        shortnameRegex
+          .findFirstIn(shortname)
+          .flatMap(Iri.toSparqlEncodedString)
       }
+    }
   }
 
   /**
    * Project Name value object.
    * (Formerly `Longname`)
    */
-  // TODO-BL: [domain-model] this should be multi-lang-string, I suppose; needs real validation once value constraints are defined
   sealed abstract case class Name private (value: String)
   object Name { self =>
-    implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { case value =>
-      Name.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { value =>
+      Name.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Name] =
       JsonEncoder[String].contramap((name: Name) => name.value)
 
+    private def isLengthCorrect(name: String): Boolean = name.length > 2 && name.length < 257
+
     def make(value: String): Validation[ValidationException, Name] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.NameMissing))
-      } else {
-        Validation.succeed(new Name(value) {})
-      }
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.NameMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.NameInvalid))
+      else Validation.succeed(new Name(value) {})
 
     def make(value: Option[String]): Validation[ValidationException, Option[Name]] =
       value match {
@@ -120,27 +123,27 @@ object Project {
   }
 
   /**
-   * ProjectDescription value object.
+   * Description value object.
    */
-  // TODO-BL: [domain-model] should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
-  // ATM it can't be changed to MultiLangString, because that has the language tag required, whereas in V2, it's currently optional, so this would be a breaking change.
-  sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
-  object ProjectDescription { self =>
-    implicit val decoder: JsonDecoder[ProjectDescription] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail {
-      case value =>
-        ProjectDescription.make(value).toEitherWith(e => e.head.getMessage())
+  sealed abstract case class Description private (value: Seq[V2.StringLiteralV2])
+  object Description { self =>
+    implicit val decoder: JsonDecoder[Description] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail { value =>
+      Description.make(value).toEitherWith(e => e.head.getMessage)
     }
-    implicit val encoder: JsonEncoder[ProjectDescription] =
-      JsonEncoder[Seq[V2.StringLiteralV2]].contramap((description: ProjectDescription) => description.value)
+    implicit val encoder: JsonEncoder[Description] =
+      JsonEncoder[Seq[V2.StringLiteralV2]].contramap((description: Description) => description.value)
 
-    def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, ProjectDescription] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.ProjectDescriptionsMissing))
-      } else {
-        Validation.succeed(new ProjectDescription(value) {})
-      }
+    private def isLengthCorrect(descriptionToCheck: Seq[V2.StringLiteralV2]): Boolean = {
+      val checked = descriptionToCheck.filter(d => d.value.length > 2 && d.value.length < 40961)
+      descriptionToCheck == checked
+    }
 
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[ProjectDescription]] =
+    def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, Description] =
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionInvalid))
+      else Validation.succeed(new Description(value) {})
+
+    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[Description]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -152,18 +155,21 @@ object Project {
    */
   sealed abstract case class Keywords private (value: Seq[String])
   object Keywords { self =>
-    implicit val decoder: JsonDecoder[Keywords] = JsonDecoder[Seq[String]].mapOrFail { case value =>
-      Keywords.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Keywords] = JsonDecoder[Seq[String]].mapOrFail { value =>
+      Keywords.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Keywords] =
       JsonEncoder[Seq[String]].contramap((keywords: Keywords) => keywords.value)
 
+    private def isLengthCorrect(keywordsToCheck: Seq[String]): Boolean = {
+      val checked = keywordsToCheck.filter(k => k.length > 2 && k.length < 65)
+      keywordsToCheck == checked
+    }
+
     def make(value: Seq[String]): Validation[ValidationException, Keywords] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.KeywordsMissing))
-      } else {
-        Validation.succeed(new Keywords(value) {})
-      }
+      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.KeywordsMissing))
+      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.KeywordsInvalid))
+      else Validation.succeed(new Keywords(value) {})
 
     def make(value: Option[Seq[String]]): Validation[ValidationException, Option[Keywords]] =
       value match {
@@ -177,16 +183,16 @@ object Project {
    */
   sealed abstract case class Logo private (value: String)
   object Logo { self =>
-    implicit val decoder: JsonDecoder[Logo] = JsonDecoder[String].mapOrFail { case value =>
-      Logo.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[Logo] = JsonDecoder[String].mapOrFail { value =>
+      Logo.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[Logo] =
       JsonEncoder[String].contramap((logo: Logo) => logo.value)
 
     def make(value: String): Validation[ValidationException, Logo] =
-      if (value.isEmpty) {
-        Validation.fail(ValidationException(ProjectErrorMessages.LogoMissing))
-      } else {
+      if (value.isEmpty)
+        Validation.fail(ValidationException(ErrorMessages.LogoMissing))
+      else {
         Validation.succeed(new Logo(value) {})
       }
     def make(value: Option[String]): Validation[ValidationException, Option[Logo]] =
@@ -201,8 +207,8 @@ object Project {
    */
   sealed abstract case class ProjectSelfJoin private (value: Boolean)
   object ProjectSelfJoin { self =>
-    implicit val decoder: JsonDecoder[ProjectSelfJoin] = JsonDecoder[Boolean].mapOrFail { case value =>
-      ProjectSelfJoin.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[ProjectSelfJoin] = JsonDecoder[Boolean].mapOrFail { value =>
+      ProjectSelfJoin.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[ProjectSelfJoin] =
       JsonEncoder[Boolean].contramap((selfJoin: ProjectSelfJoin) => selfJoin.value)
@@ -226,8 +232,8 @@ object Project {
     val deleted = new ProjectStatus(false) {}
     val active  = new ProjectStatus(true) {}
 
-    implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { case value =>
-      ProjectStatus.make(value).toEitherWith(e => e.head.getMessage())
+    implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { value =>
+      ProjectStatus.make(value).toEitherWith(e => e.head.getMessage)
     }
     implicit val encoder: JsonEncoder[ProjectStatus] =
       JsonEncoder[Boolean].contramap((status: ProjectStatus) => status.value)
@@ -241,19 +247,4 @@ object Project {
         case None    => Validation.succeed(None)
       }
   }
-}
-
-object ProjectErrorMessages {
-  val ShortcodeMissing           = "Shortcode cannot be empty."
-  val ShortcodeInvalid           = (v: String) => s"Shortcode is invalid: $v"
-  val ShortnameMissing           = "Shortname cannot be empty."
-  val ShortnameInvalid           = (v: String) => s"Shortname is invalid: $v"
-  val NameMissing                = "Name cannot be empty."
-  val NameInvalid                = (v: String) => s"Name is invalid: $v"
-  val ProjectDescriptionsMissing = "Description cannot be empty."
-  val ProjectDescriptionsInvalid = (v: String) => s"Description is invalid: $v"
-  val KeywordsMissing            = "Keywords cannot be empty."
-  val KeywordsInvalid            = (v: String) => s"Keywords are invalid: $v"
-  val LogoMissing                = "Logo cannot be empty."
-  val LogoInvalid                = (v: String) => s"Logo is invalid: $v"
 }

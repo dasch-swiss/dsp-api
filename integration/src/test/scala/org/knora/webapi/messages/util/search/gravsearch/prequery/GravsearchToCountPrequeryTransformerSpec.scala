@@ -7,8 +7,6 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import zio._
 
-import scala.collection.mutable.ArrayBuffer
-
 import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.core.MessageRelay
@@ -102,7 +100,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
       groupBy = Nil,
       orderBy = Nil,
       whereClause = WhereClause(
-        patterns = ArrayBuffer(
+        patterns = Vector(
           StatementPattern(
             subj = QueryVariable(variableName = "thing"),
             pred = IriRef(
@@ -201,7 +199,7 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
   val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
     SelectQuery(
       fromClause = None,
-      variables = Vector(
+      variables = List(
         Count(
           outputVariableName = "count",
           distinct = true,
@@ -238,14 +236,6 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
           OptionalPattern(
             patterns = Vector(
               StatementPattern(
-                subj = QueryVariable(variableName = "decimal"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = QueryVariable(variableName = "decimalVal")
-              ),
-              StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
@@ -263,6 +253,14 @@ class GravsearchToCountPrequeryTransformerSpec extends CoreSpec {
                   value = "false",
                   datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
                 )
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "decimal"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "decimalVal")
               ),
               FilterPattern(expression =
                 CompareExpression(

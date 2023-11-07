@@ -21,14 +21,15 @@ object TestDataFactory {
 
   val someProject = KnoraProject(
     InternalIri("http://rdfh.ch/projects/0001"),
-    "shortname",
+    Shortname.unsafeFrom("shortname"),
     Shortcode.unsafeFrom("0001"),
     None,
     NonEmptyChunk(V2.StringLiteralV2("Some description", None)),
     List.empty,
     None,
     true,
-    false
+    false,
+    List.empty
   )
 
   def projectShortcodeIdentifier(shortcode: String): ShortcodeIdentifier =
@@ -61,8 +62,8 @@ object TestDataFactory {
       .make(name)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Name $name."))
 
-  def projectDescription(description: Seq[V2.StringLiteralV2]): ProjectDescription =
-    ProjectDescription
+  def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
+    Description
       .make(description)
       .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectDescription $description."))
 
