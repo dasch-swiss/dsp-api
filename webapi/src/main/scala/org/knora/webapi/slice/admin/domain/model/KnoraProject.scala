@@ -16,7 +16,7 @@ case class KnoraProject(
   shortname: Project.Shortname,
   shortcode: Project.Shortcode,
   longname: Option[Project.Longname],
-  description: NonEmptyChunk[StringLiteralV2],
+  description: Project.Description,
   keywords: List[String],
   logo: Option[String],
   status: Boolean,

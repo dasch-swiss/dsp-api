@@ -123,10 +123,7 @@ object ProjectSpec extends ZIOSpecDefault {
   private val descriptionTest = suite("Description")(
     test("pass an empty object and return an error") {
       assertTrue(
-        Description.make(Seq.empty) == Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing)),
-        Description.make(Some(Seq.empty)) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionMissing)
-        )
+        Description.make(Seq.empty) == Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing))
       )
     },
     test("pass an object containing invalid Description and expect an error to be returned") {
@@ -141,17 +138,8 @@ object ProjectSpec extends ZIOSpecDefault {
     },
     test("pass a valid object and successfully create value object") {
       for {
-        description           <- Description.make(validDescription).toZIO
-        optionalDescription   <- Description.make(Option(validDescription)).toZIO
-        descriptionFromOption <- ZIO.fromOption(optionalDescription)
-      } yield assertTrue(description.value == validDescription) &&
-        assert(optionalDescription)(isSome(isSubtype[Description](Assertion.anything))) &&
-        assertTrue(descriptionFromOption.value == validDescription)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Description.make(None) == Validation.succeed(None)
-      )
+        description <- Description.make(validDescription).toZIO
+      } yield assertTrue(description.value.toList == validDescription.toList)
     }
   )
 

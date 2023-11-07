@@ -5,20 +5,19 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio._
-
-import dsp.valueobjects.Project
-import dsp.valueobjects.Project.Shortcode
-import dsp.valueobjects.Project.Shortname
-import dsp.valueobjects.RestrictedViewSize
+import dsp.valueobjects.Project.{Shortcode, Shortname}
+import dsp.valueobjects.{Project, RestrictedViewSize}
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{
+  ProjectADM,
+  ProjectIdentifierADM,
+  ProjectKeywordsGetResponseADM,
+  ProjectsKeywordsGetResponseADM
+}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import zio._
 
 trait ProjectADMService {
   def findAll: Task[List[ProjectADM]]
@@ -74,7 +73,7 @@ final case class ProjectADMServiceLive(
         shortname = knoraProject.shortname.value,
         shortcode = knoraProject.shortcode.value,
         longname = knoraProject.longname.map(_.value),
-        description = knoraProject.description,
+        description = knoraProject.description.value,
         keywords = knoraProject.keywords,
         logo = knoraProject.logo,
         status = knoraProject.status,
@@ -86,10 +85,10 @@ final case class ProjectADMServiceLive(
   private def toKnoraProject(project: ProjectADM): KnoraProject =
     KnoraProject(
       id = InternalIri.apply(project.id),
-      shortname = Shortname.unsafeFrom(project.shortname),
-      shortcode = Shortcode.unsafeFrom(project.shortcode),
+      shortname = Project.Shortname.unsafeFrom(project.shortname),
+      shortcode = Project.Shortcode.unsafeFrom(project.shortcode),
       longname = project.longname.map(Project.Longname.unsafeFrom),
-      description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
+      description = Project.Description.unsafeFrom(project.description),
       keywords = project.keywords.toList,
       logo = project.logo,
       status = project.status,

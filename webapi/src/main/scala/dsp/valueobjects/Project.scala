@@ -5,12 +5,12 @@
 
 package dsp.valueobjects
 
+import dsp.errors.ValidationException
+import zio.NonEmptyChunk
 import zio.json._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-
-import dsp.errors.ValidationException
 
 object Project {
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
@@ -120,7 +120,7 @@ object Project {
   /**
    * Description value object.
    */
-  sealed abstract case class Description private (value: Seq[V2.StringLiteralV2])
+  sealed abstract case class Description private (value: NonEmptyChunk[V2.StringLiteralV2])
   object Description { self =>
     implicit val decoder: JsonDecoder[Description] = JsonDecoder[Seq[V2.StringLiteralV2]].mapOrFail { value =>
       Description.make(value).toEitherWith(e => e.head.getMessage)
@@ -133,16 +133,12 @@ object Project {
       descriptionToCheck == checked
     }
 
-    def make(value: Seq[V2.StringLiteralV2]): Validation[ValidationException, Description] =
-      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing))
-      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionInvalid))
-      else Validation.succeed(new Description(value) {})
+    def unsafeFrom(str: Seq[V2.StringLiteralV2]): Description = make(str).fold(e => throw e.head, identity)
 
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[ValidationException, Option[Description]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+    def make(literals: Seq[V2.StringLiteralV2]): Validation[ValidationException, Description] =
+      if (literals.isEmpty) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing))
+      else if (!isLengthCorrect(literals)) Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionInvalid))
+      else { Validation.succeed(new Description(NonEmptyChunk.fromIterable(literals.head, literals.tail)) {}) }
   }
 
   /**

@@ -12,6 +12,7 @@ import zio.test.assertTrue
 
 import dsp.valueobjects.Project.Shortcode
 import dsp.valueobjects.Project.Shortname
+import dsp.valueobjects.Project.Description
 import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -49,8 +50,9 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           shortname = Shortname.unsafeFrom(shortname),
           shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,
-          description =
-            NonEmptyChunk(StringLiteralV2("description not used in test but is required by constructor", None)),
+          description = Description.unsafeFrom(
+            NonEmptyChunk(StringLiteralV2("description not used in test but is required by constructor", None))
+          ),
           keywords = List.empty,
           logo = None,
           status = true,
