@@ -95,7 +95,7 @@ object Dependencies {
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
-  val jodd           = "org.jodd"          % "jodd"             % "3.4.1"
+  val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.7"
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.7"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.3"
@@ -121,7 +121,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
 
-  val tapirVersion = "1.8.4"
+  val tapirVersion = "1.7.6"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -129,7 +129,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.8.4"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % tapirVersion
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
