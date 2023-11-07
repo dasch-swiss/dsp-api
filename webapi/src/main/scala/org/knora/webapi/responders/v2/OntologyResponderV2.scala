@@ -6,32 +6,43 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+
+import java.time.Instant
+
 import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.{MessageHandler, MessageRelay}
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.v2.responder.CanDoResponseV2
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
-import org.knora.webapi.responders.v2.ontology.{CardinalityHandler, OntologyHelpers}
-import org.knora.webapi.responders.{IriLocker, IriService, Responder}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.ontology.domain.service.{CardinalityService, OntologyRepo}
+import org.knora.webapi.slice.ontology.domain.service.CardinalityService
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import zio.{Task, URLayer, ZIO, ZLayer}
-
-import java.time.Instant
 
 /**
  * Responds to requests dealing with ontologies.
