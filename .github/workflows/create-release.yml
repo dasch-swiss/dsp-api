@@ -25,7 +25,7 @@ jobs:
               {"type": "docs", "section": "Documentation", "hidden": false },
               {"type": "feat", "section": "Enhancements", "hidden": false },
               {"type": "fix", "section": "Bug Fixes", "hidden": false },
-              {"type": "perf", "section": "Maintenance", "hidden": false },
+              {"type": "perf", "section": "Enhancements", "hidden": false },
               {"type": "refactor", "section": "Maintenance", "hidden": false },
               {"type": "test", "section": "Maintenance", "hidden": false }
             ]'
