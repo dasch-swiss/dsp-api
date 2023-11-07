@@ -6,44 +6,32 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-
-import java.time.Instant
-
 import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.{SmartIriLiteralV2, StringLiteralV2}
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.v2.responder.CanDoResponseV2
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
-import org.knora.webapi.responders.v2.ontology.CardinalityHandler
-import org.knora.webapi.responders.v2.ontology.OntologyHelpers
-import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
+import org.knora.webapi.responders.v2.ontology.{CardinalityHandler, OntologyHelpers}
+import org.knora.webapi.responders.{IriLocker, IriService, Responder}
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.ontology.domain.service.{CardinalityService, OntologyRepo}
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import zio.{Task, URLayer, ZIO, ZLayer}
+
+import java.time.Instant
 
 /**
  * Responds to requests dealing with ontologies.
@@ -71,10 +59,10 @@ final case class OntologyResponderV2Live(
   cardinalityHandler: CardinalityHandler,
   cardinalityService: CardinalityService,
   iriService: IriService,
-  messageRelay: MessageRelay,
   ontologyCache: OntologyCache,
   ontologyHelpers: OntologyHelpers,
   ontologyRepo: OntologyRepo,
+  projectRepo: KnoraProjectRepo,
   triplestoreService: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends OntologyResponderV2
@@ -526,14 +514,6 @@ final case class OntologyResponderV2Live(
           ZIO.fail(ForbiddenException(msg))
         }
 
-      // Get project info for the shortcode.
-      projectInfo <-
-        IriIdentifier
-          .fromString(projectIri.toString)
-          .toZIO
-          .mapError(e => BadRequestException(e.getMessage))
-          .flatMap(id => messageRelay.ask[ProjectGetResponseADM](ProjectGetRequestADM(identifier = id)))
-
       // Check that the ontology name is valid.
       validOntologyName <-
         ZIO
@@ -543,10 +523,12 @@ final case class OntologyResponderV2Live(
           )
 
       // Make the internal ontology IRI.
+      projectId <- IriIdentifier.fromString(projectIri.toString).toZIO.mapError(e => BadRequestException(e.getMessage))
+      project   <- projectRepo.findById(projectId).someOrFail(BadRequestException(s"Project not found: $projectIri"))
       internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(
                               validOntologyName,
                               createOntologyRequest.isShared,
-                              projectInfo.project.shortcode
+                              project.shortcode.value
                             )
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
@@ -2957,30 +2939,32 @@ final case class OntologyResponderV2Live(
 
 object OntologyResponderV2Live {
   val layer: URLayer[
-    StringFormatter
-      with TriplestoreService
-      with OntologyRepo
-      with OntologyHelpers
-      with OntologyCache
-      with CardinalityService
+    AppConfig
       with CardinalityHandler
-      with MessageRelay
+      with CardinalityService
       with IriService
-      with AppConfig,
+      with KnoraProjectRepo
+      with MessageRelay
+      with OntologyCache
+      with OntologyHelpers
+      with OntologyRepo
+      with StringFormatter
+      with TriplestoreService,
     OntologyResponderV2
   ] = ZLayer.fromZIO {
     for {
-      config  <- ZIO.service[AppConfig]
-      iriS    <- ZIO.service[IriService]
-      mr      <- ZIO.service[MessageRelay]
-      ch      <- ZIO.service[CardinalityHandler]
-      cs      <- ZIO.service[CardinalityService]
-      oc      <- ZIO.service[OntologyCache]
-      oh      <- ZIO.service[OntologyHelpers]
-      or      <- ZIO.service[OntologyRepo]
-      ts      <- ZIO.service[TriplestoreService]
-      sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(OntologyResponderV2Live(config, ch, cs, iriS, mr, oc, oh, or, ts, sf))
-    } yield handler
+      ac       <- ZIO.service[AppConfig]
+      ch       <- ZIO.service[CardinalityHandler]
+      cs       <- ZIO.service[CardinalityService]
+      is       <- ZIO.service[IriService]
+      kr       <- ZIO.service[KnoraProjectRepo]
+      oc       <- ZIO.service[OntologyCache]
+      oh       <- ZIO.service[OntologyHelpers]
+      or       <- ZIO.service[OntologyRepo]
+      sf       <- ZIO.service[StringFormatter]
+      ts       <- ZIO.service[TriplestoreService]
+      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, sf)
+      _        <- MessageRelay.subscribe(responder)
+    } yield responder
   }
 }
