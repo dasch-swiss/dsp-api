@@ -21,14 +21,15 @@ object TestDataFactory {
 
   val someProject = KnoraProject(
     InternalIri("http://rdfh.ch/projects/0001"),
-    "shortname",
+    Shortname.unsafeFrom("shortname"),
     Shortcode.unsafeFrom("0001"),
     None,
     NonEmptyChunk(V2.StringLiteralV2("Some description", None)),
     List.empty,
     None,
     true,
-    false
+    false,
+    List.empty
   )
 
   def projectShortcodeIdentifier(shortcode: String): ShortcodeIdentifier =
