@@ -10,15 +10,15 @@ Issue Number: DEV-
 
 ### PR Type
 
-- [ ] fix: represents bug fixes
-- [ ] refactor: represents production code refactoring
-- [ ] feat: represents a new feature
+- [ ] build/chore: maintenance tasks (no production code change)
 - [ ] docs: documentation changes (no production code change)
-- [ ] chore: maintenance tasks (no production code change)
-- [ ] test: all about tests: adding, refactoring tests (no production code change)
-- [ ] other... Please describe:
+- [ ] feat: represents new features
+- [ ] fix: represents bug fixes
+- [ ] perf: performance improvements
+- [ ] refactor: represents production code refactoring
+- [ ] test: adding or refactoring tests (no production code change)
 
-### Basic Requirements for bug fixes and features
+### Basic requirements for bug fixes and features
 
 - [ ] Tests for the changes have been added
 - [ ] Docs have been added / updated

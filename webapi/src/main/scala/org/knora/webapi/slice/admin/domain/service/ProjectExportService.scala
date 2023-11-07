@@ -131,13 +131,13 @@ final case class ProjectExportServiceLive(
 
   override def exportProjectTriples(project: KnoraProject): Task[Path] =
     Files
-      .createTempDirectory(Some(project.shortname), fileAttributes = Nil)
+      .createTempDirectory(Some(project.shortname.value), fileAttributes = Nil)
       .map(trigExportFilePath(project, _))
       .flatMap(exportProjectTriples(project, _))
 
   override def exportProjectTriples(project: KnoraProject, targetFile: Path): Task[Path] = ZIO.scoped {
     for {
-      tempDir         <- Files.createTempDirectoryScoped(Some(project.shortname), fileAttributes = Nil)
+      tempDir         <- Files.createTempDirectoryScoped(Some(project.shortname.value), fileAttributes = Nil)
       ontologyAndData <- downloadOntologyAndData(project, tempDir)
       adminData       <- downloadProjectAdminData(project, tempDir)
       permissionData  <- downloadPermissionData(project, tempDir)

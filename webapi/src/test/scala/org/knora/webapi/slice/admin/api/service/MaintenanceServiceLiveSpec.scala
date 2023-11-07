@@ -15,7 +15,7 @@ import zio.test.assertTrue
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
-import org.knora.webapi.slice.admin.domain.repo.service.KnoraProjectRepoInMemory
+import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.MaintenanceServiceLive
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
