@@ -7,16 +7,15 @@ package org.knora.webapi.slice.admin.domain.model
 
 import zio.NonEmptyChunk
 
-import dsp.valueobjects.Project.Shortcode
-import dsp.valueobjects.Project.Shortname
+import dsp.valueobjects.Project
 import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
   id: InternalIri,
-  shortname: Shortname,
-  shortcode: Shortcode,
-  longname: Option[String],
+  shortname: Project.Shortname,
+  shortcode: Project.Shortcode,
+  longname: Option[Project.Longname],
   description: NonEmptyChunk[StringLiteralV2],
   keywords: List[String],
   logo: Option[String],

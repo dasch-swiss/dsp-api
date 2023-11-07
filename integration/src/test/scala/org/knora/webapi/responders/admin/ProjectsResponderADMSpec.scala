@@ -169,7 +169,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make(shortcode).fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -264,7 +264,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
-            longname = Some(Name.make("project longname").fold(error => throw error.head, value => value)),
+            longname = Some(Longname.make("project longname").fold(error => throw error.head, value => value)),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -296,7 +296,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("project_with_char").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
+            longname =
+              Longname.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -328,7 +329,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -348,7 +349,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),

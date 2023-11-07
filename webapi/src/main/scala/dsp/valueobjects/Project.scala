@@ -97,25 +97,26 @@ object Project {
   }
 
   /**
-   * Project Name value object.
-   * (Formerly `Longname`)
+   * Project Longname value object.
    */
-  sealed abstract case class Name private (value: String)
-  object Name { self =>
-    implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { value =>
-      Name.make(value).toEitherWith(e => e.head.getMessage)
+  sealed abstract case class Longname private (value: String)
+  object Longname { self =>
+    implicit val decoder: JsonDecoder[Longname] = JsonDecoder[String].mapOrFail { value =>
+      Longname.make(value).toEitherWith(e => e.head.getMessage)
     }
-    implicit val encoder: JsonEncoder[Name] =
-      JsonEncoder[String].contramap((name: Name) => name.value)
+    implicit val encoder: JsonEncoder[Longname] =
+      JsonEncoder[String].contramap((name: Longname) => name.value)
 
     private def isLengthCorrect(name: String): Boolean = name.length > 2 && name.length < 257
 
-    def make(value: String): Validation[ValidationException, Name] =
+    def unsafeFrom(str: String): Longname = make(str).fold(e => throw e.head, identity)
+
+    def make(value: String): Validation[ValidationException, Longname] =
       if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.NameMissing))
       else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.NameInvalid))
-      else Validation.succeed(new Name(value) {})
+      else Validation.succeed(new Longname(value) {})
 
-    def make(value: Option[String]): Validation[ValidationException, Option[Name]] =
+    def make(value: Option[String]): Validation[ValidationException, Option[Longname]] =
       value match {
         case None    => Validation.succeed(None)
         case Some(v) => self.make(v).map(Some(_))

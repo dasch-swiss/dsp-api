@@ -107,23 +107,23 @@ object ProjectSpec extends ZIOSpecDefault {
   private val nameTest = suite("Name")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Name.make("") == Validation.fail(ValidationException(ErrorMessages.NameMissing)),
-        Name.make(Some("")) == Validation.fail(ValidationException(ErrorMessages.NameMissing))
+        Longname.make("") == Validation.fail(ValidationException(ErrorMessages.NameMissing)),
+        Longname.make(Some("")) == Validation.fail(ValidationException(ErrorMessages.NameMissing))
       )
     },
     test("pass invalid Name and expect an error to be returned") {
       assertTrue(
-        Name.make(tooShortName) == Validation.fail(ValidationException(ErrorMessages.NameInvalid)),
-        Name.make(tooLongName) == Validation.fail(ValidationException(ErrorMessages.NameInvalid))
+        Longname.make(tooShortName) == Validation.fail(ValidationException(ErrorMessages.NameInvalid)),
+        Longname.make(tooLongName) == Validation.fail(ValidationException(ErrorMessages.NameInvalid))
       )
     },
     test("pass a valid value and successfully create value object") {
       for {
-        name           <- Name.make(validName).toZIO
-        optionalName   <- Name.make(Option(validName)).toZIO
+        name           <- Longname.make(validName).toZIO
+        optionalName   <- Longname.make(Option(validName)).toZIO
         nameFromOption <- ZIO.fromOption(optionalName)
       } yield assertTrue(name.value == validName) &&
-        assert(optionalName)(isSome(isSubtype[Name](Assertion.anything))) &&
+        assert(optionalName)(isSome(isSubtype[Longname](Assertion.anything))) &&
         assertTrue(nameFromOption.value == validName)
     }
   )

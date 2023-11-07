@@ -39,8 +39,8 @@ object ITTestDataFactory {
       .make(shortname)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Shortname $shortname."))
 
-  def projectName(name: String): Name =
-    Name
+  def projectName(name: String): Longname =
+    Longname
       .make(name)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Name $name."))
 
