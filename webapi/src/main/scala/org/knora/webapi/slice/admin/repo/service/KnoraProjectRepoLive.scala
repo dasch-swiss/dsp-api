@@ -11,17 +11,11 @@ import zio._
 import dsp.valueobjects.Project
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectDescription
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectKeyword
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectLogo
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectLongname
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectShortcode
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.ProjectShortname
-import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.Status
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
@@ -29,18 +23,16 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
-import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
-  private val mapper: PredicateObjectMapper
+  private val mapper: PredicateObjectMapper,
+  private implicit val sf: StringFormatter
 ) extends KnoraProjectRepo {
-  implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   override def findById(id: InternalIri): Task[Option[KnoraProject]] =
     findOneByQuery(sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
@@ -73,7 +65,9 @@ final case class KnoraProjectRepoLive(
     val projectIri = InternalIri(subjectPropsTuple._1.toString)
     val propsMap   = subjectPropsTuple._2
     for {
-      shortname <- mapper.getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap).map(_.value)
+      shortname <- mapper
+                     .getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap)
+                     .flatMap(it => Project.Shortname.make(it.value).toZIO)
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap)
                      .flatMap(it => Project.Shortcode.make(it.value).toZIO)
@@ -85,26 +79,22 @@ final case class KnoraProjectRepoLive(
       logo     <- mapper.getSingleOption[StringLiteralV2](ProjectLogo, propsMap).map(_.map(_.value))
       status   <- mapper.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(_.value)
       selfjoin <- mapper.getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap).map(_.value)
-    } yield KnoraProject(projectIri, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)
-  }
-
-  override def findOntologies(project: KnoraProject): Task[List[InternalIri]] = {
-    val query =
-      s"""
-         |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-         |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-         |PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>  
-         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>  
-         |
-         |SELECT ?ontologyIri  WHERE {
-         |  BIND(<${project.id.value}> AS ?projectIri)
-         |  ?ontologyIri a owl:Ontology .
-         |  ?ontologyIri knora-base:attachedToProject ?projectIri .
-         |  ?projectIri  a knora-admin:knoraProject .
-         |} order by ?projectIri""".stripMargin
-    triplestore
-      .query(Select(query))
-      .map(_.results.bindings.flatMap(_.rowMap.get("ontologyIri")).map(InternalIri).toList)
+      ontologies <-
+        mapper
+          .getListOption[IriLiteralV2]("http://www.knora.org/ontology/knora-admin#belongsToOntology", propsMap)
+          .map(_.getOrElse(List.empty).map(literal => InternalIri(literal.value)))
+    } yield KnoraProject(
+      projectIri,
+      shortname,
+      shortcode,
+      longname,
+      description,
+      keywords,
+      logo,
+      status,
+      selfjoin,
+      ontologies
+    )
   }
 
   override def setProjectRestrictedViewSize(
@@ -118,6 +108,5 @@ final case class KnoraProjectRepoLive(
 }
 
 object KnoraProjectRepoLive {
-  val layer: URLayer[TriplestoreService with OntologyRepo with PredicateObjectMapper, KnoraProjectRepoLive] =
-    ZLayer.fromFunction(KnoraProjectRepoLive.apply _)
+  val layer = ZLayer.derive[KnoraProjectRepoLive]
 }
