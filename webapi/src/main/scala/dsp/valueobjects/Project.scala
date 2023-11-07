@@ -115,12 +115,6 @@ object Project {
       if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.NameMissing))
       else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.NameInvalid))
       else Validation.succeed(new Longname(value) {})
-
-    def make(value: Option[String]): Validation[ValidationException, Option[Longname]] =
-      value match {
-        case None    => Validation.succeed(None)
-        case Some(v) => self.make(v).map(Some(_))
-      }
   }
 
   /**

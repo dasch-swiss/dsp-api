@@ -9,16 +9,11 @@
  */
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
-
-import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.NotFoundException
-import dsp.valueobjects.Iri
+import dsp.errors.{BadRequestException, DuplicateValueException, NotFoundException}
 import dsp.valueobjects.Project._
-import dsp.valueobjects.V2
+import dsp.valueobjects.{Iri, V2}
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
@@ -26,12 +21,10 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectUpdateRequest}
 import org.knora.webapi.util.MutableTestIri
 
-import pekko.actor.Status.Failure
-import pekko.testkit.ImplicitSender
+import java.util.UUID
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
@@ -169,7 +162,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make(shortcode).fold(error => throw error.head, value => value), // lower case
-            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Some(Longname.unsafeFrom("project longname")),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -296,8 +289,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("project_with_char").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
-            longname =
-              Longname.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
+            longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -329,7 +321,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           createRequest = ProjectCreateRequest(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Some(Longname.unsafeFrom("project longname")),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -347,9 +339,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
+            shortname = Shortname.unsafeFrom("newproject3"),
+            shortcode = Shortcode.unsafeFrom("111C"),
+            longname = Some(Longname.unsafeFrom("project longname")),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),

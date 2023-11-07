@@ -5,15 +5,14 @@
 
 package dsp.valueobjects
 
+import dsp.errors.ValidationException
+import dsp.valueobjects.Project._
 import zio._
 import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
 
 import scala.util.Random
-
-import dsp.errors.ValidationException
-import dsp.valueobjects.Project._
 
 /**
  * This spec is used to test the [[Project]] value objects creation.
@@ -106,10 +105,7 @@ object ProjectSpec extends ZIOSpecDefault {
 
   private val nameTest = suite("Name")(
     test("pass an empty value and return an error") {
-      assertTrue(
-        Longname.make("") == Validation.fail(ValidationException(ErrorMessages.NameMissing)),
-        Longname.make(Some("")) == Validation.fail(ValidationException(ErrorMessages.NameMissing))
-      )
+      assertTrue(Longname.make("") == Validation.fail(ValidationException(ErrorMessages.NameMissing)))
     },
     test("pass invalid Name and expect an error to be returned") {
       assertTrue(
@@ -119,12 +115,8 @@ object ProjectSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       for {
-        name           <- Longname.make(validName).toZIO
-        optionalName   <- Longname.make(Option(validName)).toZIO
-        nameFromOption <- ZIO.fromOption(optionalName)
-      } yield assertTrue(name.value == validName) &&
-        assert(optionalName)(isSome(isSubtype[Longname](Assertion.anything))) &&
-        assertTrue(nameFromOption.value == validName)
+        name <- Longname.make(validName).toZIO
+      } yield assertTrue(name.value == validName)
     }
   )
 
