@@ -33,10 +33,9 @@ trait ProjectExportStorageService {
 
   def listExports(): Task[Chunk[ProjectExportInfo]]
 
-  def trigFilename(project: KnoraProject): String = trigFilename(project.shortcode)
-  def trigFilename(shortcode: Shortcode): String  = trigFilename(shortcode.value)
-  def trigFilename(shortcode: String): String     = s"$shortcode.trig"
-
+  def trigFilename(project: KnoraProject): String               = trigFilename(project.shortcode)
+  def trigFilename(shortcode: Shortcode): String                = trigFilenameFromString(shortcode.value)
+  private def trigFilenameFromString(shortcode: String): String = s"$shortcode.trig"
 }
 
 object ProjectExportStorageService {

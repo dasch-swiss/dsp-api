@@ -19,11 +19,6 @@ import dsp.valueobjects.Project._
  * This spec is used to test the [[Project]] value objects creation.
  */
 object ProjectSpec extends ZIOSpecDefault {
-  private val validShortcode      = "1234"
-  private val invalidShortcode    = "12345"
-  private val validName           = "That is valid project longname"
-  private val tooShortName        = "Ab"
-  private val tooLongName         = new Random().nextString(257)
   private val validDescription    = Seq(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
   private val tooShortDescription = Seq(V2.StringLiteralV2("Ab", Some("en")))
   private val tooLongDescription  = Seq(V2.StringLiteralV2(new Random().nextString(40961), Some("en")))
@@ -46,27 +41,26 @@ object ProjectSpec extends ZIOSpecDefault {
   private val shortcodeTest = suite("Shortcode")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Shortcode.make("") == Validation.fail(ValidationException(ErrorMessages.ShortcodeMissing))
+        Shortcode.make("") == Validation.fail(ValidationException("Shortcode cannot be empty."))
       )
     },
     test("pass an invalid value and return an error") {
-      assertTrue(
-        Shortcode.make(invalidShortcode) == Validation.fail(
-          ValidationException(ErrorMessages.ShortcodeInvalid(invalidShortcode))
+      val invalidShortcodes = Gen.fromIterable(Seq("123", "000G", "12345"))
+      check(invalidShortcodes) { shortcode =>
+        assertTrue(
+          Shortcode.make(shortcode) == Validation.fail(ValidationException(s"Shortcode is invalid: $shortcode"))
         )
-      )
+      }
     },
     test("pass a valid value and successfully create value object") {
-      for {
-        shortcode <- Shortcode.make(validShortcode).toZIO
-      } yield assertTrue(shortcode.value == validShortcode)
+      assertTrue(Shortcode.make("FFFF").map(_.value).contains("FFFF"))
     }
   )
 
   private val shortnameTest = suite("Shortname")(
     test("pass an empty value and return validation error") {
       assertTrue(
-        Shortname.make("") == Validation.fail(ValidationException(ErrorMessages.ShortnameMissing))
+        Shortname.make("") == Validation.fail(ValidationException("Shortname cannot be empty."))
       )
     },
     test("pass invalid values and return validation error") {
@@ -88,43 +82,39 @@ object ProjectSpec extends ZIOSpecDefault {
       )
       check(gen) { param =>
         assertTrue(
-          Shortname.make(param) == Validation.fail(ValidationException(ErrorMessages.ShortnameInvalid(param)))
+          Shortname.make(param) == Validation.fail(ValidationException(s"Shortname is invalid: $param"))
         )
       }
     },
     test("pass valid values and successfully create value objects") {
       val gen = Gen.fromIterable(
-        Seq("valid-shortname", "valid_shortname", "validshortname-", "validshortname_", "abc", "a20charLongShortname")
+        Seq(
+          "DefaultSharedOntologiesProject",
+          "valid-shortname",
+          "valid_shortname",
+          "validshortname-",
+          "validshortname_",
+          "abc",
+          "a20charLongShortname"
+        )
       )
-      check(gen) { param =>
-        assertTrue(
-          Shortname.make(param).map(_.value) == Validation.succeed(param)
-        ) && assert(Shortname.make(param).toOption)(isSome(isSubtype[Shortname](Assertion.anything)))
-      }
+      check(gen)(param => assertTrue(Shortname.make(param).map(_.value) == Validation.succeed(param)))
     }
   )
 
   private val nameTest = suite("Name")(
-    test("pass an empty value and return an error") {
-      assertTrue(
-        Name.make("") == Validation.fail(ValidationException(ErrorMessages.NameMissing)),
-        Name.make(Some("")) == Validation.fail(ValidationException(ErrorMessages.NameMissing))
-      )
-    },
     test("pass invalid Name and expect an error to be returned") {
-      assertTrue(
-        Name.make(tooShortName) == Validation.fail(ValidationException(ErrorMessages.NameInvalid)),
-        Name.make(tooLongName) == Validation.fail(ValidationException(ErrorMessages.NameInvalid))
-      )
+      val invalidNames =
+        Gen.stringBounded(0, 2)(Gen.printableChar) ++ Gen.stringBounded(257, 300)(Gen.printableChar)
+      check(invalidNames) { name =>
+        assertTrue(Longname.from(name) == Left("Longname must be 3 to 256 characters long."))
+      }
     },
     test("pass a valid value and successfully create value object") {
-      for {
-        name           <- Name.make(validName).toZIO
-        optionalName   <- Name.make(Option(validName)).toZIO
-        nameFromOption <- ZIO.fromOption(optionalName)
-      } yield assertTrue(name.value == validName) &&
-        assert(optionalName)(isSome(isSubtype[Name](Assertion.anything))) &&
-        assertTrue(nameFromOption.value == validName)
+      val validNames = Gen.stringBounded(3, 256)(Gen.printableChar)
+      check(validNames) { name =>
+        assertTrue(Longname.from(name).map(_.value) == Right(name))
+      }
     }
   )
 

@@ -40,7 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
   private val testShortCodeStr = "0001"
-  private val testProject      = Shortcode.make(testShortCodeStr).toOption.orNull
+  private val testProject      = Shortcode.unsafeFrom(testShortCodeStr)
   private val testContent      = "testContent".getBytes()
   private val expectedPath     = s"/projects/$testShortCodeStr/export"
   override def spec: Spec[TestEnvironment with Scope, Any] =

@@ -17,7 +17,7 @@ object ProjectsEndpointsRequests {
     id: Option[ProjectIri] = None,
     shortname: Shortname,
     shortcode: Shortcode,
-    longname: Option[Name] = None,
+    longname: Option[Longname] = None,
     description: Description,
     keywords: Keywords,
     logo: Option[Logo] = None,
@@ -30,7 +30,7 @@ object ProjectsEndpointsRequests {
 
   final case class ProjectUpdateRequest(
     shortname: Option[Shortname] = None,
-    longname: Option[Name] = None,
+    longname: Option[Longname] = None,
     description: Option[Description] = None,
     keywords: Option[Keywords] = None,
     logo: Option[Logo] = None,

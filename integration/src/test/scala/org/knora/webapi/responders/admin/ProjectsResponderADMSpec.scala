@@ -9,7 +9,8 @@
  */
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.ImplicitSender
 
 import java.util.UUID
 
@@ -29,9 +30,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.util.MutableTestIri
-
-import pekko.actor.Status.Failure
-import pekko.testkit.ImplicitSender
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
@@ -167,9 +165,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val shortcode = "111c"
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make(shortcode).fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
+            shortname = Shortname.unsafeFrom("newproject"),
+            shortcode = Shortcode.unsafeFrom(shortcode),
+            longname = Some(Longname.unsafeFrom("project longname")),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -262,9 +260,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
-            longname = Some(Name.make("project longname").fold(error => throw error.head, value => value)),
+            shortname = Shortname.unsafeFrom("newproject2"),
+            shortcode = Shortcode.unsafeFrom("1112"),
+            longname = Some(Longname.unsafeFrom("project longname")),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -294,9 +292,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("project_with_char").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
+            shortname = Shortname.unsafeFrom("project_with_char"),
+            shortcode = Shortcode.unsafeFrom("1312"),
+            longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -326,9 +324,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
+            shortname = Shortname.unsafeFrom("newproject"),
+            shortcode = Shortcode.unsafeFrom("111C"),
+            longname = Some(Longname.unsafeFrom("project longname")),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -346,9 +344,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
+            shortname = Shortname.unsafeFrom("newproject3"),
+            shortcode = Shortcode.unsafeFrom("111C"),
+            longname = Some(Longname.unsafeFrom("project longname")),
             description = Description
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -365,7 +363,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "UPDATE a project" in {
         val iri             = ITTestDataFactory.projectIri(newProjectIri.get)
-        val updatedLongname = ITTestDataFactory.projectName("updated project longname")
+        val updatedLongname = Longname.unsafeFrom("updated project longname")
         val updatedDescription = ITTestDataFactory.projectDescription(
           Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")))
         )
@@ -407,7 +405,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        val longname = ITTestDataFactory.projectName("longname")
+        val longname = Longname.unsafeFrom("longname")
         val iri      = ITTestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,

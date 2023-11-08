@@ -29,21 +29,6 @@ object ITTestDataFactory {
       .fromString(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
 
-  def projectShortcode(shortcode: String): Shortcode =
-    Shortcode
-      .make(shortcode)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Shortcode $shortcode."))
-
-  def projectShortname(shortname: String): Shortname =
-    Shortname
-      .make(shortname)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Shortname $shortname."))
-
-  def projectName(name: String): Name =
-    Name
-      .make(name)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Name $name."))
-
   def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
     Description
       .make(description)

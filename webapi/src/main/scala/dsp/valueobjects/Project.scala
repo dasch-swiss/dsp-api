@@ -13,27 +13,8 @@ import scala.util.matching.Regex
 import dsp.errors.ValidationException
 
 object Project {
-  // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
-  private val ProjectIDPattern: String = """\p{XDigit}{4,4}"""
-
-  // A regex for matching a string containing the project ID.
-  private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
-
-  /**
-   * Regex which matches string that:
-   * - is 3-20 characters long,
-   * - contains small and capital letters, numbers, special characters: `-` and `_`,
-   * - cannot start with number nor allowed special characters.
-   */
-  private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
 
   object ErrorMessages {
-    val ShortcodeMissing          = "Shortcode cannot be empty."
-    val ShortcodeInvalid          = (v: String) => s"Invalid project shortcode: $v"
-    val ShortnameMissing          = "Shortname cannot be empty."
-    val ShortnameInvalid          = (v: String) => s"Shortname is invalid: $v"
-    val NameMissing               = "Name cannot be empty."
-    val NameInvalid               = "Name must be 3 to 256 characters long."
     val ProjectDescriptionMissing = "Description cannot be empty."
     val ProjectDescriptionInvalid = "Description must be 3 to 40960 characters long."
     val KeywordsMissing           = "Keywords cannot be empty."
@@ -41,85 +22,61 @@ object Project {
     val LogoMissing               = "Logo cannot be empty."
   }
 
-  /**
-   * Project Shortcode value object.
-   */
-  sealed abstract case class Shortcode private (value: String)
-  object Shortcode { self =>
-    implicit val decoder: JsonDecoder[Shortcode] = JsonDecoder[String].mapOrFail { value =>
-      Shortcode.make(value).toEitherWith(e => e.head.getMessage)
-    }
-    implicit val encoder: JsonEncoder[Shortcode] =
-      JsonEncoder[String].contramap((shortcode: Shortcode) => shortcode.value)
+  final case class Shortcode private (value: String) extends AnyVal
+
+  object Shortcode {
+
+    private val shortcodeRegex: Regex = ("^\\p{XDigit}{4,4}$").r
+
+    implicit val codec: JsonCodec[Shortcode] =
+      JsonCodec[String].transformOrFail(value => Shortcode.make(value).toEitherWith(e => e.head.getMessage), _.value)
 
     def unsafeFrom(str: String): Shortcode = make(str).fold(e => throw e.head, identity)
 
     def make(value: String): Validation[ValidationException, Shortcode] =
-      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortcodeMissing))
-      else
-        ProjectIDRegex.matches(value.toUpperCase) match {
-          case false => Validation.fail(ValidationException(ErrorMessages.ShortcodeInvalid(value)))
-          case true  => Validation.succeed(new Shortcode(value.toUpperCase) {})
-        }
+      if (value.isEmpty) Validation.fail(ValidationException("Shortcode cannot be empty."))
+      else if (shortcodeRegex.matches(value.toUpperCase)) { Validation.succeed(Shortcode(value.toUpperCase)) }
+      else { Validation.fail(ValidationException(s"Shortcode is invalid: $value")) }
   }
 
-  /**
-   * Project Shortname value object.
-   */
-  sealed abstract case class Shortname private (value: String)
-  object Shortname { self =>
-    implicit val decoder: JsonDecoder[Shortname] = JsonDecoder[String].mapOrFail { value =>
-      Shortname.make(value).toEitherWith(e => e.head.getMessage)
-    }
-    implicit val encoder: JsonEncoder[Shortname] =
-      JsonEncoder[String].contramap((shortname: Shortname) => shortname.value)
+  final case class Shortname private (value: String) extends AnyVal
+
+  object Shortname {
+
+    private val shortnameRegex: Regex = "^[a-zA-Z][a-zA-Z0-9_-]{2,19}$".r
+
+    implicit val codec: JsonCodec[Shortname] =
+      JsonCodec[String].transformOrFail(value => Shortname.make(value).toEitherWith(e => e.head.getMessage), _.value)
 
     def unsafeFrom(str: String): Shortname = make(str).fold(e => throw e.head, identity)
 
     def make(value: String): Validation[ValidationException, Shortname] =
-      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.ShortnameMissing))
-      else
+      if (value.isEmpty) Validation.fail(ValidationException("Shortname cannot be empty."))
+      else {
+        val maybeShortname = value match {
+          case "DefaultSharedOntologiesProject" => Some(value)
+          case _                                => shortnameRegex.findFirstIn(value)
+        }
         Validation
-          .fromOption(validateAndEscape(value))
-          .mapError(_ => ValidationException(ErrorMessages.ShortnameInvalid(value)))
-          .map(new Shortname(_) {})
-
-    private def validateAndEscape(shortname: String): Option[String] = {
-      val defaultSharedOntologiesProject = "DefaultSharedOntologiesProject"
-      if (shortname == defaultSharedOntologiesProject) {
-        Some(defaultSharedOntologiesProject)
-      } else {
-        shortnameRegex
-          .findFirstIn(shortname)
-          .flatMap(Iri.toSparqlEncodedString)
+          .fromOption(maybeShortname.flatMap(Iri.toSparqlEncodedString))
+          .mapError(_ => ValidationException(s"Shortname is invalid: $value"))
+          .map(Shortname(_))
       }
-    }
   }
 
-  /**
-   * Project Name value object.
-   * (Formerly `Longname`)
-   */
-  sealed abstract case class Name private (value: String)
-  object Name { self =>
-    implicit val decoder: JsonDecoder[Name] = JsonDecoder[String].mapOrFail { value =>
-      Name.make(value).toEitherWith(e => e.head.getMessage)
-    }
-    implicit val encoder: JsonEncoder[Name] =
-      JsonEncoder[String].contramap((name: Name) => name.value)
+  final case class Longname private (value: String) extends AnyVal
 
-    private def isLengthCorrect(name: String): Boolean = name.length > 2 && name.length < 257
+  object Longname {
 
-    def make(value: String): Validation[ValidationException, Name] =
-      if (value.isEmpty) Validation.fail(ValidationException(ErrorMessages.NameMissing))
-      else if (!isLengthCorrect(value)) Validation.fail(ValidationException(ErrorMessages.NameInvalid))
-      else Validation.succeed(new Name(value) {})
+    implicit val codec: JsonCodec[Longname] = JsonCodec[String].transformOrFail(Longname.from, _.value)
 
-    def make(value: Option[String]): Validation[ValidationException, Option[Name]] =
-      value match {
-        case None    => Validation.succeed(None)
-        case Some(v) => self.make(v).map(Some(_))
-      }
+    private val longnameRegex: Regex = "^.{3,256}$".r
+
+    def unsafeFrom(str: String): Longname = from(str).fold(e => throw new IllegalArgumentException(e), identity)
+
+    def from(value: String): Either[String, Longname] =
+      if (longnameRegex.matches(value)) Right(Longname(value))
+      else Left("Longname must be 3 to 256 characters long.")
   }
 
   /**

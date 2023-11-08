@@ -57,9 +57,9 @@ object TestDataFactory {
       .make(shortname)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Shortname $shortname."))
 
-  def projectName(name: String): Name =
-    Name
-      .make(name)
+  def projectName(name: String): Longname =
+    Longname
+      .from(name)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Name $name."))
 
   def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
