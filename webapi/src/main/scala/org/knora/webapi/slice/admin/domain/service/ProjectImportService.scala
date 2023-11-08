@@ -5,19 +5,24 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import dsp.valueobjects.Project
-import dsp.valueobjects.Project.Shortcode
-import org.apache.jena.query.{QueryExecution, ResultSet}
-import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionFuseki}
-import org.knora.webapi.config.Triplestore
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.apache.jena.query.QueryExecution
+import org.apache.jena.query.ResultSet
+import org.apache.jena.rdfconnection.RDFConnection
+import org.apache.jena.rdfconnection.RDFConnectionFuseki
 import zio._
 import zio.http.URL
 import zio.macros.accessible
-import zio.nio.file.{Files, Path}
+import zio.nio.file.Files
+import zio.nio.file.Path
 
-import java.net.{Authenticator, PasswordAuthentication}
+import java.net.Authenticator
+import java.net.PasswordAuthentication
 import java.net.http.HttpClient
+
+import dsp.valueobjects.Project
+import dsp.valueobjects.Project.Shortcode
+import org.knora.webapi.config.Triplestore
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 @accessible
 trait ProjectImportService {

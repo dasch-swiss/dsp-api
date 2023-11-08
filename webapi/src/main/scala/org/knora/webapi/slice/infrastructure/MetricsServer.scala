@@ -5,13 +5,15 @@
 
 package org.knora.webapi.slice.infrastructure
 
+import zio._
+import zio.http._
+import zio.metrics.connectors.MetricsConfig
+import zio.metrics.connectors.prometheus
+import zio.metrics.jvm.DefaultJvmMetrics
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.State
 import org.knora.webapi.slice.infrastructure.api.PrometheusApp
-import zio._
-import zio.http._
-import zio.metrics.connectors.{MetricsConfig, prometheus}
-import zio.metrics.jvm.DefaultJvmMetrics
 
 object MetricsServer {
 
