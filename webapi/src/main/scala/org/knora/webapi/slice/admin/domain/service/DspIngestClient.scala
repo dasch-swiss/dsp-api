@@ -5,32 +5,19 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import sttp.capabilities.zio.ZioStreams
-import sttp.client3.UriContext
-import sttp.client3.asStreamAlways
-import sttp.client3.basicRequest
-import sttp.client3.httpclient.zio.HttpClientZioBackend
-import zio.Scope
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-import zio.http.Body
-import zio.http.Client
-import zio.http.Header
-import zio.http.Headers
-import zio.http.MediaType
-import zio.http.Request
-import zio.http.URL
-import zio.macros.accessible
-import zio.nio.file.Files
-import zio.nio.file.Path
-import zio.stream.ZSink
-
-import scala.concurrent.duration.DurationInt
-
 import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.routing.JwtService
+import sttp.capabilities.zio.ZioStreams
+import sttp.client3.{UriContext, asStreamAlways, basicRequest}
+import sttp.client3.httpclient.zio.HttpClientZioBackend
+import zio.{Scope, Task, ZIO, ZLayer}
+import zio.http.{Body, Client, Header, Headers, MediaType, Request, URL}
+import zio.macros.accessible
+import zio.nio.file.{Files, Path}
+import zio.stream.ZSink
+
+import scala.concurrent.duration.DurationInt
 
 @accessible
 trait DspIngestClient {
@@ -66,7 +53,7 @@ final case class DspIngestClientLive(
       importUrl <- ZIO.fromEither(URL.decode(s"${projectsPath(shortcode)}/import"))
       token     <- jwtService.createJwtForDspIngest()
       request = Request
-                  .post(Body.fromFile(fileToImport.toFile), importUrl)
+                  .post(importUrl, Body.fromFile(fileToImport.toFile))
                   .addHeaders(
                     Headers(
                       Header.Authorization.Bearer(token.jwtString),

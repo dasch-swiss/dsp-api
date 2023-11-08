@@ -5,24 +5,19 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import org.apache.jena.query.QueryExecution
-import org.apache.jena.query.ResultSet
-import org.apache.jena.rdfconnection.RDFConnection
-import org.apache.jena.rdfconnection.RDFConnectionFuseki
+import dsp.valueobjects.Project
+import dsp.valueobjects.Project.Shortcode
+import org.apache.jena.query.{QueryExecution, ResultSet}
+import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionFuseki}
+import org.knora.webapi.config.Triplestore
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import zio._
 import zio.http.URL
 import zio.macros.accessible
-import zio.nio.file.Files
-import zio.nio.file.Path
+import zio.nio.file.{Files, Path}
 
-import java.net.Authenticator
-import java.net.PasswordAuthentication
+import java.net.{Authenticator, PasswordAuthentication}
 import java.net.http.HttpClient
-
-import dsp.valueobjects.Project
-import dsp.valueobjects.Project.Shortcode
-import org.knora.webapi.config.Triplestore
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 @accessible
 trait ProjectImportService {
@@ -60,7 +55,7 @@ final case class ProjectImportServiceLive(
     def acquire(fusekiUrl: URL, httpClient: HttpClient) =
       ZIO.attempt(RDFConnectionFuseki.service(fusekiUrl.encode).httpClient(httpClient).build())
     def release(connection: RDFConnection) = ZIO.attempt(connection.close()).logError.ignore
-    ZIO.acquireRelease(acquire(fusekiBaseUrl.withPath(s"/${config.fuseki.repositoryName}"), httpClient))(release)
+    ZIO.acquireRelease(acquire(fusekiBaseUrl.path(s"/${config.fuseki.repositoryName}"), httpClient))(release)
   }
 
   override def importTrigFile(file: Path): Task[Unit] = ZIO.scoped {
@@ -126,5 +121,5 @@ final case class ProjectImportServiceLive(
 }
 
 object ProjectImportServiceLive {
-  val layer = ZLayer.fromFunction(ProjectImportServiceLive.apply _)
+  val layer = ZLayer.derive[ProjectImportServiceLive]
 }
