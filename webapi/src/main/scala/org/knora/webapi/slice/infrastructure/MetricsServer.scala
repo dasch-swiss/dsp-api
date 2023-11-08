@@ -17,7 +17,7 @@ import org.knora.webapi.slice.infrastructure.api.PrometheusApp
 
 object MetricsServer {
 
-  private val metricsServer = ZIO.serviceWith[PrometheusApp](_.route).flatMap(Server.install(_)) *> ZIO.never
+  private val metricsServer = ZIO.serviceWithZIO[PrometheusApp](app => Server.install(app.route)) *> ZIO.never
 
   val make: ZIO[State with AppConfig, Throwable, Unit] =
     ZIO.serviceWithZIO[AppConfig] { config =>
