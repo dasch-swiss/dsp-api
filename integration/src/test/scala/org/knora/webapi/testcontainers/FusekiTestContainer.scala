@@ -48,7 +48,7 @@ trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {
                       .map(_.map(line => line.replace("@REPOSITORY@", repositoryName)).mkString("\n"))
     request = HttpRequest
                 .newBuilder()
-                .uri(baseUrl.withPath("/$/datasets").toJavaURI)
+                .uri(baseUrl.path("/$/datasets").toJavaURI)
                 .POST(BodyPublishers.ofString(fusekiConfig))
                 .header("Content-Type", "text/turtle; charset=utf-8")
                 .build()

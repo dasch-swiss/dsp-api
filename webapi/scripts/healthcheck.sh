@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fetch health route status json
-json=$(curl -sS --max-time 10 'http://localhost:3339/health')
+json=$(curl -sS --max-time 10 'http://localhost:3333/health')
 if [ $? -ne 0 ]; then
   echo "Health route is not responding"
   exit 1

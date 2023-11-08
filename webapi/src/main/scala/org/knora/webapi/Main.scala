@@ -8,6 +8,7 @@ package org.knora.webapi
 import zio._
 
 import org.knora.webapi.core._
+import org.knora.webapi.slice.infrastructure.MetricsServer
 import org.knora.webapi.util.Logger
 
 object Main extends ZIOApp {
@@ -30,5 +31,5 @@ object Main extends ZIOApp {
    *  Entrypoint of our Application
    */
   override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
-    AppServer.make *> InstrumentationServer.make
+    AppServer.make *> MetricsServer.make
 }
