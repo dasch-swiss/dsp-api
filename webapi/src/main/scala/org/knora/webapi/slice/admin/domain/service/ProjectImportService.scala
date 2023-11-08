@@ -60,7 +60,7 @@ final case class ProjectImportServiceLive(
     def acquire(fusekiUrl: URL, httpClient: HttpClient) =
       ZIO.attempt(RDFConnectionFuseki.service(fusekiUrl.encode).httpClient(httpClient).build())
     def release(connection: RDFConnection) = ZIO.attempt(connection.close()).logError.ignore
-    ZIO.acquireRelease(acquire(fusekiBaseUrl.withPath(s"/${config.fuseki.repositoryName}"), httpClient))(release)
+    ZIO.acquireRelease(acquire(fusekiBaseUrl.path(s"/${config.fuseki.repositoryName}"), httpClient))(release)
   }
 
   override def importTrigFile(file: Path): Task[Unit] = ZIO.scoped {
@@ -126,5 +126,5 @@ final case class ProjectImportServiceLive(
 }
 
 object ProjectImportServiceLive {
-  val layer = ZLayer.fromFunction(ProjectImportServiceLive.apply _)
+  val layer = ZLayer.derive[ProjectImportServiceLive]
 }
