@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectC
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
@@ -175,7 +176,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       Some(Longname.unsafeFrom("updated project longname")),
       Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
       Some(TestDataFactory.projectKeywords(Seq("updated", "kewords"))),
-      Some(TestDataFactory.projectLogo("../updatedlogo.png")),
+      Some(Logo.unsafeFrom("../updatedlogo.png")),
       Some(ProjectStatus.Active),
       Some(ProjectSelfJoin.CanJoin)
     )

@@ -16,11 +16,7 @@ import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
 import dsp.valueobjects.V2.StringLiteralV2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
@@ -30,7 +26,7 @@ case class KnoraProject(
   longname: Option[Longname],
   description: NonEmptyChunk[StringLiteralV2],
   keywords: List[String],
-  logo: Option[String],
+  logo: Option[Logo],
   status: ProjectStatus,
   selfjoin: ProjectSelfJoin,
   ontologies: List[InternalIri]
@@ -43,7 +39,6 @@ object KnoraProject {
     val ProjectDescriptionInvalid = "Description must be 3 to 40960 characters long."
     val KeywordsMissing           = "Keywords cannot be empty."
     val KeywordsInvalid           = "Keywords must be 3 to 64 characters long."
-    val LogoMissing               = "Logo cannot be empty."
   }
 
   final case class Shortcode private (value: String) extends AnyVal
@@ -160,28 +155,18 @@ object KnoraProject {
       }
   }
 
-  /**
-   * Project Logo value object.
-   */
-  sealed abstract case class Logo private (value: String)
+  final case class Logo private (value: String) extends AnyVal
+
   object Logo { self =>
-    implicit val decoder: JsonDecoder[Logo] = JsonDecoder[String].mapOrFail { value =>
-      Logo.make(value).toEitherWith(e => e.head.getMessage)
-    }
-    implicit val encoder: JsonEncoder[Logo] =
-      JsonEncoder[String].contramap((logo: Logo) => logo.value)
+
+    implicit val codec: JsonCodec[Logo] =
+      JsonCodec[String].transformOrFail(value => Logo.make(value).toEitherWith(e => e.head.getMessage), _.value)
+
+    def unsafeFrom(str: String): Logo = make(str).fold(e => throw e.head, identity)
 
     def make(value: String): Validation[ValidationException, Logo] =
-      if (value.isEmpty)
-        Validation.fail(ValidationException(ErrorMessages.LogoMissing))
-      else {
-        Validation.succeed(new Logo(value) {})
-      }
-    def make(value: Option[String]): Validation[ValidationException, Option[Logo]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+      if (value.isEmpty) Validation.fail(ValidationException("Logo cannot be empty."))
+      else Validation.succeed(Logo(value))
   }
 
   trait ProjectStatus { def value: Boolean }

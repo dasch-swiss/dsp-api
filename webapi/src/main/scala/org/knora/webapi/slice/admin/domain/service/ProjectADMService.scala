@@ -14,6 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
@@ -78,7 +79,7 @@ final case class ProjectADMServiceLive(
         longname = knoraProject.longname.map(_.value),
         description = knoraProject.description,
         keywords = knoraProject.keywords,
-        logo = knoraProject.logo,
+        logo = knoraProject.logo.map(_.value),
         status = knoraProject.status.value,
         selfjoin = knoraProject.selfjoin.value,
         ontologies = knoraProject.ontologies.map(_.value)
@@ -93,7 +94,7 @@ final case class ProjectADMServiceLive(
       longname = project.longname.map(Longname.unsafeFrom),
       description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
       keywords = project.keywords.toList,
-      logo = project.logo,
+      logo = project.logo.map(Logo.unsafeFrom),
       status = ProjectStatus.from(project.status),
       selfjoin = ProjectSelfJoin.from(project.selfjoin),
       ontologies = project.ontologies.map(InternalIri.apply).toList

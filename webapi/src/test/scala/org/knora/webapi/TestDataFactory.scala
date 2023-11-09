@@ -57,11 +57,6 @@ object TestDataFactory {
       .make(keywords)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Keywords $keywords."))
 
-  def projectLogo(logo: String): Logo =
-    Logo
-      .make(logo)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Logo $logo."))
-
   def projectIri(iri: String): ProjectIri =
     ProjectIri
       .make(iri)

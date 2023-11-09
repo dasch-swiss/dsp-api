@@ -172,7 +172,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
           ),
@@ -267,7 +267,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
           ),
@@ -299,7 +299,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
           ),
@@ -331,7 +331,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
           ),
@@ -351,7 +351,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
           ),
@@ -368,7 +368,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")))
         )
         val updatedKeywords = ITTestDataFactory.projectKeywords(Seq("updated", "keywords"))
-        val updatedLogo     = ITTestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
+        val updatedLogo     = Logo.unsafeFrom("/fu/bar/baz-updated.jpg")
         val projectStatus   = ProjectStatus.Active
         val selfJoin        = ProjectSelfJoin.CanJoin
 

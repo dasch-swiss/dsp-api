@@ -83,8 +83,10 @@ final case class KnoraProjectRepoLive(
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propsMap)
                        .map(_.map(it => V2.StringLiteralV2(it.value, it.language)))
       keywords <- mapper.getList[StringLiteralV2](ProjectKeyword, propsMap).map(_.map(_.value).sorted)
-      logo     <- mapper.getSingleOption[StringLiteralV2](ProjectLogo, propsMap).map(_.map(_.value))
-      status   <- mapper.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(l => ProjectStatus.from(l.value))
+      logo <- mapper
+                .getSingleOption[StringLiteralV2](ProjectLogo, propsMap)
+                .flatMap(it => ZIO.foreach(it)(it => KnoraProject.Logo.make(it.value).toZIO))
+      status <- mapper.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(l => ProjectStatus.from(l.value))
       selfjoin <- mapper
                     .getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap)
                     .map(l => ProjectSelfJoin.from(l.value))

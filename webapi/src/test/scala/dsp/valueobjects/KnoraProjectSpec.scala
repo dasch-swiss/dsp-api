@@ -25,7 +25,6 @@ object KnoraProjectSpec extends ZIOSpecDefault {
   private val validKeywords       = Seq("key", "word")
   private val tooShortKeywords    = Seq("de", "key", "word")
   private val tooLongKeywords     = Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "key", "word")
-  private val validLogo           = "/fu/bar/baz.jpg"
 
   def spec = suite("ProjectSpec")(
     shortcodeTest,
@@ -186,24 +185,11 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val logoTest = suite("Logo")(
     test("pass an empty object and return an error") {
-      assertTrue(
-        Logo.make("") == Validation.fail(ValidationException(ErrorMessages.LogoMissing)),
-        Logo.make(Some("")) == Validation.fail(ValidationException(ErrorMessages.LogoMissing))
-      )
+      assertTrue(Logo.make("") == Validation.fail(ValidationException("Logo cannot be empty.")))
     },
     test("pass a valid object and successfully create value object") {
-      for {
-        logo           <- Logo.make(validLogo).toZIO
-        optionalLogo   <- Logo.make(Option(validLogo)).toZIO
-        logoFromOption <- ZIO.fromOption(optionalLogo)
-      } yield assertTrue(logo.value == validLogo) &&
-        assert(optionalLogo)(isSome(isSubtype[Logo](Assertion.anything))) &&
-        assertTrue(logoFromOption.value == validLogo)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Keywords.make(None) == Validation.succeed(None)
-      )
+      val validLogo = "/foo/bar/baz.jpg"
+      assertTrue(Logo.make(validLogo).map(_.value).contains(validLogo))
     }
   )
 
