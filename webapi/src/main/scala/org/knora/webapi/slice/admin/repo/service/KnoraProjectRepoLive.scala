@@ -5,12 +5,19 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import dsp.valueobjects.{RestrictedViewSize, V2}
+import play.twirl.api.TxtFormat
+import zio._
+
+import dsp.valueobjects.RestrictedViewSize
+import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages.{BooleanLiteralV2, IriLiteralV2, StringLiteralV2, SubjectV2}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject._
@@ -18,9 +25,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Construct, Update}
-import play.twirl.api.TxtFormat
-import zio._
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
