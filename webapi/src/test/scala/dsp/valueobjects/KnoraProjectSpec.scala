@@ -5,9 +5,7 @@
 
 package dsp.valueobjects
 
-import zio._
 import zio.prelude.Validation
-import zio.test.Assertion._
 import zio.test._
 
 import scala.util.Random
@@ -19,13 +17,6 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject._
  * This spec is used to test the [[KnoraProject]] value objects creation.
  */
 object KnoraProjectSpec extends ZIOSpecDefault {
-  private val validDescription    = Seq(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
-  private val tooShortDescription = Seq(V2.StringLiteralV2("Ab", Some("en")))
-  private val tooLongDescription  = Seq(V2.StringLiteralV2(new Random().nextString(40961), Some("en")))
-  private val validKeywords       = Seq("key", "word")
-  private val tooShortKeywords    = Seq("de", "key", "word")
-  private val tooLongKeywords     = Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "key", "word")
-
   def spec = suite("ProjectSpec")(
     shortcodeTest,
     shortnameTest,
@@ -120,66 +111,38 @@ object KnoraProjectSpec extends ZIOSpecDefault {
   )
 
   private val descriptionTest = suite("Description")(
-    test("pass an empty object and return an error") {
+    test("pass an object containing too short Description and expect an error to be returned") {
       assertTrue(
-        Description.make(Seq.empty) == Validation.fail(ValidationException(ErrorMessages.ProjectDescriptionMissing)),
-        Description.make(Some(Seq.empty)) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionMissing)
-        )
+        Description.make(V2.StringLiteralV2("Ab", Some("en"))) ==
+          Validation.fail(ValidationException("Description must be 3 to 40960 characters long."))
       )
     },
-    test("pass an object containing invalid Description and expect an error to be returned") {
+    test("pass an object containing too long Description and expect an error to be returned") {
       assertTrue(
-        Description.make(tooShortDescription) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionInvalid)
-        ),
-        Description.make(tooLongDescription) == Validation.fail(
-          ValidationException(ErrorMessages.ProjectDescriptionInvalid)
-        )
+        Description.make(V2.StringLiteralV2(new Random().nextString(40961), Some("en"))) ==
+          Validation.fail(ValidationException("Description must be 3 to 40960 characters long."))
       )
     },
     test("pass a valid object and successfully create value object") {
-      for {
-        description           <- Description.make(validDescription).toZIO
-        optionalDescription   <- Description.make(Option(validDescription)).toZIO
-        descriptionFromOption <- ZIO.fromOption(optionalDescription)
-      } yield assertTrue(description.value == validDescription) &&
-        assert(optionalDescription)(isSome(isSubtype[Description](Assertion.anything))) &&
-        assertTrue(descriptionFromOption.value == validDescription)
-    },
-    test("successfully validate passing None") {
       assertTrue(
-        Description.make(None) == Validation.succeed(None)
+        Description.make(V2.StringLiteralV2(value = "Valid project description", language = Some("en"))).map(_.value) ==
+          Validation.succeed(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
       )
     }
   )
 
   private val keywordsTest = suite("Keywords")(
     test("pass an empty object and return an error") {
-      assertTrue(
-        Keywords.make(Seq.empty) == Validation.fail(ValidationException(ErrorMessages.KeywordsMissing)),
-        Keywords.make(Some(Seq.empty)) == Validation.fail(ValidationException(ErrorMessages.KeywordsMissing))
-      )
-    },
-    test("pass invalid keywords and return an error") {
-      assertTrue(
-        Keywords.make(tooShortKeywords) == Validation.fail(ValidationException(ErrorMessages.KeywordsInvalid)),
-        Keywords.make(tooLongKeywords) == Validation.fail(ValidationException(ErrorMessages.KeywordsInvalid))
-      )
+      val invalidKeywords =
+        Gen.fromIterable(Seq("ThisIs65CharactersKeywordThatShouldFailTheTestSoItHasToBeThatLong", "12", "1"))
+      check(invalidKeywords) { keyword =>
+        assertTrue(
+          Keyword.make(keyword) == Validation.fail(ValidationException("Keyword must be 3 to 64 characters long."))
+        )
+      }
     },
     test("pass a valid object and successfully create value object") {
-      for {
-        keywords           <- Keywords.make(validKeywords).toZIO
-        optionalKeywords   <- Keywords.make(Option(validKeywords)).toZIO
-        keywordsFromOption <- ZIO.fromOption(optionalKeywords)
-      } yield assertTrue(keywords.value == validKeywords) &&
-        assert(optionalKeywords)(isSome(isSubtype[Keywords](Assertion.anything))) &&
-        assertTrue(keywordsFromOption.value == validKeywords)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Keywords.make(None) == Validation.succeed(None)
-      )
+      assertTrue(Keyword.make("validKeyword").map(_.value).contains("validKeyword"))
     }
   )
 

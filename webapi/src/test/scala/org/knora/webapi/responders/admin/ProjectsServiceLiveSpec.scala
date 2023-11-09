@@ -21,12 +21,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectC
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
@@ -129,8 +124,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       Shortname.unsafeFrom("newproject"),
       Shortcode.unsafeFrom("3333"),
       Some(Longname.unsafeFrom("project longname")),
-      TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en")))),
-      TestDataFactory.projectKeywords(Seq("test", "kewords")),
+      List(Description.unsafeFrom(StringLiteralV2("updated project description", Some("en")))),
+      List("test", "kewords").map(Keyword.unsafeFrom),
       None,
       ProjectStatus.Active,
       ProjectSelfJoin.CanJoin
@@ -174,8 +169,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val projectUpdatePayload = ProjectUpdateRequest(
       Some(Shortname.unsafeFrom("usn")),
       Some(Longname.unsafeFrom("updated project longname")),
-      Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
-      Some(TestDataFactory.projectKeywords(Seq("updated", "kewords"))),
+      Some(List(Description.unsafeFrom(StringLiteralV2("updated project description", Some("en"))))),
+      Some(List("updated", "kewords").map(Keyword.unsafeFrom)),
       Some(Logo.unsafeFrom("../updatedlogo.png")),
       Some(ProjectStatus.Active),
       Some(ProjectSelfJoin.CanJoin)

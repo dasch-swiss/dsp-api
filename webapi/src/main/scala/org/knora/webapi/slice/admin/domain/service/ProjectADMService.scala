@@ -14,12 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Logo
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -77,8 +72,8 @@ final case class ProjectADMServiceLive(
         shortname = knoraProject.shortname.value,
         shortcode = knoraProject.shortcode.value,
         longname = knoraProject.longname.map(_.value),
-        description = knoraProject.description,
-        keywords = knoraProject.keywords,
+        description = knoraProject.description.map(_.value),
+        keywords = knoraProject.keywords.map(_.value),
         logo = knoraProject.logo.map(_.value),
         status = knoraProject.status.value,
         selfjoin = knoraProject.selfjoin.value,
@@ -92,8 +87,10 @@ final case class ProjectADMServiceLive(
       shortname = Shortname.unsafeFrom(project.shortname),
       shortcode = Shortcode.unsafeFrom(project.shortcode),
       longname = project.longname.map(Longname.unsafeFrom),
-      description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
-      keywords = project.keywords.toList,
+      description = NonEmptyChunk
+        .fromIterable(project.description.head, project.description.tail)
+        .map(Description.unsafeFrom),
+      keywords = project.keywords.map(Keyword.unsafeFrom).toList,
       logo = project.logo.map(Logo.unsafeFrom),
       status = ProjectStatus.from(project.status),
       selfjoin = ProjectSelfJoin.from(project.selfjoin),
@@ -103,13 +100,13 @@ final case class ProjectADMServiceLive(
   override def findAllProjectsKeywords: Task[ProjectsKeywordsGetResponseADM] =
     for {
       projects <- projectRepo.findAll()
-      keywords  = projects.flatMap(_.keywords).distinct.sorted
+      keywords  = projects.flatMap(_.keywords.map(_.value)).distinct.sorted
     } yield ProjectsKeywordsGetResponseADM(keywords)
 
   override def findProjectKeywordsBy(id: ProjectIdentifierADM): Task[Option[ProjectKeywordsGetResponseADM]] =
     for {
       projectMaybe <- projectRepo.findById(id)
-      keywordsMaybe = projectMaybe.map(_.keywords)
+      keywordsMaybe = projectMaybe.map(_.keywords.map(_.value))
       result        = keywordsMaybe.map(ProjectKeywordsGetResponseADM(_))
     } yield result
 

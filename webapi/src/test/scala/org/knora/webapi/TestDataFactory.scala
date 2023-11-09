@@ -24,7 +24,7 @@ object TestDataFactory {
     Shortname.unsafeFrom("shortname"),
     Shortcode.unsafeFrom("0001"),
     None,
-    NonEmptyChunk(V2.StringLiteralV2("Some description", None)),
+    NonEmptyChunk(Description.unsafeFrom(V2.StringLiteralV2("Some description", None))),
     List.empty,
     None,
     ProjectStatus.Active,
@@ -46,16 +46,6 @@ object TestDataFactory {
     IriIdentifier
       .fromString(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
-
-  def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
-    Description
-      .make(description)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectDescription $description."))
-
-  def projectKeywords(keywords: Seq[String]): Keywords =
-    Keywords
-      .make(keywords)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Keywords $keywords."))
 
   def projectIri(iri: String): ProjectIri =
     ProjectIri

@@ -18,8 +18,8 @@ object ProjectsEndpointsRequests {
     shortname: Shortname,
     shortcode: Shortcode,
     longname: Option[Longname] = None,
-    description: Description,
-    keywords: Keywords,
+    description: List[Description],
+    keywords: List[Keyword],
     logo: Option[Logo] = None,
     status: ProjectStatus,
     selfjoin: ProjectSelfJoin
@@ -31,8 +31,8 @@ object ProjectsEndpointsRequests {
   final case class ProjectUpdateRequest(
     shortname: Option[Shortname] = None,
     longname: Option[Longname] = None,
-    description: Option[Description] = None,
-    keywords: Option[Keywords] = None,
+    description: Option[List[Description]] = None,
+    keywords: Option[List[Keyword]] = None,
     logo: Option[Logo] = None,
     status: Option[ProjectStatus] = None,
     selfjoin: Option[ProjectSelfJoin] = None

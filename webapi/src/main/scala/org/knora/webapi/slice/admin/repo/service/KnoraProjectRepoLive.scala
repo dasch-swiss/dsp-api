@@ -78,7 +78,10 @@ final case class KnoraProjectRepoLive(
       description <- mapper
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propsMap)
                        .map(_.map(it => V2.StringLiteralV2(it.value, it.language)))
-      keywords <- mapper.getList[StringLiteralV2](ProjectKeyword, propsMap).map(_.map(_.value).sorted)
+                       .flatMap(ZIO.foreach(_)(KnoraProject.Description.make(_).toZIO))
+      keywords <- mapper
+                    .getList[StringLiteralV2](ProjectKeyword, propsMap)
+                    .flatMap(it => ZIO.foreach(it.map(_.value).sorted)(it => KnoraProject.Keyword.make(it).toZIO))
       logo <- mapper
                 .getSingleOption[StringLiteralV2](ProjectLogo, propsMap)
                 .flatMap(it => ZIO.foreach(it)(it => KnoraProject.Logo.make(it.value).toZIO))

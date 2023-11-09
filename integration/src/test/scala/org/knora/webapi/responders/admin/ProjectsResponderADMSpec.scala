@@ -168,10 +168,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortname = Shortname.unsafeFrom("newproject"),
             shortcode = Shortcode.unsafeFrom(shortcode),
             longname = Some(Longname.unsafeFrom("project longname")),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
@@ -263,10 +262,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortname = Shortname.unsafeFrom("newproject2"),
             shortcode = Shortcode.unsafeFrom("1112"),
             longname = Some(Longname.unsafeFrom("project longname")),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
@@ -295,10 +293,10 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortname = Shortname.unsafeFrom("project_with_char"),
             shortcode = Shortcode.unsafeFrom("1312"),
             longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
+            description = List(
+              Description.unsafeFrom(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en")))
+            ),
+            keywords = List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
@@ -327,10 +325,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortname = Shortname.unsafeFrom("newproject"),
             shortcode = Shortcode.unsafeFrom("111C"),
             longname = Some(Longname.unsafeFrom("project longname")),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
@@ -347,10 +344,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortname = Shortname.unsafeFrom("newproject3"),
             shortcode = Shortcode.unsafeFrom("111C"),
             longname = Some(Longname.unsafeFrom("project longname")),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = ProjectStatus.Active,
             selfjoin = ProjectSelfJoin.CannotJoin
@@ -364,10 +360,12 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "UPDATE a project" in {
         val iri             = ITTestDataFactory.projectIri(newProjectIri.get)
         val updatedLongname = Longname.unsafeFrom("updated project longname")
-        val updatedDescription = ITTestDataFactory.projectDescription(
-          Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")))
+        val updatedDescription = List(
+          Description.unsafeFrom(
+            V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en"))
+          )
         )
-        val updatedKeywords = ITTestDataFactory.projectKeywords(Seq("updated", "keywords"))
+        val updatedKeywords = List("updated", "keywords").map(Keyword.unsafeFrom)
         val updatedLogo     = Logo.unsafeFrom("/fu/bar/baz-updated.jpg")
         val projectStatus   = ProjectStatus.Active
         val selfJoin        = ProjectSelfJoin.CanJoin

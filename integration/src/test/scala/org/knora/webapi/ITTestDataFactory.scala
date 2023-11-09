@@ -6,9 +6,7 @@
 package org.knora.webapi
 
 import dsp.valueobjects.Iri._
-import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 
 /**
  * Helps in creating value objects for tests.
@@ -28,16 +26,6 @@ object ITTestDataFactory {
     IriIdentifier
       .fromString(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
-
-  def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
-    Description
-      .make(description)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectDescription $description."))
-
-  def projectKeywords(keywords: Seq[String]): Keywords =
-    Keywords
-      .make(keywords)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Keywords $keywords."))
 
   def projectIri(iri: String): ProjectIri =
     ProjectIri
