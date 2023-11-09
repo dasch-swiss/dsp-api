@@ -8,10 +8,10 @@ package org.knora.webapi
 import zio.NonEmptyChunk
 
 import dsp.valueobjects.Iri._
-import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /**

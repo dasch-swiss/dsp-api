@@ -2,13 +2,16 @@
  * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
+/*
+ * Copyright © 2021 - 2023 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 package org.knora.webapi.slice.admin.repo.service
 
 import play.twirl.api.TxtFormat
 import zio._
 
-import dsp.valueobjects.Project
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
@@ -67,13 +70,13 @@ final case class KnoraProjectRepoLive(
     for {
       shortname <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap)
-                     .flatMap(it => Project.Shortname.make(it.value).toZIO)
+                     .flatMap(it => KnoraProject.Shortname.make(it.value).toZIO)
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap)
-                     .flatMap(it => Project.Shortcode.make(it.value).toZIO)
+                     .flatMap(it => KnoraProject.Shortcode.make(it.value).toZIO)
       longname <- mapper
                     .getSingleOption[StringLiteralV2](ProjectLongname, propsMap)
-                    .flatMap(it => ZIO.foreach(it)(it => Project.Longname.make(it.value).toZIO))
+                    .flatMap(it => ZIO.foreach(it)(it => KnoraProject.Longname.make(it.value).toZIO))
       description <- mapper
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propsMap)
                        .map(_.map(it => V2.StringLiteralV2(it.value, it.language)))

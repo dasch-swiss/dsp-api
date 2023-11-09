@@ -18,7 +18,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.util.MutableTestIri
 
 /**

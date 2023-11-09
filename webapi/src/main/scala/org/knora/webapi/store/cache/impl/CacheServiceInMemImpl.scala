@@ -9,7 +9,6 @@ import zio._
 import zio.stm._
 
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Project
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
@@ -18,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
@@ -141,7 +141,7 @@ case class CacheServiceInMemImpl(
    * @param shortname of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortname(shortname: Project.Shortname): UIO[Option[ProjectADM]] =
+  def getProjectByShortname(shortname: KnoraProject.Shortname): UIO[Option[ProjectADM]] =
     (for {
       iri     <- lut.get(shortname.value).some
       project <- projects.get(iri).some
@@ -153,7 +153,7 @@ case class CacheServiceInMemImpl(
    * @param shortcode of the project.
    * @return an optional [[ProjectADM]]
    */
-  def getProjectByShortcode(shortcode: Project.Shortcode): UIO[Option[ProjectADM]] =
+  def getProjectByShortcode(shortcode: KnoraProject.Shortcode): UIO[Option[ProjectADM]] =
     (for {
       iri     <- lut.get(shortcode.value).some
       project <- projects.get(iri).some

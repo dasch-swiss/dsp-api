@@ -9,7 +9,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 
 object ProjectsEndpointsRequests {
 

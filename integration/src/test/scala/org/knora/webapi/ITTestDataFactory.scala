@@ -6,9 +6,9 @@
 package org.knora.webapi
 
 import dsp.valueobjects.Iri._
-import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 
 /**
  * Helps in creating value objects for tests.

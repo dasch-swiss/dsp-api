@@ -9,9 +9,6 @@ import zio._
 import zio.mock._
 import zio.test._
 
-import dsp.valueobjects.Project.Longname
-import dsp.valueobjects.Project.Shortcode
-import dsp.valueobjects.Project.Shortname
 import dsp.valueobjects.V2._
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -24,6 +21,9 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectC
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub

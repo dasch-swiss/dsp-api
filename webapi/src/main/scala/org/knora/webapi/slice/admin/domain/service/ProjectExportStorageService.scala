@@ -8,9 +8,9 @@ package org.knora.webapi.slice.admin.domain.service
 import zio._
 import zio.nio.file._
 
-import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageService.exportFileEnding
 
 case class ProjectExportInfo(projectShortname: String, path: Path)

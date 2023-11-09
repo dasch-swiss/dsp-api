@@ -28,9 +28,9 @@ import zio.stream.ZSink
 
 import scala.concurrent.duration.DurationInt
 
-import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.routing.JwtService
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 @accessible
 trait DspIngestClient {

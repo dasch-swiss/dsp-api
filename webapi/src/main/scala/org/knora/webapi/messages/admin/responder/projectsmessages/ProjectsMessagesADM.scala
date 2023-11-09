@@ -25,7 +25,6 @@ import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project._
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
@@ -38,6 +37,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 

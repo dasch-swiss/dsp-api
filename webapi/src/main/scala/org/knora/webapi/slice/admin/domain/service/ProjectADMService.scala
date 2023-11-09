@@ -7,9 +7,6 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio._
 
-import dsp.valueobjects.Project.Longname
-import dsp.valueobjects.Project.Shortcode
-import dsp.valueobjects.Project.Shortname
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -17,6 +14,9 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 

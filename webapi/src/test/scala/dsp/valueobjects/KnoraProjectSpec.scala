@@ -13,12 +13,12 @@ import zio.test._
 import scala.util.Random
 
 import dsp.errors.ValidationException
-import dsp.valueobjects.Project._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 
 /**
- * This spec is used to test the [[Project]] value objects creation.
+ * This spec is used to test the [[KnoraProject]] value objects creation.
  */
-object ProjectSpec extends ZIOSpecDefault {
+object KnoraProjectSpec extends ZIOSpecDefault {
   private val validDescription    = Seq(V2.StringLiteralV2(value = "Valid project description", language = Some("en")))
   private val tooShortDescription = Seq(V2.StringLiteralV2("Ab", Some("en")))
   private val tooLongDescription  = Seq(V2.StringLiteralV2(new Random().nextString(40961), Some("en")))
