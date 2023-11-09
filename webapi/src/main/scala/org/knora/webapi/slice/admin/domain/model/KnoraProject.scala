@@ -135,7 +135,7 @@ object KnoraProject {
       JsonCodec[String].transformOrFail(Logo.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  trait Status { def value: Boolean }
+  sealed trait Status { def value: Boolean }
 
   object Status {
 
@@ -149,7 +149,7 @@ object KnoraProject {
     implicit val schema: Schema[Status] = Schema.schemaForBoolean.map(b => Some(Status.from(b)))(_.value)
   }
 
-  trait SelfJoin { def value: Boolean }
+  sealed trait SelfJoin { def value: Boolean }
 
   object SelfJoin {
 
