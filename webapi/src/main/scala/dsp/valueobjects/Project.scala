@@ -5,11 +5,12 @@
 
 package dsp.valueobjects
 
-import dsp.errors.ValidationException
 import zio.json._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
+
+import dsp.errors.ValidationException
 
 object Project {
 

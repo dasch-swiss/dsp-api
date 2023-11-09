@@ -5,10 +5,13 @@
 
 package org.knora.webapi.responders.admin
 
-import dsp.valueobjects.Project.{Longname, Shortcode, Shortname}
 import zio._
 import zio.mock._
 import zio.test._
+
+import dsp.valueobjects.Project.Longname
+import dsp.valueobjects.Project.Shortcode
+import dsp.valueobjects.Project.Shortname
 import dsp.valueobjects.V2._
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
