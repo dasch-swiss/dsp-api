@@ -5,10 +5,10 @@
 
 package org.knora.webapi.responders.admin
 
+import dsp.valueobjects.Project.{Longname, Shortcode, Shortname}
 import zio._
 import zio.mock._
 import zio.test._
-
 import dsp.valueobjects.V2._
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
@@ -120,9 +120,9 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val createProjectSpec: Spec[Any, Throwable] = test("create a project") {
     val payload = ProjectCreateRequest(
       None,
-      TestDataFactory.projectShortname("newproject"),
-      TestDataFactory.projectShortcode("3333"),
-      Some(TestDataFactory.projectName("project longname")),
+      Shortname.unsafeFrom("newproject"),
+      Shortcode.unsafeFrom("3333"),
+      Some(Longname.unsafeFrom("project longname")),
       TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en")))),
       TestDataFactory.projectKeywords(Seq("test", "kewords")),
       None,
@@ -166,8 +166,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val iri        = "http://rdfh.ch/projects/0001"
     val projectIri = TestDataFactory.projectIri(iri)
     val projectUpdatePayload = ProjectUpdateRequest(
-      Some(TestDataFactory.projectShortname("usn")),
-      Some(TestDataFactory.projectName("updated project longname")),
+      Some(Shortname.unsafeFrom("usn")),
+      Some(Longname.unsafeFrom("updated project longname")),
       Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
       Some(TestDataFactory.projectKeywords(Seq("updated", "kewords"))),
       Some(TestDataFactory.projectLogo("../updatedlogo.png")),

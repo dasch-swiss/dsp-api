@@ -5,14 +5,13 @@
 
 package org.knora.webapi
 
-import zio.NonEmptyChunk
-
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
+import zio.NonEmptyChunk
 
 /**
  * Helps in creating value objects for tests.
@@ -46,21 +45,6 @@ object TestDataFactory {
     IriIdentifier
       .fromString(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
-
-  def projectShortcode(shortcode: String): Shortcode =
-    Shortcode
-      .make(shortcode)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Shortcode $shortcode."))
-
-  def projectShortname(shortname: String): Shortname =
-    Shortname
-      .make(shortname)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Shortname $shortname."))
-
-  def projectName(name: String): Longname =
-    Longname
-      .from(name)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Name $name."))
 
   def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
     Description

@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.domain.service
 
 import zio._
 
+import dsp.valueobjects.Project.Longname
 import dsp.valueobjects.Project.Shortcode
 import dsp.valueobjects.Project.Shortname
 import dsp.valueobjects.RestrictedViewSize
@@ -72,7 +73,7 @@ final case class ProjectADMServiceLive(
         id = knoraProject.id.value,
         shortname = knoraProject.shortname.value,
         shortcode = knoraProject.shortcode.value,
-        longname = knoraProject.longname,
+        longname = knoraProject.longname.map(_.value),
         description = knoraProject.description,
         keywords = knoraProject.keywords,
         logo = knoraProject.logo,
@@ -87,7 +88,7 @@ final case class ProjectADMServiceLive(
       id = InternalIri.apply(project.id),
       shortname = Shortname.unsafeFrom(project.shortname),
       shortcode = Shortcode.unsafeFrom(project.shortcode),
-      longname = project.longname,
+      longname = project.longname.map(Longname.unsafeFrom),
       description = NonEmptyChunk.fromIterable(project.description.head, project.description.tail),
       keywords = project.keywords.toList,
       logo = project.logo,

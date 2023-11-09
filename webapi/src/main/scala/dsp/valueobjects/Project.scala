@@ -5,12 +5,11 @@
 
 package dsp.valueobjects
 
+import dsp.errors.ValidationException
 import zio.json._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-
-import dsp.errors.ValidationException
 
 object Project {
 
@@ -68,15 +67,16 @@ object Project {
 
   object Longname {
 
-    implicit val codec: JsonCodec[Longname] = JsonCodec[String].transformOrFail(Longname.from, _.value)
+    implicit val codec: JsonCodec[Longname] =
+      JsonCodec[String].transformOrFail(Longname.make(_).toEitherWith(e => e.head.getMessage), _.value)
 
     private val longnameRegex: Regex = "^.{3,256}$".r
 
-    def unsafeFrom(str: String): Longname = from(str).fold(e => throw new IllegalArgumentException(e), identity)
+    def unsafeFrom(str: String): Longname = make(str).fold(e => throw e.head, identity)
 
-    def from(value: String): Either[String, Longname] =
-      if (longnameRegex.matches(value)) Right(Longname(value))
-      else Left("Longname must be 3 to 256 characters long.")
+    def make(value: String): Validation[ValidationException, Longname] =
+      if (longnameRegex.matches(value)) Validation.succeed(Longname(value))
+      else Validation.fail(ValidationException("Longname must be 3 to 256 characters long."))
   }
 
   /**
