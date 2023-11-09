@@ -197,5 +197,4 @@ object KnoraProject {
 
     def from(value: Boolean): ProjectSelfJoin = if (value) CanJoin else CannotJoin
   }
-
 }
