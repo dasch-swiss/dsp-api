@@ -69,7 +69,7 @@ object SipiTestContainer {
   def portAndHost: ZIO[SipiTestContainer, Nothing, (Int, String)] = port <*> host
 
   def resolveUrl(path: http.Path): URIO[SipiTestContainer, URL] =
-    ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.withPath(path))
+    ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.path(path))
 
   def copyFileToImageFolderInContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
     ZIO.serviceWithZIO[SipiTestContainer](_.copyFileToImageFolderInContainer(prefix, filename))
