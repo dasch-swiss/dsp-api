@@ -5,29 +5,22 @@
 
 package org.knora.webapi.slice.admin.repo.service
 
-import play.twirl.api.TxtFormat
-import zio._
-
-import dsp.valueobjects.RestrictedViewSize
-import dsp.valueobjects.V2
+import dsp.valueobjects.{RestrictedViewSize, V2}
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.IriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
+import org.knora.webapi.messages.store.triplestoremessages.{BooleanLiteralV2, IriLiteralV2, StringLiteralV2, SubjectV2}
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Construct, Update}
+import play.twirl.api.TxtFormat
+import zio._
 
 final case class KnoraProjectRepoLive(
   private val triplestore: TriplestoreService,
@@ -68,31 +61,32 @@ final case class KnoraProjectRepoLive(
     for {
       shortname <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap)
-                     .flatMap(it => KnoraProject.Shortname.make(it.value).toZIO)
+                     .flatMap(l => Shortname.from(l.value).toZIO)
       shortcode <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortcode, propsMap)
-                     .flatMap(it => KnoraProject.Shortcode.make(it.value).toZIO)
+                     .flatMap(l => Shortcode.from(l.value).toZIO)
       longname <- mapper
                     .getSingleOption[StringLiteralV2](ProjectLongname, propsMap)
-                    .flatMap(it => ZIO.foreach(it)(it => KnoraProject.Longname.make(it.value).toZIO))
+                    .flatMap(optLit => ZIO.foreach(optLit)(l => Longname.from(l.value).toZIO))
       description <- mapper
                        .getNonEmptyChunkOrFail[StringLiteralV2](ProjectDescription, propsMap)
-                       .map(_.map(it => V2.StringLiteralV2(it.value, it.language)))
-                       .flatMap(ZIO.foreach(_)(KnoraProject.Description.make(_).toZIO))
+                       .map(_.map(l => V2.StringLiteralV2(l.value, l.language)))
+                       .flatMap(ZIO.foreach(_)(Description.from(_).toZIO))
       keywords <- mapper
                     .getList[StringLiteralV2](ProjectKeyword, propsMap)
-                    .flatMap(it => ZIO.foreach(it.map(_.value).sorted)(it => KnoraProject.Keyword.make(it).toZIO))
+                    .flatMap(l => ZIO.foreach(l.map(_.value).sorted)(Keyword.from(_).toZIO))
       logo <- mapper
                 .getSingleOption[StringLiteralV2](ProjectLogo, propsMap)
-                .flatMap(it => ZIO.foreach(it)(it => KnoraProject.Logo.make(it.value).toZIO))
-      status <- mapper.getSingleOrFail[BooleanLiteralV2](Status, propsMap).map(l => ProjectStatus.from(l.value))
+                .flatMap(optLit => ZIO.foreach(optLit)(l => Logo.from(l.value).toZIO))
+      status <- mapper
+                  .getSingleOrFail[BooleanLiteralV2](StatusProp, propsMap)
+                  .map(l => Status.from(l.value))
       selfjoin <- mapper
                     .getSingleOrFail[BooleanLiteralV2](HasSelfJoinEnabled, propsMap)
-                    .map(l => ProjectSelfJoin.from(l.value))
-      ontologies <-
-        mapper
-          .getListOption[IriLiteralV2]("http://www.knora.org/ontology/knora-admin#belongsToOntology", propsMap)
-          .map(_.getOrElse(List.empty).map(literal => InternalIri(literal.value)))
+                    .map(l => SelfJoin.from(l.value))
+      ontologies <- mapper
+                      .getList[IriLiteralV2]("http://www.knora.org/ontology/knora-admin#belongsToOntology", propsMap)
+                      .map(_.map(l => InternalIri(l.value)))
     } yield KnoraProject(
       projectIri,
       shortname,

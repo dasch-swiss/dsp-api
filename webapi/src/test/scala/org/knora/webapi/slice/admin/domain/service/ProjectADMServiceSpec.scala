@@ -51,8 +51,8 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           description = NonEmptyChunk(Description.unsafeFrom(StringLiteralV2("description not used in test", None))),
           keywords = List.empty,
           logo = None,
-          status = ProjectStatus.Active,
-          selfjoin = ProjectSelfJoin.CanJoin,
+          status = Status.Active,
+          selfjoin = SelfJoin.CanJoin,
           List.empty
         )
         assertTrue(

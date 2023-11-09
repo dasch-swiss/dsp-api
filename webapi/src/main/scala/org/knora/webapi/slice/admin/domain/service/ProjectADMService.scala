@@ -92,8 +92,8 @@ final case class ProjectADMServiceLive(
         .map(Description.unsafeFrom),
       keywords = project.keywords.map(Keyword.unsafeFrom).toList,
       logo = project.logo.map(Logo.unsafeFrom),
-      status = ProjectStatus.from(project.status),
-      selfjoin = ProjectSelfJoin.from(project.selfjoin),
+      status = Status.from(project.status),
+      selfjoin = SelfJoin.from(project.selfjoin),
       ontologies = project.ontologies.map(InternalIri.apply).toList
     )
 

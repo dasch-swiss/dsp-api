@@ -395,7 +395,7 @@ object ProjectIdentifierADM {
   object ShortcodeIdentifier {
     def from(shortcode: Shortcode): ShortcodeIdentifier = ShortcodeIdentifier(shortcode)
     def fromString(value: String): Validation[ValidationException, ShortcodeIdentifier] =
-      Shortcode.make(value).map {
+      Shortcode.from(value).map {
         ShortcodeIdentifier(_)
       }
   }
@@ -408,7 +408,7 @@ object ProjectIdentifierADM {
   final case class ShortnameIdentifier(value: Shortname) extends ProjectIdentifierADM
   object ShortnameIdentifier {
     def fromString(value: String): Validation[ValidationException, ShortnameIdentifier] =
-      Shortname.make(value).map {
+      Shortname.from(value).map {
         ShortnameIdentifier(_)
       }
   }

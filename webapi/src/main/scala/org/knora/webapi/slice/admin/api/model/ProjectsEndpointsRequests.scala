@@ -21,8 +21,8 @@ object ProjectsEndpointsRequests {
     description: List[Description],
     keywords: List[Keyword],
     logo: Option[Logo] = None,
-    status: ProjectStatus,
-    selfjoin: ProjectSelfJoin
+    status: Status,
+    selfjoin: SelfJoin
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]
@@ -34,8 +34,8 @@ object ProjectsEndpointsRequests {
     description: Option[List[Description]] = None,
     keywords: Option[List[Keyword]] = None,
     logo: Option[Logo] = None,
-    status: Option[ProjectStatus] = None,
-    selfjoin: Option[ProjectSelfJoin] = None
+    status: Option[Status] = None,
+    selfjoin: Option[SelfJoin] = None
   )
   object ProjectUpdateRequest {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]

@@ -222,7 +222,7 @@ final case class UsersResponderADMLive(
                                   .value,
                                 status = propsMap
                                   .getOrElse(
-                                    OntologyConstants.KnoraAdmin.Status.toSmartIri,
+                                    OntologyConstants.KnoraAdmin.StatusProp.toSmartIri,
                                     throw InconsistentRepositoryDataException(
                                       s"User: $userIri has no 'status' defined."
                                     )
@@ -1728,7 +1728,7 @@ final case class UsersResponderADMLive(
                    .value,
                  status = propsMap
                    .getOrElse(
-                     OntologyConstants.KnoraAdmin.Status.toSmartIri,
+                     OntologyConstants.KnoraAdmin.StatusProp.toSmartIri,
                      throw InconsistentRepositoryDataException(s"User: $userIri has no 'status' defined.")
                    )
                    .head

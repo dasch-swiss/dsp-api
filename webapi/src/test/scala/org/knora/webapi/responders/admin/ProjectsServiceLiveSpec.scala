@@ -127,8 +127,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       List(Description.unsafeFrom(StringLiteralV2("updated project description", Some("en")))),
       List("test", "kewords").map(Keyword.unsafeFrom),
       None,
-      ProjectStatus.Active,
-      ProjectSelfJoin.CanJoin
+      Status.Active,
+      SelfJoin.CanJoin
     )
 
     for {
@@ -148,7 +148,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
     val iri                  = "http://rdfh.ch/projects/0001"
     val projectIri           = TestDataFactory.projectIri(iri)
-    val projectStatus        = Some(ProjectStatus.Inactive)
+    val projectStatus        = Some(Status.Inactive)
     val projectUpdatePayload = ProjectUpdateRequest(status = projectStatus)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
@@ -172,8 +172,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       Some(List(Description.unsafeFrom(StringLiteralV2("updated project description", Some("en"))))),
       Some(List("updated", "kewords").map(Keyword.unsafeFrom)),
       Some(Logo.unsafeFrom("../updatedlogo.png")),
-      Some(ProjectStatus.Active),
-      Some(ProjectSelfJoin.CanJoin)
+      Some(Status.Active),
+      Some(SelfJoin.CanJoin)
     )
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)

@@ -27,8 +27,8 @@ object TestDataFactory {
     NonEmptyChunk(Description.unsafeFrom(V2.StringLiteralV2("Some description", None))),
     List.empty,
     None,
-    ProjectStatus.Active,
-    ProjectSelfJoin.CannotJoin,
+    Status.Active,
+    SelfJoin.CannotJoin,
     List.empty
   )
 

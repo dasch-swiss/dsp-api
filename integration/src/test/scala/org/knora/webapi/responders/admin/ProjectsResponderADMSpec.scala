@@ -172,8 +172,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = ProjectStatus.Active,
-            selfjoin = ProjectSelfJoin.CannotJoin
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -266,8 +266,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = ProjectStatus.Active,
-            selfjoin = ProjectSelfJoin.CannotJoin
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -298,8 +298,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             ),
             keywords = List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = ProjectStatus.Active,
-            selfjoin = ProjectSelfJoin.CannotJoin
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -329,8 +329,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = ProjectStatus.Active,
-            selfjoin = ProjectSelfJoin.CannotJoin
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -348,8 +348,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
-            status = ProjectStatus.Active,
-            selfjoin = ProjectSelfJoin.CannotJoin
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -367,8 +367,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val updatedKeywords = List("updated", "keywords").map(Keyword.unsafeFrom)
         val updatedLogo     = Logo.unsafeFrom("/fu/bar/baz-updated.jpg")
-        val projectStatus   = ProjectStatus.Active
-        val selfJoin        = ProjectSelfJoin.CanJoin
+        val projectStatus   = Status.Active
+        val selfJoin        = SelfJoin.CanJoin
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
