@@ -19,7 +19,7 @@ object Dependencies {
 
   val PekkoActorVersion = "1.0.1"
   val PekkoHttpVersion  = "1.0.0"
-  val JenaVersion       = "4.9.0"
+  val JenaVersion       = "4.8.0"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioLoggingVersion           = "2.1.14"
