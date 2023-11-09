@@ -173,8 +173,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.Active,
+            selfjoin = ProjectSelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -268,8 +268,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.Active,
+            selfjoin = ProjectSelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -300,8 +300,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.Active,
+            selfjoin = ProjectSelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -332,8 +332,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.Active,
+            selfjoin = ProjectSelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -352,8 +352,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.Active,
+            selfjoin = ProjectSelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -369,8 +369,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val updatedKeywords = ITTestDataFactory.projectKeywords(Seq("updated", "keywords"))
         val updatedLogo     = ITTestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
-        val projectStatus   = ITTestDataFactory.projectStatus(true)
-        val selfJoin        = ITTestDataFactory.projectSelfJoin(true)
+        val projectStatus   = ProjectStatus.Active
+        val selfJoin        = ProjectSelfJoin.CanJoin
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
@@ -416,7 +416,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             NotFoundException(
-              s"Project '${notExistingProjectButValidProjectIri}' not found. Aborting update request."
+              s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request."
             )
           )
         )

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import sttp.tapir.Schema
 import zio.NonEmptyChunk
 import zio.json._
 import zio.prelude.Validation
@@ -15,11 +16,12 @@ import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
 import dsp.valueobjects.V2.StringLiteralV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
-
-import KnoraProject.Longname
-import KnoraProject.Shortcode
-import KnoraProject.Shortname
 
 case class KnoraProject(
   id: InternalIri,
@@ -29,8 +31,8 @@ case class KnoraProject(
   description: NonEmptyChunk[StringLiteralV2],
   keywords: List[String],
   logo: Option[String],
-  status: Boolean,
-  selfjoin: Boolean,
+  status: ProjectStatus,
+  selfjoin: ProjectSelfJoin,
   ontologies: List[InternalIri]
 )
 
@@ -182,49 +184,33 @@ object KnoraProject {
       }
   }
 
-  /**
-   * ProjectSelfjoin value object.
-   */
-  sealed abstract case class ProjectSelfJoin private (value: Boolean)
-  object ProjectSelfJoin { self =>
-    implicit val decoder: JsonDecoder[ProjectSelfJoin] = JsonDecoder[Boolean].mapOrFail { value =>
-      ProjectSelfJoin.make(value).toEitherWith(e => e.head.getMessage)
-    }
-    implicit val encoder: JsonEncoder[ProjectSelfJoin] =
-      JsonEncoder[Boolean].contramap((selfJoin: ProjectSelfJoin) => selfJoin.value)
+  trait ProjectStatus { def value: Boolean }
 
-    def make(value: Boolean): Validation[ValidationException, ProjectSelfJoin] =
-      Validation.succeed(new ProjectSelfJoin(value) {})
+  object ProjectStatus {
+    case object Active   extends ProjectStatus { val value = true  }
+    case object Inactive extends ProjectStatus { val value = false }
 
-    def make(value: Option[Boolean]): Validation[ValidationException, Option[ProjectSelfJoin]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+    implicit val codec: JsonCodec[ProjectStatus] =
+      JsonCodec[Boolean].transformOrFail(value => Right(ProjectStatus.from(value)), _.value)
+
+    implicit val schema: Schema[ProjectStatus] = Schema.schemaForBoolean.map(b => Some(ProjectStatus.from(b)))(_.value)
+
+    def from(value: Boolean): ProjectStatus = if (value) Active else Inactive
   }
 
-  /**
-   * ProjectStatus value object.
-   */
-  sealed abstract case class ProjectStatus private (value: Boolean)
-  object ProjectStatus { self =>
+  trait ProjectSelfJoin { def value: Boolean }
 
-    val deleted = new ProjectStatus(false) {}
-    val active  = new ProjectStatus(true) {}
+  object ProjectSelfJoin {
+    case object CanJoin    extends ProjectSelfJoin { val value = true  }
+    case object CannotJoin extends ProjectSelfJoin { val value = false }
 
-    implicit val decoder: JsonDecoder[ProjectStatus] = JsonDecoder[Boolean].mapOrFail { value =>
-      ProjectStatus.make(value).toEitherWith(e => e.head.getMessage)
-    }
-    implicit val encoder: JsonEncoder[ProjectStatus] =
-      JsonEncoder[Boolean].contramap((status: ProjectStatus) => status.value)
+    implicit val codec: JsonCodec[ProjectSelfJoin] =
+      JsonCodec[Boolean].transformOrFail(value => Right(ProjectSelfJoin.from(value)), _.value)
 
-    def make(value: Boolean): Validation[ValidationException, ProjectStatus] =
-      Validation.succeed(new ProjectStatus(value) {})
+    implicit val schema: Schema[ProjectSelfJoin] =
+      Schema.schemaForBoolean.map(b => Some(ProjectSelfJoin.from(b)))(_.value)
 
-    def make(value: Option[Boolean]): Validation[ValidationException, Option[ProjectStatus]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+    def from(value: Boolean): ProjectSelfJoin = if (value) CanJoin else CannotJoin
   }
+
 }

@@ -209,32 +209,27 @@ object KnoraProjectSpec extends ZIOSpecDefault {
 
   private val projectStatusTest = suite("ProjectStatus")(
     test("pass a valid object and successfully create value object") {
-      for {
-        status           <- ProjectStatus.make(true).toZIO
-        optionalStatus   <- ProjectStatus.make(Option(false)).toZIO
-        statusFromOption <- ZIO.fromOption(optionalStatus)
-      } yield assertTrue(status.value, !statusFromOption.value) &&
-        assert(optionalStatus)(isSome(isSubtype[ProjectStatus](Assertion.anything)))
-    },
-    test("successfully validate passing None") {
       assertTrue(
-        ProjectStatus.make(None) == Validation.succeed(None)
+        ProjectStatus.from(true) == ProjectStatus.Active,
+        ProjectStatus.from(false) == ProjectStatus.Inactive
       )
+    },
+    test("value should be the correct boolean") {
+      assertTrue(ProjectStatus.Active.value, !ProjectStatus.Inactive.value)
     }
   )
 
   private val projectSelfJoinTest = suite("ProjectSelfJoin")(
     test("pass a valid object and successfully create value object") {
-      for {
-        selfJoin           <- ProjectSelfJoin.make(true).toZIO
-        optionalSelfJoin   <- ProjectSelfJoin.make(Option(false)).toZIO
-        selfJoinFromOption <- ZIO.fromOption(optionalSelfJoin)
-      } yield assertTrue(selfJoin.value, !selfJoinFromOption.value) &&
-        assert(optionalSelfJoin)(isSome(isSubtype[ProjectSelfJoin](Assertion.anything)))
-    },
-    test("successfully validate passing None") {
       assertTrue(
-        ProjectSelfJoin.make(None) == Validation.succeed(None)
+        ProjectSelfJoin.from(true) == ProjectSelfJoin.CanJoin,
+        ProjectSelfJoin.from(false) == ProjectSelfJoin.CannotJoin
+      )
+    },
+    test("value should be the correct boolean") {
+      assertTrue(
+        ProjectSelfJoin.CanJoin.value,
+        !ProjectSelfJoin.CannotJoin.value
       )
     }
   )

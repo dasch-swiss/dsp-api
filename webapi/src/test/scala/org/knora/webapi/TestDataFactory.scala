@@ -27,8 +27,8 @@ object TestDataFactory {
     NonEmptyChunk(V2.StringLiteralV2("Some description", None)),
     List.empty,
     None,
-    true,
-    false,
+    ProjectStatus.Active,
+    ProjectSelfJoin.CannotJoin,
     List.empty
   )
 
@@ -61,16 +61,6 @@ object TestDataFactory {
     Logo
       .make(logo)
       .getOrElse(throw new IllegalArgumentException(s"Invalid Logo $logo."))
-
-  def projectStatus(status: Boolean): ProjectStatus =
-    ProjectStatus
-      .make(status)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectStatus $status."))
-
-  def projectSelfJoin(selfJoin: Boolean): ProjectSelfJoin =
-    ProjectSelfJoin
-      .make(selfJoin)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectSelfJoin $selfJoin."))
 
   def projectIri(iri: String): ProjectIri =
     ProjectIri

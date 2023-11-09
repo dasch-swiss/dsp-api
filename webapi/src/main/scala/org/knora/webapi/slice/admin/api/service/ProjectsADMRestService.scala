@@ -132,7 +132,7 @@ final case class ProjectsADMRestServiceLive(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def deleteProject(id: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM] = {
-    val updatePayload = ProjectUpdateRequest(status = Some(ProjectStatus.deleted))
+    val updatePayload = ProjectUpdateRequest(status = Some(ProjectStatus.Inactive))
     for {
       apiId    <- Random.nextUUID
       response <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)

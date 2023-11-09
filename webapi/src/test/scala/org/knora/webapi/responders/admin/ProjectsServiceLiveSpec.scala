@@ -22,6 +22,8 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectU
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Longname
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectSelfJoin
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
@@ -129,8 +131,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en")))),
       TestDataFactory.projectKeywords(Seq("test", "kewords")),
       None,
-      TestDataFactory.projectStatus(true),
-      TestDataFactory.projectSelfJoin(true)
+      ProjectStatus.Active,
+      ProjectSelfJoin.CanJoin
     )
 
     for {
@@ -150,7 +152,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
     val iri                  = "http://rdfh.ch/projects/0001"
     val projectIri           = TestDataFactory.projectIri(iri)
-    val projectStatus        = Some(TestDataFactory.projectStatus(false))
+    val projectStatus        = Some(ProjectStatus.Inactive)
     val projectUpdatePayload = ProjectUpdateRequest(status = projectStatus)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
@@ -174,8 +176,8 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
       Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
       Some(TestDataFactory.projectKeywords(Seq("updated", "kewords"))),
       Some(TestDataFactory.projectLogo("../updatedlogo.png")),
-      Some(TestDataFactory.projectStatus(true)),
-      Some(TestDataFactory.projectSelfJoin(true))
+      Some(ProjectStatus.Active),
+      Some(ProjectSelfJoin.CanJoin)
     )
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
