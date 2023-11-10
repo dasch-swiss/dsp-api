@@ -89,7 +89,8 @@ lazy val customScalacOptions = Seq(
   "-deprecation",
   "-Yresolve-term-conflict:package",
   "-Ymacro-annotations",
-  "-Wunused"
+  "-Wunused",
+  "-Xsource:3"
 )
 
 //////////////////////////////////////
