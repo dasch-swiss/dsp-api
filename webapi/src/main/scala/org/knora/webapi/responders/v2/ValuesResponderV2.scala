@@ -5,23 +5,21 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko
-import zio.Task
-import zio.ZIO
-import zio._
+import org.apache.pekko.http.scaladsl.util.FastFuture
+import zio.*
 import zio.macros.accessible
 
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -29,13 +27,13 @@ import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.PermissionUtilADM.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -47,8 +45,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.util.ZioHelper
-
-import pekko.http.scaladsl.util.FastFuture
 
 /**
  * Handles requests to read and write Knora values.
@@ -488,7 +484,7 @@ final case class ValuesResponderV2Live(
           case textValueContent: TextValueContentV2 =>
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
             val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
-              textValueContent.standoffLinkTagTargetResourceIris.map { (targetResourceIri: IRI) =>
+              textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri =>
                 incrementLinkValue(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
@@ -1017,13 +1013,13 @@ final case class ValuesResponderV2Live(
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
         currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
-        newPermissionsParsed <- ZIO.attempt(
-                                  PermissionUtilADM.parsePermissions(
-                                    updateValuePermissionsV2.permissions,
-                                    (permissionLiteral: String) =>
-                                      throw AssertionException(s"Invalid permission literal: $permissionLiteral")
-                                  )
-                                )
+        newPermissionsParsed <-
+          ZIO.attempt(
+            PermissionUtilADM.parsePermissions(
+              updateValuePermissionsV2.permissions,
+              (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral")
+            )
+          )
 
         _ <- ZIO.when(newPermissionsParsed == currentPermissionsParsed)(
                ZIO.fail(BadRequestException(s"The submitted permissions are the same as the current ones"))
@@ -1104,13 +1100,13 @@ final case class ValuesResponderV2Live(
         // Check that the user has permission to do the update. If they want to change the permissions
         // on the value, they need ChangeRightsPermission, otherwise they need ModifyPermission.
         currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
-        newPermissionsParsed <- ZIO.attempt(
-                                  PermissionUtilADM.parsePermissions(
-                                    newValueVersionPermissionLiteral,
-                                    (permissionLiteral: String) =>
-                                      throw AssertionException(s"Invalid permission literal: $permissionLiteral")
-                                  )
-                                )
+        newPermissionsParsed <-
+          ZIO.attempt(
+            PermissionUtilADM.parsePermissions(
+              newValueVersionPermissionLiteral,
+              (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral")
+            )
+          )
 
         permissionNeeded =
           if (newPermissionsParsed != currentPermissionsParsed) { ChangeRightsPermission }
