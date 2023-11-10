@@ -1,5 +1,30 @@
 # Changelog
 
+## [30.5.1](https://github.com/dasch-swiss/dsp-api/compare/v30.5.0...v30.5.1) (2023-11-09)
+
+
+### Maintenance
+
+* Bump sipi version ([#2913](https://github.com/dasch-swiss/dsp-api/issues/2913)) ([303ca0f](https://github.com/dasch-swiss/dsp-api/commit/303ca0f78dfdc1158e5980fc4ba09346f6e9e349))
+* Bump Sipi version to 3.8.3 ([#2917](https://github.com/dasch-swiss/dsp-api/issues/2917)) ([e4c587a](https://github.com/dasch-swiss/dsp-api/commit/e4c587a6ba453a8973b09fc9c208d2f16e538bab))
+* Group dependency updates ([#2906](https://github.com/dasch-swiss/dsp-api/issues/2906)) ([8b08c74](https://github.com/dasch-swiss/dsp-api/commit/8b08c741ee6503a21aaf88f12760ee01a6515c78))
+* Load ontologies when querying for KnoraProjects ([#2916](https://github.com/dasch-swiss/dsp-api/issues/2916)) ([21550ce](https://github.com/dasch-swiss/dsp-api/commit/21550ce88302ebbe7e718bf2fd79d23482d7a9ce))
+* Patch updates ([#2910](https://github.com/dasch-swiss/dsp-api/issues/2910)) ([3e95d71](https://github.com/dasch-swiss/dsp-api/commit/3e95d71c29467ebd3bc981ffaab9dcafb6875970))
+* **PRs:** Add 'perf' as allowed prefix for PR titles ([#2915](https://github.com/dasch-swiss/dsp-api/issues/2915)) ([8d08e35](https://github.com/dasch-swiss/dsp-api/commit/8d08e35edeb647ae8aea55900c602fe93cb19d4f))
+* **release-please:** Add missing PR title prefixes to the workflow ([#2918](https://github.com/dasch-swiss/dsp-api/issues/2918)) ([142fee0](https://github.com/dasch-swiss/dsp-api/commit/142fee02777bf8990a0ed92cfe2a681b23b231f6))
+* Remove GravsearchQueryOptimisationFeature and simplify ([#2909](https://github.com/dasch-swiss/dsp-api/issues/2909)) ([a91f6f6](https://github.com/dasch-swiss/dsp-api/commit/a91f6f669d2517cc2667f0c59aa88e01de00116c))
+* Replace MessageRelay with KnoraProjectRepo in OntologyResponderV2 ([#2920](https://github.com/dasch-swiss/dsp-api/issues/2920)) ([b093357](https://github.com/dasch-swiss/dsp-api/commit/b09335766c8d0d7da0e1524614d1755308cb574a))
+* **scala-steward:** Improve dependency grouping ([#2919](https://github.com/dasch-swiss/dsp-api/issues/2919)) ([dbda1cc](https://github.com/dasch-swiss/dsp-api/commit/dbda1ccc6839d5da4fb3b6978c4a125c11c26a88))
+* Update icu4j to v74.1 ([#2912](https://github.com/dasch-swiss/dsp-api/issues/2912)) ([77e144b](https://github.com/dasch-swiss/dsp-api/commit/77e144bda4150ac4c2e990255b054028f01036bb))
+* Update sbt-javaagent to v0.1.8 ([#2911](https://github.com/dasch-swiss/dsp-api/issues/2911)) ([e17cda2](https://github.com/dasch-swiss/dsp-api/commit/e17cda29d60acb536cc62429375f786379b530f9))
+* Update tapir to v1.8.4 ([#2922](https://github.com/dasch-swiss/dsp-api/issues/2922)) ([354662c](https://github.com/dasch-swiss/dsp-api/commit/354662c7fce0aea944412c0967b217bda4ddfb98))
+
+
+### Bug Fixes
+
+* Fix project name, description and keywords value objects (2892) ([#2908](https://github.com/dasch-swiss/dsp-api/issues/2908)) ([d1388bc](https://github.com/dasch-swiss/dsp-api/commit/d1388bce55523e6c4395d4c7f7d5f714ed256214))
+* **performance:** Reverse order of topological sorting in Gravsearch queries ([#2914](https://github.com/dasch-swiss/dsp-api/issues/2914)) ([d81a88e](https://github.com/dasch-swiss/dsp-api/commit/d81a88e5045437445365d9faefd9c65408ccc21b))
+
 ## [30.5.0](https://github.com/dasch-swiss/dsp-api/compare/v30.4.2...v30.5.0) (2023-10-27)
 
 
