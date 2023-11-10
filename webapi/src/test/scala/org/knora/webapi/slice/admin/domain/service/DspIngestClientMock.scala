@@ -11,13 +11,13 @@ import zio.ZIO
 import zio.ZLayer
 import zio.nio.file.Path
 
-import dsp.valueobjects.Project
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 object DspIngestClientMock {
   final case class MockDspIngestClient() extends DspIngestClient {
-    override def exportProject(shortcode: Project.Shortcode): ZIO[Scope, Throwable, Path] =
+    override def exportProject(shortcode: KnoraProject.Shortcode): ZIO[Scope, Throwable, Path] =
       ZIO.succeed(Path("/tmp/test.zip"))
-    override def importProject(shortcode: Project.Shortcode, fileToImport: Path): Task[Path] =
+    override def importProject(shortcode: KnoraProject.Shortcode, fileToImport: Path): Task[Path] =
       ZIO.succeed(Path("/tmp/test.zip"))
   }
   val layer = ZLayer.fromFunction(MockDspIngestClient.apply _)

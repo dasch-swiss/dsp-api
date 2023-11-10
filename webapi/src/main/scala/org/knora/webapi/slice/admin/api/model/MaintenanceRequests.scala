@@ -15,7 +15,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 import zio.json.interop.refined._
 
-import dsp.valueobjects.Project.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object MaintenanceRequests {
 

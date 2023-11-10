@@ -26,12 +26,12 @@ import zio.test.TestEnvironment
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.mockJwtServiceLayer
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.testPortLayer
@@ -40,7 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
   private val testShortCodeStr = "0001"
-  private val testProject      = Shortcode.make(testShortCodeStr).toOption.orNull
+  private val testProject      = Shortcode.unsafeFrom(testShortCodeStr)
   private val testContent      = "testContent".getBytes()
   private val expectedPath     = s"/projects/$testShortCodeStr/export"
   override def spec: Spec[TestEnvironment with Scope, Any] =

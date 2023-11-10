@@ -19,10 +19,10 @@ import java.net.Authenticator
 import java.net.PasswordAuthentication
 import java.net.http.HttpClient
 
-import dsp.valueobjects.Project
-import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 @accessible
 trait ProjectImportService {
@@ -32,7 +32,7 @@ trait ProjectImportService {
   def querySelect(queryString: String): ZIO[Scope, Throwable, ResultSet] = query(queryString)(_.execSelect())
 }
 
-final case class Asset(belongsToProject: Project.Shortcode, internalFilename: String)
+final case class Asset(belongsToProject: KnoraProject.Shortcode, internalFilename: String)
 object Asset {
   def logString(it: Asset) = s"Asset(code: ${it.belongsToProject.value}, path: ${it.internalFilename}"
 }

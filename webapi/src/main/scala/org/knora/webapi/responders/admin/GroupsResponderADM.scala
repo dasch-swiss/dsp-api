@@ -210,7 +210,7 @@ final case class GroupsResponderADMLive(
                     )
       name         <- getFirstValueOrFail[StringLiteralV2](GroupName).map(_.value)
       descriptions <- getOrFail[StringLiteralV2](GroupDescriptions)
-      status       <- getFirstValueOrFail[BooleanLiteralV2](Status).map(_.value)
+      status       <- getFirstValueOrFail[BooleanLiteralV2](StatusProp).map(_.value)
       selfjoin     <- getFirstValueOrFail[BooleanLiteralV2](HasSelfJoinEnabled).map(_.value)
     } yield GroupADM(groupIri.toString, name, descriptions, projectADM, status, selfjoin)
   }

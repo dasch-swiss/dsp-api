@@ -457,12 +457,14 @@ object OntologyConstants {
     val Password: IRI              = KnoraAdminPrefixExpansion + "password"
     val Address: IRI               = KnoraAdminPrefixExpansion + "address"
     val UsersActiveProject: IRI    = KnoraAdminPrefixExpansion + "currentproject"
-    val Status: IRI                = KnoraAdminPrefixExpansion + "status"
     val PreferredLanguage: IRI     = KnoraAdminPrefixExpansion + "preferredLanguage"
     val IsInProject: IRI           = KnoraAdminPrefixExpansion + "isInProject"
     val IsInProjectAdminGroup: IRI = KnoraAdminPrefixExpansion + "isInProjectAdminGroup"
     val IsInGroup: IRI             = KnoraAdminPrefixExpansion + "isInGroup"
     val IsInSystemAdminGroup: IRI  = KnoraAdminPrefixExpansion + "isInSystemAdminGroup"
+
+    /* Status used for User and Project*/
+    val StatusProp: IRI = KnoraAdminPrefixExpansion + "status"
 
     /* Project */
     val KnoraProject: IRI                   = KnoraAdminPrefixExpansion + "knoraProject"

@@ -9,7 +9,7 @@ import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 
 object ProjectsEndpointsRequests {
 
@@ -17,12 +17,12 @@ object ProjectsEndpointsRequests {
     id: Option[ProjectIri] = None,
     shortname: Shortname,
     shortcode: Shortcode,
-    longname: Option[Name] = None,
-    description: Description,
-    keywords: Keywords,
+    longname: Option[Longname] = None,
+    description: List[Description],
+    keywords: List[Keyword],
     logo: Option[Logo] = None,
-    status: ProjectStatus,
-    selfjoin: ProjectSelfJoin
+    status: Status,
+    selfjoin: SelfJoin
   )
   object ProjectCreateRequest {
     implicit val codec: JsonCodec[ProjectCreateRequest] = DeriveJsonCodec.gen[ProjectCreateRequest]
@@ -30,12 +30,12 @@ object ProjectsEndpointsRequests {
 
   final case class ProjectUpdateRequest(
     shortname: Option[Shortname] = None,
-    longname: Option[Name] = None,
-    description: Option[Description] = None,
-    keywords: Option[Keywords] = None,
+    longname: Option[Longname] = None,
+    description: Option[List[Description]] = None,
+    keywords: Option[List[Keyword]] = None,
     logo: Option[Logo] = None,
-    status: Option[ProjectStatus] = None,
-    selfjoin: Option[ProjectSelfJoin] = None
+    status: Option[Status] = None,
+    selfjoin: Option[SelfJoin] = None
   )
   object ProjectUpdateRequest {
     implicit val codec: JsonCodec[ProjectUpdateRequest] = DeriveJsonCodec.gen[ProjectUpdateRequest]

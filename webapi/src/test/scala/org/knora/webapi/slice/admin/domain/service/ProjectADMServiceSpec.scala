@@ -10,11 +10,10 @@ import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import dsp.valueobjects.Project.Shortcode
-import dsp.valueobjects.Project.Shortname
 import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
@@ -30,7 +29,7 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           shortname = shortname,
           shortcode = shortcode,
           longname = None,
-          description = List(StringLiteralV2("description not used in test but is required by constructor", None)),
+          description = List(StringLiteralV2("description not used in test", None)),
           keywords = List.empty,
           logo = None,
           ontologies = List.empty,
@@ -49,12 +48,11 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
           shortname = Shortname.unsafeFrom(shortname),
           shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,
-          description =
-            NonEmptyChunk(StringLiteralV2("description not used in test but is required by constructor", None)),
+          description = NonEmptyChunk(Description.unsafeFrom(StringLiteralV2("description not used in test", None))),
           keywords = List.empty,
           logo = None,
-          status = true,
-          selfjoin = true,
+          status = Status.Active,
+          selfjoin = SelfJoin.CanJoin,
           List.empty
         )
         assertTrue(

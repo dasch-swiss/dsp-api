@@ -9,7 +9,8 @@
  */
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.ImplicitSender
 
 import java.util.UUID
 
@@ -17,7 +18,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
@@ -28,10 +28,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.util.MutableTestIri
-
-import pekko.actor.Status.Failure
-import pekko.testkit.ImplicitSender
 
 /**
  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
@@ -49,7 +47,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
         assert(received.projects.contains(SharedTestDataADM.imagesProject))
         assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
-        assert(!received.projects.contains(SharedTestDataADM.systemProjectIri))
+        assert(!received.projects.map(_.id).contains(SharedTestDataADM.systemProjectIri))
         assert(!received.projects.contains(SharedTestDataADM.defaultSharedOntologiesProject))
       }
 
@@ -167,16 +165,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val shortcode = "111c"
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make(shortcode).fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            shortname = Shortname.unsafeFrom("newproject"),
+            shortcode = Shortcode.unsafeFrom(shortcode),
+            longname = Some(Longname.unsafeFrom("project longname")),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "project description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -262,16 +259,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
-            longname = Some(Name.make("project longname").fold(error => throw error.head, value => value)),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            shortname = Shortname.unsafeFrom("newproject2"),
+            shortcode = Shortcode.unsafeFrom("1112"),
+            longname = Some(Longname.unsafeFrom("project longname")),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "project description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -294,16 +290,16 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("project_with_char").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            shortname = Shortname.unsafeFrom("project_with_char"),
+            shortcode = Shortcode.unsafeFrom("1312"),
+            longname = Some(Longname.unsafeFrom(longnameWithSpecialCharacter)),
+            description = List(
+              Description.unsafeFrom(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en")))
+            ),
+            keywords = List(keywordWithSpecialCharacter).map(Keyword.unsafeFrom),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -326,16 +322,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            shortname = Shortname.unsafeFrom("newproject"),
+            shortcode = Shortcode.unsafeFrom("111C"),
+            longname = Some(Longname.unsafeFrom("project longname")),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -346,16 +341,15 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreateRequest(
-            shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
-            shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
-              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
-              .fold(error => throw error.head, value => value),
-            keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
-            logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
-            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
+            shortname = Shortname.unsafeFrom("newproject3"),
+            shortcode = Shortcode.unsafeFrom("111C"),
+            longname = Some(Longname.unsafeFrom("project longname")),
+            description =
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+            keywords = List("keywords").map(Keyword.unsafeFrom),
+            logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
+            status = Status.Active,
+            selfjoin = SelfJoin.CannotJoin
           ),
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -365,14 +359,16 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "UPDATE a project" in {
         val iri             = ITTestDataFactory.projectIri(newProjectIri.get)
-        val updatedLongname = ITTestDataFactory.projectName("updated project longname")
-        val updatedDescription = ITTestDataFactory.projectDescription(
-          Seq(V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en")))
+        val updatedLongname = Longname.unsafeFrom("updated project longname")
+        val updatedDescription = List(
+          Description.unsafeFrom(
+            V2.StringLiteralV2("""updated project description with "quotes" and <html tags>""", Some("en"))
+          )
         )
-        val updatedKeywords = ITTestDataFactory.projectKeywords(Seq("updated", "keywords"))
-        val updatedLogo     = ITTestDataFactory.projectLogo("/fu/bar/baz-updated.jpg")
-        val projectStatus   = ITTestDataFactory.projectStatus(true)
-        val selfJoin        = ITTestDataFactory.projectSelfJoin(true)
+        val updatedKeywords = List("updated", "keywords").map(Keyword.unsafeFrom)
+        val updatedLogo     = Logo.unsafeFrom("/fu/bar/baz-updated.jpg")
+        val projectStatus   = Status.Active
+        val selfJoin        = SelfJoin.CanJoin
 
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
@@ -407,7 +403,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        val longname = ITTestDataFactory.projectName("longname")
+        val longname = Longname.unsafeFrom("longname")
         val iri      = ITTestDataFactory.projectIri(notExistingProjectButValidProjectIri)
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
@@ -418,7 +414,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             NotFoundException(
-              s"Project '${notExistingProjectButValidProjectIri}' not found. Aborting update request."
+              s"Project '$notExistingProjectButValidProjectIri' not found. Aborting update request."
             )
           )
         )

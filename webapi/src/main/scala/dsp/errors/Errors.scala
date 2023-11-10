@@ -199,7 +199,6 @@ case class InvalidRdfException(msg: String, cause: Throwable = null) extends Req
  * An exception indication that the validation of one or more values submitted to the API v2 failed.
  *
  * @param msg   a description of the error.
- * @param cause the cause for the error
  */
 case class ValidationException(msg: String) extends RequestRejectedException(msg)
 

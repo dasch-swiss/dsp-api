@@ -11,8 +11,6 @@ import zio.macros.accessible
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
-import dsp.valueobjects.Project.ProjectStatus
-import dsp.valueobjects.Project.Shortcode
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -24,6 +22,8 @@ import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
@@ -132,7 +132,7 @@ final case class ProjectsADMRestServiceLive(
    *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
   def deleteProject(id: IriIdentifier, user: UserADM): Task[ProjectOperationResponseADM] = {
-    val updatePayload = ProjectUpdateRequest(status = Some(ProjectStatus.deleted))
+    val updatePayload = ProjectUpdateRequest(status = Some(Status.Inactive))
     for {
       apiId    <- Random.nextUUID
       response <- responder.changeBasicInformationRequestADM(id.value, updatePayload, user, apiId)
@@ -271,7 +271,7 @@ final case class ProjectsADMRestServiceLive(
   } yield ()
 
   private def convertStringToShortcodeId(shortcodeStr: String): IO[BadRequestException, ShortcodeIdentifier] =
-    Shortcode.make(shortcodeStr).toZIO.mapBoth(err => BadRequestException(err.msg), ShortcodeIdentifier.from)
+    Shortcode.from(shortcodeStr).toZIO.mapBoth(err => BadRequestException(err.msg), ShortcodeIdentifier.from)
 
   override def importProject(
     shortcodeStr: String,

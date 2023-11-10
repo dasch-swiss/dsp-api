@@ -6,8 +6,6 @@
 package org.knora.webapi
 
 import dsp.valueobjects.Iri._
-import dsp.valueobjects.Project._
-import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 
 /**
@@ -28,46 +26,6 @@ object ITTestDataFactory {
     IriIdentifier
       .fromString(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
-
-  def projectShortcode(shortcode: String): Shortcode =
-    Shortcode
-      .make(shortcode)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Shortcode $shortcode."))
-
-  def projectShortname(shortname: String): Shortname =
-    Shortname
-      .make(shortname)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Shortname $shortname."))
-
-  def projectName(name: String): Name =
-    Name
-      .make(name)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Name $name."))
-
-  def projectDescription(description: Seq[V2.StringLiteralV2]): Description =
-    Description
-      .make(description)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectDescription $description."))
-
-  def projectKeywords(keywords: Seq[String]): Keywords =
-    Keywords
-      .make(keywords)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Keywords $keywords."))
-
-  def projectLogo(logo: String): Logo =
-    Logo
-      .make(logo)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid Logo $logo."))
-
-  def projectStatus(status: Boolean): ProjectStatus =
-    ProjectStatus
-      .make(status)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectStatus $status."))
-
-  def projectSelfJoin(selfJoin: Boolean): ProjectSelfJoin =
-    ProjectSelfJoin
-      .make(selfJoin)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectSelfJoin $selfJoin."))
 
   def projectIri(iri: String): ProjectIri =
     ProjectIri

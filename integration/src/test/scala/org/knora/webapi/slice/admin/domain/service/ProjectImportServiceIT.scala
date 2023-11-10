@@ -11,9 +11,9 @@ import zio.test._
 
 import java.io.IOException
 
-import dsp.valueobjects.Project.Shortcode
 import org.knora.webapi.config.Fuseki
 import org.knora.webapi.config.Triplestore
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ProjectImportServiceIT extends ZIOSpecDefault {

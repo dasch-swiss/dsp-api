@@ -528,8 +528,8 @@ final case class ProjectsResponderADMLive(
                         projectIri = projectIri.value,
                         maybeShortname = projectUpdatePayload.shortname.map(_.value),
                         maybeLongname = projectUpdatePayload.longname.map(_.value),
-                        maybeDescriptions = projectUpdatePayload.description.map(_.value),
-                        maybeKeywords = projectUpdatePayload.keywords.map(_.value),
+                        maybeDescriptions = projectUpdatePayload.description.map(_.map(_.value)),
+                        maybeKeywords = projectUpdatePayload.keywords.map(_.map(_.value)),
                         maybeLogo = projectUpdatePayload.logo.map(_.value),
                         maybeStatus = projectUpdatePayload.status.map(_.value),
                         maybeSelfjoin = projectUpdatePayload.selfjoin.map(_.value)
@@ -592,7 +592,7 @@ final case class ProjectsResponderADMLive(
 
     if (projectUpdatePayload.description.nonEmpty) {
       projectUpdatePayload.description
-        .map(_.value)
+        .map(_.map(_.value))
         .map(_.map(d => V2.StringLiteralV2(Iri.fromSparqlEncodedString(d.value), d.language)))
         .filter(updatedProject.description.diff(_).isEmpty)
         .getOrElse(
@@ -604,7 +604,7 @@ final case class ProjectsResponderADMLive(
 
     if (projectUpdatePayload.keywords.nonEmpty) {
       projectUpdatePayload.keywords
-        .map(_.value)
+        .map(_.map(_.value))
         .map(_.map(key => Iri.fromSparqlEncodedString(key)))
         .filter(_.sorted == updatedProject.keywords.sorted)
         .getOrElse(
@@ -780,6 +780,8 @@ final case class ProjectsResponderADMLive(
         newProjectIRI                     <- iriService.checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri)
         maybeLongname                      = createProjectRequest.longname.map(_.value)
         maybeLogo                          = createProjectRequest.logo.map(_.value)
+        descriptions                       = createProjectRequest.description.map(_.value)
+        _                                 <- ZIO.fail(BadRequestException("Project description is required.")).when(descriptions.isEmpty)
 
         createNewProjectSparql = sparql.admin.txt
                                    .createNewProject(
@@ -789,11 +791,9 @@ final case class ProjectsResponderADMLive(
                                      shortname = createProjectRequest.shortname.value,
                                      shortcode = createProjectRequest.shortcode.value,
                                      maybeLongname = maybeLongname,
-                                     maybeDescriptions = if (createProjectRequest.description.value.nonEmpty) {
-                                       Some(createProjectRequest.description.value)
-                                     } else None,
-                                     maybeKeywords = if (createProjectRequest.keywords.value.nonEmpty) {
-                                       Some(createProjectRequest.keywords.value)
+                                     descriptions = descriptions,
+                                     maybeKeywords = if (createProjectRequest.keywords.nonEmpty) {
+                                       Some(createProjectRequest.keywords.map(_.value))
                                      } else None,
                                      maybeLogo = maybeLogo,
                                      status = createProjectRequest.status.value,

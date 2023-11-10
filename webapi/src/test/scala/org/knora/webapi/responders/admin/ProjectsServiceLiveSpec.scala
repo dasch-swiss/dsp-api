@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectC
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.domain.model.KnoraProject._
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
 import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
@@ -120,14 +121,14 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val createProjectSpec: Spec[Any, Throwable] = test("create a project") {
     val payload = ProjectCreateRequest(
       None,
-      TestDataFactory.projectShortname("newproject"),
-      TestDataFactory.projectShortcode("3333"),
-      Some(TestDataFactory.projectName("project longname")),
-      TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en")))),
-      TestDataFactory.projectKeywords(Seq("test", "kewords")),
+      Shortname.unsafeFrom("newproject"),
+      Shortcode.unsafeFrom("3333"),
+      Some(Longname.unsafeFrom("project longname")),
+      List(Description.unsafeFrom(StringLiteralV2("updated project description", Some("en")))),
+      List("test", "kewords").map(Keyword.unsafeFrom),
       None,
-      TestDataFactory.projectStatus(true),
-      TestDataFactory.projectSelfJoin(true)
+      Status.Active,
+      SelfJoin.CanJoin
     )
 
     for {
@@ -147,7 +148,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
     val iri                  = "http://rdfh.ch/projects/0001"
     val projectIri           = TestDataFactory.projectIri(iri)
-    val projectStatus        = Some(TestDataFactory.projectStatus(false))
+    val projectStatus        = Some(Status.Inactive)
     val projectUpdatePayload = ProjectUpdateRequest(status = projectStatus)
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
@@ -166,13 +167,13 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
     val iri        = "http://rdfh.ch/projects/0001"
     val projectIri = TestDataFactory.projectIri(iri)
     val projectUpdatePayload = ProjectUpdateRequest(
-      Some(TestDataFactory.projectShortname("usn")),
-      Some(TestDataFactory.projectName("updated project longname")),
-      Some(TestDataFactory.projectDescription(Seq(StringLiteralV2("updated project description", Some("en"))))),
-      Some(TestDataFactory.projectKeywords(Seq("updated", "kewords"))),
-      Some(TestDataFactory.projectLogo("../updatedlogo.png")),
-      Some(TestDataFactory.projectStatus(true)),
-      Some(TestDataFactory.projectSelfJoin(true))
+      Some(Shortname.unsafeFrom("usn")),
+      Some(Longname.unsafeFrom("updated project longname")),
+      Some(List(Description.unsafeFrom(StringLiteralV2("updated project description", Some("en"))))),
+      Some(List("updated", "kewords").map(Keyword.unsafeFrom)),
+      Some(Logo.unsafeFrom("../updatedlogo.png")),
+      Some(Status.Active),
+      Some(SelfJoin.CanJoin)
     )
     for {
       uuid <- ZIO.random.flatMap(_.nextUUID)
