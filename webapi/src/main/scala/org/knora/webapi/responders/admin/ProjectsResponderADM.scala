@@ -781,7 +781,7 @@ final case class ProjectsResponderADMLive(
         maybeLongname                      = createProjectRequest.longname.map(_.value)
         maybeLogo                          = createProjectRequest.logo.map(_.value)
         descriptions                       = createProjectRequest.description.map(_.value)
-        _                                 <- ZIO.fail(BadRequestException("Project's shortcode is invalid.")).when(descriptions.isEmpty)
+        _                                 <- ZIO.fail(BadRequestException("Project description is required.")).when(descriptions.isEmpty)
 
         createNewProjectSparql = sparql.admin.txt
                                    .createNewProject(
