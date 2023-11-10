@@ -46,7 +46,7 @@ final case class AuthenticationRouteV2()(
            * the authorization header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
            */
           entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
-            val task = ZIO.serviceWithZIO[StringFormatter] { sf: StringFormatter =>
+            val task = ZIO.serviceWithZIO[StringFormatter] { sf =>
               val userId      = UserIdentifierADM(apiRequest.iri, apiRequest.email, apiRequest.username)(sf)
               val credentials = KnoraPasswordCredentialsV2(userId, apiRequest.password)
               Authenticator.doLoginV2(credentials)
@@ -65,7 +65,7 @@ final case class AuthenticationRouteV2()(
             formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
               {
                 val task =
-                  ZIO.serviceWithZIO[StringFormatter] { sf: StringFormatter =>
+                  ZIO.serviceWithZIO[StringFormatter] { sf =>
                     val userId      = UserIdentifierADM(maybeUsername = Some(username))(sf)
                     val credentials = KnoraPasswordCredentialsV2(userId, password)
                     Authenticator.doLoginV2(credentials)

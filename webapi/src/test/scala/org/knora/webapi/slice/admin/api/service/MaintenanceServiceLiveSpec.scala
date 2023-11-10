@@ -5,16 +5,17 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import eu.timepit.refined.auto._
+import eu.timepit.refined.auto.*
 import zio.Chunk
 import zio.ZIO
+import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertCompletes
 import zio.test.assertTrue
 
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.MaintenanceServiceLive
@@ -74,7 +75,7 @@ object MaintenanceServiceLiveSpec extends ZIOSpecDefault {
     dim    <- ZIO.fromEither(Dimensions.from(width, height))
   } yield dim
 
-  val spec = suite("MaintenanceServiceLive")(
+  val spec: Spec[Any, Any] = suite("MaintenanceServiceLive")(
     test("fixTopLeftDimensions should not fail for an empty report") {
       createProject *>
         saveStillImageFileValueWithDimensions(width = expectedDimension.height, height = expectedDimension.width) *>

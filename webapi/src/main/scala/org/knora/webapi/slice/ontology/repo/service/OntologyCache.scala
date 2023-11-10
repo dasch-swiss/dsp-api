@@ -6,17 +6,17 @@
 package org.knora.webapi.slice.ontology.repo.service
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import java.time.Instant
 
-import dsp.errors._
+import dsp.errors.*
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.OntologySchema
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -25,8 +25,8 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.OntologyUtil
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
@@ -159,9 +159,7 @@ object OntologyCache {
         checkOntologyReferencesInPropertyDef(
           ontologyCacheData = ontologyCacheData,
           propertyDef = propertyInfo.entityInfoContent,
-          errorFun = { msg: String =>
-            throw InconsistentRepositoryDataException(msg)
-          }
+          errorFun = { (msg: String) => throw InconsistentRepositoryDataException(msg) }
         )
       }
 
@@ -169,9 +167,7 @@ object OntologyCache {
         checkOntologyReferencesInClassDef(
           cache = ontologyCacheData,
           classDef = classInfo.entityInfoContent,
-          errorFun = { msg: String =>
-            throw InconsistentRepositoryDataException(msg)
-          }
+          errorFun = { (msg: String) => throw InconsistentRepositoryDataException(msg) }
         )
       }
     }
@@ -185,7 +181,7 @@ object OntologyCache {
   def make(ontologies: Map[SmartIri, ReadOntologyV2])(implicit stringFormatter: StringFormatter): OntologyCacheData = {
     // A map of ontology IRIs to class IRIs in each ontology.
     val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map { case (iri, ontology) =>
-      val classIris = ontology.classes.values.map { classInfo: ReadClassInfoV2 =>
+      val classIris = ontology.classes.values.map { (classInfo: ReadClassInfoV2) =>
         classInfo.entityInfoContent.classIri
       }.toSet
       iri -> classIris
@@ -193,7 +189,7 @@ object OntologyCache {
 
     // A map of ontology IRIs to property IRIs in each ontology.
     val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map { case (iri, ontology) =>
-      val propertyIris = ontology.properties.values.map { propertyInfo: ReadPropertyInfoV2 =>
+      val propertyIris = ontology.properties.values.map { (propertyInfo: ReadPropertyInfoV2) =>
         propertyInfo.entityInfoContent.propertyIri
       }.toSet
       iri -> propertyIris
@@ -841,7 +837,7 @@ final case class OntologyCacheLive(
             constraintValueToBeChecked = subjectClassConstraint,
             allSuperPropertyIris = allSuperPropertyIris,
             errorSchema = InternalSchema,
-            errorFun = { msg: String =>
+            errorFun = { (msg: String) =>
               throw InconsistentRepositoryDataException(msg)
             }
           )
@@ -875,7 +871,7 @@ final case class OntologyCacheLive(
             constraintValueToBeChecked = objectClassConstraint,
             allSuperPropertyIris = allSuperPropertyIris,
             errorSchema = InternalSchema,
-            errorFun = { msg: String =>
+            errorFun = { (msg: String) =>
               throw InconsistentRepositoryDataException(msg)
             }
           )
@@ -964,7 +960,7 @@ final case class OntologyCacheLive(
           inheritableCardinalities = inheritableCardinalities,
           allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
           errorSchema = ApiV2Complex,
-          errorFun = { msg: String =>
+          errorFun = { (msg: String) =>
             throw BadRequestException(msg)
           }
         )

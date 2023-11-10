@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api.service
 
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import java.time.Instant
@@ -14,7 +14,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams._
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.*
 import org.knora.webapi.slice.resourceinfo.api.model.ResourceInfoDto
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.resourceinfo.domain.ResourceInfoRepo
@@ -69,7 +69,7 @@ final case class RestResourceInfoServiceLive(repo: ResourceInfoRepo, iriConverte
       rc <- iriConverter
               .asInternalIri(resourceClass)
               .mapError(err => BadRequestException(s"Invalid resourceClass: ${err.getMessage}"))
-      resources <- repo.findByProjectAndResourceClass(projectIri, rc).map(_.map(ResourceInfoDto(_)))
+      resources <- repo.findByProjectAndResourceClass(projectIri, rc).map(_.map(ResourceInfoDto.from))
     } yield ListResponseDto(sort(resources, order, orderBy))
 }
 

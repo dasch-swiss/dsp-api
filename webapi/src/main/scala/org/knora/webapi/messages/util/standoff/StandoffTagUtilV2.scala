@@ -348,7 +348,7 @@ object StandoffTagUtilV2 {
         .filterNot(attr =>
           (xmlToStandoffMapping.dataType.nonEmpty && xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute == attr.key) || attr.key == classAttribute
         )
-        .map { attr: StandoffTagAttribute =>
+        .map { (attr: StandoffTagAttribute) =>
           // get the standoff property IRI for this XML attribute
 
           val xmlNamespace = attr.xmlNamespace match {
@@ -625,7 +625,7 @@ object StandoffTagUtilV2 {
 
     }
 
-    textWithStandoff.standoff.map { standoffNodeFromXML: StandoffTag =>
+    textWithStandoff.standoff.map { (standoffNodeFromXML: StandoffTag) =>
       val xmlNamespace = standoffNodeFromXML.xmlNamespace match {
         case None            => noNamespace
         case Some(namespace) => namespace
@@ -1291,7 +1291,7 @@ object StandoffTagUtilV2 {
 
     val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
-    val standoffTags: Seq[StandoffTag] = standoff.map { standoffTagV2: StandoffTagV2 =>
+    val standoffTags: Seq[StandoffTag] = standoff.map { (standoffTagV2: StandoffTagV2) =>
       val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(
         standoffTagV2.standoffTagClassIri.toString,
         throw NotFoundException(s"standoff class IRI ${standoffTagV2.standoffTagClassIri} not found in mapping")

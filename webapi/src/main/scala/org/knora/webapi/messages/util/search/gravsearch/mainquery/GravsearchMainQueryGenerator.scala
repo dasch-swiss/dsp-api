@@ -121,7 +121,7 @@ object GravsearchMainQueryGenerator {
 
         // get the Iris of all the dependent resources for the given main resource
         val dependentResIris: Set[IRI] = dependentResourceVariablesGroupConcat.flatMap {
-          dependentResVar: QueryVariable =>
+          (dependentResVar: QueryVariable) =>
             // check if key exists: the variable representing dependent resources
             // could be contained in an OPTIONAL or a UNION and be unbound
             // It would be suppressed by `VariableResultsRow` in that case.
@@ -179,7 +179,7 @@ object GravsearchMainQueryGenerator {
 
           // the the variables representing value objects and their Iris
           val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
-            valueObjVarConcat: QueryVariable =>
+            (valueObjVarConcat: QueryVariable) =>
               // check if key exists: the variable representing value objects
               // could be contained in an OPTIONAL or a UNION and be unbound
               // It would be suppressed by `VariableResultsRow` in that case.
@@ -203,7 +203,7 @@ object GravsearchMainQueryGenerator {
 
           val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(
             valueObjVarToIris,
-            { key: QueryVariable =>
+            { (key: QueryVariable) =>
               throw GravsearchException(s"variable not found: $key")
             }
           )

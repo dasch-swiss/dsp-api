@@ -24,7 +24,7 @@ import dsp.errors.InconsistentRepositoryDataException
 class ErrorHandlingMap[A, B](
   toWrap: Map[A, B],
   private val errorTemplateFun: A => String,
-  private val errorFun: String => B = { errorMessage: String =>
+  private val errorFun: String => B = { (errorMessage: String) =>
     throw InconsistentRepositoryDataException(errorMessage)
   }
 ) extends Map[A, B] {

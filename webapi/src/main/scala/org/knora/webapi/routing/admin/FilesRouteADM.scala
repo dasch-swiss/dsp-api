@@ -36,7 +36,7 @@ final case class FilesRouteADM(
    * Returns the route.
    */
   override def makeRoute: Route =
-    path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
+    path("admin" / "files" / Segments(2)) { (projectIDAndFile: Seq[String]) =>
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- Authenticator.getUserADM(requestContext)

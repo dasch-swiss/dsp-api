@@ -251,7 +251,7 @@ private object ReorderPatternsByDependency {
       }.toSet
 
       // Filter out the topological orders that end with any of those nodes.
-      orders.filterNot { order: Vector[NodeT] =>
+      orders.filterNot { (order: Vector[NodeT]) =>
         nodesThatAreObjectsOfRdfType.contains(order.last.value)
       }
     }

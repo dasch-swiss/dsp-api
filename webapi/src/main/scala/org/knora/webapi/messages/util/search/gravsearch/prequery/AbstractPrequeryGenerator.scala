@@ -1776,7 +1776,7 @@ abstract class AbstractPrequeryGenerator(
     // standoff tag contains the term:
     // FILTER REGEX(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start), 'term', "i")
     // TODO: handle the differences between regex syntax and Lucene syntax.
-    val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map { term: String =>
+    val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map { (term: String) =>
       FilterPattern(
         expression = RegexFunction(
           textExpr = SubStrFunction(

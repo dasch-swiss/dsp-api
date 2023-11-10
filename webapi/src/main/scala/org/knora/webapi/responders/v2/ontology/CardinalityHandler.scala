@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import zio._
+import zio.*
 
 import java.time.Instant
 
@@ -13,13 +13,13 @@ import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -174,9 +174,7 @@ final case class CardinalityHandlerLive(
       _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
-            errorFun = { msg: String =>
-              throw BadRequestException(msg)
-            }
+            errorFun = { (msg: String) => throw BadRequestException(msg) }
           )
 
       // response is true only when property is not used in data and cardinality is defined directly on that class
@@ -323,9 +321,7 @@ final case class CardinalityHandlerLive(
       _ = OntologyCache.checkOntologyReferencesInClassDef(
             cache = cacheData,
             classDef = newInternalClassDefWithLinkValueProps,
-            errorFun = { msg: String =>
-              throw BadRequestException(msg)
-            }
+            errorFun = { (msg: String) => throw BadRequestException(msg) }
           )
 
       // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there

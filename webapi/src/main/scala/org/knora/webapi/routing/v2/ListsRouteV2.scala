@@ -29,7 +29,7 @@ final case class ListsRouteV2()(
 
   def makeRoute: Route = getList() ~ getNode()
 
-  private def getList(): Route = path("v2" / "lists" / Segment) { lIri: String =>
+  private def getList(): Route = path("v2" / "lists" / Segment) { (lIri: String) =>
     get {
       /* return a list (a graph with all list nodes) */
       requestContext =>
@@ -41,7 +41,7 @@ final case class ListsRouteV2()(
     }
   }
 
-  private def getNode(): Route = path("v2" / "node" / Segment) { nIri: String =>
+  private def getNode(): Route = path("v2" / "node" / Segment) { (nIri: String) =>
     get {
       /* return a list node */
       requestContext =>

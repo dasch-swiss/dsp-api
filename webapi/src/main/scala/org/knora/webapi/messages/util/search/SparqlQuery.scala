@@ -446,8 +446,8 @@ case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends Q
  */
 case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
   override def toSparql: String = {
-    val blocksAsStrings = blocks.map { block: Seq[QueryPattern] =>
-      val queryPatternStrings: Seq[String] = block.map { queryPattern: QueryPattern =>
+    val blocksAsStrings = blocks.map { (block: Seq[QueryPattern]) =>
+      val queryPatternStrings: Seq[String] = block.map { (queryPattern: QueryPattern) =>
         queryPattern.toSparql
       }
 
@@ -465,7 +465,7 @@ case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
  */
 case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
   override def toSparql: String = {
-    val queryPatternStrings: Seq[String] = patterns.map { queryPattern: QueryPattern =>
+    val queryPatternStrings: Seq[String] = patterns.map { (queryPattern: QueryPattern) =>
       queryPattern.toSparql
     }
 

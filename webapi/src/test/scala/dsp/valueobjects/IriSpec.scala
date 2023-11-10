@@ -6,13 +6,13 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test.Assertion._
-import zio.test._
+import zio.test.Assertion.*
+import zio.test.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.UuidUtil._
+import dsp.valueobjects.Iri.*
+import dsp.valueobjects.UuidUtil.*
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
@@ -43,34 +43,26 @@ object IriSpec extends ZIOSpecDefault {
   val uuidVersion3  = fromIri(userIriWithUUIDVersion3)
   val supportedUuid = fromIri(validUserIri)
 
-  def spec = (groupIriTest + listIriTest + projectIriTest + uuidTest + roleIriTest + userIriTest)
+  def spec: Spec[Any, Throwable] = groupIriTest + listIriTest + projectIriTest + uuidTest + roleIriTest + userIriTest
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {
-      assertTrue(GroupIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))) &&
       assertTrue(
+        GroupIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing)),
         GroupIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        GroupIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.GroupIriInvalid)
-        )
-      ) &&
-      assertTrue(
-        GroupIri.make(Some(invalidIri)) == Validation.fail(
-          BadRequestException(IriErrorMessages.GroupIriInvalid)
-        )
+        GroupIri.make(invalidIri) == Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid)),
+        GroupIri.make(Some(invalidIri)) == Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
       )
     },
     test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
         GroupIri.make(groupIriWithUUIDVersion3) == Validation.fail(
           BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        )
-      ) &&
-      assertTrue(
+        ),
         GroupIri.make(Some(groupIriWithUUIDVersion3)) == Validation.fail(
           BadRequestException(IriErrorMessages.UuidVersionInvalid)
         )

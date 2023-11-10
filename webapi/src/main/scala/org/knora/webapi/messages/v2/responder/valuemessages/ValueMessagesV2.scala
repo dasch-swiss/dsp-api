@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
@@ -16,14 +16,14 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex._
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -33,14 +33,14 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
-import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -1479,7 +1479,7 @@ case class TextValueContentV2(
       // create an IRI for each standoff tag
       // internal references to XML ids are not resolved yet
       val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = standoff.map {
-        standoffNode: StandoffTagV2 =>
+        (standoffNode: StandoffTagV2) =>
           CreateStandoffTagV2InTriplestore(
             standoffNode = standoffNode,
             standoffTagInstanceIri = StandoffStringUtil.makeRandomStandoffTagIri(
@@ -1492,10 +1492,10 @@ case class TextValueContentV2(
       // collect all the standoff tags that contain XML ids and
       // map the XML ids to standoff node Iris
       val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
-        standoffTag: CreateStandoffTagV2InTriplestore =>
+        (standoffTag: CreateStandoffTagV2InTriplestore) =>
           // filter those tags out that have an XML id
           standoffTag.standoffNode.originalXMLID.isDefined
-      }.map { standoffTagWithID: CreateStandoffTagV2InTriplestore =>
+      }.map { (standoffTagWithID: CreateStandoffTagV2InTriplestore) =>
         // return the XML id as a key and the standoff IRI as the value
         standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
       }.toMap
@@ -1509,7 +1509,7 @@ case class TextValueContentV2(
 
       // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
       val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
-        standoffTag: CreateStandoffTagV2InTriplestore =>
+        (standoffTag: CreateStandoffTagV2InTriplestore) =>
           // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
           val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] =
             standoffTag.standoffNode.attributes.map {

@@ -321,7 +321,7 @@ class XMLToStandoffUtil(
 
   private val xmlNamespaces2Prefixes = new ErrorHandlingMap(
     xmlNamespaces.map(_.swap),
-    { key: String =>
+    { (key: String) =>
       s"No prefix defined for XML namespace $key"
     }
   )

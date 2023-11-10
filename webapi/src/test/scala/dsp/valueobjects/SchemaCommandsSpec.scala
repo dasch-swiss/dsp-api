@@ -5,16 +5,12 @@
 
 package dsp.valueobjects
 
-import zio.test.Assertion._
-import zio.test._
+import zio.test.Assertion.*
+import zio.test.*
 
 import java.time.Instant
-import scala.collection.immutable.List
 
 import dsp.constants.SalsahGui
-import dsp.valueobjects.LangString
-import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.Schema
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
@@ -23,18 +19,18 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
  */
 object SchemaCommandsSpec extends ZIOSpecDefault {
 
-  def spec = (createPropertyCommandTest).provide(IriConverter.layer, StringFormatter.test)
+  def spec: Spec[Any, Any] =
+    createPropertyCommandTest.provide(IriConverter.layer, StringFormatter.test)
 
   private val createPropertyCommandTest = suite("CreatePropertyCommand")(
     test("create a createPropertyCommand") {
       val lastModificationDate = Instant.now()
       val subjectType          = None
       (for {
-        ontologyIri <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything")
-        propertyIri <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someProperty")
-        objectType  <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#SomeClass")
-        superProperties <-
-          IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someSuperCoolProperty").map(List(_))
+        ontologyIri       <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything")
+        propertyIri       <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someProperty")
+        objectType        <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#SomeClass")
+        superProperty     <- IriConverter.asSmartIri("http://www.knora.org/ontology/0001/anything#someSuperCoolProperty")
         label             <- LangString.make(LanguageCode.en, "some label").toZIO
         commentLangString <- LangString.make(LanguageCode.en, "some comment").toZIO
         comment            = Some(commentLangString)
@@ -50,7 +46,7 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
             objectType = objectType,
             label = label,
             comment = comment,
-            superProperties = superProperties,
+            superProperties = scala.collection.immutable.List(superProperty),
             guiObject = guiObject
           )
       } yield assert(command.toEither)(isRight))

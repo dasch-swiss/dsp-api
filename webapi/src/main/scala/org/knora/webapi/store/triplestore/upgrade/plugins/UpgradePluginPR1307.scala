@@ -192,7 +192,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
       }
 
       // Make a map of standoff IRIs to StandoffRdf objects.
-      val standoff: Map[IriNode, StandoffRdf] = standoffSubjects.map { standoffSubj: IriNode =>
+      val standoff: Map[IriNode, StandoffRdf] = standoffSubjects.map { (standoffSubj: IriNode) =>
         standoffSubj -> StandoffRdf(
           oldIri = standoffSubj,
           statements = model

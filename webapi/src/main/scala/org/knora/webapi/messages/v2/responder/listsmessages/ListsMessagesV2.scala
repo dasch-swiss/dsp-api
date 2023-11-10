@@ -106,7 +106,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
       val children: Map[IRI, JsonLDArray] = if (node.children.nonEmpty) {
         Map(
           OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDArray(
-            node.children.map { childNode: ListChildNodeADM =>
+            node.children.map { (childNode: ListChildNodeADM) =>
               makeNode(childNode) // recursion
             }
           )
@@ -142,7 +142,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
     val children: Map[IRI, JsonLDArray] = if (list.children.nonEmpty) {
       Map(
         OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDArray(
-          list.children.map { childNode: ListNodeADM =>
+          list.children.map { (childNode: ListNodeADM) =>
             makeNode(childNode.asInstanceOf[ListChildNodeADM])
           }
         )

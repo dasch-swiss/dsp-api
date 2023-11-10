@@ -449,7 +449,7 @@ final case class InferringGravsearchTypeInspector(
                           }
 
                         val isSubclassOfAlreadyInferredType: Boolean = alreadyInferredPropertyTypes.exists {
-                          alreadyInferredType: PropertyTypeInfo =>
+                          (alreadyInferredType: PropertyTypeInfo) =>
                             baseClassesOfInferredType.contains(alreadyInferredType.objectTypeIri)
                         }
 
@@ -507,7 +507,7 @@ final case class InferringGravsearchTypeInspector(
       val typesFromFilters: Set[GravsearchEntityTypeInfo] = usageIndex.typedEntitiesInFilters.get(entityToType) match {
         case Some(typesFromFilters: Set[SmartIri]) =>
           // Yes. Return those types.
-          typesFromFilters.map { typeFromFilter: SmartIri =>
+          typesFromFilters.map { (typeFromFilter: SmartIri) =>
             val isValueType       = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeFromFilter.toString)
             val isStandoffTagType = typeFromFilter.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag
             val isResourceType    = !(isValueType || isStandoffTagType)
@@ -557,7 +557,7 @@ final case class InferringGravsearchTypeInspector(
               usageIndex.knoraPropertyVariablesInFilters.get(variableToType) match {
                 case Some(propertyIris: Set[SmartIri]) =>
                   // Yes.
-                  propertyIris.flatMap { propertyIri: SmartIri =>
+                  propertyIris.flatMap { (propertyIri: SmartIri) =>
                     // Has the ontology responder provided a definition of this property?
                     entityInfo.propertyInfoMap.get(propertyIri) match {
                       case Some(readPropertyInfo: ReadPropertyInfoV2) =>

@@ -48,7 +48,7 @@ final case class GetListItemsRouteADM(
    */
   private def getLists: Route = path(listsBasePath) {
     get {
-      parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
+      parameters("projectIri".?) { (maybeProjectIri: Option[IRI]) => requestContext =>
         val task = for {
           iri <- ZIO.foreach(maybeProjectIri)(iri =>
                    Iri

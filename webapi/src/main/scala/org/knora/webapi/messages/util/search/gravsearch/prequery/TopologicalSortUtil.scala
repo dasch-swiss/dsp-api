@@ -47,7 +47,7 @@ object TopologicalSortUtil {
 
       // For each permutation of last layer nodes, add nodes of lower layers in correct order.
       val allPermutations: List[Vector[NodeT]] = permutationsOfLastLayerNodes.map {
-        lastLayerPermutation: Vector[NodeT] =>
+        (lastLayerPermutation: Vector[NodeT]) =>
           // Iterate over the previous layers to add the nodes into the order w.r.t. edges.
           val orderedLowerLayerNodes: Vector[NodeT] = allLowerLayers.iterator.foldRight(lastLayerPermutation) {
             (layer, acc) =>

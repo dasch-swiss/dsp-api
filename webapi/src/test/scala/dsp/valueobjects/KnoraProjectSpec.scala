@@ -5,19 +5,20 @@
 
 package dsp.valueobjects
 
+import zio.Scope
 import zio.prelude.Validation
-import zio.test._
+import zio.test.*
 
 import scala.util.Random
 
 import dsp.errors.ValidationException
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
 /**
  * This spec is used to test the [[KnoraProject]] value objects creation.
  */
 object KnoraProjectSpec extends ZIOSpecDefault {
-  def spec = suite("ProjectSpec")(
+  def spec: Spec[TestEnvironment with Scope, Nothing] = suite("ProjectSpec")(
     shortcodeTest,
     shortnameTest,
     nameTest,

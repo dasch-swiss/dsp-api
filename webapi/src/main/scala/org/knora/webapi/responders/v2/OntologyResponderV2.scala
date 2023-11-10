@@ -14,14 +14,14 @@ import zio.ZLayer
 import java.time.Instant
 
 import dsp.constants.SalsahGui
-import dsp.errors._
-import org.knora.webapi._
+import dsp.errors.*
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -30,7 +30,7 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -824,7 +824,7 @@ final case class OntologyResponderV2Live(
                OntologyCache.checkOntologyReferencesInClassDef(
                  cacheData,
                  internalClassDefWithLinkValueProps,
-                 { msg: String => throw BadRequestException(msg) }
+                 (msg: String) => throw BadRequestException(msg)
                )
              )
 
@@ -1173,7 +1173,7 @@ final case class OntologyResponderV2Live(
                OntologyCache.checkOntologyReferencesInClassDef(
                  cacheData,
                  newInternalClassDefWithLinkValueProps,
-                 { msg: String => throw BadRequestException(msg) }
+                 (msg: String) => throw BadRequestException(msg)
                )
              )
 
@@ -1339,7 +1339,7 @@ final case class OntologyResponderV2Live(
              OntologyCache.checkOntologyReferencesInClassDef(
                cacheData,
                newInternalClassDefWithLinkValueProps,
-               { msg: String => throw BadRequestException(msg) }
+               (msg: String) => throw BadRequestException(msg)
              )
            )
 
@@ -2039,7 +2039,7 @@ final case class OntologyResponderV2Live(
                    constraintValueToBeChecked = subjectClassConstraint,
                    allSuperPropertyIris = allKnoraSuperPropertyIris,
                    errorSchema = ApiV2Complex,
-                   errorFun = { msg: String => throw BadRequestException(msg) }
+                   errorFun = { (msg: String) => throw BadRequestException(msg) }
                  )
 
                case None => ()
@@ -2055,7 +2055,7 @@ final case class OntologyResponderV2Live(
                  constraintValueToBeChecked = objectClassConstraint,
                  allSuperPropertyIris = allKnoraSuperPropertyIris,
                  errorSchema = ApiV2Complex,
-                 errorFun = { msg: String => throw BadRequestException(msg) }
+                 errorFun = { (msg: String) => throw BadRequestException(msg) }
                )
              )
 
@@ -2064,7 +2064,7 @@ final case class OntologyResponderV2Live(
                OntologyCache.checkOntologyReferencesInPropertyDef(
                  ontologyCacheData = cacheData,
                  propertyDef = internalPropertyDef,
-                 errorFun = { msg: String => throw BadRequestException(msg) }
+                 errorFun = { (msg: String) => throw BadRequestException(msg) }
                )
              )
 
@@ -2247,7 +2247,7 @@ final case class OntologyResponderV2Live(
       loadedPropertyDef <- ontologyHelpers.loadPropertyDefinition(internalPropertyIri)
 
       maybeNewGuiElementPredicate =
-        newGuiElementIri.map { guiElement: SmartIri =>
+        newGuiElementIri.map { (guiElement: SmartIri) =>
           SalsahGui.GuiElementProp.toSmartIri -> PredicateInfoV2(
             predicateIri = SalsahGui.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2(guiElement))
@@ -2715,14 +2715,14 @@ final case class OntologyResponderV2Live(
              }
 
         maybeLoadedLinkValuePropertyDefFuture: Option[Task[PropertyInfoContentV2]] =
-          maybeLinkValueOfPropertyToUpdate.map { linkValueReadPropertyInfo: ReadPropertyInfoV2 =>
+          maybeLinkValueOfPropertyToUpdate.map { (linkValueReadPropertyInfo: ReadPropertyInfoV2) =>
             ontologyHelpers.loadPropertyDefinition(linkValueReadPropertyInfo.entityInfoContent.propertyIri)
           }
 
         maybeLoadedLinkValuePropertyDef <- ZIO.collectAll(maybeLoadedLinkValuePropertyDefFuture)
 
         maybeNewLinkValuePropertyDef <-
-          maybeLoadedLinkValuePropertyDef.map { loadedLinkValuePropertyDef: PropertyInfoContentV2 =>
+          maybeLoadedLinkValuePropertyDef.map { (loadedLinkValuePropertyDef: PropertyInfoContentV2) =>
             val newLinkPropertyDef: PropertyInfoContentV2 =
               maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.copy(
                 predicates = maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.predicates
@@ -2746,7 +2746,7 @@ final case class OntologyResponderV2Live(
                               )
 
         maybeLinkValuePropertyCacheEntry =
-          maybeNewLinkValuePropertyDef.map { newLinkPropertyDef: PropertyInfoContentV2 =>
+          maybeNewLinkValuePropertyDef.map { (newLinkPropertyDef: PropertyInfoContentV2) =>
             newLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
               entityInfoContent = newLinkPropertyDef,
               isEditable = true,

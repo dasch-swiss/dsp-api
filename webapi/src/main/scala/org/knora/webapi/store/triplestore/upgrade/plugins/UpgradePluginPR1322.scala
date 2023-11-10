@@ -38,7 +38,7 @@ class UpgradePluginPR1322() extends UpgradePlugin {
     model
       .find(None, Some(ValueCreationDateIri), None)
       .map(_.subj)
-      .filter { resource: RdfResource =>
+      .filter { (resource: RdfResource) =>
         model
           .find(
             subj = None,

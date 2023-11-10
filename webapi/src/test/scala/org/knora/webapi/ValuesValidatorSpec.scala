@@ -5,8 +5,8 @@
 
 package org.knora.webapi
 
-import zio.test.Assertion._
-import zio.test._
+import zio.test.Assertion.*
+import zio.test.*
 
 import java.time.Instant
 
@@ -257,7 +257,7 @@ object ValuesValidatorSpec extends ZIOSpecDefault {
     }
   )
 
-  override def spec = suite("ValuesValidator")(
+  override def spec: Spec[Any, Nothing] = suite("ValuesValidator")(
     booleanSuite,
     integerSuite,
     bigDecimalSuite,

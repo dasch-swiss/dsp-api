@@ -414,7 +414,7 @@ object PermissionUtilADM extends LazyLogging {
    */
   def parsePermissions(
     permissionLiteral: String,
-    errorFun: String => Nothing = { permissionLiteral: String =>
+    errorFun: String => Nothing = { (permissionLiteral: String) =>
       throw InconsistentRepositoryDataException(s"invalid permission literal: $permissionLiteral")
     }
   ): Map[EntityPermission, Set[IRI]] = {

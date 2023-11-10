@@ -15,7 +15,7 @@ import dsp.errors.ValidationException
  */
 object LangStringSpec extends ZIOSpecDefault {
 
-  def spec = suite("LangStringSpec")(
+  def spec: Spec[Any, ValidationException] = suite("LangStringSpec")(
     langStringTest,
     multiLangStringTest
   )

@@ -121,7 +121,7 @@ final case class QueryTraverser(
 
                                case unionPattern: UnionPattern =>
                                  val transformedBlocks: Seq[Task[Seq[QueryPattern]]] = unionPattern.blocks.map {
-                                   blockPatterns: Seq[QueryPattern] =>
+                                   (blockPatterns: Seq[QueryPattern]) =>
                                      whereTransformer
                                        .enteringUnionBlock()
                                        .zipRight(

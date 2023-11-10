@@ -259,7 +259,7 @@ final case class SearchResponderV2Live(
 
       // a sequence of resource IRIs that match the search criteria
       // attention: no permission checking has been done so far
-      resourceIris: Seq[IRI] = prequeryResponse.results.bindings.map { resultRow: VariableResultsRow =>
+      resourceIris: Seq[IRI] = prequeryResponse.results.bindings.map { (resultRow: VariableResultsRow) =>
                                  resultRow.rowMap(FullTextSearchConstants.resourceVar.variableName)
                                }
 
@@ -507,7 +507,7 @@ final case class SearchResponderV2Live(
       // a sequence of resource IRIs that match the search criteria
       // attention: no permission checking has been done so far
       mainResourceIris: Seq[IRI] =
-        prequeryResponse.results.bindings.map { resultRow: VariableResultsRow =>
+        prequeryResponse.results.bindings.map { (resultRow: VariableResultsRow) =>
           resultRow.rowMap(mainResourceVar.variableName)
         }
 
@@ -983,7 +983,7 @@ final case class SearchResponderV2Live(
       resourceIri -> VariableResultsRow(
         new ErrorHandlingMap(
           mergedRowMap,
-          { key: String =>
+          { (key: String) =>
             s"No value found for SPARQL query variable '$key' in query result row"
           }
         )
@@ -992,7 +992,7 @@ final case class SearchResponderV2Live(
 
     // Construct a sequence of the distinct main resource IRIs in the query results, preserving the
     // order of the result rows.
-    val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map { resultRow: VariableResultsRow =>
+    val mainResourceIris: Seq[IRI] = prequeryResponseNotMerged.results.bindings.map { (resultRow: VariableResultsRow) =>
       resultRow.rowMap(mainResourceVar.variableName)
     }.distinct
 

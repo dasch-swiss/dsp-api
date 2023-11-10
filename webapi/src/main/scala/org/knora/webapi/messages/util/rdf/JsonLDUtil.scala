@@ -876,22 +876,19 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   ): JsonLDArray =
     JsonLDArray {
       // Flatten the JSON-LD objects that are elements of the array.
-      value.map { elem: JsonLDValue =>
-        // What type of element is it?
-        elem match {
-          case jsonLDObject: JsonLDObject =>
-            // A JSON-LD object. Flatten its content. If it has an IRI, move it to the top level,
-            // unless this array is a @graph, meaning that the JSON-LD object is already
-            // at the top level.
-            jsonLDObject.flattened(
-              entitiesToAddToTopLevel = entitiesToAddToTopLevel,
-              isAtTopLevel = isAtTopLevel
-            )
+      value.map {
+        case jsonLDObject: JsonLDObject =>
+          // A JSON-LD object. Flatten its content. If it has an IRI, move it to the top level,
+          // unless this array is a @graph, meaning that the JSON-LD object is already
+          // at the top level.
+          jsonLDObject.flattened(
+            entitiesToAddToTopLevel = entitiesToAddToTopLevel,
+            isAtTopLevel = isAtTopLevel
+          )
 
-          case _ =>
-            // Something else. Leave it as is.
-            elem
-        }
+        case elem =>
+          // Something else. Leave it as is.
+          elem
       }
     }
 
@@ -1274,7 +1271,7 @@ object JsonLDUtil {
         case JsonValue.FALSE        => JsonLDBoolean(false)
 
         case jsonObject: JsonObject =>
-          val content: Map[IRI, JsonLDValue] = jsonObject.keySet.asScala.toSet.map { key: IRI =>
+          val content: Map[IRI, JsonLDValue] = jsonObject.keySet.asScala.toSet.map { (key: IRI) =>
             if (key.startsWith("@") && !JsonLDKeywords.allSupported.contains(key)) {
               throw BadRequestException(s"JSON-LD keyword $key is not supported")
             }
@@ -1419,7 +1416,7 @@ object JsonLDUtil {
     val groupedByPred: Map[IriNode, Set[Statement]] = statements.groupBy(_.pred)
 
     // Make JSON-LD content representing the predicates and their objects.
-    val predsAndObjs: Map[IRI, JsonLDValue] = groupedByPred.keySet.map { pred: IriNode =>
+    val predsAndObjs: Map[IRI, JsonLDValue] = groupedByPred.keySet.map { (pred: IriNode) =>
       val predStatements: Set[Statement] = groupedByPred(pred)
       val predIri: IRI                   = pred.iri
 

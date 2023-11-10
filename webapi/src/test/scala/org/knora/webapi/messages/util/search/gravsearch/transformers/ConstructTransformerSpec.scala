@@ -6,13 +6,14 @@
 package org.knora.webapi.messages.util.search.gravsearch.transformers
 
 import zio.ZIO
+import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
@@ -23,7 +24,7 @@ object ConstructTransformerSpec extends ZIOSpecDefault {
   private def constructTransformerTransform(q: ConstructQuery, limit: Option[Set[SmartIri]] = None) =
     ZIO.serviceWithZIO[ConstructTransformer](_.transform(q, limit))
 
-  val spec = suite("ConstructTransformerLive")(
+  val spec: Spec[Any, Any] = suite("ConstructTransformerLive")(
     test(
       "Given an optional pattern in the Where clause it should transform the inner but not split the pattern"
     ) {

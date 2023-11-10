@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import zio._
+import zio.*
 import zio.prelude.Validation
 
 import java.time.Instant
@@ -13,26 +13,26 @@ import scala.collection.immutable
 import scala.util.Try
 
 import dsp.constants.SalsahGui
-import dsp.errors._
-import org.knora.webapi._
+import dsp.errors.*
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.slice.ontology.domain.model.Cardinality._
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -411,9 +411,7 @@ object OntologyHelpers {
             directCardinalities = directCardinalities,
             allPropertyDefs = allPropertyDefs,
             schemaForErrors = InternalSchema,
-            errorFun = { msg: String =>
-              throw InconsistentRepositoryDataException(msg)
-            }
+            errorFun = { (msg: String) => throw InconsistentRepositoryDataException(msg) }
           )
 
           // All its base classes with Knora IRIs must also be resource classes.
@@ -469,9 +467,7 @@ object OntologyHelpers {
         allClassCardinalityKnoraPropertyDefs =
           allPropertyDefs.view.filterKeys(allOwlCardinalitiesForClass.keySet).toMap,
         errorSchema = InternalSchema,
-        errorFun = { msg: String =>
-          throw InconsistentRepositoryDataException(msg)
-        }
+        errorFun = { msg => throw InconsistentRepositoryDataException(msg) }
       )
 
       val inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = allOwlCardinalitiesForClass.filterNot {
@@ -982,7 +978,7 @@ object OntologyHelpers {
   ): Option[(SmartIri, SmartIri)] =
     propertyIris.flatMap { propertyIri =>
       val maybeBasePropertyIri: Option[SmartIri] = (propertyIris - propertyIri).find { otherPropertyIri =>
-        subPropertyOfRelations.get(propertyIri).exists { baseProperties: Set[SmartIri] =>
+        subPropertyOfRelations.get(propertyIri).exists { (baseProperties: Set[SmartIri]) =>
           baseProperties.contains(otherPropertyIri)
         }
       }
@@ -1143,11 +1139,7 @@ object OntologyHelpers {
               inheritableCardinalities = cardinalitiesAvailableToInherit,
               allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
               errorSchema = ApiV2Complex,
-              errorFun = { msg: String =>
-                throw BadRequestException(
-                  msg
-                )
-              }
+              errorFun = { msg => throw BadRequestException(msg) }
             )
           )
         )
@@ -1177,9 +1169,7 @@ object OntologyHelpers {
                  allBaseClassIris = allBaseClassIris,
                  allClassCardinalityKnoraPropertyDefs = allClassCardinalityKnoraPropertyDefs,
                  errorSchema = ApiV2Complex,
-                 errorFun = { msg: String =>
-                   throw BadRequestException(msg)
-                 }
+                 errorFun = { msg => throw BadRequestException(msg) }
                )
              )
            )
@@ -1209,9 +1199,7 @@ object OntologyHelpers {
                  directCardinalities = internalClassDef.directCardinalities,
                  allPropertyDefs = cacheData.allPropertyDefs,
                  schemaForErrors = ApiV2Complex,
-                 errorFun = { msg: String =>
-                   throw BadRequestException(msg)
-                 }
+                 errorFun = { msg => throw BadRequestException(msg) }
                )
              )
            )
@@ -1312,9 +1300,7 @@ object OntologyHelpers {
     val reverseOverrides: Map[SmartIri, Set[SmartIri]] = overrides.toVector.flatMap {
       // Unpack the sets to make an association list.
       case (thisClassProp: SmartIri, baseClassProps: Set[SmartIri]) =>
-        baseClassProps.map { baseClassProp: SmartIri =>
-          thisClassProp -> baseClassProp
-        }
+        baseClassProps.map((baseClassProp: SmartIri) => thisClassProp -> baseClassProp)
     }.map {
       // Reverse the direction of the association list.
       case (thisClassProp: SmartIri, baseClassProp: SmartIri) =>
@@ -1520,9 +1506,7 @@ object OntologyHelpers {
       inheritableCardinalities = cardinalitiesAvailableToInherit,
       allSubPropertyOfRelations = allSubPropertyOfRelations,
       errorSchema = InternalSchema,
-      { msg: String =>
-        throw InconsistentRepositoryDataException(msg)
-      }
+      (msg: String) => throw InconsistentRepositoryDataException(msg)
     )
   }
 

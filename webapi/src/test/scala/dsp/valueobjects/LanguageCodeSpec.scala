@@ -15,7 +15,7 @@ object LanguageCodeSpec extends ZIOSpecDefault {
   private val validLanguageCode   = "de"
   private val invalidLanguageCode = "00"
 
-  def spec = (languageCodeTest)
+  def spec: Spec[Any, ValidationException] = languageCodeTest
 
   private val languageCodeTest = suite("LanguageCode")(
     test("pass an empty value and return an error") {

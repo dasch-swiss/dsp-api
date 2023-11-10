@@ -6,7 +6,7 @@
 package org.knora.webapi.slice.resourceinfo.api
 
 import zio.Exit
-import zio.test._
+import zio.test.*
 
 import java.time.Instant.now
 import java.time.temporal.ChronoUnit.DAYS
@@ -31,7 +31,7 @@ import org.knora.webapi.slice.resourceinfo.repo.ResourceInfoRepoFake.unknownProj
 
 object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
 
-  override def spec =
+  override def spec: Spec[Any, Any] =
     suite("LiveRestResourceInfoServiceSpec")(
       test("should fail with bad request given an invalid resourceClass") {
         for {
@@ -98,7 +98,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
               LastModificationDate
             )
         } yield {
-          val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.lastModificationDate)
+          val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.lastModificationDate)
           assertTrue(actual == model.ListResponseDto(items))
         }
       },
@@ -120,7 +120,7 @@ object LiveRestResourceInfoServiceSpec extends ZIOSpecDefault {
                       CreationDate
                     )
         } yield {
-          val items = List(given1, given2).map(ResourceInfoDto(_)).sortBy(_.creationDate).reverse
+          val items = List(given1, given2).map(ResourceInfoDto.from).sortBy(_.creationDate).reverse
           assertTrue(actual == model.ListResponseDto(items))
         }
       }

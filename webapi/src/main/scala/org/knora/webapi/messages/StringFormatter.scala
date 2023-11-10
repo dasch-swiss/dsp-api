@@ -262,10 +262,10 @@ object StringFormatter {
   private def getOrCacheSmartIri(iriStr: IRI, creationFun: () => SmartIri): SmartIri =
     smartIriCache.computeIfAbsent(
       iriStr,
-      JavaUtil.function({ _: Object => creationFun() })
+      JavaUtil.function({ (_: Object) => creationFun() })
     )
 
-  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
+  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { (appConfig: AppConfig) =>
     StringFormatter.init(appConfig)
     StringFormatter.getGeneralInstance
   }
@@ -436,7 +436,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   /**
    * Checks that the IRI's ontology schema, if present, corresponds to the specified schema.
    *
-   * @param schema The [[ApiV2Schema]] to be allowed.
+   * @param allowedSchema The [[ApiV2Schema]] to be allowed.
    * @return `true` if the [[OntologySchema]] is present and matches the specified schema or if the iri does not have a schema.
    */
   def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean = getOntologySchema match {

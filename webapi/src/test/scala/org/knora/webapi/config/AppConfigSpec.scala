@@ -6,6 +6,7 @@
 package org.knora.webapi.config
 
 import zio.ZIO
+import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
@@ -15,7 +16,7 @@ import dsp.valueobjects.User
 
 object AppConfigSpec extends ZIOSpecDefault {
 
-  def spec = suite("ApplicationConfigSpec")(
+  def spec: Spec[Any, Nothing] = suite("ApplicationConfigSpec")(
     test("successfully provide the application configuration") {
       for {
         appConfig       <- ZIO.service[AppConfig]

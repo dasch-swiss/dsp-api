@@ -47,7 +47,7 @@ final case class StandoffRouteV2()(
   def makeRoute: Route =
     path("v2" / "mapping") {
       post {
-        entity(as[Multipart.FormData]) { formData: Multipart.FormData => requestContext =>
+        entity(as[Multipart.FormData]) { (formData: Multipart.FormData) => requestContext =>
           val jsonPartKey = "json"
           val xmlPartKey  = "xml"
           type Name = String

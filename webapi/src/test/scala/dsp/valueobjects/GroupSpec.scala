@@ -6,15 +6,16 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test._
+import zio.test.*
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Group._
+import dsp.valueobjects.Group.*
 
 /**
  * This spec is used to test the [[Group]] value objects creation.
  */
 object GroupSpec extends ZIOSpecDefault {
+
   private val validName        = "Valid group name"
   private val invalidName      = "Invalid group name\r"
   private val validDescription = Seq(V2.StringLiteralV2(value = "Valid group description", language = Some("en")))
@@ -22,30 +23,26 @@ object GroupSpec extends ZIOSpecDefault {
     V2.StringLiteralV2(value = "Invalid group description \r", language = Some("en"))
   )
 
-  def spec = (groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest)
+  def spec: Spec[Any, Any] = groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest
 
   private val groupNameTest = suite("GroupSpec - GroupName")(
     test("pass an empty value and return an error") {
-      assertTrue(GroupName.make("") == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))) &&
       assertTrue(
+        GroupName.make("") == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing)),
         GroupName.make(Some("")) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        GroupName.make(invalidName) == Validation.fail(
-          BadRequestException(GroupErrorMessages.GroupNameInvalid)
-        )
-      ) &&
-      assertTrue(
-        GroupName.make(Some(invalidName)) == Validation.fail(
-          BadRequestException(GroupErrorMessages.GroupNameInvalid)
-        )
+        GroupName.make(invalidName) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameInvalid)),
+        GroupName.make(Some(invalidName)) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameInvalid))
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(GroupName.make(validName).toOption.get.value == validName) &&
-      assertTrue(GroupName.make(Option(validName)).getOrElse(null).get.value == validName)
+      assertTrue(
+        GroupName.make(validName).toOption.get.value == validName,
+        GroupName.make(Option(validName)).getOrElse(null).get.value == validName
+      )
     },
     test("successfully validate passing None") {
       assertTrue(

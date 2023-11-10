@@ -488,7 +488,7 @@ final case class ValuesResponderV2Live(
           case textValueContent: TextValueContentV2 =>
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
             val linkUpdateFutures: Seq[Task[SparqlTemplateLinkUpdate]] =
-              textValueContent.standoffLinkTagTargetResourceIris.map { targetResourceIri: IRI =>
+              textValueContent.standoffLinkTagTargetResourceIris.map { (targetResourceIri: IRI) =>
                 incrementLinkValue(
                   sourceResourceInfo = resourceInfo,
                   linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
@@ -1020,9 +1020,8 @@ final case class ValuesResponderV2Live(
         newPermissionsParsed <- ZIO.attempt(
                                   PermissionUtilADM.parsePermissions(
                                     updateValuePermissionsV2.permissions,
-                                    { permissionLiteral: String =>
+                                    (permissionLiteral: String) =>
                                       throw AssertionException(s"Invalid permission literal: $permissionLiteral")
-                                    }
                                   )
                                 )
 
@@ -1108,9 +1107,8 @@ final case class ValuesResponderV2Live(
         newPermissionsParsed <- ZIO.attempt(
                                   PermissionUtilADM.parsePermissions(
                                     newValueVersionPermissionLiteral,
-                                    { permissionLiteral: String =>
+                                    (permissionLiteral: String) =>
                                       throw AssertionException(s"Invalid permission literal: $permissionLiteral")
-                                    }
                                   )
                                 )
 
@@ -2148,7 +2146,7 @@ final case class ValuesResponderV2Live(
   ): Option[ReadLinkValueV2] = {
     val linkValueProperty = linkPropertyIri.fromLinkPropToLinkValueProp
 
-    sourceResourceInfo.values.get(linkValueProperty).flatMap { linkValueInfos: Seq[ReadValueV2] =>
+    sourceResourceInfo.values.get(linkValueProperty).flatMap { (linkValueInfos: Seq[ReadValueV2]) =>
       linkValueInfos.collectFirst {
         case linkValueInfo: ReadLinkValueV2 if linkValueInfo.valueContent.referredResourceIri == targetResourceIri =>
           linkValueInfo

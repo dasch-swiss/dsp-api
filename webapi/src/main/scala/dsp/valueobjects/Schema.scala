@@ -8,9 +8,7 @@ package dsp.valueobjects
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import zio.prelude.ZValidation.Failure
 import zio.prelude.ZValidation.Success
-import zio.prelude._
-
-import scala.collection.immutable.List
+import zio.prelude.*
 
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
@@ -278,7 +276,7 @@ object Schema {
       case Some(valueType) if valueType.toString() == "iri" => {
         val iriWithoutBrackets: Option[String] =
           if (value.startsWith("<") && value.endsWith(">")) Some(value.substring(1, value.length - 1)) else None
-        iriWithoutBrackets.map { valueWithoutBrackets: String =>
+        iriWithoutBrackets.map { valueWithoutBrackets =>
           if (Iri.urlValidator.isValid(encodeAllowEscapes(valueWithoutBrackets))) value else None
         }
       }

@@ -5,6 +5,7 @@
 
 package org.knora.webapi.util
 
+import zio.test.Spec
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
@@ -16,7 +17,7 @@ object Base64UrlCheckDigitZSpec extends ZIOSpecDefault {
   val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
   val correctResourceIDCheckDigit = "n"
 
-  def spec = suite("Base64UrlCheckDigitZSpec")(
+  def spec: Spec[Any, Any] = suite("Base64UrlCheckDigitZSpec")(
     test("reject a string without a check digit") {
       assertTrue(!base64UrlCheckDigit.isValid(correctResourceID))
     } +

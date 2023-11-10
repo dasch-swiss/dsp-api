@@ -5,8 +5,14 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko
-import zio._
+import org.apache.pekko.http.scaladsl.model.ContentTypes.`application/json`
+import org.apache.pekko.http.scaladsl.model.StatusCodes.Accepted
+import org.apache.pekko.http.scaladsl.model.StatusCodes.OK
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.RouteResult
+import org.apache.pekko.util.ByteString
+import zio.*
 import zio.json.EncoderOps
 import zio.json.JsonEncoder
 
@@ -21,17 +27,9 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages._
-
-import pekko.http.scaladsl.model.ContentTypes.`application/json`
-import pekko.http.scaladsl.model.StatusCodes.Accepted
-import pekko.http.scaladsl.model.StatusCodes.OK
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.RouteResult
-import pekko.util.ByteString
+import org.knora.webapi.messages.admin.responder.groupsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 
 /**
  * Convenience methods for Knora Admin routes.
@@ -46,7 +44,7 @@ object RouteUtilADM {
    */
   private def transformResponseIntoExternalFormat(
     response: KnoraResponseADM
-  ): ZIO[StringFormatter, Throwable, KnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { sf: StringFormatter =>
+  ): ZIO[StringFormatter, Throwable, KnoraResponseADM] = ZIO.serviceWithZIO[StringFormatter] { sf =>
     ZIO.attempt {
       def projectAsExternalRepresentation(project: ProjectADM): ProjectADM = {
         val ontologiesExternal =
@@ -60,8 +58,8 @@ object RouteUtilADM {
       }
 
       def userAsExternalRepresentation(user: UserADM): UserADM = {
-        val groupsExternal   = user.groups.map { g: GroupADM => groupAsExternalRepresentation(g) }
-        val projectsExternal = user.projects.map { p: ProjectADM => projectAsExternalRepresentation(p) }
+        val groupsExternal   = user.groups.map(groupAsExternalRepresentation)
+        val projectsExternal = user.projects.map(projectAsExternalRepresentation)
         user.copy(groups = groupsExternal, projects = projectsExternal)
       }
 
