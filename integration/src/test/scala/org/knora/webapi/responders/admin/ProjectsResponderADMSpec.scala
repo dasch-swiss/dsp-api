@@ -47,7 +47,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
         assert(received.projects.contains(SharedTestDataADM.imagesProject))
         assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
-        assert(!received.projects.contains(SharedTestDataADM.systemProjectIri))
+        assert(!received.projects.map(_.id).contains(SharedTestDataADM.systemProjectIri))
         assert(!received.projects.contains(SharedTestDataADM.defaultSharedOntologiesProject))
       }
 
