@@ -83,16 +83,6 @@ addCommandAlias(
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check; headerCheckAll")
 addCommandAlias("it", "integration/test")
 
-lazy val customScalacOptions = Seq(
-  "-feature",
-  "-unchecked",
-  "-deprecation",
-  "-Yresolve-term-conflict:package",
-  "-Ymacro-annotations",
-  "-Wunused",
-  "-Xsource:3"
-)
-
 //////////////////////////////////////
 // DSP's custom SIPI
 //////////////////////////////////////
