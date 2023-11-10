@@ -780,6 +780,8 @@ final case class ProjectsResponderADMLive(
         newProjectIRI                     <- iriService.checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri)
         maybeLongname                      = createProjectRequest.longname.map(_.value)
         maybeLogo                          = createProjectRequest.logo.map(_.value)
+        descriptions                       = createProjectRequest.description.map(_.value)
+        _                                 <- ZIO.fail(BadRequestException("Project's shortcode is invalid.")).when(descriptions.isEmpty)
 
         createNewProjectSparql = sparql.admin.txt
                                    .createNewProject(
@@ -789,9 +791,7 @@ final case class ProjectsResponderADMLive(
                                      shortname = createProjectRequest.shortname.value,
                                      shortcode = createProjectRequest.shortcode.value,
                                      maybeLongname = maybeLongname,
-                                     maybeDescriptions = if (createProjectRequest.description.nonEmpty) {
-                                       Some(createProjectRequest.description.map(_.value))
-                                     } else None,
+                                     descriptions = descriptions,
                                      maybeKeywords = if (createProjectRequest.keywords.nonEmpty) {
                                        Some(createProjectRequest.keywords.map(_.value))
                                      } else None,

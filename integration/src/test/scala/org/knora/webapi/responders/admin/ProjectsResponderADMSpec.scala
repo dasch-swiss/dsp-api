@@ -169,7 +169,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortcode = Shortcode.unsafeFrom(shortcode),
             longname = Some(Longname.unsafeFrom("project longname")),
             description =
-              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "project description", language = Some("en")))),
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = Status.Active,
@@ -263,7 +263,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
             shortcode = Shortcode.unsafeFrom("1112"),
             longname = Some(Longname.unsafeFrom("project longname")),
             description =
-              List(Description.unsafeFrom(V2.StringLiteralV2(value = "description", language = Some("en")))),
+              List(Description.unsafeFrom(V2.StringLiteralV2(value = "project description", language = Some("en")))),
             keywords = List("keywords").map(Keyword.unsafeFrom),
             logo = Some(Logo.unsafeFrom("/fu/bar/baz.jpg")),
             status = Status.Active,
