@@ -21,7 +21,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment & Scope, Nothing] = suite("ProjectSpec")(
     shortcodeTest,
     shortnameTest,
-    nameTest,
+    longnameTest,
     descriptionTest,
     keywordsTest,
     logoTest,
@@ -93,8 +93,8 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     }
   )
 
-  private val nameTest = suite("Name")(
-    test("pass invalid Name and expect an error to be returned") {
+  private val longnameTest = suite("Longname")(
+    test("pass invalid Longname and expect an error to be returned") {
       val invalidNames =
         Gen.stringBounded(0, 2)(Gen.printableChar) ++ Gen.stringBounded(257, 300)(Gen.printableChar)
       check(invalidNames) { name =>
