@@ -6,13 +6,13 @@
 package org.knora.webapi.responders.admin
 
 import zio.URLayer
-import zio._
-import zio.mock._
+import zio.*
+import zio.mock.*
 
-import dsp.valueobjects.Iri._
+import dsp.valueobjects.Iri.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
-import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse

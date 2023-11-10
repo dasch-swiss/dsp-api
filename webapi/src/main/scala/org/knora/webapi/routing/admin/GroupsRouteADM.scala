@@ -6,23 +6,23 @@
 package org.knora.webapi.routing.admin
 
 import org.apache.pekko
-import zio._
+import zio.*
 import zio.prelude.Validation
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Group._
+import dsp.valueobjects.Group.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri._
+import dsp.valueobjects.Iri.*
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM._
+import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.routing.RouteUtilZ
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.PathMatcher
 import pekko.http.scaladsl.server.Route
 
@@ -32,7 +32,7 @@ import pekko.http.scaladsl.server.Route
 
 final case class GroupsRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+  override protected implicit val runtime: Runtime[Authenticator & StringFormatter & MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with GroupsADMJsonProtocol {
 

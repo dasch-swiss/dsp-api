@@ -7,7 +7,7 @@ package org.knora.webapi.slice.ontology.repo.service
 
 import zio.Scope
 import zio.test.ZIOSpecDefault
-import zio.test._
+import zio.test.*
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -31,7 +31,7 @@ object OntologyRepoLiveSpec extends ZIOSpecDefault {
   private val aKnownClassSmartIri: SmartIri = sf.toSmartIri(aKnownClassIri.value)
   private val ontologySmartIri: SmartIri    = aKnownClassSmartIri.getOntologyFromEntity
 
-  val spec: Spec[TestEnvironment with Scope, Any] =
+  val spec: Spec[TestEnvironment & Scope, Any] =
     suite("OntologyRepoLive")(
       suite("findOntologyBy(InternalIri)")(
         test("when searching for unknown iri => return None") {

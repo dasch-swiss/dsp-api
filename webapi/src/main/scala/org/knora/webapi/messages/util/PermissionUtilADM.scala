@@ -765,6 +765,6 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
 }
 
 object PermissionUtilADMLive {
-  val layer: URLayer[StringFormatter with MessageRelay, PermissionUtilADMLive] =
+  val layer: URLayer[StringFormatter & MessageRelay, PermissionUtilADMLive] =
     ZLayer.fromFunction(PermissionUtilADMLive.apply _)
 }

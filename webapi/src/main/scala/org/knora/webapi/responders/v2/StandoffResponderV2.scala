@@ -1063,12 +1063,7 @@ final case class StandoffResponderV2Live(
 
 object StandoffResponderV2Live {
   val layer: URLayer[
-    AppConfig
-      with MessageRelay
-      with TriplestoreService
-      with ConstructResponseUtilV2
-      with StandoffTagUtilV2
-      with StringFormatter,
+    AppConfig & MessageRelay & TriplestoreService & ConstructResponseUtilV2 & StandoffTagUtilV2 & StringFormatter,
     StandoffResponderV2
   ] =
     ZLayer.fromZIO {

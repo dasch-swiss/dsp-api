@@ -649,7 +649,7 @@ final case class GroupsResponderADMLive(
 
 object GroupsResponderADMLive {
   val layer: URLayer[
-    MessageRelay with StringFormatter with IriService with TriplestoreService,
+    MessageRelay & StringFormatter & IriService & TriplestoreService,
     GroupsResponderADM
   ] = ZLayer.fromZIO {
     for {

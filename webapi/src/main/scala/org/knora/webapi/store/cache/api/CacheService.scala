@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.cache.api
 
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM

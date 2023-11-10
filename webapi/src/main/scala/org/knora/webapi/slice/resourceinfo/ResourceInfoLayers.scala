@@ -21,9 +21,9 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 object ResourceInfoLayers {
 
   val live: ZLayer[
-    TriplestoreService with IriConverter with BaseEndpoints with HandlerMapper with TapirToPekkoInterpreter,
+    TriplestoreService & IriConverter & BaseEndpoints & HandlerMapper & TapirToPekkoInterpreter,
     Nothing,
-    RestResourceInfoService with ResourceInfoEndpoints with ResourceInfoRoutes
+    RestResourceInfoService & ResourceInfoEndpoints & ResourceInfoRoutes
   ] =
     ResourceInfoRepoLive.layer >>> RestResourceInfoServiceLive.layer >+> ResourceInfoEndpoints.layer >+> ResourceInfoRoutes.layer
 

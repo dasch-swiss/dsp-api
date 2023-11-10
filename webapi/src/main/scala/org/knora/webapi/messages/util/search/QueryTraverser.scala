@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search
 
-import zio._
+import zio.*
 
 import dsp.errors.GravsearchOptimizationException
 import org.knora.webapi.InternalSchema
@@ -321,6 +321,6 @@ final case class QueryTraverser(
 }
 
 object QueryTraverser {
-  val layer: URLayer[MessageRelay with OntologyCache with StringFormatter, QueryTraverser] =
+  val layer: URLayer[MessageRelay & OntologyCache & StringFormatter, QueryTraverser] =
     ZLayer.fromFunction(QueryTraverser.apply _)
 }

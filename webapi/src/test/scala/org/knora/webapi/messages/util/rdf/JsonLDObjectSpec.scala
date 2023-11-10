@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 import java.util.UUID
 
@@ -17,7 +17,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 object JsonLDObjectSpec extends ZIOSpecDefault {
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("JsonLDObject")(
       iriValueSuite +
         stringValueSuite +

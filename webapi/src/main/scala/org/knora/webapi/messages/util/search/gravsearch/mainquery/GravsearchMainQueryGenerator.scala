@@ -6,14 +6,14 @@
 package org.knora.webapi.messages.util.search.gravsearch.mainquery
 
 import dsp.errors.GravsearchException
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 
@@ -233,7 +233,7 @@ object GravsearchMainQueryGenerator {
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption]
   ): ConstructQuery = {
-    import GravsearchConstants._
+    import GravsearchConstants.*
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

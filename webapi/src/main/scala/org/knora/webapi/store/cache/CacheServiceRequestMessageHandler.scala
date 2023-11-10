@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.cache
 
-import zio._
+import zio.*
 import zio.metrics.Metric
 
 import java.time.temporal.ChronoUnit
@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.store.cacheservicemessages._
+import org.knora.webapi.messages.store.cacheservicemessages.*
 import org.knora.webapi.store.cache.api.CacheService
 
 trait CacheServiceRequestMessageHandler extends MessageHandler
@@ -57,7 +57,7 @@ final case class CacheServiceRequestMessageHandlerLive(cacheService: CacheServic
 }
 
 object CacheServiceRequestMessageHandlerLive {
-  val layer: URLayer[CacheService with MessageRelay, CacheServiceRequestMessageHandler] = ZLayer.fromZIO {
+  val layer: URLayer[CacheService & MessageRelay, CacheServiceRequestMessageHandler] = ZLayer.fromZIO {
     for {
       mr      <- ZIO.service[MessageRelay]
       cs      <- ZIO.service[CacheService]

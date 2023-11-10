@@ -18,7 +18,7 @@ import org.knora.webapi.SchemaOptions
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 /**
  * A trait for Knora API V2 response messages.

@@ -8,7 +8,7 @@ package org.knora.webapi.slice.common.api
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.capabilities.WebSockets
 import sttp.capabilities.pekko.PekkoStreams
-import sttp.tapir.generic.auto._
+import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.zio.ZioMetrics
@@ -31,7 +31,7 @@ final case class TapirToPekkoInterpreter()(actorSystem: ActorSystem) {
     implicit val codec: JsonCodec[GenericErrorResponse] = DeriveJsonCodec.gen[GenericErrorResponse]
   }
 
-  private def customizedErrorResponse(m: String): ValuedEndpointOutput[_] =
+  private def customizedErrorResponse(m: String): ValuedEndpointOutput[?] =
     ValuedEndpointOutput(jsonBody[GenericErrorResponse], GenericErrorResponse(m))
 
   private val serverOptions =
@@ -42,7 +42,7 @@ final case class TapirToPekkoInterpreter()(actorSystem: ActorSystem) {
 
   private val interpreter: PekkoHttpServerInterpreter = PekkoHttpServerInterpreter(serverOptions)
 
-  def toRoute(endpoint: ServerEndpoint[PekkoStreams with WebSockets, Future]): Route =
+  def toRoute(endpoint: ServerEndpoint[PekkoStreams & WebSockets, Future]): Route =
     interpreter.toRoute(endpoint)
 }
 

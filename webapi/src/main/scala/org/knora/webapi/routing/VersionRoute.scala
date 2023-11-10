@@ -11,7 +11,7 @@ import spray.json.JsString
 
 import org.knora.webapi.http.version.BuildInfo
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.server.Directives.get
 import pekko.http.scaladsl.server.Directives.path
 import pekko.http.scaladsl.server.Route

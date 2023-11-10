@@ -6,14 +6,14 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko
-import zio._
-import zio.metrics._
+import zio.*
+import zio.metrics.*
 
 import java.time.temporal.ChronoUnit
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -21,13 +21,13 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
-import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.messages.v2.responder.searchmessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.RequestContext
 import pekko.http.scaladsl.server.Route
 
@@ -35,7 +35,7 @@ import pekko.http.scaladsl.server.Route
  * Provides a function for API routes that deal with search.
  */
 final case class SearchRouteV2(searchValueMinLength: Int)(
-  private implicit val runtime: Runtime[AppConfig with Authenticator with IriConverter with MessageRelay]
+  private implicit val runtime: Runtime[AppConfig & Authenticator & IriConverter & MessageRelay]
 ) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"

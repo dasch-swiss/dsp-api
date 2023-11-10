@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.admin.responder.storesmessages
 
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM

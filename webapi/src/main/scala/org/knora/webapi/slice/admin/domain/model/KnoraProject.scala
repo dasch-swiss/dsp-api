@@ -7,7 +7,7 @@ package org.knora.webapi.slice.admin.domain.model
 
 import sttp.tapir.Schema
 import zio.NonEmptyChunk
-import zio.json._
+import zio.json.*
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
@@ -15,7 +15,7 @@ import scala.util.matching.Regex
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.V2
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(

@@ -40,7 +40,7 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
   def discoverFiles(dirPath: String): Array[Path] =
     Files.list(Path.of(dirPath)).filter(Files.isRegularFile(_)).iterator.asScala.toArray
 
-  def applyUpgradePluginTo(plugin: UpgradePlugin, path: Path): ZIO[Any with Scope, Throwable, Unit] = for {
+  def applyUpgradePluginTo(plugin: UpgradePlugin, path: Path): ZIO[Any & Scope, Throwable, Unit] = for {
     model            <- parseRdfModelFromFile(path)
     transformedModel <- applyPluginToModel(plugin, model)
     _                <- writeModelToFile(transformedModel, path)
@@ -74,7 +74,7 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
   def fileOutputStreamFor(path: Path): ZIO[Scope, IOException, FileOutputStream] =
     ZIO.acquireRelease(ZIO.attemptBlockingIO(new FileOutputStream(path.toFile)))(fos => ZIO.succeedBlocking(fos))
 
-  def run: ZIO[ZIOAppArgs with Scope, Any, Any] =
+  def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
     ZIO.foreach(discoverFiles(testDataPath))(pathToFile =>
       ZIO.debug(s"applying to $pathToFile") *> applyUpgradePluginTo(upgradePlugin, pathToFile)
     )

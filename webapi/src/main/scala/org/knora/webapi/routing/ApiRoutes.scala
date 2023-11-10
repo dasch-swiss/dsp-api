@@ -8,10 +8,10 @@ package org.knora.webapi.routing
 import org.apache.pekko.actor
 import org.apache.pekko.http.cors.scaladsl.CorsDirectives
 import org.apache.pekko.http.cors.scaladsl.settings.CorsSettings
-import org.apache.pekko.http.scaladsl.model.HttpMethods._
-import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.model.HttpMethods.*
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.Route
-import zio._
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
@@ -23,8 +23,8 @@ import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.routing
-import org.knora.webapi.routing.admin._
-import org.knora.webapi.routing.v2._
+import org.knora.webapi.routing.admin.*
+import org.knora.webapi.routing.v2.*
 import org.knora.webapi.slice.admin.api.AdminApiRoutes
 import org.knora.webapi.slice.admin.api.ProjectsEndpointsHandler
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
@@ -44,22 +44,9 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem
-      with AdminApiRoutes
-      with AppConfig
-      with AppRouter
-      with IriConverter
-      with KnoraProjectRepo
-      with MessageRelay
-      with ProjectADMRestService
-      with ProjectsEndpointsHandler
-      with ResourceInfoRoutes
-      with RestCardinalityService
-      with RestResourceInfoService
-      with StringFormatter
-      with ValuesResponderV2
-      with core.State
-      with routing.Authenticator,
+    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay &
+      ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService &
+      RestResourceInfoService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
     ApiRoutes
   ] =
     ZLayer {
@@ -71,17 +58,9 @@ object ApiRoutes {
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
         routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
-                     AppConfig
-                       with IriConverter
-                       with KnoraProjectRepo
-                       with MessageRelay
-                       with ProjectADMRestService
-                       with RestCardinalityService
-                       with RestResourceInfoService
-                       with StringFormatter
-                       with ValuesResponderV2
-                       with core.State
-                       with routing.Authenticator
+                     AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService &
+                       RestCardinalityService & RestResourceInfoService & StringFormatter & ValuesResponderV2 &
+                       core.State & routing.Authenticator
                    ]
       } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, appConfig, runtime)
     }
@@ -100,17 +79,8 @@ private final case class ApiRoutesImpl(
   resourceInfoRoutes: ResourceInfoRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
-    AppConfig
-      with IriConverter
-      with KnoraProjectRepo
-      with MessageRelay
-      with ProjectADMRestService
-      with RestCardinalityService
-      with RestResourceInfoService
-      with StringFormatter
-      with ValuesResponderV2
-      with core.State
-      with routing.Authenticator
+    AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService &
+      RestResourceInfoService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
   ]
 ) extends ApiRoutes
     with AroundDirectives {

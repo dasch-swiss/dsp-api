@@ -2950,17 +2950,8 @@ final case class OntologyResponderV2Live(
 
 object OntologyResponderV2Live {
   val layer: URLayer[
-    AppConfig
-      with CardinalityHandler
-      with CardinalityService
-      with IriService
-      with KnoraProjectRepo
-      with MessageRelay
-      with OntologyCache
-      with OntologyHelpers
-      with OntologyRepo
-      with StringFormatter
-      with TriplestoreService,
+    AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectRepo & MessageRelay & OntologyCache &
+      OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService,
     OntologyResponderV2
   ] = ZLayer.fromZIO {
     for {

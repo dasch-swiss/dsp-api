@@ -2861,15 +2861,8 @@ final case class ResourcesResponderV2Live(
 object ResourcesResponderV2Live {
 
   val layer: URLayer[
-    StringFormatter
-      with PermissionUtilADM
-      with ResourceUtilV2
-      with StandoffTagUtilV2
-      with ConstructResponseUtilV2
-      with TriplestoreService
-      with MessageRelay
-      with IriService
-      with AppConfig,
+    StringFormatter & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & ConstructResponseUtilV2 &
+      TriplestoreService & MessageRelay & IriService & AppConfig,
     ResourcesResponderV2
   ] = ZLayer.fromZIO {
     for {

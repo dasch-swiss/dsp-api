@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.knora.webapi.messages.util.rdf.jenaimpl._
+import org.knora.webapi.messages.util.rdf.jenaimpl.*
 
 /**
  * A feature factory that creates RDF processing tools.

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import zio._
+import zio.*
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.config.AppConfig
@@ -85,7 +85,7 @@ final case class StoresResponderADMLive(
 
 object StoresResponderADMLive {
   val layer: URLayer[
-    TriplestoreService with MessageRelay with CacheService with AppConfig with OntologyCache,
+    TriplestoreService & MessageRelay & CacheService & AppConfig & OntologyCache,
     StoresResponderADMLive
   ] =
     ZLayer.fromZIO {

@@ -12,12 +12,12 @@ import zio.ZLayer
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -29,9 +29,9 @@ import org.knora.webapi.messages.util
 import org.knora.webapi.messages.util.DateUtil
 import org.knora.webapi.messages.util.KnoraCalendarPrecision
 import org.knora.webapi.messages.util.KnoraCalendarType
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
@@ -268,7 +268,7 @@ final case class StandoffTagUtilV2Live(
 }
 
 object StandoffTagUtilV2Live {
-  val layer: URLayer[MessageRelay with StringFormatter, StandoffTagUtilV2] =
+  val layer: URLayer[MessageRelay & StringFormatter, StandoffTagUtilV2] =
     ZLayer.fromFunction(StandoffTagUtilV2Live.apply _)
 }
 

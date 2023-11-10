@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
@@ -16,7 +16,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
@@ -138,7 +138,7 @@ final case class SipiResponderADMLive(
     } yield response
 }
 object SipiResponderADMLive {
-  val layer: URLayer[TriplestoreService with MessageRelay, SipiResponderADM] = ZLayer.fromZIO {
+  val layer: URLayer[TriplestoreService & MessageRelay, SipiResponderADM] = ZLayer.fromZIO {
     for {
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]

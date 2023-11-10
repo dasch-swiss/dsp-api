@@ -6,7 +6,7 @@
 package org.knora.webapi.core
 
 import org.apache.pekko
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import org.knora.webapi.core
@@ -32,17 +32,8 @@ trait AppRouter {
 
 object AppRouter {
   val layer: ZLayer[
-    core.ActorSystem
-      with CardinalityHandler
-      with CardinalityService
-      with ConstructResponseUtilV2
-      with MessageRelay
-      with OntologyCache
-      with OntologyHelpers
-      with OntologyRepo
-      with PermissionUtilADM
-      with ResourceUtilV2
-      with StandoffTagUtilV2,
+    core.ActorSystem & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & MessageRelay &
+      OntologyCache & OntologyHelpers & OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2,
     Nothing,
     AppRouter
   ] =
@@ -52,15 +43,8 @@ object AppRouter {
         messageRelay <- ZIO.service[MessageRelay]
         runtime <-
           ZIO.runtime[
-            CardinalityHandler
-              with CardinalityService
-              with ConstructResponseUtilV2
-              with OntologyCache
-              with OntologyHelpers
-              with OntologyRepo
-              with PermissionUtilADM
-              with ResourceUtilV2
-              with StandoffTagUtilV2
+            CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & OntologyCache & OntologyHelpers &
+              OntologyRepo & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2
           ]
       } yield new AppRouter {
         implicit val system: org.apache.pekko.actor.ActorSystem = as.system

@@ -6,7 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test._
+import zio.test.*
 
 import dsp.errors.ValidationException
 

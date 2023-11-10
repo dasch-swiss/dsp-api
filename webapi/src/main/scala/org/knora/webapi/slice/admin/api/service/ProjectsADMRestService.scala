@@ -5,15 +5,15 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.RestrictedViewSize
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
@@ -296,11 +296,7 @@ final case class ProjectsADMRestServiceLive(
 
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
-    ProjectsResponderADM
-      with KnoraProjectRepo
-      with ProjectExportService
-      with ProjectImportService
-      with RestPermissionService,
+    ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectImportService & RestPermissionService,
     ProjectsADMRestServiceLive
   ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

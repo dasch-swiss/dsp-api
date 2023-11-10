@@ -673,7 +673,7 @@ object CreateResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
-  ): ZIO[IriConverter with StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] =
+  ): ZIO[IriConverter & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
         (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
@@ -881,7 +881,7 @@ object UpdateResourceMetadataRequestV2 {
     jsonLDDocument: JsonLDDocument,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): ZIO[StringFormatter with IriConverter, Throwable, UpdateResourceMetadataRequestV2] = {
+  ): ZIO[StringFormatter & IriConverter, Throwable, UpdateResourceMetadataRequestV2] = {
     val body = jsonLDDocument.body
     for {
       resourceIri               <- getResourceIri(body)
@@ -905,7 +905,7 @@ object UpdateResourceMetadataRequestV2 {
     )
   }
 
-  private def getResourceIri(obj: JsonLDObject): ZIO[StringFormatter with IriConverter, Throwable, SmartIri] =
+  private def getResourceIri(obj: JsonLDObject): ZIO[StringFormatter & IriConverter, Throwable, SmartIri] =
     for {
       resourceIri <- obj.getRequiredIdValueAsKnoraDataIri
                        .filterOrElseWith(_.isKnoraResourceIri)(it => ZIO.fail(s"Invalid resource IRI: <$it>"))
@@ -955,7 +955,7 @@ object UpdateResourceMetadataRequestV2 {
     getTimeStamp.mapError(BadRequestException(_))
   }
 
-  private def areAllOptionsEmpty(options: Option[_]*): Boolean = options.forall(_.isEmpty)
+  private def areAllOptionsEmpty(options: Option[?]*): Boolean = options.forall(_.isEmpty)
 }
 
 /**
@@ -1077,7 +1077,7 @@ object DeleteOrEraseResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): ZIO[StringFormatter with IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
+  ): ZIO[StringFormatter & IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
       for {
         resourceIri <-

@@ -6,23 +6,23 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
@@ -30,7 +30,7 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
@@ -40,22 +40,22 @@ import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimi
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types._
+import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.searchmessages.*
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.util.ApacheLuceneSupport._
+import org.knora.webapi.util.ApacheLuceneSupport.*
 
 trait SearchResponderV2
 final case class SearchResponderV2Live(
@@ -1009,19 +1009,9 @@ final case class SearchResponderV2Live(
 
 object SearchResponderV2Live {
   val layer: ZLayer[
-    AppConfig
-      with TriplestoreService
-      with MessageRelay
-      with ConstructResponseUtilV2
-      with OntologyCache
-      with StandoffTagUtilV2
-      with QueryTraverser
-      with OntologyInferencer
-      with GravsearchTypeInspectionRunner
-      with InferenceOptimizationService
-      with IriConverter
-      with ConstructTransformer
-      with StringFormatter,
+    AppConfig & TriplestoreService & MessageRelay & ConstructResponseUtilV2 & OntologyCache & StandoffTagUtilV2 &
+      QueryTraverser & OntologyInferencer & GravsearchTypeInspectionRunner & InferenceOptimizationService &
+      IriConverter & ConstructTransformer & StringFormatter,
     Nothing,
     SearchResponderV2Live
   ] =

@@ -43,7 +43,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
   private val testProject      = Shortcode.unsafeFrom(testShortCodeStr)
   private val testContent      = "testContent".getBytes()
   private val expectedPath     = s"/projects/$testShortCodeStr/export"
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("DspIngestClientLive")(test("should download a project export") {
       ZIO.scoped {
         for {

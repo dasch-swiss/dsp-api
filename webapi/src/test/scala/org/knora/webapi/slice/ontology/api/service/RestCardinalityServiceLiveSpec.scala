@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.ontology.api.service
 
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
@@ -22,7 +22,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult
 import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanReplaceCardinalityCheckResult.IsInUseCheckFailure
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult._
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -47,7 +47,7 @@ object RestCardinalityServiceLiveSpec extends ZIOSpecDefault {
       SystemUser.permissions.copy(groupsPerProject = Map(projectIri -> List(OntologyConstants.KnoraAdmin.ProjectAdmin)))
     )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("RestCardinalityServiceLive")(
       suite("canSetCardinality")(
         test("should render a success Response") {

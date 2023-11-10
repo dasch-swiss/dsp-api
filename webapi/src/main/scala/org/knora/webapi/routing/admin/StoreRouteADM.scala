@@ -18,7 +18,7 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.runJsonRoute
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route
 
 /**
@@ -27,7 +27,7 @@ import pekko.http.scaladsl.server.Route
 
 final case class StoreRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+  override protected implicit val runtime: Runtime[Authenticator & StringFormatter & MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with StoresADMJsonProtocol {
   override def makeRoute: Route = Route {

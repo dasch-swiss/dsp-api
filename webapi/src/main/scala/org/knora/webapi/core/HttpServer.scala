@@ -6,7 +6,7 @@
 package org.knora.webapi.core
 
 import org.apache.pekko
-import zio._
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
@@ -22,7 +22,7 @@ trait HttpServer {
 }
 
 object HttpServer {
-  val layer: ZLayer[ActorSystem with AppConfig with ApiRoutes, Nothing, HttpServer] =
+  val layer: ZLayer[ActorSystem & AppConfig & ApiRoutes, Nothing, HttpServer] =
     ZLayer.scoped {
       for {
         as        <- ZIO.service[core.ActorSystem]

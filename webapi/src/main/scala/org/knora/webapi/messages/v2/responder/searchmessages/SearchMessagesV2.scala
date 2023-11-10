@@ -19,7 +19,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDInt
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.search.ConstructQuery
-import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.*
 
 /**
  * An abstract trait for messages that can be sent to `SearchResponderV2`.

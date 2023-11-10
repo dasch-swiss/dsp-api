@@ -1071,6 +1071,6 @@ final case class OntologyCacheLive(
 }
 
 object OntologyCacheLive {
-  val layer: URLayer[TriplestoreService with StringFormatter, OntologyCache] =
+  val layer: URLayer[TriplestoreService & StringFormatter, OntologyCache] =
     ZLayer.fromFunction(OntologyCacheLive.apply _)
 }

@@ -7,12 +7,12 @@ package dsp.valueobjects
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-import zio._
+import zio.*
 import zio.config.magnolia.Descriptor
 import zio.json.JsonCodec
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
-import zio.prelude.Assertion._
+import zio.prelude.Assertion.*
 import zio.prelude.Subtype
 import zio.prelude.Validation
 

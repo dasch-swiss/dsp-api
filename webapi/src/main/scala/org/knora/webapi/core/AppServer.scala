@@ -5,7 +5,7 @@
 
 package org.knora.webapi.core
 
-import zio._
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
@@ -156,15 +156,8 @@ final case class AppServer(
 object AppServer {
 
   private type AppServerEnvironment =
-    State
-      with TriplestoreService
-      with RepositoryUpdater
-      with ActorSystem
-      with OntologyCache
-      with IIIFService
-      with CacheService
-      with HttpServer
-      with AppConfig
+    State & TriplestoreService & RepositoryUpdater & ActorSystem & OntologyCache & IIIFService & CacheService &
+      HttpServer & AppConfig
 
   /**
    * Initializes the AppServer instance with the required services

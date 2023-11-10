@@ -5,25 +5,25 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.instrumentation.InstrumentationSupport
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
@@ -31,7 +31,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
@@ -887,7 +887,7 @@ final case class ProjectsResponderADMLive(
 
 object ProjectsResponderADMLive {
   val layer: URLayer[
-    MessageRelay with TriplestoreService with StringFormatter with ProjectADMService with IriService with AppConfig,
+    MessageRelay & TriplestoreService & StringFormatter & ProjectADMService & IriService & AppConfig,
     ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {

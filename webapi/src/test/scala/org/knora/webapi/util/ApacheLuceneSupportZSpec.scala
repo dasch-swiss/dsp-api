@@ -13,7 +13,7 @@ import zio.test.assertTrue
 
 object ApacheLuceneSupportZSpec extends ZIOSpecDefault {
 
-  def spec: Spec[TestEnvironment with Scope, Any] =
+  def spec: Spec[TestEnvironment & Scope, Any] =
     suite("The ApacheLuceneSupport class")(
       test("leave a Lucene query unchanged") {
 

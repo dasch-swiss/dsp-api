@@ -7,7 +7,7 @@ package org.knora.webapi.http.status
 
 import org.apache.pekko
 
-import dsp.errors._
+import dsp.errors.*
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 import pekko.http.scaladsl.model.StatusCode

@@ -13,7 +13,7 @@ import zio.test.*
  */
 object RestrictedViewSizeSpec extends ZIOSpecDefault {
 
-  def spec: Spec[TestEnvironment with Scope, Nothing] = suite("Size")(
+  def spec: Spec[TestEnvironment & Scope, Nothing] = suite("Size")(
     test("should succeed on passing percentage values") {
       val gen = Gen.int(1, 100)
       check(gen) { int =>

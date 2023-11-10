@@ -6,7 +6,7 @@
 package org.knora.webapi.core
 
 import org.apache.pekko
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import scala.concurrent.ExecutionContext

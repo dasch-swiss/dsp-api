@@ -5,9 +5,9 @@
 
 package org.knora.webapi.util
 
-import zio._
+import zio.*
 
-import java.io._
+import java.io.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipInputStream
@@ -18,27 +18,27 @@ object ZScopedJavaIoStreams {
   private def release(in: AutoCloseable): UIO[Unit] =
     ZIO.attempt(in.close()).logError("Unable to close AutoCloseable.").ignore
 
-  def bufferedInputStream(in: InputStream): ZIO[Any with Scope, Throwable, InputStream] = {
+  def bufferedInputStream(in: InputStream): ZIO[Any & Scope, Throwable, InputStream] = {
     def acquire = ZIO.attempt(new BufferedInputStream(in))
     ZIO.acquireRelease(acquire)(release)
   }
 
-  def bufferedOutputStream(in: OutputStream): ZIO[Any with Scope, Throwable, OutputStream] = {
+  def bufferedOutputStream(in: OutputStream): ZIO[Any & Scope, Throwable, OutputStream] = {
     def acquire = ZIO.attempt(new BufferedOutputStream(in))
     ZIO.acquireRelease(acquire)(release)
   }
 
-  def byteArrayOutputStream(): ZIO[Any with Scope, Throwable, ByteArrayOutputStream] = {
+  def byteArrayOutputStream(): ZIO[Any & Scope, Throwable, ByteArrayOutputStream] = {
     def acquire                   = ZIO.attempt(new ByteArrayOutputStream())
     def release(os: OutputStream) = ZIO.succeed(os.close())
     ZIO.acquireRelease(acquire)(release)
   }
 
-  def fileInputStream(path: zio.nio.file.Path): ZIO[Any with Scope, Throwable, InputStream] =
+  def fileInputStream(path: zio.nio.file.Path): ZIO[Any & Scope, Throwable, InputStream] =
     fileInputStream(path.toFile)
-  def fileInputStream(file: File): ZIO[Any with Scope, Throwable, InputStream] =
+  def fileInputStream(file: File): ZIO[Any & Scope, Throwable, InputStream] =
     fileInputStream(file.toPath)
-  def fileInputStream(path: Path): ZIO[Any with Scope, Throwable, InputStream] = {
+  def fileInputStream(path: Path): ZIO[Any & Scope, Throwable, InputStream] = {
     def acquire = ZIO.attempt(Files.newInputStream(path))
     if (!Files.exists(path)) {
       ZIO.fail(new IllegalArgumentException(s"File ${path.toAbsolutePath} does not exist."))
@@ -73,9 +73,9 @@ object ZScopedJavaIoStreams {
    * @param path The path to the file.
    * @return The managed output stream.
    */
-  def fileBufferedOutputStream(path: zio.nio.file.Path): ZIO[Any with Scope, Throwable, OutputStream] =
+  def fileBufferedOutputStream(path: zio.nio.file.Path): ZIO[Any & Scope, Throwable, OutputStream] =
     fileBufferedOutputStream(path.toFile.toPath)
-  def fileBufferedOutputStream(path: Path): ZIO[Any with Scope, Throwable, OutputStream] = {
+  def fileBufferedOutputStream(path: Path): ZIO[Any & Scope, Throwable, OutputStream] = {
     def acquire = ZIO.attempt(Files.newOutputStream(path))
     ZIO.acquireRelease(acquire)(release).flatMap(os => bufferedOutputStream(os))
   }

@@ -8,13 +8,13 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 import org.apache.jena
 
 import scala.collection.mutable.ArrayBuffer
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 import dsp.errors.RdfProcessingException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 sealed trait JenaNode extends RdfNode {
   def node: jena.graph.Node
@@ -159,7 +159,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     extends JenaContextFactory
     with RdfModel {
 
-  import JenaConversions._
+  import JenaConversions.*
 
   private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
@@ -329,7 +329,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
  */
 class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 
-  import JenaConversions._
+  import JenaConversions.*
 
   /**
    * Represents a custom Knora datatype (used in the simple schema), for registration

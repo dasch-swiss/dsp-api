@@ -4,9 +4,9 @@
  */
 
 package org.knora.webapi.util
-import zio._
-import zio.logging.LogFormat._
-import zio.logging._
+import zio.*
+import zio.logging.LogFormat.*
+import zio.logging.*
 import zio.logging.slf4j.bridge.Slf4jBridge
 
 object Logger {
@@ -47,12 +47,12 @@ object Logger {
     if (useJsonLogger) jsonLogger
     else textLogger
 
-  def fromEnv(): ZLayer[Any, Nothing, Unit with Unit] =
+  def fromEnv(): ZLayer[Any, Nothing, Unit & Unit] =
     Runtime.removeDefaultLoggers >>> logger >+> Slf4jBridge.initialize
 
-  def json(): ZLayer[Any, Nothing, Unit with Unit] =
+  def json(): ZLayer[Any, Nothing, Unit & Unit] =
     Runtime.removeDefaultLoggers >>> jsonLogger >+> Slf4jBridge.initialize
 
-  def text(): ZLayer[Any, Nothing, Unit with Unit] =
+  def text(): ZLayer[Any, Nothing, Unit & Unit] =
     Runtime.removeDefaultLoggers >>> textLogger >+> Slf4jBridge.initialize
 }

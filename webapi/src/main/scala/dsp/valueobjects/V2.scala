@@ -5,7 +5,7 @@
 
 package dsp.valueobjects
 
-import zio.json._
+import zio.json.*
 
 object V2 {
 

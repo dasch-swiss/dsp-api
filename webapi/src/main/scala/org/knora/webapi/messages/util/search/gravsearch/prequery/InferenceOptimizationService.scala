@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import org.knora.webapi.InternalSchema
@@ -134,6 +134,6 @@ final case class InferenceOptimizationServiceLive(
 }
 
 object InferenceOptimizationService {
-  val layer: URLayer[MessageRelay with OntologyCache with StringFormatter, InferenceOptimizationServiceLive] =
+  val layer: URLayer[MessageRelay & OntologyCache & StringFormatter, InferenceOptimizationServiceLive] =
     ZLayer.fromFunction(InferenceOptimizationServiceLive.apply _)
 }

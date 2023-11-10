@@ -14,27 +14,27 @@ import zio.ZLayer
 import java.util.UUID
 import scala.annotation.tailrec
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri._
+import dsp.valueobjects.Iri.*
 import dsp.valueobjects.List.ListName
 import dsp.valueobjects.ListErrorMessages
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -2067,7 +2067,7 @@ final case class ListsResponderADMLive(
 
 object ListsResponderADMLive {
   val layer: URLayer[
-    StringFormatter with TriplestoreService with MessageRelay with IriService with AppConfig,
+    StringFormatter & TriplestoreService & MessageRelay & IriService & AppConfig,
     ListsResponderADM
   ] = ZLayer.fromZIO {
     for {

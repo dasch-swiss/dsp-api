@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.util.standoff
 
 import com.sksamuel.diffpatch.DiffMatchPatch
-import com.sksamuel.diffpatch.DiffMatchPatch._
+import com.sksamuel.diffpatch.DiffMatchPatch.*
 import org.apache.commons.text.StringEscapeUtils
 
 import java.io.StringReader
@@ -15,11 +15,11 @@ import java.util.UUID
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import scala.util.control.NonFatal
-import scala.xml._
+import scala.xml.*
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ErrorHandlingMap
 
@@ -306,7 +306,7 @@ class XMLToStandoffUtil(
   documentSpecificIDs: Map[String, UUID] = Map.empty[String, UUID]
 ) {
 
-  import XMLToStandoffUtil._
+  import XMLToStandoffUtil.*
   // Parse XML with an XML parser configured to prevent certain security risks.
   // See <https://github.com/scala/scala-xml/issues/17>.
   private val saxParserFactory = SAXParserFactory.newInstance()
@@ -569,7 +569,7 @@ class XMLToStandoffUtil(
    * @return the differences between the two texts.
    */
   def makeStandoffDiffs(baseText: String, derivedText: String): Seq[StandoffDiff] = {
-    import scala.jdk.CollectionConverters._
+    import scala.jdk.CollectionConverters.*
 
     case class DiffConversionState(
       standoffDiffs: Vector[StandoffDiff] = Vector.empty[StandoffDiff],

@@ -166,7 +166,7 @@ object DeleteValueV2 {
    * @param jsonLdString the JSON-LD input as String.
    * @return a case class instance representing the input.
    */
-  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter with IriConverter, Throwable, DeleteValueV2] =
+  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter & IriConverter, Throwable, DeleteValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       RouteUtilV2.parseJsonLd(jsonLdString).flatMap { jsonLDDocument =>
         jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
@@ -619,7 +619,7 @@ object CreateValueV2 {
   def fromJsonLd(
     jsonLdString: String,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with IriConverter with MessageRelay, Throwable, CreateValueV2] =
+  ): ZIO[StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
         // Get the IRI of the resource that the value is to be created in.
@@ -740,7 +740,7 @@ object UpdateValueV2 {
   def fromJsonLd(
     jsonLdString: String,
     requestingUser: UserADM
-  ): ZIO[IriConverter with StringFormatter with MessageRelay, Throwable, UpdateValueV2] =
+  ): ZIO[IriConverter & StringFormatter & MessageRelay, Throwable, UpdateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       def makeUpdateValueContentV2(
         resourceIri: SmartIri,
@@ -1048,7 +1048,7 @@ object ValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, ValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
+  ): ZIO[StringFormatter & MessageRelay, Throwable, ValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
     stringFormatter =>
       for {
         valueType <-
@@ -1665,7 +1665,7 @@ object TextValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, TextValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, TextValueContentV2] =
     for {
       maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
       maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
@@ -2580,7 +2580,7 @@ object FileValueWithSipiMetadata {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, FileValueWithSipiMetadata] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, FileValueWithSipiMetadata] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       for {
         // The submitted value provides only Sipi's internal filename for the file.
@@ -2716,7 +2716,7 @@ object StillImageFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, StillImageFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, StillImageFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)
@@ -2865,7 +2865,7 @@ object DocumentFileValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, DocumentFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, DocumentFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLdObject)
@@ -2886,7 +2886,7 @@ object ArchiveFileValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, ArchiveFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, ArchiveFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLdObject)
@@ -2959,7 +2959,7 @@ object TextFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, TextFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, TextFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)
@@ -3032,7 +3032,7 @@ object AudioFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, AudioFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, AudioFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)
@@ -3107,7 +3107,7 @@ object MovingImageFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, MovingImageFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, MovingImageFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)

@@ -12,7 +12,7 @@ import zio.ZIO
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.config.AppConfig
@@ -30,7 +30,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import pekko.actor.ActorSystem
 import pekko.http.scaladsl.model.Multipart
 import pekko.http.scaladsl.model.Multipart.BodyPart
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route
 
 /**
@@ -38,7 +38,7 @@ import pekko.http.scaladsl.server.Route
  */
 final case class StandoffRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig with Authenticator with IriConverter with StringFormatter with MessageRelay
+    AppConfig & Authenticator & IriConverter & StringFormatter & MessageRelay
   ],
   private implicit val system: ActorSystem
 ) extends LazyLogging {

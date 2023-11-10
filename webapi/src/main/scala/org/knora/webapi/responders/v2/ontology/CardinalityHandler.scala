@@ -492,7 +492,7 @@ final case class CardinalityHandlerLive(
 
 object CardinalityHandlerLive {
   val layer: URLayer[
-    OntologyCache with TriplestoreService with MessageRelay with OntologyHelpers with StringFormatter,
+    OntologyCache & TriplestoreService & MessageRelay & OntologyHelpers & StringFormatter,
     CardinalityHandler
   ] = ZLayer.fromFunction(CardinalityHandlerLive.apply _)
 }

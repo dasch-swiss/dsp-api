@@ -2440,13 +2440,7 @@ final case class ValuesResponderV2Live(
 
 object ValuesResponderV2Live {
   val layer: URLayer[
-    AppConfig
-      with IriService
-      with MessageRelay
-      with PermissionUtilADM
-      with ResourceUtilV2
-      with TriplestoreService
-      with StringFormatter,
+    AppConfig & IriService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & TriplestoreService & StringFormatter,
     ValuesResponderV2
   ] = ZLayer.fromZIO {
     for {

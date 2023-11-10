@@ -2170,7 +2170,7 @@ final case class OntologyHelpersLive(
 
 object OntologyHelpersLive {
   val layer: URLayer[
-    AppConfig with IriService with MessageRelay with TriplestoreService with OntologyCache with StringFormatter,
+    AppConfig & IriService & MessageRelay & TriplestoreService & OntologyCache & StringFormatter,
     OntologyHelpers
   ] = ZLayer.fromFunction(OntologyHelpersLive.apply _)
 }

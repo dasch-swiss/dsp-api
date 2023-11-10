@@ -6,23 +6,23 @@
 package org.knora.webapi.routing.admin.permissions
 
 import org.apache.pekko
-import zio._
+import zio.*
 
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM._
+import org.knora.webapi.routing.RouteUtilADM.*
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.PathMatcher
 import pekko.http.scaladsl.server.Route
 
 final case class DeletePermissionRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+  override protected implicit val runtime: Runtime[Authenticator & StringFormatter & MessageRelay]
 ) extends KnoraRoute(routeData, runtime)
     with PermissionsADMJsonProtocol {
 

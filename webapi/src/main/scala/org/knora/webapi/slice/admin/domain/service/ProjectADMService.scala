@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio._
+import zio.*
 
 import dsp.valueobjects.RestrictedViewSize
 import org.knora.webapi.messages.OntologyConstants
@@ -14,7 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectKeywordsGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsKeywordsGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.KnoraProject._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
@@ -123,6 +123,6 @@ final case class ProjectADMServiceLive(
 }
 
 object ProjectADMServiceLive {
-  val layer: URLayer[OntologyRepo with KnoraProjectRepo, ProjectADMServiceLive] =
+  val layer: URLayer[OntologyRepo & KnoraProjectRepo, ProjectADMServiceLive] =
     ZLayer.fromFunction(ProjectADMServiceLive.apply _)
 }

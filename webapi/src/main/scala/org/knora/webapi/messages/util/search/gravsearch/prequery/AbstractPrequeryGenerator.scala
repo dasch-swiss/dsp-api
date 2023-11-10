@@ -10,18 +10,18 @@ import zio.ZIO
 
 import scala.collection.mutable
 
-import dsp.errors._
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types._
+import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 

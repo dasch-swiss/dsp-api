@@ -13,7 +13,7 @@ import eu.timepit.refined.string.MatchesRegex
 import zio.Chunk
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
-import zio.json.interop.refined._
+import zio.json.interop.refined.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 

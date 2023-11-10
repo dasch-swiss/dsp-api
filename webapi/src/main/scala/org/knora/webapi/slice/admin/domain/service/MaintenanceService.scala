@@ -12,7 +12,7 @@ import zio.ZLayer
 import zio.macros.accessible
 import zio.stream.ZStream
 
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests._
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri

@@ -45,7 +45,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
  */
 final case class OntologiesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig with Authenticator with IriConverter with MessageRelay with RestCardinalityService with StringFormatter
+    AppConfig & Authenticator & IriConverter & MessageRelay & RestCardinalityService & StringFormatter
   ]
 ) {
 
@@ -112,7 +112,7 @@ final case class OntologiesRouteV2()(
 
   private def getOntologySmartIri(
     requestContext: RequestContext
-  ): ZIO[AppConfig with IriConverter with StringFormatter, BadRequestException, SmartIri] = {
+  ): ZIO[AppConfig & IriConverter & StringFormatter, BadRequestException, SmartIri] = {
     val urlPath = requestContext.request.uri.path.toString
     ZIO.serviceWithZIO[AppConfig] { appConfig =>
       val externalOntologyIriHostAndPort = appConfig.knoraApi.externalOntologyIriHostAndPort
@@ -131,7 +131,7 @@ final case class OntologiesRouteV2()(
     }
   }
 
-  private def validateOntologyIri(iri: String): ZIO[IriConverter with StringFormatter, BadRequestException, SmartIri] =
+  private def validateOntologyIri(iri: String): ZIO[IriConverter & StringFormatter, BadRequestException, SmartIri] =
     RouteUtilZ.toSmartIri(iri, s"Invalid ontology IRI: $iri").flatMap(RouteUtilZ.ensureExternalOntologyName)
 
   private def getOntologyMetadata(): Route =
@@ -361,7 +361,7 @@ final case class OntologiesRouteV2()(
   private def getClasses(): Route =
     path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
       get { requestContext =>
-        val classSmartIrisTask: ZIO[IriConverter with StringFormatter, BadRequestException, Set[SmartIri]] =
+        val classSmartIrisTask: ZIO[IriConverter & StringFormatter, BadRequestException, Set[SmartIri]] =
           ZIO
             .foreach(externalResourceClassIris)(iri =>
               RouteUtilZ
@@ -371,7 +371,7 @@ final case class OntologiesRouteV2()(
             )
             .map(_.toSet)
 
-        val targetSchemaTask: ZIO[IriConverter with StringFormatter, BadRequestException, OntologySchema] =
+        val targetSchemaTask: ZIO[IriConverter & StringFormatter, BadRequestException, OntologySchema] =
           classSmartIrisTask
             .flatMap(iriSet =>
               ZIO.foreach(iriSet)(iri =>

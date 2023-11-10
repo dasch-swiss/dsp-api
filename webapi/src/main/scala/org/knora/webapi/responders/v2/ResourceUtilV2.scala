@@ -7,7 +7,7 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.Task
-import zio._
+import zio.*
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
@@ -278,6 +278,6 @@ final case class ResourceUtilV2Live(triplestore: TriplestoreService, messageRela
 }
 
 object ResourceUtilV2Live {
-  val layer: URLayer[TriplestoreService with MessageRelay, ResourceUtilV2] =
+  val layer: URLayer[TriplestoreService & MessageRelay, ResourceUtilV2] =
     ZLayer.fromFunction(ResourceUtilV2Live.apply _)
 }

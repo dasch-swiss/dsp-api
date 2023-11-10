@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
@@ -15,19 +15,19 @@ import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import dsp.errors.NotImplementedException
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatPredicateObjects
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatStatements
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MainResourcesAndValueRdfData
@@ -54,7 +54,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRespons
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
@@ -1687,7 +1687,7 @@ final case class ConstructResponseUtilV2Live(
 
 object ConstructResponseUtilV2Live {
   val layer: URLayer[
-    AppConfig with MessageRelay with StandoffTagUtilV2 with StringFormatter,
+    AppConfig & MessageRelay & StandoffTagUtilV2 & StringFormatter,
     ConstructResponseUtilV2
   ] = ZLayer.fromFunction(ConstructResponseUtilV2Live.apply _)
 }
