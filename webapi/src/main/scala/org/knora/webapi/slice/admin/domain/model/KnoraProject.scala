@@ -50,7 +50,7 @@ object KnoraProject {
       JsonCodec[String].transformOrFail(Shortcode.from(_).toEitherWith(_.head.getMessage), _.value)
   }
 
-  final case class Shortname private (value: String)
+  final case class Shortname private (value: String) extends AnyVal
 
   object Shortname {
 
