@@ -6,7 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-import zio.test._
+import zio.test.*
 
 import dsp.errors.ValidationException
 
@@ -15,7 +15,7 @@ import dsp.errors.ValidationException
  */
 object LangStringSpec extends ZIOSpecDefault {
 
-  def spec = suite("LangStringSpec")(
+  def spec: Spec[Any, ValidationException] = suite("LangStringSpec")(
     langStringTest,
     multiLangStringTest
   )

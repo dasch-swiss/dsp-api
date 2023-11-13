@@ -5,14 +5,14 @@
 
 package org.knora.webapi.messages.util
 
-import zio._
+import zio.*
 
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.Full
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 
 /**
@@ -35,7 +35,7 @@ object UserUtilADM {
     requestingUser: UserADM,
     requestedUserIri: IRI,
     projectIri: IRI
-  ): ZIO[StringFormatter with MessageRelay, Throwable, UserADM] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, UserADM] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       if (requestingUser.id == requestedUserIri) {
         ZIO.succeed(requestingUser)

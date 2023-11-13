@@ -180,6 +180,6 @@ case class RestCardinalityServiceLive(
 }
 
 object RestCardinalityServiceLive {
-  val layer: ZLayer[CardinalityService with IriConverter with OntologyRepo, Nothing, RestCardinalityService] =
+  val layer: ZLayer[CardinalityService & IriConverter & OntologyRepo, Nothing, RestCardinalityService] =
     ZLayer.fromFunction(RestCardinalityServiceLive.apply _)
 }

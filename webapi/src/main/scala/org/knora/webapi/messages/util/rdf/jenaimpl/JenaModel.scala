@@ -8,13 +8,13 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 import org.apache.jena
 
 import scala.collection.mutable.ArrayBuffer
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 import dsp.errors.RdfProcessingException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 
 sealed trait JenaNode extends RdfNode {
   def node: jena.graph.Node
@@ -159,7 +159,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     extends JenaContextFactory
     with RdfModel {
 
-  import JenaConversions._
+  import JenaConversions.*
 
   private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
@@ -255,7 +255,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
 
     // Get the namespaces used in all the named graphs in the dataset.
     val namedGraphNamespaces: Map[String, IRI] = datasetGraph.listGraphNodes.asScala.flatMap {
-      graphNode: jena.graph.Node =>
+      (graphNode: jena.graph.Node) =>
         val graph: jena.graph.Graph                  = datasetGraph.getGraph(graphNode)
         val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
         prefixMapping.getNsPrefixMap.asScala
@@ -267,7 +267,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
   override def isEmpty: Boolean = dataset.isEmpty
 
   override def getSubjects: Set[RdfResource] =
-    datasetGraph.find.asScala.map { quad: jena.sparql.core.Quad =>
+    datasetGraph.find.asScala.map { (quad: jena.sparql.core.Quad) =>
       val subj: jena.graph.Node = quad.getSubject
       JenaResource.fromJena(subj).getOrElse(throw RdfProcessingException(s"Unexpected statement subject: $subj"))
     }.toSet
@@ -287,13 +287,13 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     // - The named graphs with the same IRIs are isomorphic.
     thisModelNamedGraphIris == thatModelNamedGraphIris &&
     datasetGraph.getDefaultGraph.isIsomorphicWith(thatDatasetGraph.getDefaultGraph) &&
-    thisModelNamedGraphIris.forall { namedGraphIri: jena.graph.Node =>
+    thisModelNamedGraphIris.forall { (namedGraphIri: jena.graph.Node) =>
       datasetGraph.getGraph(namedGraphIri).isIsomorphicWith(thatDatasetGraph.getGraph(namedGraphIri))
     }
   }
 
   override def getContexts: Set[IRI] =
-    datasetGraph.listGraphNodes.asScala.toSet.map { node: jena.graph.Node =>
+    datasetGraph.listGraphNodes.asScala.toSet.map { (node: jena.graph.Node) =>
       node.getURI
     }
 
@@ -329,7 +329,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
  */
 class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 
-  import JenaConversions._
+  import JenaConversions.*
 
   /**
    * Represents a custom Knora datatype (used in the simple schema), for registration
@@ -435,7 +435,7 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
         VariableResultsRow(
           new ErrorHandlingMap[String, String](
             rowMap,
-            { key: String =>
+            { (key: String) =>
               s"No value found for SPARQL query variable '$key' in query result row"
             }
           )

@@ -7,7 +7,7 @@ package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import java.io.File
@@ -17,8 +17,8 @@ import scala.reflect.io.Directory
 
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion

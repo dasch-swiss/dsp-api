@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.List._
+import dsp.valueobjects.Iri.*
+import dsp.valueobjects.List.*
 
 /**
  * List root node and child node creation payloads

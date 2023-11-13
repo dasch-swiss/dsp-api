@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.infrastructure
 
-import zio._
-import zio.http._
+import zio.*
+import zio.http.*
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus
 import zio.metrics.jvm.DefaultJvmMetrics
@@ -19,7 +19,7 @@ object MetricsServer {
 
   private val metricsServer = ZIO.serviceWithZIO[PrometheusApp](app => Server.install(app.route)) *> ZIO.never
 
-  val make: ZIO[State with AppConfig, Throwable, Unit] =
+  val make: ZIO[State & AppConfig, Throwable, Unit] =
     ZIO.serviceWithZIO[AppConfig] { config =>
       val port          = config.instrumentationServerConfig.port
       val interval      = config.instrumentationServerConfig.interval

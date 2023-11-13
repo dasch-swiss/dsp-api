@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.resourceinfo.api.model
 
-import zio.json._
+import zio.json.*
 
 import java.time.Instant
 
@@ -30,8 +30,10 @@ final case class ResourceInfoDto private (
   deleteDate: Option[Instant],
   isDeleted: Boolean
 )
+
 object ResourceInfoDto {
-  def apply(info: ResourceInfo): ResourceInfoDto =
+
+  def from(info: ResourceInfo): ResourceInfoDto =
     ResourceInfoDto(
       info.iri,
       info.creationDate,

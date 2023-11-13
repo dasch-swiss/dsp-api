@@ -6,12 +6,12 @@
 package org.knora.webapi.store.triplestore.api
 
 import play.twirl.api.TxtFormat
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import java.nio.file.Path
 
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri

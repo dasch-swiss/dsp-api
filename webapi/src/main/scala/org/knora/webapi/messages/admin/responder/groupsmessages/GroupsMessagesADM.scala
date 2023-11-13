@@ -269,7 +269,7 @@ case class GroupADM(
  */
 trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol {
 
-  import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
+  import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
 
   implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
   implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =

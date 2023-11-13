@@ -14,14 +14,14 @@ import scala.annotation.tailrec
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
@@ -449,7 +449,7 @@ final case class InferringGravsearchTypeInspector(
                           }
 
                         val isSubclassOfAlreadyInferredType: Boolean = alreadyInferredPropertyTypes.exists {
-                          alreadyInferredType: PropertyTypeInfo =>
+                          (alreadyInferredType: PropertyTypeInfo) =>
                             baseClassesOfInferredType.contains(alreadyInferredType.objectTypeIri)
                         }
 
@@ -507,7 +507,7 @@ final case class InferringGravsearchTypeInspector(
       val typesFromFilters: Set[GravsearchEntityTypeInfo] = usageIndex.typedEntitiesInFilters.get(entityToType) match {
         case Some(typesFromFilters: Set[SmartIri]) =>
           // Yes. Return those types.
-          typesFromFilters.map { typeFromFilter: SmartIri =>
+          typesFromFilters.map { (typeFromFilter: SmartIri) =>
             val isValueType       = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeFromFilter.toString)
             val isStandoffTagType = typeFromFilter.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag
             val isResourceType    = !(isValueType || isStandoffTagType)
@@ -557,7 +557,7 @@ final case class InferringGravsearchTypeInspector(
               usageIndex.knoraPropertyVariablesInFilters.get(variableToType) match {
                 case Some(propertyIris: Set[SmartIri]) =>
                   // Yes.
-                  propertyIris.flatMap { propertyIri: SmartIri =>
+                  propertyIris.flatMap { (propertyIri: SmartIri) =>
                     // Has the ontology responder provided a definition of this property?
                     entityInfo.propertyInfoMap.get(propertyIri) match {
                       case Some(readPropertyInfo: ReadPropertyInfoV2) =>

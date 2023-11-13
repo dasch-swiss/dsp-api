@@ -6,16 +6,16 @@
 package org.knora.webapi.routing.admin
 
 import org.apache.pekko
-import zio._
+import zio.*
 
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.routing
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.admin.permissions._
+import org.knora.webapi.routing.admin.permissions.*
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route
 
 /**
@@ -23,7 +23,7 @@ import pekko.http.scaladsl.server.Route
  */
 final case class PermissionsRouteADM(
   private val routeData: KnoraRouteData,
-  override protected implicit val runtime: Runtime[routing.Authenticator with StringFormatter with MessageRelay]
+  override protected implicit val runtime: Runtime[routing.Authenticator & StringFormatter & MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
   private val createPermissionRoute: CreatePermissionRouteADM = CreatePermissionRouteADM(routeData, runtime)
   private val getPermissionRoute: GetPermissionsRouteADM      = GetPermissionsRouteADM(routeData, runtime)

@@ -7,7 +7,7 @@ package org.knora.webapi.routing
 
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko
-import zio._
+import zio.*
 import zio.prelude.Validation
 
 import scala.concurrent.ExecutionContext

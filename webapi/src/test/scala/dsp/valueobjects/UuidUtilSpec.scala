@@ -6,12 +6,12 @@
 package dsp.valueobjects
 
 import zio.Scope
-import zio.test._
+import zio.test.*
 
 import java.util.UUID
 
 object UuidUtilSpec extends ZIOSpecDefault {
-  def spec: Spec[TestEnvironment with Scope, Any] = suite("UuidUtil")(base64EncodeAndBase64Decode + hasSupportedVersion)
+  def spec: Spec[TestEnvironment & Scope, Any] = suite("UuidUtil")(base64EncodeAndBase64Decode + hasSupportedVersion)
 
   private val base64EncodeAndBase64Decode = test("encode UUID to Base64 and decode again") {
     val uuid              = UUID.randomUUID

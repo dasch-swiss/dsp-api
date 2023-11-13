@@ -5,12 +5,12 @@
 
 package dsp.valueobjects
 
-import zio.json._
+import zio.json.*
 import zio.prelude.Validation
-import zio.test._
+import zio.test.*
 
 import dsp.errors.ValidationException
-import dsp.valueobjects.User._
+import dsp.valueobjects.User.*
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -33,8 +33,8 @@ object UserSpec extends ZIOSpecDefault {
   private val validFamilyName                             = "Rambo"
   private val validPasswordHash                           = PasswordHash.make("test", PasswordStrength(12)).fold(e => throw e.head, v => v)
 
-  def spec =
-    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + systemAdminTest)
+  def spec: Spec[Any, Any] =
+    usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + systemAdminTest
 
   private val usernameTest = suite("Username")(
     test("pass an empty value and return an error") {
@@ -180,8 +180,7 @@ object UserSpec extends ZIOSpecDefault {
 
       val password = PasswordHash.make(passwordString, PasswordStrength(12)).fold(e => throw e.head, v => v)
 
-      assertTrue(password.matches(passwordEqualString)) &&
-      assertTrue(!password.matches(passwordNotEqualString))
+      assertTrue(password.matches(passwordEqualString), !password.matches(passwordNotEqualString))
     },
     test("pass an invalid password strength value and return an error") {
       assertTrue(

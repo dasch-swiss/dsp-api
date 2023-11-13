@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.iiif
 
-import zio._
+import zio.*
 
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
@@ -36,7 +36,7 @@ final case class IIIFRequestMessageHandlerLive(iiifService: IIIFService) extends
 }
 
 object IIIFRequestMessageHandlerLive {
-  val layer: URLayer[IIIFService with MessageRelay, IIIFRequestMessageHandler] = ZLayer.fromZIO {
+  val layer: URLayer[IIIFService & MessageRelay, IIIFRequestMessageHandler] = ZLayer.fromZIO {
     for {
       mr      <- ZIO.service[MessageRelay]
       is      <- ZIO.service[IIIFService]

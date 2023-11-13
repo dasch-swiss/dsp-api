@@ -11,7 +11,7 @@ import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.search.QueryTraverser
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
 import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
@@ -20,20 +20,20 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2Live
 import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.admin._
-import org.knora.webapi.responders.v2._
+import org.knora.webapi.responders.admin.*
+import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.CardinalityHandlerLive
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.responders.v2.ontology.OntologyHelpersLive
-import org.knora.webapi.routing._
-import org.knora.webapi.slice.admin.api._
+import org.knora.webapi.routing.*
+import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
-import org.knora.webapi.slice.admin.domain.service._
+import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
-import org.knora.webapi.slice.common.api._
+import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.repo.service.PredicateObjectMapper
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLive
@@ -65,62 +65,17 @@ object LayersLive {
    * The `Environment` that we require to exist at startup.
    */
   type DspEnvironmentLive =
-    ActorSystem
-      with ApiRoutes
-      with AppConfigurations
-      with AppRouter
-      with Authenticator
-      with CacheService
-      with CacheServiceRequestMessageHandler
-      with CardinalityHandler
-      with CardinalityService
-      with ConstructResponseUtilV2
-      with ConstructTransformer
-      with GravsearchTypeInspectionRunner
-      with GroupsResponderADM
-      with HttpServer
-      with IIIFRequestMessageHandler
-      with IIIFService
-      with InferenceOptimizationService
-      with IriService
-      with IriConverter
-      with JwtService
-      with KnoraProjectRepo
-      with ListsResponderADM
-      with ListsResponderV2
-      with MessageRelay
-      with OntologyCache
-      with OntologyHelpers
-      with OntologyRepo
-      with OntologyResponderV2
-      with PermissionUtilADM
-      with PermissionsResponderADM
-      with PredicateObjectMapper
-      with ProjectADMRestService
-      with ProjectADMService
-      with ProjectExportService
-      with ProjectExportStorageService
-      with ProjectImportService
-      with ProjectsResponderADM
-      with QueryTraverser
-      with RepositoryUpdater
-      with ResourceUtilV2
-      with ResourceUtilV2
-      with ResourcesResponderV2
-      with RestCardinalityService
-      with RestPermissionService
-      with RestResourceInfoService
-      with SearchResponderV2
-      with SipiResponderADM
-      with OntologyInferencer
-      with StandoffResponderV2
-      with StandoffTagUtilV2
-      with State
-      with StoresResponderADM
-      with StringFormatter
-      with TriplestoreService
-      with UsersResponderADM
-      with ValuesResponderV2
+    ActorSystem & ApiRoutes & AppConfigurations & AppRouter & Authenticator & CacheService &
+      CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
+      ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
+      IIIFRequestMessageHandler & IIIFService & InferenceOptimizationService & IriService & IriConverter & JwtService &
+      KnoraProjectRepo & ListsResponderADM & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
+      OntologyRepo & OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PredicateObjectMapper &
+      ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
+      ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
+      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & RestPermissionService & RestResourceInfoService &
+      SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
+      StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
    * All effect layers needed to provide the `Environment`

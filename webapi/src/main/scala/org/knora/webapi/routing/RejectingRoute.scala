@@ -7,7 +7,7 @@ package org.knora.webapi.routing
 
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko
-import zio._
+import zio.*
 
 import scala.concurrent.Future
 import scala.util.Failure
@@ -18,7 +18,7 @@ import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 
 import pekko.http.scaladsl.model.StatusCodes
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route
 
 /**

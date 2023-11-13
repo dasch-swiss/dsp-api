@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.common.repo.service
 
-import zio._
+import zio.*
 
 abstract class AbstractInMemoryCrudRepository[Entity, Id](entities: Ref[List[Entity]], getId: Entity => Id)
     extends CrudRepository[Entity, Id] {

@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.util.search
 
 import dsp.errors.AssertionException
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
@@ -79,7 +79,7 @@ object MainQueryResultProcessor {
 
         // get those value object Iris from the results that the user asked for in the input query's CONSTRUCT clause
         val valObjIrisRequestedForRes: Set[IRI] = allRequestedValueObjectVariables.flatMap {
-          requestedQueryVar: QueryVariable =>
+          (requestedQueryVar: QueryVariable) =>
             valueObjIrisForRes.getOrElse(
               requestedQueryVar,
               throw AssertionException(
@@ -112,13 +112,13 @@ object MainQueryResultProcessor {
         values.valuePropertyAssertions.foldLeft(ConstructResponseUtilV2.emptyRdfPropertyValues) {
           case (acc, (propIri: SmartIri, values: Seq[ValueRdfData])) =>
             // filter values for the current resource
-            val valuesFiltered: Seq[ValueRdfData] = values.filter { valueObj: ValueRdfData =>
+            val valuesFiltered: Seq[ValueRdfData] = values.filter { (valueObj: ValueRdfData) =>
               // only return those value objects whose Iris are contained in valueObjIrisRequestedForRes
               valueObjIrisRequestedForRes(valueObj.subjectIri)
             }
 
             // if there are link values including a target resource, apply filter to their values too
-            val valuesFilteredRecursively: Seq[ValueRdfData] = valuesFiltered.map { valObj: ValueRdfData =>
+            val valuesFilteredRecursively: Seq[ValueRdfData] = valuesFiltered.map { (valObj: ValueRdfData) =>
               if (valObj.nestedResource.nonEmpty) {
 
                 val targetResourceAssertions: ResourceWithValueRdfData = valObj.nestedResource.get

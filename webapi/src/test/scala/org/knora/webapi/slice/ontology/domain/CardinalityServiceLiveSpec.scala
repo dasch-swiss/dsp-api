@@ -10,23 +10,23 @@ import zio.Random
 import zio.Ref
 import zio.ZLayer
 import zio.test.ZIOSpecDefault
-import zio.test._
+import zio.test.*
 
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
-import org.knora.webapi.slice.ontology.domain.model.Cardinality._
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
-import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult._
+import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResult.CanSetCardinalityCheckResult.*
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.ontology.repo.service.PredicateRepositoryLive
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants._
-import org.knora.webapi.store.triplestore.TestDatasetBuilder._
+import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants.*
+import org.knora.webapi.store.triplestore.TestDatasetBuilder.*
 import org.knora.webapi.store.triplestore.api.TriplestoreServiceInMemory
 
 object CardinalityServiceLiveSpec extends ZIOSpecDefault {
@@ -161,7 +161,7 @@ object CardinalityServiceLiveSpec extends ZIOSpecDefault {
     }
   }
 
-  private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService with OntologyCacheFake](
+  private val commonLayers = ZLayer.makeSome[Ref[Dataset], CardinalityService & OntologyCacheFake](
     CardinalityService.layer,
     IriConverter.layer,
     OntologyCacheFake.emptyCache,

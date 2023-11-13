@@ -5,8 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.service
 
-import zio._
-import zio.nio.file._
+import zio.*
+import zio.nio.file.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.slice.admin.domain.model.KnoraProject

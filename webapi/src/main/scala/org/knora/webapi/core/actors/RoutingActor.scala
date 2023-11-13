@@ -6,7 +6,7 @@
 package org.knora.webapi.core.actors
 
 import org.apache.pekko
-import zio._
+import zio.*
 
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.core.MessageRelay
@@ -14,7 +14,7 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.responders.v2._
+import org.knora.webapi.responders.v2.*
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -27,15 +27,8 @@ import pekko.actor.Actor
 final case class RoutingActor(
   messageRelay: MessageRelay,
   implicit val runtime: Runtime[
-    CardinalityHandler
-      with CardinalityService
-      with ConstructResponseUtilV2
-      with OntologyCache
-      with OntologyHelpers
-      with OntologyRepo
-      with PermissionUtilADM
-      with ResourceUtilV2
-      with StandoffTagUtilV2
+    CardinalityHandler & CardinalityService & ConstructResponseUtilV2 & OntologyCache & OntologyHelpers & OntologyRepo &
+      PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2
   ]
 ) extends Actor {
   def receive: Receive = {

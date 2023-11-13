@@ -7,18 +7,18 @@ package org.knora.webapi.responders.admin
 
 import com.typesafe.scalalogging.LazyLogging
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import zio._
+import zio.*
 
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.User._
-import org.knora.webapi._
+import dsp.valueobjects.User.*
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
@@ -29,12 +29,12 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.IriLocker
@@ -1885,7 +1885,7 @@ final case class UsersResponderADMLive(
 
 object UsersResponderADMLive {
   val layer: URLayer[
-    StringFormatter with TriplestoreService with MessageRelay with IriService with AppConfig,
+    StringFormatter & TriplestoreService & MessageRelay & IriService & AppConfig,
     UsersResponderADMLive
   ] = ZLayer.fromZIO {
     for {

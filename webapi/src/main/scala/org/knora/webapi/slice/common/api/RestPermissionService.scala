@@ -5,7 +5,7 @@
 
 package org.knora.webapi.slice.common.api
 
-import zio._
+import zio.*
 import zio.macros.accessible
 
 import dsp.errors.ForbiddenException

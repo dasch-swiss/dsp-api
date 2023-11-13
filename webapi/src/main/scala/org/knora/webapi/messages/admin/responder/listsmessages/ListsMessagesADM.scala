@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 
 import java.util.UUID
 
@@ -14,14 +14,14 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol

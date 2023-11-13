@@ -7,26 +7,26 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.ZIO
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
-import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
@@ -37,20 +37,20 @@ import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
 import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
 import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
@@ -1964,7 +1964,7 @@ final case class ResourcesResponderV2Live(
             ZIO.attempt(GraphQueryResults())
           } else {
             // Yes. Get the nodes from the query results.
-            val otherNodes: Seq[QueryResultNode] = rows.map { row: VariableResultsRow =>
+            val otherNodes: Seq[QueryResultNode] = rows.map { (row: VariableResultsRow) =>
               val rowMap: Map[String, String] = row.rowMap
 
               QueryResultNode(
@@ -1975,7 +1975,7 @@ final case class ResourcesResponderV2Live(
                 nodeProject = rowMap("nodeProject"),
                 nodePermissions = rowMap("nodePermissions")
               )
-            }.filter { node: QueryResultNode =>
+            }.filter { (node: QueryResultNode) =>
               // Filter out the nodes that the user doesn't have permission to see.
               PermissionUtilADM
                 .getUserPermissionADM(
@@ -1991,7 +1991,7 @@ final case class ResourcesResponderV2Live(
             val visibleNodeIris: Set[IRI] = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
 
             // Get the edges from the query results.
-            val edges: Set[QueryResultEdge] = rows.map { row: VariableResultsRow =>
+            val edges: Set[QueryResultEdge] = rows.map { (row: VariableResultsRow) =>
               val rowMap: Map[String, String] = row.rowMap
               val nodeIri: IRI                = rowMap("node")
 
@@ -2012,7 +2012,7 @@ final case class ResourcesResponderV2Live(
                 sourceNodeProject = if (outbound) startNode.nodeProject else rowMap("nodeProject"),
                 linkValuePermissions = rowMap("linkValuePermissions")
               )
-            }.filter { edge: QueryResultEdge =>
+            }.filter { (edge: QueryResultEdge) =>
               // Filter out the edges that the user doesn't have permission to see. To see an edge,
               // the user must have some permission on the link value and on the source and target
               // nodes.
@@ -2066,7 +2066,7 @@ final case class ResourcesResponderV2Live(
 
               // Return those results plus the ones we found.
 
-              lowerResultsFuture.map { lowerResultsSeq: Seq[GraphQueryResults] =>
+              lowerResultsFuture.map { (lowerResultsSeq: Seq[GraphQueryResults]) =>
                 lowerResultsSeq.foldLeft(results) { case (acc: GraphQueryResults, lowerResults: GraphQueryResults) =>
                   GraphQueryResults(
                     nodes = acc.nodes ++ lowerResults.nodes,
@@ -2155,7 +2155,7 @@ final case class ResourcesResponderV2Live(
       edges = outboundQueryResults.edges ++ inboundQueryResults.edges
 
       // Convert each node to a GraphNodeV2 for the API response message.
-      resultNodes: Vector[GraphNodeV2] = nodes.map { node: QueryResultNode =>
+      resultNodes: Vector[GraphNodeV2] = nodes.map { (node: QueryResultNode) =>
                                            GraphNodeV2(
                                              resourceIri = node.nodeIri,
                                              resourceClassIri = node.nodeClass,
@@ -2164,7 +2164,7 @@ final case class ResourcesResponderV2Live(
                                          }.toVector
 
       // Convert each edge to a GraphEdgeV2 for the API response message.
-      resultEdges: Vector[GraphEdgeV2] = edges.map { edge: QueryResultEdge =>
+      resultEdges: Vector[GraphEdgeV2] = edges.map { (edge: QueryResultEdge) =>
                                            GraphEdgeV2(
                                              source = edge.sourceNodeIri,
                                              propertyIri = edge.linkProp,
@@ -2303,7 +2303,7 @@ final case class ResourcesResponderV2Live(
 
   private def toItems(representations: Seq[ReadResourceV2]): Task[JsonLDArray] =
     ZIO
-      .foreach(representations) { representation: ReadResourceV2 =>
+      .foreach(representations) { (representation: ReadResourceV2) =>
         for {
           imageValue <-
             ZIO
@@ -2861,15 +2861,8 @@ final case class ResourcesResponderV2Live(
 object ResourcesResponderV2Live {
 
   val layer: URLayer[
-    StringFormatter
-      with PermissionUtilADM
-      with ResourceUtilV2
-      with StandoffTagUtilV2
-      with ConstructResponseUtilV2
-      with TriplestoreService
-      with MessageRelay
-      with IriService
-      with AppConfig,
+    StringFormatter & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & ConstructResponseUtilV2 &
+      TriplestoreService & MessageRelay & IriService & AppConfig,
     ResourcesResponderV2
   ] = ZLayer.fromZIO {
     for {

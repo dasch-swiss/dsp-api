@@ -5,8 +5,11 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko
-import zio._
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.Route
+import zio.*
 import zio.prelude.Validation
 
 import java.time.Instant
@@ -15,10 +18,10 @@ import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 import dsp.valueobjects.CreatePropertyCommand
-import dsp.valueobjects.Iri._
+import dsp.valueobjects.Iri.*
 import dsp.valueobjects.LangString
-import dsp.valueobjects.Schema._
-import org.knora.webapi._
+import dsp.valueobjects.Schema.*
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
@@ -28,7 +31,7 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilV2.completeResponse
@@ -37,17 +40,12 @@ import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-import pekko.http.scaladsl.server.Directives._
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.Route
-
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
  */
 final case class OntologiesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig with Authenticator with IriConverter with MessageRelay with RestCardinalityService with StringFormatter
+    AppConfig & Authenticator & IriConverter & MessageRelay & RestCardinalityService & StringFormatter
   ]
 ) {
 
@@ -86,7 +84,7 @@ final case class OntologiesRouteV2()(
       canDeleteOntology() ~
       deleteOntology()
 
-  private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { _: List[String] =>
+  private def dereferenceOntologyIri(): Route = path("ontology" / Segments) { (_: List[String]) =>
     get { requestContext =>
       // This is the route used to dereference an actual ontology IRI. If the URL path looks like it
       // belongs to a built-in API ontology (which has to contain "knora-api"), prefix it with
@@ -114,7 +112,7 @@ final case class OntologiesRouteV2()(
 
   private def getOntologySmartIri(
     requestContext: RequestContext
-  ): ZIO[AppConfig with IriConverter with StringFormatter, BadRequestException, SmartIri] = {
+  ): ZIO[AppConfig & IriConverter & StringFormatter, BadRequestException, SmartIri] = {
     val urlPath = requestContext.request.uri.path.toString
     ZIO.serviceWithZIO[AppConfig] { appConfig =>
       val externalOntologyIriHostAndPort = appConfig.knoraApi.externalOntologyIriHostAndPort
@@ -133,7 +131,7 @@ final case class OntologiesRouteV2()(
     }
   }
 
-  private def validateOntologyIri(iri: String): ZIO[IriConverter with StringFormatter, BadRequestException, SmartIri] =
+  private def validateOntologyIri(iri: String): ZIO[IriConverter & StringFormatter, BadRequestException, SmartIri] =
     RouteUtilZ.toSmartIri(iri, s"Invalid ontology IRI: $iri").flatMap(RouteUtilZ.ensureExternalOntologyName)
 
   private def getOntologyMetadata(): Route =
@@ -166,7 +164,7 @@ final case class OntologiesRouteV2()(
     }
 
   private def getOntologyMetadataForProjects(): Route =
-    path(ontologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
+    path(ontologiesBasePath / "metadata" / Segments) { (projectIris: List[IRI]) =>
       get { requestContext =>
         val requestTask = for {
           requestingUser <- Authenticator.getUserADM(requestContext)
@@ -179,7 +177,7 @@ final case class OntologiesRouteV2()(
     }
 
   private def getOntology(): Route =
-    path(ontologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
+    path(ontologiesBasePath / "allentities" / Segment) { (externalOntologyIriStr: IRI) =>
       get { requestContext =>
         val ontologyIriTask = validateOntologyIri(externalOntologyIriStr)
         val requestMessageTask = for {
@@ -236,7 +234,7 @@ final case class OntologiesRouteV2()(
 
   // delete the comment of a class definition
   private def deleteClassComment(): Route =
-    path(ontologiesBasePath / "classes" / "comment" / Segment) { classIriStr: IRI =>
+    path(ontologiesBasePath / "classes" / "comment" / Segment) { (classIriStr: IRI) =>
       delete { requestContext =>
         val requestMessageFuture = for {
           classIri <- RouteUtilZ
@@ -274,7 +272,7 @@ final case class OntologiesRouteV2()(
   private def canReplaceCardinalities: Route =
     // GET basePath/{iriEncode} or
     // GET basePath/{iriEncode}?propertyIri={iriEncode}&newCardinality=[0-1|1|1-n|0-n]
-    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIri: IRI =>
+    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { (classIri: IRI) =>
       get { requestContext =>
         val response = for {
           user           <- Authenticator.getUserADM(requestContext)
@@ -361,9 +359,9 @@ final case class OntologiesRouteV2()(
     }
 
   private def getClasses(): Route =
-    path(ontologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
+    path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
       get { requestContext =>
-        val classSmartIrisTask: ZIO[IriConverter with StringFormatter, BadRequestException, Set[SmartIri]] =
+        val classSmartIrisTask: ZIO[IriConverter & StringFormatter, BadRequestException, Set[SmartIri]] =
           ZIO
             .foreach(externalResourceClassIris)(iri =>
               RouteUtilZ
@@ -373,7 +371,7 @@ final case class OntologiesRouteV2()(
             )
             .map(_.toSet)
 
-        val targetSchemaTask: ZIO[IriConverter with StringFormatter, BadRequestException, OntologySchema] =
+        val targetSchemaTask: ZIO[IriConverter & StringFormatter, BadRequestException, OntologySchema] =
           classSmartIrisTask
             .flatMap(iriSet =>
               ZIO.foreach(iriSet)(iri =>
@@ -395,7 +393,7 @@ final case class OntologiesRouteV2()(
     }
 
   private def canDeleteClass(): Route =
-    path(ontologiesBasePath / "candeleteclass" / Segment) { classIriStr: IRI =>
+    path(ontologiesBasePath / "candeleteclass" / Segment) { (classIriStr: IRI) =>
       get { requestContext =>
         val requestTask = for {
           classSmartIri <-
@@ -413,7 +411,7 @@ final case class OntologiesRouteV2()(
     }
 
   private def deleteClass(): Route =
-    path(ontologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
+    path(ontologiesBasePath / "classes" / Segments) { (externalResourceClassIris: List[IRI]) =>
       delete { requestContext =>
         val requestTask = for {
           classIri <- ZIO
@@ -441,7 +439,7 @@ final case class OntologiesRouteV2()(
       .flatMap(it => ZIO.fromOption(it).orElseFail(BadRequestException(s"Invalid timestamp: $it")))
 
   private def deleteOntologyComment(): Route =
-    path(ontologiesBasePath / "comment" / Segment) { ontologyIriStr: IRI =>
+    path(ontologiesBasePath / "comment" / Segment) { (ontologyIriStr: IRI) =>
       delete { requestContext =>
         val requestMessageTask = for {
           ontologyIri <- RouteUtilZ
@@ -602,7 +600,7 @@ final case class OntologiesRouteV2()(
       .map(propertyInfoContent.predicates.get)
       .flatMap(infoMaybe =>
         ZIO
-          .foreach(infoMaybe) { predicateInfoV2: PredicateInfoV2 =>
+          .foreach(infoMaybe) { predicateInfoV2 =>
             ZIO.foreach(predicateInfoV2.objects) {
               case guiAttribute: StringLiteralV2 => ZIO.succeed(guiAttribute.value)
               case other =>
@@ -617,7 +615,7 @@ final case class OntologiesRouteV2()(
       .toSmartIri(SalsahGui.External.GuiElementProp, "Should not happen")
       .map(propertyInfoContent.predicates.get)
       .flatMap(infoMaybe =>
-        ZIO.foreach(infoMaybe) { predicateInfoV2: PredicateInfoV2 =>
+        ZIO.foreach(infoMaybe) { (predicateInfoV2: PredicateInfoV2) =>
           predicateInfoV2.objects.head match {
             case guiElement: SmartIriLiteralV2 =>
               ZIO.succeed(guiElement.value.toOntologySchema(InternalSchema).toString)
@@ -656,7 +654,7 @@ final case class OntologiesRouteV2()(
 
   // delete the comment of a property definition
   private def deletePropertyComment(): Route =
-    path(ontologiesBasePath / "properties" / "comment" / Segment) { propertyIriStr: IRI =>
+    path(ontologiesBasePath / "properties" / "comment" / Segment) { (propertyIriStr: IRI) =>
       delete { requestContext =>
         val requestTask = for {
           propertyIri <- RouteUtilZ
@@ -706,10 +704,10 @@ final case class OntologiesRouteV2()(
     }
 
   private def getProperties(): Route =
-    path(ontologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
+    path(ontologiesBasePath / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
       get { requestContext =>
         val propertyIrisTask = for {
-          propertyIris <- ZIO.foreach(externalPropertyIris) { propertyIriStr: IRI =>
+          propertyIris <- ZIO.foreach(externalPropertyIris) { (propertyIriStr: IRI) =>
                             RouteUtilZ
                               .toSmartIri(propertyIriStr, s"Invalid property IRI: $propertyIriStr")
                               .flatMap(RouteUtilZ.ensureIsNotKnoraOntologyIri)
@@ -736,7 +734,7 @@ final case class OntologiesRouteV2()(
     }
 
   private def canDeleteProperty(): Route =
-    path(ontologiesBasePath / "candeleteproperty" / Segment) { propertyIriStr: IRI =>
+    path(ontologiesBasePath / "candeleteproperty" / Segment) { (propertyIriStr: IRI) =>
       get { requestContext =>
         val requestMessageTask = for {
           propertyIri <- RouteUtilZ
@@ -750,7 +748,7 @@ final case class OntologiesRouteV2()(
     }
 
   private def deleteProperty(): Route =
-    path(ontologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
+    path(ontologiesBasePath / "properties" / Segments) { (externalPropertyIris: List[IRI]) =>
       delete { requestContext =>
         val requestMessageTask = for {
           propertyIri <-
@@ -792,7 +790,7 @@ final case class OntologiesRouteV2()(
   }
 
   private def canDeleteOntology(): Route =
-    path(ontologiesBasePath / "candeleteontology" / Segment) { ontologyIriStr: IRI =>
+    path(ontologiesBasePath / "candeleteontology" / Segment) { (ontologyIriStr: IRI) =>
       get { requestContext =>
         val requestTask = for {
           ontologyIri <- RouteUtilZ

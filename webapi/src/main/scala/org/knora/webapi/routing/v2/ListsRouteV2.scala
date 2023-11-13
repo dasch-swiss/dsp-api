@@ -6,7 +6,7 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko
-import zio._
+import zio.*
 
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -17,19 +17,19 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a function for API routes that deal with lists and nodes.
  */
 final case class ListsRouteV2()(
-  private implicit val runtime: Runtime[AppConfig with Authenticator with StringFormatter with MessageRelay]
+  private implicit val runtime: Runtime[AppConfig & Authenticator & StringFormatter & MessageRelay]
 ) {
 
   def makeRoute: Route = getList() ~ getNode()
 
-  private def getList(): Route = path("v2" / "lists" / Segment) { lIri: String =>
+  private def getList(): Route = path("v2" / "lists" / Segment) { (lIri: String) =>
     get {
       /* return a list (a graph with all list nodes) */
       requestContext =>
@@ -41,7 +41,7 @@ final case class ListsRouteV2()(
     }
   }
 
-  private def getNode(): Route = path("v2" / "node" / Segment) { nIri: String =>
+  private def getNode(): Route = path("v2" / "node" / Segment) { (nIri: String) =>
     get {
       /* return a list node */
       requestContext =>

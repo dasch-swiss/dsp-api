@@ -5,20 +5,20 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants._
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants.*
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -26,18 +26,18 @@ import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
-import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.util._
+import org.knora.webapi.util.*
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -199,7 +199,7 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
 
     // Convert the history entries to an array of JSON-LD objects.
 
-    val historyAsJsonLD: Seq[JsonLDObject] = history.map { historyEntry: ResourceHistoryEntry =>
+    val historyAsJsonLD: Seq[JsonLDObject] = history.map { (historyEntry: ResourceHistoryEntry) =>
       JsonLDObject(
         Map(
           KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
@@ -673,7 +673,7 @@ object CreateResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM
-  ): ZIO[IriConverter with StringFormatter with MessageRelay, Throwable, CreateResourceRequestV2] =
+  ): ZIO[IriConverter & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
         (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
@@ -881,7 +881,7 @@ object UpdateResourceMetadataRequestV2 {
     jsonLDDocument: JsonLDDocument,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): ZIO[StringFormatter with IriConverter, Throwable, UpdateResourceMetadataRequestV2] = {
+  ): ZIO[StringFormatter & IriConverter, Throwable, UpdateResourceMetadataRequestV2] = {
     val body = jsonLDDocument.body
     for {
       resourceIri               <- getResourceIri(body)
@@ -905,7 +905,7 @@ object UpdateResourceMetadataRequestV2 {
     )
   }
 
-  private def getResourceIri(obj: JsonLDObject): ZIO[StringFormatter with IriConverter, Throwable, SmartIri] =
+  private def getResourceIri(obj: JsonLDObject): ZIO[StringFormatter & IriConverter, Throwable, SmartIri] =
     for {
       resourceIri <- obj.getRequiredIdValueAsKnoraDataIri
                        .filterOrElseWith(_.isKnoraResourceIri)(it => ZIO.fail(s"Invalid resource IRI: <$it>"))
@@ -955,7 +955,7 @@ object UpdateResourceMetadataRequestV2 {
     getTimeStamp.mapError(BadRequestException(_))
   }
 
-  private def areAllOptionsEmpty(options: Option[_]*): Boolean = options.forall(_.isEmpty)
+  private def areAllOptionsEmpty(options: Option[?]*): Boolean = options.forall(_.isEmpty)
 }
 
 /**
@@ -1077,7 +1077,7 @@ object DeleteOrEraseResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     requestingUser: UserADM,
     apiRequestID: UUID
-  ): ZIO[StringFormatter with IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
+  ): ZIO[StringFormatter & IriConverter, Throwable, DeleteOrEraseResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit sf =>
       for {
         resourceIri <-
@@ -1156,7 +1156,7 @@ case class ReadResourcesSequenceV2(
     appConfig: AppConfig,
     schemaOptions: Set[SchemaOption]
   ): JsonLDDocument = {
-    val resourcesJsonObjects: Seq[JsonLDObject] = resources.map { resource: ReadResourceV2 =>
+    val resourcesJsonObjects: Seq[JsonLDObject] = resources.map { (resource: ReadResourceV2) =>
       resource.toJsonLD(
         targetSchema = targetSchema,
         appConfig = appConfig,
@@ -1397,7 +1397,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
     val groupedEdges: Map[IRI, Seq[GraphEdgeV2]] = edgesInTargetSchema.groupBy(_.source)
 
-    val nodesWithEdges: Seq[JsonLDObject] = sortedNodesInTargetSchema.map { node: GraphNodeV2 =>
+    val nodesWithEdges: Seq[JsonLDObject] = sortedNodesInTargetSchema.map { (node: GraphNodeV2) =>
       // Convert the node to JSON-LD.
       val jsonLDNodeMap = Map(
         JsonLDKeywords.ID   -> JsonLDString(node.resourceIri),
@@ -1703,7 +1703,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
 
     // Convert the history entries to an array of JSON-LD objects.
 
-    val historyEventsAsJsonLD: Seq[JsonLDObject] = historyEvents.map { historyEntry: ResourceAndValueHistoryEvent =>
+    val historyEventsAsJsonLD: Seq[JsonLDObject] = historyEvents.map { (historyEntry: ResourceAndValueHistoryEvent) =>
       // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
         case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, appConfig, schemaOptions)

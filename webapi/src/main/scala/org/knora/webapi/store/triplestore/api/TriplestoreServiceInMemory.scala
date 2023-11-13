@@ -4,7 +4,7 @@
  */
 
 package org.knora.webapi.store.triplestore.api
-import org.apache.jena.query._
+import org.apache.jena.query.*
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.tdb2.TDB2Factory
@@ -30,7 +30,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -63,19 +63,19 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     ZIO.scoped(execSelect(query.sparql).map(toSparqlSelectResult))
   }
 
-  private def execSelect(query: String): ZIO[Any with Scope, Throwable, ResultSet] = {
+  private def execSelect(query: String): ZIO[Any & Scope, Throwable, ResultSet] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execSelect)
     def closeResultSet(rs: ResultSet)       = ZIO.succeed(rs.close())
     getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeResultSet))
   }
 
-  private def getReadTransactionQueryExecution(query: String): ZIO[Any with Scope, Throwable, QueryExecution] = {
+  private def getReadTransactionQueryExecution(query: String): ZIO[Any & Scope, Throwable, QueryExecution] = {
     def acquire(query: String, ds: Dataset)                     = ZIO.attempt(QueryExecutionFactory.create(query, ds))
     def release(qExec: QueryExecution): ZIO[Any, Nothing, Unit] = ZIO.succeed(qExec.close())
     getDataSetWithTransaction(ReadWrite.READ).flatMap(ds => ZIO.acquireRelease(acquire(query, ds))(release))
   }
 
-  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any with Scope, Dataset] = {
+  private def getDataSetWithTransaction(readWrite: ReadWrite): URIO[Any & Scope, Dataset] = {
     val acquire = datasetRef.get.tap(ds => ZIO.succeed(ds.begin(readWrite)))
     def release(ds: Dataset) = ZIO.succeed(try { ds.commit() }
     finally { ds.end() })
@@ -124,13 +124,13 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
                     )
     } yield SparqlConstructResponse.make(rdfModel)
 
-  private def execConstruct(query: String): ZIO[Any with Scope, Throwable, Model] = {
+  private def execConstruct(query: String): ZIO[Any & Scope, Throwable, Model] = {
     def executeQuery(qExec: QueryExecution) = ZIO.attempt(qExec.execConstruct(ModelFactory.createDefaultModel()))
     def closeModel(model: Model)            = ZIO.succeed(model.close())
     getReadTransactionQueryExecution(query).flatMap(qExec => ZIO.acquireRelease(executeQuery(qExec))(closeModel))
   }
 
-  private def modelToTurtle(model: Model): ZIO[Any with Scope, Throwable, String] =
+  private def modelToTurtle(model: Model): ZIO[Any & Scope, Throwable, String] =
     for {
       os    <- byteArrayOutputStream()
       _      = model.write(os, "TURTLE")
@@ -252,6 +252,6 @@ object TriplestoreServiceInMemory {
 
   val emptyDatasetRefLayer: ULayer[Ref[Dataset]] = ZLayer.fromZIO(createEmptyDataset.flatMap(Ref.make(_)))
 
-  val layer: ZLayer[Ref[Dataset] with StringFormatter, Nothing, TestTripleStore with TriplestoreService] =
+  val layer: ZLayer[Ref[Dataset] & StringFormatter, Nothing, TestTripleStore & TriplestoreService] =
     ZLayer.fromFunction(TriplestoreServiceInMemory.apply _)
 }

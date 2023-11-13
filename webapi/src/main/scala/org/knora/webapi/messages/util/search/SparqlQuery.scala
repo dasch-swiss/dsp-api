@@ -8,8 +8,8 @@ package org.knora.webapi.messages.util.search
 import org.apache.pekko
 
 import dsp.errors.GravsearchException
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -446,8 +446,8 @@ case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends Q
  */
 case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
   override def toSparql: String = {
-    val blocksAsStrings = blocks.map { block: Seq[QueryPattern] =>
-      val queryPatternStrings: Seq[String] = block.map { queryPattern: QueryPattern =>
+    val blocksAsStrings = blocks.map { (block: Seq[QueryPattern]) =>
+      val queryPatternStrings: Seq[String] = block.map { (queryPattern: QueryPattern) =>
         queryPattern.toSparql
       }
 
@@ -465,7 +465,7 @@ case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
  */
 case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
   override def toSparql: String = {
-    val queryPatternStrings: Seq[String] = patterns.map { queryPattern: QueryPattern =>
+    val queryPatternStrings: Seq[String] = patterns.map { (queryPattern: QueryPattern) =>
       queryPattern.toSparql
     }
 

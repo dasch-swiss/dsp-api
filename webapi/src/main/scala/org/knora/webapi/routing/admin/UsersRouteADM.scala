@@ -6,15 +6,15 @@
 package org.knora.webapi.routing.admin
 
 import org.apache.pekko
-import zio._
+import zio.*
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.User._
+import dsp.valueobjects.User.*
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol.*
+import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.Authenticator
@@ -24,7 +24,7 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.PathMatcher
 import pekko.http.scaladsl.server.RequestContext
 import pekko.http.scaladsl.server.Route
@@ -33,7 +33,7 @@ import pekko.http.scaladsl.server.Route
  * Provides an pekko-http-routing function for API routes that deal with users.
  */
 final case class UsersRouteADM()(
-  private implicit val runtime: Runtime[Authenticator with StringFormatter with MessageRelay]
+  private implicit val runtime: Runtime[Authenticator & StringFormatter & MessageRelay]
 ) {
 
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")

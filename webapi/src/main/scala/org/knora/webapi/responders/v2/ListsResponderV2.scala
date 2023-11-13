@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import zio.Task
-import zio._
+import zio.*
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
@@ -18,7 +18,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.listsmessages._
+import org.knora.webapi.messages.v2.responder.listsmessages.*
 import org.knora.webapi.responders.Responder
 
 /**
@@ -102,7 +102,7 @@ final case class ListsResponderV2Live(
 
 object ListsResponderV2Live {
   val layer: URLayer[
-    AppConfig with MessageRelay,
+    AppConfig & MessageRelay,
     ListsResponderV2
   ] = ZLayer.fromZIO {
     for {

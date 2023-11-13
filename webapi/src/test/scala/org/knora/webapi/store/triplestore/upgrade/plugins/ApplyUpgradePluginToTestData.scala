@@ -8,11 +8,14 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.riot.RDFFormat
 import zio.Scope
+import zio.UIO
 import zio.ZIO
+import zio.ZIOAppArgs
 import zio.ZIOAppDefault
 
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
@@ -21,7 +24,7 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions._
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
@@ -34,27 +37,27 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
   val upgradePlugin = new NoopPlugin()
   val testDataPath  = "/test_data/project_data"
 
-  def discoverFiles(dirPath: String) =
+  def discoverFiles(dirPath: String): Array[Path] =
     Files.list(Path.of(dirPath)).filter(Files.isRegularFile(_)).iterator.asScala.toArray
 
-  def applyUpgradePluginTo(plugin: UpgradePlugin, path: Path): ZIO[Any with Scope, Throwable, Unit] = for {
+  def applyUpgradePluginTo(plugin: UpgradePlugin, path: Path): ZIO[Any & Scope, Throwable, Unit] = for {
     model            <- parseRdfModelFromFile(path)
     transformedModel <- applyPluginToModel(plugin, model)
     _                <- writeModelToFile(transformedModel, path)
   } yield ()
 
-  def parseRdfModelFromFile(path: Path) =
+  def parseRdfModelFromFile(path: Path): ZIO[Scope, IOException, RdfModel] =
     for {
       fis   <- fileInputStreamFor(path)
       model <- parseRdfModel(fis)
     } yield model
 
-  def applyPluginToModel(plugin: UpgradePlugin, model: RdfModel) = ZIO.succeed {
+  def applyPluginToModel(plugin: UpgradePlugin, model: RdfModel): UIO[RdfModel] = ZIO.succeed {
     plugin.transform(model)
     model
   }
 
-  def writeModelToFile(rdfModel: RdfModel, path: Path) = {
+  def writeModelToFile(rdfModel: RdfModel, path: Path): ZIO[Scope, Throwable, Unit] = {
     val defaultGraph = rdfModel.asJenaDataset.asDatasetGraph.getDefaultGraph
     for {
       fos <- fileOutputStreamFor(path)
@@ -62,16 +65,16 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
     } yield ()
   }
 
-  def fileInputStreamFor(path: Path) =
+  def fileInputStreamFor(path: Path): ZIO[Scope, IOException, FileInputStream] =
     ZIO.acquireRelease(ZIO.attemptBlockingIO(new FileInputStream(path.toFile)))(fis => ZIO.succeedBlocking(fis.close()))
 
-  def parseRdfModel(is: InputStream) =
+  def parseRdfModel(is: InputStream): ZIO[Any, Nothing, RdfModel] =
     ZIO.succeed(RdfFeatureFactory.getRdfFormatUtil().inputStreamToRdfModel(is, Turtle))
 
-  def fileOutputStreamFor(path: Path) =
+  def fileOutputStreamFor(path: Path): ZIO[Scope, IOException, FileOutputStream] =
     ZIO.acquireRelease(ZIO.attemptBlockingIO(new FileOutputStream(path.toFile)))(fos => ZIO.succeedBlocking(fos))
 
-  def run =
+  def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
     ZIO.foreach(discoverFiles(testDataPath))(pathToFile =>
       ZIO.debug(s"applying to $pathToFile") *> applyUpgradePluginTo(upgradePlugin, pathToFile)
     )

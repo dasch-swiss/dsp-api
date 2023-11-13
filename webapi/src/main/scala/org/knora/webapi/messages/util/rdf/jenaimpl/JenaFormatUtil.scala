@@ -16,7 +16,7 @@ import scala.util.Success
 import scala.util.Try
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil.rdfFormatToJenaParsingLang
 
 /**
@@ -46,7 +46,7 @@ class StreamProcessorAsStreamRDF(streamProcessor: RdfStreamProcessor) extends je
  */
 class StreamRDFAsStreamProcessor(streamRDF: jena.riot.system.StreamRDF) extends RdfStreamProcessor {
 
-  import JenaConversions._
+  import JenaConversions.*
 
   override def start(): Unit = streamRDF.start()
 
@@ -82,7 +82,7 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
   }
 
   override def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
-    import JenaConversions._
+    import JenaConversions.*
 
     val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph
     val stringWriter: StringWriter                  = new StringWriter
@@ -187,7 +187,7 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
   }
 
   override def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
-    import JenaConversions._
+    import JenaConversions.*
 
     val formatTry: Try[Unit] = Try {
       val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph

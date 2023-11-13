@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.iiif.api
 
-import zio._
+import zio.*
 import zio.macros.accessible
 import zio.nio.file.Path
 

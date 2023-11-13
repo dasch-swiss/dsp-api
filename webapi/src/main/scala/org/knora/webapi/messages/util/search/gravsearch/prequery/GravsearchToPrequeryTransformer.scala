@@ -10,16 +10,15 @@ import zio.ZIO
 
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator.*
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
-
-import AbstractPrequeryGenerator._
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -95,19 +94,18 @@ class GravsearchToPrequeryTransformer(
   /**
    * All the variables used in the Gravsearch CONSTRUCT clause.
    */
-  private val variablesInConstruct: Set[QueryVariable] = constructClause.statements.flatMap {
-    statementPattern: StatementPattern =>
-      Seq(statementPattern.subj, statementPattern.obj).flatMap {
-        case queryVariable: QueryVariable => Some(queryVariable)
-        case _                            => None
-      }
+  private val variablesInConstruct: Set[QueryVariable] = constructClause.statements.flatMap { statementPattern =>
+    Seq(statementPattern.subj, statementPattern.obj).flatMap {
+      case queryVariable: QueryVariable => Some(queryVariable)
+      case _                            => None
+    }
   }.toSet
 
   /**
    * The variables representing values in the CONSTRUCT clause, grouped by resource.
    */
   private val valueVariablesPerResourceInConstruct: Map[Entity, Set[QueryVariable]] =
-    constructClause.statements.filter { statementPattern: StatementPattern =>
+    constructClause.statements.filter { (statementPattern) =>
       // Find statements in which the subject is a resource, the predicate is a value property,
       // and the object is a value.
       entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
@@ -164,7 +162,7 @@ class GravsearchToPrequeryTransformer(
   private val valueGroupConcatsPerResource: Map[Entity, Set[GroupConcat]] = {
     // Generate variables representing link values and group them by containing resource entity.
     val linkValueVariablesPerResourceGeneratedForConstruct: Map[Entity, Set[QueryVariable]] =
-      constructClause.statements.filter { statementPattern: StatementPattern =>
+      constructClause.statements.filter { (statementPattern: StatementPattern) =>
         // Find statements in which the subject is a resource, the predicate is a link property,
         // and the object is a resource.
         entityHasNonPropertyType(entity = statementPattern.subj, condition = _.isResourceType) &&
@@ -184,12 +182,12 @@ class GravsearchToPrequeryTransformer(
 
     // Make a GroupConcat for each value variable.
     (valueVariablesPerResourceInConstruct.keySet ++ linkValueVariablesPerResourceGeneratedForConstruct.keySet).map {
-      resourceEntity: Entity =>
+      (resourceEntity: Entity) =>
         val valueVariables: Set[QueryVariable] =
           valueVariablesPerResourceInConstruct.getOrElse(resourceEntity, Set.empty) ++
             linkValueVariablesPerResourceGeneratedForConstruct.getOrElse(resourceEntity, Set.empty)
 
-        val groupConcats: Set[GroupConcat] = valueVariables.map { valueObjVar: QueryVariable =>
+        val groupConcats: Set[GroupConcat] = valueVariables.map { (valueObjVar: QueryVariable) =>
           GroupConcat(
             inputVariable = valueObjVar,
             separator = groupConcatSeparator,
@@ -224,7 +222,7 @@ class GravsearchToPrequeryTransformer(
    * A GROUP_CONCAT expression for each dependent resource variable.
    */
   private val dependentResourceGroupConcat: Set[GroupConcat] = dependentResourceVariablesInConstruct.map {
-    dependentResVar: QueryVariable =>
+    (dependentResVar: QueryVariable) =>
       GroupConcat(
         inputVariable = dependentResVar,
         separator = groupConcatSeparator,

@@ -175,6 +175,6 @@ final case class JwtServiceLive(
     }
 }
 object JwtServiceLive {
-  val layer: URLayer[DspIngestConfig with JwtConfig, JwtServiceLive] =
+  val layer: URLayer[DspIngestConfig & JwtConfig, JwtServiceLive] =
     ZLayer.fromFunction(JwtServiceLive.apply _)
 }

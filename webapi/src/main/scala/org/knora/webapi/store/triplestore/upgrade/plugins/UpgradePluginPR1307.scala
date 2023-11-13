@@ -8,7 +8,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
@@ -192,7 +192,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
       }
 
       // Make a map of standoff IRIs to StandoffRdf objects.
-      val standoff: Map[IriNode, StandoffRdf] = standoffSubjects.map { standoffSubj: IriNode =>
+      val standoff: Map[IriNode, StandoffRdf] = standoffSubjects.map { (standoffSubj: IriNode) =>
         standoffSubj -> StandoffRdf(
           oldIri = standoffSubj,
           statements = model

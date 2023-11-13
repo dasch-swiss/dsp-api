@@ -6,7 +6,7 @@
 package org.knora.webapi.routing
 
 import org.apache.pekko
-import zio._
+import zio.*
 import zio.prelude.Validation
 
 import scala.concurrent.Future
@@ -14,7 +14,7 @@ import scala.util.control.Exception.catching
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.server.RequestContext
 import pekko.http.scaladsl.server.RouteResult
 
@@ -228,7 +228,7 @@ object RouteUtilV2 {
     requestContext: RequestContext,
     targetSchema: OntologySchema = ApiV2Complex,
     schemaOptionsOption: Option[Set[SchemaOption]] = None
-  )(implicit runtime: Runtime[MessageRelay with AppConfig]): Future[RouteResult] =
+  )(implicit runtime: Runtime[MessageRelay & AppConfig]): Future[RouteResult] =
     runRdfRouteZ(
       ZIO.fromFuture(_ => requestMessageF),
       requestContext,
@@ -251,7 +251,7 @@ object RouteUtilV2 {
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
     schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
-  )(implicit runtime: Runtime[R with MessageRelay with AppConfig]): Future[RouteResult] = {
+  )(implicit runtime: Runtime[R & MessageRelay & AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
     completeResponse(responseZio, requestContext, targetSchemaTask, schemaOptionsOption)
   }
@@ -278,7 +278,7 @@ object RouteUtilV2 {
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
     schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
-  )(implicit runtime: Runtime[R with AppConfig]): Future[RouteResult] =
+  )(implicit runtime: Runtime[R & AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
       targetSchema      <- targetSchemaTask
       schemaOptions     <- schemaOptionsOption.some.orElse(getSchemaOptions(requestContext))
@@ -303,7 +303,7 @@ object RouteUtilV2 {
   def runTEIXMLRoute[R](
     requestTask: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext
-  )(implicit runtime: Runtime[R with MessageRelay]): Future[RouteResult] =
+  )(implicit runtime: Runtime[R & MessageRelay]): Future[RouteResult] =
     UnsafeZioRun.runToFuture {
       for {
         requestMessage <- requestTask

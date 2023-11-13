@@ -6,15 +6,15 @@
 package org.knora.webapi.routing
 
 import org.apache.pekko
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.util.LogAspect
 
-import pekko.http.scaladsl.model._
+import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.server.Directives.get
 import pekko.http.scaladsl.server.Directives.path
 import pekko.http.scaladsl.server.Route
@@ -100,7 +100,7 @@ trait HealthCheck {
  * Provides the '/health' endpoint serving the health status.
  */
 final case class HealthRoute()(
-  private implicit val runtime: Runtime[Authenticator with State]
+  private implicit val runtime: Runtime[Authenticator & State]
 ) extends HealthCheck {
 
   /**

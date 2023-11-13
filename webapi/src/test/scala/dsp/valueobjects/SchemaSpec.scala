@@ -7,7 +7,7 @@ package dsp.valueobjects
 
 import zio.NonEmptyChunk
 import zio.prelude.Validation
-import zio.test._
+import zio.test.*
 
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
@@ -43,7 +43,7 @@ object SchemaSpec extends ZIOSpecDefault {
   private val guiElementColorpicker = Schema.GuiElement.make(SalsahGui.Colorpicker).fold(e => throw e.head, v => v)
   private val guiElementCheckbox    = Schema.GuiElement.make(SalsahGui.Checkbox).fold(e => throw e.head, v => v)
 
-  def spec = (
+  def spec: Spec[Any, Any] =
     guiAttributeTest +
       guiElementTest +
       guiObjectTest +
@@ -57,7 +57,6 @@ object SchemaSpec extends ZIOSpecDefault {
       guiObjectSearchboxTest +
       guiObjectColorpickerTest +
       guiObjectCheckboxTest
-  )
 
   private val guiAttributeTest = suite("gui attribute")(
     test("pass an empty value and return an error") {

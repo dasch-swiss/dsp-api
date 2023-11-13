@@ -6,10 +6,10 @@
 package org.knora.webapi.config
 
 import com.typesafe.config.ConfigFactory
-import zio._
-import zio.config._
-import zio.config.magnolia._
-import zio.config.typesafe._
+import zio.*
+import zio.config.*
+import zio.config.magnolia.*
+import zio.config.typesafe.*
 
 import java.time.Duration
 
@@ -203,7 +203,7 @@ final case class InstrumentationServerConfig(
 )
 
 object AppConfig {
-  type AppConfigurations = AppConfig with JwtConfig with DspIngestConfig with Triplestore
+  type AppConfigurations = AppConfig & JwtConfig & DspIngestConfig & Triplestore
 
   val layer: ULayer[AppConfigurations] = {
     val appConfigLayer = ZLayer {

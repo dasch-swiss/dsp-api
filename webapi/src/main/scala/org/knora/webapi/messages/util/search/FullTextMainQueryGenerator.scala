@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.search
 
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 
@@ -73,7 +73,7 @@ object FullTextMainQueryGenerator {
   ): ConstructQuery = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    import FullTextSearchConstants._
+    import FullTextSearchConstants.*
 
     // WHERE patterns for the resources: check that the resource are a knora-base:Resource and that it is not marked as deleted
     val wherePatternsForResources = Seq(

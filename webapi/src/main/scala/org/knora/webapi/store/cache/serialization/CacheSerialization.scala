@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.cache.serialization
 
-import zio._
+import zio.*
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream

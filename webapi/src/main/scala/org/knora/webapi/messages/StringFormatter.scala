@@ -5,11 +5,11 @@
 
 package org.knora.webapi.messages
 
-import spray.json._
+import spray.json.*
 import zio.ZLayer
 import zio.prelude.Validation
 
-import java.time._
+import java.time.*
 import java.time.temporal.ChronoField
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -18,13 +18,13 @@ import scala.util.Success
 import scala.util.Try
 import scala.util.matching.Regex
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.StringFormatter._
+import org.knora.webapi.messages.StringFormatter.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
@@ -262,10 +262,10 @@ object StringFormatter {
   private def getOrCacheSmartIri(iriStr: IRI, creationFun: () => SmartIri): SmartIri =
     smartIriCache.computeIfAbsent(
       iriStr,
-      JavaUtil.function({ _: Object => creationFun() })
+      JavaUtil.function({ (_: Object) => creationFun() })
     )
 
-  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { appConfig: AppConfig =>
+  val live: ZLayer[AppConfig, Nothing, StringFormatter] = ZLayer.fromFunction { (appConfig: AppConfig) =>
     StringFormatter.init(appConfig)
     StringFormatter.getGeneralInstance
   }
@@ -436,7 +436,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
   /**
    * Checks that the IRI's ontology schema, if present, corresponds to the specified schema.
    *
-   * @param schema The [[ApiV2Schema]] to be allowed.
+   * @param allowedSchema The [[ApiV2Schema]] to be allowed.
    * @return `true` if the [[OntologySchema]] is present and matches the specified schema or if the iri does not have a schema.
    */
   def isApiV2Schema(allowedSchema: ApiV2Schema): Boolean = getOntologySchema match {

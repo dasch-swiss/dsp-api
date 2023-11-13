@@ -2,11 +2,11 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper.*
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
-import sbt.Keys.version
 import sbt.*
-import sys.process.*
+import sbt.Keys.version
 
 import scala.language.postfixOps
+import scala.sys.process.*
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
@@ -177,6 +177,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   )
   .settings(
     scalacOptions ++= Seq(
+      "-Xsource:3",
+      "-Wconf:msg=constructor modifiers are assumed:s",
       "-feature",
       "-unchecked",
       "-deprecation",

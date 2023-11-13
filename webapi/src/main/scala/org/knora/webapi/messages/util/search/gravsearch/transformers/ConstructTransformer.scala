@@ -5,10 +5,10 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.transformers
 
-import zio._
+import zio.*
 
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 final case class ConstructTransformer(

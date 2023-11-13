@@ -29,8 +29,8 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import spray.json._
-import zio._
+import spray.json.*
+import zio.*
 import zio.metrics.Metric
 
 import java.io.BufferedInputStream
@@ -43,13 +43,13 @@ import java.nio.file.StandardCopyOption
 import java.time.temporal.ChronoUnit
 import java.util
 
-import dsp.errors._
-import org.knora.webapi._
+import dsp.errors.*
+import org.knora.webapi.*
 import org.knora.webapi.config.Triplestore
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.*
+import org.knora.webapi.messages.store.triplestoremessages.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -62,7 +62,7 @@ import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Available
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.NotInitialized
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus.Unavailable
-import org.knora.webapi.store.triplestore.errors._
+import org.knora.webapi.store.triplestore.errors.*
 import org.knora.webapi.util.FileUtil
 
 case class TriplestoreServiceLive(
@@ -321,7 +321,7 @@ case class TriplestoreServiceLive(
 
     def checkForExpectedDataset(response: String) = ZIO.attempt {
       val nameShouldBe = fusekiConfig.repositoryName
-      import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol._
+      import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol.*
       val fusekiServer: FusekiServer = JsonParser(response).convertTo[FusekiServer]
       val neededDataset: Option[FusekiDataset] =
         fusekiServer.datasets.find(dataset => dataset.dsName == s"/$nameShouldBe" && dataset.dsState)
@@ -636,7 +636,7 @@ object TriplestoreServiceLive {
       ZIO.succeed(httpClient)
     }(client => ZIO.attemptBlocking(client.close()).logError.ignore)
 
-  val layer: URLayer[Triplestore with StringFormatter, TriplestoreService] =
+  val layer: URLayer[Triplestore & StringFormatter, TriplestoreService] =
     ZLayer.scoped {
       for {
         sf     <- ZIO.service[StringFormatter]

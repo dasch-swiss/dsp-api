@@ -5,22 +5,20 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import org.apache.pekko
-import spray.json._
-import zio._
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json.*
+import zio.*
 
 import java.time.Instant
 import scala.collection.mutable
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.V2
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages._
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.*
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.util.rdf.*
 
 /**
  * A response to a [[org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct]] query.
@@ -447,9 +445,7 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
       VariableResultsRow(
         new ErrorHandlingMap(
           mapToWrap,
-          { key: String =>
-            s"No value found for SPARQL query variable '$key' in query result row"
-          }
+          { (key: String) => s"No value found for SPARQL query variable '$key' in query result row" }
         )
       )
     }

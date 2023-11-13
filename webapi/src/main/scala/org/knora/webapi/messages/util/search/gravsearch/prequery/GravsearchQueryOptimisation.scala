@@ -10,7 +10,7 @@ import scalax.collection.GraphEdge.DiHyperEdge
 
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveEntitiesInferredFromProperty.removeEntitiesInferredFromProperty
 import org.knora.webapi.messages.util.search.gravsearch.prequery.RemoveRedundantKnoraApiResource.removeRedundantKnoraApiResource
 import org.knora.webapi.messages.util.search.gravsearch.prequery.ReorderPatternsByDependency.reorderPatternsByDependency
@@ -251,7 +251,7 @@ private object ReorderPatternsByDependency {
       }.toSet
 
       // Filter out the topological orders that end with any of those nodes.
-      orders.filterNot { order: Vector[NodeT] =>
+      orders.filterNot { (order: Vector[NodeT]) =>
         nodesThatAreObjectsOfRdfType.contains(order.last.value)
       }
     }

@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
 

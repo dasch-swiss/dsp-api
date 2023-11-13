@@ -5,11 +5,11 @@
 
 package org.knora.webapi.core
 
-import zio._
+import zio.*
 import zio.test.Assertion.anything
 import zio.test.Assertion.dies
 import zio.test.Assertion.isSubtype
-import zio.test._
+import zio.test.*
 
 import org.knora.webapi.messages.ResponderRequest
 
@@ -27,7 +27,7 @@ object MessageRelaySpec extends ZIOSpecDefault {
   case class SomeRelayedMessage() extends RelayedMessage
   case class NotARelayedMessage() extends ResponderRequest
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("MessageRelay")(
       test("when asked with an UnknownTestMessage then it should die with an IllegalStateException") {
         for {

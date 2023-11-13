@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
@@ -15,19 +15,19 @@ import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import dsp.errors.NotImplementedException
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatPredicateObjects
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatStatements
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MainResourcesAndValueRdfData
@@ -54,7 +54,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRespons
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 
@@ -621,7 +621,7 @@ final case class ConstructResponseUtilV2Live(
   )(implicit stringFormatter: StringFormatter): RdfPropertyValues = {
     valuePropertyToObjectIris.map { case (property: SmartIri, valObjIris: Seq[IRI]) =>
       // Make an RdfWithUserPermission for each value of the property.
-      val rdfWithUserPermissionsForValues: Seq[(IRI, RdfWithUserPermission)] = valObjIris.map { valObjIri: IRI =>
+      val rdfWithUserPermissionsForValues: Seq[(IRI, RdfWithUserPermission)] = valObjIris.map { (valObjIri: IRI) =>
         val valueObjAssertions: ConstructPredicateObjects = nonResourceStatements(valObjIri)
 
         // get the resource's project
@@ -869,7 +869,7 @@ final case class ConstructResponseUtilV2Live(
       // create a virtual property representing an incoming link
       val incomingProps: (SmartIri, Seq[ValueRdfData]) =
         OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri -> incomingLinkAssertions.values.toSeq.flatten.map {
-          linkValue: ValueRdfData =>
+          (linkValue: ValueRdfData) =>
             // get the source of the link value (it points to the resource that is currently processed)
             val sourceIri: IRI = linkValue.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
             val source = Some(
@@ -970,18 +970,18 @@ final case class ConstructResponseUtilV2Live(
   ): Set[IRI] =
     valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], (_: SmartIri, valObjs: Seq[ValueRdfData])) =>
-        val mappings: Seq[String] = valObjs.filter { valObj: ValueRdfData =>
+        val mappings: Seq[String] = valObjs.filter { (valObj: ValueRdfData) =>
           valObj.valueObjectClass == OntologyConstants.KnoraBase.TextValue.toSmartIri && valObj.assertions.contains(
             OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri
           )
-        }.map { textValObj: ValueRdfData =>
+        }.map { (textValObj: ValueRdfData) =>
           textValObj.requireIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)
         }
 
         // get mappings from linked resources
-        val mappingsFromReferredResources: Set[IRI] = valObjs.filter { valObj: ValueRdfData =>
+        val mappingsFromReferredResources: Set[IRI] = valObjs.filter { (valObj: ValueRdfData) =>
           valObj.nestedResource.nonEmpty
-        }.flatMap { valObj: ValueRdfData =>
+        }.flatMap { (valObj: ValueRdfData) =>
           val referredRes: ResourceWithValueRdfData = valObj.nestedResource.get
 
           // recurse on the nested resource's values
@@ -1455,11 +1455,11 @@ final case class ConstructResponseUtilV2Live(
         val readValues: Seq[Task[ReadValueV2]] = valObjs
           .sortBy(_.subjectIri)
           .sortBy { // order values by value IRI, then by knora-base:valueHasOrder
-            valObj: ValueRdfData =>
+            (valObj: ValueRdfData) =>
               // set order to zero if not given
               valObj.maybeIntObject(OntologyConstants.KnoraBase.ValueHasOrder.toSmartIri).getOrElse(0)
           }
-          .map { valObj: ValueRdfData =>
+          .map { (valObj: ValueRdfData) =>
             for {
               valueContent <-
                 createValueContentV2FromValueRdfData(
@@ -1596,7 +1596,7 @@ final case class ConstructResponseUtilV2Live(
       orderByResourceIri.filter(resourceIri => mainResourcesAndValueRdfData.resources.keySet.contains(resourceIri))
 
     // iterate over visibleResourceIris and construct the response in the correct order
-    val readResourceFutures: Vector[Task[ReadResourceV2]] = visibleResourceIris.map { resourceIri: IRI =>
+    val readResourceFutures: Vector[Task[ReadResourceV2]] = visibleResourceIris.map { (resourceIri: IRI) =>
       val data = mainResourcesAndValueRdfData.resources(resourceIri)
       constructReadResourceV2(
         resourceIri = resourceIri,
@@ -1642,7 +1642,7 @@ final case class ConstructResponseUtilV2Live(
     }.toSet
 
     // get all the mappings
-    val mappingResponsesFuture = mappingIris.map { mappingIri: IRI =>
+    val mappingResponsesFuture = mappingIris.map { (mappingIri: IRI) =>
       messageRelay.ask[GetMappingResponseV2](GetMappingRequestV2(mappingIri, requestingUser))
     }
 
@@ -1651,7 +1651,7 @@ final case class ConstructResponseUtilV2Live(
 
       // get the default XSL transformations
       mappingsWithFuture =
-        mappingResponses.map { mapping: GetMappingResponseV2 =>
+        mappingResponses.map { (mapping: GetMappingResponseV2) =>
           for {
             // if given, get the default XSL transformation
             xsltOption <-
@@ -1687,7 +1687,7 @@ final case class ConstructResponseUtilV2Live(
 
 object ConstructResponseUtilV2Live {
   val layer: URLayer[
-    AppConfig with MessageRelay with StandoffTagUtilV2 with StringFormatter,
+    AppConfig & MessageRelay & StandoffTagUtilV2 & StringFormatter,
     ConstructResponseUtilV2
   ] = ZLayer.fromFunction(ConstructResponseUtilV2Live.apply _)
 }

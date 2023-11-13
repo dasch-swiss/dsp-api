@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
@@ -16,14 +16,14 @@ import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex._
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -33,14 +33,14 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
-import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -166,7 +166,7 @@ object DeleteValueV2 {
    * @param jsonLdString the JSON-LD input as String.
    * @return a case class instance representing the input.
    */
-  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter with IriConverter, Throwable, DeleteValueV2] =
+  def fromJsonLd(jsonLdString: String): ZIO[StringFormatter & IriConverter, Throwable, DeleteValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       RouteUtilV2.parseJsonLd(jsonLdString).flatMap { jsonLDDocument =>
         jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
@@ -619,7 +619,7 @@ object CreateValueV2 {
   def fromJsonLd(
     jsonLdString: String,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with IriConverter with MessageRelay, Throwable, CreateValueV2] =
+  ): ZIO[StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       for {
         // Get the IRI of the resource that the value is to be created in.
@@ -740,7 +740,7 @@ object UpdateValueV2 {
   def fromJsonLd(
     jsonLdString: String,
     requestingUser: UserADM
-  ): ZIO[IriConverter with StringFormatter with MessageRelay, Throwable, UpdateValueV2] =
+  ): ZIO[IriConverter & StringFormatter & MessageRelay, Throwable, UpdateValueV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       def makeUpdateValueContentV2(
         resourceIri: SmartIri,
@@ -1048,7 +1048,7 @@ object ValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, ValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
+  ): ZIO[StringFormatter & MessageRelay, Throwable, ValueContentV2] = ZIO.serviceWithZIO[StringFormatter] {
     stringFormatter =>
       for {
         valueType <-
@@ -1479,7 +1479,7 @@ case class TextValueContentV2(
       // create an IRI for each standoff tag
       // internal references to XML ids are not resolved yet
       val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = standoff.map {
-        standoffNode: StandoffTagV2 =>
+        (standoffNode: StandoffTagV2) =>
           CreateStandoffTagV2InTriplestore(
             standoffNode = standoffNode,
             standoffTagInstanceIri = StandoffStringUtil.makeRandomStandoffTagIri(
@@ -1492,10 +1492,10 @@ case class TextValueContentV2(
       // collect all the standoff tags that contain XML ids and
       // map the XML ids to standoff node Iris
       val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
-        standoffTag: CreateStandoffTagV2InTriplestore =>
+        (standoffTag: CreateStandoffTagV2InTriplestore) =>
           // filter those tags out that have an XML id
           standoffTag.standoffNode.originalXMLID.isDefined
-      }.map { standoffTagWithID: CreateStandoffTagV2InTriplestore =>
+      }.map { (standoffTagWithID: CreateStandoffTagV2InTriplestore) =>
         // return the XML id as a key and the standoff IRI as the value
         standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
       }.toMap
@@ -1509,7 +1509,7 @@ case class TextValueContentV2(
 
       // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
       val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
-        standoffTag: CreateStandoffTagV2InTriplestore =>
+        (standoffTag: CreateStandoffTagV2InTriplestore) =>
           // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
           val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] =
             standoffTag.standoffNode.attributes.map {
@@ -1665,7 +1665,7 @@ object TextValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, TextValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, TextValueContentV2] =
     for {
       maybeValueAsString    <- getSparqlEncodedString(jsonLdObject, ValueAsString)
       maybeValueHasLanguage <- getSparqlEncodedString(jsonLdObject, TextValueHasLanguage)
@@ -2580,7 +2580,7 @@ object FileValueWithSipiMetadata {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, FileValueWithSipiMetadata] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, FileValueWithSipiMetadata] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       for {
         // The submitted value provides only Sipi's internal filename for the file.
@@ -2716,7 +2716,7 @@ object StillImageFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, StillImageFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, StillImageFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)
@@ -2865,7 +2865,7 @@ object DocumentFileValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, DocumentFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, DocumentFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLdObject)
@@ -2886,7 +2886,7 @@ object ArchiveFileValueContentV2 {
   def fromJsonLdObject(
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, ArchiveFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, ArchiveFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLdObject)
@@ -2959,7 +2959,7 @@ object TextFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, TextFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, TextFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)
@@ -3032,7 +3032,7 @@ object AudioFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, AudioFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, AudioFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)
@@ -3107,7 +3107,7 @@ object MovingImageFileValueContentV2 {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM
-  ): ZIO[StringFormatter with MessageRelay, Throwable, MovingImageFileValueContentV2] =
+  ): ZIO[StringFormatter & MessageRelay, Throwable, MovingImageFileValueContentV2] =
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject, requestingUser)
       comment                   <- JsonLDUtil.getComment(jsonLDObject)

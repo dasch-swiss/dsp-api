@@ -5,14 +5,15 @@
 
 package dsp.valueobjects
 
-import zio.test._
+import zio.Scope
+import zio.test.*
 
 /**
  * This spec is used to test the [[dsp.valueobjects.RestrictedViewSize]] value object creation.
  */
 object RestrictedViewSizeSpec extends ZIOSpecDefault {
 
-  def spec = suite("Size")(
+  def spec: Spec[TestEnvironment & Scope, Nothing] = suite("Size")(
     test("should succeed on passing percentage values") {
       val gen = Gen.int(1, 100)
       check(gen) { int =>

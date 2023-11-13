@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.apache.pekko
-import spray.json._
+import spray.json.*
 import zio.prelude.Validation
 
 import java.util.UUID
@@ -17,8 +17,8 @@ import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.User._
-import org.knora.webapi._
+import dsp.valueobjects.User.*
+import org.knora.webapi.*
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM

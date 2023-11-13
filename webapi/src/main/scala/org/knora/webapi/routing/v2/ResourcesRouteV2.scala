@@ -6,16 +6,16 @@
 package org.knora.webapi.routing.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.Route
-import zio._
+import zio.*
 
 import java.time.Instant
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.Sipi
@@ -26,9 +26,9 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
@@ -40,7 +40,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig with Authenticator with StringFormatter with IriConverter with MessageRelay with RestResourceInfoService
+    AppConfig & Authenticator & StringFormatter & IriConverter & MessageRelay & RestResourceInfoService
   ]
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi
@@ -76,7 +76,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       eraseResource()
 
   private def getIIIFManifest(): Route =
-    path(resourcesBasePath / "iiifmanifest" / Segment) { resourceIriStr: IRI =>
+    path(resourcesBasePath / "iiifmanifest" / Segment) { (resourceIriStr: IRI) =>
       get { requestContext =>
         val requestTask = for {
           resourceIri <- Iri
@@ -187,7 +187,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
   }
 
   private def getResourceHistory(): Route =
-    path(resourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
+    path(resourcesBasePath / "history" / Segment) { (resourceIriStr: IRI) =>
       get { requestContext =>
         val getResourceIri = Iri
           .validateAndEscapeIri(resourceIriStr)
@@ -230,7 +230,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       .getOrElse(ZIO.none)
 
   private def getResourceHistoryEvents(): Route =
-    path(resourcesBasePath / "resourceHistoryEvents" / Segment) { resourceIri: IRI =>
+    path(resourcesBasePath / "resourceHistoryEvents" / Segment) { (resourceIri: IRI) =>
       get { requestContext =>
         val requestTask = Authenticator
           .getUserADM(requestContext)
@@ -240,7 +240,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     }
 
   private def getProjectResourceAndValueHistory(): Route =
-    path(resourcesBasePath / "projectHistoryEvents" / Segment) { projectIri: IRI =>
+    path(resourcesBasePath / "projectHistoryEvents" / Segment) { (projectIri: IRI) =>
       get { requestContext =>
         val requestTask =
           Authenticator.getUserADM(requestContext).map(ProjectResourcesWithHistoryGetRequestV2(projectIri, _))
@@ -248,7 +248,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       }
     }
 
-  private def getResources(): Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
+  private def getResources(): Route = path(resourcesBasePath / Segments) { (resIris: Seq[String]) =>
     get { requestContext =>
       val targetSchemaTask      = RouteUtilV2.getOntologySchema(requestContext)
       val schemaOptionsTask     = RouteUtilV2.getSchemaOptions(requestContext)
@@ -275,7 +275,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     ZIO
       .fail(BadRequestException(s"List of provided resource Iris exceeds limit of $resultsPerPage"))
       .when(resIris.size > resultsPerPage) *>
-      ZIO.foreach(resIris) { resIri: IRI =>
+      ZIO.foreach(resIris) { (resIri: IRI) =>
         Iri
           .validateAndEscapeIri(resIri)
           .toZIO
@@ -283,7 +283,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       }
 
   private def getResourcesPreview(): Route =
-    path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
+    path("v2" / "resourcespreview" / Segments) { (resIris: Seq[String]) =>
       get { requestContext =>
         val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
         val requestTask = for {
@@ -295,7 +295,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       }
     }
 
-  private def getResourcesTei(): Route = path("v2" / "tei" / Segment) { resIri: String =>
+  private def getResourcesTei(): Route = path("v2" / "tei" / Segment) { (resIri: String) =>
     get { requestContext =>
       val params: Map[String, String] = requestContext.request.uri.query().toMap
       val getResourceIri =
@@ -315,7 +315,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
     }
   }
 
-  private def getResourcesGraph(): Route = path("v2" / "graph" / Segment) { resIriStr: String =>
+  private def getResourcesGraph(): Route = path("v2" / "graph" / Segment) { (resIriStr: String) =>
     get { requestContext =>
       val getResourceIri =
         Iri

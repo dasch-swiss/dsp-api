@@ -34,7 +34,9 @@ class CardinalitiesSpec extends CoreSpec {
             _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
           )
         )
-      resF map { res => println(res); assert(res, "property is used in resource (instance of that resource class)") }
+      resF map { res =>
+        println(res); assert(res, "property is used in resource (instance of that resource class)")
+      }
     }
 
     "detect that property is not in use, when not used in a resource" in {
@@ -81,7 +83,9 @@ class CardinalitiesSpec extends CoreSpec {
             _.isPropertyUsedInResources(internalClassIri, internalPropertyIri)
           )
         )
-      resF map { res => println(res); assert(res, "property is used in resource (instance of resource class)") }
+      resF map { res =>
+        println(res); assert(res, "property is used in resource (instance of resource class)")
+      }
     }
 
     "detect that property is in use, when used in a resource of a subclass" in {
@@ -93,7 +97,9 @@ class CardinalitiesSpec extends CoreSpec {
         UnsafeZioRun.runToFuture(
           ZIO.serviceWithZIO[CardinalityHandler](_.isPropertyUsedInResources(internalClassIri, internalPropertyIri))
         )
-      resF map { res => println(res); assert(res, "property is used in a resource of subclass") }
+      resF map { res =>
+        println(res); assert(res, "property is used in a resource of subclass")
+      }
     }
   }
 }

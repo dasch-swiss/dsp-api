@@ -6,9 +6,9 @@
 package org.knora.webapi.responders
 
 import com.typesafe.scalalogging.LazyLogging
-import zio._
+import zio.*
 
-import dsp.errors._
+import dsp.errors.*
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
@@ -108,6 +108,6 @@ final case class IriService(
 }
 
 object IriService {
-  val layer: ZLayer[TriplestoreService with StringFormatter, Nothing, IriService] =
+  val layer: ZLayer[TriplestoreService & StringFormatter, Nothing, IriService] =
     ZLayer.fromFunction(IriService.apply _)
 }

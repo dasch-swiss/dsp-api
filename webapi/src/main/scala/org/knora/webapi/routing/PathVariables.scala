@@ -6,7 +6,7 @@
 package org.knora.webapi.routing
 
 import sttp.tapir.CodecFormat.TextPlain
-import sttp.tapir._
+import sttp.tapir.*
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier

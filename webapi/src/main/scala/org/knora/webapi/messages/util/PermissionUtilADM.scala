@@ -414,7 +414,7 @@ object PermissionUtilADM extends LazyLogging {
    */
   def parsePermissions(
     permissionLiteral: String,
-    errorFun: String => Nothing = { permissionLiteral: String =>
+    errorFun: String => Nothing = { (permissionLiteral: String) =>
       throw InconsistentRepositoryDataException(s"invalid permission literal: $permissionLiteral")
     }
   ): Map[EntityPermission, Set[IRI]] = {
@@ -765,6 +765,6 @@ final case class PermissionUtilADMLive(messageRelay: MessageRelay, stringFormatt
 }
 
 object PermissionUtilADMLive {
-  val layer: URLayer[StringFormatter with MessageRelay, PermissionUtilADMLive] =
+  val layer: URLayer[StringFormatter & MessageRelay, PermissionUtilADMLive] =
     ZLayer.fromFunction(PermissionUtilADMLive.apply _)
 }

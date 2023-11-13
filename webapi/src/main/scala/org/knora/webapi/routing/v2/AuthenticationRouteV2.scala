@@ -6,7 +6,7 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko
-import zio._
+import zio.*
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
@@ -16,14 +16,14 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginApiReque
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 
-import pekko.http.scaladsl.server.Directives._
+import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.Route
 
 /**
  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
  */
 final case class AuthenticationRouteV2()(
-  private implicit val runtime: Runtime[StringFormatter with Authenticator]
+  private implicit val runtime: Runtime[StringFormatter & Authenticator]
 ) extends AuthenticationV2JsonProtocol {
 
   def makeRoute: Route =
@@ -46,7 +46,7 @@ final case class AuthenticationRouteV2()(
            * the authorization header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
            */
           entity(as[LoginApiRequestPayloadV2]) { apiRequest => requestContext =>
-            val task = ZIO.serviceWithZIO[StringFormatter] { sf: StringFormatter =>
+            val task = ZIO.serviceWithZIO[StringFormatter] { sf =>
               val userId      = UserIdentifierADM(apiRequest.iri, apiRequest.email, apiRequest.username)(sf)
               val credentials = KnoraPasswordCredentialsV2(userId, apiRequest.password)
               Authenticator.doLoginV2(credentials)
@@ -65,7 +65,7 @@ final case class AuthenticationRouteV2()(
             formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
               {
                 val task =
-                  ZIO.serviceWithZIO[StringFormatter] { sf: StringFormatter =>
+                  ZIO.serviceWithZIO[StringFormatter] { sf =>
                     val userId      = UserIdentifierADM(maybeUsername = Some(username))(sf)
                     val credentials = KnoraPasswordCredentialsV2(userId, password)
                     Authenticator.doLoginV2(credentials)

@@ -25,8 +25,8 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import spray.json._
-import zio._
+import spray.json.*
+import zio.*
 import zio.nio.file.Path
 
 import java.net.URI
@@ -37,13 +37,13 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.api.IIIFService
-import org.knora.webapi.store.iiif.domain._
+import org.knora.webapi.store.iiif.domain.*
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 import org.knora.webapi.util.ZScopedJavaIoStreams
@@ -76,7 +76,7 @@ final case class IIIFServiceSipiImpl(
    * @return a [[GetFileMetadataResponse]] containing the requested metadata.
    */
   def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): Task[GetFileMetadataResponse] = {
-    import SipiKnoraJsonResponseProtocol._
+    import SipiKnoraJsonResponseProtocol.*
 
     for {
       url             <- ZIO.succeed(sipiConfig.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
@@ -404,7 +404,7 @@ object IIIFServiceSipiImpl {
   private def release(httpClient: CloseableHttpClient): UIO[Unit] =
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
-  val layer: URLayer[AppConfig with JwtService, IIIFService] =
+  val layer: URLayer[AppConfig & JwtService, IIIFService] =
     ZLayer.scoped {
       for {
         config     <- ZIO.serviceWith[AppConfig](_.sipi)

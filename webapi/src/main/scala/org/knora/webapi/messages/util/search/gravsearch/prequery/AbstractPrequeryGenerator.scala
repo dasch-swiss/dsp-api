@@ -10,18 +10,18 @@ import zio.ZIO
 
 import scala.collection.mutable
 
-import dsp.errors._
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.transformers.WhereTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types._
+import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
@@ -1776,7 +1776,7 @@ abstract class AbstractPrequeryGenerator(
     // standoff tag contains the term:
     // FILTER REGEX(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start), 'term', "i")
     // TODO: handle the differences between regex syntax and Lucene syntax.
-    val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map { term: String =>
+    val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map { (term: String) =>
       FilterPattern(
         expression = RegexFunction(
           textExpr = SubStrFunction(

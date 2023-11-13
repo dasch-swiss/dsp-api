@@ -7,10 +7,10 @@ package org.knora.webapi.slice.ontology.domain.model
 
 import zio.Random
 import zio.Scope
-import zio.test._
+import zio.test.*
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
-import org.knora.webapi.slice.ontology.domain.model.Cardinality._
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.domain.model.CardinalitySpec.Generator.cardinalitiesGen
 
 object CardinalitySpec extends ZIOSpecDefault {
@@ -30,7 +30,7 @@ object CardinalitySpec extends ZIOSpecDefault {
     }
   }
 
-  val spec: Spec[TestEnvironment with Scope, Nothing] = suite("CardinalitySpec")(
+  val spec: Spec[TestEnvironment & Scope, Nothing] = suite("CardinalitySpec")(
     suite("Cardinality to String")(
       test("lower bound only") {
         assertTrue(AtLeastOne.toString == "1-n")

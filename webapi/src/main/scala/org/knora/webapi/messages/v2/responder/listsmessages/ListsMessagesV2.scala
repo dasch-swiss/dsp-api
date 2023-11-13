@@ -5,19 +5,19 @@
 
 package org.knora.webapi.messages.v2.responder.listsmessages
 
-import org.knora.webapi._
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.listsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf
-import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 
 /**
@@ -106,7 +106,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
       val children: Map[IRI, JsonLDArray] = if (node.children.nonEmpty) {
         Map(
           OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDArray(
-            node.children.map { childNode: ListChildNodeADM =>
+            node.children.map { (childNode: ListChildNodeADM) =>
               makeNode(childNode) // recursion
             }
           )
@@ -142,7 +142,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
     val children: Map[IRI, JsonLDArray] = if (list.children.nonEmpty) {
       Map(
         OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDArray(
-          list.children.map { childNode: ListNodeADM =>
+          list.children.map { (childNode: ListNodeADM) =>
             makeNode(childNode.asInstanceOf[ListChildNodeADM])
           }
         )
