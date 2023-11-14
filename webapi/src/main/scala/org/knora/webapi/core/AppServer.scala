@@ -5,10 +5,14 @@
 
 package org.knora.webapi.core
 
+import zio.*
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceStatusNOK, CacheServiceStatusOK}
-import org.knora.webapi.messages.store.sipimessages.{IIIFServiceStatusNOK, IIIFServiceStatusOK}
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.cache.api.CacheService
@@ -17,7 +21,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.cache.CacheUtil
-import zio.*
 
 /**
  * The application bootstrapper
