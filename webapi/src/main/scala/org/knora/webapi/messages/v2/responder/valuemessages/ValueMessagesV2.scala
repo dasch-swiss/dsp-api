@@ -5,45 +5,32 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
+import dsp.errors.{AssertionException, BadRequestException, NotImplementedException}
+import dsp.valueobjects.{Iri, IriErrorMessages, UuidUtil}
+import org.knora.webapi.*
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.{MessageRelay, RelayedMessage}
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.standoff.{StandoffStringUtil, StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.messages.v2.responder.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.*
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter, ValuesValidator}
+import org.knora.webapi.routing.{RouteUtilV2, RouteUtilZ}
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.iiif.api.{FileMetadataSipiResponse, SipiService}
 import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.errors.NotImplementedException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.IriErrorMessages
-import dsp.valueobjects.UuidUtil
-import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.*
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.*
-import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.standoff.StandoffStringUtil
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.util.standoff.XMLUtil
-import org.knora.webapi.messages.v2.responder.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.*
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
-import org.knora.webapi.store.iiif.api.SipiService
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -2579,27 +2566,17 @@ case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: F
 object FileValueWithSipiMetadata {
   def fromJsonLdObject(
     jsonLDObject: JsonLDObject
-  ): ZIO[SipiService & StringFormatter, Throwable, FileValueWithSipiMetadata] =
-    ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
-      for {
-        // The submitted value provides only Sipi's internal filename for the file.
-        internalFilename <- ZIO.attempt {
-                              val validationFun: (String, => Nothing) => String =
-                                (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                              jsonLDObject.requireStringWithValidation(FileValueHasFilename, validationFun)
-                            }
-
-        // Ask Sipi about the rest of the file's metadata.
-        tempFilePath         <- ZIO.attempt(stringFormatter.makeSipiTempFilePath(internalFilename))
-        fileMetadataResponse <- SipiService.getFileMetadata(tempFilePath)
-        fileValue = FileValueV2(
-                      internalFilename = internalFilename,
-                      internalMimeType = fileMetadataResponse.internalMimeType,
-                      originalFilename = fileMetadataResponse.originalFilename,
-                      originalMimeType = fileMetadataResponse.originalMimeType
-                    )
-      } yield FileValueWithSipiMetadata(fileValue, fileMetadataResponse)
-    }
+  ): ZIO[SipiService, Throwable, FileValueWithSipiMetadata] =
+    for {
+      // The submitted value provides only Sipi's internal filename for the file.
+      internalFilename <- ZIO.attempt {
+                            val validationFun: (String, => Nothing) => String =
+                              (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                            jsonLDObject.requireStringWithValidation(FileValueHasFilename, validationFun)
+                          }
+      meta     <- SipiService.getFileMetadata(s"/tmp/$internalFilename")
+      fileValue = FileValueV2(internalFilename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
+    } yield FileValueWithSipiMetadata(fileValue, meta)
 }
 
 /**
