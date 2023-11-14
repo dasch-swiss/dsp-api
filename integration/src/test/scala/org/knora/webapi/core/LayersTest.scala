@@ -52,9 +52,9 @@ import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
-import org.knora.webapi.store.iiif.api.IIIFService
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.store.iiif.impl.SipiServiceMock
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -70,7 +70,7 @@ object LayersTest {
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
-  type CommonR0 = ActorSystem with AppConfigurations with IIIFService with JwtService with StringFormatter
+  type CommonR0 = ActorSystem with AppConfigurations with SipiService with JwtService with StringFormatter
   type CommonR =
     ApiRoutes
       with AppRouter
@@ -198,29 +198,30 @@ object LayersTest {
         with SipiTestContainer
         with AppConfigurations
         with JwtService
-        with IIIFService
+        with SipiService
         with StringFormatter
     ](
       AppConfigForTestContainers.testcontainers,
       FusekiTestContainer.layer,
       SipiTestContainer.layer,
-      IIIFServiceSipiImpl.layer,
+      SipiServiceLive.layer,
       JwtServiceLive.layer,
       StringFormatter.test
     )
 
   private val fusekiTestcontainers =
-    ZLayer.make[FusekiTestContainer with AppConfigurations with JwtService with IIIFService with StringFormatter](
+    ZLayer.make[FusekiTestContainer with AppConfigurations with JwtService with SipiService with StringFormatter](
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       FusekiTestContainer.layer,
-      IIIFServiceMockImpl.layer,
+      SipiServiceMock.layer,
       JwtServiceLive.layer,
       StringFormatter.test
     )
 
   /**
    * Provides a layer for integration tests which depend on Fuseki as Testcontainers.
-   * Sipi/IIIFService will be mocked with the [[IIIFServiceMockImpl]]
+   * Sipi/IIIFService will be mocked with the [[SipiServiceMock]]
+   *
    * @param system An optional [[pekko.actor.ActorSystem]] for use with Akka's [[pekko.testkit.TestKit]]
    * @return a [[ULayer]] with the [[DefaultTestEnvironmentWithoutSipi]]
    */

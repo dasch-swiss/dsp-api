@@ -16,7 +16,7 @@ import org.knora.webapi.messages.traits.RequestWithSender
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 /**
- * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.api.IIIFService]]
+ * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.api.SipiService]]
  */
 sealed trait IIIFRequest extends StoreRequest with RelayedMessage
 

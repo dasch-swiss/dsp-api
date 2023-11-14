@@ -21,7 +21,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.domain.service.Asset
 
 @accessible
-trait IIIFService {
+trait SipiService {
 
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.

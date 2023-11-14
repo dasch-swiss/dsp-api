@@ -42,7 +42,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.domain.service.Asset
-import org.knora.webapi.store.iiif.api.IIIFService
+import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.domain.*
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
@@ -55,11 +55,11 @@ import org.knora.webapi.util.ZScopedJavaIoStreams
  * @param jwtService         The JWT Service to handle JWT Tokens
  * @param httpClient  The HTTP Client
  */
-final case class IIIFServiceSipiImpl(
+final case class SipiServiceLive(
   private val sipiConfig: Sipi,
   private val jwtService: JwtService,
   private val httpClient: CloseableHttpClient
-) extends IIIFService {
+) extends SipiService {
 
   private object SipiRoutes {
     def file(asset: Asset): UIO[URI]           = makeUri(s"${assetBase(asset)}/file")
@@ -351,7 +351,7 @@ final case class IIIFServiceSipiImpl(
       .as(targetFile)
 }
 
-object IIIFServiceSipiImpl {
+object SipiServiceLive {
 
   /**
    * Acquires a configured httpClient, backed by a connection pool,
@@ -404,12 +404,12 @@ object IIIFServiceSipiImpl {
   private def release(httpClient: CloseableHttpClient): UIO[Unit] =
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
-  val layer: URLayer[AppConfig & JwtService, IIIFService] =
+  val layer: URLayer[AppConfig & JwtService, SipiService] =
     ZLayer.scoped {
       for {
         config     <- ZIO.serviceWith[AppConfig](_.sipi)
         jwtService <- ZIO.service[JwtService]
         httpClient <- ZIO.acquireRelease(acquire(config))(release)
-      } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
+      } yield SipiServiceLive(config, jwtService, httpClient)
     }
 }
