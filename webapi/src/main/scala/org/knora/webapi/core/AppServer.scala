@@ -26,15 +26,15 @@ import org.knora.webapi.util.cache.CacheUtil
  * The application bootstrapper
  */
 final case class AppServer(
-                            state: State,
-                            ts: TriplestoreService,
-                            ru: RepositoryUpdater,
-                            as: ActorSystem,
-                            ontologyCache: OntologyCache,
-                            iiifs: SipiService,
-                            cs: CacheService,
-                            hs: HttpServer,
-                            appConfig: AppConfig
+  state: State,
+  ts: TriplestoreService,
+  ru: RepositoryUpdater,
+  as: ActorSystem,
+  ontologyCache: OntologyCache,
+  iiifs: SipiService,
+  cs: CacheService,
+  hs: HttpServer,
+  appConfig: AppConfig
 ) {
 
   /**

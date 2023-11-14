@@ -33,6 +33,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.iiif.api.SipiService
 
 trait ApiRoutes {
   val routes: Route
@@ -46,7 +47,7 @@ object ApiRoutes {
   val layer: URLayer[
     ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay &
       ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService &
-      RestResourceInfoService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
+      RestResourceInfoService & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
     ApiRoutes
   ] =
     ZLayer {
@@ -57,11 +58,12 @@ object ApiRoutes {
         adminApiRoutes     <- ZIO.service[AdminApiRoutes]
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
         routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
-        runtime <- ZIO.runtime[
-                     AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService &
-                       RestCardinalityService & RestResourceInfoService & StringFormatter & ValuesResponderV2 &
-                       core.State & routing.Authenticator
-                   ]
+        runtime <-
+          ZIO.runtime[
+            AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService &
+              RestCardinalityService & RestResourceInfoService & SipiService & StringFormatter & ValuesResponderV2 &
+              core.State & routing.Authenticator
+          ]
       } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, appConfig, runtime)
     }
 }
@@ -80,7 +82,7 @@ private final case class ApiRoutesImpl(
   appConfig: AppConfig,
   implicit val runtime: Runtime[
     AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService &
-      RestResourceInfoService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
+      RestResourceInfoService & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
   ]
 ) extends ApiRoutes
     with AroundDirectives {

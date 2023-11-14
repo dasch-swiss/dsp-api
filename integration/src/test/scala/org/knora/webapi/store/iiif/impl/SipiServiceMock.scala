@@ -12,6 +12,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.domain.service.Asset
+import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
 
@@ -26,15 +27,15 @@ case class SipiServiceMock() extends SipiService {
    */
   private val FAILURE_FILENAME: String = "failure.jp2"
 
-  def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Task[GetFileMetadataResponse] =
+  override def getFileMetadata(ignoredByMock: String): Task[FileMetadataSipiResponse] =
     ZIO.succeed(
-      GetFileMetadataResponse(
+      FileMetadataSipiResponse(
         originalFilename = Some("test2.tiff"),
         originalMimeType = Some("image/tiff"),
         internalMimeType = "image/jp2",
         width = Some(512),
         height = Some(256),
-        pageCount = None,
+        numpages = None,
         duration = None,
         fps = None
       )
