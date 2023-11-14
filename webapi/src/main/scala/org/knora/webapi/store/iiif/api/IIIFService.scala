@@ -21,7 +21,7 @@ import org.knora.webapi.slice.admin.domain.service.Asset
  *
  * @param originalFilename the file's original filename, if known.
  * @param originalMimeType the file's original MIME type.
- * @param internalMimeType the file's internal MIME type. Always defined (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
+ * @param internalMimeType the file's internal MIME type.
  * @param width            the file's width in pixels, if applicable.
  * @param height           the file's height in pixels, if applicable.
  * @param numpages         the number of pages in the file, if applicable.
