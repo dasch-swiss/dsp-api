@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.ZIO
 import zio.*
 
 import java.time.Instant
@@ -54,6 +53,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
@@ -77,6 +77,7 @@ final case class ResourcesResponderV2Live(
   standoffTagUtilV2: StandoffTagUtilV2,
   resourceUtilV2: ResourceUtilV2,
   permissionUtilADM: PermissionUtilADM,
+  projectRepo: KnoraProjectRepo,
   implicit val stringFormatter: StringFormatter
 ) extends ResourcesResponderV2
     with MessageHandler
@@ -2418,11 +2419,10 @@ final case class ResourcesResponderV2Live(
                      .fromString(projectResourceHistoryEventsGetRequest.projectIri)
                      .toZIO
                      .mapError(e => BadRequestException(e.getMessage))
-      projectInfoResponse <- messageRelay.ask[ProjectGetResponseADM](ProjectGetRequestADM(projectId))
+      _ <- projectRepo.findById(projectId).someOrFail(NotFoundException(s"Project ${projectId.value.value} not found"))
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
-      prequery = sparql.v2.txt
-                   .getAllResourcesInProjectPrequery(projectIri = projectInfoResponse.project.id)
+      prequery              = sparql.v2.txt.getAllResourcesInProjectPrequery(projectId.value.value)
       sparqlSelectResponse <- triplestore.query(Select(prequery))
       mainResourceIris      = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
@@ -2861,8 +2861,7 @@ final case class ResourcesResponderV2Live(
 object ResourcesResponderV2Live {
 
   val layer: URLayer[
-    StringFormatter & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & ConstructResponseUtilV2 &
-      TriplestoreService & MessageRelay & IriService & AppConfig,
+    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectRepo & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & StringFormatter & TriplestoreService,
     ResourcesResponderV2
   ] = ZLayer.fromZIO {
     for {
@@ -2874,8 +2873,9 @@ object ResourcesResponderV2Live {
       su      <- ZIO.service[StandoffTagUtilV2]
       ru      <- ZIO.service[ResourceUtilV2]
       pu      <- ZIO.service[PermissionUtilADM]
+      pr      <- ZIO.service[KnoraProjectRepo]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, sf))
+      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, pr, sf))
     } yield handler
   }
 }
