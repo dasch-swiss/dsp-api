@@ -25,15 +25,14 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter.*
+import org.knora.webapi.messages.XmlPatterns.nCNamePattern
+import org.knora.webapi.messages.XmlPatterns.nCNameRegex
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
-
-import XmlPatterns.nCNamePattern
-import XmlPatterns.nCNameRegex
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -1640,14 +1639,6 @@ class StringFormatter private (
         arkUrlWithoutTimestamp
     }
   }
-
-  /**
-   * Constructs a path for accessing a file that has been uploaded to Sipi's temporary storage.
-   *
-   * @param filename the filename.
-   * @return a URL for accessing the file.
-   */
-  def makeSipiTempFilePath(filename: String): String = s"/tmp/$filename"
 
   /**
    * Creates a new resource IRI based on a UUID.

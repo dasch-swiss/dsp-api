@@ -33,6 +33,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.iiif.api.IIIFService
 
 trait ApiRoutes {
   val routes: Route
@@ -44,7 +45,7 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay &
+    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IIIFService & IriConverter & KnoraProjectRepo & MessageRelay &
       ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService &
       RestResourceInfoService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
     ApiRoutes
@@ -58,7 +59,7 @@ object ApiRoutes {
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
         routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <- ZIO.runtime[
-                     AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService &
+                     AppConfig & IIIFService & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService &
                        RestCardinalityService & RestResourceInfoService & StringFormatter & ValuesResponderV2 &
                        core.State & routing.Authenticator
                    ]
@@ -79,7 +80,7 @@ private final case class ApiRoutesImpl(
   resourceInfoRoutes: ResourceInfoRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
-    AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService &
+    AppConfig & IIIFService & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService &
       RestResourceInfoService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
   ]
 ) extends ApiRoutes

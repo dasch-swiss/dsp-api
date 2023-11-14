@@ -10,12 +10,7 @@ import zio.*
 import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
-import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
+import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.store.iiif.api.IIIFService
 
 trait IIIFRequestMessageHandler extends MessageHandler
@@ -26,7 +21,6 @@ final case class IIIFRequestMessageHandlerLive(iiifService: IIIFService) extends
     message.isInstanceOf[IIIFRequest]
 
   override def handle(message: ResponderRequest): Task[Any] = message match {
-    case req: GetFileMetadataRequest                     => iiifService.getFileMetadata(req)
     case req: MoveTemporaryFileToPermanentStorageRequest => iiifService.moveTemporaryFileToPermanentStorage(req)
     case req: DeleteTemporaryFileRequest                 => iiifService.deleteTemporaryFile(req)
     case req: SipiGetTextFileRequest                     => iiifService.getTextFileRequest(req)
