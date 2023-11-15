@@ -345,13 +345,12 @@ private object ReorderPatternsByDependency {
    * @return the optimised query patterns.
    */
   def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    val (statementPatterns: Seq[StatementPattern], otherPatterns: Seq[QueryPattern]) =
-      patterns.partition {
-        case _: StatementPattern => true
-        case _                   => false
-      }
+    val (statementPatterns, otherPatterns) = patterns.partition {
+      case _: StatementPattern => true
+      case _                   => false
+    }
 
-    val sortedStatementPatterns = createAndSortGraph(statementPatterns)
+    val sortedStatementPatterns = createAndSortGraph(statementPatterns.asInstanceOf[Seq[StatementPattern]])
 
     val sortedOtherPatterns = otherPatterns.map {
       case unionPattern: UnionPattern =>
