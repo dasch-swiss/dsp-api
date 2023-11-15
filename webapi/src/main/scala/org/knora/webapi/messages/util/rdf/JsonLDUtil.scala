@@ -471,7 +471,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type returned by the validation function.
    * @return the return value of the validation function.
    */
-  @deprecated("Use getIri() instead")
   @throws[BadRequestException]
   def toIri[T](validationFun: (String, => Nothing) => T): T =
     getIri match {
@@ -526,7 +525,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function.
    */
-  @deprecated("Use getString(String) instead")
   @throws[BadRequestException]
   def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
     val str: String = getRequiredString(key).fold(msg => throw BadRequestException(msg), identity)
@@ -566,7 +564,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
-  @deprecated("Use getString(String) instead")
   @throws[BadRequestException]
   def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     getString(key)
@@ -582,7 +579,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param key the key of the required value.
    * @return the validated IRI.
    */
-  @deprecated("use getIdIriInObject(String) instead")
   @throws[BadRequestException]
   def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T =
     getRequiredObject(key)
@@ -602,7 +598,6 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @tparam T the type of the validation function's return value.
    * @return the return value of the validation function, or `None` if the value was not present.
    */
-  @deprecated("use getIdIriInObject(String) instead")
   def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] =
     getObject(key)
       .fold(e => throw BadRequestException(e), identity)
