@@ -8,10 +8,6 @@
 For a detailed overview of Gravsearch, see
 [Gravsearch: Transforming SPARQL to query humanities data](https://doi.org/10.3233/SW-200386).
 
-## Gravsearch Package
-
-The classes that process Gravsearch queries and results can be found in `org.knora.webapi.messages.util.search.gravsearch`.
-
 ## Type Inspection
 
 The code that converts Gravsearch queries into SPARQL queries, and processes the query results, needs to know the
@@ -123,12 +119,9 @@ To improve query performance, this trait defines the method `optimiseQueryPatter
 private methods to optimise the generated SPARQL. For example, before transformation of statements in WHERE clause, query 
 pattern orders must be optimised by moving `LuceneQueryPatterns` to the beginning and `isDeleted` statement patterns to the end of the WHERE clause. 
 
-- `ConstructToSelectTransformer` (extends `WhereTransformer`): instructions how to turn a Construct query into a Select query (converts a Gravsearch query into a prequery)
-- `SelectToSelectTransformer` (extends `WhereTransformer`): instructions how to turn a triplestore independent Select query into a triplestore dependent Select query (implementation of inference).    
-- `ConstructToConstructTransformer` (extends `WhereTransformer`): instructions how to turn a triplestore independent Construct query into a triplestore dependent Construct query (implementation of inference).
-
-The traits listed above define methods that are implemented in the transformer classes and called by `QueryTraverser` to perform SPARQL to SPARQL conversions.
-When iterating over the statements of the input query, the transformer class' transformation methods are called to perform the conversion.
+- `AbstractPrequeryGenerator` (extends `WhereTransformer`): converts a Gravsearch query into a prequery; this one has two implementations for regular search queries and for count queries.
+- `SelectTransformer` (extends `WhereTransformer`): transforms a Select query into a Select query with simulated RDF inference.
+- `ConstructTransformer`: transforms a Construct query into a Construct query with simulated RDF inference.
 
 ### Prequery
 
@@ -243,9 +236,6 @@ the main query can specifically ask for more detailed information on these resou
 
 #### Generating the Main Query
 
-The classes involved in generating the main query can be found in
-`org.knora.webapi.messages.util.search.gravsearch.mainquery`.
-
 The main query is a SPARQL CONSTRUCT query. Its generation is handled by the
 method `GravsearchMainQueryGenerator.createMainQuery`.
 It takes three arguments:
@@ -291,8 +281,8 @@ to the maximum allowed page size, the predicate
 Gravsearch queries support a subset of RDFS reasoning (see [Inference](../../../03-endpoints/api-v2/query-language.md#inference) in the API documentation
 on Gravsearch). This is implemented as follows:
 
-To simulate RDF inference, the API expands the prequery on basis of the available ontologies. For that reason, `SparqlTransformer.transformStatementInWhereForNoInference` expands all `rdfs:subClassOf` and `rdfs:subPropertyOf` statements using `UNION` statements for all subclasses and subproperties from the ontologies (equivalent to `rdfs:subClassOf*` and `rdfs:subPropertyOf*`). 
-Similarly, `SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
+To simulate RDF inference, the API expands all `rdfs:subClassOf` and `rdfs:subPropertyOf` statements using `UNION` statements for all subclasses and subproperties from the ontologies (equivalent to `rdfs:subClassOf*` and `rdfs:subPropertyOf*`). 
+Similarly, the API replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
 
 # Optimisation of generated SPARQL
@@ -453,7 +443,7 @@ CONSTRUCT {
   ?thing anything:hasOtherThing ?thing1 .
   ?thing1 anything:hasOtherThing ?thing2 .
   ?thing2 anything:hasOtherThing ?thing . 
-
+}
 ```
 
 In this case, the algorithm tries to break the cycles in order to sort the graph. If this is not possible,
