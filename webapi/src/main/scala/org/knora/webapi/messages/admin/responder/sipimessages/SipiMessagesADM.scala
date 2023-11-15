@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.sipimessages
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.NullOptions
@@ -17,8 +17,7 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 /**
  * An abstract trait representing a Knora v1 API request message that can be sent to `SipiResponderV2`.
@@ -33,7 +32,7 @@ sealed trait SipiResponderRequestADM extends KnoraRequestADM with RelayedMessage
  * @param requestingUser       the profile of the user making the request.
  */
 case class SipiFileInfoGetRequestADM(
-  projectID: String,
+  projectID: Shortcode,
   filename: String,
   requestingUser: UserADM
 ) extends SipiResponderRequestADM
