@@ -1642,14 +1642,6 @@ class StringFormatter private (
   }
 
   /**
-   * Constructs a path for accessing a file that has been uploaded to Sipi's temporary storage.
-   *
-   * @param filename the filename.
-   * @return a URL for accessing the file.
-   */
-  def makeSipiTempFilePath(filename: String): String = s"/tmp/$filename"
-
-  /**
    * Creates a new resource IRI based on a UUID.
    *
    * @param projectShortcode the project's shortcode.
