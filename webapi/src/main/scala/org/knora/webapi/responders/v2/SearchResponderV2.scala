@@ -861,6 +861,9 @@ final case class SearchResponderV2Live(
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
+    val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
+    val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
+    val searchTerm   = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
 
     val searchResourceByLabelSparql =
       limitToResourceClass match {
@@ -876,14 +879,7 @@ final case class SearchResponderV2Live(
             )
           )
         case Some(cls) =>
-          Construct(
-            sparql.v2.txt.searchResourceByLabelWithDefinedResourceClass(
-              searchTerm = MatchStringWhileTyping(searchValue),
-              limitToResourceClass = cls.toString,
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
-            )
-          )
+          SearchUtil.constructSearchByLabelWithResourceClass(searchTerm, cls.toString, searchLimit, searchOffset)
       }
 
     for {
