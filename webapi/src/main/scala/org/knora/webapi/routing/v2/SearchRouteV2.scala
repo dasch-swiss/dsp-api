@@ -5,31 +5,20 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko
-import zio.*
-import zio.metrics.*
-
-import java.time.temporal.ChronoUnit
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.{RequestContext, Route}
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.searchmessages.*
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, ValuesValidator}
+import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.Route
+import zio.*
 
 /**
  * Provides a function for API routes that deal with search.
@@ -242,27 +231,16 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     post(entity(as[String])(query => requestContext => gravsearch(query, requestContext)))
   }
 
-  private val gravsearchDuration = Metric.timer("gravsearch", ChronoUnit.MILLIS, Chunk.iterate(1.0, 17)(_ * 2))
-  private val gravsearchDurationSummary =
-    Metric.summary("gravsearch_summary", 1.day, 100, 0.03d, Chunk(0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.99))
-  private val gravsearchFailCounter    = Metric.counter("gravsearch_fail").fromConst(1)
-  private val gravsearchTimeoutCounter = Metric.counter("gravsearch_timeout").fromConst(1)
-
   private def gravsearch(query: String, requestContext: RequestContext) = {
     val constructQuery    = GravsearchParser.parseQuery(query)
     val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
     val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
     val task = for {
-      start          <- Clock.instant.map(_.toEpochMilli).map(_.toDouble)
       targetSchema   <- targetSchemaTask
       requestingUser <- Authenticator.getUserADM(requestContext)
       schemaOptions  <- schemaOptionsTask
-      request         = GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      response <- MessageRelay.ask[KnoraResponseV2](request).tapError {
-                    case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
-                    case _                              => ZIO.unit @@ gravsearchFailCounter
-                  } @@ gravsearchDuration.trackDuration
-      _ <- Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
+      gravsearchReq   = GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
+      response       <- MessageRelay.ask[KnoraResponseV2](gravsearchReq)
     } yield response
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
