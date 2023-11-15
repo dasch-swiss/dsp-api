@@ -16,7 +16,7 @@ import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.iiif.api.IIIFService
+import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -31,7 +31,7 @@ final case class AppServer(
   ru: RepositoryUpdater,
   as: ActorSystem,
   ontologyCache: OntologyCache,
-  iiifs: IIIFService,
+  sipiService: SipiService,
   cs: CacheService,
   hs: HttpServer,
   appConfig: AppConfig
@@ -99,7 +99,7 @@ final case class AppServer(
   private def checkIIIFService(requiresIIIFService: Boolean): UIO[Unit] =
     for {
       _ <- state.set(AppState.WaitingForIIIFService)
-      _ <- iiifs
+      _ <- sipiService
              .getStatus()
              .flatMap {
                case IIIFServiceStatusOK =>
@@ -156,7 +156,7 @@ final case class AppServer(
 object AppServer {
 
   private type AppServerEnvironment =
-    State & TriplestoreService & RepositoryUpdater & ActorSystem & OntologyCache & IIIFService & CacheService &
+    State & TriplestoreService & RepositoryUpdater & ActorSystem & OntologyCache & SipiService & CacheService &
       HttpServer & AppConfig
 
   /**
@@ -169,7 +169,7 @@ object AppServer {
       ru       <- ZIO.service[RepositoryUpdater]
       as       <- ZIO.service[ActorSystem]
       oc       <- ZIO.service[OntologyCache]
-      iiifs    <- ZIO.service[IIIFService]
+      iiifs    <- ZIO.service[SipiService]
       cs       <- ZIO.service[CacheService]
       hs       <- ZIO.service[HttpServer]
       c        <- ZIO.service[AppConfig]

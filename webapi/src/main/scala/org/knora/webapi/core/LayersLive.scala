@@ -53,8 +53,8 @@ import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandler
 import org.knora.webapi.store.iiif.IIIFRequestMessageHandlerLive
-import org.knora.webapi.store.iiif.api.IIIFService
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.store.iiif.impl.SipiServiceLive
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -68,7 +68,7 @@ object LayersLive {
     ActorSystem & ApiRoutes & AppConfigurations & AppRouter & Authenticator & CacheService &
       CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
-      IIIFRequestMessageHandler & IIIFService & InferenceOptimizationService & IriService & IriConverter & JwtService &
+      IIIFRequestMessageHandler & SipiService & InferenceOptimizationService & IriService & IriConverter & JwtService &
       KnoraProjectRepo & ListsResponderADM & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
       OntologyRepo & OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PredicateObjectMapper &
       ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
@@ -101,7 +101,7 @@ object LayersLive {
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
-      IIIFServiceSipiImpl.layer,
+      SipiServiceLive.layer,
       InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,

@@ -16,43 +16,11 @@ import org.knora.webapi.messages.traits.RequestWithSender
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 /**
- * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.api.IIIFService]]
+ * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.api.SipiService]]
  */
 sealed trait IIIFRequest extends StoreRequest with RelayedMessage
 
-sealed trait SipiRequest extends IIIFRequest {
-  def requestingUser: UserADM
-}
-
-/**
- * Requests file metadata from Sipi. A successful response is a [[GetFileMetadataResponse]].
- *
- * @param filePath       the path at which Sipi can serve the file.
- * @param requestingUser the user making the request.
- */
-case class GetFileMetadataRequest(filePath: String, requestingUser: UserADM) extends SipiRequest
-
-/**
- * Represents file metadata returned by Sipi.
- *
- * @param originalFilename the file's original filename, if known.
- * @param originalMimeType the file's original MIME type.
- * @param internalMimeType the file's internal MIME type. Always defined (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
- * @param width            the file's width in pixels, if applicable.
- * @param height           the file's height in pixels, if applicable.
- * @param pageCount        the number of pages in the file, if applicable.
- * @param duration         the duration of the file in seconds, if applicable.
- */
-case class GetFileMetadataResponse(
-  originalFilename: Option[String],
-  originalMimeType: Option[String],
-  internalMimeType: String,
-  width: Option[Int],
-  height: Option[Int],
-  pageCount: Option[Int],
-  duration: Option[BigDecimal],
-  fps: Option[BigDecimal]
-)
+sealed trait SipiRequest extends IIIFRequest
 
 /**
  * Asks Sipi to move a file from temporary to permanent storage.

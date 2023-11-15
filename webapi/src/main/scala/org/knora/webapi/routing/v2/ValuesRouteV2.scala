@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import dsp.errors.BadRequestException
@@ -21,17 +23,14 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
+import org.knora.webapi.store.iiif.api.SipiService
 
 /**
  * Provides a routing function for API v2 routes that deal with values.
  */
 final case class ValuesRouteV2()(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & IriConverter & StringFormatter & MessageRelay & ValuesResponderV2
+    AppConfig & Authenticator & IriConverter & SipiService & StringFormatter & MessageRelay & ValuesResponderV2
   ]
 ) {
 
