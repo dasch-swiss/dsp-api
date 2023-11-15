@@ -948,24 +948,7 @@ class StringFormatterSpec extends CoreSpec {
 
   }
 
-  "The StringFormatter class for User and Project" should {
-    "validate project shortcode" in {
-      stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
-      stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
-      stringFormatter.validateProjectShortcode("12aF", throw AssertionException("not valid")) should be("12AF")
-
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateProjectShortcode("000", throw AssertionException("not valid"))
-      }
-
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateProjectShortcode("00000", throw AssertionException("not valid"))
-      }
-
-      an[AssertionException] should be thrownBy {
-        stringFormatter.validateProjectShortcode("wxyz", throw AssertionException("not valid"))
-      }
-    }
+  "The StringFormatter class for User" should {
 
     "validate username" in {
       // 4 - 50 characters long
