@@ -811,23 +811,15 @@ final case class SearchResponderV2Live(
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri]
   ) = {
-    val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
+    val searchTerm = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+    val countSparql = SearchUtil.selectCountByLabel(
+      searchTerm = searchTerm,
+      limitToProject = limitToProject,
+      limitToResourceClass = limitToResourceClass.map(_.toString)
+    )
 
     for {
-      countSparql <-
-        ZIO.attempt(
-          sparql.v2.txt
-            .searchResourceByLabel(
-              searchTerm = searchPhrase,
-              limitToProject = limitToProject,
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = 1,
-              offset = 0,
-              countQuery = true
-            )
-        )
-
-      countResponse <- triplestore.query(Select(countSparql))
+      countResponse <- triplestore.query(countSparql)
 
       count <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -866,21 +858,13 @@ final case class SearchResponderV2Live(
     val searchTerm   = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
 
     val searchResourceByLabelSparql =
-      limitToResourceClass match {
-        case None =>
-          Construct(
-            sparql.v2.txt.searchResourceByLabel(
-              searchTerm = MatchStringWhileTyping(searchValue),
-              limitToProject = limitToProject,
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
-              countQuery = false
-            )
-          )
-        case Some(cls) =>
-          SearchUtil.constructSearchByLabelWithResourceClass(searchTerm, cls.toString, searchLimit, searchOffset)
-      }
+      SearchUtil.constructSearchByLabel(
+        searchTerm,
+        limitToResourceClass.map(_.toIri),
+        limitToProject,
+        searchLimit,
+        searchOffset
+      )
 
     for {
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)

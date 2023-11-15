@@ -7,14 +7,41 @@ package org.knora.webapi.responders.v2
 
 import org.knora.webapi.IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 object SearchUtil {
-  def constructSearchByLabelWithResourceClass(
+
+  def selectCountByLabel(
     searchTerm: String,
-    limitToResourceClass: IRI,
-    limit: Int = 0,
+    limitToProject: Option[IRI],
+    limitToResourceClass: Option[IRI]
+  ): Select =
+    Select(
+      s"""|SELECT (count(distinct ?resource) as ?count)
+          |WHERE {
+          |    ?resource <http://jena.apache.org/text#query> (rdfs:label "$searchTerm") ;
+          |        a ?resourceClass .
+          |    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+          |    ${limitToResourceClass.fold("")(resourceClass => s"?resourceClass rdfs:subClassOf* <$resourceClass> .")}
+          |    ${limitToProject.fold("")(project => s"?resource knora-base:attachedToProject <$project> .")}
+          |    FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
+          |}
+          |""".stripMargin
+    )
+
+  def constructSearchByLabel(
+    searchTerm: String,
+    limitToResourceClass: Option[IRI] = None,
+    limitToProject: Option[IRI] = None,
+    limit: Int,
     offset: Int = 0
-  ) =
+  ): Construct = {
+    val limitToClassOrProject =
+      (limitToResourceClass, limitToProject) match {
+        case (Some(cls), _)     => s"?resourceClass rdfs:subClassOf* <$cls> ."
+        case (_, Some(project)) => s"?resource knora-base:attachedToProject <$project> ."
+        case _                  => ""
+      }
     Construct(
       s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -39,7 +66,7 @@ object SearchUtil {
           |            ?resource <http://jena.apache.org/text#query> (rdfs:label "$searchTerm") ;
           |                a ?resourceClass ;
           |                rdfs:label ?label .
-          |            ?resourceClass rdfs:subClassOf* <$limitToResourceClass> .
+          |            $limitToClassOrProject
           |            FILTER NOT EXISTS { ?resource knora-base:isDeleted true . }
           |        }
           |        ORDER BY ?resource
@@ -67,5 +94,6 @@ object SearchUtil {
           |}
           |""".stripMargin
     )
+  }
 
 }
