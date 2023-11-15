@@ -5,10 +5,15 @@
 
 package org.knora.webapi.slice.resourceinfo.domain
 
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
-import org.knora.webapi.{ApiV2Complex, InternalSchema}
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 import zio.macros.accessible
-import zio.{Task, ZIO, ZLayer}
+
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 
 @accessible
 trait IriConverter {
