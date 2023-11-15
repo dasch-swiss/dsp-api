@@ -5,18 +5,15 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import zio.*
-import zio.macros.accessible
-
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import zio.*
+import zio.macros.accessible
 
 @accessible
 trait InferenceOptimizationService {
@@ -70,7 +67,7 @@ final case class InferenceOptimizationServiceLive(
         projectRepo
           .findByShortcode(Shortcode.unsafeFrom(str))
           .map(_.toList.flatMap(_.ontologies))
-          .flatMap(iriConverter.asInternalSmartIris(_))
+          .flatMap(iriConverter.asInternalSmartIris)
     }
 
   override def getOntologiesRelevantForInference(
