@@ -22,7 +22,7 @@ object Dependencies {
   val JenaVersion       = "4.8.0"
 
   val ZioConfigVersion            = "3.0.7"
-  val ZioLoggingVersion           = "2.1.14"
+  val ZioLoggingVersion           = "2.1.15"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.2.1"
   val ZioPreludeVersion           = "1.0.0-RC21"
