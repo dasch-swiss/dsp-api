@@ -13,12 +13,12 @@ import dsp.errors.GravsearchException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.search.*
-import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator.*
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
+import org.knora.webapi.messages.StringFormatter
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -190,7 +190,7 @@ class GravsearchToPrequeryTransformer(
         val groupConcats: Set[GroupConcat] = valueVariables.map { (valueObjVar: QueryVariable) =>
           GroupConcat(
             inputVariable = valueObjVar,
-            separator = groupConcatSeparator,
+            separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
             outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix
           )
         }
@@ -225,7 +225,7 @@ class GravsearchToPrequeryTransformer(
     (dependentResVar: QueryVariable) =>
       GroupConcat(
         inputVariable = dependentResVar,
-        separator = groupConcatSeparator,
+        separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
         outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix
       )
   }
