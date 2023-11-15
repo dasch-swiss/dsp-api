@@ -5,9 +5,10 @@
 
 package org.knora.webapi.store.iiif.api
 
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
+import spray.json.RootJsonFormat
 import zio.*
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
 import zio.macros.accessible
 import zio.nio.file.Path
 
@@ -15,6 +16,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.domain.service.Asset
+import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
  * Represents file metadata returned by Sipi.
@@ -36,9 +38,20 @@ case class FileMetadataSipiResponse(
   numpages: Option[Int],
   duration: Option[BigDecimal],
   fps: Option[BigDecimal]
-)
-object FileMetadataSipiResponse {
-  implicit val codec: JsonCodec[FileMetadataSipiResponse] = DeriveJsonCodec.gen[FileMetadataSipiResponse]
+) {
+  if (originalFilename.contains("")) {
+    throw SipiException(s"Sipi returned an empty originalFilename")
+  }
+
+  if (originalMimeType.contains("")) {
+    throw SipiException(s"Sipi returned an empty originalMimeType")
+  }
+}
+
+object FileMetadataSipiResponse extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[FileMetadataSipiResponse] = jsonFormat8(
+    FileMetadataSipiResponse.apply
+  )
 }
 
 @accessible
