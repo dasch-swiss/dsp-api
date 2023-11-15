@@ -17,7 +17,9 @@ object SearchUtil {
     limitToResourceClass: Option[IRI]
   ): Select =
     Select(
-      s"""|SELECT (count(distinct ?resource) as ?count)
+      s"""|PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |SELECT (count(distinct ?resource) as ?count)
           |WHERE {
           |    ?resource <http://jena.apache.org/text#query> (rdfs:label "$searchTerm") ;
           |        a ?resourceClass .
