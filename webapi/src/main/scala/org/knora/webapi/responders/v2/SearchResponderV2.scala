@@ -483,16 +483,10 @@ final case class SearchResponderV2Live(
 
       prequerySparql = transformedPrequery.toSparql
 
-      start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
         triplestore
           .query(Select(prequerySparql, isGravsearch = true))
           .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
-
-      end     <- Clock.instant.map(_.toEpochMilli)
-      duration = (end - start) / 1000.0
-      _ = if (duration < 3) logger.debug(s"Prequery took: ${duration}s")
-          else logger.warn(s"Slow Prequery ($duration):\n$prequerySparql")
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
