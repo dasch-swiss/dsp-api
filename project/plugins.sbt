@@ -5,11 +5,11 @@ resolvers ++= Seq(
 // please don't remove or merge uncommented to main
 //addDependencyTreePlugin
 
-addSbtPlugin("com.github.sbt"    % "sbt-native-packager" % "1.9.16")
-addSbtPlugin("io.kamon"          % "sbt-aspectj-runner"  % "1.1.2")
-addSbtPlugin("com.typesafe.play" % "sbt-twirl"           % "1.6.2")
-addSbtPlugin("com.eed3si9n"      % "sbt-assembly"        % "2.1.4")
-addSbtPlugin("com.github.sbt"    % "sbt-javaagent"       % "0.1.8")
+addSbtPlugin("com.github.sbt"          % "sbt-native-packager" % "1.9.16")
+addSbtPlugin("io.kamon"                % "sbt-aspectj-runner"  % "1.1.2")
+addSbtPlugin("org.playframework.twirl" % "sbt-twirl"           % "2.0.1")
+addSbtPlugin("com.eed3si9n"            % "sbt-assembly"        % "2.1.4")
+addSbtPlugin("com.github.sbt"          % "sbt-javaagent"       % "0.1.8")
 // also update the scalac-scoverage-runtime version in build.sbt
 addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "2.0.9")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo" % "0.11.0")
