@@ -5,11 +5,12 @@
 
 package dsp.valueobjects
 
-import dsp.errors.InconsistentRepositoryDataException
-
 import java.nio.ByteBuffer
-import java.util.{Base64, UUID}
+import java.util.Base64
+import java.util.UUID
 import scala.util.Try
+
+import dsp.errors.InconsistentRepositoryDataException
 
 object UuidUtil {
   private val base64Encoder       = Base64.getUrlEncoder.withoutPadding
