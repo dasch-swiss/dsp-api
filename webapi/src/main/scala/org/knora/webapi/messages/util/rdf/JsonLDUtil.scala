@@ -7,25 +7,31 @@ package org.knora.webapi.messages.util.rdf
 
 import com.apicatalog.jsonld.*
 import com.apicatalog.jsonld.document.*
-import dsp.errors.*
-import dsp.valueobjects.{Iri, UuidUtil}
 import jakarta.json.*
 import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasComment
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.routing.RouteUtilZ
-import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import zio.{IO, ZIO}
+import zio.IO
+import zio.ZIO
 
-import java.io.{StringReader, StringWriter}
+import java.io.StringReader
+import java.io.StringWriter
 import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
 import scala.util.control.Exception.*
+
+import dsp.errors.*
+import dsp.valueobjects.Iri
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi.*
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasComment
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /*
 
