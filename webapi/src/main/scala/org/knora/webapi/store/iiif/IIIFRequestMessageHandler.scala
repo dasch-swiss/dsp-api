@@ -11,22 +11,20 @@ import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.store.iiif.api.IIIFService
+import org.knora.webapi.store.iiif.api.SipiService
 
 trait IIIFRequestMessageHandler extends MessageHandler
 
-final case class IIIFRequestMessageHandlerLive(iiifService: IIIFService) extends IIIFRequestMessageHandler {
+final case class IIIFRequestMessageHandlerLive(iiifService: SipiService) extends IIIFRequestMessageHandler {
 
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[IIIFRequest]
 
   override def handle(message: ResponderRequest): Task[Any] = message match {
-    case req: GetFileMetadataRequest                     => iiifService.getFileMetadata(req)
     case req: MoveTemporaryFileToPermanentStorageRequest => iiifService.moveTemporaryFileToPermanentStorage(req)
     case req: DeleteTemporaryFileRequest                 => iiifService.deleteTemporaryFile(req)
     case req: SipiGetTextFileRequest                     => iiifService.getTextFileRequest(req)
@@ -36,10 +34,10 @@ final case class IIIFRequestMessageHandlerLive(iiifService: IIIFService) extends
 }
 
 object IIIFRequestMessageHandlerLive {
-  val layer: URLayer[IIIFService & MessageRelay, IIIFRequestMessageHandler] = ZLayer.fromZIO {
+  val layer: URLayer[SipiService & MessageRelay, IIIFRequestMessageHandler] = ZLayer.fromZIO {
     for {
       mr      <- ZIO.service[MessageRelay]
-      is      <- ZIO.service[IIIFService]
+      is      <- ZIO.service[SipiService]
       handler <- mr.subscribe(IIIFRequestMessageHandlerLive(is))
     } yield handler
   }
