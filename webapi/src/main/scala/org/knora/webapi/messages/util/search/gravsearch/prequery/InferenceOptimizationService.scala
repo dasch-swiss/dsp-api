@@ -5,29 +5,15 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.ontology.repo.service.OntologyCache
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import zio.*
 import zio.macros.accessible
-
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.util.search.BindPattern
-import org.knora.webapi.messages.util.search.Entity
-import org.knora.webapi.messages.util.search.FilterNotExistsPattern
-import org.knora.webapi.messages.util.search.IriRef
-import org.knora.webapi.messages.util.search.MinusPattern
-import org.knora.webapi.messages.util.search.OptionalPattern
-import org.knora.webapi.messages.util.search.QueryPattern
-import org.knora.webapi.messages.util.search.StatementPattern
-import org.knora.webapi.messages.util.search.UnionPattern
-import org.knora.webapi.messages.util.search.ValuesPattern
-import org.knora.webapi.messages.util.search.WhereClause
-import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 
 @accessible
 trait InferenceOptimizationService {
@@ -43,8 +29,9 @@ trait InferenceOptimizationService {
 }
 
 final case class InferenceOptimizationServiceLive(
-  private val messageRelay: MessageRelay,
   private val ontologyCache: OntologyCache,
+  private val projectRepo: KnoraProjectRepo,
+  private val iriConverter: IriConverter,
   implicit private val stringFormatter: StringFormatter
 ) extends InferenceOptimizationService {
 
@@ -68,30 +55,20 @@ final case class InferenceOptimizationServiceLive(
           case None      =>
             // if the map doesn't contain a corresponding ontology IRI, then the entity IRI points to a resource or value
             // in that case, all ontologies of the project, to which the entity belongs, should be returned.
-            resolveEntityByShortcode(internal)
+            getOntologiesFromEntityProject(internal)
         }
       case _ => ZIO.succeed(Seq.empty)
     }
 
-  /**
-   * Attempts to retrieve all ontologies of the project, to which the entity IRI (resource or property IRI) belongs.
-   */
-  private def resolveEntityByShortcode(entityIri: SmartIri): Task[Seq[SmartIri]] = {
-    val shortcode = entityIri.getProjectCode
-    shortcode match {
+  private def getOntologiesFromEntityProject(entityIri: SmartIri): Task[Seq[SmartIri]] =
+    entityIri.getProjectCode match {
       case None => ZIO.succeed(Seq.empty)
-      case Some(value) =>
-        for {
-          shortcode    <- ProjectIdentifierADM.ShortcodeIdentifier.fromString(value).toZIO
-          projectMaybe <- messageRelay.ask[Option[ProjectADM]](ProjectGetADM(shortcode))
-          projectOntologies =
-            projectMaybe match {
-              case None          => Seq.empty
-              case Some(project) => project.ontologies.map(stringFormatter.toSmartIri(_))
-            }
-        } yield projectOntologies
+      case Some(str) =>
+        projectRepo
+          .findByShortcode(Shortcode.unsafeFrom(str))
+          .map(_.toList.flatMap(_.ontologies))
+          .flatMap(iriConverter.asInternalSmartIris(_))
     }
-  }
 
   override def getOntologiesRelevantForInference(
     whereClause: WhereClause
@@ -134,6 +111,5 @@ final case class InferenceOptimizationServiceLive(
 }
 
 object InferenceOptimizationService {
-  val layer: URLayer[MessageRelay & OntologyCache & StringFormatter, InferenceOptimizationServiceLive] =
-    ZLayer.fromFunction(InferenceOptimizationServiceLive.apply _)
+  val layer = ZLayer.derive[InferenceOptimizationServiceLive]
 }

@@ -5,24 +5,20 @@
 
 package org.knora.webapi.slice.resourceinfo.domain
 
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.{ApiV2Complex, InternalSchema}
 import zio.macros.accessible
-
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import zio.{Task, ZIO, ZLayer}
 
 @accessible
 trait IriConverter {
   def asSmartIri(iri: String): Task[SmartIri]
-  def asSmartIris(iris: Set[String]): Task[Set[SmartIri]]  = ZIO.foreach(iris)(asSmartIri)
-  def asInternalIri(iri: String): Task[InternalIri]        = asSmartIri(iri).mapAttempt(_.toInternalIri)
-  def asInternalSmartIri(iri: String): Task[SmartIri]      = asSmartIri(iri).mapAttempt(_.toOntologySchema(InternalSchema))
-  def asInternalSmartIri(iri: InternalIri): Task[SmartIri] = asInternalSmartIri(iri.value)
-  def asInternalSmartIri(iri: SmartIri): Task[SmartIri]    = ZIO.attempt(iri.toOntologySchema(InternalSchema))
+  def asSmartIris(iris: Set[String]): Task[Set[SmartIri]]              = ZIO.foreach(iris)(asSmartIri)
+  def asInternalIri(iri: String): Task[InternalIri]                    = asSmartIri(iri).mapAttempt(_.toInternalIri)
+  def asInternalSmartIri(iri: String): Task[SmartIri]                  = asSmartIri(iri).mapAttempt(_.toOntologySchema(InternalSchema))
+  def asInternalSmartIri(iri: InternalIri): Task[SmartIri]             = asInternalSmartIri(iri.value)
+  def asInternalSmartIris(iris: Seq[InternalIri]): Task[Seq[SmartIri]] = ZIO.foreach(iris)(asInternalSmartIri)
+  def asInternalSmartIri(iri: SmartIri): Task[SmartIri]                = ZIO.attempt(iri.toOntologySchema(InternalSchema))
   def asExternalIri(iri: InternalIri): Task[String] =
     asInternalSmartIri(iri.value).mapAttempt(_.toOntologySchema(ApiV2Complex)).map(_.toIri)
   def getOntologyIriFromClassIri(iri: InternalIri): Task[InternalIri] =
