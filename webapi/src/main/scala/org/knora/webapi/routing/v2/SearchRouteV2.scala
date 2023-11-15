@@ -5,20 +5,25 @@
 
 package org.knora.webapi.routing.v2
 
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.Route
+import zio.*
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
-import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.{RequestContext, Route}
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.searchmessages.*
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, ValuesValidator}
-import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import zio.*
 
 /**
  * Provides a function for API routes that deal with search.
