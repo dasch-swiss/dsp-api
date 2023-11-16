@@ -104,10 +104,6 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
       directory("sipi/scripts")
     },
     dockerCommands += Cmd(
-      "RUN",
-      "mv /sipi/scripts/entrypoint.sh /sipi/ && chmod +x /sipi/entrypoint.sh && apt-get update && apt-get install -y cron curl && rm -rf /var/lib/apt/lists/*"
-    ), // install cron and curl for periodically cleaning temp dir
-    dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=30s --retries=4 --start-period=30s \
         |CMD bash /sipi/scripts/healthcheck.sh || exit 1""".stripMargin
     ),
@@ -125,10 +121,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
 
       // don't filter the rest; don't filter out anything that doesn't match a pattern
       case cmd => false
-    },
-    // add our own entrypoint and also cmd because it is reset when overriding the entrypoint
-    dockerCommands += ExecCmd("ENTRYPOINT", "/sipi/entrypoint.sh"),
-    dockerCommands += ExecCmd("CMD", "--config=/sipi/config/sipi.config.lua")
+    }
   )
 
 //////////////////////////////////////
