@@ -23,6 +23,7 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json.*
 import zio.*
+import zio.json.DecoderOps
 import zio.nio.file.Path
 
 import java.net.URI
@@ -73,7 +74,11 @@ final case class SipiServiceLive(
    */
   override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
     doSipiRequest(new HttpGet(sipiConfig.internalBaseUrl + filePath + "/knora.json"))
-      .mapAttempt(_.parseJson.convertTo[FileMetadataSipiResponse])
+      .flatMap(bodyStr =>
+        ZIO
+          .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
+          .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
+      )
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.
