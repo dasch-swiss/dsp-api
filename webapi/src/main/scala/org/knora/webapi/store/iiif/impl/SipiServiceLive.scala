@@ -5,26 +5,22 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import dsp.errors.{BadRequestException, NotFoundException}
-import org.apache.http.{Consts, HttpEntity, HttpHost, HttpRequest, HttpResponse, NameValuePair}
+import org.apache.http.Consts
+import org.apache.http.HttpEntity
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.HttpResponse
+import org.apache.http.NameValuePair
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.*
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.config.SocketConfig
-import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.knora.webapi.config.{AppConfig, Sipi}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.routing.{Jwt, JwtService}
-import org.knora.webapi.slice.admin.domain.service.Asset
-import org.knora.webapi.store.iiif.api.{FileMetadataSipiResponse, SipiService}
-import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.util.{SipiUtil, ZScopedJavaIoStreams}
 import spray.json.*
 import zio.*
 import zio.json.DecoderOps
@@ -32,6 +28,22 @@ import zio.nio.file.Path
 
 import java.net.URI
 import java.util
+
+import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.Sipi
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.*
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.routing.Jwt
+import org.knora.webapi.routing.JwtService
+import org.knora.webapi.slice.admin.domain.service.Asset
+import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
+import org.knora.webapi.store.iiif.api.SipiService
+import org.knora.webapi.store.iiif.errors.SipiException
+import org.knora.webapi.util.SipiUtil
+import org.knora.webapi.util.ZScopedJavaIoStreams
 
 /**
  * Makes requests to Sipi.
