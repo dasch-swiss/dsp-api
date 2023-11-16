@@ -20,34 +20,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.v2.responder.*
 
-/**
- * An abstract trait for messages that can be sent to `SearchResponderV2`.
- */
 sealed trait SearchResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
-
-/**
- * Requests a fulltext search. A successful response will be a [[org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2]].
- *
- * @param searchValue          the values to search for.
- * @param offset               the offset to be used for paging.
- * @param limitToProject       limit search to given project.
- * @param limitToResourceClass limit search to given resource class.
- * @param returnFiles          if true, return any file value value attached to each matching resource.
- * @param targetSchema         the target API schema.
- * @param schemaOptions        the schema options submitted with the request.
- * @param requestingUser       the user making the request.
- */
-case class FulltextSearchRequestV2(
-  searchValue: String,
-  offset: Int,
-  limitToProject: Option[IRI],
-  limitToResourceClass: Option[SmartIri],
-  limitToStandoffClass: Option[SmartIri],
-  returnFiles: Boolean,
-  targetSchema: ApiV2Schema,
-  schemaOptions: Set[SchemaOption],
-  requestingUser: UserADM
-) extends SearchResponderRequestV2
 
 /**
  * Requests a search of resources by their label. A successful response will be a [[ResourceCountV2]].

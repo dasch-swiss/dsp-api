@@ -188,20 +188,19 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           limitToStandoffClass <- getStandoffClass(params)
           returnFiles           = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
           requestingUser       <- Authenticator.getUserADM(requestContext)
-          targetSchema         <- targetSchemaTask
-          schemaOptions        <- schemaOptionsTask
-        } yield FulltextSearchRequestV2(
-          searchValue = escapedSearchStr,
-          offset = offset,
-          limitToProject = limitToProject,
-          limitToResourceClass = limitToResourceClass,
-          limitToStandoffClass = limitToStandoffClass,
-          returnFiles = returnFiles,
-          requestingUser = requestingUser,
-          targetSchema = targetSchema,
-          schemaOptions = schemaOptions
-        )
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
+          schemaAndOptions     <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
+          response <- SearchResponderV2.fulltextSearchV2(
+                        escapedSearchStr,
+                        offset,
+                        limitToProject,
+                        limitToResourceClass,
+                        limitToStandoffClass,
+                        returnFiles,
+                        schemaAndOptions,
+                        requestingUser
+                      )
+        } yield response
+        RouteUtilV2.completeResponse(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
       }
   }
 

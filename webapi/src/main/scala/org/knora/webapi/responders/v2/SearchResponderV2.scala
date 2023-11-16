@@ -100,6 +100,30 @@ trait SearchResponderV2 {
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri]
   ): Task[ResourceCountV2]
+
+  /**
+   * Performs a fulltext search (simple search).
+   *
+   * @param searchValue          the values to search for.
+   * @param offset               the offset to be used for paging.
+   * @param limitToProject       limit search to given project.
+   * @param limitToResourceClass limit search to given resource class.
+   * @param limitToStandoffClass limit search to given standoff class.
+   * @param returnFiles          if true, return any file value attached to each matching resource.
+   * @param schemaAndOptions     the target API schema and the schema options submitted with the request.
+   * @param requestingUser       the client making the request.
+   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+   */
+  def fulltextSearchV2(
+    searchValue: IRI,
+    offset: RuntimeFlags,
+    limitToProject: Option[IRI],
+    limitToResourceClass: Option[SmartIri],
+    limitToStandoffClass: Option[SmartIri],
+    returnFiles: Boolean,
+    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    requestingUser: UserADM
+  ): Task[ReadResourcesSequenceV2]
 }
 
 final case class SearchResponderV2Live(
@@ -123,30 +147,6 @@ final case class SearchResponderV2Live(
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[SearchResponderRequestV2]
   override def handle(msg: ResponderRequest): Task[KnoraJsonLDResponseV2] = msg match {
-    case FulltextSearchRequestV2(
-          searchValue,
-          offset,
-          limitToProject,
-          limitToResourceClass,
-          limitToStandoffClass,
-          returnFiles,
-          targetSchema,
-          schemaOptions,
-          requestingUser
-        ) =>
-      fulltextSearchV2(
-        searchValue,
-        offset,
-        limitToProject,
-        limitToResourceClass,
-        limitToStandoffClass,
-        returnFiles,
-        targetSchema,
-        schemaOptions,
-        requestingUser,
-        appConfig
-      )
-
     case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass) =>
       searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass)
 
@@ -190,7 +190,7 @@ final case class SearchResponderV2Live(
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri]
-  ) =
+  ): Task[ResourceCountV2] =
     for {
       countSparql <- ZIO.attempt(
                        sparql.v2.txt
@@ -225,41 +225,32 @@ final case class SearchResponderV2Live(
    * @param limitToResourceClass limit search to given resource class.
    * @param limitToStandoffClass limit search to given standoff class.
    * @param returnFiles          if true, return any file value attached to each matching resource.
-   * @param targetSchema         the target API schema.
-   * @param schemaOptions        the schema options submitted with the request.
+   * @param schemaAndOptions     the target API schema and the schema options submitted with the request.
    * @param requestingUser       the client making the request.
-   * @param appConfig            the application config
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
-  private def fulltextSearchV2(
+  override def fulltextSearchV2(
     searchValue: String,
     offset: Int,
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
-    targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption],
-    requestingUser: UserADM,
-    appConfig: AppConfig
+    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
-
-    val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
-
-    val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
-
     for {
       searchSparql <-
         ZIO.attempt(
           sparql.v2.txt
             .searchFulltext(
-              searchTerms = searchTerms,
+              searchTerms = LuceneQueryString(searchValue),
               limitToProject = limitToProject,
               limitToResourceClass = limitToResourceClass.map(_.toString),
               limitToStandoffClass = limitToStandoffClass.map(_.toString),
               returnFiles = returnFiles,
-              separator = Some(groupConcatSeparator),
+              separator = Some(StringFormatter.INFORMATION_SEPARATOR_ONE),
               limit = appConfig.v2.resourcesSequence.resultsPerPage,
               offset = offset * appConfig.v2.resourcesSequence.resultsPerPage, // determine the actual offset
               countQuery = false
@@ -293,7 +284,10 @@ final case class SearchResponderV2Live(
 
                   case Some(valObjIris) =>
                     // Filter out empty IRIs (which we could get if a variable used in GROUP_CONCAT is unbound)
-                    acc + (mainResIri -> valObjIris.split(groupConcatSeparator).toSet.filterNot(_.isEmpty))
+                    acc + (mainResIri -> valObjIris
+                      .split(StringFormatter.INFORMATION_SEPARATOR_ONE)
+                      .toSet
+                      .filterNot(_.isEmpty))
 
                   case None => acc
                 }
@@ -306,8 +300,8 @@ final case class SearchResponderV2Live(
           val mainQuery = FullTextMainQueryGenerator.createMainQuery(
             resourceIris = resourceIris.toSet,
             valueObjectIris = allValueObjectIris,
-            targetSchema = targetSchema,
-            schemaOptions = schemaOptions
+            targetSchema = schemaAndOptions.schema,
+            schemaOptions = schemaAndOptions.options
           )
 
           for {
@@ -324,8 +318,8 @@ final case class SearchResponderV2Live(
       // Find out whether to query standoff along with text values. This boolean value will be passed to
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
-                                 targetSchema = targetSchema,
-                                 schemaOptions = schemaOptions
+                                 targetSchema = schemaAndOptions.schema,
+                                 schemaOptions = schemaAndOptions.options
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
@@ -348,7 +342,7 @@ final case class SearchResponderV2Live(
           queryStandoff = queryStandoff,
           calculateMayHaveMoreResults = true,
           versionDate = None,
-          targetSchema = targetSchema,
+          targetSchema = schemaAndOptions.schema,
           requestingUser = requestingUser
         )
 

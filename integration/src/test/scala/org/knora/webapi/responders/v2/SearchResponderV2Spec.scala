@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko
 import org.apache.pekko.testkit.ImplicitSender
 
 import dsp.errors.BadRequestException
@@ -22,6 +21,7 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * Tests [[SearchResponderV2]].
@@ -50,88 +50,79 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "perform a fulltext search for 'Narr'" in {
 
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "Narr",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "Narr",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = anonymousUser
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 25)
-      }
+      assert(result.resources.size == 25)
     }
 
     "perform a fulltext search for 'Dinge'" in {
-
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "Dinge",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "Dinge",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 1)
-      }
-
+      assert(result.resources.size == 1)
     }
 
     "return a Bad Request error if fulltext search input is invalid" in {
-
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "qin(",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.run(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "qin(",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
-
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
-      }
-
+      assertFailsWithA[BadRequestException](result)
     }
 
     "return files attached to full-text search results" in {
 
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "p7v",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = true,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result: ReadResourcesSequenceV2 = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "p7v",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = true,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        val hasImageFileValues: Boolean =
-          response.resources.flatMap(_.values.values.flatten).exists { readValueV2: ReadValueV2 =>
-            readValueV2.valueContent match {
-              case _: StillImageFileValueContentV2 => true
-              case _                               => false
-            }
+      val hasImageFileValues: Boolean =
+        result.resources.flatMap(_.values.values.flatten).exists { readValueV2: ReadValueV2 =>
+          readValueV2.valueContent match {
+            case _: StillImageFileValueContentV2 => true
+            case _                               => false
           }
+        }
 
-        assert(hasImageFileValues)
-      }
+      assert(hasImageFileValues)
 
     }
 
@@ -245,46 +236,43 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "search for list label" in {
 
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "non fiction",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "non fiction",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabel,
-          received = response
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabel,
+        received = result
+      )
     }
 
     "search for list label and find sub-nodes" in {
-
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "novel",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "novel",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabelWithSubnodes,
-          received = response
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabelWithSubnodes,
+        received = result
+      )
     }
 
     "perform an extended search for a particular compound object (book)" in {
