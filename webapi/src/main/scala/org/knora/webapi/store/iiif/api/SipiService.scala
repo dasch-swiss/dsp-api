@@ -5,10 +5,9 @@
 
 package org.knora.webapi.store.iiif.api
 
-import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.RootJsonFormat
 import zio.*
+import zio.json.DeriveJsonDecoder
+import zio.json.JsonDecoder
 import zio.macros.accessible
 import zio.nio.file.Path
 
@@ -48,10 +47,15 @@ case class FileMetadataSipiResponse(
   }
 }
 
-object FileMetadataSipiResponse extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[FileMetadataSipiResponse] = jsonFormat8(
-    FileMetadataSipiResponse.apply
-  )
+object FileMetadataSipiResponse {
+  // Because Sipi returns JSON Numbers which are whole numbers but not a valid Scala Int, e.g. `width: 1920.0`, we need to
+  // use a custom decoder for Int. See also https://github.com/zio/zio-json/issues/1049#issuecomment-1814108354
+  implicit val anyWholeNumber: JsonDecoder[Int] = JsonDecoder[Double].mapOrFail { d =>
+    val i = d.toInt
+    if (d == i.toDouble) { Right(i) }
+    else { Left("32-bit int expected") }
+  }
+  implicit val decoder: JsonDecoder[FileMetadataSipiResponse] = DeriveJsonDecoder.gen[FileMetadataSipiResponse]
 }
 
 @accessible
