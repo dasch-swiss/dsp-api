@@ -204,8 +204,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! SearchResourceByLabelCountRequestV2(
         searchValue = "Narrenschiff",
         limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        requestingUser = anonymousUser
+        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
       )
 
       expectMsgPF(timeout) { case response: ResourceCountV2 =>
@@ -219,8 +218,7 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
       appActor ! SearchResourceByLabelCountRequestV2(
         searchValue = "Passio sancti Meynrhadi martyris et heremite",
         limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        requestingUser = anonymousUser
+        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
       )
 
       expectMsgPF(timeout) { case response: ResourceCountV2 =>

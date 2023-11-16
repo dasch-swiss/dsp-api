@@ -82,6 +82,24 @@ trait SearchResponderV2 {
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   def gravsearchCountV2(query: ConstructQuery, user: UserADM): Task[ResourceCountV2]
+
+  /**
+   * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
+   * without taking into consideration permission checking.
+   *
+   * This method does not return the resources themselves.
+   *
+   * @param searchValue          the values to search for.
+   * @param limitToProject       limit search to given project.
+   * @param limitToResourceClass limit search to given resource class.
+   * @return a [[ResourceCountV2]] representing the number of resources that have been found.
+   */
+  def fulltextSearchCountV2(
+    searchValue: IRI,
+    limitToProject: Option[IRI],
+    limitToResourceClass: Option[SmartIri],
+    limitToStandoffClass: Option[SmartIri]
+  ): Task[ResourceCountV2]
 }
 
 final case class SearchResponderV2Live(
@@ -105,15 +123,6 @@ final case class SearchResponderV2Live(
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[SearchResponderRequestV2]
   override def handle(msg: ResponderRequest): Task[KnoraJsonLDResponseV2] = msg match {
-    case FullTextSearchCountRequestV2(
-          searchValue,
-          limitToProject,
-          limitToResourceClass,
-          limitToStandoffClass,
-          _
-        ) =>
-      fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass)
-
     case FulltextSearchRequestV2(
           searchValue,
           offset,
@@ -138,12 +147,7 @@ final case class SearchResponderV2Live(
         appConfig
       )
 
-    case SearchResourceByLabelCountRequestV2(
-          searchValue,
-          limitToProject,
-          limitToResourceClass,
-          _
-        ) =>
+    case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass) =>
       searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass)
 
     case SearchResourceByLabelRequestV2(
@@ -181,7 +185,7 @@ final case class SearchResponderV2Live(
    *
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
-  private def fulltextSearchCountV2(
+  override def fulltextSearchCountV2(
     searchValue: IRI,
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],

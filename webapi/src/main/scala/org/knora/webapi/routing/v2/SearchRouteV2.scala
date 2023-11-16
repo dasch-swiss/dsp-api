@@ -136,21 +136,20 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get { requestContext =>
           val params: Map[String, String] = requestContext.request.uri.query().toMap
-          val requestTask = for {
+          val response = for {
             _                    <- ensureIsNotFullTextSearch(searchStr)
             escapedSearchStr     <- validateSearchString(searchStr)
             limitToProject       <- getProjectFromParams(params)
             limitToResourceClass <- getResourceClassFromParams(params)
             limitToStandoffClass <- getStandoffClass(params)
-            user                 <- Authenticator.getUserADM(requestContext)
-          } yield FullTextSearchCountRequestV2(
-            escapedSearchStr,
-            limitToProject,
-            limitToResourceClass,
-            limitToStandoffClass,
-            user
-          )
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+            response <- SearchResponderV2.fulltextSearchCountV2(
+                          escapedSearchStr,
+                          limitToProject,
+                          limitToResourceClass,
+                          limitToStandoffClass
+                        )
+          } yield response
+          RouteUtilV2.completeResponse(response, requestContext)
         }
     }
 
@@ -256,8 +255,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
             searchString         <- validateSearchString(searchval)
             limitToProject       <- getProjectFromParams(params)
             limitToResourceClass <- getResourceClassFromParams(params)
-            user                 <- Authenticator.getUserADM(requestContext)
-          } yield SearchResourceByLabelCountRequestV2(searchString, limitToProject, limitToResourceClass, user)
+          } yield SearchResourceByLabelCountRequestV2(searchString, limitToProject, limitToResourceClass)
           RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
         }
     }

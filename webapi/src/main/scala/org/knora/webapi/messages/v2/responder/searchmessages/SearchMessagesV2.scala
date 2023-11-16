@@ -23,26 +23,7 @@ import org.knora.webapi.messages.v2.responder.*
 /**
  * An abstract trait for messages that can be sent to `SearchResponderV2`.
  */
-sealed trait SearchResponderRequestV2 extends KnoraRequestV2 with RelayedMessage {
-
-  def requestingUser: UserADM
-}
-
-/**
- * Requests the amount of results (resources count) of a given fulltext search. A successful response will be a [[ResourceCountV2]].
- *
- * @param searchValue          the values to search for.
- * @param limitToProject       limit search to given project.
- * @param limitToResourceClass limit search to given resource class.
- * @param requestingUser       the user making the request.
- */
-case class FullTextSearchCountRequestV2(
-  searchValue: String,
-  limitToProject: Option[IRI],
-  limitToResourceClass: Option[SmartIri],
-  limitToStandoffClass: Option[SmartIri],
-  requestingUser: UserADM
-) extends SearchResponderRequestV2
+sealed trait SearchResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
  * Requests a fulltext search. A successful response will be a [[org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2]].
@@ -74,13 +55,11 @@ case class FulltextSearchRequestV2(
  * @param searchValue          the values to search for.
  * @param limitToProject       limit search to given project.
  * @param limitToResourceClass limit search to given resource class.
- * @param requestingUser       the user making the request.
  */
 case class SearchResourceByLabelCountRequestV2(
-  searchValue: String,
+  searchValue: IRI,
   limitToProject: Option[IRI],
-  limitToResourceClass: Option[SmartIri],
-  requestingUser: UserADM
+  limitToResourceClass: Option[SmartIri]
 ) extends SearchResponderRequestV2
 
 /**
