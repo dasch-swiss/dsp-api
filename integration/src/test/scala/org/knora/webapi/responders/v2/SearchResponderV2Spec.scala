@@ -157,37 +157,33 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
-
-      appActor ! SearchResourceByLabelRequestV2(
-        searchValue = "Narrenschiff",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        targetSchema = ApiV2Complex,
-        requestingUser = anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelV2(
+          searchValue = "Narrenschiff",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+          targetSchema = ApiV2Complex,
+          requestingUser = anonymousUser
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 3)
-      }
-
+      assert(result.resources.size == 3)
     }
 
     "perform a search by label for incunabula:book that contain 'Das Narrenschiff'" in {
-
-      appActor ! SearchResourceByLabelRequestV2(
-        searchValue = "Narrenschiff",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        targetSchema = ApiV2Complex,
-        requestingUser = anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelV2(
+          searchValue = "Narrenschiff",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+          targetSchema = ApiV2Complex,
+          requestingUser = anonymousUser
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 3)
-      }
-
+      assert(result.resources.size == 3)
     }
 
     "perform a count search query by label for incunabula:book that contain 'Narrenschiff'" in {

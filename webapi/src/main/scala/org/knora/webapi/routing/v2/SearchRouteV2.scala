@@ -267,22 +267,23 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     get { requestContext =>
       val targetSchemaTask            = RouteUtilV2.getOntologySchema(requestContext)
       val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val requestMessage = for {
+      val response = for {
         sparqlEncodedSearchString <- validateSearchString(searchval)
         offset                    <- getOffsetFromParams(params)
         limitToProject            <- getProjectFromParams(params)
         limitToResourceClass      <- getResourceClassFromParams(params)
         targetSchema              <- targetSchemaTask
         requestingUser            <- Authenticator.getUserADM(requestContext)
-      } yield SearchResourceByLabelRequestV2(
-        searchValue = sparqlEncodedSearchString,
-        offset = offset,
-        limitToProject = limitToProject,
-        limitToResourceClass = limitToResourceClass,
-        targetSchema = targetSchema,
-        requestingUser = requestingUser
-      )
-      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask)
+        response <- SearchResponderV2.searchResourcesByLabelV2(
+                      searchValue = sparqlEncodedSearchString,
+                      offset = offset,
+                      limitToProject = limitToProject,
+                      limitToResourceClass = limitToResourceClass,
+                      targetSchema = targetSchema,
+                      requestingUser = requestingUser
+                    )
+      } yield response
+      RouteUtilV2.completeResponse(response, requestContext, targetSchemaTask)
     }
   }
 }

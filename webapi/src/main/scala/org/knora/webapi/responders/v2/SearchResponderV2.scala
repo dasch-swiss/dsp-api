@@ -138,6 +138,26 @@ trait SearchResponderV2 {
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri]
   ): Task[ResourceCountV2]
+
+  /**
+   * Performs a search for resources by their rdfs:label.
+   *
+   * @param searchValue          the values to search for.
+   * @param offset               the offset to be used for paging.
+   * @param limitToProject       limit search to given project.
+   * @param limitToResourceClass limit search to given resource class.
+   * @param targetSchema         the schema of the response.
+   * @param requestingUser       the client making the request.
+   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+   */
+  def searchResourcesByLabelV2(
+    searchValue: IRI,
+    offset: RuntimeFlags,
+    limitToProject: Option[IRI],
+    limitToResourceClass: Option[SmartIri],
+    targetSchema: ApiV2Schema,
+    requestingUser: UserADM
+  ): Task[ReadResourcesSequenceV2]
 }
 
 final case class SearchResponderV2Live(
@@ -161,24 +181,6 @@ final case class SearchResponderV2Live(
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[SearchResponderRequestV2]
   override def handle(msg: ResponderRequest): Task[KnoraJsonLDResponseV2] = msg match {
-
-    case SearchResourceByLabelRequestV2(
-          searchValue,
-          offset,
-          limitToProject,
-          limitToResourceClass,
-          targetSchema,
-          requestingUser
-        ) =>
-      searchResourcesByLabelV2(
-        searchValue,
-        offset,
-        limitToProject,
-        limitToResourceClass,
-        targetSchema,
-        requestingUser
-      )
-
     case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 =>
       searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
 
@@ -827,18 +829,7 @@ final case class SearchResponderV2Live(
     } yield ResourceCountV2(count.toInt)
   }
 
-  /**
-   * Performs a search for resources by their rdfs:label.
-   *
-   * @param searchValue          the values to search for.
-   * @param offset               the offset to be used for paging.
-   * @param limitToProject       limit search to given project.
-   * @param limitToResourceClass limit search to given resource class.
-   * @param targetSchema         the schema of the response.
-   * @param requestingUser       the client making the request.
-   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
-   */
-  private def searchResourcesByLabelV2(
+  override def searchResourcesByLabelV2(
     searchValue: String,
     offset: Int,
     limitToProject: Option[IRI],

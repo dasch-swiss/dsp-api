@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.v2.responder.searchmessages
 
 import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.IRI
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.RelayedMessage
@@ -21,25 +20,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.v2.responder.*
 
 sealed trait SearchResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
-
-/**
- * Requests a search of resources by their label. A successful response will be a [[org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2]].
- *
- * @param searchValue          the values to search for.
- * @param offset               the offset to be used for paging.
- * @param limitToProject       limit search to given project.
- * @param limitToResourceClass limit search to given resource class.
- * @param targetSchema         the schema of the response.
- * @param requestingUser       the user making the request.
- */
-case class SearchResourceByLabelRequestV2(
-  searchValue: String,
-  offset: Int,
-  limitToProject: Option[IRI],
-  limitToResourceClass: Option[SmartIri],
-  targetSchema: ApiV2Schema,
-  requestingUser: UserADM
-) extends SearchResponderRequestV2
 
 /**
  * Represents the number of resources found by a search query.
