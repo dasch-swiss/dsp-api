@@ -5,8 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko.testkit.ImplicitSender
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
 import org.knora.webapi._
@@ -22,13 +20,10 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-/**
- * Tests [[SearchResponderV2]].
- */
-class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
+class SearchResponderV2Spec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  override lazy val rdfDataObjects = List(
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula"
