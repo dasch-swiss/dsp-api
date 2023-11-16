@@ -33,7 +33,6 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
@@ -948,7 +947,7 @@ final case class SearchResponderV2Live(
         } else {
           // No. This must be a column resulting from GROUP_CONCAT, so use the GROUP_CONCAT
           // separator to concatenate the column values.
-          columnValues.mkString(AbstractPrequeryGenerator.groupConcatSeparator.toString)
+          columnValues.mkString(StringFormatter.INFORMATION_SEPARATOR_ONE.toString)
         }
 
         columnName -> mergedColumnValue

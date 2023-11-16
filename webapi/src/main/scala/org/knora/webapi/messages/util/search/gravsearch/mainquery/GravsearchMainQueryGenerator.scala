@@ -14,7 +14,6 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.*
-import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 
 object GravsearchMainQueryGenerator {
@@ -135,7 +134,7 @@ object GravsearchMainQueryGenerator {
               case Some(depResIri: IRI) =>
                 // IRIs are concatenated by GROUP_CONCAT using a separator, split them.
                 // Ignore empty strings, which could result from unbound variables in a UNION.
-                depResIri.split(AbstractPrequeryGenerator.groupConcatSeparator).toSeq.filter(_.nonEmpty)
+                depResIri.split(StringFormatter.INFORMATION_SEPARATOR_ONE).toSeq.filter(_.nonEmpty)
 
               case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
             }
@@ -192,7 +191,7 @@ object GravsearchMainQueryGenerator {
                 case Some(valObjIris) =>
                   // IRIs are concatenated by GROUP_CONCAT using a separator, split them.
                   // Ignore empty strings, which could result from unbound variables in a UNION.
-                  valObjIris.split(AbstractPrequeryGenerator.groupConcatSeparator).toSet.filter(_.nonEmpty)
+                  valObjIris.split(StringFormatter.INFORMATION_SEPARATOR_ONE).toSet.filter(_.nonEmpty)
 
                 case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 
