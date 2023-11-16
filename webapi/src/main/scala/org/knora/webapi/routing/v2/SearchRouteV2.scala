@@ -8,7 +8,10 @@ package org.knora.webapi.routing.v2
 import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.RouteResult
 import zio.*
+
+import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -204,27 +207,23 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   }
 
   private def gravsearchCountGet(): Route =
-    path("v2" / "searchextended" / "count" / Segment) {
-      gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
-        get { requestContext =>
-          val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-          val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-        }
+    path("v2" / "searchextended" / "count" / Segment) { query =>
+      get(gravsearchCountV2(query, _))
     }
 
   private def gravsearchCountPost(): Route =
     path("v2" / "searchextended" / "count") {
-      post {
-        entity(as[String]) { gravsearchQuery => requestContext =>
-          {
-            val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-            val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
-            RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-          }
-        }
-      }
+      post(entity(as[String])(query => gravsearchCountV2(query, _)))
     }
+
+  private def gravsearchCountV2(query: String, ctx: RequestContext): Future[RouteResult] = {
+    val response: ZIO[SearchResponderV2 & Authenticator, Throwable, ResourceCountV2] = for {
+      user       <- Authenticator.getUserADM(ctx)
+      gravsearch <- ZIO.attempt(GravsearchParser.parseQuery(query))
+      response   <- SearchResponderV2.gravsearchCountV2(gravsearch, user)
+    } yield response
+    RouteUtilV2.completeResponse(response, ctx)
+  }
 
   private def gravsearchGet(): Route = path(
     "v2" / "searchextended" / Segment

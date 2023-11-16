@@ -18,7 +18,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDInt
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
-import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.v2.responder.*
 
 /**
@@ -68,18 +67,6 @@ case class FulltextSearchRequestV2(
   schemaOptions: Set[SchemaOption],
   requestingUser: UserADM
 ) extends SearchResponderRequestV2
-
-/**
- * Requests the amount of results (resources count) of a given Gravsearch query. A successful response will be a [[ResourceCountV2]].
- *
- * @param constructQuery       a Sparql construct query provided by the client.
- * @param requestingUser       the user making the request.
- */
-case class GravsearchCountRequestV2(
-  constructQuery: ConstructQuery,
-  requestingUser: UserADM
-) extends SearchResponderRequestV2
-
 
 /**
  * Requests a search of resources by their label. A successful response will be a [[ResourceCountV2]].

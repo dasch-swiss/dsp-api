@@ -63,9 +63,9 @@ trait SearchResponderV2 {
   /**
    * Performs a search using a Gravsearch query provided by the client.
    *
-   * @param query             a Gravsearch query provided by the client.
-   * @param schemaAndOptions  the target API schema and its options submitted with the request.
-   * @param user              the client making the request.
+   * @param query            a Gravsearch query provided by the client.
+   * @param schemaAndOptions the target API schema and its options submitted with the request.
+   * @param user             the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def gravsearchV2(
@@ -73,6 +73,15 @@ trait SearchResponderV2 {
     schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
     user: UserADM
   ): Task[ReadResourcesSequenceV2]
+
+  /**
+   * Performs a count query for a Gravsearch query provided by the user.
+   *
+   * @param query a Gravsearch query provided by the client.
+   * @param user  the client making the request.
+   * @return a [[ResourceCountV2]] representing the number of resources that have been found.
+   */
+  def gravsearchCountV2(query: ConstructQuery, user: UserADM): Task[ResourceCountV2]
 }
 
 final case class SearchResponderV2Live(
@@ -127,12 +136,6 @@ final case class SearchResponderV2Live(
         schemaOptions,
         requestingUser,
         appConfig
-      )
-
-    case GravsearchCountRequestV2(query, requestingUser) =>
-      gravsearchCountV2(
-        inputQuery = query,
-        requestingUser = requestingUser
       )
 
     case SearchResourceByLabelCountRequestV2(
@@ -348,45 +351,34 @@ final case class SearchResponderV2Live(
     } yield apiResponse
   }
 
-  /**
-   * Performs a count query for a Gravsearch query provided by the user.
-   *
-   * @param inputQuery           a Gravsearch query provided by the client.
-   *
-   * @param requestingUser       the client making the request.
-   * @return a [[ResourceCountV2]] representing the number of resources that have been found.
-   */
-  private def gravsearchCountV2(
-    inputQuery: ConstructQuery,
-    requestingUser: UserADM
-  ): Task[ResourceCountV2] =
+  override def gravsearchCountV2(query: ConstructQuery, user: UserADM): Task[ResourceCountV2] =
     for {
       _ <- // make sure that OFFSET is 0
         ZIO
-          .fail(GravsearchException(s"OFFSET must be 0 for a count query, but ${inputQuery.offset} given"))
-          .when(inputQuery.offset != 0)
+          .fail(GravsearchException(s"OFFSET must be 0 for a count query, but ${query.offset} given"))
+          .when(query.offset != 0)
 
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
+      typeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause, user)
 
-      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
+      _ <- GravsearchQueryChecker.checkConstructClause(query.constructClause, typeInspectionResult)
 
       // Create a Select prequery
       querySchema <-
-        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
+        ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"WhereClause has no querySchema"))
       gravsearchToCountTransformer: GravsearchToCountPrequeryTransformer =
         new GravsearchToCountPrequeryTransformer(
-          constructClause = inputQuery.constructClause,
+          constructClause = query.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = querySchema
         )
 
       prequery <-
         queryTraverser.transformConstructToSelect(
-          inputQuery = inputQuery.copy(
+          inputQuery = query.copy(
             whereClause = whereClauseWithoutAnnotations,
             orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
           ),
@@ -401,7 +393,7 @@ final case class SearchResponderV2Live(
         )
 
       ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
+        inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
 
       countQuery <- queryTraverser.transformSelectToSelect(
                       inputQuery = prequery,

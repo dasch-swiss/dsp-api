@@ -5,37 +5,46 @@
 
 package org.knora.webapi.responders.v2
 
-import dsp.errors.*
-import dsp.valueobjects.UuidUtil
 import org.apache.pekko.http.scaladsl.util.FastFuture
-import org.knora.webapi.*
-import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.{MessageHandler, MessageRelay}
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.PermissionUtilADM.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.responders.{IriLocker, IriService, Responder}
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.{AtLeastOne, ExactlyOne, ZeroOrOne}
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Select, Update}
-import org.knora.webapi.util.ZioHelper
 import zio.*
 import zio.macros.accessible
 
 import java.time.Instant
 import java.util.UUID
+
+import dsp.errors.*
+import dsp.valueobjects.UuidUtil
+import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi.*
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.PermissionUtilADM.*
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.util.ZioHelper
 
 /**
  * Handles requests to read and write Knora values.
