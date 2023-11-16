@@ -15,11 +15,9 @@ import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -42,14 +40,12 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInf
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.searchmessages.*
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -158,6 +154,26 @@ trait SearchResponderV2 {
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2]
+
+  /**
+   * Requests resources of the specified class from the specified project.
+   *
+   * @param projectIri       the IRI of the project.
+   * @param resourceClass    the IRI of the resource class, in the complex schema.
+   * @param orderByProperty  the IRI of the property that the resources are to be ordered by, in the complex schema.
+   * @param page             the page number of the results page to be returned.
+   * @param schemaAndOptions the schema of the response and schema options submitted with the request.
+   * @param requestingUser   the user making the request.
+   * @return a [[ReadResourcesSequenceV2]].
+   */
+  def searchResourcesByProjectAndClassV2(
+    projectIri: SmartIri,
+    resourceClass: SmartIri,
+    orderByProperty: Option[SmartIri],
+    page: RuntimeFlags,
+    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    requestingUser: UserADM
+  ): Task[ReadResourcesSequenceV2]
 }
 
 final case class SearchResponderV2Live(
@@ -175,17 +191,7 @@ final case class SearchResponderV2Live(
   private val iriConverter: IriConverter,
   private val constructTransformer: ConstructTransformer
 ) extends SearchResponderV2
-    with MessageHandler
     with LazyLogging {
-
-  override def isResponsibleFor(message: ResponderRequest): Boolean =
-    message.isInstanceOf[SearchResponderRequestV2]
-  override def handle(msg: ResponderRequest): Task[KnoraJsonLDResponseV2] = msg match {
-    case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 =>
-      searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
-
-    case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
-  }
 
   /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
@@ -623,17 +629,27 @@ final case class SearchResponderV2Live(
   }
 
   /**
-   * Gets resources from a project.
+   * Requests resources of the specified class from the specified project.
    *
-   * @param resourcesInProjectGetRequestV2 the request message.
+   * @param projectIri      the IRI of the project.
+   * @param resourceClass   the IRI of the resource class, in the complex schema.
+   * @param orderByProperty the IRI of the property that the resources are to be ordered by, in the complex schema.
+   * @param page            the page number of the results page to be returned.
+   * @param schemaAndOptions    the schema of the response and schema options submitted with the request.
+   * @param requestingUser  the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
-  private def searchResourcesByProjectAndClassV2(
-    resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2
+  override def searchResourcesByProjectAndClassV2(
+    projectIri: SmartIri,
+    resourceClass: SmartIri,
+    orderByProperty: Option[SmartIri],
+    page: Int,
+    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
-    val internalClassIri = resourcesInProjectGetRequestV2.resourceClass.toOntologySchema(InternalSchema)
+    val internalClassIri = resourceClass.toOntologySchema(InternalSchema)
     val maybeInternalOrderByPropertyIri: Option[SmartIri] =
-      resourcesInProjectGetRequestV2.orderByProperty.map(_.toOntologySchema(InternalSchema))
+      orderByProperty.map(_.toOntologySchema(InternalSchema))
 
     for {
       // Get information about the resource class, and about the ORDER BY property if specified.
@@ -641,7 +657,7 @@ final case class SearchResponderV2Live(
                               EntityInfoGetRequestV2(
                                 classIris = Set(internalClassIri),
                                 propertyIris = maybeInternalOrderByPropertyIri.toSet,
-                                requestingUser = resourcesInProjectGetRequestV2.requestingUser
+                                requestingUser = requestingUser
                               )
                             )
 
@@ -662,7 +678,7 @@ final case class SearchResponderV2Live(
                                             !internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp
                                           ) {
                                             throw BadRequestException(
-                                              s"Cannot sort by property <${resourcesInProjectGetRequestV2.orderByProperty}>"
+                                              s"Cannot sort by property <${orderByProperty}>"
                                             )
                                           }
 
@@ -673,7 +689,7 @@ final case class SearchResponderV2Live(
                                             )
                                           ) {
                                             throw BadRequestException(
-                                              s"Class <${resourcesInProjectGetRequestV2.resourceClass}> has no cardinality on property <${resourcesInProjectGetRequestV2.orderByProperty}>"
+                                              s"Class <${resourceClass}> has no cardinality on property <${orderByProperty}>"
                                             )
                                           }
 
@@ -718,12 +734,12 @@ final case class SearchResponderV2Live(
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
       prequery = sparql.v2.txt
                    .getResourcesByClassInProjectPrequery(
-                     projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
+                     projectIri = projectIri.toString,
                      resourceClassIri = internalClassIri,
                      maybeOrderByProperty = maybeInternalOrderByPropertyIri,
                      maybeOrderByValuePredicate = maybeOrderByValuePredicate,
                      limit = appConfig.v2.resourcesSequence.resultsPerPage,
-                     offset = resourcesInProjectGetRequestV2.page * appConfig.v2.resourcesSequence.resultsPerPage
+                     offset = page * appConfig.v2.resourcesSequence.resultsPerPage
                    )
       sparqlSelectResponse      <- triplestore.query(Select(prequery))
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
@@ -732,7 +748,7 @@ final case class SearchResponderV2Live(
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
                                  targetSchema = ApiV2Complex,
-                                 schemaOptions = resourcesInProjectGetRequestV2.schemaOptions
+                                 schemaOptions = schemaAndOptions.options
                                )
 
       // Are there any matching resources?
@@ -760,7 +776,7 @@ final case class SearchResponderV2Live(
             // separate resources and values
             mainResourcesAndValueRdfData = constructResponseUtilV2.splitMainResourcesAndValueRdfData(
                                              resourceRequestResponse,
-                                             resourcesInProjectGetRequestV2.requestingUser
+                                             requestingUser
                                            )
 
             // If we're querying standoff, get XML-to standoff mappings.
@@ -768,7 +784,7 @@ final case class SearchResponderV2Live(
               if (queryStandoff) {
                 constructResponseUtilV2.getMappingsFromQueryResultsSeparated(
                   mainResourcesAndValueRdfData.resources,
-                  resourcesInProjectGetRequestV2.requestingUser
+                  requestingUser
                 )
               } else {
                 ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
@@ -783,8 +799,8 @@ final case class SearchResponderV2Live(
                                        queryStandoff = queryStandoff,
                                        versionDate = None,
                                        calculateMayHaveMoreResults = true,
-                                       targetSchema = resourcesInProjectGetRequestV2.targetSchema,
-                                       requestingUser = resourcesInProjectGetRequestV2.requestingUser
+                                       targetSchema = schemaAndOptions.schema,
+                                       requestingUser = requestingUser
                                      )
           } yield readResourcesSequence
         } else {
@@ -1002,28 +1018,24 @@ object SearchResponderV2Live {
         queryTraverser               <- ZIO.service[QueryTraverser]
         sparqlTransformerLive        <- ZIO.service[OntologyInferencer]
         stringFormatter              <- ZIO.service[StringFormatter]
-        mr                           <- ZIO.service[MessageRelay]
         typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
         inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
         iriConverter                 <- ZIO.service[IriConverter]
         constructTransformer         <- ZIO.service[ConstructTransformer]
-        handler <- mr.subscribe(
-                     new SearchResponderV2Live(
-                       appConfig,
-                       triplestoreService,
-                       messageRelay,
-                       constructResponseUtilV2,
-                       ontologyCache,
-                       standoffTagUtilV2,
-                       queryTraverser,
-                       sparqlTransformerLive,
-                       typeInspectionRunner,
-                       inferenceOptimizationService,
-                       stringFormatter,
-                       iriConverter,
-                       constructTransformer
-                     )
-                   )
-      } yield handler
+      } yield new SearchResponderV2Live(
+        appConfig,
+        triplestoreService,
+        messageRelay,
+        constructResponseUtilV2,
+        ontologyCache,
+        standoffTagUtilV2,
+        queryTraverser,
+        sparqlTransformerLive,
+        typeInspectionRunner,
+        inferenceOptimizationService,
+        stringFormatter,
+        iriConverter,
+        constructTransformer
+      )
     )
 }

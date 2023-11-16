@@ -14,7 +14,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
@@ -214,19 +213,17 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
     }
 
     "search by project and resource class" in {
-      appActor ! SearchResourcesByProjectAndClassRequestV2(
-        projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
-        resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        page = 0,
-        targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByProjectAndClassV2(
+          projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
+          resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
+          page = 0,
+          schemaAndOptions = SchemaAndOptions.apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+        )
       )
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        response.resources.size should ===(19)
-      }
+      result.resources.size should ===(19)
     }
 
     "search for list label" in {
