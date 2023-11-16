@@ -250,12 +250,14 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get { requestContext =>
           val params: Map[String, String] = requestContext.request.uri.query().toMap
-          val requestMessage = for {
+          val response = for {
             searchString         <- validateSearchString(searchval)
             limitToProject       <- getProjectFromParams(params)
             limitToResourceClass <- getResourceClassFromParams(params)
-          } yield SearchResourceByLabelCountRequestV2(searchString, limitToProject, limitToResourceClass)
-          RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+            response <-
+              SearchResponderV2.searchResourcesByLabelCountV2(searchString, limitToProject, limitToResourceClass)
+          } yield response
+          RouteUtilV2.completeResponse(response, requestContext, RouteUtilV2.getOntologySchema(requestContext))
         }
     }
 

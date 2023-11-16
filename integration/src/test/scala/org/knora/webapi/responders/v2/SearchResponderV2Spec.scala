@@ -192,30 +192,29 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "perform a count search query by label for incunabula:book that contain 'Narrenschiff'" in {
 
-      appActor ! SearchResourceByLabelCountRequestV2(
-        searchValue = "Narrenschiff",
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelCountV2(
+          searchValue = "Narrenschiff",
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+        )
       )
 
-      expectMsgPF(timeout) { case response: ResourceCountV2 =>
-        assert(response.numberOfResources == 3)
-      }
+      assert(result.numberOfResources == 3)
 
     }
 
     "perform a a count search query by label for incunabula:book that contain 'Passio sancti Meynrhadi martyris et heremite'" in {
 
-      appActor ! SearchResourceByLabelCountRequestV2(
-        searchValue = "Passio sancti Meynrhadi martyris et heremite",
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelCountV2(
+          searchValue = "Passio sancti Meynrhadi martyris et heremite",
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+        )
       )
 
-      expectMsgPF(timeout) { case response: ResourceCountV2 =>
-        assert(response.numberOfResources == 1)
-      }
-
+      assert(result.numberOfResources == 1)
     }
 
     "search by project and resource class" in {

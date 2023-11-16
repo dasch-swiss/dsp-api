@@ -124,6 +124,20 @@ trait SearchResponderV2 {
     schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2]
+
+  /**
+   * Performs a count query for a search for resources by their rdfs:label.
+   *
+   * @param searchValue          the values to search for.
+   * @param limitToProject       limit search to given project.
+   * @param limitToResourceClass limit search to given resource class.
+   * @return a [[ResourceCountV2]] representing the resources that have been found.
+   */
+  def searchResourcesByLabelCountV2(
+    searchValue: IRI,
+    limitToProject: Option[IRI],
+    limitToResourceClass: Option[SmartIri]
+  ): Task[ResourceCountV2]
 }
 
 final case class SearchResponderV2Live(
@@ -147,8 +161,6 @@ final case class SearchResponderV2Live(
   override def isResponsibleFor(message: ResponderRequest): Boolean =
     message.isInstanceOf[SearchResponderRequestV2]
   override def handle(msg: ResponderRequest): Task[KnoraJsonLDResponseV2] = msg match {
-    case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass) =>
-      searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass)
 
     case SearchResourceByLabelRequestV2(
           searchValue,
@@ -779,16 +791,7 @@ final case class SearchResponderV2Live(
     } yield apiResponse
   }
 
-  /**
-   * Performs a count query for a search for resources by their rdfs:label.
-   *
-   * @param searchValue          the values to search for.
-   * @param limitToProject       limit search to given project.
-   * @param limitToResourceClass limit search to given resource class.
-   *
-   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
-   */
-  private def searchResourcesByLabelCountV2(
+  override def searchResourcesByLabelCountV2(
     searchValue: IRI,
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri]

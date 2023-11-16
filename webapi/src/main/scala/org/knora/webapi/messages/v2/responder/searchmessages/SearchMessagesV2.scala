@@ -23,19 +23,6 @@ import org.knora.webapi.messages.v2.responder.*
 sealed trait SearchResponderRequestV2 extends KnoraRequestV2 with RelayedMessage
 
 /**
- * Requests a search of resources by their label. A successful response will be a [[ResourceCountV2]].
- *
- * @param searchValue          the values to search for.
- * @param limitToProject       limit search to given project.
- * @param limitToResourceClass limit search to given resource class.
- */
-case class SearchResourceByLabelCountRequestV2(
-  searchValue: IRI,
-  limitToProject: Option[IRI],
-  limitToResourceClass: Option[SmartIri]
-) extends SearchResponderRequestV2
-
-/**
  * Requests a search of resources by their label. A successful response will be a [[org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2]].
  *
  * @param searchValue          the values to search for.
