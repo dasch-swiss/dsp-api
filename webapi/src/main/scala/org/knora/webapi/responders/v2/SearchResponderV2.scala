@@ -26,6 +26,10 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDInt
+import org.knora.webapi.messages.util.rdf.JsonLDObject
+import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
@@ -40,12 +44,12 @@ import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInf
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.searchmessages.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -53,6 +57,28 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.*
 
+/**
+ * Represents the number of resources found by a search query.
+ */
+case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2 {
+  override def toJsonLDDocument(
+    targetSchema: ApiV2Schema,
+    appConfig: AppConfig,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDDocument =
+    JsonLDDocument(
+      body = JsonLDObject(
+        Map(
+          OntologyConstants.SchemaOrg.NumberOfItems -> JsonLDInt(numberOfResources)
+        )
+      ),
+      context = JsonLDObject(
+        Map(
+          "schema" -> JsonLDString(OntologyConstants.SchemaOrg.SchemaOrgPrefixExpansion)
+        )
+      )
+    )
+}
 @accessible
 trait SearchResponderV2 {
 
