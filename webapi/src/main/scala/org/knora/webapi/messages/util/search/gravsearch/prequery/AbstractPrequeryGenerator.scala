@@ -25,11 +25,6 @@ import org.knora.webapi.messages.util.search.gravsearch.types.*
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
-object AbstractPrequeryGenerator {
-  // separator used by GroupConcat
-  val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
-}
-
 /**
  * An abstract base class for [[WhereTransformer]] instances that generate SPARQL prequeries from Gravsearch input.
  *
