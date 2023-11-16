@@ -19,8 +19,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.searchmessages.*
+import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -29,7 +29,7 @@ import org.knora.webapi.slice.resourceinfo.domain.IriConverter
  * Provides a function for API routes that deal with search.
  */
 final case class SearchRouteV2(searchValueMinLength: Int)(
-  private implicit val runtime: Runtime[AppConfig & Authenticator & IriConverter & MessageRelay]
+  private implicit val runtime: Runtime[AppConfig & Authenticator & IriConverter & SearchResponderV2 & MessageRelay]
 ) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"
@@ -241,11 +241,9 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
     val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
     val task = for {
-      targetSchema   <- targetSchemaTask
-      requestingUser <- Authenticator.getUserADM(requestContext)
-      schemaOptions  <- schemaOptionsTask
-      gravsearchReq   = GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      response       <- MessageRelay.ask[KnoraResponseV2](gravsearchReq)
+      schemaAndOptions <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
+      user             <- Authenticator.getUserADM(requestContext)
+      response         <- SearchResponderV2.gravsearchV2(constructQuery, schemaAndOptions, user)
     } yield response
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }

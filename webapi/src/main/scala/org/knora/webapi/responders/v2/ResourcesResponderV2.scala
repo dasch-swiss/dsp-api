@@ -6,65 +6,45 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
+import dsp.errors.*
+import dsp.valueobjects.{Iri, UuidUtil}
+import org.knora.webapi.*
+import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
+import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
+import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
+import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.{IriLocker, IriService, Responder}
+import org.knora.webapi.slice.admin.domain.service.{KnoraProjectRepo, ProjectADMService}
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.{AtLeastOne, ExactlyOne, ZeroOrOne}
+import org.knora.webapi.store.iiif.errors.SipiException
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Construct, Select, Update}
+import org.knora.webapi.util.{FileUtil, ZioHelper}
 import zio.*
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-
-import dsp.errors.*
-import dsp.valueobjects.Iri
-import dsp.valueobjects.UuidUtil
-import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
-import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
-import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
-import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
-import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
-import org.knora.webapi.messages.util.*
-import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
-import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.ZioHelper
 
 trait ResourcesResponderV2
 
@@ -78,6 +58,7 @@ final case class ResourcesResponderV2Live(
   resourceUtilV2: ResourceUtilV2,
   permissionUtilADM: PermissionUtilADM,
   projectRepo: KnoraProjectRepo,
+  searchResponderV2: SearchResponderV2,
   implicit val stringFormatter: StringFormatter
 ) extends ResourcesResponderV2
     with MessageHandler
@@ -1757,9 +1738,9 @@ final case class ResourcesResponderV2Live(
                        .map(_.replace("$resourceIri", resourceIri))
                        .mapAttempt(GravsearchParser.parseQuery)
 
-            // do a request to the SearchResponder
-            req       = GravsearchRequestV2(query, ApiV2Complex, SchemaOptions.ForStandoffWithTextValues, requestingUser)
-            resource <- messageRelay.ask[ReadResourcesSequenceV2](req).mapAttempt(_.toResource(resourceIri))
+            resource <- searchResponderV2
+                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupAsXml), requestingUser)
+                          .mapAttempt(_.toResource(resourceIri))
           } yield resource
 
         } else {
@@ -2269,15 +2250,11 @@ final case class ResourcesResponderV2Live(
       // Run the query.
 
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse <- messageRelay
-                          .ask[ReadResourcesSequenceV2](
-                            GravsearchRequestV2(
-                              constructQuery = parsedGravsearchQuery,
-                              targetSchema = ApiV2Complex,
-                              schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
-                              requestingUser = request.requestingUser
-                            )
-                          )
+      searchResponse <- searchResponderV2.gravsearchV2(
+                          parsedGravsearchQuery,
+                          apiV2SchemaWithOption(MarkupAsStandoff),
+                          request.requestingUser
+                        )
 
       resource      = searchResponse.toResource(request.resourceIri)
       incomingLinks = resource.values.getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
@@ -2861,7 +2838,7 @@ final case class ResourcesResponderV2Live(
 object ResourcesResponderV2Live {
 
   val layer: URLayer[
-    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectRepo & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & StringFormatter & TriplestoreService,
+    AppConfig & ConstructResponseUtilV2 & IriService & KnoraProjectRepo & MessageRelay & PermissionUtilADM & ResourceUtilV2 & StandoffTagUtilV2 & SearchResponderV2 & StringFormatter & TriplestoreService,
     ResourcesResponderV2
   ] = ZLayer.fromZIO {
     for {
@@ -2874,8 +2851,9 @@ object ResourcesResponderV2Live {
       ru      <- ZIO.service[ResourceUtilV2]
       pu      <- ZIO.service[PermissionUtilADM]
       pr      <- ZIO.service[KnoraProjectRepo]
+      sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, pr, sf))
+      handler <- mr.subscribe(ResourcesResponderV2Live(config, iriS, mr, ts, cu, su, ru, pu, pr, sr, sf))
     } yield handler
   }
 }

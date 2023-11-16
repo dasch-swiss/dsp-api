@@ -6,6 +6,18 @@
 package org.knora.webapi
 
 /**
+ * Indicates the schema that a Knora ontology or ontology entity conforms to
+ * and its options that can be submitted to configure an ontology schema.
+ */
+case class SchemaAndOptions[S <: OntologySchema, O <: SchemaOption](schema: S, options: Set[O])
+object SchemaAndOptions {
+  def apiV2SchemaWithOption[O <: SchemaOption](option: O): SchemaAndOptions[ApiV2Schema, O] =
+    apiV2SchemaWithOptions(Set(option))
+  def apiV2SchemaWithOptions[O <: SchemaOption](options: Set[O]): SchemaAndOptions[ApiV2Schema, O] =
+    SchemaAndOptions[ApiV2Schema, O](ApiV2Complex, options)
+}
+
+/**
  * Indicates the schema that a Knora ontology or ontology entity conforms to.
  */
 sealed trait OntologySchema

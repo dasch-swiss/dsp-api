@@ -80,20 +80,6 @@ case class GravsearchCountRequestV2(
   requestingUser: UserADM
 ) extends SearchResponderRequestV2
 
-/**
- * Performs a Gravsearch query. A successful response will be a [[org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2]].
- *
- * @param constructQuery       a Sparql construct query provided by the client.
- * @param targetSchema         the target API schema.
- * @param schemaOptions        the schema options submitted with the request.
- * @param requestingUser       the user making the request.
- */
-case class GravsearchRequestV2(
-  constructQuery: ConstructQuery,
-  targetSchema: ApiV2Schema,
-  schemaOptions: Set[SchemaOption] = Set.empty[SchemaOption],
-  requestingUser: UserADM
-) extends SearchResponderRequestV2
 
 /**
  * Requests a search of resources by their label. A successful response will be a [[ResourceCountV2]].

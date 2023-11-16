@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
+import zio.macros.accessible
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -56,7 +57,24 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Constru
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.*
 
-trait SearchResponderV2
+@accessible
+trait SearchResponderV2 {
+
+  /**
+   * Performs a search using a Gravsearch query provided by the client.
+   *
+   * @param query             a Gravsearch query provided by the client.
+   * @param schemaAndOptions  the target API schema and its options submitted with the request.
+   * @param user              the client making the request.
+   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+   */
+  def gravsearchV2(
+    query: ConstructQuery,
+    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    user: UserADM
+  ): Task[ReadResourcesSequenceV2]
+}
+
 final case class SearchResponderV2Live(
   private val appConfig: AppConfig,
   private val triplestore: TriplestoreService,
@@ -114,14 +132,6 @@ final case class SearchResponderV2Live(
     case GravsearchCountRequestV2(query, requestingUser) =>
       gravsearchCountV2(
         inputQuery = query,
-        requestingUser = requestingUser
-      )
-
-    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) =>
-      gravsearchV2(
-        inputQuery = query,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions,
         requestingUser = requestingUser
       )
 
@@ -414,37 +424,26 @@ final case class SearchResponderV2Live(
 
     } yield ResourceCountV2(numberOfResources = count.toInt)
 
-  /**
-   * Performs a search using a Gravsearch query provided by the client.
-   *
-   * @param inputQuery           a Gravsearch query provided by the client.
-   * @param targetSchema         the target API schema.
-   * @param schemaOptions        the schema options submitted with the request.
-   *
-   * @param requestingUser       the client making the request.
-   * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
-   */
-  private def gravsearchV2(
-    inputQuery: ConstructQuery,
-    targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption],
-    requestingUser: UserADM
+  override def gravsearchV2(
+    query: ConstructQuery,
+    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    user: UserADM
   ): Task[ReadResourcesSequenceV2] = {
 
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
-      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+      typeInspectionResult          <- gravsearchTypeInspectionRunner.inspectTypes(query.whereClause, user)
+      whereClauseWithoutAnnotations <- GravsearchTypeInspectionUtil.removeTypeAnnotations(query.whereClause)
 
       // Validate schemas and predicates in the CONSTRUCT clause.
-      _ <- GravsearchQueryChecker.checkConstructClause(inputQuery.constructClause, typeInspectionResult)
+      _ <- GravsearchQueryChecker.checkConstructClause(query.constructClause, typeInspectionResult)
 
       // Create a Select prequery
       querySchema <-
-        ZIO.fromOption(inputQuery.querySchema).orElseFail(AssertionException(s"InputQuery has no querySchema"))
+        ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"InputQuery has no querySchema"))
       gravsearchToPrequeryTransformer: GravsearchToPrequeryTransformer =
         new GravsearchToPrequeryTransformer(
-          constructClause = inputQuery.constructClause,
+          constructClause = query.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = querySchema,
           appConfig = appConfig
@@ -454,11 +453,11 @@ final case class SearchResponderV2Live(
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
       ontologiesForInferenceMaybe <-
-        inferenceOptimizationService.getOntologiesRelevantForInference(inputQuery.whereClause)
+        inferenceOptimizationService.getOntologiesRelevantForInference(query.whereClause)
 
       prequery <-
         queryTraverser.transformConstructToSelect(
-          inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
+          inputQuery = query.copy(whereClause = whereClauseWithoutAnnotations),
           transformer = gravsearchToPrequeryTransformer
         )
 
@@ -557,8 +556,8 @@ final case class SearchResponderV2Live(
             mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
             dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
             valueObjectIris = allValueObjectIris,
-            targetSchema = targetSchema,
-            schemaOptions = schemaOptions
+            targetSchema = schemaAndOptions.schema,
+            schemaOptions = schemaAndOptions.options
           )
 
           for {
@@ -567,7 +566,7 @@ final case class SearchResponderV2Live(
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions =
-              constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, requestingUser)
+              constructResponseUtilV2.splitMainResourcesAndValueRdfData(mainQueryResponse, user)
 
             // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
             queryResWithFullGraphPatternOnlyRequestedValues: Map[
@@ -593,14 +592,14 @@ final case class SearchResponderV2Live(
       // Find out whether to query standoff along with text values. This boolean value will be passed to
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
-                                 targetSchema = targetSchema,
-                                 schemaOptions = schemaOptions
+                                 targetSchema = schemaAndOptions.schema,
+                                 schemaOptions = schemaAndOptions.options
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
         if (queryStandoff) {
-          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(mainQueryResults.resources, requestingUser)
+          constructResponseUtilV2.getMappingsFromQueryResultsSeparated(mainQueryResults.resources, user)
         } else {
           ZIO.succeed(Map.empty[IRI, MappingAndXSLTransformation])
         }
@@ -613,8 +612,8 @@ final case class SearchResponderV2Live(
                        queryStandoff = queryStandoff,
                        versionDate = None,
                        calculateMayHaveMoreResults = true,
-                       targetSchema = targetSchema,
-                       requestingUser = requestingUser
+                       targetSchema = schemaAndOptions.schema,
+                       requestingUser = user
                      )
     } yield apiResponse
   }

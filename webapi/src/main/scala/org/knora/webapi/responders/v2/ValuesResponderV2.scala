@@ -5,46 +5,37 @@
 
 package org.knora.webapi.responders.v2
 
+import dsp.errors.*
+import dsp.valueobjects.UuidUtil
 import org.apache.pekko.http.scaladsl.util.FastFuture
+import org.knora.webapi.*
+import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
+import org.knora.webapi.messages.*
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.PermissionUtilADM.*
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.{IriLocker, IriService, Responder}
+import org.knora.webapi.slice.admin.domain.service.ProjectADMService
+import org.knora.webapi.slice.ontology.domain.model.Cardinality.{AtLeastOne, ExactlyOne, ZeroOrOne}
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Select, Update}
+import org.knora.webapi.util.ZioHelper
 import zio.*
 import zio.macros.accessible
 
 import java.time.Instant
 import java.util.UUID
-
-import dsp.errors.*
-import dsp.valueobjects.UuidUtil
-import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.PermissionUtilADM.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.domain.service.ProjectADMService
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 /**
  * Handles requests to read and write Knora values.
@@ -76,6 +67,7 @@ final case class ValuesResponderV2Live(
   messageRelay: MessageRelay,
   permissionUtilADM: PermissionUtilADM,
   resourceUtilV2: ResourceUtilV2,
+  searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends ValuesResponderV2
@@ -1973,17 +1965,8 @@ final case class ValuesResponderV2Live(
           .toString()
 
       // Run the query.
-      parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <-
-        messageRelay
-          .ask[ReadResourcesSequenceV2](
-            GravsearchRequestV2(
-              constructQuery = parsedGravsearchQuery,
-              targetSchema = ApiV2Complex,
-              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-              requestingUser = requestingUser
-            )
-          )
+      query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
+      searchResponse <- searchResponderV2.gravsearchV2(query, apiV2SchemaWithOption(MarkupAsXml), requestingUser)
     } yield searchResponse.toResource(resourceIri)
 
   /**
@@ -2440,7 +2423,7 @@ final case class ValuesResponderV2Live(
 
 object ValuesResponderV2Live {
   val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & TriplestoreService & StringFormatter,
+    AppConfig & IriService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & TriplestoreService & SearchResponderV2 & StringFormatter,
     ValuesResponderV2
   ] = ZLayer.fromZIO {
     for {
@@ -2450,8 +2433,9 @@ object ValuesResponderV2Live {
       pu      <- ZIO.service[PermissionUtilADM]
       ru      <- ZIO.service[ResourceUtilV2]
       ts      <- ZIO.service[TriplestoreService]
+      sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, ts, sf))
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts, sf))
     } yield handler
   }
 }
