@@ -87,13 +87,13 @@ object SparqlTransformer {
     createUniqueVariableFromStatement(baseStatement, "LinkValue")
 
   /**
-   * Optimises a query by replacing `knora-base:isDeleted false` with a `MINUS` pattern
+   * Optimises a query by replacing `knora-base:isDeleted false` with a `FILTER NOT EXISTS` pattern
    * placed at the end of the block.
    *
    * @param patterns the block of patterns to be optimised.
    * @return the result of the optimisation.
    */
-  def optimiseIsDeletedWithMinus(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+  def optimiseIsDeletedWithFilter(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     // Separate the knora-base:isDeleted statements from the rest of the block.
@@ -107,17 +107,18 @@ object SparqlTransformer {
       case _ => false
     }
 
-    // Replace the knora-base:isDeleted statements with MINUS patterns.
-    val filterPatterns: Seq[MinusPattern] = isDeletedPatterns.collect { case statementPattern: StatementPattern =>
-      MinusPattern(
-        Seq(
-          StatementPattern(
-            subj = statementPattern.subj,
-            pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-            obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+    // Replace the knora-base:isDeleted statements with FILTER NOT EXISTS patterns.
+    val filterPatterns: Seq[FilterNotExistsPattern] = isDeletedPatterns.collect {
+      case statementPattern: StatementPattern =>
+        FilterNotExistsPattern(
+          Seq(
+            StatementPattern(
+              subj = statementPattern.subj,
+              pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
+              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
+            )
           )
         )
-      )
     }
 
     otherPatterns ++ filterPatterns
