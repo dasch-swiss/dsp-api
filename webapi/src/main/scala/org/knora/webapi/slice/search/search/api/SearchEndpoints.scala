@@ -5,6 +5,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schemaQueryParam
 import org.knora.webapi.slice.search.search.api.ApiV2.defaultApiV2Schema
+import org.knora.webapi.slice.search.search.api.ApiV2Codecs.apiV2Schema
 import org.knora.webapi.{ApiV2Complex, ApiV2Schema}
 import sttp.tapir.*
 import sttp.tapir.Codec.PlainCodec
@@ -17,6 +18,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   val postGravsearch = baseEndpoints.withUserEndpoint.post
     .in(searchBase / "gravsearch")
+    .in(apiV2Schema)
     .in(stringBody)
     .out(stringBody)
     .tags(tags)
@@ -58,16 +60,27 @@ object ApiV2Codecs {
   implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
     Codec.listHeadOption(apiV2SchemaCodec)
 
-  val apiV2SchemaHeader = header[ApiV2Schema](xKnoraAcceptSchemaHeader)
-    .default(defaultApiV2Schema)
+  private val apiV2SchemaHeader = header[Option[ApiV2Schema]](xKnoraAcceptSchemaHeader)
     .description(
       s"The ontology schema to be used for the request. If not specified, the default schema $defaultApiV2Schema  will be used."
     )
 
-  val apiV2SchemaQuery = query[ApiV2Schema](schemaQueryParam)
-    .default(defaultApiV2Schema)
+  private val apiV2SchemaQuery = query[Option[ApiV2Schema]](schemaQueryParam)
     .description(
       s"The ontology schema to be used for the request. If not specified, the default schema $defaultApiV2Schema will be used."
     )
+
+  val apiV2Schema: EndpointInput[ApiV2Schema] =
+    apiV2SchemaHeader
+      .and(apiV2SchemaQuery)
+      .map { headerOrQuery =>
+        headerOrQuery match {
+          case (Some(fromHeader), _) => fromHeader
+          case (_, Some(fromQuery))  => fromQuery
+          case _                     => defaultApiV2Schema
+        }
+      }(s => (Some(s), Some(s)))
+
+//      [U](f: ((Option[org.knora.webapi.ApiV2Schema], Option[org.knora.webapi.ApiV2Schema])) => U)(g: U => (Option[org.knora.webapi.ApiV2Schema], Option[org.knora.webapi.ApiV2Schema])): sttp.tapir.EndpointIO[this.Out]#ThisType[U] <and>
 
 }
