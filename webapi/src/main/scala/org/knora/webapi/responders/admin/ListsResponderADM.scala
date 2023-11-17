@@ -39,6 +39,7 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -1056,7 +1057,9 @@ final case class ListsResponderADMLive(
       for {
         projectIri <- getProjectIriFromNode(nodeIri)
         // check if the requesting user is allowed to perform operation
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+            ) {
               // not project or a system admin
               throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
@@ -1065,7 +1068,7 @@ final case class ListsResponderADMLive(
           getUpdateNodeInfoSparqlStatement(
             changeNodeInfoRequest = ListNodeChangePayloadADM(
               listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
-              projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
+              projectIri = projectIri,
               name = Some(changeNodeNameRequest.name)
             )
           )
@@ -1122,14 +1125,16 @@ final case class ListsResponderADMLive(
         projectIri <- getProjectIriFromNode(nodeIri)
 
         // check if the requesting user is allowed to perform operation
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+            ) {
               // not project or a system admin
               throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
         changeNodeLabelsSparql <- getUpdateNodeInfoSparqlStatement(
                                     changeNodeInfoRequest = ListNodeChangePayloadADM(
                                       listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
-                                      projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
+                                      projectIri = projectIri,
                                       labels = Some(changeNodeLabelsRequest.labels)
                                     )
                                   )
@@ -1185,7 +1190,9 @@ final case class ListsResponderADMLive(
         projectIri <- getProjectIriFromNode(nodeIri)
 
         // check if the requesting user is allowed to perform operation
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+            ) {
               // not project or a system admin
               throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
@@ -1193,7 +1200,7 @@ final case class ListsResponderADMLive(
         changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
                                       ListNodeChangePayloadADM(
                                         listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
-                                        projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
+                                        projectIri = projectIri,
                                         comments = Some(changeNodeCommentsRequest.comments)
                                       )
                                     )
@@ -1474,7 +1481,9 @@ final case class ListsResponderADMLive(
         dataNamedGraph <- getDataNamedGraph(projectIri)
 
         // check if the requesting user is allowed to perform operation
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+            ) {
               // not project or a system admin
               throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
@@ -1616,7 +1625,7 @@ final case class ListsResponderADMLive(
      */
     def deleteListItem(
       nodeIri: IRI,
-      projectIri: IRI,
+      projectIri: ProjectIri,
       children: Seq[ListChildNodeADM],
       isRootNode: Boolean
     ): Task[IRI] =
@@ -1714,7 +1723,9 @@ final case class ListsResponderADMLive(
         projectIri <- getProjectIriFromNode(nodeIri)
 
         // check if the requesting user is allowed to perform operation
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+            ) {
               // not project or a system admin
               throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
@@ -1822,7 +1833,7 @@ final case class ListsResponderADMLive(
   ): Task[String] =
     for {
       // get the data graph of the project.
-      dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri.value)
+      dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri)
 
       /* verify that the list name is unique for the project */
       nodeNameUnique <- listNodeNameIsProjectUnique(
@@ -1862,29 +1873,31 @@ final case class ListsResponderADMLive(
    * Helper method to get projectIri of a node.
    *
    * @param nodeIri              the IRI of the node.
-   * @return a [[IRI]].
+   * @return a [[ProjectIri]].
    */
-  private def getProjectIriFromNode(nodeIri: IRI): Task[IRI] =
+  private def getProjectIriFromNode(nodeIri: IRI): Task[ProjectIri] =
     for {
       maybeNode <- listNodeGetADM(nodeIri = nodeIri, shallow = true)
 
-      projectIri <- maybeNode match {
-                      case Some(rootNode: ListRootNodeADM) => ZIO.attempt(rootNode.projectIri)
+      projectIriStr <- maybeNode match {
+                         case Some(rootNode: ListRootNodeADM) => ZIO.succeed(rootNode.projectIri)
 
-                      case Some(childNode: ListChildNodeADM) =>
-                        for {
-                          maybeRoot <- listNodeGetADM(nodeIri = childNode.hasRootNode, shallow = true)
-                          rootProjectIri = maybeRoot match {
-                                             case Some(rootNode: ListRootNodeADM) => rootNode.projectIri
-                                             case _ =>
-                                               throw BadRequestException(
-                                                 s"Root node of $nodeIri was not found. Please verify the given IRI."
-                                               )
-                                           }
-                        } yield rootProjectIri
+                         case Some(childNode: ListChildNodeADM) =>
+                           for {
+                             maybeRoot <- listNodeGetADM(childNode.hasRootNode, shallow = true)
+                             iriStr <- maybeRoot.collect { case it: ListRootNodeADM => it }
+                                         .map(rootNode => ZIO.succeed(rootNode.projectIri))
+                                         .getOrElse(ZIO.fail {
+                                           val msg =
+                                             s"Root node of $nodeIri was not found. Please verify the given IRI."
+                                           BadRequestException(msg)
+                                         })
+                           } yield iriStr
 
-                      case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
-                    }
+                         case _ =>
+                           throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
+                       }
+      projectIri <- ProjectIri.from(projectIriStr).toZIO.mapError(e => BadRequestException(e.getMessage))
     } yield projectIri
 
   /**
@@ -1906,11 +1919,10 @@ final case class ListsResponderADMLive(
    * @param projectIri           the IRI of the project.
    * @return an [[IRI]].
    */
-  private def getDataNamedGraph(projectIri: IRI): Task[IRI] =
+  private def getDataNamedGraph(projectIri: ProjectIri): Task[IRI] =
     for {
-      projectId <- IriIdentifier.fromString(projectIri).toZIO.mapError(e => BadRequestException(e.getMessage))
       project <- messageRelay
-                   .ask[Option[ProjectADM]](ProjectGetADM(projectId))
+                   .ask[Option[ProjectADM]](ProjectGetADM(IriIdentifier.from(projectIri)))
                    .someOrFail(BadRequestException(s"Project '$projectIri' not found."))
     } yield ProjectADMService.projectDataNamedGraphV2(project).value
 

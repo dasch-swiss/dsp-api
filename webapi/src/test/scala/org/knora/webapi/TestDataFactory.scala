@@ -7,12 +7,10 @@ package org.knora.webapi
 
 import zio.NonEmptyChunk
 
-import dsp.valueobjects.Iri.*
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 /**
  * Helps in creating value objects for tests.
@@ -20,7 +18,7 @@ import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 object TestDataFactory {
 
   val someProject = KnoraProject(
-    InternalIri("http://rdfh.ch/projects/0001"),
+    ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001"),
     Shortname.unsafeFrom("shortname"),
     Shortcode.unsafeFrom("0001"),
     None,
@@ -49,6 +47,6 @@ object TestDataFactory {
 
   def projectIri(iri: String): ProjectIri =
     ProjectIri
-      .make(iri)
+      .from(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectIri $iri."))
 }

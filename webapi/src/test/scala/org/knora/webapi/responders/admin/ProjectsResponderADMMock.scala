@@ -15,11 +15,11 @@ import zio.mock.Proxy
 
 import java.util.UUID
 
-import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
 
@@ -31,7 +31,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object ProjectAdminMembersGetRequestADM
       extends Effect[(ProjectIdentifierADM, UserADM), Throwable, ProjectAdminMembersGetResponseADM]
   object ProjectsKeywordsGetRequestADM extends Effect[Unit, Throwable, ProjectsKeywordsGetResponseADM]
-  object ProjectKeywordsGetRequestADM  extends Effect[Iri.ProjectIri, Throwable, ProjectKeywordsGetResponseADM]
+  object ProjectKeywordsGetRequestADM  extends Effect[ProjectIri, Throwable, ProjectKeywordsGetResponseADM]
   object ProjectRestrictedViewSettingsGetADM
       extends Effect[ProjectIdentifierADM, Throwable, Option[ProjectRestrictedViewSettingsADM]]
   object ProjectRestrictedViewSettingsGetRequestADM
@@ -39,7 +39,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
   object ProjectCreateRequestADM
       extends Effect[(ProjectCreateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
   object ChangeBasicInformationRequestADM
-      extends Effect[(Iri.ProjectIri, ProjectUpdateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
+      extends Effect[(ProjectIri, ProjectUpdateRequest, UserADM, UUID), Throwable, ProjectOperationResponseADM]
 
   val compose: URLayer[mock.Proxy, ProjectsResponderADM] =
     ZLayer {
@@ -64,7 +64,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
           proxy(ProjectAdminMembersGetRequestADM, (id, user))
         override def projectsKeywordsGetRequestADM(): Task[ProjectsKeywordsGetResponseADM] =
           proxy(ProjectsKeywordsGetRequestADM, ())
-        override def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM] =
+        override def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponseADM] =
           proxy(ProjectKeywordsGetRequestADM, projectIri)
         override def projectRestrictedViewSettingsGetADM(
           id: ProjectIdentifierADM
@@ -81,7 +81,7 @@ object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
         ): Task[ProjectOperationResponseADM] =
           proxy(ProjectCreateRequestADM, (createReq, requestingUser, apiRequestID))
         override def changeBasicInformationRequestADM(
-          projectIri: Iri.ProjectIri,
+          projectIri: ProjectIri,
           updateReq: ProjectUpdateRequest,
           user: UserADM,
           apiRequestID: UUID

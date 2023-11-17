@@ -34,7 +34,7 @@ final case class KnoraProjectRepoLive(
   private implicit val sf: StringFormatter
 ) extends KnoraProjectRepo {
 
-  override def findById(id: InternalIri): Task[Option[KnoraProject]] =
+  override def findById(id: ProjectIri): Task[Option[KnoraProject]] =
     findOneByQuery(sparql.admin.txt.getProjects(maybeIri = Some(id.value), None, None))
 
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = {
@@ -62,9 +62,9 @@ final case class KnoraProjectRepoLive(
   }
 
   private def toKnoraProject(subjectPropsTuple: (SubjectV2, ConstructPredicateObjects)): Task[KnoraProject] = {
-    val projectIri = InternalIri(subjectPropsTuple._1.toString)
-    val propsMap   = subjectPropsTuple._2
+    val propsMap = subjectPropsTuple._2
     for {
+      projectIri <- ProjectIri.from(subjectPropsTuple._1.toString).toZIO
       shortname <- mapper
                      .getSingleOrFail[StringLiteralV2](ProjectShortname, propsMap)
                      .flatMap(l => Shortname.from(l.value).toZIO)
