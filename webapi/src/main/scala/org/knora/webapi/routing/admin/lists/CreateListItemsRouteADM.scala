@@ -25,6 +25,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.PathMatcher
@@ -54,7 +55,7 @@ final case class CreateListItemsRouteADM(
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
         val maybeId: Validation[Throwable, Option[ListIri]]    = ListIri.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIri]      = ProjectIri.make(apiRequest.projectIri)
+        val projectIri: Validation[Throwable, ProjectIri]      = ProjectIri.from(apiRequest.projectIri)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
@@ -86,7 +87,7 @@ final case class CreateListItemsRouteADM(
                  .when(iri != apiRequest.parentNodeIri)
           parentNodeIri = ListIri.make(apiRequest.parentNodeIri)
           id            = ListIri.make(apiRequest.id)
-          projectIri    = ProjectIri.make(apiRequest.projectIri)
+          projectIri    = ProjectIri.from(apiRequest.projectIri)
           name          = ListName.make(apiRequest.name)
           position      = Position.make(apiRequest.position)
           labels        = Labels.make(apiRequest.labels)

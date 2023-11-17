@@ -39,6 +39,7 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -1065,7 +1066,7 @@ final case class ListsResponderADMLive(
           getUpdateNodeInfoSparqlStatement(
             changeNodeInfoRequest = ListNodeChangePayloadADM(
               listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
-              projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
+              projectIri = ProjectIri.unsafeFrom(projectIri),
               name = Some(changeNodeNameRequest.name)
             )
           )
@@ -1129,7 +1130,7 @@ final case class ListsResponderADMLive(
         changeNodeLabelsSparql <- getUpdateNodeInfoSparqlStatement(
                                     changeNodeInfoRequest = ListNodeChangePayloadADM(
                                       listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
-                                      projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
+                                      projectIri = ProjectIri.from(projectIri).fold(e => throw e.head, v => v),
                                       labels = Some(changeNodeLabelsRequest.labels)
                                     )
                                   )
@@ -1193,7 +1194,7 @@ final case class ListsResponderADMLive(
         changeNodeCommentsSparql <- getUpdateNodeInfoSparqlStatement(
                                       ListNodeChangePayloadADM(
                                         listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
-                                        projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
+                                        projectIri = ProjectIri.from(projectIri).fold(e => throw e.head, v => v),
                                         comments = Some(changeNodeCommentsRequest.comments)
                                       )
                                     )

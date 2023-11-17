@@ -44,6 +44,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
     "used to query for project information" should {
       "return information for every project excluding system projects" in {
         appActor ! ProjectsGetRequestADM()
+
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
         assert(received.projects.contains(SharedTestDataADM.imagesProject))
         assert(received.projects.contains(SharedTestDataADM.incunabulaProject))
@@ -178,8 +179,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
-        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
+        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
         received.project.shortname should be("newproject")
         received.project.shortcode should be(shortcode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
@@ -195,6 +196,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
+
         // Check Administrative Permission of ProjectAdmin
         val receivedApAdmin: AdministrativePermissionsForProjectGetResponseADM =
           expectMsgType[AdministrativePermissionsForProjectGetResponseADM]
@@ -304,8 +306,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
-        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
+        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
         received.project.longname should contain(Iri.fromSparqlEncodedString(longnameWithSpecialCharacter))
         received.project.description should be(
           Seq(
@@ -316,7 +318,6 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
           )
         )
         received.project.keywords should contain(Iri.fromSparqlEncodedString(keywordWithSpecialCharacter))
-
       }
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
@@ -358,7 +359,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "UPDATE a project" in {
-        val iri             = ITTestDataFactory.projectIri(newProjectIri.get)
+        val iri             = ProjectIri.unsafeFrom(newProjectIri.get)
         val updatedLongname = Longname.unsafeFrom("updated project longname")
         val updatedDescription = List(
           Description.unsafeFrom(
@@ -404,7 +405,7 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
         val longname = Longname.unsafeFrom("longname")
-        val iri      = ITTestDataFactory.projectIri(notExistingProjectButValidProjectIri)
+        val iri      = ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri)
         appActor ! ProjectChangeRequestADM(
           projectIri = iri,
           projectUpdatePayload = ProjectUpdateRequest(longname = Some(longname)),
@@ -600,33 +601,29 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
     "used to query keywords" should {
       "return all unique keywords for all projects" in {
         appActor ! ProjectsKeywordsGetRequestADM()
+
         val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
         received.keywords.size should be(21)
       }
 
       "return all keywords for a single project" in {
-        val iri = ITTestDataFactory.projectIri(SharedTestDataADM.incunabulaProject.id)
-        appActor ! ProjectKeywordsGetRequestADM(
-          projectIri = iri
+        appActor ! ProjectKeywordsGetRequestADM(projectIri =
+          ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProject.id)
         )
+
         val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
         received.keywords should be(SharedTestDataADM.incunabulaProject.keywords)
       }
 
       "return empty list for a project without keywords" in {
-        val iri = ITTestDataFactory.projectIri(SharedTestDataADM.dokubibProject.id)
-        appActor ! ProjectKeywordsGetRequestADM(
-          projectIri = iri
-        )
+        appActor ! ProjectKeywordsGetRequestADM(ProjectIri.unsafeFrom(SharedTestDataADM.dokubibProject.id))
+
         val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
         received.keywords should be(Seq.empty[String])
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
-        val iri = ITTestDataFactory.projectIri(notExistingProjectButValidProjectIri)
-        appActor ! ProjectKeywordsGetRequestADM(
-          projectIri = iri
-        )
+        appActor ! ProjectKeywordsGetRequestADM(ProjectIri.unsafeFrom(notExistingProjectButValidProjectIri))
 
         expectMsg(Failure(NotFoundException(s"Project '$notExistingProjectButValidProjectIri' not found.")))
       }

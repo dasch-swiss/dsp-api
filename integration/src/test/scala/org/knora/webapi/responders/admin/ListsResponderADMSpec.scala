@@ -25,6 +25,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 
 import pekko.actor.Status.Failure
@@ -155,7 +156,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
       "create a list" in {
         appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de"))))
@@ -195,7 +196,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
         appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
@@ -235,7 +236,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
             listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
             labels = Some(
               Labels
@@ -289,7 +290,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
-        val projectIRI = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v)
+        val projectIRI = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v)
         appActor ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
@@ -313,7 +314,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
@@ -366,7 +367,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
             position = Some(Position.make(0).fold(e => throw e.head, v => v)),
             labels = Labels
@@ -420,7 +421,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(secondChildIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
@@ -474,7 +475,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,
             labels = Labels
@@ -832,7 +833,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
-        expectMsg(Failure(BadRequestException(s"Node ${nodeInUseIri} cannot be deleted, because it is in use.")))
+        expectMsg(Failure(BadRequestException(s"Node $nodeInUseIri cannot be deleted, because it is in use.")))
 
       }
 
@@ -845,7 +846,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val usedChild = "http://rdfh.ch/lists/0001/treeList10"
         expectMsg(
-          Failure(BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${usedChild} is in use."))
+          Failure(BadRequestException(s"Node $nodeIri cannot be deleted, because its child $usedChild is in use."))
         )
 
       }
@@ -858,7 +859,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
           apiRequestID = UUID.randomUUID
         )
         expectMsg(
-          Failure(BadRequestException(s"Node ${nodeInUseInOntologyIri} cannot be deleted, because it is in use."))
+          Failure(BadRequestException(s"Node $nodeInUseInOntologyIri cannot be deleted, because it is in use."))
         )
 
       }

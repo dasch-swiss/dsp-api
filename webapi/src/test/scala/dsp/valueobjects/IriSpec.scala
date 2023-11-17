@@ -43,7 +43,7 @@ object IriSpec extends ZIOSpecDefault {
   val uuidVersion3  = fromIri(userIriWithUUIDVersion3)
   val supportedUuid = fromIri(validUserIri)
 
-  def spec: Spec[Any, Throwable] = groupIriTest + listIriTest + projectIriTest + uuidTest + roleIriTest + userIriTest
+  def spec: Spec[Any, Throwable] = groupIriTest + listIriTest + uuidTest + roleIriTest + userIriTest
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {
@@ -129,59 +129,6 @@ object IriSpec extends ZIOSpecDefault {
     test("successfully validate passing None") {
       assertTrue(
         ListIri.make(None) == Validation.succeed(None)
-      )
-    }
-  )
-
-  private val projectIriTest = suite("IriSpec - ProjectIri")(
-    test("pass an empty value and return an error") {
-      assertTrue(
-        ProjectIri.make("") == Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing)),
-        ProjectIri.make(Some("")) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
-      )
-    },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        ProjectIri.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid)),
-        ProjectIri.make(Some(invalidIri)) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-      )
-    },
-    test("pass an invalid IRI containing unsupported UUID version and return an error") {
-      assertTrue(
-        ProjectIri.make(projectIriWithUUIDVersion3) == Validation.fail(
-          ValidationException(IriErrorMessages.UuidVersionInvalid)
-        ),
-        ProjectIri.make(Some(projectIriWithUUIDVersion3)) == Validation.fail(
-          ValidationException(IriErrorMessages.UuidVersionInvalid)
-        )
-      )
-    },
-    test("pass an invalid IRI containing the shortcode and return an error") {
-      assertTrue(
-        ProjectIri.make(invalidIri) == Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-      )
-    },
-    test("pass a valid project IRI and successfully create value object") {
-      def makeProjectIri(iri: String) = ProjectIri.make(iri)
-      val maybeProjectIri             = ProjectIri.make(Some(validProjectIri))
-
-      (for {
-        iri      <- makeProjectIri(validProjectIri)
-        iri2     <- makeProjectIri(systemProject)
-        iri3     <- makeProjectIri(defaultSharedOntologiesProject)
-        beolIri  <- makeProjectIri(beolProjectIri)
-        maybeIri <- maybeProjectIri
-      } yield assertTrue(
-        iri.value == validProjectIri,
-        iri2.value == systemProject,
-        iri3.value == defaultSharedOntologiesProject,
-        beolIri.value == beolProjectIri,
-        maybeIri.get == iri
-      )).toZIO
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        ProjectIri.make(None) == Validation.succeed(None)
       )
     }
   )

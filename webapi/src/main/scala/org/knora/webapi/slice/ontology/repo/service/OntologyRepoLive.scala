@@ -14,6 +14,7 @@ import scala.annotation.tailrec
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
@@ -45,8 +46,8 @@ final case class OntologyRepoLive(private val converter: IriConverter, private v
 
   override def findAll(): Task[List[ReadOntologyV2]] = getCache.map(_.ontologies.values.toList)
 
-  override def findByProject(projectId: InternalIri): Task[List[ReadOntologyV2]] =
-    smartIriMapCache(projectId)(findByProject)
+  override def findByProject(projectId: ProjectIri): Task[List[ReadOntologyV2]] =
+    smartIriMapCache(InternalIri(projectId.value))(findByProject)
 
   private def findByProject(projectIri: SmartIri, cache: OntologyCacheData): List[ReadOntologyV2] =
     cache.ontologies.values.filter(_.ontologyMetadata.projectIri.contains(projectIri)).toList

@@ -16,12 +16,12 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.repo.AbstractInMemoryCrudRepository
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 final case class KnoraProjectRepoInMemory(projects: Ref[List[KnoraProject]])
-    extends AbstractInMemoryCrudRepository[KnoraProject, InternalIri](projects, _.id)
+    extends AbstractInMemoryCrudRepository[KnoraProject, ProjectIri](projects, _.id)
     with KnoraProjectRepo {
 
   override def findById(id: ProjectIdentifierADM): Task[Option[KnoraProject]] = projects.get.map(
