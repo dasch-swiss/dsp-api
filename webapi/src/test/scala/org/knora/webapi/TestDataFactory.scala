@@ -7,7 +7,6 @@ package org.knora.webapi
 
 import zio.NonEmptyChunk
 
-import dsp.valueobjects.Iri.*
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
