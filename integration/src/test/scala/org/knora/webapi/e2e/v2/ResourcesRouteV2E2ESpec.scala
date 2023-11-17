@@ -5,14 +5,29 @@
 
 package org.knora.webapi.e2e.v2
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import org.apache.pekko
-import org.xmlunit.builder.DiffBuilder
-import org.xmlunit.builder.Input
+import com.typesafe.config.{Config, ConfigFactory}
+import dsp.errors.{AssertionException, BadRequestException}
+import dsp.valueobjects.Iri
+import org.apache.pekko.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
+import org.apache.pekko.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.knora.webapi._
+import org.knora.webapi.e2e.{ClientTestDataCollector, InstanceChecker, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.e2e.v2.ResponseCheckerV2._
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter, ValuesValidator}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.v2.OntologiesRouteV2
+import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
+import org.knora.webapi.util._
+import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import spray.json.JsValue
-import spray.json.JsonParser
+import spray.json.{JsValue, JsonParser}
 import zio.durationInt
 
 import java.net.URLEncoder
@@ -20,40 +35,7 @@ import java.nio.file.Paths
 import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration.SECONDS
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.InstanceChecker
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.e2e.v2.ResponseCheckerV2._
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
-
-import pekko.http.scaladsl.model.HttpEntity
-import pekko.http.scaladsl.model.HttpResponse
-import pekko.http.scaladsl.model.MediaRange
-import pekko.http.scaladsl.model.StatusCodes
-import pekko.http.scaladsl.model.headers.Accept
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import pekko.http.scaladsl.unmarshalling.Unmarshal
+import scala.concurrent.duration.{FiniteDuration, SECONDS}
 
 /**
  * Tests the API v2 resources route.
@@ -221,7 +203,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
       val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+        .addHeader(new SchemaHeader("simple"))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -238,7 +220,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in Turtle" in {
       val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+        .addHeader(new SchemaHeader("simple"))
         .addHeader(Accept(RdfMediaTypes.`text/turtle`))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -249,7 +231,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML" in {
       val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+        .addHeader(new SchemaHeader("simple"))
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -260,7 +242,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)" in {
       val request = Get(s"$baseApiUrl/v2/resourcespreview/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+        .addHeader(new SchemaHeader("simple"))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -270,7 +252,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by a URL parameter)" in {
       val request = Get(
-        s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded?${RouteUtilV2.SCHEMA_PARAM}=${RouteUtilV2.SIMPLE_SCHEMA_NAME}"
+        s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded?schema=simple"
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -343,7 +325,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "perform a full resource request for a resource with a list value (in the simple schema)" in {
       val iri = URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")
       val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+        .addHeader(new SchemaHeader("simple"))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -378,7 +360,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "perform a full resource request for a resource with a link (in the simple schema)" in {
       val iri = URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")
       val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+        .addHeader(new SchemaHeader("simple"))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -413,7 +395,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "perform a full resource request for a resource with a Text language (in the simple schema)" in {
       val iri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")
       val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+        .addHeader(new SchemaHeader("simple"))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -833,7 +815,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
       val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> addCredentials(
+        .addHeader(new SchemaHeader("simple")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
@@ -901,7 +883,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
       val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> addCredentials(
+        .addHeader(new SchemaHeader("simple")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
