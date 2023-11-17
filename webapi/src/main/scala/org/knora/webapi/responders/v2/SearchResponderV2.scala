@@ -805,7 +805,7 @@ final case class SearchResponderV2Live(
     limitToResourceClass: Option[SmartIri]
   ) = {
     val searchTerm = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
-    val countSparql = SearchUtil.selectCountByLabel(
+    val countSparql = SearchQueries.selectCountByLabel(
       searchTerm = searchTerm,
       limitToProject = limitToProject,
       limitToResourceClass = limitToResourceClass.map(_.toString)
@@ -851,7 +851,7 @@ final case class SearchResponderV2Live(
     val searchTerm   = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
 
     val searchResourceByLabelSparql =
-      SearchUtil.constructSearchByLabel(
+      SearchQueries.constructSearchByLabel(
         searchTerm,
         limitToResourceClass.map(_.toIri),
         limitToProject,

@@ -9,7 +9,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
-object SearchUtil {
+object SearchQueries {
 
   def selectCountByLabel(
     searchTerm: String,
