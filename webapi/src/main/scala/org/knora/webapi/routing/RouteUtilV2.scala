@@ -5,26 +5,29 @@
 
 package org.knora.webapi.routing
 
-import dsp.errors.BadRequestException
 import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.server.{RequestContext, RouteResult}
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.RouteResult
+import zio.*
+import zio.prelude.Validation
+
+import scala.concurrent.Future
+import scala.util.control.Exception.catching
+
+import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.rdf.{JsonLDUtil, RdfFormat}
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.search.api.ApiV2
 import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schemaQueryParam
-import zio.*
-import zio.prelude.Validation
-
-import scala.concurrent.Future
-import scala.util.control.Exception.catching
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.

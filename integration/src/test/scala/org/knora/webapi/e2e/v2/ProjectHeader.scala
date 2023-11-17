@@ -5,10 +5,12 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko.http.scaladsl.model.headers.{ModeledCustomHeader, ModeledCustomHeaderCompanion}
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
+import org.apache.pekko.http.scaladsl.model.headers.ModeledCustomHeader
+import org.apache.pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
 
 import scala.util.Try
+
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 
 /**
  * A custom Pekko HTTP header "x-knora-accept-schema", which a client can send to specify

@@ -30,7 +30,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2

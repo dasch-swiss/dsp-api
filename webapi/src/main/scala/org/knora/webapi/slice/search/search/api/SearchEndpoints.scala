@@ -1,15 +1,17 @@
 package org.knora.webapi.slice.search.search.api
 
+import sttp.tapir.Codec.PlainCodec
+import sttp.tapir.*
+import zio.ZLayer
+
 import dsp.errors.BadRequestException
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schemaQueryParam
 import org.knora.webapi.slice.search.search.api.ApiV2.defaultApiV2Schema
 import org.knora.webapi.slice.search.search.api.ApiV2Codecs.apiV2Schema
-import org.knora.webapi.{ApiV2Complex, ApiV2Schema}
-import sttp.tapir.*
-import sttp.tapir.Codec.PlainCodec
-import zio.ZLayer
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 

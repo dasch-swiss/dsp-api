@@ -5,7 +5,8 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko.http.scaladsl.model.headers.{ModeledCustomHeader, ModeledCustomHeaderCompanion}
+import org.apache.pekko.http.scaladsl.model.headers.ModeledCustomHeader
+import org.apache.pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
 
 import scala.util.Try
 
