@@ -12,7 +12,6 @@ import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import java.time.Instant
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -34,6 +33,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 import org.knora.webapi.store.iiif.api.SipiService
 
 /**
@@ -162,7 +162,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       val getProjectIri = RouteUtilV2
         .getProjectIri(requestContext)
         .some
-        .orElseFail(BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
+        .orElseFail(BadRequestException(s"This route requires the request header $xKnoraAcceptSchemaHeader"))
 
       val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
       val response = for {

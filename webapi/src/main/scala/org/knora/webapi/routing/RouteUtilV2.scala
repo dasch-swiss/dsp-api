@@ -32,11 +32,6 @@ import scala.util.control.Exception.catching
 object RouteUtilV2 {
 
   /**
-   * The name of the HTTP header in which results from a project can be requested.
-   */
-  val PROJECT_HEADER: String = "x-knora-accept-project"
-
-  /**
    * The name of the URL parameter that can be used to specify how markup should be returned
    * with text values.
    */
@@ -166,11 +161,12 @@ object RouteUtilV2 {
    *         Fails with a [[BadRequestException]] if the project IRI is invalid.
    */
   def getProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, Option[SmartIri]] = {
-    val maybeProjectIriStr = requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value())
+    val maybeProjectIriStr =
+      requestContext.request.headers.find(_.lowercaseName == xKnoraAcceptSchemaHeader).map(_.value())
     ZIO.foreach(maybeProjectIriStr)(iri =>
       IriConverter
         .asSmartIri(iri)
-        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $PROJECT_HEADER"))
+        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $xKnoraAcceptSchemaHeader"))
     )
   }
 

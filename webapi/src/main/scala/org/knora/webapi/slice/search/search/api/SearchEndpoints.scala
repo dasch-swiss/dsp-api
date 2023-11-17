@@ -50,25 +50,22 @@ object ApiV2 {
 }
 
 object ApiV2Codecs {
-  private def apiV2SchemaDecode(s: String): DecodeResult[ApiV2Schema] =
-    ApiV2Schema.from(s).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_))
-  private def apiV2SchemaEncode(schema: ApiV2Schema): String = schema.name
 
   implicit val apiV2SchemaCodec: PlainCodec[ApiV2Schema] =
-    Codec.string.mapDecode(apiV2SchemaDecode)(apiV2SchemaEncode)
+    Codec.string.mapDecode(s =>
+      ApiV2Schema.from(s).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_))
+    )(_.name)
 
   implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
     Codec.listHeadOption(apiV2SchemaCodec)
 
   private val apiV2SchemaHeader = header[Option[ApiV2Schema]](xKnoraAcceptSchemaHeader)
-    .description(
-      s"The ontology schema to be used for the request. If not specified, the default schema $defaultApiV2Schema  will be used."
-    )
+    .description(s"""The ontology schema to be used for the request. 
+                    |If not specified, the default schema $defaultApiV2Schema  will be used.""".stripMargin)
 
   private val apiV2SchemaQuery = query[Option[ApiV2Schema]](schemaQueryParam)
-    .description(
-      s"The ontology schema to be used for the request. If not specified, the default schema $defaultApiV2Schema will be used."
-    )
+    .description(s"""The ontology schema to be used for the request. 
+                    |If not specified, the default schema $defaultApiV2Schema will be used.""".stripMargin)
 
   val apiV2Schema: EndpointInput[ApiV2Schema] =
     apiV2SchemaHeader
@@ -80,7 +77,5 @@ object ApiV2Codecs {
           case _                     => defaultApiV2Schema
         }
       }(s => (Some(s), Some(s)))
-
-//      [U](f: ((Option[org.knora.webapi.ApiV2Schema], Option[org.knora.webapi.ApiV2Schema])) => U)(g: U => (Option[org.knora.webapi.ApiV2Schema], Option[org.knora.webapi.ApiV2Schema])): sttp.tapir.EndpointIO[this.Out]#ThisType[U] <and>
 
 }

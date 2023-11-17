@@ -5,17 +5,13 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.headers.{ModeledCustomHeader, ModeledCustomHeaderCompanion}
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 
 import scala.util.Try
 
-import org.knora.webapi.routing.RouteUtilV2
-
-import pekko.http.scaladsl.model.headers.ModeledCustomHeader
-import pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
-
 /**
- * A custom Pekko HTTP header representing [[RouteUtilV2.PROJECT_HEADER]], which a client can send to specify
+ * A custom Pekko HTTP header "x-knora-accept-schema", which a client can send to specify
  * a project from which results should be returned.
  *
  * The definition follows [[https://doc.pekko.io/docs/pekko-http/current/common/http-model.html#custom-headers]].
@@ -28,6 +24,6 @@ class ProjectHeader(token: String) extends ModeledCustomHeader[ProjectHeader] {
 }
 
 object ProjectHeader extends ModeledCustomHeaderCompanion[ProjectHeader] {
-  override val name: String         = RouteUtilV2.PROJECT_HEADER
-  override def parse(value: String) = Try(new ProjectHeader(value))
+  override val name: String                             = xKnoraAcceptSchemaHeader
+  override def parse(value: String): Try[ProjectHeader] = Try(new ProjectHeader(value))
 }

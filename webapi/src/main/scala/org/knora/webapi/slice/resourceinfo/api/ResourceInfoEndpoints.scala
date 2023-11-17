@@ -5,22 +5,20 @@
 
 package org.knora.webapi.slice.resourceinfo.api
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
+import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.{Order, OrderBy}
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.*
 import zio.ZLayer
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
-import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
-
 final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getResourcesInfo = baseEndpoints.publicEndpoint.get
     .in("v2" / "resources" / "info")
-    .in(header[IriIdentifier](RouteUtilV2.PROJECT_HEADER))
+    .in(header[IriIdentifier](xKnoraAcceptSchemaHeader))
     .in(query[String]("resourceClass"))
     .in(query[Option[Order]](Order.queryParamKey))
     .in(query[Option[OrderBy]](OrderBy.queryParamKey))
