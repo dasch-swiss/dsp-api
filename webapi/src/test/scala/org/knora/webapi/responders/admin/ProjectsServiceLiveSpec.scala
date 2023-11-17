@@ -5,28 +5,22 @@
 
 package org.knora.webapi.responders.admin
 
-import zio.*
-import zio.mock.*
-import zio.test.*
-
 import dsp.valueobjects.V2.*
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
-import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
-import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectUpdateRequest}
+import org.knora.webapi.slice.admin.api.service.{ProjectADMRestService, ProjectsADMRestServiceLive}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
-import org.knora.webapi.slice.admin.domain.service.DspIngestClientMock
-import org.knora.webapi.slice.admin.domain.service.ProjectExportServiceStub
-import org.knora.webapi.slice.admin.domain.service.ProjectExportStorageServiceLive
-import org.knora.webapi.slice.admin.domain.service.ProjectImportServiceLive
+import org.knora.webapi.slice.admin.domain.service.{DspIngestClientMock, ProjectExportServiceStub, ProjectExportStorageServiceLive, ProjectImportServiceLive}
+import zio.*
+import zio.mock.*
+import zio.test.*
 
 object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
@@ -147,7 +141,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   // needs to have the StringFormatter in the environment because the [[ChangeProjectApiRequestADM]] needs it
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
     val iri                  = "http://rdfh.ch/projects/0001"
-    val projectIri           = TestDataFactory.projectIri(iri)
+    val projectIri           = ProjectIri.unsafeFrom(iri)
     val projectStatus        = Some(Status.Inactive)
     val projectUpdatePayload = ProjectUpdateRequest(status = projectStatus)
     for {
@@ -165,7 +159,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   val updateProjectSpec: Spec[Any, Throwable] = test("update a project") {
     val iri        = "http://rdfh.ch/projects/0001"
-    val projectIri = TestDataFactory.projectIri(iri)
+    val projectIri = ProjectIri.unsafeFrom(iri)
     val projectUpdatePayload = ProjectUpdateRequest(
       Some(Shortname.unsafeFrom("usn")),
       Some(Longname.unsafeFrom("updated project longname")),
@@ -285,7 +279,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   val getKeywordsByProjectIri: Spec[Any, Throwable] = test("get keywords of a single project by project IRI") {
     val iri        = "http://rdfh.ch/projects/0001"
-    val projectIri = TestDataFactory.projectIri(iri)
+    val projectIri = ProjectIri.unsafeFrom(iri)
     val mockResponder = ProjectsResponderADMMock.ProjectKeywordsGetRequestADM(
       assertion = Assertion.equalTo(projectIri),
       result = Expectation.value(ProjectKeywordsGetResponseADM(Seq.empty[String]))

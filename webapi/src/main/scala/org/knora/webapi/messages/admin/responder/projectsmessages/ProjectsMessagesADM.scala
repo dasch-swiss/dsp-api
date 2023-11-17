@@ -5,27 +5,10 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
+import dsp.errors.{BadRequestException, OntologyConstraintException, ValidationException}
+import dsp.valueobjects.{Iri, RestrictedViewSize, V2}
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json.JsValue
-import spray.json.JsonFormat
-import spray.json.RootJsonFormat
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat.TextPlain
-import sttp.tapir.DecodeResult
-import zio.json.DeriveJsonCodec
-import zio.json.JsonCodec
-import zio.prelude.Validation
-
-import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.OntologyConstraintException
-import dsp.errors.ValidationException
-import dsp.valueobjects.Iri
-import dsp.valueobjects.RestrictedViewSize
-import dsp.valueobjects.V2
 import org.knora.webapi.IRI
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -34,9 +17,15 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
-import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.{ProjectCreateRequest, ProjectUpdateRequest}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
+import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
+import sttp.tapir.CodecFormat.TextPlain
+import sttp.tapir.{Codec, DecodeResult}
+import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.prelude.Validation
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -366,11 +355,9 @@ object ProjectIdentifierADM {
   object IriIdentifier {
 
     def from(projectIri: ProjectIri): IriIdentifier = IriIdentifier(projectIri)
+
     def unsafeFrom(projectIri: String): IriIdentifier =
-      fromString(projectIri).fold(
-        err => throw new IllegalArgumentException(s"Invalid project IRI: $projectIri: ${err.head.msg}"),
-        identity
-      )
+      fromString(projectIri).fold(err => throw err.head, identity)
 
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
       ProjectIri.from(value).map(IriIdentifier(_))

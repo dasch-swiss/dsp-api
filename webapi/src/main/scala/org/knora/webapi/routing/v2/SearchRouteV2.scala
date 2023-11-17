@@ -5,28 +5,22 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.RequestContext
-import org.apache.pekko.http.scaladsl.server.Route
-import org.apache.pekko.http.scaladsl.server.RouteResult
-import zio.*
-
-import scala.concurrent.Future
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.{RequestContext, Route, RouteResult}
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.responders.v2.ResourceCountV2
-import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, ValuesValidator}
+import org.knora.webapi.responders.v2.{ResourceCountV2, SearchResponderV2}
+import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import zio.*
+
+import scala.concurrent.Future
 
 /**
  * Provides a function for API routes that deal with search.
@@ -70,22 +64,11 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       }
       .getOrElse(ZIO.succeed(0))
 
-  /**
-   * Gets the the project the search should be restricted to, if any.
-   *
-   * @param params the GET parameters.
-   * @return the project Iri, if any.
-   */
-  private def getProjectFromParams(params: Map[String, String]): IO[BadRequestException, Option[IRI]] =
-    params
-      .get(LIMIT_TO_PROJECT)
-      .map { projectIriStr =>
-        Iri
-          .validateAndEscapeIri(projectIriStr)
-          .toZIO
-          .mapBoth(_ => BadRequestException(s"$projectIriStr is not a valid Iri"), Some(_))
-      }
-      .getOrElse(ZIO.none)
+  private def getProjectIri(params: Map[String, String]): IO[BadRequestException, Option[ProjectIri]] =
+    ZIO
+      .fromOption(params.get(LIMIT_TO_PROJECT))
+      .flatMap(iri => ProjectIri.from(iri).toZIO.orElseFail(Some(BadRequestException(s"$iri is not a valid Iri"))))
+      .unsome
 
   /**
    * Gets the resource class the search should be restricted to, if any.
@@ -139,7 +122,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           val response = for {
             _                    <- ensureIsNotFullTextSearch(searchStr)
             escapedSearchStr     <- validateSearchString(searchStr)
-            limitToProject       <- getProjectFromParams(params)
+            limitToProject       <- getProjectIri(params)
             limitToResourceClass <- getResourceClassFromParams(params)
             limitToStandoffClass <- getStandoffClass(params)
             response <- SearchResponderV2.fulltextSearchCountV2(
@@ -183,7 +166,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           _                    <- ensureIsNotFullTextSearch(searchStr)
           escapedSearchStr     <- validateSearchString(searchStr)
           offset               <- getOffsetFromParams(params)
-          limitToProject       <- getProjectFromParams(params)
+          limitToProject       <- getProjectIri(params)
           limitToResourceClass <- getResourceClassFromParams(params)
           limitToStandoffClass <- getStandoffClass(params)
           returnFiles           = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
@@ -252,7 +235,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           val params: Map[String, String] = requestContext.request.uri.query().toMap
           val response = for {
             searchString         <- validateSearchString(searchval)
-            limitToProject       <- getProjectFromParams(params)
+            limitToProject       <- getProjectIri(params)
             limitToResourceClass <- getResourceClassFromParams(params)
             response <-
               SearchResponderV2.searchResourcesByLabelCountV2(searchString, limitToProject, limitToResourceClass)
@@ -270,7 +253,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       val response = for {
         sparqlEncodedSearchString <- validateSearchString(searchval)
         offset                    <- getOffsetFromParams(params)
-        limitToProject            <- getProjectFromParams(params)
+        limitToProject            <- getProjectIri(params)
         limitToResourceClass      <- getResourceClassFromParams(params)
         targetSchema              <- targetSchemaTask
         requestingUser            <- Authenticator.getUserADM(requestContext)
