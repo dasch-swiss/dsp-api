@@ -5,30 +5,21 @@
 
 package org.knora.webapi.slice.common.api
 
+import dsp.errors.*
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
+import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.EndpointOutput
-import sttp.tapir.auth
-import sttp.tapir.cookie
-import sttp.tapir.endpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.model.UsernamePassword
-import sttp.tapir.oneOf
-import sttp.tapir.oneOfVariant
-import sttp.tapir.statusCode
-import zio.ZIO
-import zio.ZLayer
+import sttp.tapir.{Endpoint, EndpointOutput, auth, cookie, endpoint, oneOf, oneOfVariant, statusCode}
+import zio.{ZIO, ZLayer}
 
 import scala.concurrent.Future
-
-import dsp.errors.*
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.UnsafeZioRun
 
 final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
 
@@ -54,17 +45,27 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
 
   val publicEndpoint = endpoint.errorOut(defaultErrorOutputs)
 
-  val securedEndpoint = endpoint
-    .errorOut(secureDefaultErrorOutputs)
-    .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-    .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
-    .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
-    .serverSecurityLogic {
-      case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
-      case (_, Some(cookie), _)   => authenticateJwt(cookie)
-      case (_, _, Some(basic))    => authenticateBasic(basic)
-      case _                      => Future.successful(Left(BadCredentialsException("No credentials provided.")))
-    }
+  private val endpointWithBearerCookieBasicAuthOptional
+    : Endpoint[(Option[String], Option[String], Option[UsernamePassword]), Unit, RequestRejectedException, Unit, Any] =
+    endpoint
+      .errorOut(secureDefaultErrorOutputs)
+      .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+      .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
+      .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
+
+  val securedEndpoint = endpointWithBearerCookieBasicAuthOptional.serverSecurityLogic {
+    case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
+    case (_, Some(cookie), _)   => authenticateJwt(cookie)
+    case (_, _, Some(basic))    => authenticateBasic(basic)
+    case _                      => Future.successful(Left(BadCredentialsException("No credentials provided.")))
+  }
+
+  val withUserEndpoint = endpointWithBearerCookieBasicAuthOptional.serverSecurityLogic {
+    case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
+    case (_, Some(cookie), _)   => authenticateJwt(cookie)
+    case (_, _, Some(basic))    => authenticateBasic(basic)
+    case _                      => Future.successful(Right(AnonymousUser))
+  }
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, UserADM]] =
     UnsafeZioRun.runToFuture(
