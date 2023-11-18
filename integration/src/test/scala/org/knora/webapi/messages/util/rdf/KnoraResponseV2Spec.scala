@@ -5,14 +5,13 @@
 
 package org.knora.webapi.util.rdf
 
-
-import java.nio.file.Paths
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
+import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraTurtleResponseV2}
 import org.knora.webapi.util.FileUtil
+
+import java.nio.file.Paths
 
 /**
  * Tests the formatting of Knora API v2 responses.
@@ -191,45 +190,24 @@ class KnoraResponseV2Spec() extends CoreSpec {
     }
 
     "convert a hierarchical JsonLDDocument to a flat one" in {
-      val jsonLDTestResponse = JsonLDTestResponse(hierarchicalJsonLD)
+      val actual = JsonLDTestResponse(hierarchicalJsonLD)
+        .format(JsonLD, ApiV2Complex, Set(JsonLdRendering.Flat), appConfig)
 
-      val jsonLDResponseStr: String = jsonLDTestResponse.format(
-        rdfFormat = JsonLD,
-        targetSchema = ApiV2Complex,
-        schemaOptions = Set(JsonLdRendering.Flat),
-        appConfig = appConfig
-      )
-
-      val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-      assert(jsonLDResponseDoc.body == flatJsonLD.body)
+      assert(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
     }
 
     "convert Turtle to a hierarchical JSON-LD document" in {
-      val turtleTestResponse = TurtleTestResponse(turtle)
+      val actual = TurtleTestResponse(turtle)
+        .format(JsonLD, InternalSchema, Set(JsonLdRendering.Hierarchical), appConfig)
 
-      val jsonLDResponseStr: String = turtleTestResponse.format(
-        rdfFormat = JsonLD,
-        targetSchema = InternalSchema,
-        schemaOptions = Set(JsonLdRendering.Hierarchical),
-        appConfig = appConfig
-      )
-
-      val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-      assert(jsonLDResponseDoc.body == hierarchicalJsonLD.body)
+      assert(JsonLDUtil.parseJsonLD(actual).body == hierarchicalJsonLD.body)
     }
 
     "convert Turtle to a flat JSON-LD document" in {
-      val turtleTestResponse = TurtleTestResponse(turtle)
+      val actual = TurtleTestResponse(turtle)
+        .format(JsonLD, InternalSchema, Set(JsonLdRendering.Flat), appConfig)
 
-      val jsonLDResponseStr: String = turtleTestResponse.format(
-        rdfFormat = JsonLD,
-        targetSchema = InternalSchema,
-        schemaOptions = Set(JsonLdRendering.Flat),
-        appConfig = appConfig
-      )
-
-      val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-      assert(jsonLDResponseDoc.body == flatJsonLD.body)
+      assert(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
     }
   }
 }
