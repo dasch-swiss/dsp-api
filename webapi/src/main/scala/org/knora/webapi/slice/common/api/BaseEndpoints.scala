@@ -5,21 +5,32 @@
 
 package org.knora.webapi.slice.common.api
 
-import dsp.errors.*
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
+import sttp.tapir.Endpoint
+import sttp.tapir.EndpointOutput
+import sttp.tapir.auth
+import sttp.tapir.cookie
+import sttp.tapir.endpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.model.UsernamePassword
-import sttp.tapir.{Endpoint, EndpointOutput, auth, cookie, endpoint, oneOf, oneOfVariant, statusCode}
-import zio.{ZIO, ZLayer}
+import sttp.tapir.oneOf
+import sttp.tapir.oneOfVariant
+import sttp.tapir.statusCode
+import zio.ZIO
+import zio.ZLayer
 
 import scala.concurrent.Future
+
+import dsp.errors.*
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.UnsafeZioRun
 
 final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio.Runtime[Any]) {
 
@@ -64,7 +75,8 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
     case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
     case (_, Some(cookie), _)   => authenticateJwt(cookie)
     case (_, _, Some(basic))    => authenticateBasic(basic)
-    case _                      => Future.successful(Right(AnonymousUser))
+
+    case _ => Future.successful(Right(AnonymousUser))
   }
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, UserADM]] =
