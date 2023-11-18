@@ -1,17 +1,15 @@
 package org.knora.webapi.slice.search.search.api
 
-import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.*
-import zio.ZLayer
-
 import dsp.errors.BadRequestException
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.{xKnoraAcceptSchemaHeader, xKnoraJsonLdRendering}
 import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schemaQueryParam
 import org.knora.webapi.slice.search.search.api.ApiV2.defaultApiV2Schema
 import org.knora.webapi.slice.search.search.api.ApiV2Codecs.apiV2Schema
+import org.knora.webapi.{ApiV2Complex, ApiV2Schema, JsonLdRendering, SchemaOption}
+import sttp.tapir.*
+import sttp.tapir.Codec.PlainCodec
+import zio.ZLayer
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -39,6 +37,11 @@ object ApiV2 {
      * The name of the HTTP header in which an ontology schema can be requested.
      */
     val xKnoraAcceptSchemaHeader: String = "x-knora-accept-schema"
+
+    /**
+     * The name of the HTTP header that can be used to request hierarchical or flat JSON-LD.
+     */
+    val xKnoraJsonLdRendering: String = "x-knora-json-ld-rendering"
   }
   object QueryParams {
 
@@ -53,18 +56,16 @@ object ApiV2 {
 
 object ApiV2Codecs {
 
-  implicit val apiV2SchemaCodec: PlainCodec[ApiV2Schema] =
-    Codec.string.mapDecode(s =>
-      ApiV2Schema.from(s).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_))
-    )(_.name)
+  private def codecFromStringCodec[A](f: String => Either[String, A], g: A => String): PlainCodec[A] =
+    Codec.string.mapDecode(f(_).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_)))(g)
 
+  implicit val apiV2SchemaCodec: PlainCodec[ApiV2Schema] = codecFromStringCodec(ApiV2Schema.from, _.name)
   implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
     Codec.listHeadOption(apiV2SchemaCodec)
 
   private val apiV2SchemaHeader = header[Option[ApiV2Schema]](xKnoraAcceptSchemaHeader)
     .description(s"""The ontology schema to be used for the request. 
                     |If not specified, the default schema $defaultApiV2Schema  will be used.""".stripMargin)
-
   private val apiV2SchemaQuery = query[Option[ApiV2Schema]](schemaQueryParam)
     .description(s"""The ontology schema to be used for the request. 
                     |If not specified, the default schema $defaultApiV2Schema will be used.""".stripMargin)
@@ -80,4 +81,14 @@ object ApiV2Codecs {
         }
       }(s => (Some(s), Some(s)))
 
+  implicit val jsonLdRenderingCodec: PlainCodec[JsonLdRendering] =
+    codecFromStringCodec(JsonLdRendering.from, _.name)
+  implicit val jsonLDRenderingListCode: Codec[List[String], Option[JsonLdRendering], CodecFormat.TextPlain] =
+    Codec.listHeadOption(jsonLdRenderingCodec)
+
+  private val jsonLdRenderingHeader = header[Option[JsonLdRendering]](xKnoraJsonLdRendering)
+    .description(s"""The JSON-LD rendering to be used for the request (flat or hierarchical). 
+                    |If not specified, hierarchical JSON-LD will be used.""".stripMargin)
+
+  val apiV2Rendering: EndpointInput[SchemaOption] = ???
 }

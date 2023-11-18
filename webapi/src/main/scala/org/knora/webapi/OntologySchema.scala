@@ -5,6 +5,8 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.JsonLdRendering.Flat
+
 /**
  * Indicates the schema that a Knora ontology or ontology entity conforms to
  * and its options that can be submitted to configure an ontology schema.
@@ -80,26 +82,37 @@ case object MarkupAsXml extends MarkupRendering
 case object MarkupAsStandoff extends MarkupRendering
 
 /**
- * Indicates that no markup should be returned with text values. Used only internally.
- */
-case object NoMarkup extends MarkupRendering
-
-/**
  * A trait representing options that affect the format of JSON-LD responses.
  */
-sealed trait JsonLDRendering extends SchemaOption
+sealed trait JsonLdRendering extends SchemaOption {
+  def name: String
+}
 
-/**
- * Indicates that flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
- * rather than nested. Blank nodes will still be nested in any case.
- */
-case object FlatJsonLD extends JsonLDRendering
+object JsonLdRendering {
 
-/**
- * Indicates that hierarchical JSON-LD should be returned, i.e. objects with IRIs should be nested when
- * possible, rather than referenced by IRI.
- */
-case object HierarchicalJsonLD extends JsonLDRendering
+  /**
+   * Indicates that flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
+   * rather than nested. Blank nodes will still be nested in any case.
+   * See https://w3c.github.io/json-ld-syntax/#flattened-document-formd
+   */
+  case object Flat extends JsonLdRendering {
+    override val name: String = "flat"
+  }
+
+  /**
+   * Indicates that hierarchical JSON-LD should be returned, i.e. objects with IRIs should be nested when
+   * possible, rather than referenced by IRI.
+   */
+  case object Hierarchical extends JsonLdRendering {
+    override val name: String = "hierarchical"
+  }
+
+  def from(str: String): Either[String, JsonLdRendering] = str.toLowerCase match {
+    case Flat.name         => Right(Flat)
+    case Hierarchical.name => Right(Hierarchical)
+    case _                 => Left(s"Unrecognised JSON-LD rendering name: $str")
+  }
+}
 
 /**
  * Utility functions for working with schema options.
@@ -149,5 +162,5 @@ object SchemaOptions {
    * @return `true` if flat JSON-LD should be returned.
    */
   def returnFlatJsonLD(schemaOptions: Set[SchemaOption]): Boolean =
-    schemaOptions.contains(FlatJsonLD)
+    schemaOptions.contains(Flat)
 }

@@ -5,8 +5,8 @@
 
 package org.knora.webapi.util.rdf
 
-import java.nio.file.Paths
 
+import java.nio.file.Paths
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.util.rdf._
@@ -196,7 +196,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
       val jsonLDResponseStr: String = jsonLDTestResponse.format(
         rdfFormat = JsonLD,
         targetSchema = ApiV2Complex,
-        schemaOptions = Set(FlatJsonLD),
+        schemaOptions = Set(JsonLdRendering.Flat),
         appConfig = appConfig
       )
 
@@ -210,7 +210,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
       val jsonLDResponseStr: String = turtleTestResponse.format(
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
-        schemaOptions = Set(HierarchicalJsonLD),
+        schemaOptions = Set(JsonLdRendering.Hierarchical),
         appConfig = appConfig
       )
 
@@ -224,7 +224,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
       val jsonLDResponseStr: String = turtleTestResponse.format(
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
-        schemaOptions = Set(FlatJsonLD),
+        schemaOptions = Set(JsonLdRendering.Flat),
         appConfig = appConfig
       )
 

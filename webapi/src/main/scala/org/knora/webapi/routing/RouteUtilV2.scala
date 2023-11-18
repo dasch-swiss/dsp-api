@@ -5,29 +5,26 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko.http.scaladsl.model.*
-import org.apache.pekko.http.scaladsl.server.RequestContext
-import org.apache.pekko.http.scaladsl.server.RouteResult
-import zio.*
-import zio.prelude.Validation
-
-import scala.concurrent.Future
-import scala.util.control.Exception.catching
-
 import dsp.errors.BadRequestException
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.server.{RequestContext, RouteResult}
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.util.rdf.RdfFormat
+import org.knora.webapi.messages.util.rdf.{JsonLDUtil, RdfFormat}
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.search.api.ApiV2
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.{xKnoraAcceptSchemaHeader, xKnoraJsonLdRendering}
 import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schemaQueryParam
+import zio.*
+import zio.prelude.Validation
+
+import scala.concurrent.Future
+import scala.util.control.Exception.catching
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
@@ -56,23 +53,6 @@ object RouteUtilV2 {
    * separately as standoff.
    */
   val MARKUP_STANDOFF: String = "standoff"
-
-  /**
-   * The name of the HTTP header that can be used to request hierarchical or flat JSON-LD.
-   */
-  private val JSON_LD_RENDERING_HEADER: String = "x-knora-json-ld-rendering"
-
-  /**
-   * Indicates that flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
-   * rather than nested. Blank nodes will still be nested in any case.
-   */
-  private val JSON_LD_RENDERING_FLAT: String = "flat"
-
-  /**
-   * Indicates that hierarchical JSON-LD should be returned, i.e. objects with IRIs should be nested when
-   * possible, rather than referenced by IRI.
-   */
-  private val JSON_LD_RENDERING_HIERARCHICAL: String = "hierarchical"
 
   def getStringQueryParam(ctx: RequestContext, key: String): Option[String] = getQueryParamsMap(ctx).get(key)
   private def getQueryParamsMap(ctx: RequestContext): Map[String, String]   = ctx.request.uri.query().toMap
@@ -121,26 +101,22 @@ object RouteUtilV2 {
       case Some(schemaParam) => nameToStandoffRendering(schemaParam).map(Some(_))
 
       case None =>
-        requestContext.request.headers
-          .find(_.lowercaseName == MARKUP_HEADER)
-          .map(_.value)
+        firstHeaderValue(requestContext, MARKUP_HEADER)
           .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
             nameToStandoffRendering(_).map(Some(_))
           )
     }
   }
 
-  private def getJsonLDRendering(
-    requestContext: RequestContext
-  ): Validation[BadRequestException, Option[JsonLDRendering]] = {
-    val header: Option[String] =
-      requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map(_.value)
-    header.fold[Validation[BadRequestException, Option[JsonLDRendering]]](Validation.succeed(None)) {
-      case JSON_LD_RENDERING_FLAT         => Validation.succeed(Some(FlatJsonLD))
-      case JSON_LD_RENDERING_HIERARCHICAL => Validation.succeed(Some(HierarchicalJsonLD))
-      case header                         => Validation.fail(BadRequestException(s"Unrecognised JSON-LD rendering: $header"))
-    }
-  }
+  private def firstHeaderValue(ctx: RequestContext, headerName: String): Option[String] =
+    ctx.request.headers.find(_.lowercaseName == headerName).map(_.value)
+
+  private def getJsonLDRendering(ctx: RequestContext): Validation[BadRequestException, Option[JsonLdRendering]] =
+    firstHeaderValue(ctx, xKnoraJsonLdRendering)
+      .map(JsonLdRendering.from)
+      .fold[Validation[BadRequestException, Option[JsonLdRendering]]](Validation.succeed(None))(
+        Validation.fromEither(_).map(Some(_)).mapError(BadRequestException(_))
+      )
 
   /**
    * Gets the schema options submitted in the request.
