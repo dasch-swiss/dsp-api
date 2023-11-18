@@ -47,7 +47,6 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -1746,7 +1745,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
       // Get the resource without markup.
       val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}")
-        .addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(
+        .addHeader(new MarkupHeader("standoff")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)

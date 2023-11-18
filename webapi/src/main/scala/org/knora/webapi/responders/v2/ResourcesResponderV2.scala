@@ -15,6 +15,7 @@ import scala.concurrent.Future
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.MarkupRendering.Standoff
 import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -1594,7 +1595,7 @@ final case class ResourcesResponderV2Live(
       resources <- getResourcesV2(
                      resourceIris = Vector(gravsearchTemplateIri),
                      targetSchema = ApiV2Complex,
-                     schemaOptions = Set(MarkupAsStandoff),
+                     schemaOptions = Set(MarkupRendering.Standoff),
                      requestingUser = requestingUser
                    )
 
@@ -1759,7 +1760,7 @@ final case class ResourcesResponderV2Live(
                        .mapAttempt(GravsearchParser.parseQuery)
 
             resource <- searchResponderV2
-                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupAsXml), requestingUser)
+                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
                           .mapAttempt(_.toResource(resourceIri))
           } yield resource
 
@@ -2272,7 +2273,7 @@ final case class ResourcesResponderV2Live(
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
       searchResponse <- searchResponderV2.gravsearchV2(
                           parsedGravsearchQuery,
-                          apiV2SchemaWithOption(MarkupAsStandoff),
+                          apiV2SchemaWithOption(Standoff),
                           request.requestingUser
                         )
 

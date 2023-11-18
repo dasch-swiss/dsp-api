@@ -52,7 +52,7 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = anonymousUser
         )
       )
@@ -69,7 +69,7 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = SharedTestDataADM.anythingUser1
         )
       )
@@ -86,7 +86,7 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = SharedTestDataADM.anythingUser1
         )
       )
@@ -103,7 +103,7 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = true,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = SharedTestDataADM.anythingUser1
         )
       )
@@ -125,7 +125,7 @@ class SearchResponderV2Spec extends CoreSpec {
       val searchResult = UnsafeZioRun.runOrThrow(
         SearchResponderV2.gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           anonymousUser
         )
       )
@@ -141,7 +141,7 @@ class SearchResponderV2Spec extends CoreSpec {
       val searchResult = UnsafeZioRun.runOrThrow(
         SearchResponderV2.gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           anonymousUser
         )
       )
@@ -214,7 +214,7 @@ class SearchResponderV2Spec extends CoreSpec {
           resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
           page = 0,
-          schemaAndOptions = SchemaAndOptions.apiV2SchemaWithOption(MarkupAsXml),
+          schemaAndOptions = SchemaAndOptions.apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
         )
       )
@@ -231,7 +231,7 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = SharedTestDataADM.anythingUser1
         )
       )
@@ -251,7 +251,7 @@ class SearchResponderV2Spec extends CoreSpec {
           limitToResourceClass = None,
           limitToStandoffClass = None,
           returnFiles = false,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = SharedTestDataADM.anythingUser1
         )
       )
@@ -266,7 +266,7 @@ class SearchResponderV2Spec extends CoreSpec {
       val searchResult = UnsafeZioRun.runOrThrow(
         SearchResponderV2.gravsearchV2(
           searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject,
-          apiV2SchemaWithOption(MarkupAsXml),
+          apiV2SchemaWithOption(MarkupRendering.Xml),
           anonymousUser
         )
       )
@@ -276,7 +276,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "perform an extended search ordered asc by label" in {
       val queryAsc = searchResponderV2SpecFullData.constructQuerySortByLabel
       val ascResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(queryAsc, apiV2SchemaWithOption(MarkupAsXml), anonymousUser)
+        SearchResponderV2.gravsearchV2(queryAsc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser)
       )
       assert(ascResult.resources.head.label == "A blue thing")
     }
@@ -284,7 +284,7 @@ class SearchResponderV2Spec extends CoreSpec {
     "perform an extended search ordered desc by label" in {
       val queryDesc = searchResponderV2SpecFullData.constructQuerySortByLabelDesc
       val descResult = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.gravsearchV2(queryDesc, apiV2SchemaWithOption(MarkupAsXml), anonymousUser)
+        SearchResponderV2.gravsearchV2(queryDesc, apiV2SchemaWithOption(MarkupRendering.Xml), anonymousUser)
       )
       assert(descResult.resources.head.label == "visible thing with hidden int values")
     }

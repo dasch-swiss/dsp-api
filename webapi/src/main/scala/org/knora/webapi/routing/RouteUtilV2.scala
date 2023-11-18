@@ -18,8 +18,9 @@ import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.search.api.ApiV2
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.{xKnoraAcceptSchemaHeader, xKnoraJsonLdRendering}
-import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schemaQueryParam
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.{xKnoraAcceptMarkup, xKnoraAcceptSchemaHeader, xKnoraJsonLdRendering}
+import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams
+import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schema
 import zio.*
 import zio.prelude.Validation
 
@@ -30,29 +31,6 @@ import scala.util.control.Exception.catching
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
  */
 object RouteUtilV2 {
-
-  /**
-   * The name of the URL parameter that can be used to specify how markup should be returned
-   * with text values.
-   */
-  private val MARKUP_PARAM: String = "markup"
-
-  /**
-   * The name of the HTTP header that can be used to specify how markup should be returned with
-   * text values.
-   */
-  val MARKUP_HEADER: String = "x-knora-accept-markup"
-
-  /**
-   * Indicates that standoff markup should be returned as XML with text values.
-   */
-  private val MARKUP_XML: String = "xml"
-
-  /**
-   * Indicates that markup should not be returned with text values, because it will be requested
-   * separately as standoff.
-   */
-  val MARKUP_STANDOFF: String = "standoff"
 
   def getStringQueryParam(ctx: RequestContext, key: String): Option[String] = getQueryParamsMap(ctx).get(key)
   private def getQueryParamsMap(ctx: RequestContext): Map[String, String]   = ctx.request.uri.query().toMap
@@ -69,7 +47,7 @@ object RouteUtilV2 {
     def stringToSchema(str: String): IO[BadRequestException, ApiV2Schema] =
       ZIO.fromEither(ApiV2Schema.from(str)).mapError(BadRequestException(_))
     def fromQueryParams: Option[IO[BadRequestException, ApiV2Schema]] =
-      ctx.request.uri.query().get(schemaQueryParam).map(stringToSchema)
+      ctx.request.uri.query().get(schema).map(stringToSchema)
     def fromHeaders: Option[IO[BadRequestException, ApiV2Schema]] =
       ctx.request.headers.find(_.lowercaseName == xKnoraAcceptSchemaHeader).map(h => stringToSchema(h.value))
     fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2.defaultApiV2Schema))
@@ -77,35 +55,21 @@ object RouteUtilV2 {
 
   /**
    * Gets the type of standoff rendering that should be used when returning text with standoff.
-   * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
-   * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
-   * default of [[MarkupAsXml]] is returned.
+   * The name of the standoff rendering can be specified either as HTTP header or query parameter.
    *
-   * @param requestContext the pekko-http [[RequestContext]].
-   * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
-   *         in the request.
+   * @param ctx the pekko-http [[RequestContext]].
+   * @return the optional rendering that was specified in the request.
    */
-  private def getStandoffRendering(
-    requestContext: RequestContext
-  ): Validation[BadRequestException, Option[MarkupRendering]] = {
-    def nameToStandoffRendering(standoffRenderingName: String): Validation[BadRequestException, MarkupRendering] =
-      standoffRenderingName match {
-        case MARKUP_XML      => Validation.succeed(MarkupAsXml)
-        case MARKUP_STANDOFF => Validation.succeed(MarkupAsStandoff)
-        case _               => Validation.fail(BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName"))
-      }
-
-    val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-    params.get(MARKUP_PARAM) match {
-      case Some(schemaParam) => nameToStandoffRendering(schemaParam).map(Some(_))
-
-      case None =>
-        firstHeaderValue(requestContext, MARKUP_HEADER)
-          .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
-            nameToStandoffRendering(_).map(Some(_))
-          )
-    }
+  private def getStandoffRendering(ctx: RequestContext): Validation[BadRequestException, Option[MarkupRendering]] = {
+    def toMarkupRendering(str: String) = MarkupRendering.from(str).left.map(BadRequestException(_)).map(Some(_))
+    def fromQueryParam                 = getStringQueryParam(ctx, QueryParams.markup)
+    def fromHeader                     = firstHeaderValue(ctx, xKnoraAcceptMarkup)
+    fromQueryParam
+      .orElse(fromHeader)
+      .map(toMarkupRendering)
+      .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
+        Validation.fromEither(_)
+      )
   }
 
   private def firstHeaderValue(ctx: RequestContext, headerName: String): Option[String] =
@@ -113,9 +77,9 @@ object RouteUtilV2 {
 
   private def getJsonLDRendering(ctx: RequestContext): Validation[BadRequestException, Option[JsonLdRendering]] =
     firstHeaderValue(ctx, xKnoraJsonLdRendering)
-      .map(JsonLdRendering.from)
+      .map(JsonLdRendering.from(_).left.map(BadRequestException(_)).map(Some(_)))
       .fold[Validation[BadRequestException, Option[JsonLdRendering]]](Validation.succeed(None))(
-        Validation.fromEither(_).map(Some(_)).mapError(BadRequestException(_))
+        Validation.fromEither
       )
 
   /**

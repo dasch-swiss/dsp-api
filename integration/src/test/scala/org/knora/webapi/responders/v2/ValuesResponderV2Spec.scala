@@ -200,7 +200,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
     val result = UnsafeZioRun.runOrThrow(
       SearchResponderV2.gravsearchV2(
         GravsearchParser.parseQuery(gravsearchQuery),
-        SchemaAndOptions.apiV2SchemaWithOption(MarkupAsXml),
+        SchemaAndOptions.apiV2SchemaWithOption(MarkupRendering.Xml),
         requestingUser
       )
     )

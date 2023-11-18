@@ -63,30 +63,43 @@ object ApiV2Schema {
 /**
  * A trait representing options that can be submitted to configure an ontology schema.
  */
-sealed trait SchemaOption
+sealed trait SchemaOption {
+  def name: String
+}
 
 /**
  * A trait representing options that affect the rendering of markup when text values are returned.
  */
 sealed trait MarkupRendering extends SchemaOption
 
-/**
- * Indicates that markup should be rendered as XML when text values are returned.
- */
-case object MarkupAsXml extends MarkupRendering
+object MarkupRendering {
 
-/**
- * Indicates that markup should not be returned with text values, because it will be requested
- * separately as standoff.
- */
-case object MarkupAsStandoff extends MarkupRendering
+  /**
+   * Indicates that standoff markup should be returned as XML with text values.
+   */
+  case object Xml extends MarkupRendering {
+    override val name: String = "xml"
+  }
+
+  /**
+   * Indicates that markup should not be returned with text values, because it will be requested
+   * separately as standoff.
+   */
+  case object Standoff extends MarkupRendering {
+    override val name: String = "standoff"
+  }
+
+  def from(str: String): Either[String, MarkupRendering] = str.toLowerCase match {
+    case Xml.name      => Right(Xml)
+    case Standoff.name => Right(Standoff)
+    case _             => Left(s"Unrecognised markup rendering name: $str")
+  }
+}
 
 /**
  * A trait representing options that affect the format of JSON-LD responses.
  */
-sealed trait JsonLdRendering extends SchemaOption {
-  def name: String
-}
+sealed trait JsonLdRendering extends SchemaOption
 
 object JsonLdRendering {
 
@@ -122,7 +135,7 @@ object SchemaOptions {
   /**
    * A set of schema options for querying all standoff markup along with text values.
    */
-  val ForStandoffWithTextValues: Set[SchemaOption] = Set(MarkupAsXml)
+  val ForStandoffWithTextValues: Set[SchemaOption] = Set(MarkupRendering.Xml)
 
   /**
    * Determines whether standoff should be queried when a text value is queried.
@@ -132,7 +145,7 @@ object SchemaOptions {
    * @return `true` if standoff should be queried.
    */
   def queryStandoffWithTextValues(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean =
-    targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupAsStandoff)
+    targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupRendering.Standoff)
 
   /**
    * Determines whether markup should be rendered as XML.
@@ -142,7 +155,7 @@ object SchemaOptions {
    * @return `true` if markup should be rendered as XML.
    */
   def renderMarkupAsXml(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean =
-    targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupAsStandoff)
+    targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupRendering.Standoff)
 
   /**
    * Determines whether markup should be rendered as standoff, separately from text values.
@@ -152,7 +165,7 @@ object SchemaOptions {
    * @return `true` if markup should be rendered as standoff.
    */
   def renderMarkupAsStandoff(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean =
-    targetSchema == ApiV2Complex && schemaOptions.contains(MarkupAsStandoff)
+    targetSchema == ApiV2Complex && schemaOptions.contains(MarkupRendering.Standoff)
 
   /**
    * Determines whether flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI

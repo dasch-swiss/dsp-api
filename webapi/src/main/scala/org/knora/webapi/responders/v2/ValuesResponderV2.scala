@@ -1974,8 +1974,9 @@ final case class ValuesResponderV2Live(
           .toString()
 
       // Run the query.
-      query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <- searchResponderV2.gravsearchV2(query, apiV2SchemaWithOption(MarkupAsXml), requestingUser)
+      query <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
+      searchResponse <-
+        searchResponderV2.gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
     } yield searchResponse.toResource(resourceIri)
 
   /**
