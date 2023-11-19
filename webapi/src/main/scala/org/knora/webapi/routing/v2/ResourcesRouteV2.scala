@@ -172,7 +172,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         projectIri           <- getProjectIri
         page                 <- getPage
         targetSchema <- targetSchemaTask.zip(RouteUtilV2.getSchemaOptions(requestContext)).map {
-                          case (schema, options) => SchemaAndOptions(schema, options)
+                          case (schema, options) => SchemaRendering(schema, options)
                         }
         requestingUser <- Authenticator.getUserADM(requestContext)
         response <- SearchResponderV2.searchResourcesByProjectAndClassV2(

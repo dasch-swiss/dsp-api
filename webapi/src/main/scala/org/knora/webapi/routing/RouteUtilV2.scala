@@ -93,7 +93,7 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  def getSchemaOptions(requestContext: RequestContext): IO[BadRequestException, Set[SchemaOption]] =
+  def getSchemaOptions(requestContext: RequestContext): IO[BadRequestException, Set[Rendering]] =
     Validation
       .validateWith(
         getStandoffRendering(requestContext),
@@ -132,7 +132,7 @@ object RouteUtilV2 {
     requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none
   )(implicit runtime: Runtime[R & MessageRelay & AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
     completeResponse(responseZio, requestContext, targetSchemaTask, schemaOptionsOption)
@@ -159,7 +159,7 @@ object RouteUtilV2 {
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none
   )(implicit runtime: Runtime[R & AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
       targetSchema      <- targetSchemaTask

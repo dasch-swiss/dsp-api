@@ -6,51 +6,36 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import zio.*
-import zio.macros.accessible
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.errors.GravsearchException
-import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.{AssertionException, BadRequestException, GravsearchException, InconsistentRepositoryDataException}
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.*
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
-import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
-import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
-import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
-import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.{GravsearchToCountPrequeryTransformer, GravsearchToPrequeryTransformer, InferenceOptimizationService}
+import org.knora.webapi.messages.util.search.gravsearch.transformers.{ConstructTransformer, OntologyInferencer, SelectTransformer}
 import org.knora.webapi.messages.util.search.gravsearch.types.*
+import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap}
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Construct, Select}
 import org.knora.webapi.util.ApacheLuceneSupport.*
+import zio.*
+import zio.macros.accessible
 
 /**
  * Represents the number of resources found by a search query.
@@ -59,7 +44,7 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraJsonLDResponseV2
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument =
     JsonLDDocument(
       body = JsonLDObject(
@@ -87,9 +72,18 @@ trait SearchResponderV2 {
    */
   def gravsearchV2(
     query: ConstructQuery,
-    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
     user: UserADM
   ): Task[ReadResourcesSequenceV2]
+
+  def gravsearchV2(
+    query: String,
+    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    user: UserADM
+  ): Task[ReadResourcesSequenceV2] = for {
+    q <- ZIO.attempt(GravsearchParser.parseQuery(query))
+    r <- gravsearchV2(q, schemaAndOptions, user)
+  } yield r
 
   /**
    * Performs a count query for a Gravsearch query provided by the user.
@@ -138,7 +132,7 @@ trait SearchResponderV2 {
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
-    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2]
 
@@ -192,7 +186,7 @@ trait SearchResponderV2 {
     resourceClass: SmartIri,
     orderByProperty: Option[SmartIri],
     page: RuntimeFlags,
-    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2]
 }
@@ -277,7 +271,7 @@ final case class SearchResponderV2Live(
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
-    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
@@ -342,7 +336,7 @@ final case class SearchResponderV2Live(
             resourceIris = resourceIris.toSet,
             valueObjectIris = allValueObjectIris,
             targetSchema = schemaAndOptions.schema,
-            schemaOptions = schemaAndOptions.options
+            schemaOptions = schemaAndOptions.rendering
           )
 
           for {
@@ -360,7 +354,7 @@ final case class SearchResponderV2Live(
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
                                  targetSchema = schemaAndOptions.schema,
-                                 schemaOptions = schemaAndOptions.options
+                                 schemaOptions = schemaAndOptions.rendering
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
@@ -457,7 +451,7 @@ final case class SearchResponderV2Live(
 
   override def gravsearchV2(
     query: ConstructQuery,
-    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
     user: UserADM
   ): Task[ReadResourcesSequenceV2] = {
 
@@ -588,7 +582,7 @@ final case class SearchResponderV2Live(
             dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
             valueObjectIris = allValueObjectIris,
             targetSchema = schemaAndOptions.schema,
-            schemaOptions = schemaAndOptions.options
+            schemaOptions = schemaAndOptions.rendering
           )
 
           for {
@@ -624,7 +618,7 @@ final case class SearchResponderV2Live(
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
                                  targetSchema = schemaAndOptions.schema,
-                                 schemaOptions = schemaAndOptions.options
+                                 schemaOptions = schemaAndOptions.rendering
                                )
 
       // If we're querying standoff, get XML-to standoff mappings.
@@ -665,7 +659,7 @@ final case class SearchResponderV2Live(
     resourceClass: SmartIri,
     orderByProperty: Option[SmartIri],
     page: Int,
-    schemaAndOptions: SchemaAndOptions[ApiV2Schema, SchemaOption],
+    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
     val internalClassIri = resourceClass.toOntologySchema(InternalSchema)
@@ -769,7 +763,7 @@ final case class SearchResponderV2Live(
       // ConstructResponseUtilV2.makeTextValueContentV2.
       queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
                                  targetSchema = ApiV2Complex,
-                                 schemaOptions = schemaAndOptions.options
+                                 schemaOptions = schemaAndOptions.rendering
                                )
 
       // Are there any matching resources?

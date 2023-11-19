@@ -5,16 +5,8 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.ApiV2Simple
-import org.knora.webapi.IRI
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.OntologySchema
-import org.knora.webapi.SchemaOption
-import org.knora.webapi.SchemaOptions
+import dsp.errors.{AssertionException, BadRequestException}
+import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -37,7 +29,7 @@ trait KnoraResponseV2 {
   def format(
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
-    schemaOptions: Set[SchemaOption],
+    schemaOptions: Set[Rendering],
     appConfig: AppConfig
   ): String
 }
@@ -50,7 +42,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
   override def format(
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
-    schemaOptions: Set[SchemaOption],
+    schemaOptions: Set[Rendering],
     appConfig: AppConfig
   ): String = {
     val targetApiV2Schema = targetSchema match {
@@ -94,7 +86,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
   protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument
 }
 
@@ -112,7 +104,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
   override def format(
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
-    schemaOptions: Set[SchemaOption],
+    schemaOptions: Set[Rendering],
     appConfig: AppConfig
   ): String = {
     if (targetSchema != InternalSchema) {
@@ -149,7 +141,7 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     val (ontologyPrefixExpansion, resultProp) = targetSchema match {
       case ApiV2Simple =>
@@ -185,7 +177,7 @@ final case class CanDoResponseV2(
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
       throw BadRequestException(s"Response is available only in the complex schema")

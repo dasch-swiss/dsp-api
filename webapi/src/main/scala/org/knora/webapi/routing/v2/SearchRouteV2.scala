@@ -178,7 +178,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           limitToStandoffClass <- getStandoffClass(params)
           returnFiles           = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
           requestingUser       <- Authenticator.getUserADM(requestContext)
-          schemaAndOptions     <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
+          schemaAndOptions     <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaRendering(s, o) }
           response <- SearchResponderV2.fulltextSearchV2(
                         escapedSearchStr,
                         offset,
@@ -228,7 +228,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
     val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
     val task = for {
-      schemaAndOptions <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
+      schemaAndOptions <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaRendering(s, o) }
       user             <- Authenticator.getUserADM(requestContext)
       response         <- SearchResponderV2.gravsearchV2(constructQuery, schemaAndOptions, user)
     } yield response

@@ -5,26 +5,13 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.apache.pekko
+import dsp.errors.{BadRequestException, InvalidRdfException}
+import org.apache.pekko.http.scaladsl.model.MediaType
+import org.knora.webapi.{IRI, RdfMediaTypes, Rendering, SchemaOptions}
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.InputStream
-import java.io.OutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import dsp.errors.BadRequestException
-import dsp.errors.InvalidRdfException
-import org.knora.webapi.IRI
-import org.knora.webapi.RdfMediaTypes
-import org.knora.webapi.SchemaOption
-import org.knora.webapi.SchemaOptions
-
-import pekko.http.scaladsl.model.MediaType
+import java.io.{BufferedInputStream, BufferedOutputStream, InputStream, OutputStream}
+import java.nio.file.{Files, Path}
+import scala.util.{Failure, Success, Try}
 
 /**
  * A trait for supported RDF formats.
@@ -35,6 +22,7 @@ sealed trait RdfFormat {
    * The [[MediaType]] that represents this format.
    */
   val toMediaType: MediaType
+  def mediaType: sttp.model.MediaType
 }
 
 /**
@@ -78,7 +66,8 @@ object RdfFormat {
 case object JsonLD extends RdfFormat {
   override def toString: String = "JSON-LD"
 
-  override val toMediaType: MediaType = RdfMediaTypes.`application/ld+json`
+  override val toMediaType: MediaType          = RdfMediaTypes.`application/ld+json`
+  override val mediaType: sttp.model.MediaType = sttp.model.MediaType.unsafeApply("application", "ld+json")
 }
 
 /**
@@ -87,7 +76,8 @@ case object JsonLD extends RdfFormat {
 case object Turtle extends NonJsonLD {
   override def toString: String = "Turtle"
 
-  override val toMediaType: MediaType = RdfMediaTypes.`text/turtle`
+  override val toMediaType: MediaType          = RdfMediaTypes.`text/turtle`
+  override val mediaType: sttp.model.MediaType = sttp.model.MediaType.unsafeApply("text", "turtle")
 
   override val supportsPrettyPrinting: Boolean = true
 }
@@ -100,6 +90,8 @@ case object TriG extends QuadFormat {
 
   override val toMediaType: MediaType = RdfMediaTypes.`application/trig`
 
+  override val mediaType: sttp.model.MediaType = sttp.model.MediaType.unsafeApply("application", "trig")
+
   override val supportsPrettyPrinting: Boolean = true
 }
 
@@ -109,7 +101,8 @@ case object TriG extends QuadFormat {
 case object RdfXml extends NonJsonLD {
   override def toString: String = "RDF/XML"
 
-  override val toMediaType: MediaType = RdfMediaTypes.`application/rdf+xml`
+  override val toMediaType: MediaType          = RdfMediaTypes.`application/rdf+xml`
+  override val mediaType: sttp.model.MediaType = sttp.model.MediaType.unsafeApply("application", "rdf+xml")
 
   override val supportsPrettyPrinting: Boolean = true
 }
@@ -120,7 +113,8 @@ case object RdfXml extends NonJsonLD {
 case object NQuads extends QuadFormat {
   override def toString: String = "N-Quads"
 
-  override val toMediaType: MediaType = RdfMediaTypes.`application/n-quads`
+  override val toMediaType: MediaType          = RdfMediaTypes.`application/n-quads`
+  override val mediaType: sttp.model.MediaType = sttp.model.MediaType.unsafeApply("application", "n-quads")
 
   override val supportsPrettyPrinting: Boolean = false
 }
@@ -234,7 +228,7 @@ trait RdfFormatUtil {
   def format(
     rdfModel: RdfModel,
     rdfFormat: RdfFormat,
-    schemaOptions: Set[SchemaOption] = Set.empty,
+    schemaOptions: Set[Rendering] = Set.empty,
     prettyPrint: Boolean = true
   ): String =
     rdfFormat match {

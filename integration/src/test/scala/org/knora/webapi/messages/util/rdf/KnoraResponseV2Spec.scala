@@ -121,7 +121,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
     override protected def toJsonLDDocument(
       targetSchema: ApiV2Schema,
       appConfig: AppConfig,
-      schemaOptions: Set[SchemaOption]
+      schemaOptions: Set[Rendering]
     ): JsonLDDocument = jsonLDDocument
   }
 

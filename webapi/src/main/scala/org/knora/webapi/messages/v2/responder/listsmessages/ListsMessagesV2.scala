@@ -75,7 +75,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -203,7 +203,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
@@ -214,7 +214,7 @@ class SearchResponderV2Spec extends CoreSpec {
           resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
           orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
           page = 0,
-          schemaAndOptions = SchemaAndOptions.apiV2SchemaWithOption(MarkupRendering.Xml),
+          schemaAndOptions = SchemaRendering.apiV2SchemaWithOption(MarkupRendering.Xml),
           requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
         )
       )

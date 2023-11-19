@@ -64,14 +64,14 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 with RelayedMess
  * @param requestingUser       the user making the request.
  */
 case class ResourcesGetRequestV2(
-  resourceIris: Seq[IRI],
-  propertyIri: Option[SmartIri] = None,
-  valueUuid: Option[UUID] = None,
-  versionDate: Option[Instant] = None,
-  withDeleted: Boolean = true,
-  targetSchema: ApiV2Schema,
-  schemaOptions: Set[SchemaOption] = Set.empty,
-  requestingUser: UserADM
+                                  resourceIris: Seq[IRI],
+                                  propertyIri: Option[SmartIri] = None,
+                                  valueUuid: Option[UUID] = None,
+                                  versionDate: Option[Instant] = None,
+                                  withDeleted: Boolean = true,
+                                  targetSchema: ApiV2Schema,
+                                  schemaOptions: Set[Rendering] = Set.empty,
+                                  requestingUser: UserADM
 ) extends ResourcesResponderRequestV2
 
 /**
@@ -111,7 +111,7 @@ case class ResourceIIIFManifestGetResponseV2(manifest: JsonLDDocument) extends K
   override protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = manifest
 }
 
@@ -190,7 +190,7 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -427,7 +427,7 @@ case class ReadResourceV2(
   def toJsonLD(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -985,7 +985,7 @@ case class UpdateResourceMetadataResponseV2(
   override protected def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1155,7 +1155,7 @@ case class ReadResourcesSequenceV2(
   private def generateJsonLD(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     val resourcesJsonObjects: Seq[JsonLDObject] = resources.map { (resource: ReadResourceV2) =>
       resource.toJsonLD(
@@ -1215,7 +1215,7 @@ case class ReadResourcesSequenceV2(
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption] = Set.empty
+    schemaOptions: Set[Rendering] = Set.empty
   ): JsonLDDocument =
     toOntologySchema(targetSchema).generateJsonLD(
       targetSchema = targetSchema,
@@ -1440,7 +1440,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument =
     toOntologySchema(targetSchema).generateJsonLD(targetSchema)
 
@@ -1497,7 +1497,7 @@ case class ResourceEventBody(
   def toJsonLD(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1625,7 +1625,7 @@ case class ValueEventBody(
   def toJsonLD(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1694,7 +1694,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

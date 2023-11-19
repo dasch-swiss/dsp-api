@@ -11,12 +11,12 @@ import org.knora.webapi.JsonLdRendering.Flat
  * Indicates the schema that a Knora ontology or ontology entity conforms to
  * and its options that can be submitted to configure an ontology schema.
  */
-case class SchemaAndOptions[S <: OntologySchema, O <: SchemaOption](schema: S, options: Set[O])
-object SchemaAndOptions {
-  def apiV2SchemaWithOption[O <: SchemaOption](option: O): SchemaAndOptions[ApiV2Schema, O] =
+case class SchemaRendering[S <: OntologySchema, O <: Rendering](schema: S, rendering: Set[O])
+object SchemaRendering {
+  def apiV2SchemaWithOption[O <: Rendering](option: O): SchemaRendering[ApiV2Schema, O] =
     apiV2SchemaWithOptions(Set(option))
-  def apiV2SchemaWithOptions[O <: SchemaOption](options: Set[O]): SchemaAndOptions[ApiV2Schema, O] =
-    SchemaAndOptions[ApiV2Schema, O](ApiV2Complex, options)
+  def apiV2SchemaWithOptions[O <: Rendering](options: Set[O]): SchemaRendering[ApiV2Schema, O] =
+    SchemaRendering[ApiV2Schema, O](ApiV2Complex, options)
 }
 
 /**
@@ -63,14 +63,14 @@ object ApiV2Schema {
 /**
  * A trait representing options that can be submitted to configure an ontology schema.
  */
-sealed trait SchemaOption {
+sealed trait Rendering {
   def name: String
 }
 
 /**
  * A trait representing options that affect the rendering of markup when text values are returned.
  */
-sealed trait MarkupRendering extends SchemaOption
+sealed trait MarkupRendering extends Rendering
 
 object MarkupRendering {
 
@@ -99,7 +99,7 @@ object MarkupRendering {
 /**
  * A trait representing options that affect the format of JSON-LD responses.
  */
-sealed trait JsonLdRendering extends SchemaOption
+sealed trait JsonLdRendering extends Rendering
 
 object JsonLdRendering {
 
@@ -135,7 +135,7 @@ object SchemaOptions {
   /**
    * A set of schema options for querying all standoff markup along with text values.
    */
-  val ForStandoffWithTextValues: Set[SchemaOption] = Set(MarkupRendering.Xml)
+  val ForStandoffWithTextValues: Set[Rendering] = Set(MarkupRendering.Xml)
 
   /**
    * Determines whether standoff should be queried when a text value is queried.
@@ -144,7 +144,7 @@ object SchemaOptions {
    * @param schemaOptions the schema options submitted with the request.
    * @return `true` if standoff should be queried.
    */
-  def queryStandoffWithTextValues(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean =
+  def queryStandoffWithTextValues(targetSchema: ApiV2Schema, schemaOptions: Set[Rendering]): Boolean =
     targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupRendering.Standoff)
 
   /**
@@ -154,18 +154,8 @@ object SchemaOptions {
    * @param schemaOptions the schema options submitted with the request.
    * @return `true` if markup should be rendered as XML.
    */
-  def renderMarkupAsXml(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean =
+  def renderMarkupAsXml(targetSchema: ApiV2Schema, schemaOptions: Set[Rendering]): Boolean =
     targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupRendering.Standoff)
-
-  /**
-   * Determines whether markup should be rendered as standoff, separately from text values.
-   *
-   * @param targetSchema  the target API schema.
-   * @param schemaOptions the schema options submitted with the request.
-   * @return `true` if markup should be rendered as standoff.
-   */
-  def renderMarkupAsStandoff(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean =
-    targetSchema == ApiV2Complex && schemaOptions.contains(MarkupRendering.Standoff)
 
   /**
    * Determines whether flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
@@ -174,6 +164,6 @@ object SchemaOptions {
    * @param schemaOptions the schema options submitted with the request.
    * @return `true` if flat JSON-LD should be returned.
    */
-  def returnFlatJsonLD(schemaOptions: Set[SchemaOption]): Boolean =
+  def returnFlatJsonLD(schemaOptions: Set[Rendering]): Boolean =
     schemaOptions.contains(Flat)
 }

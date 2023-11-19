@@ -5,34 +5,72 @@
 
 package org.knora.webapi.slice.search.search.api
 
-import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.*
-import zio.ZLayer
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers
-import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams
-import org.knora.webapi.slice.search.search.api.ApiV2.defaultApiV2Schema
-import org.knora.webapi.slice.search.search.api.ApiV2Codecs.apiV2Schema
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.util.rdf.{JsonLD, RdfFormat}
+import org.knora.webapi.messages.v2.responder.KnoraResponseV2
+import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.slice.common.api.{BaseEndpoints, SecuredEndpointAndZioHandler}
+import org.knora.webapi.slice.search.search.api.ApiV2.{Headers, QueryParams, defaultApiV2Schema}
+import org.knora.webapi.slice.search.search.api.ApiV2Codecs.apiV2SchemaRendering
+import sttp.model.{HeaderNames, MediaType}
+import sttp.tapir.*
+import sttp.tapir.Codec.PlainCodec
+import zio.{Task, ZIO, ZLayer}
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val tags       = List("v2", "search")
   private val searchBase = "v2" / "searchextended"
 
-  val postGravsearch = baseEndpoints.withUserEndpoint.post
+  val postGravsearch = baseEndpoints.securedEndpoint.post
     .in(searchBase / "gravsearch")
-    .in(apiV2Schema)
     .in(stringBody)
+    .in(apiV2SchemaRendering)
     .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
     .description("Search for resources using a Gravsearch query.")
 }
 
 object SearchEndpoints {
   val layer = ZLayer.derive[SearchEndpoints]
+}
+
+final case class SearchEndpointsHandler(
+  searchEndpoints: SearchEndpoints,
+  searchResponderV2: SearchResponderV2,
+  renderer: KnoraResponseRenderer
+) {
+
+  val postGravsearch =
+    SecuredEndpointAndZioHandler[(String, SchemaRendering[ApiV2Schema, Rendering]), (String, MediaType)](
+      searchEndpoints.postGravsearch,
+      (user: UserADM) => { case (query: String, s: SchemaRendering[ApiV2Schema, Rendering]) =>
+        searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, JsonLD, s))
+      }
+    )
+}
+
+object SearchEndpointsHandler {
+  val layer = ZLayer.derive[SearchEndpointsHandler]
+}
+
+final class KnoraResponseRenderer(appConfig: AppConfig) {
+  def render(
+    response: KnoraResponseV2,
+    format: RdfFormat,
+    rendering: SchemaRendering[ApiV2Schema, Rendering]
+  ): Task[(String, MediaType)] =
+    ZIO
+      .attempt(response.format(format, rendering.schema, rendering.rendering, appConfig))
+      .map((_, format.mediaType))
+}
+object KnoraResponseRenderer {
+
+  val layer = ZLayer.derive[KnoraResponseRenderer]
 }
 
 object ApiV2 {
@@ -78,8 +116,8 @@ object ApiV2Codecs {
   private def codecFromStringCodec[A](f: String => Either[String, A], g: A => String): PlainCodec[A] =
     Codec.string.mapDecode(f(_).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_)))(g)
 
-  implicit val apiV2SchemaCodec: PlainCodec[ApiV2Schema] = codecFromStringCodec(ApiV2Schema.from, _.name)
-  implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
+  private implicit val apiV2SchemaCodec: PlainCodec[ApiV2Schema] = codecFromStringCodec(ApiV2Schema.from, _.name)
+  private implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
     Codec.listHeadOption(apiV2SchemaCodec)
 
   private val apiV2SchemaHeader = header[Option[ApiV2Schema]](Headers.xKnoraAcceptSchemaHeader)
@@ -89,7 +127,7 @@ object ApiV2Codecs {
     .description(s"""The ontology schema to be used for the request. 
                     |If not specified, the default schema $defaultApiV2Schema will be used.""".stripMargin)
 
-  val apiV2Schema: EndpointInput[ApiV2Schema] =
+  private val apiV2Schema: EndpointInput[ApiV2Schema] =
     apiV2SchemaHeader
       .and(apiV2SchemaQuery)
       .map(_ match {
@@ -98,18 +136,18 @@ object ApiV2Codecs {
         case _                     => defaultApiV2Schema
       })(s => (Some(s), Some(s)))
 
-  implicit val jsonLdRenderingCodec: PlainCodec[JsonLdRendering] =
+  private implicit val jsonLdRenderingCodec: PlainCodec[JsonLdRendering] =
     codecFromStringCodec(JsonLdRendering.from, _.name)
-  implicit val jsonLdRenderingListCode: Codec[List[String], Option[JsonLdRendering], CodecFormat.TextPlain] =
+  private implicit val jsonLdRenderingListCode: Codec[List[String], Option[JsonLdRendering], CodecFormat.TextPlain] =
     Codec.listHeadOption(jsonLdRenderingCodec)
 
   private val jsonLdRenderingHeader = header[Option[JsonLdRendering]](Headers.xKnoraJsonLdRendering)
     .description(s"""The JSON-LD rendering to be used for the request (flat or hierarchical). 
                     |If not specified, hierarchical JSON-LD will be used.""".stripMargin)
 
-  implicit val markupRenderingCodec: PlainCodec[MarkupRendering] =
+  private implicit val markupRenderingCodec: PlainCodec[MarkupRendering] =
     codecFromStringCodec(MarkupRendering.from, _.name)
-  implicit val markupRenderingListCode: Codec[List[String], Option[MarkupRendering], CodecFormat.TextPlain] =
+  private implicit val markupRenderingListCode: Codec[List[String], Option[MarkupRendering], CodecFormat.TextPlain] =
     Codec.listHeadOption(markupRenderingCodec)
 
   private val markupRenderingHeader = header[Option[MarkupRendering]](Headers.xKnoraAcceptMarkup)
@@ -125,13 +163,16 @@ object ApiV2Codecs {
         case _                                      => None
       })(s => (s, s))
 
-  val apiV2Rendering: EndpointInput[Set[SchemaOption]] =
+  private val apiV2Rendering: EndpointInput[Set[Rendering]] =
     jsonLdRenderingHeader
       .and(markupRendering)
-      .map(tuple => Set(tuple._1, tuple._2).flatten)((s: Set[SchemaOption]) =>
+      .map(tuple => Set(tuple._1, tuple._2).flatten)((s: Set[Rendering]) =>
         (
           s.collectFirst { case jsonLd: JsonLdRendering => jsonLd },
           s.collectFirst { case standoff: MarkupRendering => standoff }
         )
       )
+
+  val apiV2SchemaRendering: EndpointInput[SchemaRendering[ApiV2Schema, Rendering]] =
+    apiV2Schema.and(apiV2Rendering).map(t => SchemaRendering(t._1, t._2))(s => (s.schema, s.rendering))
 }

@@ -14,7 +14,7 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
