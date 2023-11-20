@@ -27,7 +27,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels.FileModelUtil
@@ -198,19 +197,15 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       .toString()
 
     // Run the query.
-
-    val parsedGravsearchQuery = GravsearchParser.parseQuery(gravsearchQuery)
-
-    appActor ! GravsearchRequestV2(
-      constructQuery = parsedGravsearchQuery,
-      targetSchema = ApiV2Complex,
-      schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-      requestingUser = requestingUser
+    val result = UnsafeZioRun.runOrThrow(
+      SearchResponderV2.gravsearchV2(
+        GravsearchParser.parseQuery(gravsearchQuery),
+        SchemaAndOptions.apiV2SchemaWithOption(MarkupAsXml),
+        requestingUser
+      )
     )
 
-    expectMsgPF(timeout) { case searchResponse: ReadResourcesSequenceV2 =>
-      searchResponse.toResource(resourceIri).toOntologySchema(ApiV2Complex)
-    }
+    result.toResource(resourceIri).toOntologySchema(ApiV2Complex)
   }
 
   private def getValuesFromResource(resource: ReadResourceV2, propertyIriInResult: SmartIri): Seq[ReadValueV2] =

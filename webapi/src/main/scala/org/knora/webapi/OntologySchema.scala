@@ -6,6 +6,18 @@
 package org.knora.webapi
 
 /**
+ * Indicates the schema that a Knora ontology or ontology entity conforms to
+ * and its options that can be submitted to configure an ontology schema.
+ */
+case class SchemaAndOptions[S <: OntologySchema, O <: SchemaOption](schema: S, options: Set[O])
+object SchemaAndOptions {
+  def apiV2SchemaWithOption[O <: SchemaOption](option: O): SchemaAndOptions[ApiV2Schema, O] =
+    apiV2SchemaWithOptions(Set(option))
+  def apiV2SchemaWithOptions[O <: SchemaOption](options: Set[O]): SchemaAndOptions[ApiV2Schema, O] =
+    SchemaAndOptions[ApiV2Schema, O](ApiV2Complex, options)
+}
+
+/**
  * Indicates the schema that a Knora ontology or ontology entity conforms to.
  */
 sealed trait OntologySchema
@@ -84,11 +96,6 @@ object SchemaOptions {
    * A set of schema options for querying all standoff markup along with text values.
    */
   val ForStandoffWithTextValues: Set[SchemaOption] = Set(MarkupAsXml)
-
-  /**
-   * A set of schema options for querying standoff markup separately from text values.
-   */
-  val ForStandoffSeparateFromTextValues: Set[SchemaOption] = Set(MarkupAsStandoff)
 
   /**
    * Determines whether standoff should be queried when a text value is queried.

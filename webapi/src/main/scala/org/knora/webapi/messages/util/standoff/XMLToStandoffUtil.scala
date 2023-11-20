@@ -957,7 +957,7 @@ class XMLToStandoffUtil(
 
       val id = uuidsToDocumentSpecificIds.get(tag.uuid) match {
         case Some(documentSpecificId) => documentSpecificId
-        case None                     => UuidUtil.encode(tag.uuid, writeBase64IDs)
+        case None                     => if (writeBase64IDs) UuidUtil.base64Encode(tag.uuid) else tag.uuid.toString
       }
 
       val maybeIdAttr: Option[(String, String)] = if (writeUuidsToXml) {

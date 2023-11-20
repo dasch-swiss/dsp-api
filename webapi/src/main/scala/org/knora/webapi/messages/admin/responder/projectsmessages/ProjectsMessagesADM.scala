@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
@@ -38,8 +38,6 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages

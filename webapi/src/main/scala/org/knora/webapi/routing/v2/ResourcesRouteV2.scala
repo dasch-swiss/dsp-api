@@ -27,20 +27,21 @@ import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.iiif.api.SipiService
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & StringFormatter & IriConverter & MessageRelay & RestResourceInfoService
+    AppConfig & Authenticator & SearchResponderV2 & SipiService & StringFormatter & IriConverter & MessageRelay & RestResourceInfoService
   ]
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi
@@ -164,25 +165,26 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         .orElseFail(BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
 
       val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
-      val requestTask = for {
+      val response = for {
         maybeOrderByProperty <- getOrderByProperty
         resourceClass        <- getResourceClass
         projectIri           <- getProjectIri
         page                 <- getPage
-        targetSchema         <- targetSchemaTask
-        schemaOptions        <- RouteUtilV2.getSchemaOptions(requestContext)
-        requestingUser       <- Authenticator.getUserADM(requestContext)
-      } yield SearchResourcesByProjectAndClassRequestV2(
-        projectIri,
-        resourceClass,
-        maybeOrderByProperty,
-        page,
-        targetSchema,
-        schemaOptions,
-        requestingUser
-      )
+        targetSchema <- targetSchemaTask.zip(RouteUtilV2.getSchemaOptions(requestContext)).map {
+                          case (schema, options) => SchemaAndOptions(schema, options)
+                        }
+        requestingUser <- Authenticator.getUserADM(requestContext)
+        response <- SearchResponderV2.searchResourcesByProjectAndClassV2(
+                      projectIri,
+                      resourceClass,
+                      maybeOrderByProperty,
+                      page,
+                      targetSchema,
+                      requestingUser
+                    )
+      } yield response
 
-      RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask)
+      RouteUtilV2.completeResponse(response, requestContext, targetSchemaTask)
     }
   }
 

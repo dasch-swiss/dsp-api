@@ -78,7 +78,7 @@ final case class IriService(
           // Check that given entityIRI ends with a UUID
           ending: String = UuidUtil.fromIri(entityIriAsString)
           _ <- ZIO
-                 .fromOption(UuidUtil.validateBase64EncodedUuid(ending))
+                 .fromTry(UuidUtil.base64Decode(ending))
                  .orElseFail(BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID."))
         } yield entityIriAsString
 

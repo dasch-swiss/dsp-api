@@ -20,7 +20,6 @@ import dsp.errors.InconsistentRepositoryDataException
  * @tparam A the type of keys in the map.
  * @tparam B the type of values in the map.
  */
-@deprecated("Deprecated!")
 class ErrorHandlingMap[A, B](
   toWrap: Map[A, B],
   private val errorTemplateFun: A => String,

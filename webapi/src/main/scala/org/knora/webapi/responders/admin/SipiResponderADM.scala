@@ -8,7 +8,6 @@ package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
 
-import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.core.MessageHandler
@@ -16,7 +15,7 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
@@ -118,14 +117,11 @@ final case class SipiResponderADMLive(
       response <- permissionCode match {
                     case 1 =>
                       for {
-                        maybeRVSettings <- messageRelay
-                                             .ask[Option[ProjectRestrictedViewSettingsADM]](
-                                               ProjectRestrictedViewSettingsGetADM(
-                                                 identifier = ShortcodeIdentifier
-                                                   .fromString(request.projectID)
-                                                   .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-                                               )
-                                             )
+                        maybeRVSettings <-
+                          messageRelay
+                            .ask[Option[ProjectRestrictedViewSettingsADM]](
+                              ProjectRestrictedViewSettingsGetADM(ShortcodeIdentifier.from(request.projectID))
+                            )
                       } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
 
                     case _ =>

@@ -5,7 +5,9 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -38,10 +40,6 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
@@ -810,7 +808,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       valueType should ===(KnoraApiV2Complex.IntValue.toSmartIri)
       integerValueUUID = responseJsonDoc.body.requireStringWithValidation(
         KnoraApiV2Complex.ValueHasUUID,
-        UuidUtil.validateBase64EncodedUuid
+        (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
       )
 
       val savedValue: JsonLDObject = getValue(
@@ -3102,7 +3100,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       valueType should ===(KnoraApiV2Complex.LinkValue.toSmartIri)
       linkValueUUID = responseJsonDoc.body.requireStringWithValidation(
         KnoraApiV2Complex.ValueHasUUID,
-        UuidUtil.validateBase64EncodedUuid
+        (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
       )
 
       val savedValue: JsonLDObject = getValue(
@@ -3236,7 +3234,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newIntegerValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          UuidUtil.validateBase64EncodedUuid
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
         )
       assert(newIntegerValueUUID == integerValueUUID) // The new version should have the same UUID.
 
@@ -4942,7 +4940,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          UuidUtil.validateBase64EncodedUuid
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
         )
       assert(newLinkValueUUID != linkValueUUID)
       linkValueUUID = newLinkValueUUID
@@ -5016,7 +5014,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          UuidUtil.validateBase64EncodedUuid
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
         )
       assert(newLinkValueUUID == linkValueUUID)
 
@@ -5069,7 +5067,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val newLinkValueUUID: UUID =
         responseJsonDoc.body.requireStringWithValidation(
           KnoraApiV2Complex.ValueHasUUID,
-          UuidUtil.validateBase64EncodedUuid
+          (key, errorFun) => UuidUtil.base64Decode(key).getOrElse(errorFun)
         )
       assert(newLinkValueUUID == linkValueUUID)
 

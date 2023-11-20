@@ -13,11 +13,7 @@ import org.apache.http.HttpResponse
 import org.apache.http.NameValuePair
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.client.methods.HttpDelete
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpUriRequest
+import org.apache.http.client.methods.*
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.config.SocketConfig
 import org.apache.http.impl.client.CloseableHttpClient
@@ -27,6 +23,7 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json.*
 import zio.*
+import zio.json.DecoderOps
 import zio.nio.file.Path
 
 import java.net.URI
@@ -42,8 +39,8 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.domain.service.Asset
-import org.knora.webapi.store.iiif.api.IIIFService
-import org.knora.webapi.store.iiif.domain.*
+import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
+import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 import org.knora.webapi.util.ZScopedJavaIoStreams
@@ -55,11 +52,11 @@ import org.knora.webapi.util.ZScopedJavaIoStreams
  * @param jwtService         The JWT Service to handle JWT Tokens
  * @param httpClient  The HTTP Client
  */
-final case class IIIFServiceSipiImpl(
+final case class SipiServiceLive(
   private val sipiConfig: Sipi,
   private val jwtService: JwtService,
   private val httpClient: CloseableHttpClient
-) extends IIIFService {
+) extends SipiService {
 
   private object SipiRoutes {
     def file(asset: Asset): UIO[URI]           = makeUri(s"${assetBase(asset)}/file")
@@ -72,28 +69,16 @@ final case class IIIFServiceSipiImpl(
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.
    *
-   * @param getFileMetadataRequest the request.
-   * @return a [[GetFileMetadataResponse]] containing the requested metadata.
+   * @param filePath the path to the file.
+   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): Task[GetFileMetadataResponse] = {
-    import SipiKnoraJsonResponseProtocol.*
-
-    for {
-      url             <- ZIO.succeed(sipiConfig.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
-      request         <- ZIO.succeed(new HttpGet(url))
-      sipiResponseStr <- doSipiRequest(request)
-      sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse])
-    } yield GetFileMetadataResponse(
-      originalFilename = sipiResponse.originalFilename,
-      originalMimeType = sipiResponse.originalMimeType,
-      internalMimeType = sipiResponse.internalMimeType,
-      width = sipiResponse.width,
-      height = sipiResponse.height,
-      pageCount = sipiResponse.numpages,
-      duration = sipiResponse.duration,
-      fps = sipiResponse.fps
-    )
-  }
+  override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
+    doSipiRequest(new HttpGet(sipiConfig.internalBaseUrl + filePath + "/knora.json"))
+      .flatMap(bodyStr =>
+        ZIO
+          .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
+          .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
+      )
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.
@@ -351,7 +336,7 @@ final case class IIIFServiceSipiImpl(
       .as(targetFile)
 }
 
-object IIIFServiceSipiImpl {
+object SipiServiceLive {
 
   /**
    * Acquires a configured httpClient, backed by a connection pool,
@@ -404,12 +389,12 @@ object IIIFServiceSipiImpl {
   private def release(httpClient: CloseableHttpClient): UIO[Unit] =
     ZIO.attemptBlocking(httpClient.close()).logError.ignore <* ZIO.logInfo(">>> Release Sipi IIIF Service <<<")
 
-  val layer: URLayer[AppConfig & JwtService, IIIFService] =
+  val layer: URLayer[AppConfig & JwtService, SipiService] =
     ZLayer.scoped {
       for {
         config     <- ZIO.serviceWith[AppConfig](_.sipi)
         jwtService <- ZIO.service[JwtService]
         httpClient <- ZIO.acquireRelease(acquire(config))(release)
-      } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
+      } yield SipiServiceLive(config, jwtService, httpClient)
     }
 }
