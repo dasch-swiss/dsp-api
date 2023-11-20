@@ -5,31 +5,25 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko
-
 import dsp.errors.BadRequestException
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.SchemaOptions
+import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
-import pekko.testkit.ImplicitSender
-
-/**
- * Tests [[SearchResponderV2]].
- */
-class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
+class SearchResponderV2Spec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  override lazy val rdfDataObjects = List(
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
       path = "test_data/project_data/incunabula-data.ttl",
       name = "http://www.knora.org/data/0803/incunabula"
@@ -50,294 +44,249 @@ class SearchResponderV2Spec extends CoreSpec with ImplicitSender {
 
     "perform a fulltext search for 'Narr'" in {
 
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "Narr",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "Narr",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = anonymousUser
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 25)
-      }
+      assert(result.resources.size == 25)
     }
 
     "perform a fulltext search for 'Dinge'" in {
-
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "Dinge",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "Dinge",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 1)
-      }
-
+      assert(result.resources.size == 1)
     }
 
     "return a Bad Request error if fulltext search input is invalid" in {
-
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "qin(",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.run(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "qin(",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
-
-      expectMsgPF(timeout) { case msg: pekko.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
-      }
-
+      assertFailsWithA[BadRequestException](result)
     }
 
     "return files attached to full-text search results" in {
 
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "p7v",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = true,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result: ReadResourcesSequenceV2 = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "p7v",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = true,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        val hasImageFileValues: Boolean =
-          response.resources.flatMap(_.values.values.flatten).exists { readValueV2: ReadValueV2 =>
-            readValueV2.valueContent match {
-              case _: StillImageFileValueContentV2 => true
-              case _                               => false
-            }
+      val hasImageFileValues: Boolean =
+        result.resources.flatMap(_.values.values.flatten).exists { readValueV2: ReadValueV2 =>
+          readValueV2.valueContent match {
+            case _: StillImageFileValueContentV2 => true
+            case _                               => false
           }
+        }
 
-        assert(hasImageFileValues)
-      }
+      assert(hasImageFileValues)
 
     }
 
     "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
-      appActor ! GravsearchRequestV2(
-        constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val searchResult = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchV2(
+          searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
+          apiV2SchemaWithOption(MarkupAsXml),
+          anonymousUser
+        )
       )
 
       // extended search sort by resource Iri by default if no order criterion is indicated
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse,
-          received = response
-        )
-      }
-
+      compareReadResourcesSequenceV2Response(
+        expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse,
+        received = searchResult
+      )
     }
 
     "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
-
-      appActor ! GravsearchRequestV2(
-        constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val searchResult = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchV2(
+          searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
+          apiV2SchemaWithOption(MarkupAsXml),
+          anonymousUser
+        )
       )
 
       // extended search sort by resource Iri by default if no order criterion is indicated
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        // TODO: do better testing once JSON-LD can be converted back into case classes
-        assert(response.resources.size == 18)
-      }
-
+      assert(searchResult.resources.size == 18)
     }
 
     "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
-
-      appActor ! SearchResourceByLabelRequestV2(
-        searchValue = "Narrenschiff",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelV2(
+          searchValue = "Narrenschiff",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+          targetSchema = ApiV2Complex,
+          requestingUser = anonymousUser
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 3)
-      }
-
+      assert(result.resources.size == 3)
     }
 
     "perform a search by label for incunabula:book that contain 'Das Narrenschiff'" in {
-
-      appActor ! SearchResourceByLabelRequestV2(
-        searchValue = "Narrenschiff",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelV2(
+          searchValue = "Narrenschiff",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+          targetSchema = ApiV2Complex,
+          requestingUser = anonymousUser
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        assert(response.resources.size == 3)
-      }
-
+      assert(result.resources.size == 3)
     }
 
     "perform a count search query by label for incunabula:book that contain 'Narrenschiff'" in {
 
-      appActor ! SearchResourceByLabelCountRequestV2(
-        searchValue = "Narrenschiff",
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        requestingUser = SharedTestDataADM.anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelCountV2(
+          searchValue = "Narrenschiff",
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+        )
       )
 
-      expectMsgPF(timeout) { case response: ResourceCountV2 =>
-        assert(response.numberOfResources == 3)
-      }
+      assert(result.numberOfResources == 3)
 
     }
 
     "perform a a count search query by label for incunabula:book that contain 'Passio sancti Meynrhadi martyris et heremite'" in {
 
-      appActor ! SearchResourceByLabelCountRequestV2(
-        searchValue = "Passio sancti Meynrhadi martyris et heremite",
-        limitToProject = None,
-        limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        requestingUser = SharedTestDataADM.anonymousUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByLabelCountV2(
+          searchValue = "Passio sancti Meynrhadi martyris et heremite",
+          limitToProject = None,
+          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+        )
       )
 
-      expectMsgPF(timeout) { case response: ResourceCountV2 =>
-        assert(response.numberOfResources == 1)
-      }
-
+      assert(result.numberOfResources == 1)
     }
 
     "search by project and resource class" in {
-      appActor ! SearchResourcesByProjectAndClassRequestV2(
-        projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
-        resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        page = 0,
-        targetSchema = ApiV2Complex,
-        requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.searchResourcesByProjectAndClassV2(
+          projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
+          resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+          orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
+          page = 0,
+          schemaAndOptions = SchemaAndOptions.apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+        )
       )
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        response.resources.size should ===(19)
-      }
+      result.resources.size should ===(19)
     }
 
     "search for list label" in {
 
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "non fiction",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "non fiction",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabel,
-          received = response
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabel,
+        received = result
+      )
     }
 
     "search for list label and find sub-nodes" in {
-
-      appActor ! FulltextSearchRequestV2(
-        searchValue = "novel",
-        offset = 0,
-        limitToProject = None,
-        limitToResourceClass = None,
-        limitToStandoffClass = None,
-        returnFiles = false,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anythingUser1
+      val result = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.fulltextSearchV2(
+          searchValue = "novel",
+          offset = 0,
+          limitToProject = None,
+          limitToResourceClass = None,
+          limitToStandoffClass = None,
+          returnFiles = false,
+          apiV2SchemaWithOption(MarkupAsXml),
+          requestingUser = SharedTestDataADM.anythingUser1
+        )
       )
 
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabelWithSubnodes,
-          received = response
-        )
-      }
+      compareReadResourcesSequenceV2Response(
+        expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabelWithSubnodes,
+        received = result
+      )
     }
 
     "perform an extended search for a particular compound object (book)" in {
-
-      val query = searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject
-
-      appActor ! GravsearchRequestV2(
-        constructQuery = query,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val searchResult = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchV2(
+          searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject,
+          apiV2SchemaWithOption(MarkupAsXml),
+          anonymousUser
+        )
       )
-
-      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
-        response.resources.length should equal(25)
-      }
+      searchResult.resources.length should equal(25)
     }
 
-    "perform an extended search ordered by label" in {
-
+    "perform an extended search ordered asc by label" in {
       val queryAsc = searchResponderV2SpecFullData.constructQuerySortByLabel
-
-      appActor ! GravsearchRequestV2(
-        constructQuery = queryAsc,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
+      val ascResult = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchV2(queryAsc, apiV2SchemaWithOption(MarkupAsXml), anonymousUser)
       )
-
-      val asc = expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 => response }
-      assert(asc.resources.head.label == "A blue thing")
-
-      val queryDesc = searchResponderV2SpecFullData.constructQuerySortByLabelDesc
-
-      appActor ! GravsearchRequestV2(
-        constructQuery = queryDesc,
-        targetSchema = ApiV2Complex,
-        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        requestingUser = SharedTestDataADM.anonymousUser
-      )
-
-      val desc = expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 => response }
-      assert(desc.resources.head.label == "visible thing with hidden int values")
+      assert(ascResult.resources.head.label == "A blue thing")
     }
 
+    "perform an extended search ordered desc by label" in {
+      val queryDesc = searchResponderV2SpecFullData.constructQuerySortByLabelDesc
+      val descResult = UnsafeZioRun.runOrThrow(
+        SearchResponderV2.gravsearchV2(queryDesc, apiV2SchemaWithOption(MarkupAsXml), anonymousUser)
+      )
+      assert(descResult.resources.head.label == "visible thing with hidden int values")
+    }
   }
-
 }
