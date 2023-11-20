@@ -161,7 +161,9 @@ case class RdfDataObject(path: String, name: String)
 /**
  * Represents the subject of a statement read from the triplestore.
  */
-sealed trait SubjectV2
+sealed trait SubjectV2 {
+  def value: String
+}
 
 /**
  * Represents an IRI used as the subject of a statement.
