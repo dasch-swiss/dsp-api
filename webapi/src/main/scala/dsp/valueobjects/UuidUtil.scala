@@ -25,10 +25,7 @@ object UuidUtil {
    *
    * @return a random, Base64-encoded UUID.
    */
-  def makeRandomBase64EncodedUuid: String = {
-    val uuid = UUID.randomUUID
-    base64Encode(uuid)
-  }
+  def makeRandomBase64EncodedUuid: String = base64Encode(UUID.randomUUID)
 
   /**
    * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
@@ -101,7 +98,6 @@ object UuidUtil {
   /**
    * Calls `base64Decode`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
    */
-  @deprecated("It is still throwing!")
   def decode(uuidStr: String): UUID =
     if (uuidStr.length == canonicalUuidLength) UUID.fromString(uuidStr)
     else if (uuidStr.length == base64UuidLength)
@@ -111,31 +107,4 @@ object UuidUtil {
         .getOrElse(throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
     else throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr")
 
-  /**
-   * Encodes a [[UUID]] as a string in one of two formats:
-   *
-   * - The canonical 36-character format.
-   * - The 22-character Base64-encoded format returned by [[base64Encode]].
-   *
-   * @param uuid      the UUID to be encoded.
-   * @param useBase64 if `true`, uses Base64 encoding.
-   * @return the encoded UUID.
-   */
-  def encode(uuid: UUID, useBase64: Boolean): String =
-    if (useBase64) base64Encode(uuid)
-    else uuid.toString
-
-  /**
-   * Validates and decodes a Base64-encoded UUID.
-   *
-   * @param base64Uuid the UUID to be validated.
-   * @param errorFun   a function that throws an exception. It will be called if the string cannot be parsed.
-   * @return the decoded UUID.
-   */
-  @deprecated("Use validateBase64EncodedUuid(String) instead.")
-  def validateBase64EncodedUuid(base64Uuid: String, errorFun: => Nothing): UUID = // V2 / value objects
-    validateBase64EncodedUuid(base64Uuid).getOrElse(errorFun)
-
-  def validateBase64EncodedUuid(base64Uuid: String): Option[UUID] =
-    UuidUtil.base64Decode(base64Uuid).toOption
 }

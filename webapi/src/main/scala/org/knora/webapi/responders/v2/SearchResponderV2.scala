@@ -33,7 +33,6 @@ import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
@@ -484,16 +483,10 @@ final case class SearchResponderV2Live(
 
       prequerySparql = transformedPrequery.toSparql
 
-      start <- Clock.instant.map(_.toEpochMilli)
       prequeryResponseNotMerged <-
         triplestore
           .query(Select(prequerySparql, isGravsearch = true))
           .logError(s"Gravsearch timed out for prequery:\n$prequerySparql")
-
-      end     <- Clock.instant.map(_.toEpochMilli)
-      duration = (end - start) / 1000.0
-      _ = if (duration < 3) logger.debug(s"Prequery took: ${duration}s")
-          else logger.warn(s"Slow Prequery ($duration):\n$prequerySparql")
 
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
@@ -811,23 +804,15 @@ final case class SearchResponderV2Live(
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri]
   ) = {
-    val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
+    val searchTerm = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+    val countSparql = SearchQueries.selectCountByLabel(
+      searchTerm = searchTerm,
+      limitToProject = limitToProject,
+      limitToResourceClass = limitToResourceClass.map(_.toString)
+    )
 
     for {
-      countSparql <-
-        ZIO.attempt(
-          sparql.v2.txt
-            .searchResourceByLabel(
-              searchTerm = searchPhrase,
-              limitToProject = limitToProject,
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = 1,
-              offset = 0,
-              countQuery = true
-            )
-        )
-
-      countResponse <- triplestore.query(Select(countSparql))
+      countResponse <- triplestore.query(countSparql)
 
       count <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -861,30 +846,18 @@ final case class SearchResponderV2Live(
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
+    val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
+    val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
+    val searchTerm   = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
 
     val searchResourceByLabelSparql =
-      limitToResourceClass match {
-        case None =>
-          Construct(
-            sparql.v2.txt.searchResourceByLabel(
-              searchTerm = MatchStringWhileTyping(searchValue),
-              limitToProject = limitToProject,
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
-              countQuery = false
-            )
-          )
-        case Some(cls) =>
-          Construct(
-            sparql.v2.txt.searchResourceByLabelWithDefinedResourceClass(
-              searchTerm = MatchStringWhileTyping(searchValue),
-              limitToResourceClass = cls.toString,
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
-            )
-          )
-      }
+      SearchQueries.constructSearchByLabel(
+        searchTerm,
+        limitToResourceClass.map(_.toIri),
+        limitToProject,
+        searchLimit,
+        searchOffset
+      )
 
     for {
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
@@ -974,7 +947,7 @@ final case class SearchResponderV2Live(
         } else {
           // No. This must be a column resulting from GROUP_CONCAT, so use the GROUP_CONCAT
           // separator to concatenate the column values.
-          columnValues.mkString(AbstractPrequeryGenerator.groupConcatSeparator.toString)
+          columnValues.mkString(StringFormatter.INFORMATION_SEPARATOR_ONE.toString)
         }
 
         columnName -> mergedColumnValue

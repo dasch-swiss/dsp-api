@@ -64,26 +64,22 @@ final case class GravsearchTypeInspectionRunner(
       lastResult <- typeInspectionPipeline(whereClause, initialResult, requestingUser)
 
       untypedEntities: Set[TypeableEntity] = lastResult.untypedEntities
-      _ <- // Are any entities still untyped?
-        if (untypedEntities.nonEmpty) {
-          ZIO.fail(
-            //  Yes. Return an error.
-            GravsearchException(
-              s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}"
-            )
-          )
-        } else {
-          // No. Are there any entities with multiple types?
-          val inconsistentEntities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] =
-            lastResult.entitiesWithInconsistentTypes
-          ZIO.fail {
-            // Yes. Return an error.
-            val inconsistentStr = inconsistentEntities.map { case (entity, entityTypes) =>
-              s"$entity ${entityTypes.mkString(" ; ")} ."
-            }.mkString(" ")
-            GravsearchException(s"One or more entities have inconsistent types: $inconsistentStr")
-          }.when(inconsistentEntities.nonEmpty)
-        }
+      _ <- ZIO
+             .fail(
+               GravsearchException(
+                 s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}"
+               )
+             )
+             .when(untypedEntities.nonEmpty)
+
+      inconsistentEntities = lastResult.entitiesWithInconsistentTypes
+      _ <- ZIO.fail {
+             val inconsistentStr = inconsistentEntities.map { case (entity, entityTypes) =>
+               s"$entity ${entityTypes.mkString(" ; ")} ."
+             }.mkString(" ")
+             GravsearchException(s"One or more entities have inconsistent types: $inconsistentStr")
+           }
+             .when(inconsistentEntities.nonEmpty)
     } yield lastResult.toFinalResult
 
   /**

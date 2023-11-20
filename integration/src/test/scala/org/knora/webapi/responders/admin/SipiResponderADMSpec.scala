@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
+import org.apache.pekko.testkit._
 
 import scala.concurrent.duration._
 
@@ -14,8 +14,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestric
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import pekko.testkit._
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 /**
  * Tests [[SipiResponderADM]].
@@ -36,7 +35,7 @@ class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
     "return details of a full quality file value" in {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       appActor ! SipiFileInfoGetRequestADM(
-        projectID = "0803",
+        projectID = Shortcode.unsafeFrom("0803"),
         filename = "incunabula_0000003328.jp2",
         requestingUser = SharedTestDataADM.incunabulaMemberUser
       )
@@ -47,7 +46,7 @@ class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
     "return details of a restricted view file value" in {
       // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
       appActor ! SipiFileInfoGetRequestADM(
-        projectID = "0803",
+        projectID = Shortcode.unsafeFrom("0803"),
         filename = "incunabula_0000003328.jp2",
         requestingUser = SharedTestDataADM.anonymousUser
       )

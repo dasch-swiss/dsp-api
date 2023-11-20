@@ -34,13 +34,14 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.store.iiif.api.SipiService
 
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
 final case class ResourcesRouteV2(appConfig: AppConfig)(
   private implicit val runtime: Runtime[
-    AppConfig & Authenticator & StringFormatter & IriConverter & MessageRelay & RestResourceInfoService
+    AppConfig & Authenticator & SipiService & StringFormatter & IriConverter & MessageRelay & RestResourceInfoService
   ]
 ) extends LazyLogging {
   private val sipiConfig: Sipi             = appConfig.sipi

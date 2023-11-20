@@ -12,8 +12,8 @@ import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
-import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator.*
 import org.knora.webapi.messages.util.search.gravsearch.transformers.SparqlTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
@@ -190,7 +190,7 @@ class GravsearchToPrequeryTransformer(
         val groupConcats: Set[GroupConcat] = valueVariables.map { (valueObjVar: QueryVariable) =>
           GroupConcat(
             inputVariable = valueObjVar,
-            separator = groupConcatSeparator,
+            separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
             outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix
           )
         }
@@ -225,7 +225,7 @@ class GravsearchToPrequeryTransformer(
     (dependentResVar: QueryVariable) =>
       GroupConcat(
         inputVariable = dependentResVar,
-        separator = groupConcatSeparator,
+        separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
         outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix
       )
   }

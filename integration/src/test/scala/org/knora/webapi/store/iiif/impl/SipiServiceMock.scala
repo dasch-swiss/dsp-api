@@ -12,29 +12,30 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.domain.service.Asset
-import org.knora.webapi.store.iiif.api.IIIFService
+import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
+import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
- * Can be used in place of [[IIIFServiceSipiImpl]] for tests without an actual Sipi server, by returning hard-coded
+ * Can be used in place of [[SipiServiceLive]] for tests without an actual Sipi server, by returning hard-coded
  * responses simulating responses from Sipi.
  */
-case class IIIFServiceMockImpl() extends IIIFService {
+case class SipiServiceMock() extends SipiService {
 
   /**
    * A request with this filename will always cause a Sipi error.
    */
   private val FAILURE_FILENAME: String = "failure.jp2"
 
-  def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Task[GetFileMetadataResponse] =
+  override def getFileMetadata(ignoredByMock: String): Task[FileMetadataSipiResponse] =
     ZIO.succeed(
-      GetFileMetadataResponse(
+      FileMetadataSipiResponse(
         originalFilename = Some("test2.tiff"),
         originalMimeType = Some("image/tiff"),
         internalMimeType = "image/jp2",
         width = Some(512),
         height = Some(256),
-        pageCount = None,
+        numpages = None,
         duration = None,
         fps = None
       )
@@ -63,11 +64,11 @@ case class IIIFServiceMockImpl() extends IIIFService {
   override def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]] = ???
 }
 
-object IIIFServiceMockImpl {
+object SipiServiceMock {
 
-  val layer: ZLayer[Any, Nothing, IIIFService] =
+  val layer: ZLayer[Any, Nothing, SipiService] =
     ZLayer
-      .succeed(IIIFServiceMockImpl())
+      .succeed(SipiServiceMock())
       .tap(_ => ZIO.logInfo(">>> Mock Sipi IIIF Service Initialized <<<"))
 
 }
