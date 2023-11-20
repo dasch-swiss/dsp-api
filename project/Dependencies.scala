@@ -22,12 +22,12 @@ object Dependencies {
   val JenaVersion       = "4.8.0"
 
   val ZioConfigVersion            = "3.0.7"
-  val ZioLoggingVersion           = "2.1.14"
+  val ZioLoggingVersion           = "2.1.15"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.2.1"
   val ZioPreludeVersion           = "1.0.0-RC21"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.18"
+  val ZioVersion                  = "2.0.19"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -40,7 +40,7 @@ object Dependencies {
   val zioNio                = "dev.zio"                       %% "zio-nio"                   % ZioNioVersion
   val zioMacros             = "dev.zio"                       %% "zio-macros"                % ZioVersion
   val zioPrelude            = "dev.zio"                       %% "zio-prelude"               % ZioPreludeVersion
-  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.0"
+  val zioSttp               = "com.softwaremill.sttp.client3" %% "zio"                       % "3.9.1"
 
   // refined
   val refined = Seq(
@@ -70,8 +70,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.5" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.5" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.6" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.6" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -96,11 +96,11 @@ object Dependencies {
   val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.1"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
-  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.7"
-  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.7"
+  val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.8"
+  val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.8"
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.3"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
-  val scallop        = "org.rogach"       %% "scallop"          % "5.0.0"  // Scala 3 compatible
+  val scallop        = "org.rogach"       %% "scallop"          % "5.0.1"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.2"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
@@ -121,7 +121,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
 
-  val tapirVersion = "1.8.4"
+  val tapirVersion = "1.8.5"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
