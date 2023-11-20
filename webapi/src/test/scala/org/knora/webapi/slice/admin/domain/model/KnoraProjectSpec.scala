@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package dsp.valueobjects
+package org.knora.webapi.slice.admin.domain.model
 
 import zio.Scope
 import zio.prelude.Validation
@@ -12,13 +12,16 @@ import zio.test.*
 import scala.util.Random
 
 import dsp.errors.ValidationException
+import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 
 /**
- * This spec is used to test the [[KnoraProject]] value objects creation.
+ * This spec is used to test the [[org.knora.webapi.slice.admin.domain.model.KnoraProject]] value objects creation.
  */
 object KnoraProjectSpec extends ZIOSpecDefault {
-  def spec: Spec[TestEnvironment & Scope, Nothing] = suite("ProjectSpec")(
+
+  def spec: Spec[TestEnvironment & Scope, Nothing] = suite("KnoraProjectSpec")(
+    projectIriSuite,
     shortcodeTest,
     shortnameTest,
     longnameTest,
@@ -27,6 +30,39 @@ object KnoraProjectSpec extends ZIOSpecDefault {
     logoTest,
     projectStatusTest,
     projectSelfJoinTest
+  )
+
+  private val projectIriSuite = suite("ProjectIri")(
+    test("pass an empty value and return an error") {
+      assertTrue(
+        ProjectIri.from("") == Validation.fail(ValidationException("Project IRI cannot be empty."))
+      )
+    },
+    test("pass an invalid value and return an error") {
+      assertTrue(
+        ProjectIri.from("not an iri") == Validation.fail(ValidationException("Project IRI is invalid."))
+      )
+    },
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
+      val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
+      assertTrue(
+        ProjectIri.from(projectIriWithUUIDVersion3) == Validation.fail(
+          ValidationException("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
+        )
+      )
+    },
+    test("pass a valid project IRI and successfully create value object") {
+      val validIris =
+        Gen.fromIterable(
+          Seq(
+            "http://rdfh.ch/projects/0001",
+            "http://rdfh.ch/projects/CwQ8hXF9Qlm1gl2QE6pTpg",
+            "http://www.knora.org/ontology/knora-admin#SystemProject",
+            "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
+          )
+        )
+      check(validIris)(iri => assertTrue(ProjectIri.unsafeFrom(iri).value == iri))
+    }
   )
 
   private val shortcodeTest = suite("Shortcode")(

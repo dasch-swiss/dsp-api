@@ -14,7 +14,6 @@ import dsp.valueobjects.V2.StringLiteralV2
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
 
 object ProjectADMServiceSpec extends ZIOSpecDefault {
@@ -44,7 +43,7 @@ object ProjectADMServiceSpec extends ZIOSpecDefault {
         val shortcode = "0002"
         val shortname = "someOtherProject"
         val p: KnoraProject = KnoraProject(
-          id = InternalIri(IriTestConstants.Project.TestProject),
+          id = ProjectIri.unsafeFrom(IriTestConstants.Project.TestProject),
           shortname = Shortname.unsafeFrom(shortname),
           shortcode = Shortcode.unsafeFrom(shortcode),
           longname = None,

@@ -21,6 +21,7 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.PathMatcher
@@ -78,7 +79,7 @@ final case class GroupsRouteADM(
         val id: Validation[Throwable, Option[GroupIri]]            = GroupIri.make(apiRequest.id)
         val name: Validation[Throwable, GroupName]                 = GroupName.make(apiRequest.name)
         val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
-        val project: Validation[Throwable, ProjectIri]             = ProjectIri.make(apiRequest.project)
+        val project: Validation[Throwable, ProjectIri]             = ProjectIri.from(apiRequest.project)
         val status: Validation[Throwable, GroupStatus]             = Validation.succeed(GroupStatus.make(apiRequest.status))
         val selfjoin: Validation[Throwable, GroupSelfJoin]         = GroupSelfJoin.make(apiRequest.selfjoin)
         val payloadValidation: Validation[Throwable, GroupCreatePayloadADM] =

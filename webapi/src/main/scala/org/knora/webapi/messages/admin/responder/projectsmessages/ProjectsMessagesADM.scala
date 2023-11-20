@@ -24,7 +24,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
@@ -374,7 +373,7 @@ object ProjectIdentifierADM {
       )
 
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
-      ProjectIri.make(value).map(IriIdentifier(_))
+      ProjectIri.from(value).map(IriIdentifier(_))
 
     implicit val tapirCodec: Codec[String, IriIdentifier, TextPlain] =
       Codec.string.mapDecode(str =>

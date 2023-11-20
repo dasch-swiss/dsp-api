@@ -5,7 +5,6 @@
 
 package org.knora.webapi
 
-import dsp.valueobjects.Iri._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 
 /**
@@ -26,9 +25,4 @@ object ITTestDataFactory {
     IriIdentifier
       .fromString(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
-
-  def projectIri(iri: String): ProjectIri =
-    ProjectIri
-      .make(iri)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectIri $iri."))
 }

@@ -20,6 +20,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 
 import pekko.actor.Status.Failure
@@ -80,7 +81,7 @@ class GroupsResponderADMSpec extends CoreSpec {
                 )
               )
               .fold(e => throw e.head, v => v),
-            project = ProjectIri.make(SharedTestDataADM.imagesProjectIri).fold(e => throw e.head, v => v),
+            project = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
             status = GroupStatus.active,
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
@@ -113,7 +114,7 @@ class GroupsResponderADMSpec extends CoreSpec {
             descriptions = GroupDescriptions
               .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
-            project = ProjectIri.make(SharedTestDataADM.imagesProjectIri).fold(e => throw e.head, v => v),
+            project = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
             status = GroupStatus.active,
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
