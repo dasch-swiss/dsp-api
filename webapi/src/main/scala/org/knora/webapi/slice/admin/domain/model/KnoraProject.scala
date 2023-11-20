@@ -45,21 +45,19 @@ object KnoraProject {
 
     def unsafeFrom(str: String): ProjectIri = from(str).fold(e => throw e.head, identity)
 
-    def from(str: String): Validation[ValidationException, ProjectIri] =
-      if (str.isEmpty) Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
-      else {
-        val isUuid: Boolean = UuidUtil.hasValidLength(str.split("/").last)
-
-        if (!isProjectIri(str))
-          Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        else if (isUuid && !UuidUtil.hasSupportedVersion(str))
-          Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
-        else
-          Validation
-            .fromOption(validateAndEscapeProjectIri(str))
-            .mapError(_ => ValidationException(IriErrorMessages.ProjectIriInvalid))
-            .map(ProjectIri(_))
-      }
+    def from(str: String): Validation[ValidationException, ProjectIri] = str match {
+      case str if str.isEmpty =>
+        Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
+      case str if !isProjectIri(str) =>
+        Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
+      case str if UuidUtil.hasValidLength(str.split("/").last) && !UuidUtil.hasSupportedVersion(str) =>
+        Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      case _ =>
+        Validation
+          .fromOption(validateAndEscapeProjectIri(str))
+          .mapError(_ => ValidationException(IriErrorMessages.ProjectIriInvalid))
+          .map(ProjectIri(_))
+    }
   }
 
   final case class Shortcode private (value: String) extends AnyVal

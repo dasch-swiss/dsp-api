@@ -61,7 +61,7 @@ object KnoraProjectSpec extends ZIOSpecDefault {
             "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
           )
         )
-      check(validIris)(iri => assertTrue(ProjectIri.from(iri).toOption.get.value == iri))
+      check(validIris)(iri => assertTrue(ProjectIri.unsafeFrom(iri).value == iri))
     }
   )
 

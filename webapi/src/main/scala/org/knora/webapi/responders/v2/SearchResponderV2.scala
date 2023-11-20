@@ -26,6 +26,13 @@ import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDInt
+import org.knora.webapi.messages.util.rdf.JsonLDObject
+import org.knora.webapi.messages.util.rdf.JsonLDString
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
@@ -848,7 +855,6 @@ final case class SearchResponderV2Live(
     val searchTerm = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
     val countSparql =
       SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
-
     for {
       countResponse <- triplestore.query(countSparql)
 
