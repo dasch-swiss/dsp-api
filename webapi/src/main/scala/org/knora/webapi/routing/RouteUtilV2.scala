@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetRes
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.search.api.ApiV2
 import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptMarkup
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
 import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraJsonLdRendering
 import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams
@@ -110,7 +111,7 @@ object RouteUtilV2 {
    */
   def getProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, Option[SmartIri]] = {
     val maybeProjectIriStr =
-      requestContext.request.headers.find(_.lowercaseName == xKnoraAcceptSchemaHeader).map(_.value())
+      requestContext.request.headers.find(_.lowercaseName == xKnoraAcceptProject).map(_.value())
     ZIO.foreach(maybeProjectIriStr)(iri =>
       IriConverter
         .asSmartIri(iri)
