@@ -14,6 +14,7 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -32,7 +33,6 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
@@ -76,6 +76,7 @@ final case class ValuesResponderV2Live(
   messageRelay: MessageRelay,
   permissionUtilADM: PermissionUtilADM,
   resourceUtilV2: ResourceUtilV2,
+  searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
   implicit val stringFormatter: StringFormatter
 ) extends ValuesResponderV2
@@ -1973,17 +1974,8 @@ final case class ValuesResponderV2Live(
           .toString()
 
       // Run the query.
-      parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <-
-        messageRelay
-          .ask[ReadResourcesSequenceV2](
-            GravsearchRequestV2(
-              constructQuery = parsedGravsearchQuery,
-              targetSchema = ApiV2Complex,
-              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-              requestingUser = requestingUser
-            )
-          )
+      query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
+      searchResponse <- searchResponderV2.gravsearchV2(query, apiV2SchemaWithOption(MarkupAsXml), requestingUser)
     } yield searchResponse.toResource(resourceIri)
 
   /**
@@ -2440,7 +2432,7 @@ final case class ValuesResponderV2Live(
 
 object ValuesResponderV2Live {
   val layer: URLayer[
-    AppConfig & IriService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & TriplestoreService & StringFormatter,
+    AppConfig & IriService & MessageRelay & PermissionUtilADM & ResourceUtilV2 & TriplestoreService & SearchResponderV2 & StringFormatter,
     ValuesResponderV2
   ] = ZLayer.fromZIO {
     for {
@@ -2450,8 +2442,9 @@ object ValuesResponderV2Live {
       pu      <- ZIO.service[PermissionUtilADM]
       ru      <- ZIO.service[ResourceUtilV2]
       ts      <- ZIO.service[TriplestoreService]
+      sr      <- ZIO.service[SearchResponderV2]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, ts, sf))
+      handler <- mr.subscribe(ValuesResponderV2Live(config, is, mr, pu, ru, sr, ts, sf))
     } yield handler
   }
 }
