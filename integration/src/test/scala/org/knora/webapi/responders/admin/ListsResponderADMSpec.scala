@@ -9,15 +9,14 @@ import dsp.errors.{BadRequestException, DuplicateValueException, UpdateNotPerfor
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.{Iri, V2}
-import org.apache.pekko
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{ListChildNodeCreatePayloadADM, ListRootNodeCreatePayloadADM}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
-import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 
@@ -282,7 +281,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
-        val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri),
+        val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri)
         appActor ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
