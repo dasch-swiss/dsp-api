@@ -114,7 +114,7 @@ class GroupsResponderADMSpec extends CoreSpec {
             descriptions = GroupDescriptions
               .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
-            project = ProjectIri.from(SharedTestDataADM.imagesProjectIri).fold(e => throw e.head, v => v),
+            project = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
             status = GroupStatus.active,
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),

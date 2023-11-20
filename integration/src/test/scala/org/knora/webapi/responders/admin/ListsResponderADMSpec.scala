@@ -5,31 +5,23 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
-
-import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.UpdateNotPerformedException
-import dsp.valueobjects.Iri
+import dsp.errors.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
-import dsp.valueobjects.V2
+import dsp.valueobjects.{Iri, V2}
+import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{ListChildNodeCreatePayloadADM, ListRootNodeCreatePayloadADM}
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
+import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.util.MutableTestIri
 
-import pekko.actor.Status.Failure
-import pekko.testkit._
+import java.util.UUID
 
 /**
  * Tests [[ListsResponderADM]].
@@ -196,7 +188,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
         appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
@@ -236,7 +228,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
             listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
             labels = Some(
               Labels
@@ -290,7 +282,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
-        val projectIRI = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v)
+        val projectIRI = ProjectIri.unsafeFrom(imagesProjectIri),
         appActor ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
@@ -314,7 +306,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
@@ -367,7 +359,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
             position = Some(Position.make(0).fold(e => throw e.head, v => v)),
             labels = Labels
@@ -421,7 +413,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(secondChildIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
@@ -475,7 +467,7 @@ class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.from(imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(imagesProjectIri),
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,
             labels = Labels
