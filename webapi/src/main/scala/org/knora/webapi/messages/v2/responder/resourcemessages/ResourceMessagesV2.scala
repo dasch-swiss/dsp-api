@@ -64,14 +64,14 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 with RelayedMess
  * @param requestingUser       the user making the request.
  */
 case class ResourcesGetRequestV2(
-                                  resourceIris: Seq[IRI],
-                                  propertyIri: Option[SmartIri] = None,
-                                  valueUuid: Option[UUID] = None,
-                                  versionDate: Option[Instant] = None,
-                                  withDeleted: Boolean = true,
-                                  targetSchema: ApiV2Schema,
-                                  schemaOptions: Set[Rendering] = Set.empty,
-                                  requestingUser: UserADM
+  resourceIris: Seq[IRI],
+  propertyIri: Option[SmartIri] = None,
+  valueUuid: Option[UUID] = None,
+  versionDate: Option[Instant] = None,
+  withDeleted: Boolean = true,
+  targetSchema: ApiV2Schema,
+  schemaOptions: Set[Rendering] = Set.empty,
+  requestingUser: UserADM
 ) extends ResourcesResponderRequestV2
 
 /**

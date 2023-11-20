@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import dsp.errors.{AssertionException, BadRequestException}
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants

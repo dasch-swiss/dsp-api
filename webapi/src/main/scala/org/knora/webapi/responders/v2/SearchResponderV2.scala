@@ -6,36 +6,52 @@
 package org.knora.webapi.responders.v2
 
 import com.typesafe.scalalogging.LazyLogging
-import dsp.errors.{AssertionException, BadRequestException, GravsearchException, InconsistentRepositoryDataException}
+import zio.*
+import zio.macros.accessible
+
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.GravsearchException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
-import org.knora.webapi.messages.util.search.gravsearch.prequery.{GravsearchToCountPrequeryTransformer, GravsearchToPrequeryTransformer, InferenceOptimizationService}
-import org.knora.webapi.messages.util.search.gravsearch.transformers.{ConstructTransformer, OntologyInferencer, SelectTransformer}
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToCountPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.GravsearchToPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.InferenceOptimizationService
+import org.knora.webapi.messages.util.search.gravsearch.transformers.ConstructTransformer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.OntologyInferencer
+import org.knora.webapi.messages.util.search.gravsearch.transformers.SelectTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.*
-import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap}
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Construct, Select}
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.ApacheLuceneSupport.*
-import zio.*
-import zio.macros.accessible
 
 /**
  * Represents the number of resources found by a search query.
@@ -829,23 +845,12 @@ final case class SearchResponderV2Live(
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri]
   ): Task[ResourceCountV2] = {
-    val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
+    val searchTerm = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+    val countSparql =
+      SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
 
     for {
-      countSparql <-
-        ZIO.attempt(
-          sparql.v2.txt
-            .searchResourceByLabel(
-              searchTerm = searchPhrase,
-              limitToProject = limitToProject.map(_.value),
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = 1,
-              offset = 0,
-              countQuery = true
-            )
-        )
-
-      countResponse <- triplestore.query(Select(countSparql))
+      countResponse <- triplestore.query(countSparql)
 
       count <- // query response should contain one result with one row with the name "count"
         ZIO
@@ -868,31 +873,16 @@ final case class SearchResponderV2Live(
     targetSchema: ApiV2Schema,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
-
-    val searchResourceByLabelSparql =
-      limitToResourceClass match {
-        case None =>
-          Construct(
-            sparql.v2.txt.searchResourceByLabel(
-              searchTerm = MatchStringWhileTyping(searchValue),
-              limitToProject = limitToProject.map(_.value),
-              limitToResourceClass = limitToResourceClass.map(_.toString),
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage,
-              countQuery = false
-            )
-          )
-        case Some(cls) =>
-          Construct(
-            sparql.v2.txt.searchResourceByLabelWithDefinedResourceClass(
-              searchTerm = MatchStringWhileTyping(searchValue),
-              limitToResourceClass = cls.toString,
-              limit = appConfig.v2.resourcesSequence.resultsPerPage,
-              offset = offset * appConfig.v2.resourcesSequence.resultsPerPage
-            )
-          )
-      }
-
+    val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
+    val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
+    val searchTerm   = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+    val searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
+      searchTerm,
+      limitToResourceClass.map(_.toIri),
+      limitToProject.map(_.value),
+      searchLimit,
+      searchOffset
+    )
     for {
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
 

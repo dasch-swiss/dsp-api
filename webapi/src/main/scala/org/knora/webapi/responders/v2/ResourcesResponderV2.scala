@@ -15,7 +15,6 @@ import scala.concurrent.Future
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.MarkupRendering.Standoff
 import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -1413,15 +1412,15 @@ final case class ResourcesResponderV2Live(
    * @return a [[ReadResourcesSequenceV2]].
    */
   private def getResourcesV2(
-                              resourceIris: Seq[IRI],
-                              propertyIri: Option[SmartIri] = None,
-                              valueUuid: Option[UUID] = None,
-                              versionDate: Option[Instant] = None,
-                              withDeleted: Boolean = true,
-                              showDeletedValues: Boolean = false,
-                              targetSchema: ApiV2Schema,
-                              schemaOptions: Set[Rendering],
-                              requestingUser: UserADM
+    resourceIris: Seq[IRI],
+    propertyIri: Option[SmartIri] = None,
+    valueUuid: Option[UUID] = None,
+    versionDate: Option[Instant] = None,
+    withDeleted: Boolean = true,
+    showDeletedValues: Boolean = false,
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[Rendering],
+    requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
     // eliminate duplicate Iris
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -2273,7 +2272,7 @@ final case class ResourcesResponderV2Live(
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
       searchResponse <- searchResponderV2.gravsearchV2(
                           parsedGravsearchQuery,
-                          apiV2SchemaWithOption(Standoff),
+                          apiV2SchemaWithOption(MarkupRendering.Standoff),
                           request.requestingUser
                         )
 

@@ -5,13 +5,24 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import dsp.errors.{BadRequestException, InvalidRdfException}
 import org.apache.pekko.http.scaladsl.model.MediaType
-import org.knora.webapi.{IRI, RdfMediaTypes, Rendering, SchemaOptions}
 
-import java.io.{BufferedInputStream, BufferedOutputStream, InputStream, OutputStream}
-import java.nio.file.{Files, Path}
-import scala.util.{Failure, Success, Try}
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import dsp.errors.BadRequestException
+import dsp.errors.InvalidRdfException
+import org.knora.webapi.IRI
+import org.knora.webapi.RdfMediaTypes
+import org.knora.webapi.Rendering
+import org.knora.webapi.SchemaOptions
 
 /**
  * A trait for supported RDF formats.

@@ -75,6 +75,9 @@ object KnoraResponseRenderer {
 
 object ApiV2 {
 
+  /**
+   * The names of the supported Http Headers.
+   */
   object Headers {
 
     /**
@@ -92,6 +95,11 @@ object ApiV2 {
      * text values.
      */
     val xKnoraAcceptMarkup: String = "x-knora-accept-markup"
+
+    /**
+     * The name of the HTTP header in which results from a project can be requested.
+     */
+    val xKnoraAcceptProject: String = "x-knora-accept-project"
   }
 
   object QueryParams {
