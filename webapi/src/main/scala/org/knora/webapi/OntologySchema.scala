@@ -11,12 +11,10 @@ import org.knora.webapi.JsonLdRendering.Flat
  * Indicates the schema that a Knora ontology or ontology entity conforms to
  * and its options that can be submitted to configure an ontology schema.
  */
-case class SchemaRendering[S <: OntologySchema, O <: Rendering](schema: S, rendering: Set[O])
+case class SchemaRendering(schema: ApiV2Schema, rendering: Set[Rendering])
 object SchemaRendering {
-  def apiV2SchemaWithOption[O <: Rendering](option: O): SchemaRendering[ApiV2Schema, O] =
-    apiV2SchemaWithOptions(Set(option))
-  def apiV2SchemaWithOptions[O <: Rendering](options: Set[O]): SchemaRendering[ApiV2Schema, O] =
-    SchemaRendering[ApiV2Schema, O](ApiV2Complex, options)
+  def apiV2SchemaWithOption(option: Rendering): SchemaRendering        = apiV2SchemaWithOptions(Set(option))
+  def apiV2SchemaWithOptions(options: Set[Rendering]): SchemaRendering = SchemaRendering(ApiV2Complex, options)
 }
 
 /**

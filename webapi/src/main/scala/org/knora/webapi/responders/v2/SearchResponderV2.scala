@@ -95,13 +95,13 @@ trait SearchResponderV2 {
    */
   def gravsearchV2(
     query: ConstructQuery,
-    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    schemaAndOptions: SchemaRendering,
     user: UserADM
   ): Task[ReadResourcesSequenceV2]
 
   def gravsearchV2(
     query: String,
-    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    schemaAndOptions: SchemaRendering,
     user: UserADM
   ): Task[ReadResourcesSequenceV2] = for {
     q <- ZIO.attempt(GravsearchParser.parseQuery(query))
@@ -155,7 +155,7 @@ trait SearchResponderV2 {
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
-    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    schemaAndOptions: SchemaRendering,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2]
 
@@ -209,7 +209,7 @@ trait SearchResponderV2 {
     resourceClass: SmartIri,
     orderByProperty: Option[SmartIri],
     page: RuntimeFlags,
-    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    schemaAndOptions: SchemaRendering,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2]
 }
@@ -294,7 +294,7 @@ final case class SearchResponderV2Live(
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
     returnFiles: Boolean,
-    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    schemaAndOptions: SchemaRendering,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
@@ -474,7 +474,7 @@ final case class SearchResponderV2Live(
 
   override def gravsearchV2(
     query: ConstructQuery,
-    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    schemaAndOptions: SchemaRendering,
     user: UserADM
   ): Task[ReadResourcesSequenceV2] = {
 
@@ -682,7 +682,7 @@ final case class SearchResponderV2Live(
     resourceClass: SmartIri,
     orderByProperty: Option[SmartIri],
     page: Int,
-    schemaAndOptions: SchemaRendering[ApiV2Schema, Rendering],
+    schemaAndOptions: SchemaRendering,
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
     val internalClassIri = resourceClass.toOntologySchema(InternalSchema)

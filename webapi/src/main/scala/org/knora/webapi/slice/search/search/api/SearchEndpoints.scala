@@ -54,9 +54,9 @@ final case class SearchEndpointsHandler(
 ) {
 
   val postGravsearch =
-    SecuredEndpointAndZioHandler[(String, SchemaRendering[ApiV2Schema, Rendering]), (String, MediaType)](
+    SecuredEndpointAndZioHandler[(String, SchemaRendering), (String, MediaType)](
       searchEndpoints.postGravsearch,
-      (user: UserADM) => { case (query: String, s: SchemaRendering[ApiV2Schema, Rendering]) =>
+      (user: UserADM) => { case (query: String, s: SchemaRendering) =>
         searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, JsonLD, s))
       }
     )
@@ -70,7 +70,7 @@ final class KnoraResponseRenderer(appConfig: AppConfig) {
   def render(
     response: KnoraResponseV2,
     format: RdfFormat,
-    rendering: SchemaRendering[ApiV2Schema, Rendering]
+    rendering: SchemaRendering
   ): Task[(String, MediaType)] =
     ZIO
       .attempt(response.format(format, rendering.schema, rendering.rendering, appConfig))
@@ -189,6 +189,6 @@ object ApiV2Codecs {
         )
       )
 
-  val apiV2SchemaRendering: EndpointInput[SchemaRendering[ApiV2Schema, Rendering]] =
+  val apiV2SchemaRendering: EndpointInput[SchemaRendering] =
     apiV2Schema.and(apiV2Rendering).map(t => SchemaRendering(t._1, t._2))(s => (s.schema, s.rendering))
 }
