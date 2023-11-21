@@ -54,6 +54,17 @@ sealed trait QuadFormat extends NonJsonLD
 
 object RdfFormat {
 
+  def from(mediaType: sttp.model.MediaType): Either[String, RdfFormat] =
+    mediaType match {
+      case sttp.model.MediaType("application", "json", _, _)    => Right(JsonLD)
+      case sttp.model.MediaType("application", "ld+json", _, _) => Right(JsonLD)
+      case sttp.model.MediaType("text", "turtle", _, _)         => Right(Turtle)
+      case sttp.model.MediaType("application", "trig", _, _)    => Right(TriG)
+      case sttp.model.MediaType("application", "rdf+xml", _, _) => Right(RdfXml)
+      case sttp.model.MediaType("application", "n-quads", _, _) => Right(NQuads)
+      case other                                                => Left(s"Unsupported RDF media type: $other")
+    }
+
   /**
    * Converts a [[MediaType]] to an [[RdfFormat]].
    *
