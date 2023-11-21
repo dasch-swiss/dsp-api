@@ -40,6 +40,11 @@ import org.knora.webapi.util.MutableTestIri
 
 import pekko.pattern.ask
 import pekko.testkit.ImplicitSender
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 
 /**
  * Tests [[OntologyResponderV2]].
@@ -154,6 +159,28 @@ class OntologyResponderV2Spec extends CoreSpec with ImplicitSender {
       fooLastModDate = metadata.lastModificationDate.getOrElse(
         throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
       )
+    }
+
+    "invalidate cached project information when adding an ontology to a project" in {
+      // ernsure that the project is cached
+      appActor ! ProjectGetRequestADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString)      )
+      val projectResponse = expectMsgType[ProjectGetResponseADM](timeout)
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
+      val cachedProjectBefore = expectMsgType[Option[ProjectADM]](timeout)
+      assert(cachedProjectBefore.isDefined)
+      // create an ontology
+      appActor ! CreateOntologyRequestV2(
+        ontologyName = "foo-two",
+        projectIri = imagesProjectIri,
+        label = "The foo-two ontology",
+        apiRequestID = UUID.randomUUID,
+        requestingUser = imagesUser
+      )
+      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+      // ensure that the project is no longer cached
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM.IriIdentifier.unsafeFrom(imagesProjectIri.toString))
+      val cachedProject = expectMsgType[Option[ProjectADM]](timeout)
+      assert(cachedProject.isEmpty)
     }
 
     "change the label in the metadata of 'foo'" in {
