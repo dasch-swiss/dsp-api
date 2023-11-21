@@ -43,6 +43,8 @@ import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 
 /**
  * Responds to requests dealing with ontologies.
@@ -75,6 +77,7 @@ final case class OntologyResponderV2Live(
   ontologyRepo: OntologyRepo,
   projectRepo: KnoraProjectRepo,
   triplestoreService: TriplestoreService,
+  cacheService: CacheService,
   implicit val stringFormatter: StringFormatter
 ) extends OntologyResponderV2
     with MessageHandler
@@ -508,6 +511,9 @@ final case class OntologyResponderV2Live(
             internalOntologyIri,
             ReadOntologyV2(ontologyMetadata = unescapedNewMetadata)
           )
+
+        projectIri <- KnoraProject.ProjectIri.from(createOntologyRequest.projectIri.toString).toZIO
+        _          <- cacheService.invalidateProjectADM(projectIri).ignore
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
@@ -2951,7 +2957,7 @@ final case class OntologyResponderV2Live(
 object OntologyResponderV2Live {
   val layer: URLayer[
     AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectRepo & MessageRelay & OntologyCache &
-      OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService,
+      OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService & CacheService,
     OntologyResponderV2
   ] = ZLayer.fromZIO {
     for {
@@ -2965,7 +2971,8 @@ object OntologyResponderV2Live {
       or       <- ZIO.service[OntologyRepo]
       sf       <- ZIO.service[StringFormatter]
       ts       <- ZIO.service[TriplestoreService]
-      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, sf)
+      cache    <- ZIO.service[CacheService]
+      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, cache, sf)
       _        <- MessageRelay.subscribe(responder)
     } yield responder
   }
