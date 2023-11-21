@@ -5,28 +5,20 @@
 
 package org.knora.webapi.slice.search.search.api
 
-import sttp.model.HeaderNames
-import sttp.model.MediaType
-import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.*
-import zio.Task
-import zio.ZIO
-import zio.ZLayer
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.rdf.JsonLD
-import org.knora.webapi.messages.util.rdf.RdfFormat
+import org.knora.webapi.messages.util.rdf.{JsonLD, RdfFormat}
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers
-import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams
-import org.knora.webapi.slice.search.search.api.ApiV2.defaultApiV2Schema
+import org.knora.webapi.slice.common.api.{BaseEndpoints, SecuredEndpointAndZioHandler}
+import org.knora.webapi.slice.search.search.api.ApiV2.{Headers, QueryParams, defaultApiV2Schema}
 import org.knora.webapi.slice.search.search.api.ApiV2Codecs.apiV2SchemaRendering
+import sttp.model.{HeaderNames, MediaType}
+import sttp.tapir.*
+import sttp.tapir.Codec.PlainCodec
+import zio.{Task, ZIO, ZLayer}
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -182,13 +174,16 @@ object ApiV2Codecs {
   private val apiV2Rendering: EndpointInput[Set[Rendering]] =
     jsonLdRenderingHeader
       .and(markupRendering)
-      .map(tuple => Set(tuple._1, tuple._2).flatten)((s: Set[Rendering]) =>
-        (
-          s.collectFirst { case jsonLd: JsonLdRendering => jsonLd },
-          s.collectFirst { case standoff: MarkupRendering => standoff }
-        )
-      )
+      .map { case (jsonLd: Option[JsonLdRendering], markup: Option[MarkupRendering]) => Set(jsonLd, markup).flatten } {
+        (s: Set[Rendering]) =>
+          (
+            s.collectFirst { case jsonLd: JsonLdRendering => jsonLd },
+            s.collectFirst { case markup: MarkupRendering => markup }
+          )
+      }
 
   val apiV2SchemaRendering: EndpointInput[SchemaRendering] =
-    apiV2Schema.and(apiV2Rendering).map(t => SchemaRendering(t._1, t._2))(s => (s.schema, s.rendering))
+    apiV2Schema
+      .and(apiV2Rendering)
+      .map { case (schema, rendering) => SchemaRendering(schema, rendering) }(s => (s.schema, s.rendering))
 }
