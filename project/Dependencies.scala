@@ -116,7 +116,7 @@ object Dependencies {
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
   val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.1"
-  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.2.0"
+  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
@@ -129,7 +129,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.2.13"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.0"
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
