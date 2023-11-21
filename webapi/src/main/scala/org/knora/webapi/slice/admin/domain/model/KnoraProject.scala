@@ -14,12 +14,16 @@ import scala.util.matching.Regex
 
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
+import dsp.valueobjects.Iri.isProjectIri
+import dsp.valueobjects.Iri.validateAndEscapeProjectIri
+import dsp.valueobjects.IriErrorMessages
+import dsp.valueobjects.UuidUtil
 import dsp.valueobjects.V2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 
 case class KnoraProject(
-  id: InternalIri,
+  id: ProjectIri,
   shortname: Shortname,
   shortcode: Shortcode,
   longname: Option[Longname],
@@ -32,6 +36,29 @@ case class KnoraProject(
 )
 
 object KnoraProject {
+  final case class ProjectIri private (value: String) extends AnyVal
+
+  object ProjectIri {
+
+    implicit val codec: JsonCodec[ProjectIri] =
+      JsonCodec[String].transformOrFail(ProjectIri.from(_).toEitherWith(e => e.head.getMessage), _.value)
+
+    def unsafeFrom(str: String): ProjectIri = from(str).fold(e => throw e.head, identity)
+
+    def from(str: String): Validation[ValidationException, ProjectIri] = str match {
+      case str if str.isEmpty =>
+        Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
+      case str if !isProjectIri(str) =>
+        Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
+      case str if UuidUtil.hasValidLength(str.split("/").last) && !UuidUtil.hasSupportedVersion(str) =>
+        Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
+      case _ =>
+        Validation
+          .fromOption(validateAndEscapeProjectIri(str))
+          .mapError(_ => ValidationException(IriErrorMessages.ProjectIriInvalid))
+          .map(ProjectIri(_))
+    }
+  }
 
   final case class Shortcode private (value: String) extends AnyVal
 

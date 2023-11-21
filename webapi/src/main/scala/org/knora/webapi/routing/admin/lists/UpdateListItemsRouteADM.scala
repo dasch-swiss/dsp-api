@@ -24,6 +24,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 import pekko.http.scaladsl.server.Directives.*
 import pekko.http.scaladsl.server.PathMatcher
@@ -135,7 +136,7 @@ final case class UpdateListItemsRouteADM(
         val validatedPayload = for {
           _          <- ZIO.fail(BadRequestException("Route and payload listIri mismatch.")).when(iri != apiRequest.listIri)
           listIri     = ListIri.make(apiRequest.listIri)
-          projectIri  = ProjectIri.make(apiRequest.projectIri)
+          projectIri  = ProjectIri.from(apiRequest.projectIri)
           hasRootNode = ListIri.make(apiRequest.hasRootNode)
           position    = Position.make(apiRequest.position)
           name        = ListName.make(apiRequest.name)

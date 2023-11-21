@@ -83,7 +83,7 @@ final case class ProjectADMServiceLive(
 
   private def toKnoraProject(project: ProjectADM): KnoraProject =
     KnoraProject(
-      id = InternalIri.apply(project.id),
+      id = ProjectIri.unsafeFrom(project.id),
       shortname = Shortname.unsafeFrom(project.shortname),
       shortcode = Shortcode.unsafeFrom(project.shortcode),
       longname = project.longname.map(Longname.unsafeFrom),

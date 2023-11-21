@@ -40,6 +40,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -114,7 +115,7 @@ trait ProjectsResponderADM {
    * @param projectIri the IRI of the project.
    * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
    */
-  def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM]
+  def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponseADM]
 
   /**
    * Get project's restricted view settings.
@@ -166,7 +167,7 @@ trait ProjectsResponderADM {
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   def changeBasicInformationRequestADM(
-    projectIri: Iri.ProjectIri,
+    projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
@@ -389,7 +390,7 @@ final case class ProjectsResponderADMLive(
    * @param projectIri           the IRI of the project.
    * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
    */
-  override def projectKeywordsGetRequestADM(projectIri: Iri.ProjectIri): Task[ProjectKeywordsGetResponseADM] =
+  override def projectKeywordsGetRequestADM(projectIri: ProjectIri): Task[ProjectKeywordsGetResponseADM] =
     for {
       id <- IriIdentifier.fromString(projectIri.value).toZIO.mapError(e => BadRequestException(e.getMessage))
       keywords <- projectService
@@ -466,7 +467,7 @@ final case class ProjectsResponderADMLive(
    *         [[ForbiddenException]] In the case that the user is not allowed to perform the operation.
    */
   override def changeBasicInformationRequestADM(
-    projectIri: Iri.ProjectIri,
+    projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
     user: UserADM,
     apiRequestID: UUID
@@ -476,7 +477,7 @@ final case class ProjectsResponderADMLive(
      * The actual change project task run with an IRI lock.
      */
     def changeProjectTask(
-      projectIri: Iri.ProjectIri,
+      projectIri: ProjectIri,
       updateReq: ProjectUpdateRequest,
       requestingUser: UserADM
     ): Task[ProjectOperationResponseADM] =
@@ -503,7 +504,7 @@ final case class ProjectsResponderADMLive(
    *
    *         [[NotFoundException]] In the case that the project's IRI is not found.
    */
-  private def updateProjectADM(projectIri: Iri.ProjectIri, projectUpdatePayload: ProjectUpdateRequest) = {
+  private def updateProjectADM(projectIri: ProjectIri, projectUpdatePayload: ProjectUpdateRequest) = {
 
     val areAllParamsNone: Boolean = projectUpdatePayload.productIterator.forall {
       case param: Option[Any] => param.isEmpty
