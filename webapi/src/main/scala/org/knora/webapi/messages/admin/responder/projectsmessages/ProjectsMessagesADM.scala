@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
@@ -24,7 +24,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import dsp.errors.ValidationException
 import dsp.valueobjects.Iri
-import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.RestrictedViewSize
 import dsp.valueobjects.V2
 import org.knora.webapi.IRI
@@ -38,8 +37,6 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -376,7 +373,7 @@ object ProjectIdentifierADM {
       )
 
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
-      ProjectIri.make(value).map(IriIdentifier(_))
+      ProjectIri.from(value).map(IriIdentifier(_))
 
     implicit val tapirCodec: Codec[String, IriIdentifier, TextPlain] =
       Codec.string.mapDecode(str =>

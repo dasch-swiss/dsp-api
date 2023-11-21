@@ -5,11 +5,13 @@
 
 package org.knora.webapi.routing.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.RouteResult
 import zio.*
-import zio.metrics.*
 
-import java.time.temporal.ChronoUnit
+import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -20,22 +22,17 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.v2.responder.KnoraResponseV2
-import org.knora.webapi.messages.v2.responder.searchmessages.*
+import org.knora.webapi.responders.v2.ResourceCountV2
+import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.Route
 
 /**
  * Provides a function for API routes that deal with search.
  */
 final case class SearchRouteV2(searchValueMinLength: Int)(
-  private implicit val runtime: Runtime[AppConfig & Authenticator & IriConverter & MessageRelay]
+  private implicit val runtime: Runtime[AppConfig & Authenticator & IriConverter & SearchResponderV2 & MessageRelay]
 ) {
 
   private val LIMIT_TO_PROJECT        = "limitToProject"
@@ -139,21 +136,20 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get { requestContext =>
           val params: Map[String, String] = requestContext.request.uri.query().toMap
-          val requestTask = for {
+          val response = for {
             _                    <- ensureIsNotFullTextSearch(searchStr)
             escapedSearchStr     <- validateSearchString(searchStr)
             limitToProject       <- getProjectFromParams(params)
             limitToResourceClass <- getResourceClassFromParams(params)
             limitToStandoffClass <- getStandoffClass(params)
-            user                 <- Authenticator.getUserADM(requestContext)
-          } yield FullTextSearchCountRequestV2(
-            escapedSearchStr,
-            limitToProject,
-            limitToResourceClass,
-            limitToStandoffClass,
-            user
-          )
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
+            response <- SearchResponderV2.fulltextSearchCountV2(
+                          escapedSearchStr,
+                          limitToProject,
+                          limitToResourceClass,
+                          limitToStandoffClass
+                        )
+          } yield response
+          RouteUtilV2.completeResponse(response, requestContext)
         }
     }
 
@@ -192,45 +188,40 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           limitToStandoffClass <- getStandoffClass(params)
           returnFiles           = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
           requestingUser       <- Authenticator.getUserADM(requestContext)
-          targetSchema         <- targetSchemaTask
-          schemaOptions        <- schemaOptionsTask
-        } yield FulltextSearchRequestV2(
-          searchValue = escapedSearchStr,
-          offset = offset,
-          limitToProject = limitToProject,
-          limitToResourceClass = limitToResourceClass,
-          limitToStandoffClass = limitToStandoffClass,
-          returnFiles = returnFiles,
-          requestingUser = requestingUser,
-          targetSchema = targetSchema,
-          schemaOptions = schemaOptions
-        )
-        RouteUtilV2.runRdfRouteZ(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
+          schemaAndOptions     <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
+          response <- SearchResponderV2.fulltextSearchV2(
+                        escapedSearchStr,
+                        offset,
+                        limitToProject,
+                        limitToResourceClass,
+                        limitToStandoffClass,
+                        returnFiles,
+                        schemaAndOptions,
+                        requestingUser
+                      )
+        } yield response
+        RouteUtilV2.completeResponse(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
       }
   }
 
   private def gravsearchCountGet(): Route =
-    path("v2" / "searchextended" / "count" / Segment) {
-      gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
-        get { requestContext =>
-          val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-          val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
-          RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-        }
+    path("v2" / "searchextended" / "count" / Segment) { query =>
+      get(gravsearchCountV2(query, _))
     }
 
   private def gravsearchCountPost(): Route =
     path("v2" / "searchextended" / "count") {
-      post {
-        entity(as[String]) { gravsearchQuery => requestContext =>
-          {
-            val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-            val requestTask    = Authenticator.getUserADM(requestContext).map(GravsearchCountRequestV2(constructQuery, _))
-            RouteUtilV2.runRdfRouteZ(requestTask, requestContext)
-          }
-        }
-      }
+      post(entity(as[String])(query => gravsearchCountV2(query, _)))
     }
+
+  private def gravsearchCountV2(query: String, ctx: RequestContext): Future[RouteResult] = {
+    val response: ZIO[SearchResponderV2 & Authenticator, Throwable, ResourceCountV2] = for {
+      user       <- Authenticator.getUserADM(ctx)
+      gravsearch <- ZIO.attempt(GravsearchParser.parseQuery(query))
+      response   <- SearchResponderV2.gravsearchCountV2(gravsearch, user)
+    } yield response
+    RouteUtilV2.completeResponse(response, ctx)
+  }
 
   private def gravsearchGet(): Route = path(
     "v2" / "searchextended" / Segment
@@ -242,27 +233,14 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     post(entity(as[String])(query => requestContext => gravsearch(query, requestContext)))
   }
 
-  private val gravsearchDuration = Metric.timer("gravsearch", ChronoUnit.MILLIS, Chunk.iterate(1.0, 17)(_ * 2))
-  private val gravsearchDurationSummary =
-    Metric.summary("gravsearch_summary", 1.day, 100, 0.03d, Chunk(0.01, 0.1, 0.2, 0.5, 0.8, 0.9, 0.99))
-  private val gravsearchFailCounter    = Metric.counter("gravsearch_fail").fromConst(1)
-  private val gravsearchTimeoutCounter = Metric.counter("gravsearch_timeout").fromConst(1)
-
   private def gravsearch(query: String, requestContext: RequestContext) = {
     val constructQuery    = GravsearchParser.parseQuery(query)
     val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
     val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
     val task = for {
-      start          <- Clock.instant.map(_.toEpochMilli).map(_.toDouble)
-      targetSchema   <- targetSchemaTask
-      requestingUser <- Authenticator.getUserADM(requestContext)
-      schemaOptions  <- schemaOptionsTask
-      request         = GravsearchRequestV2(constructQuery, targetSchema, schemaOptions, requestingUser)
-      response <- MessageRelay.ask[KnoraResponseV2](request).tapError {
-                    case _: TriplestoreTimeoutException => ZIO.unit @@ gravsearchTimeoutCounter
-                    case _                              => ZIO.unit @@ gravsearchFailCounter
-                  } @@ gravsearchDuration.trackDuration
-      _ <- Clock.instant.map(_.toEpochMilli).map(_.-(start)) @@ gravsearchDurationSummary
+      schemaAndOptions <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
+      user             <- Authenticator.getUserADM(requestContext)
+      response         <- SearchResponderV2.gravsearchV2(constructQuery, schemaAndOptions, user)
     } yield response
     RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
@@ -272,13 +250,14 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
         get { requestContext =>
           val params: Map[String, String] = requestContext.request.uri.query().toMap
-          val requestMessage = for {
+          val response = for {
             searchString         <- validateSearchString(searchval)
             limitToProject       <- getProjectFromParams(params)
             limitToResourceClass <- getResourceClassFromParams(params)
-            user                 <- Authenticator.getUserADM(requestContext)
-          } yield SearchResourceByLabelCountRequestV2(searchString, limitToProject, limitToResourceClass, user)
-          RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, RouteUtilV2.getOntologySchema(requestContext))
+            response <-
+              SearchResponderV2.searchResourcesByLabelCountV2(searchString, limitToProject, limitToResourceClass)
+          } yield response
+          RouteUtilV2.completeResponse(response, requestContext, RouteUtilV2.getOntologySchema(requestContext))
         }
     }
 
@@ -288,22 +267,23 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     get { requestContext =>
       val targetSchemaTask            = RouteUtilV2.getOntologySchema(requestContext)
       val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val requestMessage = for {
+      val response = for {
         sparqlEncodedSearchString <- validateSearchString(searchval)
         offset                    <- getOffsetFromParams(params)
         limitToProject            <- getProjectFromParams(params)
         limitToResourceClass      <- getResourceClassFromParams(params)
         targetSchema              <- targetSchemaTask
         requestingUser            <- Authenticator.getUserADM(requestContext)
-      } yield SearchResourceByLabelRequestV2(
-        searchValue = sparqlEncodedSearchString,
-        offset = offset,
-        limitToProject = limitToProject,
-        limitToResourceClass = limitToResourceClass,
-        targetSchema = targetSchema,
-        requestingUser = requestingUser
-      )
-      RouteUtilV2.runRdfRouteZ(requestMessage, requestContext, targetSchemaTask)
+        response <- SearchResponderV2.searchResourcesByLabelV2(
+                      searchValue = sparqlEncodedSearchString,
+                      offset = offset,
+                      limitToProject = limitToProject,
+                      limitToResourceClass = limitToResourceClass,
+                      targetSchema = targetSchema,
+                      requestingUser = requestingUser
+                    )
+      } yield response
+      RouteUtilV2.completeResponse(response, requestContext, targetSchemaTask)
     }
   }
 }

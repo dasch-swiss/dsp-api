@@ -147,7 +147,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
   // needs to have the StringFormatter in the environment because the [[ChangeProjectApiRequestADM]] needs it
   val deleteProjectSpec: Spec[StringFormatter, Throwable] = test("delete a project") {
     val iri                  = "http://rdfh.ch/projects/0001"
-    val projectIri           = TestDataFactory.projectIri(iri)
+    val projectIri           = ProjectIri.unsafeFrom(iri)
     val projectStatus        = Some(Status.Inactive)
     val projectUpdatePayload = ProjectUpdateRequest(status = projectStatus)
     for {
@@ -165,7 +165,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   val updateProjectSpec: Spec[Any, Throwable] = test("update a project") {
     val iri        = "http://rdfh.ch/projects/0001"
-    val projectIri = TestDataFactory.projectIri(iri)
+    val projectIri = ProjectIri.unsafeFrom(iri)
     val projectUpdatePayload = ProjectUpdateRequest(
       Some(Shortname.unsafeFrom("usn")),
       Some(Longname.unsafeFrom("updated project longname")),
@@ -285,7 +285,7 @@ object ProjectsServiceLiveSpec extends ZIOSpecDefault {
 
   val getKeywordsByProjectIri: Spec[Any, Throwable] = test("get keywords of a single project by project IRI") {
     val iri        = "http://rdfh.ch/projects/0001"
-    val projectIri = TestDataFactory.projectIri(iri)
+    val projectIri = ProjectIri.unsafeFrom(iri)
     val mockResponder = ProjectsResponderADMMock.ProjectKeywordsGetRequestADM(
       assertion = Assertion.equalTo(projectIri),
       result = Expectation.value(ProjectKeywordsGetResponseADM(Seq.empty[String]))

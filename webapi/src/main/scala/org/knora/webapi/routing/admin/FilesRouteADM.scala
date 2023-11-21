@@ -5,7 +5,8 @@
 
 package org.knora.webapi.routing.admin
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import dsp.errors.BadRequestException
@@ -17,9 +18,7 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.Route
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 /**
  * Provides a routing function for the API that Sipi connects to.
@@ -41,7 +40,8 @@ final case class FilesRouteADM(
         val requestMessage = for {
           requestingUser <- Authenticator.getUserADM(requestContext)
           projectID <- ZIO
-                         .fromOption(stringFormatter.validateProjectShortcode(projectIDAndFile.head))
+                         .fromOption(projectIDAndFile.headOption)
+                         .flatMap(Shortcode.from(_).toZIO)
                          .orElseFail(BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'"))
           filename <- ZIO
                         .fromOption(Iri.toSparqlEncodedString(projectIDAndFile(1)))

@@ -53,7 +53,7 @@ trait RestPermissionService {
 object RestPermissionService {
   def isActive(userADM: UserADM): Boolean                           = userADM.status
   def isSystemAdmin(user: UserADM): Boolean                         = user.permissions.isSystemAdmin
-  def isProjectAdmin(user: UserADM, project: KnoraProject): Boolean = user.permissions.isProjectAdmin(project.id)
+  def isProjectAdmin(user: UserADM, project: KnoraProject): Boolean = user.permissions.isProjectAdmin(project.id.value)
   def isSystemOrProjectAdmin(project: KnoraProject)(userADM: UserADM): Boolean =
     isSystemAdmin(userADM) || isProjectAdmin(userADM, project)
 }

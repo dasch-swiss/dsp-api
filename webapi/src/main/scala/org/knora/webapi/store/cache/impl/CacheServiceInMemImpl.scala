@@ -8,7 +8,6 @@ package org.knora.webapi.store.cache.impl
 import zio.*
 import zio.stm.*
 
-import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
@@ -18,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierTyp
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
@@ -133,7 +133,7 @@ case class CacheServiceInMemImpl(
    * @param iri the project's IRI
    * @return an optional [[ProjectADM]].
    */
-  def getProjectByIri(iri: Iri.ProjectIri) = projects.get(iri.value).commit
+  def getProjectByIri(iri: ProjectIri) = projects.get(iri.value).commit
 
   /**
    * Retrieves the project by the SHORTNAME.

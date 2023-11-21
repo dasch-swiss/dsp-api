@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.util.search.gravsearch.transformers
+package org.knora.webapi.util.search
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
@@ -80,11 +80,11 @@ class SparqlTransformerSpec extends CoreSpec {
         isDeletedStatement,
         linkStatement
       )
-      val optimisedPatterns = SparqlTransformer.optimiseIsDeletedWithMinus(patterns)
+      val optimisedPatterns = SparqlTransformer.optimiseIsDeletedWithFilter(patterns)
       val expectedPatterns = Seq(
         typeStatement,
         linkStatement,
-        MinusPattern(
+        FilterNotExistsPattern(
           Seq(
             StatementPattern(
               subj = QueryVariable("foo"),

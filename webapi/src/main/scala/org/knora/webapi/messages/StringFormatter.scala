@@ -25,15 +25,15 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter.*
+import org.knora.webapi.messages.XmlPatterns.nCNamePattern
+import org.knora.webapi.messages.XmlPatterns.nCNameRegex
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
-
-import XmlPatterns.nCNamePattern
-import XmlPatterns.nCNameRegex
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -875,13 +875,13 @@ class StringFormatter private (
                 (true, Some(DefaultSharedOntologiesProjectCode))
               } else if (ontologyPath.length == 3) {
                 // other shared ontologies project
-                (true, Some(validateProjectShortcode(ontologyPath(1), errorFun)))
+                (true, Some(Try(Shortcode.unsafeFrom(ontologyPath(1)).value).getOrElse(errorFun)))
               } else {
                 errorFun
               }
             } else if (ontologyPath.length == 2) {
               // non-shared ontology with project code
-              (false, Some(validateProjectShortcode(ontologyPath.head, errorFun)))
+              (false, Some(Try(Shortcode.unsafeFrom(ontologyPath.head).value).getOrElse(errorFun)))
             } else {
               // built-in ontology
               (false, None)
@@ -1526,19 +1526,6 @@ class StringFormatter private (
     }
 
   /**
-   * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
-   *
-   * @param shortcode the project's shortcode.
-   * @return the shortcode in upper case.
-   */
-  @deprecated("Use def validateProjectShortcode(String) instead.")
-  def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = // V2 / value objects
-    validateProjectShortcode(shortcode).getOrElse(errorFun)
-
-  def validateProjectShortcode(shortcode: String): Option[String] =
-    ProjectIDRegex.findFirstIn(shortcode.toUpperCase)
-
-  /**
    * Given the group IRI, checks if it is in a valid format.
    *
    * @param iri the group's IRI.
@@ -1640,14 +1627,6 @@ class StringFormatter private (
         arkUrlWithoutTimestamp
     }
   }
-
-  /**
-   * Constructs a path for accessing a file that has been uploaded to Sipi's temporary storage.
-   *
-   * @param filename the filename.
-   * @return a URL for accessing the file.
-   */
-  def makeSipiTempFilePath(filename: String): String = s"/tmp/$filename"
 
   /**
    * Creates a new resource IRI based on a UUID.

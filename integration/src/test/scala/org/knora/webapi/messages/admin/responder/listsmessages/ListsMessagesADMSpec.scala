@@ -20,6 +20,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequence
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 /**
  * This spec is used to test 'ListAdminMessages'.
@@ -126,7 +127,7 @@ class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(exampleListIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIri.make(SharedTestDataADM.imagesProjectIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri),
             position = Some(Position.make(-3).fold(e => throw e.head, v => v)),
             labels = Labels
               .make(Seq(V2.StringLiteralV2(value = "New child node", language = Some("en"))))

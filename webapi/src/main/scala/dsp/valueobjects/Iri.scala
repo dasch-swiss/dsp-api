@@ -8,7 +8,6 @@ package dsp.valueobjects
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
-import zio.json.JsonCodec
 import zio.json.JsonDecoder
 import zio.json.JsonEncoder
 import zio.prelude.Validation
@@ -18,9 +17,10 @@ import scala.util.Try
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
 
-sealed trait Iri {
+trait Iri {
   val value: String
 }
+
 object Iri {
   type IRI = String
 
@@ -223,40 +223,6 @@ object Iri {
       }
 
     def make(value: Option[String]): Validation[Throwable, Option[ListIri]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
-  }
-
-  /**
-   * ProjectIri value object.
-   */
-  sealed abstract case class ProjectIri private (value: String) extends Iri
-  object ProjectIri { self =>
-
-    implicit val codec: JsonCodec[ProjectIri] = new JsonCodec[ProjectIri](
-      JsonEncoder[String].contramap(_.value),
-      JsonDecoder[String].mapOrFail(ProjectIri.make(_).toEitherWith(e => e.head.getMessage))
-    )
-
-    def make(value: String): Validation[ValidationException, ProjectIri] =
-      if (value.isEmpty) Validation.fail(ValidationException(IriErrorMessages.ProjectIriMissing))
-      else {
-        val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
-
-        if (!isProjectIri(value))
-          Validation.fail(ValidationException(IriErrorMessages.ProjectIriInvalid))
-        else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-          Validation.fail(ValidationException(IriErrorMessages.UuidVersionInvalid))
-        else
-          Validation
-            .fromOption(validateAndEscapeProjectIri(value))
-            .mapError(_ => ValidationException(IriErrorMessages.ProjectIriInvalid))
-            .map(new ProjectIri(_) {})
-      }
-
-    def make(value: Option[String]): Validation[ValidationException, Option[ProjectIri]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
