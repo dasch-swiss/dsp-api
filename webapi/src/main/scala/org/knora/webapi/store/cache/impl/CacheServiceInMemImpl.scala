@@ -132,18 +132,18 @@ case class CacheServiceInMemImpl(
    * This includes removing the the IRI, Shortcode, and Shortname keys.
    * @param iri the project's IRI.
    */
-  def invalidateProjectADM(iri: ProjectIri): IO[Option[Nothing], Unit] =
+  def invalidateProjectADM(iri: ProjectIri): UIO[Unit] =
     (for {
+      _        <- projects.delete(iri.value)
+      _        <- lut.delete(iri.value)
       project  <- projects.get(iri.value).some
       shortcode = project.shortcode
       shortname = project.shortname
-      _        <- projects.delete(iri.value)
       _        <- projects.delete(shortcode)
       _        <- projects.delete(shortname)
-      _        <- lut.delete(iri.value)
       _        <- lut.delete(shortcode)
       _        <- lut.delete(shortname)
-    } yield ()).commit
+    } yield ()).commit.ignore
 
   /**
    * Retrieves the project by the IRI.

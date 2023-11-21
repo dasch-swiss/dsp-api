@@ -513,7 +513,7 @@ final case class OntologyResponderV2Live(
           )
 
         projectIri <- KnoraProject.ProjectIri.from(createOntologyRequest.projectIri.toString).toZIO
-        _          <- cacheService.invalidateProjectADM(projectIri).ignore
+        _          <- cacheService.invalidateProjectADM(projectIri)
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 

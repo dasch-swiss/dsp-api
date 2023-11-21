@@ -24,7 +24,7 @@ trait CacheService {
   def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]]
   def putProjectADM(value: ProjectADM): Task[Unit]
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]]
-  def invalidateProjectADM(identifier: KnoraProject.ProjectIri): IO[Option[Nothing], Unit]
+  def invalidateProjectADM(identifier: KnoraProject.ProjectIri): UIO[Unit]
   def putStringValue(key: String, value: String): Task[Unit]
   def getStringValue(key: String): Task[Option[String]]
   def removeValues(keys: Set[String]): Task[Unit]
