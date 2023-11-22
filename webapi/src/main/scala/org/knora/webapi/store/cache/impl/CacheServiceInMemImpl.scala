@@ -129,7 +129,7 @@ case class CacheServiceInMemImpl(
 
   /**
    * Invalidates the project stored under the IRI.
-   * This includes removing the the IRI, Shortcode, and Shortname keys.
+   * This includes removing the IRI, Shortcode and Shortname keys.
    * @param iri the project's IRI.
    */
   def invalidateProjectADM(iri: ProjectIri): UIO[Unit] =
