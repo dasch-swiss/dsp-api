@@ -1863,6 +1863,13 @@ final case class OntologyResponderV2Live(
         _ <- triplestoreService.query(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
         // Remove the ontology from the cache.
         _ <- ontologyCache.deleteOntology(internalOntologyIri)
+        // invalidate the project cache
+        projectIri <-
+          ZIO
+            .fromOption(ontology.ontologyMetadata.projectIri)
+            .flatMap(iri => KnoraProject.ProjectIri.from(iri.toString).toZIO)
+            .orElseFail(InconsistentRepositoryDataException(s"Project IRI not found for ontology $internalOntologyIri"))
+        _ <- cacheService.invalidateProjectADM(projectIri)
 
         // Check that the ontology has been deleted.
         maybeOntologyMetadata <- ontologyHelpers.loadOntologyMetadata(internalOntologyIri)
