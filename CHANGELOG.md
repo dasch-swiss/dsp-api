@@ -1,5 +1,41 @@
 # Changelog
 
+## [30.5.2](https://github.com/dasch-swiss/dsp-api/compare/v30.5.1...v30.5.2) (2023-11-22)
+
+
+### Maintenance
+
+* Bump Sipi version to 3.8.5 ([#2942](https://github.com/dasch-swiss/dsp-api/issues/2942)) ([8f35d81](https://github.com/dasch-swiss/dsp-api/commit/8f35d8133715ccf2d2f53ec26df3cc2b44ff4371))
+* Bump Sipi version to 3.8.6 ([#2947](https://github.com/dasch-swiss/dsp-api/issues/2947)) ([34b74bf](https://github.com/dasch-swiss/dsp-api/commit/34b74bfb682e9ad6961da913f108d24e0c70eacb))
+* **docker-compose:** Bump app version to 11.1.0 ([#2926](https://github.com/dasch-swiss/dsp-api/issues/2926)) ([b39e9f3](https://github.com/dasch-swiss/dsp-api/commit/b39e9f3a230ecbcce8a72a3dcd6f04c6d3034025))
+* Inline some UuidUtil functions and reduce deprecation warnings ([#2934](https://github.com/dasch-swiss/dsp-api/issues/2934)) ([52d1efa](https://github.com/dasch-swiss/dsp-api/commit/52d1efa3a4540cdb113875279205e36ccb9c9d46))
+* **knora-sipi:** Remove cron and custom entrypoint ([#2940](https://github.com/dasch-swiss/dsp-api/issues/2940)) ([ef714c1](https://github.com/dasch-swiss/dsp-api/commit/ef714c1918d290189a0f96453d9622ff34e5148b))
+* Major dependency updates ([#2932](https://github.com/dasch-swiss/dsp-api/issues/2932)) ([0624380](https://github.com/dasch-swiss/dsp-api/commit/06243800c8059917a6f22de3e1559c4c06daf251))
+* Minor dependency updates ([#2931](https://github.com/dasch-swiss/dsp-api/issues/2931)) ([86c926a](https://github.com/dasch-swiss/dsp-api/commit/86c926a95ab3c1342fda65e445fb82462d3c8b93))
+* Move project related value objects to admin.domain.model package and cleanup code ([#2923](https://github.com/dasch-swiss/dsp-api/issues/2923)) ([57c6ac2](https://github.com/dasch-swiss/dsp-api/commit/57c6ac2d719f65efcc8f716b40c18dd18e763db5))
+* Move ProjectIri to KnoraProject ([#2944](https://github.com/dasch-swiss/dsp-api/issues/2944)) ([af95516](https://github.com/dasch-swiss/dsp-api/commit/af95516d5183979df623d688ccf322a6129b8325))
+* Patch dependency updates ([#2930](https://github.com/dasch-swiss/dsp-api/issues/2930)) ([d8e13b7](https://github.com/dasch-swiss/dsp-api/commit/d8e13b74ef5bcfa81e46e39fb17df0bb9e0ffdb3))
+* Prepare Scala 3 compatibility by adding -Xsource:3 compiler flag ([#2924](https://github.com/dasch-swiss/dsp-api/issues/2924)) ([ff9df5f](https://github.com/dasch-swiss/dsp-api/commit/ff9df5faae805928ff156b9b20ddb4e4ac5c42a3))
+* Remove [@deprecation](https://github.com/deprecation) annotations ([#2937](https://github.com/dasch-swiss/dsp-api/issues/2937)) ([224eb3d](https://github.com/dasch-swiss/dsp-api/commit/224eb3dda3d0604d3075ec231eb25ae426fb5c16))
+* Remove duplicate 'gravsearch' metrics ([#2936](https://github.com/dasch-swiss/dsp-api/issues/2936)) ([f11dfef](https://github.com/dasch-swiss/dsp-api/commit/f11dfef39bd7134a799f5895fd8eed9350d4ddb6))
+* Remove MessageHandler from SearchResponder and call responder directly ([#2943](https://github.com/dasch-swiss/dsp-api/issues/2943)) ([ee8d09d](https://github.com/dasch-swiss/dsp-api/commit/ee8d09d8ff88fe3728565cce8d530f23b64dfc06))
+* Remove redundancies in search by label queries ([#2933](https://github.com/dasch-swiss/dsp-api/issues/2933)) ([a333e34](https://github.com/dasch-swiss/dsp-api/commit/a333e346411feef176d5f2c3637ae2b7ab71947e))
+* Replace spray json with zio-json for FileMetadataSipiResponse ([#2941](https://github.com/dasch-swiss/dsp-api/issues/2941)) ([20090dc](https://github.com/dasch-swiss/dsp-api/commit/20090dc460e766fef0b80002ebf6500e631a7925))
+* Replace StringFormatter.validateProjectShortcode methods wi… ([#2935](https://github.com/dasch-swiss/dsp-api/issues/2935)) ([80561af](https://github.com/dasch-swiss/dsp-api/commit/80561af0521908af37b18ca08e4d243a9dea998e))
+* Simplify and rename SipiService ([#2929](https://github.com/dasch-swiss/dsp-api/issues/2929)) ([0835301](https://github.com/dasch-swiss/dsp-api/commit/08353017d68590b0d1a871fdd8d96655ab449b98))
+* Use KnoraRepo instead of MessageRelay in ResourcesResponderV2 ([#2927](https://github.com/dasch-swiss/dsp-api/issues/2927)) ([2358f23](https://github.com/dasch-swiss/dsp-api/commit/2358f23e5b9e51c9fac31a7a9fd488b32fa5c0da))
+
+
+### Documentation
+
+* Adjust Gravsearch documentation according to current state of code (DEV-2153) ([#2938](https://github.com/dasch-swiss/dsp-api/issues/2938)) ([6aa1990](https://github.com/dasch-swiss/dsp-api/commit/6aa1990d8e56bc0d8bdc008a04a6c6ed2f409133))
+
+
+### Bug Fixes
+
+* BEOL timeouts ([#2945](https://github.com/dasch-swiss/dsp-api/issues/2945)) ([f4a781b](https://github.com/dasch-swiss/dsp-api/commit/f4a781b14c6bb08c393585b67591f3ef02d7b7d4))
+* Invalidate cached project information when adding an ontology to the project (DEV-2926) ([#2949](https://github.com/dasch-swiss/dsp-api/issues/2949)) ([d0700a2](https://github.com/dasch-swiss/dsp-api/commit/d0700a24706c97a883385570bfc8e8c326528c5c))
+
 ## [30.5.1](https://github.com/dasch-swiss/dsp-api/compare/v30.5.0...v30.5.1) (2023-11-09)
 
 
