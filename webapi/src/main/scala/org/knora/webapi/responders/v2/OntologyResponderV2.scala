@@ -36,11 +36,13 @@ import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache.ONTOLOGY_CACHE_LOCK_IRI
+import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 
@@ -75,6 +77,7 @@ final case class OntologyResponderV2Live(
   ontologyRepo: OntologyRepo,
   projectRepo: KnoraProjectRepo,
   triplestoreService: TriplestoreService,
+  cacheService: CacheService,
   implicit val stringFormatter: StringFormatter
 ) extends OntologyResponderV2
     with MessageHandler
@@ -508,6 +511,9 @@ final case class OntologyResponderV2Live(
             internalOntologyIri,
             ReadOntologyV2(ontologyMetadata = unescapedNewMetadata)
           )
+
+        projectIri <- KnoraProject.ProjectIri.from(createOntologyRequest.projectIri.toString).toZIO
+        _          <- cacheService.invalidateProjectADM(projectIri)
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
@@ -1857,6 +1863,13 @@ final case class OntologyResponderV2Live(
         _ <- triplestoreService.query(Update(sparql.v2.txt.deleteOntology(internalOntologyIri)))
         // Remove the ontology from the cache.
         _ <- ontologyCache.deleteOntology(internalOntologyIri)
+        // invalidate the project cache
+        projectIri <-
+          ZIO
+            .fromOption(ontology.ontologyMetadata.projectIri)
+            .flatMap(iri => KnoraProject.ProjectIri.from(iri.toString).toZIO)
+            .orElseFail(InconsistentRepositoryDataException(s"Project IRI not found for ontology $internalOntologyIri"))
+        _ <- cacheService.invalidateProjectADM(projectIri)
 
         // Check that the ontology has been deleted.
         maybeOntologyMetadata <- ontologyHelpers.loadOntologyMetadata(internalOntologyIri)
@@ -2951,7 +2964,7 @@ final case class OntologyResponderV2Live(
 object OntologyResponderV2Live {
   val layer: URLayer[
     AppConfig & CardinalityHandler & CardinalityService & IriService & KnoraProjectRepo & MessageRelay & OntologyCache &
-      OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService,
+      OntologyHelpers & OntologyRepo & StringFormatter & TriplestoreService & CacheService,
     OntologyResponderV2
   ] = ZLayer.fromZIO {
     for {
@@ -2965,7 +2978,8 @@ object OntologyResponderV2Live {
       or       <- ZIO.service[OntologyRepo]
       sf       <- ZIO.service[StringFormatter]
       ts       <- ZIO.service[TriplestoreService]
-      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, sf)
+      cache    <- ZIO.service[CacheService]
+      responder = OntologyResponderV2Live(ac, ch, cs, is, oc, oh, or, kr, ts, cache, sf)
       _        <- MessageRelay.subscribe(responder)
     } yield responder
   }
