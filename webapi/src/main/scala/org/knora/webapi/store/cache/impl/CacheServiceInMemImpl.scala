@@ -134,13 +134,13 @@ case class CacheServiceInMemImpl(
    */
   def invalidateProjectADM(iri: ProjectIri): UIO[Unit] =
     (for {
-      _        <- projects.delete(iri.value)
-      _        <- lut.delete(iri.value)
       project  <- projects.get(iri.value).some
       shortcode = project.shortcode
       shortname = project.shortname
+      _        <- projects.delete(iri.value)
       _        <- projects.delete(shortcode)
       _        <- projects.delete(shortname)
+      _        <- lut.delete(iri.value)
       _        <- lut.delete(shortcode)
       _        <- lut.delete(shortname)
     } yield ()).commit.ignore
