@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.3.2...v0.3.3) (2023-11-20)
+
+
+### Maintenance
+
+* Dependency updates ([#123](https://github.com/dasch-swiss/dsp-ingest/issues/123)) ([62f5229](https://github.com/dasch-swiss/dsp-ingest/commit/62f5229e82051ac6252d6c8a8438738e3fcec3d1))
+* Patch dependency updates ([#122](https://github.com/dasch-swiss/dsp-ingest/issues/122)) ([a72f61c](https://github.com/dasch-swiss/dsp-ingest/commit/a72f61cec20916b7fa278db2452ab492be653c15))
+* **scala-steward:** Improve dependency grouping  ([#120](https://github.com/dasch-swiss/dsp-ingest/issues/120)) ([272c21c](https://github.com/dasch-swiss/dsp-ingest/commit/272c21c19b2894dd795be1d39196c60ee9e70908))
+
 ## [0.3.2](https://github.com/dasch-swiss/dsp-ingest/compare/v0.3.1...v0.3.2) (2023-11-03)
 
 
