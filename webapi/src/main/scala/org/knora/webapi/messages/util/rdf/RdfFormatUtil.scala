@@ -29,6 +29,8 @@ import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
 
 import pekko.http.scaladsl.model.MediaType
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
+import org.knora.webapi.messages.util.rdf.jenaimpl.StreamRDFAsStreamProcessor
 
 /**
  * A trait for supported RDF formats.
@@ -370,7 +372,27 @@ trait RdfFormatUtil {
    * @param outputStream the output stream.
    * @param rdfFormat    the output format.
    */
-  def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit
+  final def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
+    val formatTry: Try[Unit] = Try {
+      val datasetGraph: jena.sparql.core.DatasetGraph = JenaConversions.asJenaDataset(rdfModel).asDatasetGraph
+
+      rdfFormat match {
+        case Turtle =>
+          jena.riot.RDFDataMgr.write(outputStream, datasetGraph.getDefaultGraph, jena.riot.RDFFormat.TURTLE_FLAT)
+
+        case RdfXml =>
+          jena.riot.RDFDataMgr.write(outputStream, datasetGraph.getDefaultGraph, jena.riot.RDFFormat.RDFXML_PLAIN)
+
+        case TriG =>
+          jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.TRIG_FLAT)
+
+        case NQuads =>
+          jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.NQUADS)
+      }
+    }
+    outputStream.close()
+    formatTry.get
+  }
 
   /**
    * Creates an [[RdfStreamProcessor]] that writes formatted output.
@@ -379,7 +401,16 @@ trait RdfFormatUtil {
    * @param rdfFormat    the output format.
    * @return an an [[RdfStreamProcessor]].
    */
-  def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor
+  final def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor = {
+    // Construct a Jena StreamRDF for the requested format.
+    val streamRDF: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
+      outputStream,
+      JenaFormatUtil.rdfFormatToJenaParsingLang(rdfFormat)
+    )
+
+    // Wrap it in a StreamRDFAsStreamProcessor.
+    new StreamRDFAsStreamProcessor(streamRDF)
+  }
 
   /**
    * Reads RDF data in Turtle format from an [[RdfSource]], adds a named graph IRI to each statement,
