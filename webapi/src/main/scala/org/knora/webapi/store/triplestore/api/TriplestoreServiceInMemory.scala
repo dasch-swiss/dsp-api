@@ -31,7 +31,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -167,7 +166,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     for {
       fos <- fileOutputStream(outputFile)
       ds  <- datasetRef.get
-      lang = JenaFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
+      lang = RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
       _ <- ZIO.attemptBlocking {
              ds.begin(ReadWrite.READ)
              try { ds.getNamedModel(graphIri.value).write(fos, lang.getName) }

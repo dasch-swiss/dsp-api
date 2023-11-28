@@ -287,7 +287,7 @@ case class TEIHeader(
         ReadResourcesSequenceV2(Seq(headerInfo)).toJsonLDDocument(ApiV2Complex, appConfig)
 
       // Convert the JsonLDDocument to an RdfModel.
-      val rdfModel: RdfModel = headerJsonLD.toRdfModel(rdfFormatUtil.getRdfModelFactory)
+      val rdfModel: RdfModel = headerJsonLD.toRdfModel(rdfFormatUtil.modelFactory)
 
       // Format the RdfModel as RDF/XML. To ensure that it contains only rdf:Description elements,
       // set prettyPrint to false.

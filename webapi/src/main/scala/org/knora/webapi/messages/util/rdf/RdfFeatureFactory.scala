@@ -15,7 +15,7 @@ object RdfFeatureFactory {
   // Jena singletons.
   private val jenaNodeFactory  = new JenaNodeFactory
   private val jenaModelFactory = new JenaModelFactory(jenaNodeFactory)
-  private val jenaFormatUtil   = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
+  private val jenaFormatUtil   = new RdfFormatUtil(jenaModelFactory, jenaNodeFactory)
 
   /**
    * Returns an [[RdfModelFactory]].

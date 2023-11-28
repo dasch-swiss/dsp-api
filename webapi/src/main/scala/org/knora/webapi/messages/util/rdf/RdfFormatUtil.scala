@@ -13,6 +13,7 @@ import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.StringReader
+import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import scala.util.Failure
@@ -26,11 +27,13 @@ import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
+import org.knora.webapi.messages.util.rdf.jenaimpl.StreamRDFAsStreamProcessor
 
 import pekko.http.scaladsl.model.MediaType
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
-import org.knora.webapi.messages.util.rdf.jenaimpl.StreamRDFAsStreamProcessor
 
 /**
  * A trait for supported RDF formats.
@@ -184,7 +187,7 @@ case class RdfInputStreamSource(inputStream: InputStream) extends RdfSource
 /**
  * Formats and parses RDF.
  */
-trait RdfFormatUtil {
+final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: JenaNodeFactory) {
 
   /**
    * Parses an RDF string to an [[RdfModel]].
@@ -193,12 +196,12 @@ trait RdfFormatUtil {
    * @param rdfFormat the format of the string.
    * @return the corresponding [[RdfModel]].
    */
-  final def parseToRdfModel(rdfStr: String, rdfFormat: RdfFormat): RdfModel =
+  def parseToRdfModel(rdfStr: String, rdfFormat: RdfFormat): RdfModel =
     rdfFormat match {
       case JsonLD =>
         // Use JsonLDUtil to parse JSON-LD, and to convert the
         // resulting JsonLDDocument to an RdfModel.
-        JsonLDUtil.parseJsonLD(rdfStr).toRdfModel(getRdfModelFactory)
+        JsonLDUtil.parseJsonLD(rdfStr).toRdfModel(modelFactory)
 
       case nonJsonLD: NonJsonLD =>
         // Use an implementation-specific function to parse other formats.
@@ -213,7 +216,7 @@ trait RdfFormatUtil {
    * @param flatJsonLD if `true`, return flat JSON-LD.
    * @return the corresponding [[JsonLDDocument]].
    */
-  final def parseToJsonLDDocument(rdfStr: String, rdfFormat: RdfFormat, flatJsonLD: Boolean = false): JsonLDDocument =
+  def parseToJsonLDDocument(rdfStr: String, rdfFormat: RdfFormat, flatJsonLD: Boolean = false): JsonLDDocument =
     rdfFormat match {
       case JsonLD =>
         // Use JsonLDUtil to parse JSON-LD.
@@ -237,7 +240,7 @@ trait RdfFormatUtil {
    * @param prettyPrint   if `true`, the output should be pretty-printed.
    * @return a string representation of the RDF model.
    */
-  final def format(
+  def format(
     rdfModel: RdfModel,
     rdfFormat: RdfFormat,
     schemaOptions: Set[SchemaOption] = Set.empty,
@@ -282,7 +285,7 @@ trait RdfFormatUtil {
    * @param rdfFormat the file format.
    * @return a [[RdfModel]] representing the contents of the file.
    */
-  final def fileToRdfModel(file: Path, rdfFormat: NonJsonLD): RdfModel =
+  def fileToRdfModel(file: Path, rdfFormat: NonJsonLD): RdfModel =
     inputStreamToRdfModel(
       inputStream = new BufferedInputStream(Files.newInputStream(file)),
       rdfFormat = rdfFormat
@@ -295,7 +298,7 @@ trait RdfFormatUtil {
    * @param file      the file to be written.
    * @param rdfFormat the file format.
    */
-  final def rdfModelToFile(rdfModel: RdfModel, file: Path, rdfFormat: NonJsonLD): Unit =
+  def rdfModelToFile(rdfModel: RdfModel, file: Path, rdfFormat: NonJsonLD): Unit =
     rdfModelToOutputStream(
       rdfModel = rdfModel,
       outputStream = new BufferedOutputStream(Files.newOutputStream(file)),
@@ -311,7 +314,7 @@ trait RdfFormatUtil {
    * @param rdfFormat          the input format.
    * @param rdfStreamProcessor the [[RdfStreamProcessor]] that will be used to process the input.
    */
-  final def parseWithStreamProcessor(rdfSource: RdfSource, rdfStreamProcessor: RdfStreamProcessor): Unit = {
+  def parseWithStreamProcessor(rdfSource: RdfSource, rdfStreamProcessor: RdfStreamProcessor): Unit = {
 
     val streamRDF = new jena.riot.system.StreamRDF {
       override def start(): Unit = rdfStreamProcessor.start()
@@ -362,7 +365,19 @@ trait RdfFormatUtil {
    * @param rdfFormat   the data format.
    * @return the corresponding [[RdfModel]].
    */
-  def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel
+  def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
+    val parseTry: Try[RdfModel] = Try {
+      val model: JenaModel = modelFactory.makeEmptyModel
+      jena.riot.RDFDataMgr.read(
+        model.getDataset.asDatasetGraph,
+        inputStream,
+        RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat)
+      )
+      model
+    }
+    inputStream.close()
+    parseTry.get
+  }
 
   /**
    * Formats an [[RdfModel]], writing the output to an [[OutputStream]]. Closes the output stream before
@@ -372,7 +387,7 @@ trait RdfFormatUtil {
    * @param outputStream the output stream.
    * @param rdfFormat    the output format.
    */
-  final def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
+  def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
     val formatTry: Try[Unit] = Try {
       val datasetGraph: jena.sparql.core.DatasetGraph = JenaConversions.asJenaDataset(rdfModel).asDatasetGraph
 
@@ -401,11 +416,11 @@ trait RdfFormatUtil {
    * @param rdfFormat    the output format.
    * @return an an [[RdfStreamProcessor]].
    */
-  final def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor = {
+  def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor = {
     // Construct a Jena StreamRDF for the requested format.
     val streamRDF: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
       outputStream,
-      JenaFormatUtil.rdfFormatToJenaParsingLang(rdfFormat)
+      RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat)
     )
 
     // Wrap it in a StreamRDFAsStreamProcessor.
@@ -493,15 +508,15 @@ trait RdfFormatUtil {
     }
   }
 
-  /**
-   * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
-   */
-  def getRdfModelFactory: RdfModelFactory
+  // /**
+  //  * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
+  //  */
+  // def getRdfModelFactory: RdfModelFactory
 
-  /**
-   * Returns an [[RdfNodeFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
-   */
-  def getRdfNodeFactory: RdfNodeFactory
+  // /**
+  //  * Returns an [[RdfNodeFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
+  //  */
+  // def getRdfNodeFactory: RdfNodeFactory
 
   /**
    * Parses RDF in a format other than JSON-LD to an [[RdfModel]].
@@ -510,7 +525,16 @@ trait RdfFormatUtil {
    * @param rdfFormat the format of the string.
    * @return the corresponding [[RdfModel]].
    */
-  protected def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel
+  protected def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
+    val jenaModel: JenaModel = modelFactory.makeEmptyModel
+    jena.riot.RDFParser
+      .create()
+      .source(new StringReader(rdfStr))
+      .lang(RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat))
+      .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+      .parse(jenaModel.getDataset)
+    jenaModel
+  }
 
   /**
    * Converts an [[RdfModel]] to a string in a format other than JSON-LD.
@@ -520,5 +544,53 @@ trait RdfFormatUtil {
    * @param prettyPrint if `true`, the output should be pretty-printed.
    * @return a string representation of the RDF model.
    */
-  protected def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String
+  protected def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
+
+    val datasetGraph: jena.sparql.core.DatasetGraph = JenaConversions.asJenaDataset(rdfModel).asDatasetGraph
+    val stringWriter: StringWriter                  = new StringWriter
+
+    rdfFormat match {
+      case Turtle =>
+        val jenaRdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
+          jena.riot.RDFFormat.TURTLE_PRETTY
+        } else {
+          jena.riot.RDFFormat.TURTLE_FLAT
+        }
+
+        jena.riot.RDFDataMgr.write(stringWriter, datasetGraph.getDefaultGraph, jenaRdfFormat)
+
+      case RdfXml =>
+        val jenaRdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
+          jena.riot.RDFFormat.RDFXML_PRETTY
+        } else {
+          jena.riot.RDFFormat.RDFXML_PLAIN
+        }
+
+        jena.riot.RDFDataMgr.write(stringWriter, datasetGraph.getDefaultGraph, jenaRdfFormat)
+
+      case TriG =>
+        val jenaRdfFormat: jena.riot.RDFFormat = if (prettyPrint) {
+          jena.riot.RDFFormat.TRIG_PRETTY
+        } else {
+          jena.riot.RDFFormat.TRIG_FLAT
+        }
+
+        jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, jenaRdfFormat)
+
+      case NQuads =>
+        jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, jena.riot.RDFFormat.NQUADS)
+    }
+
+    stringWriter.toString
+  }
+}
+
+object RdfFormatUtil {
+  def rdfFormatToJenaParsingLang(rdfFormat: NonJsonLD): jena.riot.Lang =
+    rdfFormat match {
+      case Turtle => jena.riot.RDFLanguages.TURTLE
+      case TriG   => jena.riot.RDFLanguages.TRIG
+      case RdfXml => jena.riot.RDFLanguages.RDFXML
+      case NQuads => jena.riot.RDFLanguages.NQUADS
+    }
 }
