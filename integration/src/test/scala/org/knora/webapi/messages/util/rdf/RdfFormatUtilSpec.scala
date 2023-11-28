@@ -267,7 +267,6 @@ class RdfFormatUtilSpec() extends CoreSpec {
 
       rdfFormatUtil.parseWithStreamProcessor(
         rdfSource = RdfInputStreamSource(inputStream),
-        rdfFormat = Turtle,
         rdfStreamProcessor = testStreamProcessor
       )
 
@@ -289,7 +288,6 @@ class RdfFormatUtilSpec() extends CoreSpec {
 
       rdfFormatUtil.parseWithStreamProcessor(
         rdfSource = RdfInputStreamSource(fileInputStream),
-        rdfFormat = Turtle,
         rdfStreamProcessor = formattingStreamProcessor
       )
 
@@ -302,7 +300,6 @@ class RdfFormatUtilSpec() extends CoreSpec {
 
       rdfFormatUtil.parseWithStreamProcessor(
         rdfSource = RdfInputStreamSource(byteArrayInputStream),
-        rdfFormat = Turtle,
         rdfStreamProcessor = testStreamProcessor
       )
 

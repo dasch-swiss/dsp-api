@@ -305,7 +305,7 @@ trait RdfFormatUtil {
    * @param rdfFormat          the input format.
    * @param rdfStreamProcessor the [[RdfStreamProcessor]] that will be used to process the input.
    */
-  def parseWithStreamProcessor(rdfSource: RdfSource, rdfFormat: NonJsonLD, rdfStreamProcessor: RdfStreamProcessor): Unit
+  def parseWithStreamProcessor(rdfSource: RdfSource, rdfStreamProcessor: RdfStreamProcessor): Unit
 
   /**
    * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]]. Closes the input stream
@@ -394,7 +394,6 @@ trait RdfFormatUtil {
 
       parseWithStreamProcessor(
         rdfSource = rdfSource,
-        rdfFormat = Turtle,
         rdfStreamProcessor = contextAddingProcessor
       )
     }

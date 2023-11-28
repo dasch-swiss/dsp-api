@@ -122,11 +122,7 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
     stringWriter.toString
   }
 
-  override def parseWithStreamProcessor(
-    rdfSource: RdfSource,
-    rdfFormat: NonJsonLD,
-    rdfStreamProcessor: RdfStreamProcessor
-  ): Unit = {
+  override def parseWithStreamProcessor(rdfSource: RdfSource, rdfStreamProcessor: RdfStreamProcessor): Unit = {
     // Wrap the RdfStreamProcessor in a StreamProcessorAsStreamRDF.
     val streamRDF = new StreamProcessorAsStreamRDF(rdfStreamProcessor)
 
@@ -142,7 +138,7 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
     val parseTry: Try[Unit] = Try {
       // Add the other configuration and run the parser.
       parser
-        .lang(rdfFormatToJenaParsingLang(rdfFormat))
+        .lang(jena.riot.RDFLanguages.TURTLE)
         .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
         .parse(streamRDF)
     }
