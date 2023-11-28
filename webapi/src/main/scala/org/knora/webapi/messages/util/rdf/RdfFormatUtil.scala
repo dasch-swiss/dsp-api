@@ -12,6 +12,7 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.io.StringReader
 import java.nio.file.Files
 import java.nio.file.Path
 import scala.util.Failure
@@ -20,16 +21,15 @@ import scala.util.Try
 
 import dsp.errors.BadRequestException
 import dsp.errors.InvalidRdfException
+import dsp.errors.RdfProcessingException
 import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNode
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
 
 import pekko.http.scaladsl.model.MediaType
-import java.io.StringReader
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNode
-import dsp.errors.RdfProcessingException
 
 /**
  * A trait for supported RDF formats.

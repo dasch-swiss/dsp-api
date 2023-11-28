@@ -24,8 +24,8 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
-import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
+import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
  * This class may be run if you wish to apply your upgrade plugin on our test data.
