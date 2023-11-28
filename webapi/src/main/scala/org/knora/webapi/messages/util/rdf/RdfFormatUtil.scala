@@ -15,8 +15,6 @@ import java.io.OutputStream
 import java.io.StringReader
 import java.nio.file.Files
 import java.nio.file.Path
-import scala.util.Failure
-import scala.util.Success
 import scala.util.Try
 
 import dsp.errors.BadRequestException
@@ -350,10 +348,7 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
       case _                                 => ()
     }
 
-    parseTry match {
-      case Success(_)  => ()
-      case Failure(ex) => throw ex
-    }
+    parseTry.get
   }
 
   /**
@@ -439,74 +434,59 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
    * @param outputFormat the output file format.
    */
   def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: Path, outputFormat: QuadFormat): Unit = {
-    var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
+    val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
+    val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
+      outputStream = bufferedFileOutputStream,
+      rdfFormat = outputFormat
+    )
 
-    val processingTry: Try[Unit] = Try {
-      val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
-      maybeBufferedFileOutputStream = Some(bufferedFileOutputStream)
-
-      val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
-        outputStream = bufferedFileOutputStream,
-        rdfFormat = outputFormat
-      )
-
-      val streamRDF = new jena.riot.system.StreamRDF {
-        private def processStatement(statement: Statement): Unit = {
-          val outputStatement = JenaStatement(
-            new jena.sparql.core.Quad(
-              jena.graph.NodeFactory.createURI(graphIri),
-              JenaConversions.asJenaNode(statement.subj),
-              JenaConversions.asJenaNode(statement.pred),
-              JenaConversions.asJenaNode(statement.obj)
-            )
+    val streamRDF = new jena.riot.system.StreamRDF {
+      private def processStatement(statement: Statement): Unit = {
+        val outputStatement = JenaStatement(
+          new jena.sparql.core.Quad(
+            jena.graph.NodeFactory.createURI(graphIri),
+            JenaConversions.asJenaNode(statement.subj),
+            JenaConversions.asJenaNode(statement.pred),
+            JenaConversions.asJenaNode(statement.obj)
           )
+        )
 
-          formattingStreamProcessor.processStatement(outputStatement)
-        }
-        override def start(): Unit = formattingStreamProcessor.start()
-        override def triple(triple: jena.graph.Triple): Unit =
-          quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
-        override def quad(quad: jena.sparql.core.Quad): Unit = processStatement(JenaStatement(quad))
-        override def base(s: String): Unit                   = {}
-        override def prefix(prefixStr: String, namespace: String): Unit =
-          formattingStreamProcessor.processNamespace(prefixStr, namespace)
-        override def finish(): Unit = formattingStreamProcessor.finish()
+        formattingStreamProcessor.processStatement(outputStatement)
       }
-
-      // Build a parser.
-      val parser = jena.riot.RDFParser.create()
-
-      // Configure it to read from the input source.
-      rdfSource match {
-        case RdfStringSource(rdfStr)           => parser.source(new StringReader(rdfStr))
-        case RdfInputStreamSource(inputStream) => parser.source(inputStream)
-      }
-
-      val parseTry: Try[Unit] = Try {
-        // Add the other configuration and run the parser.
-        parser
-          .lang(jena.riot.RDFLanguages.TURTLE)
-          .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
-          .parse(streamRDF)
-      }
-
-      rdfSource match {
-        case RdfInputStreamSource(inputStream) => inputStream.close()
-        case _                                 => ()
-      }
-
-      parseTry match {
-        case Success(_)  => ()
-        case Failure(ex) => throw ex
-      }
+      override def start(): Unit = formattingStreamProcessor.start()
+      override def triple(triple: jena.graph.Triple): Unit =
+        quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
+      override def quad(quad: jena.sparql.core.Quad): Unit = processStatement(JenaStatement(quad))
+      override def base(s: String): Unit                   = {}
+      override def prefix(prefixStr: String, namespace: String): Unit =
+        formattingStreamProcessor.processNamespace(prefixStr, namespace)
+      override def finish(): Unit = formattingStreamProcessor.finish()
     }
 
-    maybeBufferedFileOutputStream.foreach(_.close)
+    // Build a parser.
+    val parser = jena.riot.RDFParser.create()
 
-    processingTry match {
-      case Success(_)  => ()
-      case Failure(ex) => throw ex
+    // Configure it to read from the input source.
+    rdfSource match {
+      case RdfStringSource(rdfStr)           => parser.source(new StringReader(rdfStr))
+      case RdfInputStreamSource(inputStream) => parser.source(inputStream)
     }
+
+    val parseTry: Try[Unit] = Try {
+      // Add the other configuration and run the parser.
+      parser
+        .lang(jena.riot.RDFLanguages.TURTLE)
+        .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+        .parse(streamRDF)
+    }
+
+    rdfSource match {
+      case RdfInputStreamSource(inputStream) => inputStream.close()
+      case _                                 => ()
+    }
+    bufferedFileOutputStream.close()
+
+    parseTry.get
   }
 
   // /**
