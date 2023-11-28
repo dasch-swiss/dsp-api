@@ -425,7 +425,7 @@ trait RdfFormatUtil {
         }
         override def start(): Unit = formattingStreamProcessor.start()
         override def triple(triple: jena.graph.Triple): Unit =
-          processStatement(JenaStatement(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple)))
+          quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
         override def quad(quad: jena.sparql.core.Quad): Unit = processStatement(JenaStatement(quad))
         override def base(s: String): Unit                   = {}
         override def prefix(prefixStr: String, namespace: String): Unit =
