@@ -13,7 +13,6 @@ import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.StringReader
-import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import scala.util.Failure
@@ -27,13 +26,13 @@ import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
-import org.knora.webapi.messages.util.rdf.jenaimpl.StreamRDFAsStreamProcessor
 
 import pekko.http.scaladsl.model.MediaType
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
+import java.io.StringWriter
 
 /**
  * A trait for supported RDF formats.
@@ -417,14 +416,16 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
    * @return an an [[RdfStreamProcessor]].
    */
   def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor = {
-    // Construct a Jena StreamRDF for the requested format.
     val streamRDF: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
       outputStream,
       RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat)
     )
-
-    // Wrap it in a StreamRDFAsStreamProcessor.
-    new StreamRDFAsStreamProcessor(streamRDF)
+    new RdfStreamProcessor {
+      override def start(): Unit                                          = streamRDF.start()
+      override def processNamespace(prefix: String, namespace: IRI): Unit = streamRDF.prefix(prefix, namespace)
+      override def processStatement(statement: Statement): Unit           = streamRDF.quad(JenaConversions.asJenaQuad(statement))
+      override def finish(): Unit                                         = streamRDF.finish()
+    }
   }
 
   /**
