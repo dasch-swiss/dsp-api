@@ -21,12 +21,11 @@ import scala.util.Try
 
 import dsp.errors.BadRequestException
 import dsp.errors.InvalidRdfException
-import dsp.errors.RdfProcessingException
 import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNode
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
 
 import pekko.http.scaladsl.model.MediaType
@@ -405,19 +404,13 @@ trait RdfFormatUtil {
       )
 
       val streamRDF = new jena.riot.system.StreamRDF {
-        private def asJenaNode(node: RdfNode): jena.graph.Node =
-          node match {
-            case jenaRdfNode: JenaNode => jenaRdfNode.node
-            case other                 => throw RdfProcessingException(s"$other is not a Jena node")
-          }
-
         private def processStatement(statement: Statement): Unit = {
           val outputStatement = JenaStatement(
             new jena.sparql.core.Quad(
               jena.graph.NodeFactory.createURI(graphIri),
-              asJenaNode(statement.subj),
-              asJenaNode(statement.pred),
-              asJenaNode(statement.obj)
+              JenaConversions.asJenaNode(statement.subj),
+              JenaConversions.asJenaNode(statement.pred),
+              JenaConversions.asJenaNode(statement.obj)
             )
           )
 
