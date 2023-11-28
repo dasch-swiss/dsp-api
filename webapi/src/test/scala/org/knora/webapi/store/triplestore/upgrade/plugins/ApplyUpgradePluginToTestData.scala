@@ -24,8 +24,8 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions.*
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
 
 /**
  * This class may be run if you wish to apply your upgrade plugin on our test data.
@@ -58,7 +58,7 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
   }
 
   def writeModelToFile(rdfModel: RdfModel, path: Path): ZIO[Scope, Throwable, Unit] = {
-    val defaultGraph = rdfModel.asJenaDataset.asDatasetGraph.getDefaultGraph
+    val defaultGraph = JenaConversions.asJenaDataset(rdfModel).asDatasetGraph.getDefaultGraph
     for {
       fos <- fileOutputStreamFor(path)
       _   <- ZIO.attempt(RDFDataMgr.write(fos, defaultGraph, RDFFormat.TURTLE_PRETTY))
