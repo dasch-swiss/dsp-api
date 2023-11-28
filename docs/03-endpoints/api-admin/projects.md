@@ -870,6 +870,6 @@ Operates on the following properties:
 - `knora-admin:projectRestrictedViewWatermark`: the path to the watermark image. **Currently not used!**
 
 Caveat: The restricted view settings only take effect
-for user groups that have restricted view permissions
+for user groups that have restricted view permissions (or no permissions at all)
 on the `knora-api:hasStillImageFileValue` value of StillImageFile resources.
 User groups with view permission or higher will see the image in full resolution.
