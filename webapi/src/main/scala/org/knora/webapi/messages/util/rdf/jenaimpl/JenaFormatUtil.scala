@@ -24,15 +24,13 @@ import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil.rdfFormatToJen
  */
 class StreamRDFAsStreamProcessor(streamRDF: jena.riot.system.StreamRDF) extends RdfStreamProcessor {
 
-  import JenaConversions.*
-
   override def start(): Unit = streamRDF.start()
 
   override def processNamespace(prefix: String, namespace: IRI): Unit =
     streamRDF.prefix(prefix, namespace)
 
   override def processStatement(statement: Statement): Unit =
-    streamRDF.quad(statement.asJenaQuad)
+    streamRDF.quad(JenaConversions.asJenaQuad(statement))
 
   override def finish(): Unit = streamRDF.finish()
 }
@@ -60,9 +58,8 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
   }
 
   override def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
-    import JenaConversions.*
 
-    val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph
+    val datasetGraph: jena.sparql.core.DatasetGraph = JenaConversions.asJenaDataset(rdfModel).asDatasetGraph
     val stringWriter: StringWriter                  = new StringWriter
 
     rdfFormat match {
@@ -129,10 +126,9 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
   }
 
   override def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
-    import JenaConversions.*
 
     val formatTry: Try[Unit] = Try {
-      val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph
+      val datasetGraph: jena.sparql.core.DatasetGraph = JenaConversions.asJenaDataset(rdfModel).asDatasetGraph
 
       rdfFormat match {
         case Turtle =>

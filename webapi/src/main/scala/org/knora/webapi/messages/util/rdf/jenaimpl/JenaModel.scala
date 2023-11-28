@@ -98,29 +98,23 @@ case class JenaStatement(quad: jena.sparql.core.Quad) extends Statement {
  */
 object JenaConversions {
 
-  implicit class ConvertibleJenaNode(val self: RdfNode) extends AnyVal {
-    def asJenaNode: jena.graph.Node =
-      self match {
-        case jenaRdfNode: JenaNode => jenaRdfNode.node
-        case other                 => throw RdfProcessingException(s"$other is not a Jena node")
-      }
-  }
+  def asJenaNode(node: RdfNode): jena.graph.Node =
+    node match {
+      case jenaRdfNode: JenaNode => jenaRdfNode.node
+      case other                 => throw RdfProcessingException(s"$other is not a Jena node")
+    }
 
-  implicit class ConvertibleJenaQuad(val self: Statement) extends AnyVal {
-    def asJenaQuad: jena.sparql.core.Quad =
-      self match {
-        case jenaStatement: JenaStatement => jenaStatement.quad
-        case other                        => throw RdfProcessingException(s"$other is not a Jena statement")
-      }
-  }
+  def asJenaQuad(stmt: Statement): jena.sparql.core.Quad =
+    stmt match {
+      case jenaStatement: JenaStatement => jenaStatement.quad
+      case other                        => throw RdfProcessingException(s"$other is not a Jena statement")
+    }
 
-  implicit class ConvertibleJenaModel(val self: RdfModel) extends AnyVal {
-    def asJenaDataset: jena.query.Dataset =
-      self match {
-        case model: JenaModel => model.getDataset
-        case other            => throw RdfProcessingException(s"${other.getClass.getName} is not a Jena RDF model")
-      }
-  }
+  def asJenaDataset(model: RdfModel): jena.query.Dataset =
+    model match {
+      case model: JenaModel => model.getDataset
+      case other            => throw RdfProcessingException(s"${other.getClass.getName} is not a Jena RDF model")
+    }
 
 }
 
@@ -159,8 +153,6 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     extends JenaContextFactory
     with RdfModel {
 
-  import JenaConversions.*
-
   private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
   private class StatementIterator(jenaIterator: java.util.Iterator[jena.sparql.core.Quad]) extends Iterator[Statement] {
@@ -177,21 +169,21 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
   override def getNodeFactory: RdfNodeFactory = nodeFactory
 
   override def addStatement(statement: Statement): Unit =
-    datasetGraph.add(statement.asJenaQuad)
+    datasetGraph.add(JenaConversions.asJenaQuad(statement))
 
   /**
    * Converts an optional [[RdfNode]] to a [[jena.graph.Node]], converting
    * `None` to a wildcard that will match any node.
    */
   private def asJenaNodeOrWildcard(node: Option[RdfNode]): jena.graph.Node =
-    node.map(_.asJenaNode).getOrElse(jena.graph.Node.ANY)
+    node.fold(jena.graph.Node.ANY)(JenaConversions.asJenaNode)
 
   override def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit =
     datasetGraph.add(
       contextNodeOrDefaultGraph(context),
-      subj.asJenaNode,
-      pred.asJenaNode,
-      obj.asJenaNode
+      JenaConversions.asJenaNode(subj),
+      JenaConversions.asJenaNode(pred),
+      JenaConversions.asJenaNode(obj)
     )
 
   override def remove(
@@ -208,7 +200,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     )
 
   override def removeStatement(statement: Statement): Unit =
-    datasetGraph.delete(statement.asJenaQuad)
+    datasetGraph.delete(JenaConversions.asJenaQuad(statement))
 
   override def find(
     subj: Option[RdfResource],
@@ -226,7 +218,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     )
 
   override def contains(statement: Statement): Boolean =
-    datasetGraph.contains(statement.asJenaQuad)
+    datasetGraph.contains(JenaConversions.asJenaQuad(statement))
 
   override def setNamespace(prefix: String, namespace: IRI): Unit = {
     def setNamespaceInGraph(graph: jena.graph.Graph): Unit = {
@@ -275,7 +267,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
   override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
     // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
 
-    val thatDatasetGraph: jena.sparql.core.DatasetGraph = otherRdfModel.asJenaDataset.asDatasetGraph
+    val thatDatasetGraph: jena.sparql.core.DatasetGraph = JenaConversions.asJenaDataset(otherRdfModel).asDatasetGraph
 
     // Get the IRIs of the named graphs.
     val thisModelNamedGraphIris: Set[jena.graph.Node] = datasetGraph.listGraphNodes.asScala.toSet
@@ -329,8 +321,6 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
  */
 class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 
-  import JenaConversions.*
-
   /**
    * Represents a custom Knora datatype (used in the simple schema), for registration
    * with Jena's TypeMapper.
@@ -375,9 +365,9 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
     JenaStatement(
       new jena.sparql.core.Quad(
         contextNodeOrDefaultGraph(context),
-        subj.asJenaNode,
-        pred.asJenaNode,
-        obj.asJenaNode
+        JenaConversions.asJenaNode(subj),
+        JenaConversions.asJenaNode(pred),
+        JenaConversions.asJenaNode(obj)
       )
     )
 
