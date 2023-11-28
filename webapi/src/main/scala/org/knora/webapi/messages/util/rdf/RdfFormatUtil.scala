@@ -302,6 +302,39 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
       rdfFormat = rdfFormat
     )
 
+  def parseStreamWithFormatting(inputStream: InputStream, outputStream: OutputStream): Unit = {
+
+    val streamRDF = new jena.riot.system.StreamRDF {
+      val inner = jena.riot.system.StreamRDFWriter.getWriterStream(outputStream, jena.riot.RDFLanguages.TURTLE)
+
+      override def start(): Unit                             = inner.start()
+      override def finish(): Unit                            = inner.finish()
+      override def base(base: String): Unit                  = {}
+      override def prefix(prefix: String, iri: String): Unit = inner.prefix(prefix, iri)
+      override def quad(quad: jena.sparql.core.Quad): Unit   = inner.quad(quad)
+      override def triple(triple: jena.graph.Triple): Unit =
+        inner.quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
+    }
+
+    // Build a parser.
+    val parser = jena.riot.RDFParser.create()
+
+    // Configure it to read from the input source.
+    parser.source(inputStream)
+
+    val parseTry: Try[Unit] = Try {
+      // Add the other configuration and run the parser.
+      parser
+        .lang(jena.riot.RDFLanguages.TURTLE)
+        .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+        .parse(streamRDF)
+    }
+    inputStream.close()
+    outputStream.close()
+
+    parseTry.get
+  }
+
   /**
    * Parses RDF input, processing it with an [[RdfStreamProcessor]].  If the source is an input
    * stream, this method closes it before returning. The caller must close any output stream

@@ -281,20 +281,9 @@ class RdfFormatUtilSpec() extends CoreSpec {
         new BufferedInputStream(Files.newInputStream(Paths.get("..", "test_data/project_ontologies/anything-onto.ttl")))
       val byteArrayOutputStream = new ByteArrayOutputStream()
 
-      val formattingStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
-        outputStream = byteArrayOutputStream,
-        rdfFormat = Turtle
-      )
-
-      rdfFormatUtil.parseWithStreamProcessor(
-        rdfSource = RdfInputStreamSource(fileInputStream),
-        rdfStreamProcessor = formattingStreamProcessor
-      )
-
-      byteArrayOutputStream.close()
+      rdfFormatUtil.parseStreamWithFormatting(fileInputStream, byteArrayOutputStream)
 
       // Read back the ByteArrayOutputStream and check that it's correct.
-
       val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
       val testStreamProcessor  = new TestStreamProcessor
 
