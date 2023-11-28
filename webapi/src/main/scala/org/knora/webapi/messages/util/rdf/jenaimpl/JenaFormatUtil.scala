@@ -20,28 +20,6 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil.rdfFormatToJenaParsingLang
 
 /**
- * Wraps an [[RdfStreamProcessor]] in a [[jena.riot.system.StreamRDF]].
- */
-class StreamProcessorAsStreamRDF(streamProcessor: RdfStreamProcessor) extends jena.riot.system.StreamRDF {
-  override def start(): Unit = streamProcessor.start()
-
-  override def triple(triple: jena.graph.Triple): Unit =
-    streamProcessor.processStatement(
-      JenaStatement(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
-    )
-
-  override def quad(quad: jena.sparql.core.Quad): Unit =
-    streamProcessor.processStatement(JenaStatement(quad))
-
-  override def base(s: String): Unit = {}
-
-  override def prefix(prefixStr: String, namespace: String): Unit =
-    streamProcessor.processNamespace(prefixStr, namespace)
-
-  override def finish(): Unit = streamProcessor.finish()
-}
-
-/**
  * Wraps a [[jena.riot.system.StreamRDF]] in a [[RdfStreamProcessor]].
  */
 class StreamRDFAsStreamProcessor(streamRDF: jena.riot.system.StreamRDF) extends RdfStreamProcessor {
@@ -120,38 +98,6 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
     }
 
     stringWriter.toString
-  }
-
-  override def parseWithStreamProcessor(rdfSource: RdfSource, rdfStreamProcessor: RdfStreamProcessor): Unit = {
-    // Wrap the RdfStreamProcessor in a StreamProcessorAsStreamRDF.
-    val streamRDF = new StreamProcessorAsStreamRDF(rdfStreamProcessor)
-
-    // Build a parser.
-    val parser = jena.riot.RDFParser.create()
-
-    // Configure it to read from the input source.
-    rdfSource match {
-      case RdfStringSource(rdfStr)           => parser.source(new StringReader(rdfStr))
-      case RdfInputStreamSource(inputStream) => parser.source(inputStream)
-    }
-
-    val parseTry: Try[Unit] = Try {
-      // Add the other configuration and run the parser.
-      parser
-        .lang(jena.riot.RDFLanguages.TURTLE)
-        .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
-        .parse(streamRDF)
-    }
-
-    rdfSource match {
-      case RdfInputStreamSource(inputStream) => inputStream.close()
-      case _                                 => ()
-    }
-
-    parseTry match {
-      case Success(_)  => ()
-      case Failure(ex) => throw ex
-    }
   }
 
   override def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
