@@ -13,6 +13,7 @@ import java.io.BufferedOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.StringReader
+import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import scala.util.Try
@@ -24,13 +25,12 @@ import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
 
 import pekko.http.scaladsl.model.MediaType
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
-import java.io.StringWriter
 
 /**
  * A trait for supported RDF formats.
