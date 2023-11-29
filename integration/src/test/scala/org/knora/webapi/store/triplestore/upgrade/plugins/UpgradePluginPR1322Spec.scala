@@ -6,6 +6,7 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaRepository
 
 class UpgradePluginPR1322Spec extends UpgradePluginSpec {
   "Upgrade plugin PR1322" should {
@@ -18,7 +19,7 @@ class UpgradePluginPR1322Spec extends UpgradePluginSpec {
       plugin.transform(model)
 
       // Make an in-memory repository containing the transformed model.
-      val repository: RdfRepository = model.asRepository
+      val repository: JenaRepository = model.asRepository
 
       // Check that UUIDs were added.
 

@@ -8,6 +8,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import com.typesafe.scalalogging.LazyLogging
 
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaRepository
 
 class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
   "Upgrade plugin PR2018" should {
@@ -15,7 +16,7 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2018.trig")
       val plugin          = new UpgradePluginPR2018(log)
       plugin.transform(model)
-      val repository: RdfRepository = model.asRepository
+      val repository: JenaRepository = model.asRepository
 
       // query that finds all ontologies with lastModificationDate
       val query: String =

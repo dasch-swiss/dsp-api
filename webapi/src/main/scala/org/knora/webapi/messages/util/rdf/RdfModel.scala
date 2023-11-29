@@ -10,6 +10,7 @@ import scala.util.control.Exception.allCatch
 import dsp.errors.InvalidRdfException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaRepository
 
 /**
  * Represents an RDF subject, predicate, or object.
@@ -332,9 +333,9 @@ trait RdfModel extends Iterable[Statement] {
   def clear(): Unit
 
   /**
-   * Returns an [[RdfRepository]] that can be used to query this model.
+   * Returns an [[JenaRepository]] that can be used to query this model.
    */
-  def asRepository: RdfRepository
+  def asRepository: JenaRepository
 
   override def hashCode(): Int = super.hashCode()
 
@@ -417,28 +418,4 @@ trait RdfNodeFactory {
    * @param context the IRI of the named graph, or `None` to use the default graph.
    */
   def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Statement
-}
-
-/**
- * A factory that creates [[RdfModel]] instances.
- */
-
-/**
- * Represents a simple in-memory repository based on an [[RdfModel]].
- */
-trait RdfRepository {
-
-  /**
-   * Does a SPARQL SELECT query.
-   *
-   * @param selectQuery the query.
-   * @return the query result.
-   */
-  def doSelect(selectQuery: String): SparqlSelectResult
-
-  /**
-   * Shuts down this repository. The underlying [[RdfModel]] may not be usable after its
-   * [[RdfRepository]] has been shut down.
-   */
-  def shutDown(): Unit
 }

@@ -289,7 +289,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
       node.getURI
     }
 
-  override def asRepository: RdfRepository =
+  override def asRepository: JenaRepository =
     new JenaRepository(dataset)
 
   override def size: Int = {
@@ -384,12 +384,12 @@ final case class JenaModelFactory(nodeFactory: JenaNodeFactory) {
 }
 
 /**
- * An [[RdfRepository]] that wraps a [[jena.query.Dataset]].
+ * A [[JenaRepository]] that wraps a [[jena.query.Dataset]].
  *
  * @param dataset the dataset to be queried.
  */
-class JenaRepository(private val dataset: jena.query.Dataset) extends RdfRepository {
-  override def doSelect(selectQuery: String): SparqlSelectResult = {
+class JenaRepository(private val dataset: jena.query.Dataset) {
+  def doSelect(selectQuery: String): SparqlSelectResult = {
     // Run the query.
 
     val queryExecution: jena.query.QueryExecution =
@@ -441,6 +441,6 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
     )
   }
 
-  override def shutDown(): Unit =
+  def shutDown(): Unit =
     dataset.close()
 }

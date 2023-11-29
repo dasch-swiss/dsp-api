@@ -13,6 +13,7 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaRepository
 
 /**
  * Tests implementations of [[RdfModel]].
@@ -302,7 +303,7 @@ class RdfModelSpec() extends CoreSpec {
         rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
       fileInputStream.close()
 
-      val rdfRepository: RdfRepository = anythingModel.asRepository
+      val rdfRepository: JenaRepository = anythingModel.asRepository
 
       val selectQuery =
         """PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
