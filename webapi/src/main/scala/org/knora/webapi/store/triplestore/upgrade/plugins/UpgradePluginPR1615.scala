@@ -12,10 +12,8 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1615.
  */
 class UpgradePluginPR1615() extends UpgradePlugin {
-  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   // IRI objects representing the IRIs used in this transformation.
-  private val ForbiddenResourceIri: IriNode = nodeFactory.makeIriNode("http://rdfh.ch/0000/forbiddenResource")
+  private val ForbiddenResourceIri: IriNode = JenaNodeFactory.makeIriNode("http://rdfh.ch/0000/forbiddenResource")
 
   override def transform(model: RdfModel): Unit =
     // Remove the singleton instance of knora-base:ForbiddenResource.

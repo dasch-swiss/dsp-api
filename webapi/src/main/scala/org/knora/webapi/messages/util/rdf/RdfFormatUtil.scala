@@ -179,7 +179,7 @@ case class RdfInputStreamSource(inputStream: InputStream) extends RdfSource
 /**
  * Formats and parses RDF.
  */
-final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: JenaNodeFactory) {
+object RdfFormatUtil {
 
   /**
    * Parses an RDF string to an [[RdfModel]].
@@ -193,7 +193,7 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
       case JsonLD =>
         // Use JsonLDUtil to parse JSON-LD, and to convert the
         // resulting JsonLDDocument to an RdfModel.
-        JsonLDUtil.parseJsonLD(rdfStr).toRdfModel(modelFactory)
+        JsonLDUtil.parseJsonLD(rdfStr).toRdfModel
 
       case nonJsonLD: NonJsonLD =>
         // Use an implementation-specific function to parse other formats.
@@ -284,7 +284,7 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
    */
   def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
     val parseTry: Try[RdfModel] = Try {
-      val model: JenaModel = modelFactory.makeEmptyModel
+      val model: JenaModel = JenaModelFactory.makeEmptyModel
       jena.riot.RDFDataMgr.read(
         model.getDataset.asDatasetGraph,
         inputStream,
@@ -395,7 +395,7 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
    * @return the corresponding [[RdfModel]].
    */
   protected def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
-    val jenaModel: JenaModel = modelFactory.makeEmptyModel
+    val jenaModel: JenaModel = JenaModelFactory.makeEmptyModel
     jena.riot.RDFParser
       .create()
       .source(new StringReader(rdfStr))
@@ -452,9 +452,7 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
 
     stringWriter.toString
   }
-}
 
-object RdfFormatUtil {
   def rdfFormatToJenaParsingLang(rdfFormat: NonJsonLD): jena.riot.Lang =
     rdfFormat match {
       case Turtle => jena.riot.RDFLanguages.TURTLE

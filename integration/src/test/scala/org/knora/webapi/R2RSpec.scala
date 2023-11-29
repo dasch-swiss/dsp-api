@@ -134,15 +134,11 @@ abstract class R2RSpec
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
-  protected def parseTurtle(turtleStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-    rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-  }
+  protected def parseTurtle(turtleStr: String): RdfModel =
+    RdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
 
-  protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-    rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-  }
+  protected def parseRdfXml(rdfXmlStr: String): RdfModel =
+    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
 
   private def adjustFilePath(file: Path): Path =
     Paths.get("..", "test_data", "generated_test_data").resolve(file).normalize()

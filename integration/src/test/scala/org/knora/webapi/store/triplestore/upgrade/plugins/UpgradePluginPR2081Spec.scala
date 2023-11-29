@@ -12,8 +12,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
-  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   private def getDateValue(model: RdfModel, subj: IriNode, pred: IriNode): String = {
     val statement = model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet.head
     statement.obj match {
@@ -26,12 +24,12 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
   "Upgrade plugin PR2081" should {
 
     "fix invalid date serializations" in {
-      val resource1            = nodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9ma")
-      val resource2            = nodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mb")
-      val resource3            = nodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mc")
-      val creationDate         = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.CreationDate)
-      val lastModificationDate = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.LastModificationDate)
-      val deletionDate         = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.DeleteDate)
+      val resource1            = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9ma")
+      val resource2            = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mb")
+      val resource3            = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mc")
+      val creationDate         = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.CreationDate)
+      val lastModificationDate = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.LastModificationDate)
+      val deletionDate         = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.DeleteDate)
 
       // Parse the input file.
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2081.trig")

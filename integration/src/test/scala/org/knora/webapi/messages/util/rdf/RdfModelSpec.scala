@@ -20,9 +20,7 @@ import org.knora.webapi.messages.util.rdf._
  */
 class RdfModelSpec() extends CoreSpec {
 
-  private val model: RdfModel              = RdfFeatureFactory.getRdfModelFactory().makeEmptyModel
-  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+  private val model: RdfModel = JenaModelFactory.makeEmptyModel
 
   /**
    * Adds a statement, then searches for it by subject and predicate.
@@ -38,79 +36,80 @@ class RdfModelSpec() extends CoreSpec {
     obj: RdfNode,
     context: Option[IRI] = None
   ): Unit = {
-    val statement: Statement = nodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
+    val statement: Statement = JenaNodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
     model.addStatement(statement)
     assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(statement))
   }
 
   "An RdfModel" should {
     "add a triple with a datatype literal object, without first creating a Statement" in {
-      val subj: IriNode        = nodeFactory.makeIriNode("http://example.org/1")
-      val pred: IriNode        = nodeFactory.makeIriNode("http://example.org/int_prop")
-      val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "5", datatype = OntologyConstants.Xsd.Integer)
+      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/1")
+      val pred: IriNode = JenaNodeFactory.makeIriNode("http://example.org/int_prop")
+      val obj: DatatypeLiteral =
+        JenaNodeFactory.makeDatatypeLiteral(value = "5", datatype = OntologyConstants.Xsd.Integer)
 
       model.add(subj = subj, pred = pred, obj = obj)
-      val expectedStatement: Statement = nodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
+      val expectedStatement: Statement = JenaNodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
       assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(expectedStatement))
     }
 
     "add a triple with a datatype literal object" in {
       addAndFindBySubjAndPred(
-        subj = nodeFactory.makeIriNode("http://example.org/2"),
-        pred = nodeFactory.makeIriNode("http://example.org/decimal_prop"),
-        obj = nodeFactory.makeDatatypeLiteral(value = "123.45", datatype = OntologyConstants.Xsd.Decimal)
+        subj = JenaNodeFactory.makeIriNode("http://example.org/2"),
+        pred = JenaNodeFactory.makeIriNode("http://example.org/decimal_prop"),
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "123.45", datatype = OntologyConstants.Xsd.Decimal)
       )
     }
 
     "add a triple with an IRI object" in {
       addAndFindBySubjAndPred(
-        subj = nodeFactory.makeIriNode("http://example.org/3"),
-        pred = nodeFactory.makeIriNode("http://example.org/object_prop"),
-        obj = nodeFactory.makeIriNode("http://example.org/1")
+        subj = JenaNodeFactory.makeIriNode("http://example.org/3"),
+        pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
+        obj = JenaNodeFactory.makeIriNode("http://example.org/1")
       )
     }
 
     "add a blank node" in {
       addAndFindBySubjAndPred(
-        subj = nodeFactory.makeBlankNodeWithID("bnode_1"),
-        pred = nodeFactory.makeIriNode("http://example.org/boolean_prop"),
-        obj = nodeFactory.makeDatatypeLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)
+        subj = JenaNodeFactory.makeBlankNodeWithID("bnode_1"),
+        pred = JenaNodeFactory.makeIriNode("http://example.org/boolean_prop"),
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean)
       )
     }
 
     "add a triple with a blank node object" in {
       addAndFindBySubjAndPred(
-        subj = nodeFactory.makeIriNode("http://example.org/4"),
-        pred = nodeFactory.makeIriNode("http://example.org/object_prop"),
-        obj = nodeFactory.makeBlankNodeWithID("bnode_1")
+        subj = JenaNodeFactory.makeIriNode("http://example.org/4"),
+        pred = JenaNodeFactory.makeIriNode("http://example.org/object_prop"),
+        obj = JenaNodeFactory.makeBlankNodeWithID("bnode_1")
       )
     }
 
     "remove a triple" in {
-      val subj: IriNode = nodeFactory.makeIriNode("http://example.org/1")
+      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/1")
       model.remove(subj = Some(subj), pred = None, obj = None)
       assert(model.find(subj = Some(subj), pred = None, obj = None).isEmpty)
     }
 
     "add and find several triples with the same subject" in {
-      val subj: IriNode = nodeFactory.makeIriNode("http://example.org/5")
+      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/5")
 
-      val booleanStatement: Statement = nodeFactory.makeStatement(
+      val booleanStatement: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
-        pred = nodeFactory.makeIriNode("http://example.org/boolean_prop"),
-        obj = nodeFactory.makeDatatypeLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)
+        pred = JenaNodeFactory.makeIriNode("http://example.org/boolean_prop"),
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean)
       )
 
-      val stringStatement: Statement = nodeFactory.makeStatement(
+      val stringStatement: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
-        pred = nodeFactory.makeIriNode("http://example.org/string_prop"),
-        obj = nodeFactory.makeDatatypeLiteral(value = "Hello", datatype = OntologyConstants.Xsd.String)
+        pred = JenaNodeFactory.makeIriNode("http://example.org/string_prop"),
+        obj = JenaNodeFactory.makeDatatypeLiteral(value = "Hello", datatype = OntologyConstants.Xsd.String)
       )
 
-      val stringWithLangStatement: Statement = nodeFactory.makeStatement(
+      val stringWithLangStatement: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
-        pred = nodeFactory.makeIriNode("http://example.org/string_with_lang_prop"),
-        obj = nodeFactory.makeStringWithLanguage(value = "Hello", language = "en")
+        pred = JenaNodeFactory.makeIriNode("http://example.org/string_with_lang_prop"),
+        obj = JenaNodeFactory.makeStringWithLanguage(value = "Hello", language = "en")
       )
 
       val statements: Set[Statement] = Set(
@@ -152,22 +151,22 @@ class RdfModelSpec() extends CoreSpec {
     }
 
     "add, find, and remove quads" in {
-      val labelPred: IriNode   = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
-      val commentPred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Comment)
+      val labelPred: IriNode   = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val commentPred: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Comment)
       val context1             = "http://example.org/graph1"
 
-      val graph1LabelStatement = nodeFactory.makeStatement(
-        subj = nodeFactory.makeIriNode("http://example.org/6"),
+      val graph1LabelStatement = JenaNodeFactory.makeStatement(
+        subj = JenaNodeFactory.makeIriNode("http://example.org/6"),
         pred = labelPred,
-        obj = nodeFactory
+        obj = JenaNodeFactory
           .makeDatatypeLiteral(value = "Lucky's Discount X-Wing Repair", datatype = OntologyConstants.Xsd.String),
         context = Some(context1)
       )
 
-      val graph1CommentStatement = nodeFactory.makeStatement(
-        subj = nodeFactory.makeIriNode("http://example.org/6"),
+      val graph1CommentStatement = JenaNodeFactory.makeStatement(
+        subj = JenaNodeFactory.makeIriNode("http://example.org/6"),
         pred = commentPred,
-        obj = nodeFactory
+        obj = JenaNodeFactory
           .makeDatatypeLiteral(value = "A safe flight or your money back", datatype = OntologyConstants.Xsd.String),
         context = Some(context1)
       )
@@ -179,18 +178,18 @@ class RdfModelSpec() extends CoreSpec {
 
       val context2 = "http://example.org/graph2"
 
-      val graph2LabelStatement = nodeFactory.makeStatement(
-        subj = nodeFactory.makeIriNode("http://example.org/7"),
+      val graph2LabelStatement = JenaNodeFactory.makeStatement(
+        subj = JenaNodeFactory.makeIriNode("http://example.org/7"),
         pred = labelPred,
-        obj =
-          nodeFactory.makeDatatypeLiteral(value = "Mos Eisley Used Droids", datatype = OntologyConstants.Xsd.String),
+        obj = JenaNodeFactory
+          .makeDatatypeLiteral(value = "Mos Eisley Used Droids", datatype = OntologyConstants.Xsd.String),
         context = Some(context2)
       )
 
-      val graph2CommentStatement = nodeFactory.makeStatement(
-        subj = nodeFactory.makeIriNode("http://example.org/7"),
+      val graph2CommentStatement = JenaNodeFactory.makeStatement(
+        subj = JenaNodeFactory.makeIriNode("http://example.org/7"),
         pred = commentPred,
-        obj = nodeFactory
+        obj = JenaNodeFactory
           .makeDatatypeLiteral(value = "All droids guaranteed for 10 seconds", datatype = OntologyConstants.Xsd.String),
         context = Some(context2)
       )
@@ -227,11 +226,12 @@ class RdfModelSpec() extends CoreSpec {
     }
 
     "Remove a statement from the default graph, rather than an otherwise identical statement in a named graph" in {
-      val subj: IriNode        = nodeFactory.makeIriNode("http://example.org/foo")
-      val pred: IriNode        = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
-      val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "Foo", datatype = OntologyConstants.Xsd.String)
+      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/foo")
+      val pred: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val obj: DatatypeLiteral =
+        JenaNodeFactory.makeDatatypeLiteral(value = "Foo", datatype = OntologyConstants.Xsd.String)
 
-      val statementInDefaultGraph: Statement = nodeFactory.makeStatement(
+      val statementInDefaultGraph: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
         pred = pred,
         obj = obj,
@@ -240,7 +240,7 @@ class RdfModelSpec() extends CoreSpec {
 
       val context = "http://example.org/namedGraph"
 
-      val statementInNamedGraph = nodeFactory.makeStatement(
+      val statementInNamedGraph = JenaNodeFactory.makeStatement(
         subj = subj,
         pred = pred,
         obj = obj,
@@ -260,11 +260,12 @@ class RdfModelSpec() extends CoreSpec {
     }
 
     "Remove a statement from the default graph, and an otherwise identical statement in a named graph" in {
-      val subj: IriNode        = nodeFactory.makeIriNode("http://example.org/bar")
-      val pred: IriNode        = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
-      val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "Bar", datatype = OntologyConstants.Xsd.String)
+      val subj: IriNode = JenaNodeFactory.makeIriNode("http://example.org/bar")
+      val pred: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val obj: DatatypeLiteral =
+        JenaNodeFactory.makeDatatypeLiteral(value = "Bar", datatype = OntologyConstants.Xsd.String)
 
-      val statementInDefaultGraph: Statement = nodeFactory.makeStatement(
+      val statementInDefaultGraph: Statement = JenaNodeFactory.makeStatement(
         subj = subj,
         pred = pred,
         obj = obj,
@@ -273,7 +274,7 @@ class RdfModelSpec() extends CoreSpec {
 
       val context = "http://example.org/namedGraph"
 
-      val statementInNamedGraph = nodeFactory.makeStatement(
+      val statementInNamedGraph = JenaNodeFactory.makeStatement(
         subj = subj,
         pred = pred,
         obj = obj,
@@ -300,7 +301,7 @@ class RdfModelSpec() extends CoreSpec {
       val fileInputStream =
         new BufferedInputStream(new FileInputStream("../test_data/project_data/anything-data.ttl"))
       val anythingModel: RdfModel =
-        rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
+        RdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
       fileInputStream.close()
 
       val rdfRepository: JenaRepository = anythingModel.asRepository

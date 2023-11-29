@@ -73,7 +73,6 @@ case class TriplestoreServiceLive(
 ) extends TriplestoreService
     with FusekiTriplestore {
 
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
   private val requestTimer =
     Metric.timer(
       "fuseki_request_duration",
@@ -118,7 +117,7 @@ case class TriplestoreServiceLive(
     for {
       turtleStr <- executeSparqlQuery(query, mimeTypeTextTurtle)
       rdfModel <- ZIO
-                    .attempt(rdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
+                    .attempt(RdfFormatUtil.parseToRdfModel(turtleStr, Turtle))
                     .orElse(processError(query.sparql, turtleStr))
     } yield SparqlConstructResponse.make(rdfModel)
 
@@ -139,7 +138,7 @@ case class TriplestoreServiceLive(
   ): Task[Unit] =
     executeSparqlQuery(query, acceptMimeType = mimeTypeTextTurtle)
       .map(RdfStringSource)
-      .mapAttempt(rdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
+      .mapAttempt(RdfFormatUtil.turtleToQuadsFile(_, graphIri.value, outputFile.toFile.toPath, outputFormat))
 
   /**
    * Performs a SPARQL update operation.
@@ -583,7 +582,7 @@ case class TriplestoreServiceLive(
           val tempTurtleFile = Paths.get(outputFile.toString + ".ttl")
           Files.copy(responseEntity.getContent, tempTurtleFile, StandardCopyOption.REPLACE_EXISTING)
 
-          rdfFormatUtil.turtleToQuadsFile(
+          RdfFormatUtil.turtleToQuadsFile(
             RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(tempTurtleFile))),
             graphIri,
             outputFile,

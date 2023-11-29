@@ -13,8 +13,6 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1367.
  */
 class UpgradePluginPR1367() extends UpgradePlugin {
-  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   override def transform(model: RdfModel): Unit = {
     // Fix the datatypes of decimal literals.
 
@@ -27,10 +25,10 @@ class UpgradePluginPR1367() extends UpgradePlugin {
           if (literal.datatype == "http://www.w3.org/2001/XMLSchema#valueHasDecimal") {
             statementsToRemove += statement
 
-            statementsToAdd += nodeFactory.makeStatement(
+            statementsToAdd += JenaNodeFactory.makeStatement(
               subj = statement.subj,
               pred = statement.pred,
-              obj = nodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Decimal),
+              obj = JenaNodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Decimal),
               context = statement.context
             )
           }

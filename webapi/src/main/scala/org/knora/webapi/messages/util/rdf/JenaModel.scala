@@ -149,7 +149,7 @@ object JenaContextFactory {
  *
  * @param dataset the underlying Jena dataset.
  */
-class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory: JenaNodeFactory) extends RdfModel {
+class JenaModel(private val dataset: jena.query.Dataset) extends RdfModel {
 
   private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
@@ -163,8 +163,6 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
    * Returns the underlying [[jena.query.Dataset]].
    */
   def getDataset: jena.query.Dataset = dataset
-
-  override def getNodeFactory: JenaNodeFactory = nodeFactory
 
   override def addStatement(statement: Statement): Unit =
     datasetGraph.add(JenaConversions.asJenaQuad(statement))
@@ -317,7 +315,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
 /**
  * Creates Jena node implementation wrappers.
  */
-class JenaNodeFactory {
+object JenaNodeFactory {
 
   /**
    * Represents a custom Knora datatype (used in the simple schema), for registration
@@ -407,11 +405,8 @@ class JenaNodeFactory {
 /**
  * A factory for creating instances of [[JenaModel]].
  */
-final case class JenaModelFactory(nodeFactory: JenaNodeFactory) {
-  def makeEmptyModel: JenaModel = new JenaModel(
-    dataset = jena.query.DatasetFactory.create,
-    nodeFactory = nodeFactory
-  )
+object JenaModelFactory {
+  def makeEmptyModel: JenaModel = new JenaModel(jena.query.DatasetFactory.create)
 }
 
 /**

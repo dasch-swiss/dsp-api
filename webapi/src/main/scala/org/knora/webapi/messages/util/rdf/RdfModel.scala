@@ -194,11 +194,6 @@ trait Statement {
 trait RdfModel extends Iterable[Statement] {
 
   /**
-   * Returns an [[JenaNodeFactory]] that can be used create nodes for use with this model.
-   */
-  def getNodeFactory: JenaNodeFactory
-
-  /**
    * Adds a statement to the model.
    *
    * @param statement the statement to be added.

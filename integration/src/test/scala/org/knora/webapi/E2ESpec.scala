@@ -160,20 +160,14 @@ abstract class E2ESpec
     responseToString(response)
   }
 
-  protected def parseTrig(trigStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-    rdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
-  }
+  protected def parseTrig(trigStr: String): RdfModel =
+    RdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
 
-  protected def parseTurtle(turtleStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-    rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-  }
+  protected def parseTurtle(turtleStr: String): RdfModel =
+    RdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
 
-  protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-    rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-  }
+  protected def parseRdfXml(rdfXmlStr: String): RdfModel =
+    RdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
 
   /**
    * Reads or writes a test data file.

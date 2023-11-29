@@ -218,17 +218,16 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the subject of the contents of this JSON-LD object (an IRI or a blank node).
    */
   def addToModel(model: RdfModel)(implicit stringFormatter: StringFormatter): RdfResource = {
-    val nodeFactory = model.getNodeFactory
 
     // If this object has an @id, use it as the subject, otherwise generate a blank node ID.
     val rdfSubj: RdfResource = maybeStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr) match {
       case Some(subjectIri: SmartIri) =>
         // It's an IRI.
-        nodeFactory.makeIriNode(subjectIri.toString)
+        JenaNodeFactory.makeIriNode(subjectIri.toString)
 
       case None =>
         // Generate a blank node ID.
-        nodeFactory.makeBlankNode
+        JenaNodeFactory.makeBlankNode
     }
 
     // Add rdf:type statements to the model.
@@ -242,7 +241,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     val iriPredicates: Set[IRI] = value.keySet -- JsonLDKeywords.allSupported
 
     for (pred: IRI <- iriPredicates) {
-      val rdfPred: IriNode = nodeFactory.makeIriNode(pred)
+      val rdfPred: IriNode = JenaNodeFactory.makeIriNode(pred)
       val obj: JsonLDValue = value(pred)
 
       addJsonLDValueToModel(
@@ -263,13 +262,12 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param rdfSubj the subject of this JSON-LD object.
    */
   private def addRdfTypesToModel(model: RdfModel, rdfSubj: RdfResource): Unit = {
-    val nodeFactory = model.getNodeFactory
 
     def addRdfType(typeIri: JsonLDString): Unit =
       model.add(
         subj = rdfSubj,
-        pred = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
-        obj = nodeFactory.makeIriNode(typeIri.value)
+        pred = JenaNodeFactory.makeIriNode(OntologyConstants.Rdf.Type),
+        obj = JenaNodeFactory.makeIriNode(typeIri.value)
       )
 
     def invalidType: Nothing = throw InvalidJsonLDException("The objects of @type must be strings")
@@ -355,21 +353,19 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    */
   private def addJsonLDValueToModel(model: RdfModel, rdfSubj: RdfResource, rdfPred: IriNode, jsonLDValue: JsonLDValue)(
     implicit stringFormatter: StringFormatter
-  ): Unit = {
-    val nodeFactory = model.getNodeFactory
-
+  ): Unit =
     // Which type of JSON-LD value is this?
     jsonLDValue match {
       case jsonLDObject: JsonLDObject =>
         // It's a JSON-LD object. What does it represent?
         val rdfObj: RdfNode = if (jsonLDObject.isIri) {
           // An IRI.
-          nodeFactory.makeIriNode(
+          JenaNodeFactory.makeIriNode(
             jsonLDObject.getRequiredString(JsonLDKeywords.ID).fold(msg => throw BadRequestException(msg), identity)
           )
         } else if (jsonLDObject.isDatatypeValue) {
           // A literal.
-          nodeFactory.makeDatatypeLiteral(
+          JenaNodeFactory.makeDatatypeLiteral(
             value = jsonLDObject
               .getRequiredString(JsonLDKeywords.VALUE)
               .fold(msg => throw BadRequestException(msg), identity),
@@ -378,7 +374,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
           )
         } else if (jsonLDObject.isStringWithLang) {
           // A string literal with a language tag.
-          nodeFactory.makeStringWithLanguage(
+          JenaNodeFactory.makeStringWithLanguage(
             value = jsonLDObject
               .getRequiredString(JsonLDKeywords.VALUE)
               .fold(msg => throw BadRequestException(msg), identity),
@@ -415,7 +411,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         model.add(
           subj = rdfSubj,
           pred = rdfPred,
-          obj = nodeFactory.makeStringLiteral(jsonLDString.value)
+          obj = JenaNodeFactory.makeStringLiteral(jsonLDString.value)
         )
 
       case jsonLDBoolean: JsonLDBoolean =>
@@ -423,20 +419,19 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         model.add(
           rdfSubj,
           rdfPred,
-          nodeFactory.makeBooleanLiteral(jsonLDBoolean.value)
+          JenaNodeFactory.makeBooleanLiteral(jsonLDBoolean.value)
         )
 
       case jsonLDInt: JsonLDInt =>
         model.add(
           subj = rdfSubj,
           pred = rdfPred,
-          obj = nodeFactory.makeDatatypeLiteral(
+          obj = JenaNodeFactory.makeDatatypeLiteral(
             value = jsonLDInt.value.toString,
             datatype = OntologyConstants.Xsd.Integer
           )
         )
     }
-  }
 
   /**
    * Returns `true` if this JSON-LD object represents an RDF entity with an IRI,
@@ -1055,9 +1050,9 @@ case class JsonLDDocument(
    *
    * @param modelFactory an [[JenaModelFactory]].
    */
-  def toRdfModel(modelFactory: JenaModelFactory): RdfModel = {
+  def toRdfModel: RdfModel = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val model: RdfModel                           = modelFactory.makeEmptyModel
+    val model: RdfModel                           = JenaModelFactory.makeEmptyModel
 
     // Add the prefixes and namespaces from the JSON-LD context to the model.
     for ((prefix: String, namespaceValue: JsonLDValue) <- context.value) {

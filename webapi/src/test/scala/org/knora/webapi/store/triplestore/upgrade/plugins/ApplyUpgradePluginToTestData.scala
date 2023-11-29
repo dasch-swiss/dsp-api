@@ -22,7 +22,7 @@ import java.nio.file.Path
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 import org.knora.webapi.messages.util.rdf.JenaConversions
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import org.knora.webapi.messages.util.rdf.RdfFormatUtil
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
@@ -69,7 +69,7 @@ object ApplyUpgradePluginToTestData extends ZIOAppDefault {
     ZIO.acquireRelease(ZIO.attemptBlockingIO(new FileInputStream(path.toFile)))(fis => ZIO.succeedBlocking(fis.close()))
 
   def parseRdfModel(is: InputStream): ZIO[Any, Nothing, RdfModel] =
-    ZIO.succeed(RdfFeatureFactory.getRdfFormatUtil().inputStreamToRdfModel(is, Turtle))
+    ZIO.succeed(RdfFormatUtil.inputStreamToRdfModel(is, Turtle))
 
   def fileOutputStreamFor(path: Path): ZIO[Scope, IOException, FileOutputStream] =
     ZIO.acquireRelease(ZIO.attemptBlockingIO(new FileOutputStream(path.toFile)))(fos => ZIO.succeedBlocking(fos))

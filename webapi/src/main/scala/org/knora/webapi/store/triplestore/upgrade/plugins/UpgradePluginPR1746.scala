@@ -15,8 +15,6 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1746.
  */
 class UpgradePluginPR1746(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   private val dummyString = "FIXME"
 
   override def transform(model: RdfModel): Unit = {
@@ -26,14 +24,14 @@ class UpgradePluginPR1746(log: Logger) extends UpgradePlugin {
     def replaceEmptyStringWithDummy(statement: Statement, languageTag: Option[String]): Unit = {
       val fixMeString: RdfLiteral = languageTag match {
         case Some(definedLanguageTag) =>
-          nodeFactory.makeStringWithLanguage(dummyString, definedLanguageTag)
+          JenaNodeFactory.makeStringWithLanguage(dummyString, definedLanguageTag)
 
-        case None => nodeFactory.makeStringLiteral(dummyString)
+        case None => JenaNodeFactory.makeStringLiteral(dummyString)
       }
 
       statementsToRemove += statement
 
-      statementsToAdd += nodeFactory.makeStatement(
+      statementsToAdd += JenaNodeFactory.makeStatement(
         subj = statement.subj,
         pred = statement.pred,
         obj = fixMeString,

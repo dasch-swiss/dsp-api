@@ -23,9 +23,6 @@ import org.knora.webapi.messages.util.rdf._
  * Provides helper methods for specs that test upgrade plugins.
  */
 abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
-
-  protected val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
   val log: Logger = Logger(this.getClass())
 
   /**
@@ -36,7 +33,7 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
    */
   def trigFileToModel(path: String): RdfModel = {
     val fileInputStream    = new BufferedInputStream(new FileInputStream(path))
-    val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = TriG)
+    val rdfModel: RdfModel = RdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = TriG)
     fileInputStream.close()
     rdfModel
   }
@@ -48,7 +45,7 @@ abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
    * @return an [[RdfModel]].
    */
   def stringToModel(s: String): RdfModel =
-    Using(new ByteArrayInputStream(s.getBytes))(rdfFormatUtil.inputStreamToRdfModel(_, TriG)) match {
+    Using(new ByteArrayInputStream(s.getBytes))(RdfFormatUtil.inputStreamToRdfModel(_, TriG)) match {
       case Success(value) => value
       case Failure(e)     => throw new IllegalArgumentException("Invalid model", e)
     }
