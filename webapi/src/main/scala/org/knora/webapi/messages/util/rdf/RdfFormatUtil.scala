@@ -473,16 +473,6 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
     parseTry.get
   }
 
-  // /**
-  //  * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
-  //  */
-  // def getRdfModelFactory: RdfModelFactory
-
-  // /**
-  //  * Returns an [[RdfNodeFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
-  //  */
-  // def getRdfNodeFactory: RdfNodeFactory
-
   /**
    * Parses RDF in a format other than JSON-LD to an [[RdfModel]].
    *
