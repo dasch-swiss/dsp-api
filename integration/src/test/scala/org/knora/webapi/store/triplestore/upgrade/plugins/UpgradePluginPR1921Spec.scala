@@ -11,7 +11,7 @@ import dsp.errors.AssertionException
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
+  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit =
     model

@@ -15,7 +15,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1921.
  */
 class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
+  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   // Group descriptions without language attribute get language attribute defined in DEFAULT_LANG
   private val DEFAULT_LANG = "en"
 

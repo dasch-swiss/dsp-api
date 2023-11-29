@@ -15,7 +15,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1307.
  */
 class UpgradePluginPR1307() extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
+  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   // IRI objects representing the IRIs used in this transformation.
   private val rdfTypeIri: IriNode          = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)

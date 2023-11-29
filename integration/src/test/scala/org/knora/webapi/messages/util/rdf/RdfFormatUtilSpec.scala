@@ -21,11 +21,11 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.rdf.JenaModel
 import org.knora.webapi.messages.util.rdf.JenaModelFactory
 import org.knora.webapi.messages.util.rdf.JenaNodeFactory
 import org.knora.webapi.messages.util.rdf.JenaStatement
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -295,7 +295,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
 object RdfFormatUtilSpec {
 
   private val rdfFormatUtil: RdfFormatUtil      = RdfFeatureFactory.getRdfFormatUtil()
-  private val rdfNodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory()
+  private val rdfNodeFactory: JenaNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()
   private val rdfModelFactory: JenaModelFactory = RdfFeatureFactory.getRdfModelFactory()
 
   private val expectedThingLabelStatement = rdfNodeFactory.makeStatement(

@@ -218,7 +218,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @return the subject of the contents of this JSON-LD object (an IRI or a blank node).
    */
   def addToModel(model: RdfModel)(implicit stringFormatter: StringFormatter): RdfResource = {
-    val nodeFactory: RdfNodeFactory = model.getNodeFactory
+    val nodeFactory = model.getNodeFactory
 
     // If this object has an @id, use it as the subject, otherwise generate a blank node ID.
     val rdfSubj: RdfResource = maybeStringWithValidation(JsonLDKeywords.ID, stringFormatter.toSmartIriWithErr) match {
@@ -263,7 +263,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
    * @param rdfSubj the subject of this JSON-LD object.
    */
   private def addRdfTypesToModel(model: RdfModel, rdfSubj: RdfResource): Unit = {
-    val nodeFactory: RdfNodeFactory = model.getNodeFactory
+    val nodeFactory = model.getNodeFactory
 
     def addRdfType(typeIri: JsonLDString): Unit =
       model.add(
@@ -356,7 +356,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
   private def addJsonLDValueToModel(model: RdfModel, rdfSubj: RdfResource, rdfPred: IriNode, jsonLDValue: JsonLDValue)(
     implicit stringFormatter: StringFormatter
   ): Unit = {
-    val nodeFactory: RdfNodeFactory = model.getNodeFactory
+    val nodeFactory = model.getNodeFactory
 
     // Which type of JSON-LD value is this?
     jsonLDValue match {

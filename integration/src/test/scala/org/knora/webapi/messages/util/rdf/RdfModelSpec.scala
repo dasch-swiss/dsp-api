@@ -12,8 +12,8 @@ import dsp.errors.AssertionException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.rdf.JenaRepository
+import org.knora.webapi.messages.util.rdf._
 
 /**
  * Tests implementations of [[RdfModel]].
@@ -21,7 +21,7 @@ import org.knora.webapi.messages.util.rdf.JenaRepository
 class RdfModelSpec() extends CoreSpec {
 
   private val model: RdfModel              = RdfFeatureFactory.getRdfModelFactory().makeEmptyModel
-  private val nodeFactory: RdfNodeFactory  = RdfFeatureFactory.getRdfNodeFactory()
+  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   /**

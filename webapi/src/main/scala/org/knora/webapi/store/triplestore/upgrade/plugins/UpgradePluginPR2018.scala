@@ -22,9 +22,9 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for DSP-API PR 2018.
  */
 class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-  private val newModificationDate         = Instant.now.toString
-  private val ontologyType: IriNode       = nodeFactory.makeIriNode(Ontology)
+  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
+  private val newModificationDate          = Instant.now.toString
+  private val ontologyType: IriNode        = nodeFactory.makeIriNode(Ontology)
 
   override def transform(model: RdfModel): Unit =
     for (ontology: IriNode <- getOntologiesToTransform(model)) {

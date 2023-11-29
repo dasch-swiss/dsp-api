@@ -17,7 +17,7 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * missing datatype ^^<http://www.w3.org/2001/XMLSchema#anyURI>
  */
 class UpgradePluginPR2094(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
+  private val nodeFactory: JenaNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty

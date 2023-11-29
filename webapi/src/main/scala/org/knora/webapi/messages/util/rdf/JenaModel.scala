@@ -164,7 +164,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
    */
   def getDataset: jena.query.Dataset = dataset
 
-  override def getNodeFactory: RdfNodeFactory = nodeFactory
+  override def getNodeFactory: JenaNodeFactory = nodeFactory
 
   override def addStatement(statement: Statement): Unit =
     datasetGraph.add(JenaConversions.asJenaQuad(statement))
@@ -315,9 +315,9 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
 }
 
 /**
- * An implementation of [[RdfNodeFactory]] that creates Jena node implementation wrappers.
+ * Creates Jena node implementation wrappers.
  */
-class JenaNodeFactory extends RdfNodeFactory {
+class JenaNodeFactory {
 
   /**
    * Represents a custom Knora datatype (used in the simple schema), for registration
@@ -344,22 +344,43 @@ class JenaNodeFactory extends RdfNodeFactory {
     typeMapper.registerDatatype(new KnoraDatatype(knoraDatatypeIri))
   }
 
-  override def makeBlankNode: BlankNode =
+  def makeBlankNode: BlankNode =
     JenaBlankNode(jena.graph.NodeFactory.createBlankNode)
 
-  override def makeBlankNodeWithID(id: String): BlankNode =
+  def makeBlankNodeWithID(id: String): BlankNode =
     JenaBlankNode(jena.graph.NodeFactory.createBlankNode(id))
 
-  override def makeIriNode(iri: IRI): IriNode =
+  def makeIriNode(iri: IRI): IriNode =
     JenaIriNode(jena.graph.NodeFactory.createURI(iri))
 
-  override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral =
+  /**
+   * Constructs a literal value with a datatype.
+   *
+   * @param value    the lexical value of the literal.
+   * @param datatype the datatype IRI.
+   * @return a [[DatatypeLiteral]].
+   */
+  def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral =
     JenaDatatypeLiteral(jena.graph.NodeFactory.createLiteral(value, typeMapper.getTypeByName(datatype)))
 
-  override def makeStringWithLanguage(value: String, language: String): StringWithLanguage =
+  /**
+   * Constructs a string with a language tag.
+   *
+   * @param value    the string.
+   * @param language the language tag.
+   */
+  def makeStringWithLanguage(value: String, language: String): StringWithLanguage =
     JenaStringWithLanguage(jena.graph.NodeFactory.createLiteral(value, language))
 
-  override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement =
+  /**
+   * Constructs a statement.
+   *
+   * @param subj    the subject.
+   * @param pred    the predicate.
+   * @param obj     the object.
+   * @param context the IRI of the named graph, or `None` to use the default graph.
+   */
+  def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Statement =
     JenaStatement(
       new jena.sparql.core.Quad(
         JenaContextFactory.contextNodeOrDefaultGraph(context),
@@ -368,6 +389,18 @@ class JenaNodeFactory extends RdfNodeFactory {
         JenaConversions.asJenaNode(obj)
       )
     )
+
+  def makeBooleanLiteral(value: Boolean): DatatypeLiteral =
+    makeDatatypeLiteral(value = value.toString, datatype = OntologyConstants.Xsd.Boolean)
+
+  /**
+   * Creates an `xsd:string`.
+   *
+   * @param value the string value.
+   * @return a [[DatatypeLiteral]].
+   */
+  def makeStringLiteral(value: String): DatatypeLiteral =
+    makeDatatypeLiteral(value = value, datatype = OntologyConstants.Xsd.String)
 
 }
 
