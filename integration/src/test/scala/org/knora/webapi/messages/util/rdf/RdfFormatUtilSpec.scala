@@ -10,19 +10,19 @@ import org.apache.jena
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import scala.util.Try
 
 import dsp.errors.BadRequestException
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.util.FileUtil
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
-import scala.util.Try
-import java.io.InputStream
+import org.knora.webapi.util.FileUtil
 
 /**
  * Tests implementations of [[RdfFormatUtil]].
