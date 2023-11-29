@@ -24,7 +24,7 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
+import org.knora.webapi.messages.util.rdf.JenaConversions
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**

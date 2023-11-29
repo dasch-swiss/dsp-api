@@ -13,7 +13,7 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaRepository
+import org.knora.webapi.messages.util.rdf.JenaRepository
 
 /**
  * Tests implementations of [[RdfModel]].

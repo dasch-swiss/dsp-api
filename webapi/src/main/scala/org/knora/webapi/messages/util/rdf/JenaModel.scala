@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.util.rdf.jenaimpl
+package org.knora.webapi.messages.util.rdf
 
 import org.apache.jena
 

@@ -30,7 +30,6 @@ import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.ValueHasCom
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
 import org.knora.webapi.routing.RouteUtilZ
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 

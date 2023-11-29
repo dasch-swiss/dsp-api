@@ -22,10 +22,10 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
+import org.knora.webapi.messages.util.rdf.JenaModel
+import org.knora.webapi.messages.util.rdf.JenaModelFactory
+import org.knora.webapi.messages.util.rdf.JenaNodeFactory
+import org.knora.webapi.messages.util.rdf.JenaStatement
 import org.knora.webapi.util.FileUtil
 
 /**

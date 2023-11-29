@@ -24,11 +24,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaConversions
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
 
 import pekko.http.scaladsl.model.MediaType
 

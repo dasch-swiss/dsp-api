@@ -10,7 +10,6 @@ import scala.util.control.Exception.allCatch
 import dsp.errors.InvalidRdfException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaRepository
 
 /**
  * Represents an RDF subject, predicate, or object.
