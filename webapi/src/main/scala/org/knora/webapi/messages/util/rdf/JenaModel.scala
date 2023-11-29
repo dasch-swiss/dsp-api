@@ -121,26 +121,26 @@ object JenaConversions {
 /**
  * Generates Jena nodes representing contexts.
  */
-abstract class JenaContextFactory {
+object JenaContextFactory {
 
   /**
    * Converts a named graph IRI to a [[jena.graph.Node]].
    */
-  protected def contextIriToNode(context: IRI): jena.graph.Node =
+  def contextIriToNode(context: IRI): jena.graph.Node =
     jena.graph.NodeFactory.createURI(context)
 
   /**
    * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
    * `None` to the IRI of Jena's default graph.
    */
-  protected def contextNodeOrDefaultGraph(context: Option[IRI]): jena.graph.Node =
+  def contextNodeOrDefaultGraph(context: Option[IRI]): jena.graph.Node =
     context.map(contextIriToNode).getOrElse(jena.sparql.core.Quad.defaultGraphIRI)
 
   /**
    * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
    * `None` to a wildcard that will match any graph.
    */
-  protected def contextNodeOrWildcard(context: Option[IRI]): jena.graph.Node =
+  def contextNodeOrWildcard(context: Option[IRI]): jena.graph.Node =
     context.map(contextIriToNode).getOrElse(jena.graph.Node.ANY)
 }
 
@@ -149,9 +149,7 @@ abstract class JenaContextFactory {
  *
  * @param dataset the underlying Jena dataset.
  */
-class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory: JenaNodeFactory)
-    extends JenaContextFactory
-    with RdfModel {
+class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory: JenaNodeFactory) extends RdfModel {
 
   private val datasetGraph: jena.sparql.core.DatasetGraph = dataset.asDatasetGraph
 
@@ -180,7 +178,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
 
   override def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit =
     datasetGraph.add(
-      contextNodeOrDefaultGraph(context),
+      JenaContextFactory.contextNodeOrDefaultGraph(context),
       JenaConversions.asJenaNode(subj),
       JenaConversions.asJenaNode(pred),
       JenaConversions.asJenaNode(obj)
@@ -193,7 +191,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     context: Option[IRI] = None
   ): Unit =
     datasetGraph.deleteAny(
-      contextNodeOrWildcard(context),
+      JenaContextFactory.contextNodeOrWildcard(context),
       asJenaNodeOrWildcard(subj),
       asJenaNodeOrWildcard(pred),
       asJenaNodeOrWildcard(obj)
@@ -210,7 +208,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
   ): Iterator[Statement] =
     new StatementIterator(
       datasetGraph.find(
-        contextNodeOrWildcard(context),
+        JenaContextFactory.contextNodeOrWildcard(context),
         asJenaNodeOrWildcard(subj),
         asJenaNodeOrWildcard(pred),
         asJenaNodeOrWildcard(obj)
@@ -319,7 +317,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
 /**
  * An implementation of [[RdfNodeFactory]] that creates Jena node implementation wrappers.
  */
-class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
+class JenaNodeFactory extends RdfNodeFactory {
 
   /**
    * Represents a custom Knora datatype (used in the simple schema), for registration
@@ -364,7 +362,7 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
   override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement =
     JenaStatement(
       new jena.sparql.core.Quad(
-        contextNodeOrDefaultGraph(context),
+        JenaContextFactory.contextNodeOrDefaultGraph(context),
         JenaConversions.asJenaNode(subj),
         JenaConversions.asJenaNode(pred),
         JenaConversions.asJenaNode(obj)
