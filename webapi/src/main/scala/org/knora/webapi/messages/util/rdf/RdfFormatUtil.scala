@@ -206,29 +206,6 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
     }
 
   /**
-   * Parses an RDF string to a [[JsonLDDocument]].
-   *
-   * @param rdfStr     the RDF string to be parsed.
-   * @param rdfFormat  the format of the string.
-   * @param flatJsonLD if `true`, return flat JSON-LD.
-   * @return the corresponding [[JsonLDDocument]].
-   */
-  def parseToJsonLDDocument(rdfStr: String, rdfFormat: RdfFormat, flatJsonLD: Boolean = false): JsonLDDocument =
-    rdfFormat match {
-      case JsonLD =>
-        // Use JsonLDUtil to parse JSON-LD.
-        JsonLDUtil.parseJsonLD(jsonLDString = rdfStr, flatten = flatJsonLD)
-
-      case nonJsonLD: NonJsonLD =>
-        // Use an implementation-specific function to parse other formats to an RdfModel.
-        // Use JsonLDUtil to convert the resulting model to a JsonLDDocument.
-        JsonLDUtil.fromRdfModel(
-          model = parseNonJsonLDToRdfModel(rdfStr = rdfStr, rdfFormat = nonJsonLD),
-          flatJsonLD = flatJsonLD
-        )
-    }
-
-  /**
    * Converts an [[RdfModel]] to a string.
    *
    * @param rdfModel      the model to be formatted.

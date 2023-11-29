@@ -22,14 +22,14 @@ object RdfFeatureFactory {
    *
    * @return an [[RdfModelFactory]].
    */
-  def getRdfModelFactory(): RdfModelFactory = jenaModelFactory
+  def getRdfModelFactory(): JenaModelFactory = jenaModelFactory
 
   /**
    * Returns an [[RdfNodeFactory]].
    *
    * @return an [[RdfNodeFactory]].
    */
-  def getRdfNodeFactory(): RdfNodeFactory = jenaNodeFactory
+  def getRdfNodeFactory(): JenaNodeFactory = jenaNodeFactory
 
   /**
    * Returns an [[RdfFormatUtil]].

@@ -23,15 +23,19 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
+import java.io.StringReader
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
 
 /**
  * Tests implementations of [[RdfFormatUtil]].
  */
 class RdfFormatUtilSpec() extends CoreSpec {
 
-  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
-  private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()
-  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
+  private val rdfFormatUtil: RdfFormatUtil      = RdfFeatureFactory.getRdfFormatUtil()
+  private val rdfNodeFactory: JenaNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()
+  private val rdfModelFactory: JenaModelFactory = RdfFeatureFactory.getRdfModelFactory()
 
   private def checkModelForRdfTypeBook(rdfModel: RdfModel, context: Option[IRI] = None): Unit = {
     val statements: Set[Statement] = rdfModel
@@ -90,7 +94,11 @@ class RdfFormatUtilSpec() extends CoreSpec {
         )
       val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTurtle, rdfFormat = Turtle)
       val inputJsonLDDocument: JsonLDDocument =
-        rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = Turtle)
+        RdfFormatUtilSpec.parseToJsonLDDocument(
+          rdfStr = inputTurtle,
+          rdfFormat = Turtle,
+          modelFactory = rdfModelFactory
+        )
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
 
       val jsonLDOutputModel: RdfModel = inputJsonLDDocument.toRdfModel(rdfModelFactory)
@@ -110,7 +118,11 @@ class RdfFormatUtilSpec() extends CoreSpec {
         )
       val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputRdfXml, rdfFormat = RdfXml)
       val inputJsonLDDocument: JsonLDDocument =
-        rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputRdfXml, rdfFormat = RdfXml)
+        RdfFormatUtilSpec.parseToJsonLDDocument(
+          rdfStr = inputRdfXml,
+          rdfFormat = RdfXml,
+          modelFactory = rdfModelFactory
+        )
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
 
       val jsonLDOutputModel: RdfModel = inputJsonLDDocument.toRdfModel(rdfModelFactory)
@@ -190,12 +202,20 @@ class RdfFormatUtilSpec() extends CoreSpec {
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld")
         )
       val inputJsonLDDocument: JsonLDDocument =
-        rdfFormatUtil.parseToJsonLDDocument(rdfStr = inputTurtle, rdfFormat = JsonLD)
+        RdfFormatUtilSpec.parseToJsonLDDocument(
+          rdfStr = inputTurtle,
+          rdfFormat = JsonLD,
+          modelFactory = rdfModelFactory
+        )
       checkJsonLDDocumentForRdfTypeBook(inputJsonLDDocument)
 
       val outputJsonLD: String = inputJsonLDDocument.toPrettyString()
       val outputJsonLDDocument: JsonLDDocument =
-        rdfFormatUtil.parseToJsonLDDocument(rdfStr = outputJsonLD, rdfFormat = JsonLD)
+        RdfFormatUtilSpec.parseToJsonLDDocument(
+          rdfStr = outputJsonLD,
+          rdfFormat = JsonLD,
+          modelFactory = rdfModelFactory
+        )
       checkJsonLDDocumentForRdfTypeBook(outputJsonLDDocument)
       assert(inputJsonLDDocument == outputJsonLDDocument)
     }
@@ -328,5 +348,44 @@ object RdfFormatUtilSpec {
     inputStream.close()
     testStreamProcessor.check()
     parseTry.get
+  }
+
+  /**
+   * Parses an RDF string to a [[JsonLDDocument]].
+   *
+   * @param rdfStr     the RDF string to be parsed.
+   * @param rdfFormat  the format of the string.
+   * @param flatJsonLD if `true`, return flat JSON-LD.
+   * @return the corresponding [[JsonLDDocument]].
+   */
+  def parseToJsonLDDocument(
+    rdfStr: String,
+    rdfFormat: RdfFormat,
+    flatJsonLD: Boolean = false,
+    modelFactory: JenaModelFactory
+  ): JsonLDDocument =
+    rdfFormat match {
+      case JsonLD =>
+        // Use JsonLDUtil to parse JSON-LD.
+        JsonLDUtil.parseJsonLD(jsonLDString = rdfStr, flatten = flatJsonLD)
+
+      case nonJsonLD: NonJsonLD =>
+        // Use an implementation-specific function to parse other formats to an RdfModel.
+        // Use JsonLDUtil to convert the resulting model to a JsonLDDocument.
+        JsonLDUtil.fromRdfModel(
+          model = parseNonJsonLDToRdfModel(rdfStr, nonJsonLD, modelFactory),
+          flatJsonLD = flatJsonLD
+        )
+    }
+
+  def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD, modelFactory: JenaModelFactory): RdfModel = { // XXX
+    val jenaModel: JenaModel = modelFactory.makeEmptyModel
+    jena.riot.RDFParser
+      .create()
+      .source(new StringReader(rdfStr))
+      .lang(RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat))
+      .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+      .parse(jenaModel.getDataset)
+    jenaModel
   }
 }
