@@ -31,7 +31,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaFormatUtil
 import org.knora.webapi.slice.resourceinfo.domain.InternalIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -56,7 +55,6 @@ trait TestTripleStore extends TriplestoreService {
 final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit val sf: StringFormatter)
     extends TriplestoreService
     with TestTripleStore {
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   override def query(query: Select): Task[SparqlSelectResult] = {
     require(!query.isGravsearch, "`isGravsearch` parameter is not supported by fake implementation yet")
@@ -112,7 +110,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     for {
       turtle <- ZIO.scoped(execConstruct(query.sparql).flatMap(modelToTurtle))
       rdfModel <- ZIO
-                    .attempt(RdfFeatureFactory.getRdfFormatUtil().parseToRdfModel(turtle, Turtle))
+                    .attempt(RdfFormatUtil.parseToRdfModel(turtle, Turtle))
                     .foldZIO(
                       _ =>
                         if (turtle.contains("##  Query cancelled due to timeout during execution")) {
@@ -146,7 +144,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     for {
       model  <- execConstruct(query.sparql)
       source <- modelToTurtle(model).map(RdfStringSource)
-      _      <- ZIO.attempt(rdfFormatUtil.turtleToQuadsFile(source, graphIri.value, outputFile.toFile.toPath, outputFormat))
+      _      <- ZIO.attempt(RdfFormatUtil.turtleToQuadsFile(source, graphIri.value, outputFile.toFile.toPath, outputFormat))
     } yield ()
   }
 
@@ -167,7 +165,7 @@ final case class TriplestoreServiceInMemory(datasetRef: Ref[Dataset], implicit v
     for {
       fos <- fileOutputStream(outputFile)
       ds  <- datasetRef.get
-      lang = JenaFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
+      lang = RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
       _ <- ZIO.attemptBlocking {
              ds.begin(ReadWrite.READ)
              try { ds.getNamedModel(graphIri.value).write(fos, lang.getName) }

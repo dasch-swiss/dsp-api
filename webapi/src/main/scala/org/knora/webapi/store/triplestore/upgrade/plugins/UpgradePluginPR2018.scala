@@ -22,16 +22,15 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for DSP-API PR 2018.
  */
 class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-  private val newModificationDate         = Instant.now.toString
-  private val ontologyType: IriNode       = nodeFactory.makeIriNode(Ontology)
+  private val newModificationDate   = Instant.now.toString
+  private val ontologyType: IriNode = JenaNodeFactory.makeIriNode(Ontology)
 
   override def transform(model: RdfModel): Unit =
     for (ontology: IriNode <- getOntologiesToTransform(model)) {
       model.add(
         subj = ontology,
-        pred = nodeFactory.makeIriNode(LastModificationDate),
-        obj = nodeFactory.makeDatatypeLiteral(
+        pred = JenaNodeFactory.makeIriNode(LastModificationDate),
+        obj = JenaNodeFactory.makeDatatypeLiteral(
           value = newModificationDate,
           datatype = DateTime
         ),
@@ -45,7 +44,7 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
     val triplesWithoutLastModificationDate: Set[RdfResource] = model
       .find(
         subj = None,
-        pred = Some(nodeFactory.makeIriNode(LastModificationDate)),
+        pred = Some(JenaNodeFactory.makeIriNode(LastModificationDate)),
         obj = None
       )
       .map(_.subj)
@@ -66,10 +65,10 @@ class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
     val triplesAttachedToSystemProject: Set[RdfResource] = model
       .find(
         subj = None,
-        pred = Some(nodeFactory.makeIriNode(AttachedToProject)),
+        pred = Some(JenaNodeFactory.makeIriNode(AttachedToProject)),
         obj = None
       )
-      .filter(triple => (triple.obj == nodeFactory.makeIriNode(SystemProject)))
+      .filter(triple => (triple.obj == JenaNodeFactory.makeIriNode(SystemProject)))
       .map(_.subj)
       .toSet
 

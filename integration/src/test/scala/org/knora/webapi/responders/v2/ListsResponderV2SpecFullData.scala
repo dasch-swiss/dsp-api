@@ -18,7 +18,7 @@ class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
   val treeList = ListGetResponseV2(
     list = ListADM(
-      listinfo = SharedListsTestDataADM.treeListInfo,
+      listinfo = SharedListsTestDataADM.treeListInfo.sorted,
       children = SharedListsTestDataADM.treeListChildNodes.map(_.sorted)
     ),
     userLang = "de",

@@ -18,14 +18,12 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Fixes wrong date serialisations (all `xsd:dateTime` in the database should end on `Z` rather than specifying a time zone).
  */
 class UpgradePluginPR2081(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
     val newObjectValue: String => DatatypeLiteral = (in: String) =>
-      nodeFactory.makeDatatypeLiteral(Instant.parse(in).toString, OntologyConstants.Xsd.DateTime)
+      JenaNodeFactory.makeDatatypeLiteral(Instant.parse(in).toString, OntologyConstants.Xsd.DateTime)
     val shouldTransform: DatatypeLiteral => Boolean = (literal: DatatypeLiteral) =>
       (literal.datatype == OntologyConstants.Xsd.DateTime &&
         literal.value != newObjectValue(literal.value).value)
@@ -36,7 +34,7 @@ class UpgradePluginPR2081(log: Logger) extends UpgradePlugin {
           val newValue = newObjectValue(literal.value)
           log.debug(s"Transformed ${literal.value} => ${newValue.value}")
           statementsToRemove += statement
-          statementsToAdd += nodeFactory.makeStatement(
+          statementsToAdd += JenaNodeFactory.makeStatement(
             subj = statement.subj,
             pred = statement.pred,
             obj = newValue,
