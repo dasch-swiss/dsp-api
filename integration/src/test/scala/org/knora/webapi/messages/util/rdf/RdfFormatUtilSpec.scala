@@ -123,7 +123,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF in TriG format" in {
       val graphIri = "http://example.org/data#"
       val inputTrig = FileUtil.readTextFile(
-        Paths.get("..", "test_data/generated_test_data/RdfFormatUtil/BookReiseInsHeiligeLand.trig")
+        Paths.get("..", "test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.trig")
       )
       val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTrig, rdfFormat = TriG)
       checkModelForRdfTypeBook(rdfModel = inputModel, context = Some(graphIri))
@@ -132,7 +132,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF in N-Quads format" in {
       val graphIri = "http://example.org/data#"
       val inputTrig =
-        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/RdfFormatUtil/BookReiseInsHeiligeLand.nq"))
+        FileUtil.readTextFile(Paths.get("..", "test_data/generated_test_data/rdfFormatUtil/BookReiseInsHeiligeLand.nq"))
       val inputModel: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = inputTrig, rdfFormat = NQuads)
       checkModelForRdfTypeBook(rdfModel = inputModel, context = Some(graphIri))
     }
