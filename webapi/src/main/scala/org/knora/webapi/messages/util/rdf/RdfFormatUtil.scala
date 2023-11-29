@@ -388,26 +388,6 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
   }
 
   /**
-   * Creates an [[RdfStreamProcessor]] that writes formatted output.
-   *
-   * @param outputStream the output stream to which the formatted RDF data should be written.
-   * @param rdfFormat    the output format.
-   * @return an an [[RdfStreamProcessor]].
-   */
-  def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor = {
-    val streamRDF: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
-      outputStream,
-      RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat)
-    )
-    new RdfStreamProcessor {
-      override def start(): Unit                                          = streamRDF.start()
-      override def processNamespace(prefix: String, namespace: IRI): Unit = streamRDF.prefix(prefix, namespace)
-      override def processStatement(statement: Statement): Unit           = streamRDF.quad(JenaConversions.asJenaQuad(statement))
-      override def finish(): Unit                                         = streamRDF.finish()
-    }
-  }
-
-  /**
    * Reads RDF data in Turtle format from an [[RdfSource]], adds a named graph IRI to each statement,
    * and writes the result to a file in a format that supports quads. If the source is an input
    * stream, this method closes it before returning.
@@ -419,14 +399,13 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
    */
   def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: Path, outputFormat: QuadFormat): Unit = {
     val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
-    val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
-      outputStream = bufferedFileOutputStream,
-      rdfFormat = outputFormat
-    )
-
     val streamRDF = new jena.riot.system.StreamRDF {
-      private def processStatement(statement: Statement): Unit = {
-        val outputStatement = JenaStatement(
+      val inner: jena.riot.system.StreamRDF = jena.riot.system.StreamRDFWriter.getWriterStream(
+        bufferedFileOutputStream,
+        RdfFormatUtil.rdfFormatToJenaParsingLang(outputFormat)
+      )
+      def processStatement(statement: JenaStatement): Unit =
+        inner.quad(
           new jena.sparql.core.Quad(
             jena.graph.NodeFactory.createURI(graphIri),
             JenaConversions.asJenaNode(statement.subj),
@@ -434,17 +413,13 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
             JenaConversions.asJenaNode(statement.obj)
           )
         )
-
-        formattingStreamProcessor.processStatement(outputStatement)
-      }
-      override def start(): Unit = formattingStreamProcessor.start()
+      override def start(): Unit                                      = inner.start()
+      override def base(s: String): Unit                              = {}
+      override def prefix(prefixStr: String, namespace: String): Unit = inner.prefix(prefixStr, namespace)
+      override def finish(): Unit                                     = inner.finish()
       override def triple(triple: jena.graph.Triple): Unit =
         quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
       override def quad(quad: jena.sparql.core.Quad): Unit = processStatement(JenaStatement(quad))
-      override def base(s: String): Unit                   = {}
-      override def prefix(prefixStr: String, namespace: String): Unit =
-        formattingStreamProcessor.processNamespace(prefixStr, namespace)
-      override def finish(): Unit = formattingStreamProcessor.finish()
     }
 
     // Build a parser.
