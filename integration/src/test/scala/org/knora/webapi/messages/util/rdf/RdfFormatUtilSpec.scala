@@ -27,6 +27,7 @@ import org.knora.webapi.messages.util.rdf.JenaNodeFactory
 import org.knora.webapi.messages.util.rdf.JenaStatement
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
+import java.io.OutputStream
 
 /**
  * Tests implementations of [[RdfFormatUtil]].
@@ -260,7 +261,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
         new BufferedInputStream(Files.newInputStream(Paths.get("..", "test_data/project_ontologies/anything-onto.ttl")))
       val byteArrayOutputStream = new ByteArrayOutputStream()
 
-      rdfFormatUtil.parseStreamWithFormatting(fileInputStream, byteArrayOutputStream)
+      RdfFormatUtilSpec.parseStreamWithFormatting(fileInputStream, byteArrayOutputStream)
 
       // Read back the ByteArrayOutputStream and check that it's correct.
       val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
@@ -371,5 +372,38 @@ object RdfFormatUtilSpec {
           .parse(model.getDataset)
         JsonLDUtil.fromRdfModel(model, flatJsonLD)
     }
+
+  def parseStreamWithFormatting(inputStream: InputStream, outputStream: OutputStream): Unit = {
+
+    val streamRDF = new jena.riot.system.StreamRDF {
+      val inner = jena.riot.system.StreamRDFWriter.getWriterStream(outputStream, jena.riot.RDFLanguages.TURTLE)
+
+      override def start(): Unit                             = inner.start()
+      override def finish(): Unit                            = inner.finish()
+      override def base(base: String): Unit                  = {}
+      override def prefix(prefix: String, iri: String): Unit = inner.prefix(prefix, iri)
+      override def quad(quad: jena.sparql.core.Quad): Unit   = inner.quad(quad)
+      override def triple(triple: jena.graph.Triple): Unit =
+        inner.quad(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
+    }
+
+    // Build a parser.
+    val parser = jena.riot.RDFParser.create()
+
+    // Configure it to read from the input source.
+    parser.source(inputStream)
+
+    val parseTry: Try[Unit] = Try {
+      // Add the other configuration and run the parser.
+      parser
+        .lang(jena.riot.RDFLanguages.TURTLE)
+        .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+        .parse(streamRDF)
+    }
+    inputStream.close()
+    outputStream.close()
+
+    parseTry.get
+  }
 
 }
