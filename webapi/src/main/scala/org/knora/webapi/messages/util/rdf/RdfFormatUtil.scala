@@ -336,55 +336,6 @@ final case class RdfFormatUtil(modelFactory: JenaModelFactory, nodeFactory: Jena
   }
 
   /**
-   * Parses RDF input, processing it with an [[RdfStreamProcessor]].  If the source is an input
-   * stream, this method closes it before returning. The caller must close any output stream
-   * used by the [[RdfStreamProcessor]].
-   *
-   * @param rdfSource          the input source from which the RDF data should be read.
-   * @param rdfFormat          the input format.
-   * @param rdfStreamProcessor the [[RdfStreamProcessor]] that will be used to process the input.
-   */
-  def parseWithStreamProcessor(rdfSource: RdfSource, rdfStreamProcessor: RdfStreamProcessor): Unit = {
-
-    val streamRDF = new jena.riot.system.StreamRDF {
-      override def start(): Unit = rdfStreamProcessor.start()
-      override def triple(triple: jena.graph.Triple): Unit =
-        rdfStreamProcessor.processStatement(
-          JenaStatement(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
-        )
-      override def quad(quad: jena.sparql.core.Quad): Unit   = rdfStreamProcessor.processStatement(JenaStatement(quad))
-      override def base(base: String): Unit                  = {}
-      override def prefix(prefix: String, iri: String): Unit = rdfStreamProcessor.processNamespace(prefix, iri)
-      override def finish(): Unit                            = rdfStreamProcessor.finish()
-
-    }
-
-    // Build a parser.
-    val parser = jena.riot.RDFParser.create()
-
-    // Configure it to read from the input source.
-    rdfSource match {
-      case RdfStringSource(rdfStr)           => parser.source(new StringReader(rdfStr))
-      case RdfInputStreamSource(inputStream) => parser.source(inputStream)
-    }
-
-    val parseTry: Try[Unit] = Try {
-      // Add the other configuration and run the parser.
-      parser
-        .lang(jena.riot.RDFLanguages.TURTLE)
-        .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
-        .parse(streamRDF)
-    }
-
-    rdfSource match {
-      case RdfInputStreamSource(inputStream) => inputStream.close()
-      case _                                 => ()
-    }
-
-    parseTry.get
-  }
-
-  /**
    * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]]. Closes the input stream
    * before returning.
    *

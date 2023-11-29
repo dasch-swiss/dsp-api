@@ -5,6 +5,8 @@
 
 package org.knora.webapi.util.rdf
 
+import org.apache.jena
+
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -18,6 +20,9 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
+import scala.util.Try
+import java.io.InputStream
 
 /**
  * Tests implementations of [[RdfFormatUtil]].
@@ -27,45 +32,6 @@ class RdfFormatUtilSpec() extends CoreSpec {
   private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
   private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()
   private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
-
-  private val expectedThingLabelStatement = rdfNodeFactory.makeStatement(
-    rdfNodeFactory.makeIriNode("http://www.knora.org/ontology/0001/anything#Thing"),
-    rdfNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label),
-    rdfNodeFactory.makeStringWithLanguage(value = "Thing", language = "en")
-  )
-
-  /**
-   * Processes `anything-onto.ttl` and checks whether the expected content is received.
-   */
-  class TestStreamProcessor extends RdfStreamProcessor {
-    var startCalled: Boolean            = false
-    var finishCalled: Boolean           = false
-    var gotKnoraBaseNamespace           = false
-    var gotThingLabelStatement: Boolean = false
-
-    override def start(): Unit =
-      startCalled = true
-
-    override def processNamespace(prefix: String, namespace: IRI): Unit =
-      if (prefix == "knora-base" && namespace == "http://www.knora.org/ontology/knora-base#") {
-        gotKnoraBaseNamespace = true
-      }
-
-    override def processStatement(statement: Statement): Unit =
-      if (statement == expectedThingLabelStatement) {
-        gotThingLabelStatement = true
-      }
-
-    override def finish(): Unit =
-      finishCalled = true
-
-    def check(): Unit = {
-      assert(startCalled)
-      assert(gotKnoraBaseNamespace)
-      assert(gotThingLabelStatement)
-      assert(finishCalled)
-    }
-  }
 
   private def checkModelForRdfTypeBook(rdfModel: RdfModel, context: Option[IRI] = None): Unit = {
     val statements: Set[Statement] = rdfModel
@@ -263,14 +229,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
     "parse RDF from a stream and process it using an RdfStreamProcessor" in {
       val inputStream =
         new BufferedInputStream(Files.newInputStream(Paths.get("..", "test_data/project_ontologies/anything-onto.ttl")))
-      val testStreamProcessor = new TestStreamProcessor
-
-      rdfFormatUtil.parseWithStreamProcessor(
-        rdfSource = RdfInputStreamSource(inputStream),
-        rdfStreamProcessor = testStreamProcessor
-      )
-
-      testStreamProcessor.check()
+      RdfFormatUtilSpec.testStream(inputStream)
     }
 
     "process streamed RDF and write the formatted result to an output stream" in {
@@ -285,14 +244,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
 
       // Read back the ByteArrayOutputStream and check that it's correct.
       val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)
-      val testStreamProcessor  = new TestStreamProcessor
-
-      rdfFormatUtil.parseWithStreamProcessor(
-        rdfSource = RdfInputStreamSource(byteArrayInputStream),
-        rdfStreamProcessor = testStreamProcessor
-      )
-
-      testStreamProcessor.check()
+      RdfFormatUtilSpec.testStream(byteArrayInputStream)
     }
 
     "stream RDF data from an InputStream into an RdfModel, then into an OutputStream, then back into an RdfModel" in {
@@ -300,7 +252,7 @@ class RdfFormatUtilSpec() extends CoreSpec {
         new BufferedInputStream(Files.newInputStream(Paths.get("..", "test_data/project_ontologies/anything-onto.ttl")))
       val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
       fileInputStream.close()
-      assert(rdfModel.contains(expectedThingLabelStatement))
+      assert(rdfModel.contains(RdfFormatUtilSpec.expectedThingLabelStatement))
 
       val byteArrayOutputStream = new ByteArrayOutputStream()
       rdfFormatUtil.rdfModelToOutputStream(
@@ -317,5 +269,64 @@ class RdfFormatUtilSpec() extends CoreSpec {
 
       assert(copyOfRdfModel == rdfModel)
     }
+  }
+}
+
+object RdfFormatUtilSpec {
+
+  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
+  private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()
+  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
+
+  private val expectedThingLabelStatement = rdfNodeFactory.makeStatement(
+    rdfNodeFactory.makeIriNode("http://www.knora.org/ontology/0001/anything#Thing"),
+    rdfNodeFactory.makeIriNode(OntologyConstants.Rdfs.Label),
+    rdfNodeFactory.makeStringWithLanguage(value = "Thing", language = "en")
+  )
+
+  /**
+   * Processes `anything-onto.ttl` and checks whether the expected content is received.
+   */
+  private case class TestStreamProcessor() extends jena.riot.system.StreamRDF {
+    var startCalled: Boolean            = false
+    var finishCalled: Boolean           = false
+    var gotKnoraBaseNamespace           = false
+    var gotThingLabelStatement: Boolean = false
+
+    private def checkPrefix(prefix: String, namespace: IRI): Boolean =
+      prefix == "knora-base" && namespace == "http://www.knora.org/ontology/knora-base#"
+    private def processStatement(statement: Statement): Unit =
+      if (statement == expectedThingLabelStatement) gotThingLabelStatement = true
+
+    override def start(): Unit            = startCalled = true
+    override def finish(): Unit           = finishCalled = true
+    override def base(base: String): Unit = ()
+    override def prefix(prefix: String, namespace: IRI): Unit =
+      if (checkPrefix(prefix, namespace)) gotKnoraBaseNamespace = true
+    override def quad(quad: jena.sparql.core.Quad): Unit = processStatement(JenaStatement(quad))
+    override def triple(triple: jena.graph.Triple): Unit =
+      processStatement(JenaStatement(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple)))
+
+    def check(): Unit = {
+      assert(startCalled)
+      assert(gotKnoraBaseNamespace)
+      assert(gotThingLabelStatement)
+      assert(finishCalled)
+    }
+  }
+
+  def testStream(inputStream: InputStream): Unit = {
+    val testStreamProcessor = TestStreamProcessor()
+    val parser              = jena.riot.RDFParser.create()
+    parser.source(inputStream)
+    val parseTry: Try[Unit] = Try {
+      parser
+        .lang(jena.riot.RDFLanguages.TURTLE)
+        .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+        .parse(testStreamProcessor)
+    }
+    inputStream.close()
+    testStreamProcessor.check()
+    parseTry.get
   }
 }
