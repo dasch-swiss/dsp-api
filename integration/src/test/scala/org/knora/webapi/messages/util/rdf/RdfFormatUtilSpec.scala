@@ -370,22 +370,14 @@ object RdfFormatUtilSpec {
         JsonLDUtil.parseJsonLD(jsonLDString = rdfStr, flatten = flatJsonLD)
 
       case nonJsonLD: NonJsonLD =>
-        // Use an implementation-specific function to parse other formats to an RdfModel.
-        // Use JsonLDUtil to convert the resulting model to a JsonLDDocument.
-        JsonLDUtil.fromRdfModel(
-          model = parseNonJsonLDToRdfModel(rdfStr, nonJsonLD, modelFactory),
-          flatJsonLD = flatJsonLD
-        )
+        val model: JenaModel = modelFactory.makeEmptyModel
+        jena.riot.RDFParser
+          .create()
+          .source(new StringReader(rdfStr))
+          .lang(RdfFormatUtil.rdfFormatToJenaParsingLang(nonJsonLD))
+          .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+          .parse(model.getDataset)
+        JsonLDUtil.fromRdfModel(model, flatJsonLD)
     }
 
-  def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD, modelFactory: JenaModelFactory): RdfModel = { // XXX
-    val jenaModel: JenaModel = modelFactory.makeEmptyModel
-    jena.riot.RDFParser
-      .create()
-      .source(new StringReader(rdfStr))
-      .lang(RdfFormatUtil.rdfFormatToJenaParsingLang(rdfFormat))
-      .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
-      .parse(jenaModel.getDataset)
-    jenaModel
-  }
 }
