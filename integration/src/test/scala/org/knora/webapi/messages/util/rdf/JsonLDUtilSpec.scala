@@ -11,8 +11,8 @@ import spray.json.JsonParser
 import java.nio.file.Paths
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.rdf.JenaModelFactory
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
 
 /**
