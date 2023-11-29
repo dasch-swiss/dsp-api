@@ -376,8 +376,8 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 /**
  * A factory for creating instances of [[JenaModel]].
  */
-class JenaModelFactory(private val nodeFactory: JenaNodeFactory) extends RdfModelFactory {
-  override def makeEmptyModel: JenaModel = new JenaModel(
+final case class JenaModelFactory(nodeFactory: JenaNodeFactory) {
+  def makeEmptyModel: JenaModel = new JenaModel(
     dataset = jena.query.DatasetFactory.create,
     nodeFactory = nodeFactory
   )

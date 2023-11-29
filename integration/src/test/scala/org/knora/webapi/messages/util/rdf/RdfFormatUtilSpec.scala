@@ -11,6 +11,7 @@ import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.io.StringReader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -21,12 +22,11 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
-import org.knora.webapi.util.FileUtil
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModel
-import java.io.StringReader
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
 import org.knora.webapi.messages.util.rdf.jenaimpl.JenaNodeFactory
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaStatement
+import org.knora.webapi.util.FileUtil
 
 /**
  * Tests implementations of [[RdfFormatUtil]].
@@ -294,9 +294,9 @@ class RdfFormatUtilSpec() extends CoreSpec {
 
 object RdfFormatUtilSpec {
 
-  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
-  private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()
-  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
+  private val rdfFormatUtil: RdfFormatUtil      = RdfFeatureFactory.getRdfFormatUtil()
+  private val rdfNodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory()
+  private val rdfModelFactory: JenaModelFactory = RdfFeatureFactory.getRdfModelFactory()
 
   private val expectedThingLabelStatement = rdfNodeFactory.makeStatement(
     rdfNodeFactory.makeIriNode("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -350,14 +350,6 @@ object RdfFormatUtilSpec {
     parseTry.get
   }
 
-  /**
-   * Parses an RDF string to a [[JsonLDDocument]].
-   *
-   * @param rdfStr     the RDF string to be parsed.
-   * @param rdfFormat  the format of the string.
-   * @param flatJsonLD if `true`, return flat JSON-LD.
-   * @return the corresponding [[JsonLDDocument]].
-   */
   def parseToJsonLDDocument(
     rdfStr: String,
     rdfFormat: RdfFormat,

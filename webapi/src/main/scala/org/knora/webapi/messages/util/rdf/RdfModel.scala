@@ -422,9 +422,6 @@ trait RdfNodeFactory {
 /**
  * A factory that creates [[RdfModel]] instances.
  */
-trait RdfModelFactory {
-  def makeEmptyModel: RdfModel
-}
 
 /**
  * Represents a simple in-memory repository based on an [[RdfModel]].

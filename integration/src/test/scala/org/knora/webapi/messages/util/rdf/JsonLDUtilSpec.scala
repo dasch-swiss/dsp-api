@@ -12,6 +12,7 @@ import java.nio.file.Paths
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.rdf.jenaimpl.JenaModelFactory
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -19,8 +20,8 @@ import org.knora.webapi.util.FileUtil
  */
 class JsonLDUtilSpec() extends CoreSpec {
 
-  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
-  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
+  private val rdfFormatUtil: RdfFormatUtil      = RdfFeatureFactory.getRdfFormatUtil()
+  private val rdfModelFactory: JenaModelFactory = RdfFeatureFactory.getRdfModelFactory()
 
   "The JSON-LD tool" should {
     "parse JSON-LD text, compact it with an empty context, convert the result to a JsonLDDocument, and convert that back to text" in {
