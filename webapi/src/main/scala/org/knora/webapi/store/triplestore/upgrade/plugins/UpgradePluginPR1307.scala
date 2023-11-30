@@ -15,20 +15,18 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1307.
  */
 class UpgradePluginPR1307() extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   // IRI objects representing the IRIs used in this transformation.
-  private val rdfTypeIri: IriNode          = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)
-  private val TextValueIri: IriNode        = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue)
-  private val ValueHasStandoffIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasStandoff)
+  private val rdfTypeIri: IriNode          = JenaNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)
+  private val TextValueIri: IriNode        = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue)
+  private val ValueHasStandoffIri: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasStandoff)
   private val StandoffTagHasStartIndexIri: IriNode =
-    nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
+    JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
   private val StandoffTagHasStartParentIri: IriNode =
-    nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartParent)
+    JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartParent)
   private val StandoffTagHasEndParentIri: IriNode =
-    nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasEndParent)
+    JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasEndParent)
   private val ValueHasMaxStandoffStartIndexIri: IriNode =
-    nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)
+    JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)
 
   /**
    * Represents a standoff tag to be transformed.
@@ -63,7 +61,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
     lazy val newIri: IriNode = {
       val oldSubjStr: String = oldIri.stringValue
       val slashPos: Int      = oldSubjStr.lastIndexOf('/')
-      nodeFactory.makeIriNode(oldSubjStr.substring(0, slashPos + 1) + startIndex.toString)
+      JenaNodeFactory.makeIriNode(oldSubjStr.substring(0, slashPos + 1) + startIndex.toString)
     }
 
     def transform(model: RdfModel, standoff: Map[IriNode, StandoffRdf]): Unit =
@@ -72,7 +70,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
         // to the new IRIs of those tags.
         val newStatementObj: RdfNode =
           if (statement.pred == StandoffTagHasStartParentIri || statement.pred == StandoffTagHasEndParentIri) {
-            val targetTagOldIri: IriNode = nodeFactory.makeIriNode(statement.obj.stringValue)
+            val targetTagOldIri: IriNode = JenaNodeFactory.makeIriNode(statement.obj.stringValue)
             standoff(targetTagOldIri).newIri
           } else {
             statement.obj
@@ -118,7 +116,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
           // Replace each statement in valueHasStandoffStatements with one that points to the standoff
           // tag's new IRI.
 
-          val targetTagOldIri: IriNode = nodeFactory.makeIriNode(statement.obj.stringValue)
+          val targetTagOldIri: IriNode = JenaNodeFactory.makeIriNode(statement.obj.stringValue)
           val targetTagNewIri: IriNode = standoff(targetTagOldIri).newIri
 
           model.removeStatement(statement)
@@ -135,7 +133,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
         model.add(
           subj = iri,
           pred = ValueHasMaxStandoffStartIndexIri,
-          obj = nodeFactory
+          obj = JenaNodeFactory
             .makeDatatypeLiteral(standoff.values.map(_.startIndex).max.toString, OntologyConstants.Xsd.Integer),
           context = context
         )
@@ -161,7 +159,7 @@ class UpgradePluginPR1307() extends UpgradePlugin {
         obj = Some(TextValueIri)
       )
       .map { statement =>
-        (nodeFactory.makeIriNode(statement.subj.stringValue), statement.context)
+        (JenaNodeFactory.makeIriNode(statement.subj.stringValue), statement.context)
       }
       .toMap
 

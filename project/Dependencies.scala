@@ -13,13 +13,13 @@ object Dependencies {
 
   val fusekiImage =
     "daschswiss/apache-jena-fuseki:2.1.2" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
-  val sipiImage = "daschswiss/sipi:3.8.6" // base image the knora-sipi image is created from
+  val sipiImage = "daschswiss/sipi:3.8.7" // base image the knora-sipi image is created from
 
   val ScalaVersion = "2.13.12"
 
   val PekkoActorVersion = "1.0.1"
   val PekkoHttpVersion  = "1.0.0"
-  val JenaVersion       = "4.8.0"
+  val JenaVersion       = "4.10.0"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioLoggingVersion           = "2.1.15"
@@ -116,7 +116,7 @@ object Dependencies {
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
   val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.1"
-  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.2.0"
+  val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
@@ -129,7 +129,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.2.13"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.0"
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,

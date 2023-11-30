@@ -10,8 +10,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1367Spec extends UpgradePluginSpec {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   "Upgrade plugin PR1367" should {
     "fix the datatypes of decimal literals" in {
       // Parse the input file.
@@ -23,8 +21,8 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
 
       // Check that the decimal datatype was fixed.
 
-      val subj = nodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-history/values/1")
-      val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasDecimal)
+      val subj = JenaNodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-history/values/1")
+      val pred = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasDecimal)
 
       model
         .find(

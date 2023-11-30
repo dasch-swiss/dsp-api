@@ -280,18 +280,17 @@ case class TEIHeader(
 
   def toXML: String =
     if (headerXSLT.nonEmpty) {
-      val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
       // Convert the resource to a JsonLDDocument.
       val headerJsonLD: JsonLDDocument =
         ReadResourcesSequenceV2(Seq(headerInfo)).toJsonLDDocument(ApiV2Complex, appConfig)
 
       // Convert the JsonLDDocument to an RdfModel.
-      val rdfModel: RdfModel = headerJsonLD.toRdfModel(rdfFormatUtil.getRdfModelFactory)
+      val rdfModel: RdfModel = headerJsonLD.toRdfModel
 
       // Format the RdfModel as RDF/XML. To ensure that it contains only rdf:Description elements,
       // set prettyPrint to false.
-      val teiXmlHeader: String = rdfFormatUtil.format(
+      val teiXmlHeader: String = RdfFormatUtil.format(
         rdfModel = rdfModel,
         rdfFormat = RdfXml,
         prettyPrint = false

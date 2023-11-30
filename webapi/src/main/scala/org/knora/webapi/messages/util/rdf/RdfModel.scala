@@ -194,11 +194,6 @@ trait Statement {
 trait RdfModel extends Iterable[Statement] {
 
   /**
-   * Returns an [[RdfNodeFactory]] that can be used create nodes for use with this model.
-   */
-  def getNodeFactory: RdfNodeFactory
-
-  /**
    * Adds a statement to the model.
    *
    * @param statement the statement to be added.
@@ -332,9 +327,9 @@ trait RdfModel extends Iterable[Statement] {
   def clear(): Unit
 
   /**
-   * Returns an [[RdfRepository]] that can be used to query this model.
+   * Returns an [[JenaRepository]] that can be used to query this model.
    */
-  def asRepository: RdfRepository
+  def asRepository: JenaRepository
 
   override def hashCode(): Int = super.hashCode()
 
@@ -343,105 +338,4 @@ trait RdfModel extends Iterable[Statement] {
       case thatRdfModel: RdfModel => isIsomorphicWith(thatRdfModel)
       case _                      => false
     }
-}
-
-/**
- * Represents a factory that can create RDF nodes and statements.
- */
-trait RdfNodeFactory {
-
-  /**
-   * Constructs a blank node with a generated ID.
-   *
-   * @return a [[BlankNode]].
-   */
-  def makeBlankNode: BlankNode
-
-  /**
-   * Constructs a blank node with the specified ID.
-   *
-   * @param id the blank node ID.
-   * @return a [[BlankNode]].
-   */
-  def makeBlankNodeWithID(id: String): BlankNode
-
-  /**
-   * Constructs an IRI node.
-   *
-   * @param iri the IRI.
-   * @return an [[IriNode]].
-   */
-  def makeIriNode(iri: IRI): IriNode
-
-  /**
-   * Constructs a literal value with a datatype.
-   *
-   * @param value    the lexical value of the literal.
-   * @param datatype the datatype IRI.
-   * @return a [[DatatypeLiteral]].
-   */
-  def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral
-
-  /**
-   * Creates an `xsd:string`.
-   *
-   * @param value the string value.
-   * @return a [[DatatypeLiteral]].
-   */
-  def makeStringLiteral(value: String): DatatypeLiteral =
-    makeDatatypeLiteral(value = value, datatype = OntologyConstants.Xsd.String)
-
-  /**
-   * Constructs a string with a language tag.
-   *
-   * @param value    the string.
-   * @param language the language tag.
-   */
-  def makeStringWithLanguage(value: String, language: String): StringWithLanguage
-
-  /**
-   * Constructs an `xsd:boolean`.
-   *
-   * @param value the boolean value.
-   * @return a [[DatatypeLiteral]].
-   */
-  def makeBooleanLiteral(value: Boolean): DatatypeLiteral =
-    makeDatatypeLiteral(value = value.toString, datatype = OntologyConstants.Xsd.Boolean)
-
-  /**
-   * Constructs a statement.
-   *
-   * @param subj    the subject.
-   * @param pred    the predicate.
-   * @param obj     the object.
-   * @param context the IRI of the named graph, or `None` to use the default graph.
-   */
-  def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Statement
-}
-
-/**
- * A factory that creates [[RdfModel]] instances.
- */
-trait RdfModelFactory {
-  def makeEmptyModel: RdfModel
-}
-
-/**
- * Represents a simple in-memory repository based on an [[RdfModel]].
- */
-trait RdfRepository {
-
-  /**
-   * Does a SPARQL SELECT query.
-   *
-   * @param selectQuery the query.
-   * @return the query result.
-   */
-  def doSelect(selectQuery: String): SparqlSelectResult
-
-  /**
-   * Shuts down this repository. The underlying [[RdfModel]] may not be usable after its
-   * [[RdfRepository]] has been shut down.
-   */
-  def shutDown(): Unit
 }

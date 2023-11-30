@@ -16,13 +16,11 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Adds missing datatype ^^<http://www.w3.org/2001/XMLSchema#anyURI> and/or value to valueHasUri
  */
 class UpgradePluginPR2079(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
-
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
     val newObjectValue: String => DatatypeLiteral = (value: String) =>
-      nodeFactory.makeDatatypeLiteral(value, OntologyConstants.Xsd.Uri)
+      JenaNodeFactory.makeDatatypeLiteral(value, OntologyConstants.Xsd.Uri)
 
     for (statement: Statement <- model) {
       if (statement.pred.iri == OntologyConstants.KnoraBase.ValueHasUri) {
@@ -31,7 +29,7 @@ class UpgradePluginPR2079(log: Logger) extends UpgradePlugin {
             if (literal.datatype != OntologyConstants.Xsd.Uri) {
               statementsToRemove += statement
 
-              statementsToAdd += nodeFactory.makeStatement(
+              statementsToAdd += JenaNodeFactory.makeStatement(
                 subj = statement.subj,
                 pred = statement.pred,
                 obj = newObjectValue(literal.value),

@@ -19,8 +19,6 @@ import org.knora.webapi.util.FileUtil
  */
 class KnoraResponseV2Spec() extends CoreSpec {
 
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
   private val turtle =
     """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;
       |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
@@ -177,14 +175,14 @@ class KnoraResponseV2Spec() extends CoreSpec {
       )
 
       // Parse the Turtle to an RDF4J Model.
-      val parsedTurtle: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
+      val parsedTurtle: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
 
       // Read an isomorphic Turtle file and parse it to an RDF4J Model.
       val expectedTurtle: String =
         FileUtil.readTextFile(
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
         )
-      val parsedExpectedTurtle: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
+      val parsedExpectedTurtle: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
 
       // Compare the two models.
       parsedTurtle should ===(parsedExpectedTurtle)
