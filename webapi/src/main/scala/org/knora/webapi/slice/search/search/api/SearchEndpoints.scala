@@ -5,20 +5,30 @@
 
 package org.knora.webapi.slice.search.search.api
 
+import sttp.model.HeaderNames
+import sttp.model.MediaType
+import sttp.tapir.Codec.PlainCodec
+import sttp.tapir.*
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.rdf.{JsonLD, RdfFormat}
+import org.knora.webapi.messages.util.rdf.JsonLD
+import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.common.api.{BaseEndpoints, SecuredEndpointAndZioHandler}
-import org.knora.webapi.slice.search.search.api.ApiV2.{Headers, QueryParams, defaultApiV2Schema}
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.search.search.api.ApiV2.Headers
+import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams
+import org.knora.webapi.slice.search.search.api.ApiV2.defaultApiV2Schema
 import org.knora.webapi.slice.search.search.api.ApiV2Codecs.apiV2SchemaRendering
-import sttp.model.{HeaderNames, MediaType}
-import sttp.tapir.*
-import sttp.tapir.Codec.PlainCodec
-import zio.{Task, ZIO, ZLayer}
+import org.knora.webapi.slice.search.search.api.KnoraResponseRenderer.FormatOptions
+import org.knora.webapi.slice.search.search.api.KnoraResponseRenderer.RenderedResponse
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -48,12 +58,13 @@ final case class SearchEndpointsHandler(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer
 ) {
+  type GravsearchQuery = String
 
   val postGravsearch =
-    SecuredEndpointAndZioHandler[(String, SchemaRendering), (String, MediaType)](
+    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearch,
-      (user: UserADM) => { case (query: String, s: SchemaRendering) =>
-        searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, JsonLD, s))
+      (user: UserADM) => { case (query: GravsearchQuery, s: SchemaRendering) =>
+        searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
       }
     )
 }
@@ -62,17 +73,17 @@ object SearchEndpointsHandler {
   val layer = ZLayer.derive[SearchEndpointsHandler]
 }
 
-final class KnoraResponseRenderer(appConfig: AppConfig) {
-  def render(
-    response: KnoraResponseV2,
-    format: RdfFormat,
-    rendering: SchemaRendering
-  ): Task[(String, MediaType)] =
-    ZIO
-      .attempt(response.format(format, rendering.schema, rendering.rendering, appConfig))
-      .map((_, format.mediaType))
+final class KnoraResponseRenderer(config: AppConfig) {
+  def render(response: KnoraResponseV2, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
+    ZIO.attempt(response.format(opts, config)).map((_, opts.format.mediaType))
 }
+
 object KnoraResponseRenderer {
+  type RenderedResponse = String
+  final case class FormatOptions(format: RdfFormat, schema: ApiV2Schema, rendering: Set[Rendering])
+  object FormatOptions {
+    def from(f: RdfFormat, s: SchemaRendering): FormatOptions = FormatOptions(f, s.schema, s.rendering)
+  }
 
   val layer = ZLayer.derive[KnoraResponseRenderer]
 }

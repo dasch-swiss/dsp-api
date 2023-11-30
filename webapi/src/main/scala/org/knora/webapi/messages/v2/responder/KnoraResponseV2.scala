@@ -12,6 +12,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.slice.search.search.api.KnoraResponseRenderer
 
 /**
  * A trait for Knora API V2 response messages.
@@ -33,6 +34,9 @@ trait KnoraResponseV2 {
     schemaOptions: Set[Rendering],
     appConfig: AppConfig
   ): String
+
+  def format(opts: KnoraResponseRenderer.FormatOptions, config: AppConfig): String =
+    format(opts.format, opts.schema, opts.rendering, config)
 }
 
 /**
