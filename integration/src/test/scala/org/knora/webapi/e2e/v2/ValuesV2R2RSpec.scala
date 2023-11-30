@@ -5,32 +5,22 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko
-
-import scala.concurrent.ExecutionContextExecutor
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
+import dsp.errors.{AssertionException, BadRequestException}
 import dsp.valueobjects.Iri
+import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.{HttpEntity, StatusCodes}
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.knora.webapi._
-import org.knora.webapi.e2e.ClientTestDataCollector
-import org.knora.webapi.e2e.TestDataFileContent
-import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.routing.v2.SearchRouteV2
-import org.knora.webapi.routing.v2.ValuesRouteV2
+import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
-import pekko.http.scaladsl.model.HttpEntity
-import pekko.http.scaladsl.model.StatusCodes
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import scala.concurrent.ExecutionContextExecutor
 
 /**
  * Tests creating a still image file value using a mock Sipi.
@@ -77,14 +67,10 @@ class ValuesV2R2RSpec extends R2RSpec {
   ): JsonLDDocument = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
-      .getResourceWithSpecifiedProperties(
-        resourceIri = resourceIri,
-        propertyIris = propertyIrisForGravsearch
-      )
+      .getResourceWithSpecifiedProperties(resourceIri, propertyIrisForGravsearch)
       .toString()
 
     // Run the query.
-
     Post(
       "/v2/searchextended",
       HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)

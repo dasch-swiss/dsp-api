@@ -9,10 +9,8 @@ import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.*
 import zio.ZLayer
-
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
-import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
-import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.{ApiV2, BaseEndpoints}
 import org.knora.webapi.slice.resourceinfo.api.model.ListResponseDto
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.Order
 import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
@@ -20,7 +18,7 @@ import org.knora.webapi.slice.resourceinfo.api.model.QueryParams.OrderBy
 final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
   val getResourcesInfo = baseEndpoints.publicEndpoint.get
     .in("v2" / "resources" / "info")
-    .in(header[IriIdentifier](xKnoraAcceptSchemaHeader))
+    .in(header[IriIdentifier](ApiV2.Headers.xKnoraAcceptProject))
     .in(query[String]("resourceClass"))
     .in(query[Option[Order]](Order.queryParamKey))
     .in(query[Option[OrderBy]](OrderBy.queryParamKey))
