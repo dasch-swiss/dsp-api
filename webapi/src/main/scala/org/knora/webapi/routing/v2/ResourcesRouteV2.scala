@@ -32,9 +32,9 @@ import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.store.iiif.api.SipiService
 
 /**

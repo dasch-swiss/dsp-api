@@ -12,6 +12,7 @@ import org.apache.pekko.http.scaladsl.model.HttpMethods.*
 import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -46,7 +47,7 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & SearchApiRoutes& SearchResponderV2 & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
+    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & SearchApiRoutes & SearchResponderV2 & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
     ApiRoutes
   ] =
     ZLayer {

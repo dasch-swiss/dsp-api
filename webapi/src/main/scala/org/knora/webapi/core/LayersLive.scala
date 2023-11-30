@@ -7,6 +7,7 @@ package org.knora.webapi.core
 
 import zio.ULayer
 import zio.ZLayer
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfig.AppConfigurations
 import org.knora.webapi.messages.StringFormatter
@@ -46,7 +47,9 @@ import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.search.search.api.{KnoraResponseRenderer, SearchApiRoutes, SearchEndpoints, SearchEndpointsHandler}
+import org.knora.webapi.slice.search.search.api.SearchApiRoutes
+import org.knora.webapi.slice.search.search.api.SearchEndpoints
+import org.knora.webapi.slice.search.search.api.SearchEndpointsHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
@@ -153,6 +156,6 @@ object LayersLive {
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
       UsersResponderADMLive.layer,
-      ValuesResponderV2Live.layer,
+      ValuesResponderV2Live.layer
     )
 }

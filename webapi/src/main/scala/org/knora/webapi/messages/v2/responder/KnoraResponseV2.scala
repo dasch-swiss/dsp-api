@@ -12,7 +12,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.util.rdf.*
-import org.knora.webapi.slice.search.search.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 /**
  * A trait for Knora API V2 response messages.

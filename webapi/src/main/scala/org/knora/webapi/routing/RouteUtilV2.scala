@@ -24,14 +24,15 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
+import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.search.search.api.ApiV2
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptMarkup
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptProject
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraAcceptSchemaHeader
-import org.knora.webapi.slice.search.search.api.ApiV2.Headers.xKnoraJsonLdRendering
-import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams
-import org.knora.webapi.slice.search.search.api.ApiV2.QueryParams.schema
+
+import ApiV2.Headers.xKnoraAcceptMarkup
+import ApiV2.Headers.xKnoraAcceptProject
+import ApiV2.Headers.xKnoraAcceptSchemaHeader
+import ApiV2.Headers.xKnoraJsonLdRendering
+import ApiV2.QueryParams
+import ApiV2.QueryParams.schema
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
