@@ -12,7 +12,6 @@ import org.apache.pekko.http.scaladsl.model.HttpMethods.*
 import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
@@ -34,6 +33,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.search.search.api.SearchApiRoutes
 import org.knora.webapi.store.iiif.api.SipiService
 
 trait ApiRoutes {
@@ -46,7 +46,7 @@ object ApiRoutes {
    * All routes composed together.
    */
   val layer: URLayer[
-    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
+    ActorSystem & AdminApiRoutes & AppConfig & AppRouter & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & ProjectsEndpointsHandler & ResourceInfoRoutes & RestCardinalityService & RestResourceInfoService & SearchApiRoutes& SearchResponderV2 & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator,
     ApiRoutes
   ] =
     ZLayer {
@@ -56,12 +56,13 @@ object ApiRoutes {
         appConfig          <- ZIO.service[AppConfig]
         adminApiRoutes     <- ZIO.service[AdminApiRoutes]
         resourceInfoRoutes <- ZIO.service[ResourceInfoRoutes]
+        searchApiRoutes    <- ZIO.service[SearchApiRoutes]
         routeData          <- ZIO.succeed(KnoraRouteData(sys.system, router.ref, appConfig))
         runtime <-
           ZIO.runtime[
-            AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & SearchResponderV2 & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
+            AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService & RestResourceInfoService & SearchResponderV2 & SearchApiRoutes & SipiService & StringFormatter & ValuesResponderV2 & core.State & routing.Authenticator
           ]
-      } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, appConfig, runtime)
+      } yield ApiRoutesImpl(routeData, adminApiRoutes, resourceInfoRoutes, searchApiRoutes, appConfig, runtime)
     }
 }
 
@@ -76,6 +77,7 @@ private final case class ApiRoutesImpl(
   routeData: KnoraRouteData,
   adminApiRoutes: AdminApiRoutes,
   resourceInfoRoutes: ResourceInfoRoutes,
+  searchApiRoutes: SearchApiRoutes,
   appConfig: AppConfig,
   implicit val runtime: Runtime[
     AppConfig & IriConverter & KnoraProjectRepo & MessageRelay & ProjectADMRestService & RestCardinalityService &
@@ -95,7 +97,7 @@ private final case class ApiRoutesImpl(
               .withAllowedMethods(List(GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS))
           ) {
             DSPApiDirectives.handleErrors(appConfig) {
-              (adminApiRoutes.routes ++ resourceInfoRoutes.routes).reduce(_ ~ _) ~
+              (adminApiRoutes.routes ++ resourceInfoRoutes.routes ++ searchApiRoutes.routes).reduce(_ ~ _) ~
                 AuthenticationRouteV2().makeRoute ~
                 FilesRouteADM(routeData, runtime).makeRoute ~
                 GroupsRouteADM(routeData, runtime).makeRoute ~
