@@ -18,6 +18,7 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.messages.IriConversions._
 
 import scala.concurrent.ExecutionContextExecutor
 
