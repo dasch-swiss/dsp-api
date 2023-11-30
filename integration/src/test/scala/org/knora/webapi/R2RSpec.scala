@@ -64,7 +64,7 @@ abstract class R2RSpec
   private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
-  implicit val runtime: Runtime[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
+  implicit val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // the default timeout for route tests
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
@@ -94,10 +94,10 @@ abstract class R2RSpec
     }
 
   final override def afterAll(): Unit =
-//    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-//    Unsafe.unsafe { implicit u =>
-//      runtime.unsafe.shutdown()
-//    }
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
     system.terminate()
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
