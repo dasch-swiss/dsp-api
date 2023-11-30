@@ -75,7 +75,7 @@ object LayersLive {
       ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
       ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & RestPermissionService & RestResourceInfoService &
-      SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
+      SearchApiRoutes & SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
       StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**

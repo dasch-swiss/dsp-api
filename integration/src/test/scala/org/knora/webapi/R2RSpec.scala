@@ -6,25 +6,34 @@
 package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
-import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.model.HttpResponse
-import org.apache.pekko.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
-import org.knora.webapi.core.{AppRouter, AppServer, TestStartupUtils}
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.{KnoraRouteData, UnsafeZioRun}
-import org.knora.webapi.util.{FileUtil, LogAspect}
+import org.apache.pekko.http.scaladsl.testkit.RouteTestTimeout
+import org.apache.pekko.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.NANOSECONDS
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.AppServer
+import org.knora.webapi.core.TestStartupUtils
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.LogAspect
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -38,13 +47,13 @@ abstract class R2RSpec
 
   /**
    * The `Environment` that we require to exist at startup.
-   * Can be overriden in specs that need other implementations.
+   * Can be overridden in specs that need other implementations.
    */
   type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
 
   /**
    * The effect layers from which the App is built.
-   * Can be overriden in specs that need other implementations.
+   * Can be overridden in specs that need other implementations.
    */
   lazy val effectLayers: ULayer[Environment] = core.LayersTest.integrationTestsWithFusekiTestcontainers(Some(system))
 
@@ -55,7 +64,7 @@ abstract class R2RSpec
   private val bootstrap = util.Logger.text() >>> effectLayers
 
   // create a configured runtime
-  implicit val runtime: Runtime.Scoped[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
+  implicit val runtime: Runtime[Environment] = Unsafe.unsafe(implicit u => Runtime.unsafe.fromLayer(bootstrap))
 
   // the default timeout for route tests
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
@@ -65,7 +74,7 @@ abstract class R2RSpec
   // main difference to other specs (no own systen and executionContext defined)
   lazy val rdfDataObjects = List.empty[RdfDataObject]
   val log: Logger         = Logger(this.getClass())
-  val appActor: ActorRef = UnsafeZioRun.runOrThrow(ZIO.serviceWith[core.AppRouter](_.ref))
+  val appActor: ActorRef  = UnsafeZioRun.runOrThrow(ZIO.serviceWith[core.AppRouter](_.ref))
 
   // needed by some tests
   val appConfig: AppConfig      = UnsafeZioRun.runOrThrow(ZIO.service[AppConfig])
@@ -84,13 +93,12 @@ abstract class R2RSpec
         .getOrThrow()
     }
 
-  final override def afterAll(): Unit = {
-    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.shutdown()
-    }
+  final override def afterAll(): Unit =
+//    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+//    Unsafe.unsafe { implicit u =>
+//      runtime.unsafe.shutdown()
+//    }
     system.terminate()
-  }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =
