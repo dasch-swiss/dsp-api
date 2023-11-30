@@ -46,7 +46,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     fullTextSearchCount() ~
       fullTextSearch() ~
       gravsearchCountGet() ~
-      gravsearchCountPost() ~
       searchByLabelCount() ~
       searchByLabel()
 
@@ -197,10 +196,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       get(gravsearchCountV2(query, _))
     }
 
-  private def gravsearchCountPost(): Route =
-    path("v2" / "searchextended" / "count") {
-      post(entity(as[String])(query => gravsearchCountV2(query, _)))
-    }
 
   private def gravsearchCountV2(query: String, ctx: RequestContext): Future[RouteResult] = {
     val response: ZIO[SearchResponderV2 & Authenticator, Throwable, ResourceCountV2] = for {

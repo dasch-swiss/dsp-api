@@ -115,6 +115,11 @@ trait SearchResponderV2 {
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   def gravsearchCountV2(query: ConstructQuery, user: UserADM): Task[ResourceCountV2]
+  def gravsearchCountV2(query: String, user: UserADM): Task[ResourceCountV2] =
+    for {
+      q <- ZIO.attempt(GravsearchParser.parseQuery(query))
+      r <- gravsearchCountV2(q, user)
+    } yield r
 
   /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
