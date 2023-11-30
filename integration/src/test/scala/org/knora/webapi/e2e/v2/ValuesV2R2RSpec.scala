@@ -7,7 +7,6 @@ package org.knora.webapi.e2e.v2
 
 import dsp.errors.{AssertionException, BadRequestException}
 import dsp.valueobjects.Iri
-import org.apache.pekko
 import org.apache.pekko.http.scaladsl.model.{HttpEntity, StatusCodes}
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.knora.webapi._
