@@ -34,7 +34,7 @@ import org.knora.webapi.slice.ontology.api.service.RestCardinalityService
 import org.knora.webapi.slice.resourceinfo.api.ResourceInfoRoutes
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.search.search.api.SearchApiRoutes
+import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.store.iiif.api.SipiService
 
 trait ApiRoutes {

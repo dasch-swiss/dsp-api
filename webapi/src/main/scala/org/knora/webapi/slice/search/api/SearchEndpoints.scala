@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.slice.search.search.api
+package org.knora.webapi.slice.search.api
 
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.model.HeaderNames
@@ -11,11 +11,11 @@ import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
 
-import org.knora.webapi.*
+import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.common.api.ApiV2Codecs.apiV2SchemaRendering
+import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
