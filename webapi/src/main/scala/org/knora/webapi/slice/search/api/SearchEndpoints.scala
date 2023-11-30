@@ -16,13 +16,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.*
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -68,13 +64,12 @@ object SearchEndpointsHandler {
 }
 
 final case class SearchApiRoutes(
-  searchEndpointsHandler: SearchEndpointsHandler,
+  handler: SearchEndpointsHandler,
   mapper: HandlerMapper,
   tapirToPekko: TapirToPekkoInterpreter
 ) {
-  val routes: Seq[Route] = Seq(mapper.mapEndpointAndHandler(searchEndpointsHandler.postGravsearch))
-    .map(tapirToPekko.toRoute(_))
+  val routes: Seq[Route] = Seq(mapper.mapEndpointAndHandler(handler.postGravsearch)).map(tapirToPekko.toRoute(_))
 }
 object SearchApiRoutes {
-  val layer = ZLayer.derive[SearchApiRoutes]
+  val layer = SearchEndpoints.layer >>> SearchEndpointsHandler.layer >>> ZLayer.derive[SearchApiRoutes]
 }

@@ -47,8 +47,6 @@ import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
-import org.knora.webapi.slice.search.api.SearchEndpoints
-import org.knora.webapi.slice.search.api.SearchEndpointsHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
@@ -184,8 +182,6 @@ object LayersTest {
       RestCardinalityServiceLive.layer,
       RestPermissionServiceLive.layer,
       SearchApiRoutes.layer,
-      SearchEndpoints.layer,
-      SearchEndpointsHandler.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
       StandoffResponderV2Live.layer,
