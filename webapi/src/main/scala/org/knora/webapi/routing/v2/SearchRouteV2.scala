@@ -47,7 +47,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       fullTextSearch() ~
       gravsearchCountGet() ~
       gravsearchCountPost() ~
-      gravsearchGet() ~
       searchByLabelCount() ~
       searchByLabel()
 
@@ -210,24 +209,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       response   <- SearchResponderV2.gravsearchCountV2(gravsearch, user)
     } yield response
     RouteUtilV2.completeResponse(response, ctx)
-  }
-
-  private def gravsearchGet(): Route = path(
-    "v2" / "searchextended" / Segment
-  ) { query => // Segment is a URL encoded string representing a Gravsearch query
-    get(requestContext => gravsearch(query, requestContext))
-  }
-
-  private def gravsearch(query: String, requestContext: RequestContext) = {
-    val constructQuery    = GravsearchParser.parseQuery(query)
-    val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
-    val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-    val task = for {
-      schemaAndOptions <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaRendering(s, o) }
-      user             <- Authenticator.getUserADM(requestContext)
-      response         <- SearchResponderV2.gravsearchV2(constructQuery, schemaAndOptions, user)
-    } yield response
-    RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
   }
 
   private def searchByLabelCount(): Route =

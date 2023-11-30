@@ -25,13 +25,20 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   private val tags       = List("v2", "search")
   private val searchBase = "v2" / "searchextended"
 
+  private val gravsearchDescription =
+    "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
+
   val postGravsearch = baseEndpoints.withUserEndpoint.post
     .in(searchBase)
-    .in(
-      stringBody.description(
-        "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
-      )
-    )
+    .in(stringBody.description(gravsearchDescription))
+    .in(apiV2SchemaRendering)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .tags(tags)
+    .description("Search for resources using a Gravsearch query.")
+
+  val getGravsearch = baseEndpoints.withUserEndpoint.get
+    .in(searchBase / path[String].description(gravsearchDescription))
     .in(apiV2SchemaRendering)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
@@ -57,6 +64,14 @@ final case class SearchEndpointsHandler(
         searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
       }
     )
+
+  val getGravsearch =
+    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+      searchEndpoints.getGravsearch,
+      (user: UserADM) => { case (query: GravsearchQuery, s: SchemaRendering) =>
+        searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
+      }
+    )
 }
 
 object SearchEndpointsHandler {
@@ -68,7 +83,9 @@ final case class SearchApiRoutes(
   mapper: HandlerMapper,
   tapirToPekko: TapirToPekkoInterpreter
 ) {
-  val routes: Seq[Route] = Seq(mapper.mapEndpointAndHandler(handler.postGravsearch)).map(tapirToPekko.toRoute(_))
+  val routes: Seq[Route] =
+    Seq(mapper.mapEndpointAndHandler(handler.postGravsearch), mapper.mapEndpointAndHandler(handler.getGravsearch))
+      .map(tapirToPekko.toRoute(_))
 }
 object SearchApiRoutes {
   val layer = SearchEndpoints.layer >>> SearchEndpointsHandler.layer >>> ZLayer.derive[SearchApiRoutes]
