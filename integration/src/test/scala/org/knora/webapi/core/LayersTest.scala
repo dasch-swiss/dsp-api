@@ -114,6 +114,7 @@ object LayersTest {
       with RestCardinalityService
       with RestPermissionService
       with RestResourceInfoService
+      with SearchApiRoutes
       with SearchResponderV2
       with SipiResponderADM
       with OntologyInferencer
