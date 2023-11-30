@@ -47,7 +47,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       gravsearchCountGet() ~
       gravsearchCountPost() ~
       gravsearchGet() ~
-      gravsearchPost() ~
       searchByLabelCount() ~
       searchByLabel()
 
@@ -216,10 +215,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
     "v2" / "searchextended" / Segment
   ) { query => // Segment is a URL encoded string representing a Gravsearch query
     get(requestContext => gravsearch(query, requestContext))
-  }
-
-  private def gravsearchPost(): Route = path("v2" / "searchextended") {
-    post(entity(as[String])(query => requestContext => gravsearch(query, requestContext)))
   }
 
   private def gravsearch(query: String, requestContext: RequestContext) = {

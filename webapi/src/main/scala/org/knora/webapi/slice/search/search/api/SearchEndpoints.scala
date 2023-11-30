@@ -27,8 +27,8 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   private val tags       = List("v2", "search")
   private val searchBase = "v2" / "searchextended"
 
-  val postGravsearch = baseEndpoints.securedEndpoint.post
-    .in(searchBase / "gravsearch")
+  val postGravsearch = baseEndpoints.withUserEndpoint.post
+    .in(searchBase)
     .in(
       stringBody.description(
         "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
