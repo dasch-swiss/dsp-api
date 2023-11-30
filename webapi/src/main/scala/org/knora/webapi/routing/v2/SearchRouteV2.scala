@@ -6,12 +6,9 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
-import org.apache.pekko.http.scaladsl.server.RouteResult
 import zio.*
 
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -21,8 +18,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.responders.v2.ResourceCountV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
@@ -45,7 +40,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   def makeRoute: Route =
     fullTextSearchCount() ~
       fullTextSearch() ~
-      gravsearchCountGet() ~
       searchByLabelCount() ~
       searchByLabel()
 
@@ -189,21 +183,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
         } yield response
         RouteUtilV2.completeResponse(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
       }
-  }
-
-  private def gravsearchCountGet(): Route =
-    path("v2" / "searchextended" / "count" / Segment) { query =>
-      get(gravsearchCountV2(query, _))
-    }
-
-
-  private def gravsearchCountV2(query: String, ctx: RequestContext): Future[RouteResult] = {
-    val response: ZIO[SearchResponderV2 & Authenticator, Throwable, ResourceCountV2] = for {
-      user       <- Authenticator.getUserADM(ctx)
-      gravsearch <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      response   <- SearchResponderV2.gravsearchCountV2(gravsearch, user)
-    } yield response
-    RouteUtilV2.completeResponse(response, ctx)
   }
 
   private def searchByLabelCount(): Route =

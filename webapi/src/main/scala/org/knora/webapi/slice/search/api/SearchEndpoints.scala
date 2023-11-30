@@ -55,6 +55,14 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
     .description("Count resources using a Gravsearch query.")
+
+  val getGravsearchCount = baseEndpoints.withUserEndpoint.get
+    .in(searchBase /"count"/ path[String].description(gravsearchDescription))
+    .in(apiV2SchemaRendering)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .tags(tags)
+    .description("Count resources using a Gravsearch query.")
 }
 
 object SearchEndpoints {
@@ -113,6 +121,22 @@ final case class SearchEndpointsHandler(
             .logError
       }
     )
+
+  val getGravsearchCount =
+    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+      searchEndpoints.getGravsearchCount,
+      (user: UserADM) => {
+        case (query: GravsearchQuery, s: SchemaRendering) =>
+          searchResponderV2
+            .gravsearchCountV2(query, user)
+            .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
+            .mapError {
+              case e: GravsearchException => BadRequestException(e.getMessage)
+              case e => e
+            }
+            .logError
+      }
+    )
 }
 
 object SearchEndpointsHandler {
@@ -129,6 +153,7 @@ final case class SearchApiRoutes(
       mapper.mapEndpointAndHandler(handler.postGravsearch),
       mapper.mapEndpointAndHandler(handler.getGravsearch),
       mapper.mapEndpointAndHandler(handler.postGravsearchCount),
+      mapper.mapEndpointAndHandler(handler.getGravsearchCount),
     ) .map(tapirToPekko.toRoute(_))
 }
 
