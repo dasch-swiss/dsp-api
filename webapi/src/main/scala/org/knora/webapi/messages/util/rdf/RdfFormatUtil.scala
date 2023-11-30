@@ -5,9 +5,8 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.apache.pekko.http.scaladsl.model.MediaType
 import org.apache.jena
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.MediaType
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
