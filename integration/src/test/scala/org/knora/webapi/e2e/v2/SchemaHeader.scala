@@ -16,7 +16,7 @@ import scala.util.Try
  *
  * The definition follows [[https://doc.pekko.io/docs/pekko-http/current/common/http-model.html#custom-headers]].
  */
-final class SchemaHeader(token: String) extends ModeledCustomHeader[SchemaHeader] {
+final class SchemaHeader private (token: String) extends ModeledCustomHeader[SchemaHeader] {
   override def renderInRequests             = true
   override def renderInResponses            = true
   override val companion: SchemaHeader.type = SchemaHeader
@@ -26,4 +26,7 @@ final class SchemaHeader(token: String) extends ModeledCustomHeader[SchemaHeader
 object SchemaHeader extends ModeledCustomHeaderCompanion[SchemaHeader] {
   override val name: String         = "x-knora-accept-schema"
   override def parse(value: String) = Try(new SchemaHeader(value))
+
+  val simple: SchemaHeader  = SchemaHeader("simple")
+  val complex: SchemaHeader = SchemaHeader("complex")
 }

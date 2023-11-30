@@ -218,7 +218,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
       val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader("simple"))
+        .addHeader(SchemaHeader.simple)
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -235,7 +235,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in Turtle" in {
       val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader("simple"))
+        .addHeader(SchemaHeader.simple)
         .addHeader(Accept(RdfMediaTypes.`text/turtle`))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -246,7 +246,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML" in {
       val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader("simple"))
+        .addHeader(SchemaHeader.simple)
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
@@ -257,7 +257,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)" in {
       val request = Get(s"$baseApiUrl/v2/resourcespreview/$reiseInsHeiligeLandIriEncoded")
-        .addHeader(new SchemaHeader("simple"))
+        .addHeader(SchemaHeader.simple)
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -340,7 +340,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "perform a full resource request for a resource with a list value (in the simple schema)" in {
       val iri = URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")
       val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(new SchemaHeader("simple"))
+        .addHeader(SchemaHeader.simple)
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -375,7 +375,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "perform a full resource request for a resource with a link (in the simple schema)" in {
       val iri = URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")
       val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(new SchemaHeader("simple"))
+        .addHeader(SchemaHeader.simple)
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -410,7 +410,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "perform a full resource request for a resource with a Text language (in the simple schema)" in {
       val iri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")
       val request = Get(s"$baseApiUrl/v2/resources/$iri")
-        .addHeader(new SchemaHeader("simple"))
+        .addHeader(SchemaHeader.simple)
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -830,7 +830,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
       val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
-        .addHeader(new SchemaHeader("simple")) ~> addCredentials(
+        .addHeader(SchemaHeader.simple) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
@@ -898,7 +898,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
 
       // Request the newly created resource in the simple schema, and check that it matches the ontology.
       val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
-        .addHeader(new SchemaHeader("simple")) ~> addCredentials(
+        .addHeader(SchemaHeader.simple) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
@@ -1745,7 +1745,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
     "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
       // Get the resource without markup.
       val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}")
-        .addHeader(new MarkupHeader("standoff")) ~> addCredentials(
+        .addHeader(MarkupHeader.standoff) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)

@@ -18,7 +18,7 @@ import pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
  *
  * The definition follows [[https://doc.pekko.io/docs/pekko-http/current/common/http-model.html#custom-headers]].
  */
-final class MarkupHeader(token: String) extends ModeledCustomHeader[MarkupHeader] {
+final class MarkupHeader private (token: String) extends ModeledCustomHeader[MarkupHeader] {
   override def renderInRequests             = true
   override def renderInResponses            = true
   override val companion: MarkupHeader.type = MarkupHeader
@@ -28,4 +28,6 @@ final class MarkupHeader(token: String) extends ModeledCustomHeader[MarkupHeader
 object MarkupHeader extends ModeledCustomHeaderCompanion[MarkupHeader] {
   override val name: String         = "x-knora-accept-markup"
   override def parse(value: String) = Try(new MarkupHeader(value))
+
+  val standoff: MarkupHeader = new MarkupHeader("standoff")
 }
