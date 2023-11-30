@@ -6,37 +6,25 @@
 package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
-import org.apache.pekko
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.http.scaladsl.model.HttpResponse
+import org.apache.pekko.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
+import org.knora.webapi.core.{AppRouter, AppServer, TestStartupUtils}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.{KnoraRouteData, UnsafeZioRun}
+import org.knora.webapi.util.{FileUtil, LogAspect}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import zio._
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration.NANOSECONDS
-
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.AppServer
-import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithoutSipi
-import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.LogAspect
-
-import pekko.actor.ActorRef
-import pekko.actor.ActorSystem
-import pekko.http.scaladsl.model.HttpResponse
-import pekko.http.scaladsl.testkit.RouteTestTimeout
-import pekko.http.scaladsl.testkit.ScalatestRouteTest
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+import scala.concurrent.{Await, Future}
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -75,33 +63,14 @@ abstract class R2RSpec
     FiniteDuration(appConfig.defaultTimeout.toNanos, NANOSECONDS)
   )
 
-  // An effect for getting stuff out, so that we can pass them
-  // to some legacy code
-  private val routerAndConfig = for {
-    router <- ZIO.service[core.AppRouter]
-    config <- ZIO.service[AppConfig]
-  } yield (router, config)
-
-  /**
-   * Create router and config by unsafe running them.
-   */
-  private val (router: AppRouter, config: AppConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          routerAndConfig
-        )
-        .getOrThrowFiberFailure()
-    }
-
   // main difference to other specs (no own systen and executionContext defined)
   lazy val rdfDataObjects = List.empty[RdfDataObject]
   val log: Logger         = Logger(this.getClass())
-  val appActor: ActorRef  = router.ref
+  val appActor: ActorRef = UnsafeZioRun.runOrThrow(ZIO.serviceWith[core.AppRouter](_.ref))
 
   // needed by some tests
-  val routeData: KnoraRouteData = KnoraRouteData(system, appActor, config)
-  val appConfig: AppConfig      = config
+  val appConfig: AppConfig      = UnsafeZioRun.runOrThrow(ZIO.service[AppConfig])
+  val routeData: KnoraRouteData = KnoraRouteData(system, appActor, appConfig)
 
   final override def beforeAll(): Unit =
     /* Here we start our app and initialize the repository before each suit runs */
