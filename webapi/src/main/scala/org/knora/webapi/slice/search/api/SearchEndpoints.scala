@@ -66,7 +66,10 @@ final case class SearchEndpointsHandler(
         searchResponderV2
           .gravsearchV2(query, s, user)
           .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
-          .mapError { case e: GravsearchException => BadRequestException(e.getMessage) }
+          .mapError {
+            case e: GravsearchException => BadRequestException(e.getMessage)
+            case e                      => e
+          }
           .logError
       }
     )
@@ -78,7 +81,10 @@ final case class SearchEndpointsHandler(
         searchResponderV2
           .gravsearchV2(query, s, user)
           .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
-          .mapError { case e: GravsearchException => BadRequestException(e.getMessage) }
+          .mapError {
+            case e: GravsearchException => BadRequestException(e.getMessage)
+            case e                      => e
+          }
           .logError
       }
     )
