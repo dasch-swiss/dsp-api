@@ -488,13 +488,14 @@ final case class SearchResponderV2Live(
       // Create a Select prequery
       querySchema <-
         ZIO.fromOption(query.querySchema).orElseFail(AssertionException(s"InputQuery has no querySchema"))
-      gravsearchToPrequeryTransformer: GravsearchToPrequeryTransformer =
-        new GravsearchToPrequeryTransformer(
-          constructClause = query.constructClause,
-          typeInspectionResult = typeInspectionResult,
-          querySchema = querySchema,
-          appConfig = appConfig
-        )
+      gravsearchToPrequeryTransformer <- ZIO.attempt(
+                                           new GravsearchToPrequeryTransformer(
+                                             constructClause = query.constructClause,
+                                             typeInspectionResult = typeInspectionResult,
+                                             querySchema = querySchema,
+                                             appConfig = appConfig
+                                           )
+                                         )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once

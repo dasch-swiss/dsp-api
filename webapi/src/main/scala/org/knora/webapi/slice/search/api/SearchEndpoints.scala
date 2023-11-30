@@ -11,6 +11,8 @@ import sttp.model.MediaType
 import sttp.tapir.*
 import zio.ZLayer
 
+import dsp.errors.BadRequestException
+import dsp.errors.GravsearchException
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLD
@@ -61,7 +63,11 @@ final case class SearchEndpointsHandler(
     SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearch,
       (user: UserADM) => { case (query: GravsearchQuery, s: SchemaRendering) =>
-        searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
+        searchResponderV2
+          .gravsearchV2(query, s, user)
+          .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
+          .mapError { case e: GravsearchException => BadRequestException(e.getMessage) }
+          .logError
       }
     )
 
@@ -69,7 +75,11 @@ final case class SearchEndpointsHandler(
     SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearch,
       (user: UserADM) => { case (query: GravsearchQuery, s: SchemaRendering) =>
-        searchResponderV2.gravsearchV2(query, s, user).flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
+        searchResponderV2
+          .gravsearchV2(query, s, user)
+          .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
+          .mapError { case e: GravsearchException => BadRequestException(e.getMessage) }
+          .logError
       }
     )
 }
