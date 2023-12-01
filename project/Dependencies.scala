@@ -119,7 +119,7 @@ object Dependencies {
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
   val tapirVersion = "1.9.3"
 
