@@ -124,12 +124,12 @@ object ApiV2 {
 
     // RdfFormat input
     val defaultRdfFormat: RdfFormat = JsonLD
-    private val rdfFormat: EndpointIO.Header[RdfFormat] = header[MediaType](HeaderNames.Accept)
+    private val rdfFormat: EndpointIO.Header[RdfFormat] = header[Option[MediaType]](HeaderNames.Accept)
       .description(
         s"""The RDF format to be used for the request. Valid values are: ${RdfFormat.values}
            |If not specified or unknown, the fallback RDF format $defaultRdfFormat will be used.""".stripMargin
       )
-      .mapDecode(s => DecodeResult.Value(RdfFormat.from(s)))(_.mediaType)
+      .mapDecode(s => DecodeResult.Value(s.map(RdfFormat.from).getOrElse(defaultRdfFormat)))(it => Some(it.mediaType))
       .validate(Validator.pass[RdfFormat])
 
     // FormatOptions input
