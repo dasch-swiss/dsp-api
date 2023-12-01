@@ -98,13 +98,9 @@ trait SearchResponderV2 {
     user: UserADM
   ): Task[ReadResourcesSequenceV2]
 
-  def gravsearchV2(
-    query: String,
-    schemaAndOptions: SchemaRendering,
-    user: UserADM
-  ): Task[ReadResourcesSequenceV2] = for {
+  def gravsearchV2(query: IRI, rendering: SchemaRendering, user: UserADM): Task[ReadResourcesSequenceV2] = for {
     q <- ZIO.attempt(GravsearchParser.parseQuery(query))
-    r <- gravsearchV2(q, schemaAndOptions, user)
+    r <- gravsearchV2(q, rendering, user)
   } yield r
 
   /**
@@ -115,7 +111,7 @@ trait SearchResponderV2 {
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   def gravsearchCountV2(query: ConstructQuery, user: UserADM): Task[ResourceCountV2]
-  def gravsearchCountV2(query: String, user: UserADM): Task[ResourceCountV2] =
+  def gravsearchCountV2(query: IRI, user: UserADM): Task[ResourceCountV2] =
     for {
       q <- ZIO.attempt(GravsearchParser.parseQuery(query))
       r <- gravsearchCountV2(q, user)

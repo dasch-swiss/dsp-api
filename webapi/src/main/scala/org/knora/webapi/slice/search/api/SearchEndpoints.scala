@@ -5,22 +5,19 @@
 
 package org.knora.webapi.slice.search.api
 
+import dsp.errors.{BadRequestException, GravsearchException}
 import org.apache.pekko.http.scaladsl.server.Route
-import sttp.model.HeaderNames
-import sttp.model.MediaType
-import sttp.tapir.*
-import zio.ZLayer
-
-import dsp.errors.BadRequestException
-import dsp.errors.GravsearchException
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLD
+import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.api.*
+import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.{FormatOptions, RenderedResponse}
+import sttp.model.{HeaderNames, MediaType}
+import sttp.tapir.*
+import zio.{Task, ZIO, ZLayer}
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -48,7 +45,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Search for resources using a Gravsearch query.")
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
-    .in(searchBase /"count")
+    .in(searchBase / "count")
     .in(stringBody.description(gravsearchDescription))
     .in(apiV2SchemaRendering)
     .out(stringBody)
@@ -57,7 +54,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Count resources using a Gravsearch query.")
 
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
-    .in(searchBase /"count"/ path[String].description(gravsearchDescription))
+    .in(searchBase / "count" / path[String].description(gravsearchDescription))
     .in(apiV2SchemaRendering)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
@@ -76,66 +73,46 @@ final case class SearchEndpointsHandler(
 ) {
   type GravsearchQuery = String
 
-  val postGravsearch =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
-      searchEndpoints.postGravsearch,
-      (user: UserADM) => { case (query: GravsearchQuery, s: SchemaRendering) =>
-        searchResponderV2
-          .gravsearchV2(query, s, user)
-          .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
-          .mapError {
-            case e: GravsearchException => BadRequestException(e.getMessage)
-            case e                      => e
-          }
-          .logError
+  private def renderResponse(
+    response: ZIO[Any, Throwable, KnoraResponseV2],
+    rendering: SchemaRendering
+  ): ZIO[Any, Throwable, (RenderedResponse, MediaType)] =
+    response
+      .flatMap(renderer.render(_, FormatOptions.from(JsonLD, rendering)))
+      .mapError {
+        case e: GravsearchException => BadRequestException(e.getMessage)
+        case e                      => e
       }
-    )
+      .logError
 
-  val getGravsearch =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
-      searchEndpoints.getGravsearch,
-      (user: UserADM) => { case (query: GravsearchQuery, s: SchemaRendering) =>
-        searchResponderV2
-          .gravsearchV2(query, s, user)
-          .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
-          .mapError {
-            case e: GravsearchException => BadRequestException(e.getMessage)
-            case e                      => e
-          }
-          .logError
-      }
-    )
+  private val gravsearchHandler
+    : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
+    u => { case (q, r) => renderResponse(searchResponderV2.gravsearchV2(q, r, u), r) }
+
+  val postGravsearch = SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+    searchEndpoints.postGravsearch,
+    gravsearchHandler
+  )
+
+  val getGravsearch = SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+    searchEndpoints.getGravsearch,
+    gravsearchHandler
+  )
+
+  private val gravsearchCountHandler
+    : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
+    u => { case (q, s) => renderResponse(searchResponderV2.gravsearchCountV2(q, u), s) }
 
   val postGravsearchCount =
     SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearchCount,
-      (user: UserADM) => {
-        case (query: GravsearchQuery, s: SchemaRendering) =>
-          searchResponderV2
-            .gravsearchCountV2(query, user)
-            .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
-            .mapError {
-              case e: GravsearchException => BadRequestException(e.getMessage)
-              case e => e
-            }
-            .logError
-      }
+      gravsearchCountHandler
     )
 
   val getGravsearchCount =
     SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
-      (user: UserADM) => {
-        case (query: GravsearchQuery, s: SchemaRendering) =>
-          searchResponderV2
-            .gravsearchCountV2(query, user)
-            .flatMap(renderer.render(_, FormatOptions.from(JsonLD, s)))
-            .mapError {
-              case e: GravsearchException => BadRequestException(e.getMessage)
-              case e => e
-            }
-            .logError
-      }
+      gravsearchCountHandler
     )
 }
 
@@ -153,8 +130,8 @@ final case class SearchApiRoutes(
       mapper.mapEndpointAndHandler(handler.postGravsearch),
       mapper.mapEndpointAndHandler(handler.getGravsearch),
       mapper.mapEndpointAndHandler(handler.postGravsearchCount),
-      mapper.mapEndpointAndHandler(handler.getGravsearchCount),
-    ) .map(tapirToPekko.toRoute(_))
+      mapper.mapEndpointAndHandler(handler.getGravsearchCount)
+    ).map(tapirToPekko.toRoute(_))
 }
 
 object SearchApiRoutes {
