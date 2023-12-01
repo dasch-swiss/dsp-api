@@ -63,10 +63,12 @@ object SearchEndpoints {
   val layer = ZLayer.derive[SearchEndpoints]
 }
 
-final case class SearchEndpointsHandler(
+final case class SearchApiRoutes(
   searchEndpoints: SearchEndpoints,
   searchResponderV2: SearchResponderV2,
-  renderer: KnoraResponseRenderer
+  renderer: KnoraResponseRenderer,
+  mapper: HandlerMapper,
+  tapirToPekko: TapirToPekkoInterpreter
 ) {
   private type GravsearchQuery = String
 
@@ -74,12 +76,12 @@ final case class SearchEndpointsHandler(
     : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
     u => { case (q, r) => searchResponderV2.gravsearchV2(q, r, u).flatMap(renderer.renderAsJsonLd(_, r)) }
 
-  val postGravsearch = SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+  private val postGravsearch = SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
     searchEndpoints.postGravsearch,
     gravsearchHandler
   )
 
-  val getGravsearch = SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+  private val getGravsearch = SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
     searchEndpoints.getGravsearch,
     gravsearchHandler
   )
@@ -88,34 +90,24 @@ final case class SearchEndpointsHandler(
     : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
     u => { case (q, s) => searchResponderV2.gravsearchCountV2(q, u).flatMap(renderer.renderAsJsonLd(_, s)) }
 
-  val postGravsearchCount =
+  private val postGravsearchCount =
     SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearchCount,
       gravsearchCountHandler
     )
 
-  val getGravsearchCount =
+  private val getGravsearchCount =
     SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
       gravsearchCountHandler
     )
-}
 
-object SearchEndpointsHandler {
-  val layer = ZLayer.derive[SearchEndpointsHandler]
-}
-
-final case class SearchApiRoutes(
-  handler: SearchEndpointsHandler,
-  mapper: HandlerMapper,
-  tapirToPekko: TapirToPekkoInterpreter
-) {
   val routes: Seq[Route] =
-    Seq(handler.postGravsearch, handler.getGravsearch, handler.postGravsearchCount, handler.getGravsearchCount)
+    Seq(postGravsearch, getGravsearch, postGravsearchCount, getGravsearchCount)
       .map(it => mapper.mapEndpointAndHandler(it))
       .map(it => tapirToPekko.toRoute(it))
 }
 
 object SearchApiRoutes {
-  val layer = SearchEndpoints.layer >>> SearchEndpointsHandler.layer >>> ZLayer.derive[SearchApiRoutes]
+  val layer = SearchEndpoints.layer >>> ZLayer.derive[SearchApiRoutes]
 }
