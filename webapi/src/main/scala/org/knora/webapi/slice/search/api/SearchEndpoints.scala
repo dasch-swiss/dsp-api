@@ -86,7 +86,6 @@ final case class SearchEndpointsHandler(
         case e: GravsearchException => BadRequestException(e.getMessage)
         case e                      => e
       }
-      .logError
 
   private val gravsearchHandler
     : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
