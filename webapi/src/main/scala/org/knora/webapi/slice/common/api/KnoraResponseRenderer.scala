@@ -20,6 +20,9 @@ import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 
+/**
+ * Renders a [[KnoraResponseV2]] as a [[RenderedResponse]] (type alias for a [[String]]) ready to be returned to the client.
+ */
 final class KnoraResponseRenderer(config: AppConfig) {
   def renderAsJsonLd(response: KnoraResponseV2, schemaRendering: SchemaRendering): Task[(RenderedResponse, MediaType)] =
     render(response, FormatOptions.from(JsonLD, schemaRendering))
@@ -29,7 +32,9 @@ final class KnoraResponseRenderer(config: AppConfig) {
 }
 
 object KnoraResponseRenderer {
+
   type RenderedResponse = String
+
   final case class FormatOptions(format: RdfFormat, schema: ApiV2Schema, rendering: Set[Rendering])
   object FormatOptions {
     def from(f: RdfFormat, s: SchemaRendering): FormatOptions = FormatOptions(f, s.schema, s.rendering)
