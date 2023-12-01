@@ -12,10 +12,9 @@ import sttp.tapir.*
 import zio.Task
 import zio.ZLayer
 
-import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.api.*
 
@@ -30,7 +29,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   val postGravsearch = baseEndpoints.withUserEndpoint.post
     .in(searchBase)
     .in(stringBody.description(gravsearchDescription))
-    .in(apiV2SchemaRendering)
+    .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
@@ -38,7 +37,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getGravsearch = baseEndpoints.withUserEndpoint.get
     .in(searchBase / path[String].description(gravsearchDescription))
-    .in(apiV2SchemaRendering)
+    .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
@@ -47,7 +46,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
     .in(searchBase / "count")
     .in(stringBody.description(gravsearchDescription))
-    .in(apiV2SchemaRendering)
+    .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
@@ -55,7 +54,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
     .in(searchBase / "count" / path[String].description(gravsearchDescription))
-    .in(apiV2SchemaRendering)
+    .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
@@ -75,34 +74,33 @@ final case class SearchApiRoutes(
 ) {
   private type GravsearchQuery = String
 
-  private val gravsearchHandler
-    : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
-    u => { case (q, r) => searchResponderV2.gravsearchV2(q, r, u).flatMap(renderer.renderAsJsonLd(_, r)) }
+  private val gravsearchHandler: UserADM => ((GravsearchQuery, FormatOptions)) => Task[(RenderedResponse, MediaType)] =
+    u => { case (q, o) => searchResponderV2.gravsearchV2(q, o.schemaRendering, u).flatMap(renderer.render(_, o)) }
 
   private val postGravsearch =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearch,
       gravsearchHandler
     )
 
   private val getGravsearch =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearch,
       gravsearchHandler
     )
 
   private val gravsearchCountHandler
-    : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
-    u => { case (q, s) => searchResponderV2.gravsearchCountV2(q, u).flatMap(renderer.renderAsJsonLd(_, s)) }
+    : UserADM => ((GravsearchQuery, FormatOptions)) => Task[(RenderedResponse, MediaType)] =
+    u => { case (q, s) => searchResponderV2.gravsearchCountV2(q, u).flatMap(renderer.render(_, s)) }
 
   private val postGravsearchCount =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearchCount,
       gravsearchCountHandler
     )
 
   private val getGravsearchCount =
-    SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
+    SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
       gravsearchCountHandler
     )

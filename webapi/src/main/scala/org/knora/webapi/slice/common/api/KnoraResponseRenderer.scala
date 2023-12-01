@@ -28,14 +28,16 @@ final class KnoraResponseRenderer(config: AppConfig) {
     render(response, FormatOptions.from(JsonLD, schemaRendering))
 
   def render(response: KnoraResponseV2, opts: FormatOptions): Task[(RenderedResponse, MediaType)] =
-    ZIO.attempt(response.format(opts, config)).map((_, opts.format.mediaType))
+    ZIO.attempt(response.format(opts, config)).map((_, opts.rdfFormat.mediaType))
 }
 
 object KnoraResponseRenderer {
 
   type RenderedResponse = String
 
-  final case class FormatOptions(format: RdfFormat, schema: ApiV2Schema, rendering: Set[Rendering])
+  final case class FormatOptions(rdfFormat: RdfFormat, schema: ApiV2Schema, rendering: Set[Rendering]) {
+    lazy val schemaRendering: SchemaRendering = SchemaRendering(schema, rendering)
+  }
   object FormatOptions {
     def from(f: RdfFormat, s: SchemaRendering): FormatOptions = FormatOptions(f, s.schema, s.rendering)
   }

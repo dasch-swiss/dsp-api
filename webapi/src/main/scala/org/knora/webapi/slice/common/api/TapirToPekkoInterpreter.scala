@@ -38,6 +38,7 @@ final case class TapirToPekkoInterpreter()(actorSystem: ActorSystem) {
     PekkoHttpServerOptions.customiseInterceptors
       .defaultHandlers(customizedErrorResponse)
       .metricsInterceptor(ZioMetrics.default[Future]().metricsInterceptor())
+      .notAcceptableInterceptor(None)
       .options
 
   private val interpreter: PekkoHttpServerInterpreter = PekkoHttpServerInterpreter(serverOptions)

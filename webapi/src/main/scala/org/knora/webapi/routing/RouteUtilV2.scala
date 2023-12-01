@@ -57,7 +57,7 @@ object RouteUtilV2 {
       ctx.request.uri.query().get(schema).map(stringToSchema)
     def fromHeaders: Option[IO[BadRequestException, ApiV2Schema]] =
       ctx.request.headers.find(_.lowercaseName == xKnoraAcceptSchemaHeader).map(h => stringToSchema(h.value))
-    fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2.defaultApiV2Schema))
+    fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2.Inputs.defaultApiV2Schema))
   }
 
   /**

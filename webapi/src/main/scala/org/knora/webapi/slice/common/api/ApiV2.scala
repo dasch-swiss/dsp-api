@@ -6,12 +6,14 @@
 package org.knora.webapi.slice.common.api
 
 import sttp.model.HeaderNames
+import sttp.model.MediaType
 import sttp.tapir.Codec
 import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.CodecFormat
 import sttp.tapir.DecodeResult
 import sttp.tapir.EndpointIO
 import sttp.tapir.EndpointInput
+import sttp.tapir.Validator
 import sttp.tapir.header
 import sttp.tapir.query
 
@@ -21,9 +23,9 @@ import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.JsonLdRendering
 import org.knora.webapi.MarkupRendering
 import org.knora.webapi.Rendering
-import org.knora.webapi.SchemaRendering
-import org.knora.webapi.*
+import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.util.rdf.RdfFormat
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 
 object ApiV2 {
 
@@ -68,13 +70,11 @@ object ApiV2 {
     val markup: String = "markup"
   }
 
-  object Codecs {
+  object Inputs {
+    import Codecs.{apiV2SchemaListCodec, jsonLdRenderingListCodec, markupRenderingListCode}
 
-    private def codecFromStringCodec[A](f: String => Either[String, A], g: A => String): PlainCodec[A] =
-      Codec.string.mapDecode(f(_).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_)))(g)
-
-    private implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
-      Codec.listHeadOption(codecFromStringCodec(ApiV2Schema.from, _.name))
+    // ApiV2Schema inputs
+    val defaultApiV2Schema: ApiV2Schema = ApiV2Complex
     private val apiV2SchemaHeader = header[Option[ApiV2Schema]](Headers.xKnoraAcceptSchemaHeader)
       .description(s"""The ontology schema to be used for the request.
                       |If not specified, the default schema $defaultApiV2Schema  will be used.""".stripMargin)
@@ -90,15 +90,7 @@ object ApiV2 {
           case _                     => defaultApiV2Schema
         })(s => (Some(s), Some(s)))
 
-    private implicit val jsonLdRenderingListCode: Codec[List[String], Option[JsonLdRendering], CodecFormat.TextPlain] =
-      Codec.listHeadOption(codecFromStringCodec(JsonLdRendering.from, _.name))
-    private val jsonLdRenderingHeader =
-      header[Option[JsonLdRendering]](Headers.xKnoraJsonLdRendering)
-        .description(s"""The JSON-LD rendering to be used for the request (flat or hierarchical).
-                        |If not specified, hierarchical JSON-LD will be used.""".stripMargin)
-
-    private implicit val markupRenderingListCode: Codec[List[String], Option[MarkupRendering], CodecFormat.TextPlain] =
-      Codec.listHeadOption(codecFromStringCodec(MarkupRendering.from, _.name))
+    // MarkupRendering inputs
     private val markupRenderingHeader: EndpointIO.Header[Option[MarkupRendering]] =
       header[Option[MarkupRendering]](Headers.xKnoraAcceptMarkup)
         .description(s"""The markup rendering to be used for the request (XML or standoff).""".stripMargin)
@@ -113,7 +105,14 @@ object ApiV2 {
         case _                                      => None
       })(s => (s, s))
 
-    private val apiV2Rendering: EndpointInput[Set[Rendering]] = jsonLdRenderingHeader
+    // JsonLdRendering inputs
+    private val jsonLdRenderingHeader =
+      header[Option[JsonLdRendering]](Headers.xKnoraJsonLdRendering)
+        .description(s"""The JSON-LD rendering to be used for the request (flat or hierarchical).
+                        |If not specified, hierarchical JSON-LD will be used.""".stripMargin)
+
+    // Rendering inputs (JsonLdRendering and MarkupRendering)
+    private val renderingSet: EndpointInput[Set[Rendering]] = jsonLdRenderingHeader
       .and(markupRendering)
       .map { case (jsonLd: Option[JsonLdRendering], markup: Option[MarkupRendering]) => Set(jsonLd, markup).flatten } {
         (s: Set[Rendering]) =>
@@ -123,20 +122,37 @@ object ApiV2 {
           )
       }
 
-    val apiV2SchemaRendering: EndpointInput[SchemaRendering] = apiV2Schema
-      .and(apiV2Rendering)
-      .map { case (schema, rendering) => SchemaRendering(schema, rendering) }(s => (s.schema, s.rendering))
-
-    private implicit val rdfFormatCodec: Codec[String, RdfFormat, CodecFormat.TextPlain] =
-      Codec.mediaType.mapDecode(mt =>
-        RdfFormat.from(mt).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_))
-      )(_.mediaType)
-    private implicit val rdfFormatListCodec: Codec[List[String], RdfFormat, CodecFormat.TextPlain] =
-      Codec.listHead(rdfFormatCodec)
-    val rdfFormat: EndpointIO.Header[RdfFormat] = header[RdfFormat](HeaderNames.Accept)
+    // RdfFormat input
+    val defaultRdfFormat: RdfFormat = JsonLD
+    private val rdfFormat: EndpointIO.Header[RdfFormat] = header[MediaType](HeaderNames.Accept)
       .description(
-        s"""The MediaType for the RDF format to be used for the request (JSON-LD, Turtle, RDF/XML, TriG, N-Quads).""".stripMargin
+        s"""The RDF format to be used for the request. Valid values are: ${RdfFormat.values}
+           |If not specified or unknown, the fallback RDF format $defaultRdfFormat will be used.""".stripMargin
+      )
+      .mapDecode(s => DecodeResult.Value(RdfFormat.from(s)))(_.mediaType)
+      .validate(Validator.pass[RdfFormat])
+
+    // FormatOptions input
+    val formatOptions: EndpointInput[FormatOptions] = rdfFormat
+      .and(apiV2Schema)
+      .and(renderingSet)
+      .map { case (format, schema, rendering) => FormatOptions(format, schema, rendering) }(s =>
+        (s.rdfFormat, s.schema, s.rendering)
       )
   }
-  val defaultApiV2Schema: ApiV2Schema = ApiV2Complex
+
+  private object Codecs {
+    private def codecFromStringCodec[A](f: String => Either[String, A], g: A => String): PlainCodec[A] =
+      Codec.string.mapDecode(f(_).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_)))(g)
+
+    // Codec for ApiV2Schema
+    implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
+      Codec.listHeadOption(codecFromStringCodec(ApiV2Schema.from, _.name))
+
+    // Codecs for Rendering (JsonLdRendering and MarkupRendering)
+    implicit val jsonLdRenderingListCodec: Codec[List[String], Option[JsonLdRendering], CodecFormat.TextPlain] =
+      Codec.listHeadOption(codecFromStringCodec(JsonLdRendering.from, _.name))
+    implicit val markupRenderingListCode: Codec[List[String], Option[MarkupRendering], CodecFormat.TextPlain] =
+      Codec.listHeadOption(codecFromStringCodec(MarkupRendering.from, _.name))
+  }
 }

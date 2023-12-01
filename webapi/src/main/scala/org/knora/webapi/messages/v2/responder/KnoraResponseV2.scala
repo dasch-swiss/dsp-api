@@ -36,7 +36,7 @@ trait KnoraResponseV2 {
   ): String
 
   def format(opts: KnoraResponseRenderer.FormatOptions, config: AppConfig): String =
-    format(opts.format, opts.schema, opts.rendering, config)
+    format(opts.rdfFormat, opts.schema, opts.rendering, config)
 }
 
 /**
