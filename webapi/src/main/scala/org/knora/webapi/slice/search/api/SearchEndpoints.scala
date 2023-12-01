@@ -12,11 +12,8 @@ import sttp.tapir.*
 import zio.Task
 import zio.ZLayer
 
-import dsp.errors.BadRequestException
-import dsp.errors.GravsearchException
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -76,20 +73,9 @@ final case class SearchEndpointsHandler(
 ) {
   type GravsearchQuery = String
 
-  private def renderResponse(
-    response: Task[KnoraResponseV2],
-    rendering: SchemaRendering
-  ): Task[(RenderedResponse, MediaType)] =
-    response
-      .flatMap(renderer.renderAsJsonLd(_, rendering))
-      .mapError {
-        case e: GravsearchException => BadRequestException(e.getMessage)
-        case e                      => e
-      }
-
   private val gravsearchHandler
     : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
-    u => { case (q, r) => renderResponse(searchResponderV2.gravsearchV2(q, r, u), r) }
+    u => { case (q, r) => searchResponderV2.gravsearchV2(q, r, u).flatMap(renderer.renderAsJsonLd(_, r)) }
 
   val postGravsearch = SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
     searchEndpoints.postGravsearch,
@@ -103,7 +89,7 @@ final case class SearchEndpointsHandler(
 
   private val gravsearchCountHandler
     : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
-    u => { case (q, s) => renderResponse(searchResponderV2.gravsearchCountV2(q, u), s) }
+    u => { case (q, s) => searchResponderV2.gravsearchCountV2(q, u).flatMap(renderer.renderAsJsonLd(_, s)) }
 
   val postGravsearchCount =
     SecuredEndpointAndZioHandler[(GravsearchQuery, SchemaRendering), (RenderedResponse, MediaType)](
