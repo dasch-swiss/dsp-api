@@ -16,11 +16,9 @@ import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.api.*
 
@@ -83,7 +81,7 @@ final case class SearchEndpointsHandler(
     rendering: SchemaRendering
   ): Task[(RenderedResponse, MediaType)] =
     response
-      .flatMap(renderer.render(_, FormatOptions.from(JsonLD, rendering)))
+      .flatMap(renderer.renderAsJsonLd(_, rendering))
       .mapError {
         case e: GravsearchException => BadRequestException(e.getMessage)
         case e                      => e
