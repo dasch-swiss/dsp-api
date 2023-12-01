@@ -9,7 +9,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-val tapirVersion                = "1.8.5"
+val tapirVersion                = "1.9.3"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "3.0.7"
 val zioHttpVersion              = "3.0.0-RC3"
