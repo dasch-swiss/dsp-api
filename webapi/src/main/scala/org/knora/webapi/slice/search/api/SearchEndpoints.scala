@@ -6,18 +6,15 @@
 package org.knora.webapi.slice.search.api
 
 import org.apache.pekko.http.scaladsl.server.Route
-import sttp.model.HeaderNames
-import sttp.model.MediaType
-import sttp.tapir.*
-import zio.Task
-import zio.ZLayer
-
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.api.*
+import sttp.model.{HeaderNames, MediaType}
+import sttp.tapir.*
+import zio.{Task, ZLayer}
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -114,12 +111,9 @@ final case class SearchApiRoutes(
   tapirToPekko: TapirToPekkoInterpreter
 ) {
   val routes: Seq[Route] =
-    Seq(
-      mapper.mapEndpointAndHandler(handler.postGravsearch),
-      mapper.mapEndpointAndHandler(handler.getGravsearch),
-      mapper.mapEndpointAndHandler(handler.postGravsearchCount),
-      mapper.mapEndpointAndHandler(handler.getGravsearchCount)
-    ).map(tapirToPekko.toRoute(_))
+    Seq(handler.postGravsearch, handler.getGravsearch, handler.postGravsearchCount, handler.getGravsearchCount)
+      .map(it => mapper.mapEndpointAndHandler(it))
+      .map(it => tapirToPekko.toRoute(it))
 }
 
 object SearchApiRoutes {
