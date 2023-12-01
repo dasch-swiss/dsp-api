@@ -71,7 +71,7 @@ final case class SearchEndpointsHandler(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer
 ) {
-  type GravsearchQuery = String
+  private type GravsearchQuery = String
 
   private val gravsearchHandler
     : UserADM => ((GravsearchQuery, SchemaRendering)) => Task[(RenderedResponse, MediaType)] =
