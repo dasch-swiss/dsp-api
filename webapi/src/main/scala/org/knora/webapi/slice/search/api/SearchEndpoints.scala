@@ -5,19 +5,24 @@
 
 package org.knora.webapi.slice.search.api
 
-import dsp.errors.{BadRequestException, GravsearchException}
 import org.apache.pekko.http.scaladsl.server.Route
+import sttp.model.HeaderNames
+import sttp.model.MediaType
+import sttp.tapir.*
+import zio.Task
+import zio.ZLayer
+
+import dsp.errors.BadRequestException
+import dsp.errors.GravsearchException
 import org.knora.webapi.SchemaRendering
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.responders.v2.SearchResponderV2
-import org.knora.webapi.slice.common.api.*
 import org.knora.webapi.slice.common.api.ApiV2.Codecs.apiV2SchemaRendering
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.{FormatOptions, RenderedResponse}
-import sttp.model.{HeaderNames, MediaType}
-import sttp.tapir.*
-import zio.{Task, ZIO, ZLayer}
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
+import org.knora.webapi.slice.common.api.*
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -74,9 +79,9 @@ final case class SearchEndpointsHandler(
   type GravsearchQuery = String
 
   private def renderResponse(
-    response: ZIO[Any, Throwable, KnoraResponseV2],
+    response: Task[KnoraResponseV2],
     rendering: SchemaRendering
-  ): ZIO[Any, Throwable, (RenderedResponse, MediaType)] =
+  ): Task[(RenderedResponse, MediaType)] =
     response
       .flatMap(renderer.render(_, FormatOptions.from(JsonLD, rendering)))
       .mapError {
