@@ -5,18 +5,42 @@
 
 package org.knora.webapi.slice.search.api
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
+import eu.timepit.refined.numeric.Greater
 import org.apache.pekko.http.scaladsl.server.Route
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.*
+import sttp.tapir.codec.refined.*
 import zio.Task
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.common.api.ApiV2
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.api.*
+import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+
+object SearchEndpointsInputs {
+
+  type Offset = Int Refined Greater[-1]
+
+  object Offset extends RefinedTypeOps[Offset, Int] {
+    val default: Offset = unsafeFrom(0)
+  }
+
+  val offset: EndpointInput.Query[Offset] =
+    query[Offset]("offset").description("The offset to be used for paging.").default(Offset.default)
+  val limitToProject: EndpointInput.Query[ProjectIri] =
+    query[ProjectIri]("limitToProject").description("The project to limit the search to.")
+}
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
