@@ -226,11 +226,13 @@ final case class SearchResponderV2Live(
   private val sparqlTransformerLive: OntologyInferencer,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
-  implicit private val stringFormatter: StringFormatter,
+  private val stringFormatter: StringFormatter,
   private val iriConverter: IriConverter,
   private val constructTransformer: ConstructTransformer
 ) extends SearchResponderV2
     with LazyLogging {
+
+  private implicit val sf: StringFormatter = stringFormatter
 
   /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
@@ -1057,42 +1059,5 @@ final case class SearchResponderV2Live(
 }
 
 object SearchResponderV2Live {
-  val layer: ZLayer[
-    AppConfig & TriplestoreService & MessageRelay & ConstructResponseUtilV2 & OntologyCache & StandoffTagUtilV2 &
-      QueryTraverser & OntologyInferencer & GravsearchTypeInspectionRunner & InferenceOptimizationService &
-      IriConverter & ConstructTransformer & StringFormatter,
-    Nothing,
-    SearchResponderV2Live
-  ] =
-    ZLayer.fromZIO(
-      for {
-        appConfig                    <- ZIO.service[AppConfig]
-        triplestoreService           <- ZIO.service[TriplestoreService]
-        messageRelay                 <- ZIO.service[MessageRelay]
-        constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
-        ontologyCache                <- ZIO.service[OntologyCache]
-        standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
-        queryTraverser               <- ZIO.service[QueryTraverser]
-        sparqlTransformerLive        <- ZIO.service[OntologyInferencer]
-        stringFormatter              <- ZIO.service[StringFormatter]
-        typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
-        inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
-        iriConverter                 <- ZIO.service[IriConverter]
-        constructTransformer         <- ZIO.service[ConstructTransformer]
-      } yield new SearchResponderV2Live(
-        appConfig,
-        triplestoreService,
-        messageRelay,
-        constructResponseUtilV2,
-        ontologyCache,
-        standoffTagUtilV2,
-        queryTraverser,
-        sparqlTransformerLive,
-        typeInspectionRunner,
-        inferenceOptimizationService,
-        stringFormatter,
-        iriConverter,
-        constructTransformer
-      )
-    )
+  val layer = ZLayer.derive[SearchResponderV2Live]
 }
