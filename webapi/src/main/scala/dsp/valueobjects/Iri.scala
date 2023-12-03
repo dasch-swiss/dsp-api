@@ -6,13 +6,16 @@
 package dsp.valueobjects
 
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
-import dsp.errors.{BadRequestException, ValidationException}
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
-import zio.json.{JsonDecoder, JsonEncoder}
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 import zio.prelude.Validation
 
 import scala.util.Try
+
+import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 
 trait Iri {
   val value: String

@@ -5,26 +5,33 @@
 
 package org.knora.webapi.slice.search.api
 
-import dsp.valueobjects.Iri
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Greater
 import org.apache.pekko.http.scaladsl.server.Route
+import sttp.model.HeaderNames
+import sttp.model.MediaType
+import sttp.tapir.*
+import sttp.tapir.codec.refined.*
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+
+import dsp.valueobjects.Iri
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.{FormatOptions, RenderedResponse}
-import org.knora.webapi.slice.common.api.{
-  ApiV2,
-  BaseEndpoints,
-  HandlerMapper,
-  KnoraResponseRenderer,
-  SecuredEndpointAndZioHandler,
-  TapirToPekkoInterpreter
-}
-import sttp.model.{HeaderNames, MediaType}
-import sttp.tapir.*
-import sttp.tapir.codec.refined.*
-import zio.{Task, ZLayer}
+import org.knora.webapi.slice.common.api.ApiV2
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
+import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.SimpleIri
 
 object SearchEndpointsInputs {
 
@@ -101,6 +108,27 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
     .description("Count resources using a Gravsearch query.")
+
+  val getSearchByLabel = baseEndpoints.withUserEndpoint.get
+    .in("v2" / "searchbylabel" / path[String]("searchTerm"))
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.offset)
+    .in(SearchEndpointsInputs.limitToProject)
+    .in(SearchEndpointsInputs.limitToResourceClass)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .tags(tags)
+    .description("Search for resources by label.")
+
+  val getSearchByLabelCount = baseEndpoints.withUserEndpoint.get
+    .in("v2" / "searchbylabel" / "count" / path[String]("searchTerm"))
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
+    .in(SearchEndpointsInputs.limitToResourceClass)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .tags(tags)
+    .description("Search for resources by label.")
 }
 
 object SearchEndpoints {
@@ -109,49 +137,111 @@ object SearchEndpoints {
 
 final case class SearchApiRoutes(
   searchEndpoints: SearchEndpoints,
-  searchResponderV2: SearchResponderV2,
-  renderer: KnoraResponseRenderer,
+  searchRestService: SearchRestService,
   mapper: HandlerMapper,
-  tapirToPekko: TapirToPekkoInterpreter
+  tapirToPekko: TapirToPekkoInterpreter,
+  iriConverter: IriConverter
 ) {
   private type GravsearchQuery = String
-
-  private val gravsearchHandler: UserADM => ((GravsearchQuery, FormatOptions)) => Task[(RenderedResponse, MediaType)] =
-    u => { case (q, o) => searchResponderV2.gravsearchV2(q, o.schemaRendering, u).flatMap(renderer.render(_, o)) }
 
   private val postGravsearch =
     SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearch,
-      gravsearchHandler
+      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) }
     )
 
   private val getGravsearch =
     SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearch,
-      gravsearchHandler
+      user => { case (query, opts) => searchRestService.gravsearch(query, opts, user) }
     )
-
-  private val gravsearchCountHandler
-    : UserADM => ((GravsearchQuery, FormatOptions)) => Task[(RenderedResponse, MediaType)] =
-    u => { case (q, s) => searchResponderV2.gravsearchCountV2(q, u).flatMap(renderer.render(_, s)) }
 
   private val postGravsearchCount =
     SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.postGravsearchCount,
-      gravsearchCountHandler
+      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) }
     )
 
   private val getGravsearchCount =
     SecuredEndpointAndZioHandler[(GravsearchQuery, FormatOptions), (RenderedResponse, MediaType)](
       searchEndpoints.getGravsearchCount,
-      gravsearchCountHandler
+      user => { case (query, opts) => searchRestService.gravsearchCount(query, opts, user) }
     )
 
-  val routes: Seq[Route] = Seq(postGravsearch, getGravsearch, postGravsearchCount, getGravsearchCount)
-    .map(it => mapper.mapEndpointAndHandler(it))
-    .map(it => tapirToPekko.toRoute(it))
+  private val getSearchByLabel =
+    SecuredEndpointAndZioHandler[
+      (String, FormatOptions, Offset, Option[ProjectIri], Option[SimpleIri]),
+      (RenderedResponse, MediaType)
+    ](
+      searchEndpoints.getSearchByLabel,
+      user => { case (query, opts, offset, project, resourceClass) =>
+        searchRestService.searchResourcesByLabelV2(query, opts, offset, project, resourceClass, user)
+      }
+    )
+
+  private val getSearchByLabelCount =
+    SecuredEndpointAndZioHandler[
+      (String, FormatOptions, Option[ProjectIri], Option[SimpleIri]),
+      (RenderedResponse, MediaType)
+    ](
+      searchEndpoints.getSearchByLabelCount,
+      _ => { case (query, opts, project, resourceClass) =>
+        searchRestService.searchResourcesByLabelCountV2(query, opts, project, resourceClass)
+      }
+    )
+
+  val routes: Seq[Route] =
+    Seq(getSearchByLabel, getSearchByLabelCount, postGravsearch, getGravsearch, postGravsearchCount, getGravsearchCount)
+      .map(it => mapper.mapEndpointAndHandler(it))
+      .map(it => tapirToPekko.toRoute(it))
 }
 
 object SearchApiRoutes {
-  val layer = SearchEndpoints.layer >>> ZLayer.derive[SearchApiRoutes]
+  val layer = SearchRestService.layer >+> SearchEndpoints.layer >>> ZLayer.derive[SearchApiRoutes]
+}
+
+final case class SearchRestService(
+  searchResponderV2: SearchResponderV2,
+  renderer: KnoraResponseRenderer,
+  iriConverter: IriConverter
+) {
+
+  def searchResourcesByLabelV2(
+    query: String,
+    opts: FormatOptions,
+    offset: Offset,
+    project: Option[ProjectIri],
+    limitByResourceClass: Option[SimpleIri],
+    user: UserADM
+  ): Task[(RenderedResponse, MediaType)] = for {
+    resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
+    searchResult <-
+      searchResponderV2.searchResourcesByLabelV2(query, offset.value, project, resourceClass, opts.schema, user)
+    response <- renderer.render(searchResult, opts)
+  } yield response
+
+  def searchResourcesByLabelCountV2(
+    query: String,
+    opts: FormatOptions,
+    project: Option[ProjectIri],
+    limitByResourceClass: Option[SimpleIri]
+  ): Task[(RenderedResponse, MediaType)] = for {
+    resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
+    searchResult <-
+      searchResponderV2.searchResourcesByLabelCountV2(query, project, resourceClass)
+    response <- renderer.render(searchResult, opts)
+  } yield response
+
+  def gravsearch(query: String, opts: FormatOptions, user: UserADM): Task[(RenderedResponse, MediaType)] = for {
+    searchResult <- searchResponderV2.gravsearchV2(query, opts.schemaRendering, user)
+    response     <- renderer.render(searchResult, opts)
+  } yield response
+
+  def gravsearchCount(query: String, opts: FormatOptions, user: UserADM): Task[(RenderedResponse, MediaType)] = for {
+    searchResult <- searchResponderV2.gravsearchCountV2(query, user)
+    response     <- renderer.render(searchResult, opts)
+  } yield response
+}
+object SearchRestService {
+  val layer = ZLayer.derive[SearchRestService]
 }

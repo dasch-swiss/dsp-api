@@ -36,11 +36,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   private val LIMIT_TO_STANDOFF_CLASS = "limitToStandoffClass"
   private val RETURN_FILES            = "returnFiles"
 
-  def makeRoute: Route =
-    fullTextSearchCount() ~
-      fullTextSearch() ~
-      searchByLabelCount() ~
-      searchByLabel()
+  def makeRoute: Route = fullTextSearchCount() ~ fullTextSearch()
 
   /**
    * Gets the requested offset. Returns zero if no offset is indicated.
@@ -182,47 +178,5 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
         } yield response
         RouteUtilV2.completeResponse(requestTask, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
       }
-  }
-
-  private def searchByLabelCount(): Route =
-    path("v2" / "searchbylabel" / "count" / Segment) {
-      searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-        get { requestContext =>
-          val params: Map[String, String] = requestContext.request.uri.query().toMap
-          val response = for {
-            searchString         <- validateSearchString(searchval)
-            limitToProject       <- getProjectIri(params)
-            limitToResourceClass <- getResourceClassFromParams(params)
-            response <-
-              SearchResponderV2.searchResourcesByLabelCountV2(searchString, limitToProject, limitToResourceClass)
-          } yield response
-          RouteUtilV2.completeResponse(response, requestContext, RouteUtilV2.getOntologySchema(requestContext))
-        }
-    }
-
-  private def searchByLabel(): Route = path(
-    "v2" / "searchbylabel" / Segment
-  ) { searchval =>
-    get { requestContext =>
-      val targetSchemaTask            = RouteUtilV2.getOntologySchema(requestContext)
-      val params: Map[String, String] = requestContext.request.uri.query().toMap
-      val response = for {
-        sparqlEncodedSearchString <- validateSearchString(searchval)
-        offset                    <- getOffsetFromParams(params)
-        limitToProject            <- getProjectIri(params)
-        limitToResourceClass      <- getResourceClassFromParams(params)
-        targetSchema              <- targetSchemaTask
-        requestingUser            <- Authenticator.getUserADM(requestContext)
-        response <- SearchResponderV2.searchResourcesByLabelV2(
-                      searchValue = sparqlEncodedSearchString,
-                      offset = offset,
-                      limitToProject = limitToProject,
-                      limitToResourceClass = limitToResourceClass,
-                      targetSchema = targetSchema,
-                      requestingUser = requestingUser
-                    )
-      } yield response
-      RouteUtilV2.completeResponse(response, requestContext, targetSchemaTask)
-    }
   }
 }

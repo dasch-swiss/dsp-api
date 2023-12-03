@@ -13,6 +13,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -168,7 +169,7 @@ trait SearchResponderV2 {
    * @return a [[ResourceCountV2]] representing the resources that have been found.
    */
   def searchResourcesByLabelCountV2(
-    searchValue: IRI,
+    searchValue: String,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri]
   ): Task[ResourceCountV2]
@@ -185,7 +186,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchResourcesByLabelV2(
-    searchValue: IRI,
+    searchValue: String,
     offset: RuntimeFlags,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
@@ -849,14 +850,17 @@ final case class SearchResponderV2Live(
   }
 
   override def searchResourcesByLabelCountV2(
-    searchValue: IRI,
+    searchValue: String,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri]
-  ): Task[ResourceCountV2] = {
-    val searchTerm = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
-    val countSparql =
-      SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
+  ): Task[ResourceCountV2] =
     for {
+      searchValue          <- validateSearchString(searchValue)
+      _                    <- ensureIsNotFullTextSearch(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+      countSparql =
+        SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
       countResponse <- triplestore.query(countSparql)
 
       count <- // query response should contain one result with one row with the name "count"
@@ -870,6 +874,29 @@ final case class SearchResponderV2Live(
           .as(countResponse.results.bindings.head.rowMap("count"))
 
     } yield ResourceCountV2(count.toInt)
+
+  private def ensureResourceClassIri(resourceClassIri: SmartIri): Task[SmartIri] = {
+    val errMsg = s"Resource class IRI <$resourceClassIri> is not a valid Knora API v2 entity IRI"
+    if (resourceClassIri.isKnoraApiV2EntityIri) {
+      iriConverter.asInternalSmartIri(resourceClassIri).orElseFail(BadRequestException(errMsg))
+    } else { ZIO.fail(BadRequestException(errMsg)) }
+  }
+
+  private def ensureIsNotFullTextSearch(searchStr: String) =
+    ZIO
+      .fail(BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route"))
+      .when(searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname))
+
+  private def validateSearchString(searchStr: String) = {
+    val searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength
+    ZIO
+      .fromOption(Iri.toSparqlEncodedString(searchStr))
+      .orElseFail(throw BadRequestException(s"Invalid search string: '$searchStr'"))
+      .filterOrElseWith(_.length >= searchValueMinLength) { it =>
+        val errorMsg =
+          s"A search value is expected to have at least length of $searchValueMinLength, but '$it' given of length ${it.length}."
+        ZIO.fail(BadRequestException(errorMsg))
+      }
   }
 
   override def searchResourcesByLabelV2(
@@ -882,15 +909,18 @@ final case class SearchResponderV2Live(
   ): Task[ReadResourcesSequenceV2] = {
     val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
-    val searchTerm   = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
-    val searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
-      searchTerm,
-      limitToResourceClass.map(_.toIri),
-      limitToProject.map(_.value),
-      searchLimit,
-      searchOffset
-    )
     for {
+      searchValue          <- validateSearchString(searchValue)
+      _                    <- ensureIsNotFullTextSearch(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+      searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
+                                      searchTerm,
+                                      limitToResourceClass.map(_.toIri),
+                                      limitToProject.map(_.value),
+                                      searchLimit,
+                                      searchOffset
+                                    )
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
 
       // collect the IRIs of main resources returned
