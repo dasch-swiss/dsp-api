@@ -34,7 +34,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.ResourcesRouteV2
-import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -54,13 +53,9 @@ import pekko.http.scaladsl.model.headers.BasicHttpCredentials
  */
 class SearchRouteV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val searchPathNew = UnsafeZioRun
+  private val searchPath = UnsafeZioRun
     .runOrThrow(ZIO.serviceWith[SearchApiRoutes](_.routes))
     .reduce(_ ~ _)
-  private val searchPathOld = DSPApiDirectives.handleErrors(appConfig)(
-    SearchRouteV2(routeData.appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute
-  )
-  private val searchPath = searchPathNew ~ searchPathOld
 
   private val resourcePath =
     DSPApiDirectives.handleErrors(appConfig)(ResourcesRouteV2(appConfig).makeRoute)

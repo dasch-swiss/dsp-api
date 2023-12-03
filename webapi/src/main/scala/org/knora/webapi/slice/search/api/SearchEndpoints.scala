@@ -65,6 +65,9 @@ object SearchEndpointsInputs {
 
   val limitToStandoffClass: EndpointInput.Query[Option[SimpleIri]] =
     query[Option[SimpleIri]]("limitToStandoffClass").description("The standoff class to limit the search to.")
+
+  val returnFiles: EndpointInput.Query[Boolean] =
+    query[Boolean]("returnFiles").description("Whether to return files in the search results.").default(false)
 }
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
@@ -125,6 +128,30 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
     .in(SearchEndpointsInputs.limitToResourceClass)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .tags(tags)
+    .description("Search for resources by label.")
+
+  val getFullTextSearch = baseEndpoints.withUserEndpoint.get
+    .in("v2" / "search" / path[String]("searchTerm"))
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.offset)
+    .in(SearchEndpointsInputs.limitToProject)
+    .in(SearchEndpointsInputs.limitToResourceClass)
+    .in(SearchEndpointsInputs.limitToStandoffClass)
+    .in(SearchEndpointsInputs.returnFiles)
+    .out(stringBody)
+    .out(header[MediaType](HeaderNames.ContentType))
+    .tags(tags)
+    .description("Search for resources by label.")
+
+  val getFullTextSearchCount = baseEndpoints.withUserEndpoint.get
+    .in("v2" / "search" / "count" / path[String]("searchTerm"))
+    .in(ApiV2.Inputs.formatOptions)
+    .in(SearchEndpointsInputs.limitToProject)
+    .in(SearchEndpointsInputs.limitToResourceClass)
+    .in(SearchEndpointsInputs.limitToStandoffClass)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
     .tags(tags)
@@ -190,8 +217,39 @@ final case class SearchApiRoutes(
       }
     )
 
+  private val getFullTextSearch =
+    SecuredEndpointAndZioHandler[
+      (String, FormatOptions, Offset, Option[ProjectIri], Option[SimpleIri], Option[SimpleIri], Boolean),
+      (RenderedResponse, MediaType)
+    ](
+      searchEndpoints.getFullTextSearch,
+      user => { case (query, opts, offset, project, resourceClass, standoffClass, returnFiles) =>
+        searchRestService.fullTextSearch(query, opts, offset, project, resourceClass, standoffClass, returnFiles, user)
+      }
+    )
+
+  private val getFullTextSearchCount =
+    SecuredEndpointAndZioHandler[
+      (String, FormatOptions, Option[ProjectIri], Option[SimpleIri], Option[SimpleIri]),
+      (RenderedResponse, MediaType)
+    ](
+      searchEndpoints.getFullTextSearchCount,
+      _ => { case (query, opts, project, resourceClass, standoffClass) =>
+        searchRestService.fullTextSearchCount(query, opts, project, resourceClass, standoffClass)
+      }
+    )
+
   val routes: Seq[Route] =
-    Seq(getSearchByLabel, getSearchByLabelCount, postGravsearch, getGravsearch, postGravsearchCount, getGravsearchCount)
+    Seq(
+      getFullTextSearch,
+      getFullTextSearchCount,
+      getSearchByLabel,
+      getSearchByLabelCount,
+      postGravsearch,
+      getGravsearch,
+      postGravsearchCount,
+      getGravsearchCount
+    )
       .map(it => mapper.mapEndpointAndHandler(it))
       .map(it => tapirToPekko.toRoute(it))
 }
@@ -241,7 +299,48 @@ final case class SearchRestService(
     searchResult <- searchResponderV2.gravsearchCountV2(query, user)
     response     <- renderer.render(searchResult, opts)
   } yield response
+
+  def fullTextSearch(
+    query: RenderedResponse,
+    opts: FormatOptions,
+    offset: Offset,
+    project: Option[ProjectIri],
+    resourceClass: Option[SimpleIri],
+    standoffClass: Option[SimpleIri],
+    returnFiles: Boolean,
+    user: UserADM
+  ): Task[(RenderedResponse, MediaType)] = for {
+    resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
+    standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
+    searchResult <- searchResponderV2.fulltextSearchV2(
+                      query,
+                      offset.value,
+                      project,
+                      resourceClass,
+                      standoffClass,
+                      returnFiles,
+                      opts.schemaRendering,
+                      user
+                    )
+    response <- renderer.render(searchResult, opts)
+  } yield response
+
+  def fullTextSearchCount(
+    query: RenderedResponse,
+    opts: FormatOptions,
+    project: Option[ProjectIri],
+    resourceClass: Option[SimpleIri],
+    standoffClass: Option[SimpleIri]
+  ): zio.Task[
+    (_root_.org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse, _root_.sttp.model.MediaType)
+  ] = for {
+    resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
+    standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
+    searchResult  <- searchResponderV2.fulltextSearchCountV2(query, project, resourceClass, standoffClass)
+    response      <- renderer.render(searchResult, opts)
+  } yield response
 }
+
 object SearchRestService {
   val layer = ZLayer.derive[SearchRestService]
 }

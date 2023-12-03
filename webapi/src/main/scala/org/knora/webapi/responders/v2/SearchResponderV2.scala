@@ -251,6 +251,10 @@ final case class SearchResponderV2Live(
     limitToStandoffClass: Option[SmartIri]
   ): Task[ResourceCountV2] =
     for {
+      _                    <- ensureIsFulltextSearch(searchValue)
+      searchValue          <- validateSearchString(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       countSparql <- ZIO.attempt(
                        sparql.v2.txt
                          .searchFulltext(
@@ -300,6 +304,10 @@ final case class SearchResponderV2Live(
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
     for {
+      _                    <- ensureIsFulltextSearch(searchValue)
+      searchValue          <- validateSearchString(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       searchSparql <-
         ZIO.attempt(
           sparql.v2.txt
@@ -856,7 +864,7 @@ final case class SearchResponderV2Live(
   ): Task[ResourceCountV2] =
     for {
       searchValue          <- validateSearchString(searchValue)
-      _                    <- ensureIsNotFullTextSearch(searchValue)
+      _                    <- ensureIsFulltextSearch(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
       searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
       countSparql =
@@ -882,7 +890,14 @@ final case class SearchResponderV2Live(
     } else { ZIO.fail(BadRequestException(errMsg)) }
   }
 
-  private def ensureIsNotFullTextSearch(searchStr: String) =
+  private def ensureStandoffClass(standoffClassIri: SmartIri): Task[SmartIri] = {
+    val errMsg = s"Invalid standoff class IRI: $standoffClassIri"
+    if (standoffClassIri.isApiV2ComplexSchema) {
+      iriConverter.asInternalSmartIri(standoffClassIri).orElseFail(BadRequestException(errMsg))
+    } else { ZIO.fail(BadRequestException(errMsg)) }
+  }
+
+  private def ensureIsFulltextSearch(searchStr: String) =
     ZIO
       .fail(BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route"))
       .when(searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname))
@@ -911,7 +926,7 @@ final case class SearchResponderV2Live(
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
     for {
       searchValue          <- validateSearchString(searchValue)
-      _                    <- ensureIsNotFullTextSearch(searchValue)
+      _                    <- ensureIsFulltextSearch(searchValue)
       limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
       searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
       searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
