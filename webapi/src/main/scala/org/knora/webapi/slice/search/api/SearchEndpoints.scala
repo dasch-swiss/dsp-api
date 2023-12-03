@@ -5,28 +5,26 @@
 
 package org.knora.webapi.slice.search.api
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.api.RefinedTypeOps
+import dsp.valueobjects.Iri
+import eu.timepit.refined.api.{Refined, RefinedTypeOps}
 import eu.timepit.refined.numeric.Greater
 import org.apache.pekko.http.scaladsl.server.Route
-import sttp.model.HeaderNames
-import sttp.model.MediaType
-import sttp.tapir.*
-import sttp.tapir.codec.refined.*
-import zio.Task
-import zio.ZLayer
-
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.common.api.ApiV2
-import org.knora.webapi.slice.common.api.BaseEndpoints
-import org.knora.webapi.slice.common.api.HandlerMapper
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
-import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
-import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer.{FormatOptions, RenderedResponse}
+import org.knora.webapi.slice.common.api.{
+  ApiV2,
+  BaseEndpoints,
+  HandlerMapper,
+  KnoraResponseRenderer,
+  SecuredEndpointAndZioHandler,
+  TapirToPekkoInterpreter
+}
+import sttp.model.{HeaderNames, MediaType}
+import sttp.tapir.*
+import sttp.tapir.codec.refined.*
+import zio.{Task, ZLayer}
 
 object SearchEndpointsInputs {
 
@@ -36,10 +34,30 @@ object SearchEndpointsInputs {
     val default: Offset = unsafeFrom(0)
   }
 
+  final case class SimpleIri private (value: String) extends AnyVal
+  object SimpleIri {
+
+    implicit val tapirCodec: Codec[String, SimpleIri, CodecFormat.TextPlain] =
+      Codec.string.mapEither(SimpleIri.from)(_.value)
+
+    def from(value: String): Either[String, SimpleIri] =
+      if (Iri.isIri(value)) { Right(SimpleIri(value)) }
+      else { Left(s"Invalid IRI: $value") }
+
+    def unsafeFrom(value: String): SimpleIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)
+  }
+
   val offset: EndpointInput.Query[Offset] =
     query[Offset]("offset").description("The offset to be used for paging.").default(Offset.default)
-  val limitToProject: EndpointInput.Query[ProjectIri] =
-    query[ProjectIri]("limitToProject").description("The project to limit the search to.")
+
+  val limitToProject: EndpointInput.Query[Option[ProjectIri]] =
+    query[Option[ProjectIri]]("limitToProject").description("The project to limit the search to.")
+
+  val limitToResourceClass: EndpointInput.Query[Option[SimpleIri]] =
+    query[Option[SimpleIri]]("limitToResourceClass").description("The resource class to limit the search to.")
+
+  val limitToStandoffClass: EndpointInput.Query[Option[SimpleIri]] =
+    query[Option[SimpleIri]]("limitToStandoffClass").description("The standoff class to limit the search to.")
 }
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
