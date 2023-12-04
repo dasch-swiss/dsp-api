@@ -20,14 +20,14 @@ object Sha256Hash {
 final case class ChecksumResult(file: Path, checksumMatches: Boolean)
 
 trait FileChecksumService {
-  def verifyChecksumOrig(asset: Asset): Task[Boolean]
-  def verifyChecksumDerivative(asset: Asset): Task[Boolean]
+  def verifyChecksumOrig(asset: AssetRef): Task[Boolean]
+  def verifyChecksumDerivative(asset: AssetRef): Task[Boolean]
   def verifyChecksum(assetInfo: AssetInfo): Task[Chunk[ChecksumResult]]
 }
 object FileChecksumService {
-  def verifyChecksumOrig(asset: Asset): ZIO[FileChecksumService, Throwable, Boolean] =
+  def verifyChecksumOrig(asset: AssetRef): ZIO[FileChecksumService, Throwable, Boolean] =
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksumOrig(asset))
-  def verifyChecksumDerivative(asset: Asset): ZIO[FileChecksumService, Throwable, Boolean] =
+  def verifyChecksumDerivative(asset: AssetRef): ZIO[FileChecksumService, Throwable, Boolean] =
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksumDerivative(asset))
   def verifyChecksum(assetInfo: AssetInfo): ZIO[FileChecksumService, Throwable, Chunk[ChecksumResult]] =
     ZIO.serviceWithZIO[FileChecksumService](_.verifyChecksum(assetInfo))
@@ -50,14 +50,14 @@ object FileChecksumService {
 }
 
 final case class FileChecksumServiceLive(assetInfos: AssetInfoService) extends FileChecksumService {
-  override def verifyChecksumOrig(asset: Asset): Task[Boolean] =
+  override def verifyChecksumOrig(asset: AssetRef): Task[Boolean] =
     verifyChecksum(asset, _.original)
 
-  override def verifyChecksumDerivative(asset: Asset): Task[Boolean] =
+  override def verifyChecksumDerivative(asset: AssetRef): Task[Boolean] =
     verifyChecksum(asset, _.derivative)
 
-  private def verifyChecksum(asset: Asset, checksumAndFile: AssetInfo => FileAndChecksum): Task[Boolean] =
-    assetInfos.findByAsset(asset).map(checksumAndFile).flatMap(verifyChecksum)
+  private def verifyChecksum(assetRef: AssetRef, checksumAndFile: AssetInfo => FileAndChecksum): Task[Boolean] =
+    assetInfos.findByAssetRef(assetRef).map(checksumAndFile).flatMap(verifyChecksum)
 
   private def verifyChecksum(fileAndChecksum: FileAndChecksum): Task[Boolean] =
     FileChecksumService

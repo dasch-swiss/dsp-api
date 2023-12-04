@@ -10,12 +10,12 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
+import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import swiss.dasch.infrastructure.Base62
 import zio.json.JsonCodec
 import zio.nio.file.Path
 import zio.{Random, UIO}
-import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
 
 opaque type AssetId = String Refined MatchesRegex["^[a-zA-Z0-9-_]{4,}$"]
 
@@ -39,22 +39,17 @@ object AssetId {
   given codec: JsonCodec[AssetId] = JsonCodec[String].transformOrFail(AssetId.make, _.toString)
 }
 
-sealed trait Asset {
-  def id: AssetId
-  def belongsToProject: ProjectShortcode
-}
+final case class AssetRef(id: AssetId, belongsToProject: ProjectShortcode)
 
-object Asset {
+object AssetRef {
   def makeNew(project: ProjectShortcode): UIO[AssetRef] = AssetId.makeNew.map(id => AssetRef(id, project))
 }
 
-final case class AssetRef(id: AssetId, belongsToProject: ProjectShortcode) extends Asset {
-  def makeImageAsset(
-    originalFilename: NonEmptyString,
-    original: OriginalFile,
-    derivative: JpxDerivativeFile
-  ): ComplexAsset.ImageAsset =
-    ComplexAsset.ImageAsset(id, belongsToProject, originalFilename, original, derivative)
+sealed trait Asset {
+  def id: AssetId
+  def belongsToProject: ProjectShortcode
+
+  def ref: AssetRef = AssetRef(id, belongsToProject)
 }
 
 sealed trait ComplexAsset extends Asset {
@@ -73,6 +68,13 @@ object ComplexAsset {
     derivative: DerivativeFile
   ) extends ComplexAsset
 
+  def makeImageAsset(
+    assetRef: AssetRef,
+    originalFilename: NonEmptyString,
+    original: OriginalFile,
+    derivative: JpxDerivativeFile
+  ): ComplexAsset.ImageAsset =
+    ComplexAsset.ImageAsset(assetRef.id, assetRef.belongsToProject, originalFilename, original, derivative)
 }
 
 def hasAssetIdInFilename(file: Path): Option[Path] = AssetId.makeFromPath(file).map(_ => file)

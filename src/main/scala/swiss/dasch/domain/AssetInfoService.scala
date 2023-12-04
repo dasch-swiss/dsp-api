@@ -40,7 +40,7 @@ private object AssetInfoFileContent {
 
 final case class FileAndChecksum(file: Path, checksum: Sha256Hash)
 final case class AssetInfo(
-  asset: Asset,
+  asset: AssetRef,
   original: FileAndChecksum,
   originalFilename: NonEmptyString,
   derivative: FileAndChecksum
@@ -48,20 +48,20 @@ final case class AssetInfo(
 
 trait AssetInfoService {
   def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo]
-  def getInfoFilePath(asset: Asset): UIO[Path]
-  def findByAsset(asset: Asset): Task[AssetInfo]
+  def getInfoFilePath(asset: AssetRef): UIO[Path]
+  def findByAssetRef(asset: AssetRef): Task[AssetInfo]
   def findAllInPath(path: Path, shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo]
   def updateAssetInfoForDerivative(derivative: Path): Task[Unit]
   def createAssetInfo(asset: ComplexAsset): Task[Unit]
 }
 object AssetInfoService {
-  def findByAsset(asset: Asset): ZIO[AssetInfoService, Throwable, AssetInfo] =
-    ZIO.serviceWithZIO[AssetInfoService](_.findByAsset(asset))
+  def findByAssetRef(asset: AssetRef): ZIO[AssetInfoService, Throwable, AssetInfo] =
+    ZIO.serviceWithZIO[AssetInfoService](_.findByAssetRef(asset))
   def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): ZIO[AssetInfoService, Throwable, AssetInfo] =
     ZIO.serviceWithZIO[AssetInfoService](_.loadFromFilesystem(infoFile, shortcode))
   def updateAssetInfoForDerivative(derivative: Path): ZIO[AssetInfoService, Throwable, Unit] =
     ZIO.serviceWithZIO[AssetInfoService](_.updateAssetInfoForDerivative(derivative))
-  def getInfoFilePath(asset: Asset): ZIO[AssetInfoService, Nothing, Path] =
+  def getInfoFilePath(asset: AssetRef): ZIO[AssetInfoService, Nothing, Path] =
     ZIO.serviceWithZIO[AssetInfoService](_.getInfoFilePath(asset))
   def createAssetInfo(asset: ComplexAsset): ZIO[AssetInfoService, Throwable, Unit] =
     ZIO.serviceWithZIO[AssetInfoService](_.createAssetInfo(asset))
@@ -78,22 +78,22 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
                    }
     } yield assetInfo
 
-  override def findByAsset(asset: Asset): Task[AssetInfo] =
+  override def findByAssetRef(asset: AssetRef): Task[AssetInfo] =
     getInfoFilePath(asset).flatMap(parseAssetInfoFile(asset, _))
 
-  def getInfoFilePath(asset: Asset): UIO[Path] =
+  def getInfoFilePath(asset: AssetRef): UIO[Path] =
     storageService.getAssetDirectory(asset).map(_ / infoFilename(asset))
 
-  private def infoFilename(asset: Asset): String = infoFilename(asset.id)
-  private def infoFilename(id: AssetId): String  = s"$id.info"
+  private def infoFilename(asset: AssetRef): String = infoFilename(asset.id)
+  private def infoFilename(id: AssetId): String     = s"$id.info"
 
-  private def parseAssetInfoFile(asset: Asset, infoFile: Path): Task[AssetInfo] =
+  private def parseAssetInfoFile(asset: AssetRef, infoFile: Path): Task[AssetInfo] =
     storageService.loadJsonFile[AssetInfoFileContent](infoFile).flatMap(toAssetInfo(_, infoFile.parent.orNull, asset))
 
   private def toAssetInfo(
     raw: AssetInfoFileContent,
     infoFileDirectory: Path,
-    asset: Asset
+    asset: AssetRef
   ): Task[AssetInfo] =
     Validation
       .validateWith(
@@ -136,8 +136,8 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
   } yield ()
 
   override def createAssetInfo(asset: ComplexAsset): Task[Unit] = for {
-    assetDir           <- storageService.getAssetDirectory(asset)
-    infoFile            = assetDir / infoFilename(asset)
+    assetDir           <- storageService.getAssetDirectory(asset.ref)
+    infoFile            = assetDir / infoFilename(asset.ref)
     checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.toPath)
     checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative.toPath)
     content             = AssetInfoFileContent.make(asset, checksumOriginal, checksumDerivative)

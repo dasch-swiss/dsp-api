@@ -37,7 +37,7 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           _        <- SipiClientMock.setOrientation(OrientationValue.Rotate270CW)
           image    <- imageFile
           backup   <- backupFile
-          info     <- AssetInfoService.findByAsset(asset)
+          info     <- AssetInfoService.findByAssetRef(asset)
           infoFile <- AssetInfoService.getInfoFilePath(asset)
           _ <- StorageService.saveJsonFile[AssetInfoFileContent](
                  infoFile,

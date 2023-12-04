@@ -21,9 +21,9 @@ import java.time.{ZoneId, ZoneOffset}
 
 trait StorageService {
   def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path]
-  def getAssetDirectory(asset: Asset): UIO[Path]
+  def getAssetDirectory(asset: AssetRef): UIO[Path]
   def getAssetDirectory(): UIO[Path]
-  def createOriginalFileInAssetDir(file: Path, asset: Asset): IO[IOException, OriginalFile]
+  def createOriginalFileInAssetDir(file: Path, asset: AssetRef): IO[IOException, OriginalFile]
   def getTempDirectory(): UIO[Path]
   def getBulkIngestImportFolder(project: ProjectShortcode): UIO[Path]
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
@@ -40,11 +40,11 @@ object StorageService {
   def maxParallelism(): Int = 10
   def getProjectDirectory(projectShortcode: ProjectShortcode): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getProjectDirectory(projectShortcode))
-  def getAssetDirectory(asset: Asset): RIO[StorageService, Path] =
+  def getAssetDirectory(asset: AssetRef): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory(asset))
   def getAssetDirectory(): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getAssetDirectory())
-  def createOriginalFileInAssetDir(file: Path, asset: Asset): ZIO[StorageService, IOException, OriginalFile] =
+  def createOriginalFileInAssetDir(file: Path, asset: AssetRef): ZIO[StorageService, IOException, OriginalFile] =
     ZIO.serviceWithZIO[StorageService](_.createOriginalFileInAssetDir(file, asset))
   def getTempDirectory(): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getTempDirectory())
@@ -63,7 +63,7 @@ object StorageService {
 
 final case class StorageServiceLive(config: StorageConfig) extends StorageService {
 
-  override def createOriginalFileInAssetDir(file: Path, asset: Asset): IO[IOException, OriginalFile] = for {
+  override def createOriginalFileInAssetDir(file: Path, asset: AssetRef): IO[IOException, OriginalFile] = for {
     _ <- ZIO.logInfo(s"Creating original from $file, $asset")
     _ <- ZIO
            .fail(new FileNotFoundException(s"File $file is not a regular file"))
@@ -85,7 +85,7 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
   override def getProjectDirectory(projectShortcode: ProjectShortcode): UIO[Path] =
     getAssetDirectory().map(_ / projectShortcode.toString)
 
-  override def getAssetDirectory(asset: Asset): UIO[Path] =
+  override def getAssetDirectory(asset: AssetRef): UIO[Path] =
     getProjectDirectory(asset.belongsToProject).map(_ / segments(asset.id))
 
   private def segments(assetId: AssetId): Path = {

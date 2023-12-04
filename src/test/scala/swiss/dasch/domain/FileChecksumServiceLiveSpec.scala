@@ -6,7 +6,7 @@
 package swiss.dasch.domain
 
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.test.SpecConstants.Assets.*
+import swiss.dasch.test.SpecConstants.AssetRefs.*
 import swiss.dasch.test.SpecPaths.pathFromResource
 import zio.test.{ZIOSpecDefault, assertTrue}
 
@@ -30,17 +30,17 @@ object FileChecksumServiceLiveSpec extends ZIOSpecDefault {
     },
     test("should verify the checksums of an asset's original") {
       for {
-        checksumMatches <- FileChecksumService.verifyChecksumOrig(existingAsset)
+        checksumMatches <- FileChecksumService.verifyChecksumOrig(existingAssetRef)
       } yield assertTrue(checksumMatches)
     },
     test("should verify the checksums of an asset's derivative") {
       for {
-        checksumMatches <- FileChecksumService.verifyChecksumDerivative(existingAsset)
+        checksumMatches <- FileChecksumService.verifyChecksumDerivative(existingAssetRef)
       } yield assertTrue(checksumMatches)
     },
     test("should verify the checksums of an asset's derivative and original") {
       for {
-        assetInfo      <- AssetInfoService.findByAsset(existingAsset)
+        assetInfo      <- AssetInfoService.findByAssetRef(existingAssetRef)
         checksumResult <- FileChecksumService.verifyChecksum(assetInfo)
       } yield assertTrue(checksumResult.forall(_.checksumMatches == true))
     }

@@ -6,7 +6,7 @@
 package swiss.dasch.test
 
 import eu.timepit.refined.types.string.NonEmptyString
-import swiss.dasch.domain.{Asset, AssetId, AssetRef, ProjectShortcode, Sha256Hash}
+import swiss.dasch.domain.{AssetId, AssetRef, ProjectShortcode, Sha256Hash}
 import swiss.dasch.test.SpecConstants.Projects.existingProject
 
 object SpecConstants {
@@ -18,8 +18,8 @@ object SpecConstants {
   object AssetIds {
     val existingAsset: AssetId = "FGiLaT4zzuV-CqwbEDFAFeS".toAssetId
   }
-  object Assets {
-    val existingAsset: Asset = AssetRef(AssetIds.existingAsset, existingProject)
+  object AssetRefs {
+    val existingAssetRef: AssetRef = AssetRef(AssetIds.existingAsset, existingProject)
   }
   extension (s: String) {
     def toProjectShortcode: ProjectShortcode = ProjectShortcode
