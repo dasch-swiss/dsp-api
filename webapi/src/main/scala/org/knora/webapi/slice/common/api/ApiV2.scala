@@ -30,7 +30,7 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 object ApiV2 {
 
   /**
-   * The names of the supported Http Headers.
+   * The names of the supported HTTP Headers.
    */
   object Headers {
 
