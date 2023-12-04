@@ -73,13 +73,11 @@ object SearchEndpointsInputs {
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val tags       = List("v2", "search")
-  private val searchBase = "v2" / "searchextended"
-
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
 
   val postGravsearch = baseEndpoints.withUserEndpoint.post
-    .in(searchBase)
+    .in("v2" / "searchextended")
     .in(stringBody.description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
@@ -88,7 +86,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Search for resources using a Gravsearch query.")
 
   val getGravsearch = baseEndpoints.withUserEndpoint.get
-    .in(searchBase / path[String].description(gravsearchDescription))
+    .in("v2" / "searchextended" / path[String].description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
@@ -96,7 +94,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Search for resources using a Gravsearch query.")
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
-    .in(searchBase / "count")
+    .in("v2" / "searchextended" / "count")
     .in(stringBody.description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
@@ -105,7 +103,7 @@ final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Count resources using a Gravsearch query.")
 
   val getGravsearchCount = baseEndpoints.withUserEndpoint.get
-    .in(searchBase / "count" / path[String].description(gravsearchDescription))
+    .in("v2" / "searchextended" / "count" / path[String].description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .out(stringBody)
     .out(header[MediaType](HeaderNames.ContentType))
