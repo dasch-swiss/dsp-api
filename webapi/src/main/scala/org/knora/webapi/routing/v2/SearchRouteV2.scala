@@ -64,7 +64,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   private def getProjectIri(params: Map[String, String]): IO[BadRequestException, Option[ProjectIri]] =
     ZIO
       .fromOption(params.get(LIMIT_TO_PROJECT))
-      .flatMap(iri => ProjectIri.from(iri).toZIO.orElseFail(Some(BadRequestException(s"$iri is not a valid Iri"))))
+      .flatMap(iri => ProjectIri.from(iri).toZIO.orElseFail(Some(BadRequestException(s"$iri is not a valid IRI."))))
       .unsome
 
   /**
