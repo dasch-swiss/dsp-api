@@ -22,7 +22,6 @@ import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.JsonLdRendering
 import org.knora.webapi.MarkupRendering
 import org.knora.webapi.Rendering
-import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 
@@ -121,13 +120,14 @@ object ApiV2 {
       }
 
     // RdfFormat input
-    val defaultRdfFormat: RdfFormat = JsonLD
     private val rdfFormat: EndpointIO.Header[RdfFormat] = header[Option[MediaType]](HeaderNames.Accept)
       .description(
         s"""The RDF format to be used for the request. Valid values are: ${RdfFormat.values}
-           |If not specified or unknown, the fallback RDF format $defaultRdfFormat will be used.""".stripMargin
+           |If not specified or unknown, the fallback RDF format ${RdfFormat.default} will be used.""".stripMargin
       )
-      .mapDecode(s => DecodeResult.Value(s.map(RdfFormat.from).getOrElse(defaultRdfFormat)))(it => Some(it.mediaType))
+      .mapDecode(s => DecodeResult.Value(s.flatMap(RdfFormat.from).getOrElse(RdfFormat.default)))(it =>
+        Some(it.mediaType)
+      )
       .validate(Validator.pass[RdfFormat])
 
     // FormatOptions input
