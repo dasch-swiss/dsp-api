@@ -77,7 +77,7 @@ object ApiV2 {
     val defaultApiV2Schema: ApiV2Schema = ApiV2Complex
     private val apiV2SchemaHeader = header[Option[ApiV2Schema]](Headers.xKnoraAcceptSchemaHeader)
       .description(s"""The ontology schema to be used for the request.
-                      |If not specified, the default schema $defaultApiV2Schema  will be used.""".stripMargin)
+                      |If not specified, the default schema $defaultApiV2Schema will be used.""".stripMargin)
     private val apiV2SchemaQuery = query[Option[ApiV2Schema]](QueryParams.schema)
       .description(s"""The ontology schema to be used for the request.
                       |If not specified, the default schema $defaultApiV2Schema will be used.""".stripMargin)
