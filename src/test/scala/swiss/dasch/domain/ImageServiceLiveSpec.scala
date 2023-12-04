@@ -20,11 +20,13 @@ import zio.nio.file.{Files, Path}
 import zio.test.*
 import zio.test.Assertion.{equalTo, fails, hasMessage, isSubtype}
 
+import DerivativeFile.JpxDerivativeFile
+
 import java.io.IOException
 
 object ImageServiceLiveSpec extends ZIOSpecDefault {
 
-  private val asset      = SimpleAsset("needs-topleft-correction".toAssetId, "0001".toProjectShortcode)
+  private val asset      = AssetRef("needs-topleft-correction".toAssetId, "0001".toProjectShortcode)
   private val imageFile  = StorageService.getAssetDirectory(asset).map(_ / s"${asset.id}.jp2")
   private val backupFile = imageFile.map(image => image.parent.map(_ / s"${image.filename}.bak").orNull)
 
@@ -66,7 +68,7 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
       test("createDerivative should create a jpx file with correct name") {
         for {
           assetId    <- AssetId.makeNew
-          assetDir   <- StorageService.getAssetDirectory(SimpleAsset(assetId, "0001".toProjectShortcode))
+          assetDir   <- StorageService.getAssetDirectory(AssetRef(assetId, "0001".toProjectShortcode))
           _          <- Files.createDirectories(assetDir)
           image       = assetDir / s"$assetId.jp2.orig"
           _          <- Files.createFile(image)
@@ -78,7 +80,7 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
         for {
           _        <- SipiClientMock.dontTranscode()
           assetId  <- AssetId.makeNew
-          assetDir <- StorageService.getAssetDirectory(SimpleAsset(assetId, "0001".toProjectShortcode))
+          assetDir <- StorageService.getAssetDirectory(AssetRef(assetId, "0001".toProjectShortcode))
           _        <- Files.createDirectories(assetDir)
           image     = assetDir / s"$assetId.jp2.orig"
           _        <- Files.createFile(image)

@@ -15,6 +15,8 @@ import zio.nio.file
 import zio.nio.file.{Files, Path}
 import zio.stream.{ZSink, ZStream}
 
+import DerivativeFile.JpxDerivativeFile
+
 import java.io.IOException
 
 import zio.json.interop.refined._

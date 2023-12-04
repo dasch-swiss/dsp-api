@@ -78,8 +78,8 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
           assetDir => awaitTrue(Files.exists(assetDir / s"${asset.id}.info")) *> AssetInfoService.findByAsset(asset)
         }
 
-        val assetJpx    = SimpleAsset("aaaa-a-jpx-without-orig".toAssetId, existingProject)
-        val assetJp2    = SimpleAsset("bbbb-a-jp2-without-orig".toAssetId, existingProject)
+        val assetJpx    = AssetRef("aaaa-a-jpx-without-orig".toAssetId, existingProject)
+        val assetJp2    = AssetRef("bbbb-a-jp2-without-orig".toAssetId, existingProject)
         val testMapping = MappingEntry(s"${assetJpx.id}.jpx", "ORIGINAL.jpg")
         val request     = createOriginalsRequest(existingProject, List(testMapping))
 

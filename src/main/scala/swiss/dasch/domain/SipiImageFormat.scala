@@ -43,3 +43,11 @@ object SipiImageFormat {
   val allExtensions: List[String]                               = all.flatMap(_.allExtensions)
   def fromExtension(extension: String): Option[SipiImageFormat] = all.find(_.acceptsExtension(extension))
 }
+
+object SipiVideoFormat {
+  val allExtensions: List[String] = List()
+}
+
+object SipiOtherFormat {
+  val allExtensions: List[String] = List()
+}

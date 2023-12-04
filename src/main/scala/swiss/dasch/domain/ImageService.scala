@@ -14,6 +14,8 @@ import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.nio.file.{Files, Path}
 import zio.json.interop.refined.*
 
+import DerivativeFile.JpxDerivativeFile
+
 import java.io.IOException
 
 final case class Dimensions(width: Int Refined Positive, height: Int Refined Positive)

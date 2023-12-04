@@ -8,6 +8,8 @@ package swiss.dasch.domain
 import zio.nio.file.Path
 import zio.test.{Gen, ZIOSpecDefault, assertTrue, check}
 
+import DerivativeFile.JpxDerivativeFile
+
 object OriginalAndJpxDerivativeFileSpec extends ZIOSpecDefault {
 
   private val derivativeFileSuite = suite("DerivativeFile")(

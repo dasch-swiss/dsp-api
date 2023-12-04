@@ -5,12 +5,12 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration.IngestConfig
 import zio.{Task, ZIO, ZLayer}
 import zio.nio.file.{Files, Path}
 
 import java.nio.file.StandardOpenOption
+import eu.timepit.refined.types.string.NonEmptyString
 
 trait BulkIngestService {
 
@@ -49,11 +49,11 @@ final case class BulkIngestServiceLive(
       total <- StorageService.findInPath(importDir, FileFilters.isNonHiddenRegularFile).runCount
       sum <- StorageService
                .findInPath(importDir, FileFilters.isImage)
-               .mapZIOPar(config.bulkMaxParallel)(image =>
-                 ingestSingleImage(image, project, mappingFile)
+               .mapZIOPar(config.bulkMaxParallel)(file =>
+                 ingestSingleFile(file, project, mappingFile)
                    .catchNonFatalOrDie(e =>
                      ZIO
-                       .logError(s"Error ingesting image $image: ${e.getMessage}")
+                       .logError(s"Error ingesting image $file: ${e.getMessage}")
                        .as(IngestResult.failed)
                    )
                )
@@ -70,30 +70,47 @@ final case class BulkIngestServiceLive(
       }
     } yield sum
 
-  private def ingestSingleImage(
-    imageToIngest: Path,
+  private def ingestSingleFile(
+    fileToIngest: Path,
     project: ProjectShortcode,
     csv: Path
   ): Task[IngestResult] =
     for {
-      _          <- ZIO.logInfo(s"Ingesting image $imageToIngest")
-      asset      <- Asset.makeNew(project)
-      original   <- storage.createOriginalFileInAssetDir(imageToIngest, asset)
-      derivative <- imageService.createDerivative(original).tapError(_ => Files.delete(original.toPath).ignore)
-      imageToIngestFilename <- ZIO
-                                 .fromEither(NonEmptyString.from(imageToIngest.filename.toString))
-                                 .orElseFail(new IllegalArgumentException("Image filename must not be empty"))
-      imageAsset = asset.makeImageAsset(imageToIngestFilename, original, derivative)
-      _         <- assetInfo.createAssetInfo(imageAsset)
-      _         <- updateMappingCsv(csv, imageToIngest, imageAsset)
-      _         <- Files.delete(imageToIngest)
-      _         <- ZIO.logInfo(s"Finished ingesting image $imageToIngest")
+      _           <- ZIO.logInfo(s"Ingesting file $fileToIngest")
+      simpleAsset <- Asset.makeNew(project)
+      original    <- storage.createOriginalFileInAssetDir(fileToIngest, simpleAsset)
+      asset <- ZIO
+                 .whenCaseZIO(FileTypes.fromPath(fileToIngest)) {
+                   case FileTypes.ImageFileType => handleImageFile(fileToIngest, original, simpleAsset)
+                   case FileTypes.VideoFileType =>
+                     ZIO.fail(new NotImplementedError("Video files are not supported yet."))
+                   case FileTypes.OtherFileType =>
+                     ZIO.fail(new NotImplementedError("Other files are not supported yet."))
+                 }
+                 .someOrFail(new IllegalArgumentException("Unsupported file type."))
+
+      _ <- assetInfo.createAssetInfo(asset)
+      _ <- updateMappingCsv(csv, fileToIngest, asset)
+      _ <- Files.delete(fileToIngest)
+      _ <- ZIO.logInfo(s"Finished ingesting file $fileToIngest")
     } yield IngestResult.success
+
+  private def handleImageFile(
+    imageToIngest: Path,
+    original: OriginalFile,
+    simpleAsset: AssetRef
+  ): Task[ComplexAsset] = for {
+    derivative <- imageService.createDerivative(original).tapError(_ => Files.delete(original.toPath).ignore)
+    imageToIngestFilename <- ZIO
+                               .fromEither(NonEmptyString.from(imageToIngest.filename.toString))
+                               .orElseFail(new IllegalArgumentException("Image filename must not be empty"))
+    imageAsset = simpleAsset.makeImageAsset(imageToIngestFilename, original, derivative)
+  } yield imageAsset
 
   private def updateMappingCsv(
     mappingFile: Path,
     imageToIngest: Path,
-    asset: ImageAsset
+    asset: ComplexAsset
   ) =
     ZIO.logInfo(s"Updating mapping file $mappingFile, $asset") *> {
       for {

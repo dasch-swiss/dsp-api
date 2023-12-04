@@ -23,14 +23,14 @@ final private case class AssetInfoFileContent(
 }
 private object AssetInfoFileContent {
   def make(
-    imageAsset: ImageAsset,
+    asset: ComplexAsset,
     originalChecksum: Sha256Hash,
     derivativeChecksum: Sha256Hash
   ): AssetInfoFileContent =
     AssetInfoFileContent(
-      imageAsset.derivativeFilename,
-      imageAsset.originalInternalFilename,
-      imageAsset.originalFilename.value,
+      asset.derivativeFilename,
+      asset.originalInternalFilename,
+      asset.originalFilename.value,
       originalChecksum.toString,
       derivativeChecksum.toString
     )
@@ -52,7 +52,7 @@ trait AssetInfoService {
   def findByAsset(asset: Asset): Task[AssetInfo]
   def findAllInPath(path: Path, shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo]
   def updateAssetInfoForDerivative(derivative: Path): Task[Unit]
-  def createAssetInfo(asset: ImageAsset): Task[Unit]
+  def createAssetInfo(asset: ComplexAsset): Task[Unit]
 }
 object AssetInfoService {
   def findByAsset(asset: Asset): ZIO[AssetInfoService, Throwable, AssetInfo] =
@@ -63,7 +63,7 @@ object AssetInfoService {
     ZIO.serviceWithZIO[AssetInfoService](_.updateAssetInfoForDerivative(derivative))
   def getInfoFilePath(asset: Asset): ZIO[AssetInfoService, Nothing, Path] =
     ZIO.serviceWithZIO[AssetInfoService](_.getInfoFilePath(asset))
-  def createAssetInfo(asset: ImageAsset): ZIO[AssetInfoService, Throwable, Unit] =
+  def createAssetInfo(asset: ComplexAsset): ZIO[AssetInfoService, Throwable, Unit] =
     ZIO.serviceWithZIO[AssetInfoService](_.createAssetInfo(asset))
 }
 
@@ -71,7 +71,7 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
   override def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo] =
     for {
       content   <- storageService.loadJsonFile[AssetInfoFileContent](infoFile)
-      assetMaybe = AssetId.makeFromPath(Path(content.internalFilename)).map(id => SimpleAsset(id, shortcode))
+      assetMaybe = AssetId.makeFromPath(Path(content.internalFilename)).map(id => AssetRef(id, shortcode))
       assetInfo <- assetMaybe match {
                      case Some(asset) => toAssetInfo(content, infoFile.parent.orNull, asset)
                      case None        => ZIO.fail(IllegalArgumentException(s"Unable to parse asset id from $infoFile"))
@@ -135,7 +135,7 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
     _           <- storageService.saveJsonFile(infoFile, content.withDerivativeChecksum(newChecksum))
   } yield ()
 
-  override def createAssetInfo(asset: ImageAsset): Task[Unit] = for {
+  override def createAssetInfo(asset: ComplexAsset): Task[Unit] = for {
     assetDir           <- storageService.getAssetDirectory(asset)
     infoFile            = assetDir / infoFilename(asset)
     checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.toPath)
