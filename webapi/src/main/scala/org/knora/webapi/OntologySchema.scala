@@ -51,6 +51,9 @@ case object ApiV2Complex extends ApiV2Schema {
 }
 
 object ApiV2Schema {
+
+  val default: ApiV2Schema = ApiV2Complex
+
   def from(str: String): Either[String, ApiV2Schema] = str.toLowerCase match {
     case ApiV2Simple.name  => Right(ApiV2Simple)
     case ApiV2Complex.name => Right(ApiV2Complex)

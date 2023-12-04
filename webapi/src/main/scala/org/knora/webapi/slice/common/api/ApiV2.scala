@@ -18,7 +18,6 @@ import sttp.tapir.header
 import sttp.tapir.query
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.JsonLdRendering
 import org.knora.webapi.MarkupRendering
@@ -74,20 +73,19 @@ object ApiV2 {
     import Codecs.{apiV2SchemaListCodec, jsonLdRenderingListCodec, markupRenderingListCode}
 
     // ApiV2Schema inputs
-    val defaultApiV2Schema: ApiV2Schema = ApiV2Complex
     private val apiV2SchemaHeader = header[Option[ApiV2Schema]](Headers.xKnoraAcceptSchemaHeader)
       .description(s"""The ontology schema to be used for the request.
-                      |If not specified, the default schema $defaultApiV2Schema will be used.""".stripMargin)
+                      |If not specified, the default schema ${ApiV2Schema.default} will be used.""".stripMargin)
     private val apiV2SchemaQuery = query[Option[ApiV2Schema]](QueryParams.schema)
       .description(s"""The ontology schema to be used for the request.
-                      |If not specified, the default schema $defaultApiV2Schema will be used.""".stripMargin)
+                      |If not specified, the default schema ${ApiV2Schema.default} will be used.""".stripMargin)
     private val apiV2Schema: EndpointInput[ApiV2Schema] =
       apiV2SchemaHeader
         .and(apiV2SchemaQuery)
         .map(_ match {
           case (Some(fromHeader), _) => fromHeader
           case (_, Some(fromQuery))  => fromQuery
-          case _                     => defaultApiV2Schema
+          case _                     => ApiV2Schema.default
         })(s => (Some(s), Some(s)))
 
     // MarkupRendering inputs
