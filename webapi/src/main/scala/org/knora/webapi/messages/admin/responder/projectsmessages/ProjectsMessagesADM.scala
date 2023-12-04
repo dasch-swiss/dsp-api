@@ -366,11 +366,9 @@ object ProjectIdentifierADM {
   object IriIdentifier {
 
     def from(projectIri: ProjectIri): IriIdentifier = IriIdentifier(projectIri)
+
     def unsafeFrom(projectIri: String): IriIdentifier =
-      fromString(projectIri).fold(
-        err => throw new IllegalArgumentException(s"Invalid project IRI: $projectIri: ${err.head.msg}"),
-        identity
-      )
+      fromString(projectIri).fold(err => throw err.head, identity)
 
     def fromString(value: String): Validation[ValidationException, IriIdentifier] =
       ProjectIri.from(value).map(IriIdentifier(_))

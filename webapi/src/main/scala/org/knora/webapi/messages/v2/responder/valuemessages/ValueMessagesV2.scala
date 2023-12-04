@@ -70,7 +70,7 @@ case class CreateValueResponseV2(
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -113,7 +113,7 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
       throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
@@ -380,7 +380,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1002,7 +1002,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue
 
   /**
@@ -1135,7 +1135,7 @@ case class DateValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -1388,7 +1388,7 @@ case class TextValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -1714,7 +1714,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple => JsonLDInt(valueHasInteger)
@@ -1790,7 +1790,7 @@ case class DecimalValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val decimalValueAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
       value = valueHasDecimal.toString,
@@ -1875,7 +1875,7 @@ case class BooleanValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple => JsonLDBoolean(valueHasBoolean)
@@ -1942,7 +1942,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -2027,7 +2027,7 @@ case class IntervalValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -2136,7 +2136,7 @@ case class TimeValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -2232,7 +2232,7 @@ case class HierarchicalListValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -2325,7 +2325,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -2403,7 +2403,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val uriAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
       value = valueHasUri,
@@ -2493,7 +2493,7 @@ case class GeonameValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple =>
@@ -2652,7 +2652,7 @@ case class StillImageFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val fileUrl: String = makeFileUrl(projectADM, appConfig.sipi.externalBaseUrl)
 
@@ -2747,7 +2747,7 @@ case class DocumentFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -2809,7 +2809,7 @@ case class ArchiveFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -2903,7 +2903,7 @@ case class TextFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -2974,7 +2974,7 @@ case class AudioFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -3046,7 +3046,7 @@ case class MovingImageFileValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = {
     val fileUrl: String =
       s"${appConfig.sipi.externalBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
@@ -3141,7 +3141,7 @@ case class LinkValueContentV2(
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue =
     targetSchema match {
       case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
@@ -3249,7 +3249,7 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
     targetSchema: ApiV2Schema,
     projectADM: ProjectADM,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDValue = JsonLDObject(Map(OntologyConstants.KnoraBase.DeletedValue -> JsonLDString("DeletedValue")))
 
   override def unescape: ValueContentV2 =

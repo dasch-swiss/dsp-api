@@ -69,7 +69,7 @@ object FullTextMainQueryGenerator {
     resourceIris: Set[IRI],
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): ConstructQuery = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

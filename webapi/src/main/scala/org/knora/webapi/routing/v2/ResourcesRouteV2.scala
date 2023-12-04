@@ -32,6 +32,7 @@ import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.common.api.ApiV2.Headers.xKnoraAcceptProject
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
@@ -162,7 +163,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
       val getProjectIri = RouteUtilV2
         .getProjectIri(requestContext)
         .some
-        .orElseFail(BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
+        .orElseFail(BadRequestException(s"This route requires the request header $xKnoraAcceptProject"))
 
       val targetSchemaTask = RouteUtilV2.getOntologySchema(requestContext)
       val response = for {
@@ -171,7 +172,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
         projectIri           <- getProjectIri
         page                 <- getPage
         targetSchema <- targetSchemaTask.zip(RouteUtilV2.getSchemaOptions(requestContext)).map {
-                          case (schema, options) => SchemaAndOptions(schema, options)
+                          case (schema, options) => SchemaRendering(schema, options)
                         }
         requestingUser <- Authenticator.getUserADM(requestContext)
         response <- SearchResponderV2.searchResourcesByProjectAndClassV2(

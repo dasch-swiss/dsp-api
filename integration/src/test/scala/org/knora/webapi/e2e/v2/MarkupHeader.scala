@@ -9,18 +9,16 @@ import org.apache.pekko
 
 import scala.util.Try
 
-import org.knora.webapi.routing.RouteUtilV2
-
 import pekko.http.scaladsl.model.headers.ModeledCustomHeader
 import pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
 
 /**
- * A custom Pekko HTTP header representing [[RouteUtilV2.MARKUP_HEADER]], which a client can send to specify
+ * A custom Pekko HTTP header representing "x-knora-accept-markup", which a client can send to specify
  * how text markup should be returned in an API response.
  *
  * The definition follows [[https://doc.pekko.io/docs/pekko-http/current/common/http-model.html#custom-headers]].
  */
-final class MarkupHeader(token: String) extends ModeledCustomHeader[MarkupHeader] {
+final class MarkupHeader private (token: String) extends ModeledCustomHeader[MarkupHeader] {
   override def renderInRequests             = true
   override def renderInResponses            = true
   override val companion: MarkupHeader.type = MarkupHeader
@@ -28,6 +26,8 @@ final class MarkupHeader(token: String) extends ModeledCustomHeader[MarkupHeader
 }
 
 object MarkupHeader extends ModeledCustomHeaderCompanion[MarkupHeader] {
-  override val name: String         = RouteUtilV2.MARKUP_HEADER
+  override val name: String         = "x-knora-accept-markup"
   override def parse(value: String) = Try(new MarkupHeader(value))
+
+  val standoff: MarkupHeader = new MarkupHeader("standoff")
 }
