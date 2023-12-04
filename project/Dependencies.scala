@@ -22,7 +22,7 @@ object Dependencies {
   val JenaVersion       = "4.10.0"
 
   val ZioConfigVersion            = "3.0.7"
-  val ZioLoggingVersion           = "2.1.15"
+  val ZioLoggingVersion           = "2.1.16"
   val ZioNioVersion               = "2.0.2"
   val ZioMetricsConnectorsVersion = "2.2.1"
   val ZioPreludeVersion           = "1.0.0-RC21"
@@ -101,7 +101,7 @@ object Dependencies {
   val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "5.0.1"  // Scala 3 compatible
-  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.2"
+  val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.3"
   val xmlunitCore    = "org.xmlunit"       % "xmlunit-core"     % "2.9.1"
 
   // test
@@ -115,7 +115,7 @@ object Dependencies {
   //  A needed class was not found. This could be due to an error in your runpath.Missing class: scoverage / Invoker$
   //  java.lang.NoClassDefFoundError: scoverage / Invoker$
   val scoverage      = "org.scoverage"     %% "scalac-scoverage-runtime" % "2.0.11"
-  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.1"
+  val testcontainers = "org.testcontainers" % "testcontainers"           % "1.19.3"
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
 
   // found/added by the plugin but deleted anyway
@@ -129,7 +129,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.0"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.3"
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
