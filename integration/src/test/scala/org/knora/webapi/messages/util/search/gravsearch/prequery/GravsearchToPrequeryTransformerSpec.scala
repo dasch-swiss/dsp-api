@@ -43,12 +43,14 @@ class GravsearchToPrequeryTransformerSpec extends CoreSpec {
       typeInspectionResult <- inspectionRunner.flatMap(_.inspectTypes(whereClause, anythingAdminUser))
       _                    <- GravsearchQueryChecker.checkConstructClause(constructClause, typeInspectionResult)
       querySchema          <- ZIO.fromOption(querySchemaMaybe).orElseFail(AssertionException(s"WhereClause has no querySchema"))
-      transformer = new GravsearchToPrequeryTransformer(
-                      constructClause = constructClause,
-                      typeInspectionResult = typeInspectionResult,
-                      querySchema = querySchema,
-                      appConfig = appConfig
-                    )
+      transformer <- ZIO.attempt(
+                       new GravsearchToPrequeryTransformer(
+                         constructClause = constructClause,
+                         typeInspectionResult = typeInspectionResult,
+                         querySchema = querySchema,
+                         appConfig = appConfig
+                       )
+                     )
       preQuery <-
         ZIO.serviceWithZIO[QueryTraverser](
           _.transformConstructToSelect(constructQuery.copy(whereClause = sanitizedWhereClause), transformer)

@@ -44,9 +44,4 @@ object TestDataFactory {
     IriIdentifier
       .fromString(iri)
       .getOrElse(throw new IllegalArgumentException(s"Invalid IriIdentifier $iri."))
-
-  def projectIri(iri: String): ProjectIri =
-    ProjectIri
-      .from(iri)
-      .getOrElse(throw new IllegalArgumentException(s"Invalid ProjectIri $iri."))
 }

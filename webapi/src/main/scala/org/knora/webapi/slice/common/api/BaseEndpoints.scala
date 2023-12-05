@@ -7,6 +7,7 @@ package org.knora.webapi.slice.common.api
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
+import sttp.tapir.Endpoint
 import sttp.tapir.EndpointOutput
 import sttp.tapir.auth
 import sttp.tapir.cookie
@@ -26,6 +27,7 @@ import dsp.errors.*
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
@@ -37,7 +39,8 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
       oneOfVariant[NotFoundException](statusCode(StatusCode.NotFound).and(jsonBody[NotFoundException])),
       oneOfVariant[BadRequestException](statusCode(StatusCode.BadRequest).and(jsonBody[BadRequestException])),
       oneOfVariant[ValidationException](statusCode(StatusCode.BadRequest).and(jsonBody[ValidationException])),
-      oneOfVariant[DuplicateValueException](statusCode(StatusCode.BadRequest).and(jsonBody[DuplicateValueException]))
+      oneOfVariant[DuplicateValueException](statusCode(StatusCode.BadRequest).and(jsonBody[DuplicateValueException])),
+      oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException]))
     )
 
   private val secureDefaultErrorOutputs: EndpointOutput.OneOf[RequestRejectedException, RequestRejectedException] =
@@ -47,6 +50,7 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
       oneOfVariant[BadRequestException](statusCode(StatusCode.BadRequest).and(jsonBody[BadRequestException])),
       oneOfVariant[ValidationException](statusCode(StatusCode.BadRequest).and(jsonBody[ValidationException])),
       oneOfVariant[DuplicateValueException](statusCode(StatusCode.BadRequest).and(jsonBody[DuplicateValueException])),
+      oneOfVariant[GravsearchException](statusCode(StatusCode.BadRequest).and(jsonBody[GravsearchException])),
       // plus security
       oneOfVariant[BadCredentialsException](statusCode(StatusCode.Unauthorized).and(jsonBody[BadCredentialsException])),
       oneOfVariant[ForbiddenException](statusCode(StatusCode.Forbidden).and(jsonBody[ForbiddenException]))
@@ -54,17 +58,28 @@ final case class BaseEndpoints(authenticator: Authenticator, implicit val r: zio
 
   val publicEndpoint = endpoint.errorOut(defaultErrorOutputs)
 
-  val securedEndpoint = endpoint
-    .errorOut(secureDefaultErrorOutputs)
-    .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
-    .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
-    .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
-    .serverSecurityLogic {
-      case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
-      case (_, Some(cookie), _)   => authenticateJwt(cookie)
-      case (_, _, Some(basic))    => authenticateBasic(basic)
-      case _                      => Future.successful(Left(BadCredentialsException("No credentials provided.")))
-    }
+  private val endpointWithBearerCookieBasicAuthOptional
+    : Endpoint[(Option[String], Option[String], Option[UsernamePassword]), Unit, RequestRejectedException, Unit, Any] =
+    endpoint
+      .errorOut(secureDefaultErrorOutputs)
+      .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+      .securityIn(cookie[Option[String]](authenticator.calculateCookieName()))
+      .securityIn(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
+
+  val securedEndpoint = endpointWithBearerCookieBasicAuthOptional.serverSecurityLogic {
+    case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
+    case (_, Some(cookie), _)   => authenticateJwt(cookie)
+    case (_, _, Some(basic))    => authenticateBasic(basic)
+    case _                      => Future.successful(Left(BadCredentialsException("No credentials provided.")))
+  }
+
+  val withUserEndpoint = endpointWithBearerCookieBasicAuthOptional.serverSecurityLogic {
+    case (Some(jwtToken), _, _) => authenticateJwt(jwtToken)
+    case (_, Some(cookie), _)   => authenticateJwt(cookie)
+    case (_, _, Some(basic))    => authenticateBasic(basic)
+
+    case _ => Future.successful(Right(AnonymousUser))
+  }
 
   private def authenticateJwt(jwtToken: String): Future[Either[RequestRejectedException, UserADM]] =
     UnsafeZioRun.runToFuture(

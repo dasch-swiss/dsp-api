@@ -14,7 +14,7 @@ import java.util.UUID
 
 import dsp.errors.*
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -1974,8 +1974,9 @@ final case class ValuesResponderV2Live(
           .toString()
 
       // Run the query.
-      query          <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <- searchResponderV2.gravsearchV2(query, apiV2SchemaWithOption(MarkupAsXml), requestingUser)
+      query <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQuery))
+      searchResponse <-
+        searchResponderV2.gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
     } yield searchResponse.toResource(resourceIri)
 
   /**

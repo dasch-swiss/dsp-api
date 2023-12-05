@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.*
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.RouteResult
 import zio.*
 import zio.prelude.Validation
 
@@ -13,7 +15,6 @@ import scala.concurrent.Future
 import scala.util.control.Exception.catching
 
 import dsp.errors.BadRequestException
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -23,151 +24,70 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
+import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
-import pekko.http.scaladsl.model.*
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.RouteResult
+import ApiV2.Headers.xKnoraAcceptMarkup
+import ApiV2.Headers.xKnoraAcceptProject
+import ApiV2.Headers.xKnoraAcceptSchemaHeader
+import ApiV2.Headers.xKnoraJsonLdRendering
+import ApiV2.QueryParams
+import ApiV2.QueryParams.schema
 
 /**
  * Handles message formatting, content negotiation, and simple interactions with responders, on behalf of Knora routes.
  */
 object RouteUtilV2 {
 
-  /**
-   * The name of the HTTP header in which an ontology schema can be requested.
-   */
-  val SCHEMA_HEADER: String = "x-knora-accept-schema"
-
-  /**
-   * The name of the URL parameter in which an ontology schema can be requested.
-   */
-  val SCHEMA_PARAM: String = "schema"
-
-  /**
-   * The name of the complex schema.
-   */
-  val SIMPLE_SCHEMA_NAME: String = "simple"
-
-  /**
-   * The name of the simple schema.
-   */
-  private val COMPLEX_SCHEMA_NAME: String = "complex"
-
-  /**
-   * The name of the HTTP header in which results from a project can be requested.
-   */
-  val PROJECT_HEADER: String = "x-knora-accept-project"
-
-  /**
-   * The name of the URL parameter that can be used to specify how markup should be returned
-   * with text values.
-   */
-  private val MARKUP_PARAM: String = "markup"
-
-  /**
-   * The name of the HTTP header that can be used to specify how markup should be returned with
-   * text values.
-   */
-  val MARKUP_HEADER: String = "x-knora-accept-markup"
-
-  /**
-   * Indicates that standoff markup should be returned as XML with text values.
-   */
-  private val MARKUP_XML: String = "xml"
-
-  /**
-   * Indicates that markup should not be returned with text values, because it will be requested
-   * separately as standoff.
-   */
-  val MARKUP_STANDOFF: String = "standoff"
-
-  /**
-   * The name of the HTTP header that can be used to request hierarchical or flat JSON-LD.
-   */
-  private val JSON_LD_RENDERING_HEADER: String = "x-knora-json-ld-rendering"
-
-  /**
-   * Indicates that flat JSON-LD should be returned, i.e. objects with IRIs should be referenced by IRI
-   * rather than nested. Blank nodes will still be nested in any case.
-   */
-  private val JSON_LD_RENDERING_FLAT: String = "flat"
-
-  /**
-   * Indicates that hierarchical JSON-LD should be returned, i.e. objects with IRIs should be nested when
-   * possible, rather than referenced by IRI.
-   */
-  private val JSON_LD_RENDERING_HIERARCHICAL: String = "hierarchical"
-
   def getStringQueryParam(ctx: RequestContext, key: String): Option[String] = getQueryParamsMap(ctx).get(key)
   private def getQueryParamsMap(ctx: RequestContext): Map[String, String]   = ctx.request.uri.query().toMap
 
   /**
    * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
-   * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
+   * either in the HTTP header "x-knora-accept-schema-header" or in the URL parameter "schema".
    * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
    *
    * @param ctx the pekko-http [[RequestContext]].
    * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
    */
   def getOntologySchema(ctx: RequestContext): IO[BadRequestException, ApiV2Schema] = {
-    def nameToSchema(schemaName: String): IO[BadRequestException, ApiV2Schema] =
-      schemaName match {
-        case SIMPLE_SCHEMA_NAME  => ZIO.succeed(ApiV2Simple)
-        case COMPLEX_SCHEMA_NAME => ZIO.succeed(ApiV2Complex)
-        case _                   => ZIO.fail(BadRequestException(s"Unrecognised ontology schema name: $schemaName"))
-      }
-    def fromQueryParams = ctx.request.uri.query().get(SCHEMA_PARAM).map(nameToSchema)
-    def fromHeaders     = ctx.request.headers.find(_.lowercaseName == SCHEMA_HEADER).map(h => nameToSchema(h.value))
-    fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2Complex))
+    def stringToSchema(str: String): IO[BadRequestException, ApiV2Schema] =
+      ZIO.fromEither(ApiV2Schema.from(str)).mapError(BadRequestException(_))
+    def fromQueryParams: Option[IO[BadRequestException, ApiV2Schema]] =
+      ctx.request.uri.query().get(schema).map(stringToSchema)
+    def fromHeaders: Option[IO[BadRequestException, ApiV2Schema]] =
+      ctx.request.headers.find(_.lowercaseName == xKnoraAcceptSchemaHeader).map(h => stringToSchema(h.value))
+    fromQueryParams.orElse(fromHeaders).getOrElse(ZIO.succeed(ApiV2Schema.default))
   }
 
   /**
    * Gets the type of standoff rendering that should be used when returning text with standoff.
-   * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
-   * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
-   * default of [[MarkupAsXml]] is returned.
+   * The name of the standoff rendering can be specified either as HTTP header or query parameter.
    *
-   * @param requestContext the pekko-http [[RequestContext]].
-   * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
-   *         in the request.
+   * @param ctx the pekko-http [[RequestContext]].
+   * @return the optional rendering that was specified in the request.
    */
-  private def getStandoffRendering(
-    requestContext: RequestContext
-  ): Validation[BadRequestException, Option[MarkupRendering]] = {
-    def nameToStandoffRendering(standoffRenderingName: String): Validation[BadRequestException, MarkupRendering] =
-      standoffRenderingName match {
-        case MARKUP_XML      => Validation.succeed(MarkupAsXml)
-        case MARKUP_STANDOFF => Validation.succeed(MarkupAsStandoff)
-        case _               => Validation.fail(BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName"))
-      }
-
-    val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-    params.get(MARKUP_PARAM) match {
-      case Some(schemaParam) => nameToStandoffRendering(schemaParam).map(Some(_))
-
-      case None =>
-        requestContext.request.headers
-          .find(_.lowercaseName == MARKUP_HEADER)
-          .map(_.value)
-          .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
-            nameToStandoffRendering(_).map(Some(_))
-          )
-    }
+  private def getStandoffRendering(ctx: RequestContext): Validation[BadRequestException, Option[MarkupRendering]] = {
+    def toMarkupRendering(str: String) = MarkupRendering.from(str).left.map(BadRequestException(_)).map(Some(_))
+    def fromQueryParam                 = getStringQueryParam(ctx, QueryParams.markup)
+    def fromHeader                     = firstHeaderValue(ctx, xKnoraAcceptMarkup)
+    fromQueryParam
+      .orElse(fromHeader)
+      .map(toMarkupRendering)
+      .fold[Validation[BadRequestException, Option[MarkupRendering]]](Validation.succeed(None))(
+        Validation.fromEither(_)
+      )
   }
 
-  private def getJsonLDRendering(
-    requestContext: RequestContext
-  ): Validation[BadRequestException, Option[JsonLDRendering]] = {
-    val header: Option[String] =
-      requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map(_.value)
-    header.fold[Validation[BadRequestException, Option[JsonLDRendering]]](Validation.succeed(None)) {
-      case JSON_LD_RENDERING_FLAT         => Validation.succeed(Some(FlatJsonLD))
-      case JSON_LD_RENDERING_HIERARCHICAL => Validation.succeed(Some(HierarchicalJsonLD))
-      case header                         => Validation.fail(BadRequestException(s"Unrecognised JSON-LD rendering: $header"))
-    }
-  }
+  private def firstHeaderValue(ctx: RequestContext, headerName: String): Option[String] =
+    ctx.request.headers.find(_.lowercaseName == headerName).map(_.value)
+
+  private def getJsonLDRendering(ctx: RequestContext): Validation[BadRequestException, Option[JsonLdRendering]] =
+    firstHeaderValue(ctx, xKnoraJsonLdRendering)
+      .map(JsonLdRendering.from(_).left.map(BadRequestException(_)).map(Some(_)))
+      .fold[Validation[BadRequestException, Option[JsonLdRendering]]](Validation.succeed(None))(
+        Validation.fromEither
+      )
 
   /**
    * Gets the schema options submitted in the request.
@@ -175,7 +95,7 @@ object RouteUtilV2 {
    * @param requestContext the request context.
    * @return the set of schema options submitted in the request, including default options.
    */
-  def getSchemaOptions(requestContext: RequestContext): IO[BadRequestException, Set[SchemaOption]] =
+  def getSchemaOptions(requestContext: RequestContext): IO[BadRequestException, Set[Rendering]] =
     Validation
       .validateWith(
         getStandoffRendering(requestContext),
@@ -191,50 +111,14 @@ object RouteUtilV2 {
    *         Fails with a [[BadRequestException]] if the project IRI is invalid.
    */
   def getProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, Option[SmartIri]] = {
-    val maybeProjectIriStr = requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map(_.value())
+    val maybeProjectIriStr =
+      requestContext.request.headers.find(_.lowercaseName == xKnoraAcceptProject).map(_.value())
     ZIO.foreach(maybeProjectIriStr)(iri =>
       IriConverter
         .asSmartIri(iri)
-        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $PROJECT_HEADER"))
+        .orElseFail(BadRequestException(s"Invalid project IRI: $iri in request header $xKnoraAcceptSchemaHeader"))
     )
   }
-
-  /**
-   * Gets the required project IRI specified in a Knora-specific HTTP header [[PROJECT_HEADER]].
-   *
-   * @param requestContext The pekko-http [[RequestContext]].
-   * @return The  [[SmartIri]] of the project provided in the header.
-   *         Fails with a [[BadRequestException]] if the project IRI is invalid.
-   *         Fails with a [[BadRequestException]] if the project header is missing.
-   */
-  def getRequiredProjectIri(requestContext: RequestContext): ZIO[IriConverter, BadRequestException, SmartIri] =
-    RouteUtilV2
-      .getProjectIri(requestContext)
-      .some
-      .orElseFail(BadRequestException(s"This route requires the request header $PROJECT_HEADER"))
-
-  /**
-   * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF.
-   *
-   * @param requestMessageF     A [[Future]] containing a [[KnoraRequestV2]] message that should be evaluated.
-   * @param requestContext      The pekko-http [[RequestContext]].
-   * @param targetSchema        The API schema that should be used in the response, default is [[ApiV2Complex]].
-   * @param schemaOptionsOption The schema options that should be used when processing the request.
-   *                            Uses RouteUtilV2.getSchemaOptions if not present.
-   * @return a [[Future]] containing a [[RouteResult]].
-   */
-  def runRdfRouteF(
-    requestMessageF: Future[KnoraRequestV2],
-    requestContext: RequestContext,
-    targetSchema: OntologySchema = ApiV2Complex,
-    schemaOptionsOption: Option[Set[SchemaOption]] = None
-  )(implicit runtime: Runtime[MessageRelay & AppConfig]): Future[RouteResult] =
-    runRdfRouteZ(
-      ZIO.fromFuture(_ => requestMessageF),
-      requestContext,
-      ZIO.succeed(targetSchema),
-      ZIO.succeed(schemaOptionsOption)
-    )
 
   /**
    * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotiation.
@@ -250,7 +134,7 @@ object RouteUtilV2 {
     requestZio: ZIO[R, Throwable, KnoraRequestV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none
   )(implicit runtime: Runtime[R & MessageRelay & AppConfig]): Future[RouteResult] = {
     val responseZio = requestZio.flatMap(request => MessageRelay.ask[KnoraResponseV2](request))
     completeResponse(responseZio, requestContext, targetSchemaTask, schemaOptionsOption)
@@ -277,7 +161,7 @@ object RouteUtilV2 {
     responseTask: ZIO[R, Throwable, KnoraResponseV2],
     requestContext: RequestContext,
     targetSchemaTask: ZIO[R, Throwable, OntologySchema] = ZIO.succeed(ApiV2Complex),
-    schemaOptionsOption: ZIO[R, Throwable, Option[Set[SchemaOption]]] = ZIO.none
+    schemaOptionsOption: ZIO[R, Throwable, Option[Set[Rendering]]] = ZIO.none
   )(implicit runtime: Runtime[R & AppConfig]): Future[RouteResult] =
     UnsafeZioRun.runToFuture(for {
       targetSchema      <- targetSchemaTask
