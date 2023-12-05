@@ -51,7 +51,7 @@ object Dependencies {
   // zio-test and friends
   val zioTest    = "dev.zio" %% "zio-test"     % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
-  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC11"
+  val zioMock    = "dev.zio" %% "zio-mock"     % "1.0.0-RC12"
 
   // pekko
   val pekkoActor         = "org.apache.pekko" %% "pekko-actor"           % PekkoActorVersion
@@ -98,7 +98,7 @@ object Dependencies {
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.8"
   val rdf4jShacl     = "org.eclipse.rdf4j" % "rdf4j-shacl"      % "4.3.8"
-  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.3"
+  val saxonHE        = "net.sf.saxon"      % "Saxon-HE"         % "12.4"
   val scalaGraph     = "org.scala-graph"  %% "graph-core"       % "1.13.6" // Scala 3 incompatible
   val scallop        = "org.rogach"       %% "scallop"          % "5.0.1"  // Scala 3 compatible
   val titaniumJSONLD = "com.apicatalog"    % "titanium-json-ld" % "1.3.3"
