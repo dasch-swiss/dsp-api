@@ -26,6 +26,7 @@ trait StorageService {
   def createOriginalFileInAssetDir(file: Path, asset: AssetRef): IO[IOException, OriginalFile]
   def getTempDirectory(): UIO[Path]
   def getBulkIngestImportFolder(project: ProjectShortcode): UIO[Path]
+  def createBulkIngestMappingFile(project: ProjectShortcode): Task[Path]
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit]
@@ -50,6 +51,8 @@ object StorageService {
     ZIO.serviceWithZIO[StorageService](_.getTempDirectory())
   def getBulkIngestImportFolder(project: ProjectShortcode): RIO[StorageService, Path] =
     ZIO.serviceWithZIO[StorageService](_.getBulkIngestImportFolder(project))
+  def createBulkIngestMappingFile(project: ProjectShortcode): ZIO[StorageService, Throwable, Path] =
+    ZIO.serviceWithZIO[StorageService](_.createBulkIngestMappingFile(project))
   def createTempDirectoryScoped(
     directoryName: String,
     prefix: Option[String] = None
@@ -78,6 +81,13 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
 
   override def getBulkIngestImportFolder(project: ProjectShortcode): UIO[Path] =
     getTempDirectory().map(_ / "import" / project.toString)
+
+  override def createBulkIngestMappingFile(project: ProjectShortcode): Task[Path] = for {
+    mappingDir <- getBulkIngestImportFolder(project).map(_.parent.head)
+    mappingFile = mappingDir / s"mapping-$project.csv"
+    _ <- (Files.createFile(mappingFile) *> Files.writeLines(mappingFile, List("original,derivative")))
+           .unlessZIO(Files.exists(mappingFile))
+  } yield mappingFile
 
   override def getAssetDirectory(): UIO[Path] =
     ZIO.succeed(config.assetPath)
