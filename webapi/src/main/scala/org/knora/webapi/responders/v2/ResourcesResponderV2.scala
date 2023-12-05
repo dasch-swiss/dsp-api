@@ -15,7 +15,7 @@ import scala.concurrent.Future
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
-import org.knora.webapi.SchemaAndOptions.apiV2SchemaWithOption
+import org.knora.webapi.SchemaRendering.apiV2SchemaWithOption
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageHandler
@@ -1419,7 +1419,7 @@ final case class ResourcesResponderV2Live(
     withDeleted: Boolean = true,
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption],
+    schemaOptions: Set[Rendering],
     requestingUser: UserADM
   ): Task[ReadResourcesSequenceV2] = {
     // eliminate duplicate Iris
@@ -1594,7 +1594,7 @@ final case class ResourcesResponderV2Live(
       resources <- getResourcesV2(
                      resourceIris = Vector(gravsearchTemplateIri),
                      targetSchema = ApiV2Complex,
-                     schemaOptions = Set(MarkupAsStandoff),
+                     schemaOptions = Set(MarkupRendering.Standoff),
                      requestingUser = requestingUser
                    )
 
@@ -1759,7 +1759,7 @@ final case class ResourcesResponderV2Live(
                        .mapAttempt(GravsearchParser.parseQuery)
 
             resource <- searchResponderV2
-                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupAsXml), requestingUser)
+                          .gravsearchV2(query, apiV2SchemaWithOption(MarkupRendering.Xml), requestingUser)
                           .mapAttempt(_.toResource(resourceIri))
           } yield resource
 
@@ -2272,7 +2272,7 @@ final case class ResourcesResponderV2Live(
       parsedGravsearchQuery <- ZIO.succeed(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
       searchResponse <- searchResponderV2.gravsearchV2(
                           parsedGravsearchQuery,
-                          apiV2SchemaWithOption(MarkupAsStandoff),
+                          apiV2SchemaWithOption(MarkupRendering.Standoff),
                           request.requestingUser
                         )
 
@@ -2530,7 +2530,7 @@ final case class ResourcesResponderV2Live(
                                          versionDate = Some(versionHist.versionDate),
                                          showDeletedValues = true,
                                          targetSchema = ApiV2Complex,
-                                         schemaOptions = Set.empty[SchemaOption],
+                                         schemaOptions = Set.empty[Rendering],
                                          requestingUser = requestingUser
                                        )
       resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head

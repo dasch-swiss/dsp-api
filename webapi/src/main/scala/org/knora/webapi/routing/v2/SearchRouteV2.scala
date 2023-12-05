@@ -6,12 +6,8 @@
 package org.knora.webapi.routing.v2
 
 import org.apache.pekko.http.scaladsl.server.Directives.*
-import org.apache.pekko.http.scaladsl.server.RequestContext
 import org.apache.pekko.http.scaladsl.server.Route
-import org.apache.pekko.http.scaladsl.server.RouteResult
 import zio.*
-
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -21,11 +17,10 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.responders.v2.ResourceCountV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 
 /**
@@ -44,10 +39,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
   def makeRoute: Route =
     fullTextSearchCount() ~
       fullTextSearch() ~
-      gravsearchCountGet() ~
-      gravsearchCountPost() ~
-      gravsearchGet() ~
-      gravsearchPost() ~
       searchByLabelCount() ~
       searchByLabel()
 
@@ -70,22 +61,11 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       }
       .getOrElse(ZIO.succeed(0))
 
-  /**
-   * Gets the the project the search should be restricted to, if any.
-   *
-   * @param params the GET parameters.
-   * @return the project Iri, if any.
-   */
-  private def getProjectFromParams(params: Map[String, String]): IO[BadRequestException, Option[IRI]] =
-    params
-      .get(LIMIT_TO_PROJECT)
-      .map { projectIriStr =>
-        Iri
-          .validateAndEscapeIri(projectIriStr)
-          .toZIO
-          .mapBoth(_ => BadRequestException(s"$projectIriStr is not a valid Iri"), Some(_))
-      }
-      .getOrElse(ZIO.none)
+  private def getProjectIri(params: Map[String, String]): IO[BadRequestException, Option[ProjectIri]] =
+    ZIO
+      .fromOption(params.get(LIMIT_TO_PROJECT))
+      .flatMap(iri => ProjectIri.from(iri).toZIO.orElseFail(Some(BadRequestException(s"$iri is not a valid IRI."))))
+      .unsome
 
   /**
    * Gets the resource class the search should be restricted to, if any.
@@ -139,7 +119,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           val response = for {
             _                    <- ensureIsNotFullTextSearch(searchStr)
             escapedSearchStr     <- validateSearchString(searchStr)
-            limitToProject       <- getProjectFromParams(params)
+            limitToProject       <- getProjectIri(params)
             limitToResourceClass <- getResourceClassFromParams(params)
             limitToStandoffClass <- getStandoffClass(params)
             response <- SearchResponderV2.fulltextSearchCountV2(
@@ -183,12 +163,12 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           _                    <- ensureIsNotFullTextSearch(searchStr)
           escapedSearchStr     <- validateSearchString(searchStr)
           offset               <- getOffsetFromParams(params)
-          limitToProject       <- getProjectFromParams(params)
+          limitToProject       <- getProjectIri(params)
           limitToResourceClass <- getResourceClassFromParams(params)
           limitToStandoffClass <- getStandoffClass(params)
           returnFiles           = ValuesValidator.optionStringToBoolean(params.get(RETURN_FILES), fallback = false)
           requestingUser       <- Authenticator.getUserADM(requestContext)
-          schemaAndOptions     <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
+          schemaAndOptions     <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaRendering(s, o) }
           response <- SearchResponderV2.fulltextSearchV2(
                         escapedSearchStr,
                         offset,
@@ -204,47 +184,6 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       }
   }
 
-  private def gravsearchCountGet(): Route =
-    path("v2" / "searchextended" / "count" / Segment) { query =>
-      get(gravsearchCountV2(query, _))
-    }
-
-  private def gravsearchCountPost(): Route =
-    path("v2" / "searchextended" / "count") {
-      post(entity(as[String])(query => gravsearchCountV2(query, _)))
-    }
-
-  private def gravsearchCountV2(query: String, ctx: RequestContext): Future[RouteResult] = {
-    val response: ZIO[SearchResponderV2 & Authenticator, Throwable, ResourceCountV2] = for {
-      user       <- Authenticator.getUserADM(ctx)
-      gravsearch <- ZIO.attempt(GravsearchParser.parseQuery(query))
-      response   <- SearchResponderV2.gravsearchCountV2(gravsearch, user)
-    } yield response
-    RouteUtilV2.completeResponse(response, ctx)
-  }
-
-  private def gravsearchGet(): Route = path(
-    "v2" / "searchextended" / Segment
-  ) { query => // Segment is a URL encoded string representing a Gravsearch query
-    get(requestContext => gravsearch(query, requestContext))
-  }
-
-  private def gravsearchPost(): Route = path("v2" / "searchextended") {
-    post(entity(as[String])(query => requestContext => gravsearch(query, requestContext)))
-  }
-
-  private def gravsearch(query: String, requestContext: RequestContext) = {
-    val constructQuery    = GravsearchParser.parseQuery(query)
-    val targetSchemaTask  = RouteUtilV2.getOntologySchema(requestContext)
-    val schemaOptionsTask = RouteUtilV2.getSchemaOptions(requestContext)
-    val task = for {
-      schemaAndOptions <- targetSchemaTask.zip(schemaOptionsTask).map { case (s, o) => SchemaAndOptions(s, o) }
-      user             <- Authenticator.getUserADM(requestContext)
-      response         <- SearchResponderV2.gravsearchV2(constructQuery, schemaAndOptions, user)
-    } yield response
-    RouteUtilV2.completeResponse(task, requestContext, targetSchemaTask, schemaOptionsTask.map(Some(_)))
-  }
-
   private def searchByLabelCount(): Route =
     path("v2" / "searchbylabel" / "count" / Segment) {
       searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
@@ -252,7 +191,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
           val params: Map[String, String] = requestContext.request.uri.query().toMap
           val response = for {
             searchString         <- validateSearchString(searchval)
-            limitToProject       <- getProjectFromParams(params)
+            limitToProject       <- getProjectIri(params)
             limitToResourceClass <- getResourceClassFromParams(params)
             response <-
               SearchResponderV2.searchResourcesByLabelCountV2(searchString, limitToProject, limitToResourceClass)
@@ -270,7 +209,7 @@ final case class SearchRouteV2(searchValueMinLength: Int)(
       val response = for {
         sparqlEncodedSearchString <- validateSearchString(searchval)
         offset                    <- getOffsetFromParams(params)
-        limitToProject            <- getProjectFromParams(params)
+        limitToProject            <- getProjectIri(params)
         limitToResourceClass      <- getResourceClassFromParams(params)
         targetSchema              <- targetSchemaTask
         requestingUser            <- Authenticator.getUserADM(requestContext)

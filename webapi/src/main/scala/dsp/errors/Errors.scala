@@ -178,6 +178,9 @@ case class StandoffConversionException(message: String) extends RequestRejectedE
  * @param message a description of the error.
  */
 case class GravsearchException(message: String) extends RequestRejectedException(message)
+object GravsearchException {
+  implicit val codec: JsonCodec[GravsearchException] = DeriveJsonCodec.gen[GravsearchException]
+}
 
 /**
  * An exception indication that the JSON-LD submitted to the API v2 was invalid.

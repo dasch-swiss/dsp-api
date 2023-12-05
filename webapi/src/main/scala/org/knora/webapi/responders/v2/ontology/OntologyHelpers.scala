@@ -1864,11 +1864,13 @@ final case class OntologyHelpersLive(
 
       entitiesUnavailableInSchema = classesUnavailableInSchema ++ propertiesUnavailableInSchema
 
-      _ = if (entitiesUnavailableInSchema.nonEmpty) {
-            throw NotFoundException(
-              s"Some requested entities were not found: ${entitiesUnavailableInSchema.mkString(", ")}"
-            )
-          }
+      _ <- ZIO.when(entitiesUnavailableInSchema.nonEmpty) {
+             ZIO.fail(
+               NotFoundException(
+                 s"Some requested entities were not found: ${entitiesUnavailableInSchema.mkString(", ")}"
+               )
+             )
+           }
 
       // See if any of the requested entities are hard-coded for knora-api.
       hardCodedExternalClassesAvailable =
@@ -1938,9 +1940,9 @@ final case class OntologyHelpersLive(
 
       missingEntities = missingClasses ++ missingProperties
 
-      _ = if (missingEntities.nonEmpty) {
-            throw NotFoundException(s"Some requested entities were not found: ${missingEntities.mkString(", ")}")
-          }
+      _ <- ZIO.when(missingEntities.nonEmpty) {
+             ZIO.fail(NotFoundException(s"Some requested entities were not found: ${missingEntities.mkString(", ")}"))
+           }
 
       response = EntityInfoGetResponseV2(
                    classInfoMap = new ErrorHandlingMap(allClassesAvailable, key => s"Resource class $key not found"),
