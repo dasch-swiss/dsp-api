@@ -81,7 +81,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "6.1.5" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "6.2.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.76"
 
   // caching
@@ -119,9 +119,9 @@ object Dependencies {
   val wiremock       = "org.wiremock"       % "wiremock"                 % "3.3.1"
 
   // found/added by the plugin but deleted anyway
-  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.13.0"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.8.5"
+  val tapirVersion = "1.9.3"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
