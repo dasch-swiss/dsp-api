@@ -30,10 +30,9 @@ object AssetId {
 
   def makeFromPath(file: Path): Option[AssetId] = {
     val filename = file.filename.toString
-    filename.contains(".") match {
-      case true  => AssetId.make(filename.substring(0, filename.indexOf("."))).toOption
-      case false => None
-    }
+
+    if (filename.contains(".")) AssetId.make(filename.substring(0, filename.indexOf("."))).toOption
+    else None
   }
 
   given codec: JsonCodec[AssetId] = JsonCodec[String].transformOrFail(AssetId.make, _.toString)
@@ -48,33 +47,31 @@ object AssetRef {
 sealed trait Asset {
   def id: AssetId
   def belongsToProject: ProjectShortcode
-
   def ref: AssetRef = AssetRef(id, belongsToProject)
-}
-
-sealed trait ComplexAsset extends Asset {
   def originalFilename: NonEmptyString
   def original: OriginalFile
   def derivative: DerivativeFile
+
   final def originalInternalFilename: String = original.filename
   final def derivativeFilename: String       = derivative.filename
 }
-object ComplexAsset {
+
+object Asset {
   final case class ImageAsset(
     id: AssetId,
     belongsToProject: ProjectShortcode,
     originalFilename: NonEmptyString,
     original: OriginalFile,
-    derivative: DerivativeFile
-  ) extends ComplexAsset
+    derivative: JpxDerivativeFile
+  ) extends Asset
 
   def makeImageAsset(
     assetRef: AssetRef,
     originalFilename: NonEmptyString,
     original: OriginalFile,
     derivative: JpxDerivativeFile
-  ): ComplexAsset.ImageAsset =
-    ComplexAsset.ImageAsset(assetRef.id, assetRef.belongsToProject, originalFilename, original, derivative)
+  ): Asset.ImageAsset =
+    Asset.ImageAsset(assetRef.id, assetRef.belongsToProject, originalFilename, original, derivative)
 }
 
 def hasAssetIdInFilename(file: Path): Option[Path] = AssetId.makeFromPath(file).map(_ => file)
