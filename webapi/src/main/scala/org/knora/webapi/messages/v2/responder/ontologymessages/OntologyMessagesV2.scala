@@ -1418,7 +1418,7 @@ case class ReadOntologyV2(
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument =
     toOntologySchema(targetSchema).generateJsonLD(targetSchema, appConfig)
 
@@ -1792,7 +1792,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument =
     toOntologySchema(targetSchema).generateJsonLD(targetSchema)
 }

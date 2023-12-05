@@ -72,7 +72,7 @@ case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2]) ex
   override def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
     if (targetSchema != ApiV2Complex) {
       throw AssertionException(s"Standoff is available only in the complex schema")
@@ -186,7 +186,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     appConfig: AppConfig,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): JsonLDDocument = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

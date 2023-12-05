@@ -6,9 +6,11 @@
 package org.knora.webapi.e2e.v2
 
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.RouteConcatenation._
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.ZIO
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -30,12 +32,13 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
@@ -51,11 +54,14 @@ import pekko.http.scaladsl.model.headers.BasicHttpCredentials
  */
 class SearchRouteV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private val searchPathNew = UnsafeZioRun
+    .runOrThrow(ZIO.serviceWith[SearchApiRoutes](_.routes))
+    .reduce(_ ~ _)
+  private val searchPathOld = DSPApiDirectives.handleErrors(appConfig)(
+    SearchRouteV2(routeData.appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute
+  )
+  private val searchPath = searchPathNew ~ searchPathOld
 
-  private val searchPath =
-    DSPApiDirectives.handleErrors(appConfig)(
-      SearchRouteV2(routeData.appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute
-    )
   private val resourcePath =
     DSPApiDirectives.handleErrors(appConfig)(ResourcesRouteV2(appConfig).makeRoute)
   private val standoffPath =
@@ -154,7 +160,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a fulltext search for 'Dinge' (in the simple schema)" in {
-      Get("/v2/search/Dinge").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> addCredentials(
+      Get("/v2/search/Dinge").addHeader(SchemaHeader.simple) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
       ) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, responseAs[String])
@@ -442,7 +448,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery))
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, responseAs[String])
         val expectedAnswerJSONLD =
           testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
@@ -477,7 +483,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery))
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, responseAs[String])
         val expectedAnswerJSONLD =
           testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
@@ -3059,7 +3065,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery))
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, responseAs[String])
         val expectedAnswerJSONLD =
           testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")
@@ -3090,7 +3096,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery))
-        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+        .addHeader(SchemaHeader.simple) ~> searchPath ~> check {
         assert(status == StatusCodes.OK, responseAs[String])
         val expectedAnswerJSONLD =
           testData(responseAs[String], "ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld")

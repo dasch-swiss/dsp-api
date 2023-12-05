@@ -5,22 +5,18 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model.headers.ModeledCustomHeader
+import org.apache.pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
 
 import scala.util.Try
 
-import org.knora.webapi.routing.RouteUtilV2
-
-import pekko.http.scaladsl.model.headers.ModeledCustomHeader
-import pekko.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
-
 /**
- * A custom Pekko HTTP header representing [[RouteUtilV2.SCHEMA_HEADER]], which a client can send to specify
- * which ontology schema should be used in an API response.
+ * A custom Pekko HTTP header "x-knora-accept-schema", which a client can send to specify which ontology schema
+ * should be used in an API response.
  *
  * The definition follows [[https://doc.pekko.io/docs/pekko-http/current/common/http-model.html#custom-headers]].
  */
-final class SchemaHeader(token: String) extends ModeledCustomHeader[SchemaHeader] {
+final class SchemaHeader private (token: String) extends ModeledCustomHeader[SchemaHeader] {
   override def renderInRequests             = true
   override def renderInResponses            = true
   override val companion: SchemaHeader.type = SchemaHeader
@@ -28,6 +24,9 @@ final class SchemaHeader(token: String) extends ModeledCustomHeader[SchemaHeader
 }
 
 object SchemaHeader extends ModeledCustomHeaderCompanion[SchemaHeader] {
-  override val name: String         = RouteUtilV2.SCHEMA_HEADER
+  override val name: String         = "x-knora-accept-schema"
   override def parse(value: String) = Try(new SchemaHeader(value))
+
+  val simple: SchemaHeader  = SchemaHeader("simple")
+  val complex: SchemaHeader = SchemaHeader("complex")
 }

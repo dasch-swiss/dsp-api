@@ -47,6 +47,7 @@ import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoServiceLive
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
+import org.knora.webapi.slice.search.api.SearchApiRoutes
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandler
 import org.knora.webapi.store.cache.CacheServiceRequestMessageHandlerLive
 import org.knora.webapi.store.cache.api.CacheService
@@ -74,7 +75,7 @@ object LayersLive {
       ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
       ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & RestPermissionService & RestResourceInfoService &
-      SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
+      SearchApiRoutes & SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
       StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
@@ -101,12 +102,12 @@ object LayersLive {
       HandlerMapper.layer,
       HttpServer.layer,
       IIIFRequestMessageHandlerLive.layer,
-      SipiServiceLive.layer,
       InferenceOptimizationService.layer,
       IriConverter.layer,
       IriService.layer,
       JwtServiceLive.layer,
       KnoraProjectRepoLive.layer,
+      KnoraResponseRenderer.layer,
       ListsResponderADMLive.layer,
       ListsResponderV2Live.layer,
       MaintenanceEndpoints.layer,
@@ -139,8 +140,10 @@ object LayersLive {
       RestCardinalityServiceLive.layer,
       RestPermissionServiceLive.layer,
       RestResourceInfoServiceLive.layer,
+      SearchApiRoutes.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,
+      SipiServiceLive.layer,
       StandoffResponderV2Live.layer,
       StandoffTagUtilV2Live.layer,
       State.layer,
