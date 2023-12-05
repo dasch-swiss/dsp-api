@@ -30,8 +30,8 @@ import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 import org.knora.webapi.slice.common.api.TapirToPekkoInterpreter
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
-import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 import org.knora.webapi.slice.search.api.SearchEndpointsInputs.InputIri
+import org.knora.webapi.slice.search.api.SearchEndpointsInputs.Offset
 
 object SearchEndpointsInputs {
 
@@ -41,7 +41,7 @@ object SearchEndpointsInputs {
     val default: Offset = unsafeFrom(0)
   }
 
-  final case class InputIri private(value: String) extends AnyVal
+  final case class InputIri private (value: String) extends AnyVal
   object InputIri {
 
     implicit val tapirCodec: Codec[String, InputIri, CodecFormat.TextPlain] =
@@ -72,7 +72,7 @@ object SearchEndpointsInputs {
 
 final case class SearchEndpoints(baseEndpoints: BaseEndpoints) {
 
-  private val tags       = List("v2", "search")
+  private val tags = List("v2", "search")
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/latest/DSP-API/03-endpoints/api-v2/query-language/"
 
@@ -263,12 +263,12 @@ final case class SearchRestService(
 ) {
 
   def searchResourcesByLabelV2(
-                                query: String,
-                                opts: FormatOptions,
-                                offset: Offset,
-                                project: Option[ProjectIri],
-                                limitByResourceClass: Option[InputIri],
-                                user: UserADM
+    query: String,
+    opts: FormatOptions,
+    offset: Offset,
+    project: Option[ProjectIri],
+    limitByResourceClass: Option[InputIri],
+    user: UserADM
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(limitByResourceClass.map(_.value))(iriConverter.asSmartIri)
     searchResult <-
@@ -299,14 +299,14 @@ final case class SearchRestService(
   } yield response
 
   def fullTextSearch(
-                      query: RenderedResponse,
-                      opts: FormatOptions,
-                      offset: Offset,
-                      project: Option[ProjectIri],
-                      resourceClass: Option[InputIri],
-                      standoffClass: Option[InputIri],
-                      returnFiles: Boolean,
-                      user: UserADM
+    query: RenderedResponse,
+    opts: FormatOptions,
+    offset: Offset,
+    project: Option[ProjectIri],
+    resourceClass: Option[InputIri],
+    standoffClass: Option[InputIri],
+    returnFiles: Boolean,
+    user: UserADM
   ): Task[(RenderedResponse, MediaType)] = for {
     resourceClass <- ZIO.foreach(resourceClass.map(_.value))(iriConverter.asSmartIri)
     standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
@@ -324,11 +324,11 @@ final case class SearchRestService(
   } yield response
 
   def fullTextSearchCount(
-                           query: RenderedResponse,
-                           opts: FormatOptions,
-                           project: Option[ProjectIri],
-                           resourceClass: Option[InputIri],
-                           standoffClass: Option[InputIri]
+    query: RenderedResponse,
+    opts: FormatOptions,
+    project: Option[ProjectIri],
+    resourceClass: Option[InputIri],
+    standoffClass: Option[InputIri]
   ): zio.Task[
     (_root_.org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse, _root_.sttp.model.MediaType)
   ] = for {
