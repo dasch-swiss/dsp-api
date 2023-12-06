@@ -30,27 +30,6 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
   }
 
   val spec = suite("StorageServiceLiveSpec")(
-    test("should create original file in asset directory") {
-      ZIO.scoped {
-        for {
-          // given
-          tmp     <- Files.createTempDirectoryScoped(Some("test"), List())
-          essence  = tmp / "test.txt"
-          _       <- Files.createFile(essence)
-          assetId <- AssetId.makeNew
-          asset    = AssetRef(assetId, "0001".toProjectShortcode)
-          // when
-          original <- StorageService.createOriginalFileInAssetDir(essence, asset)
-          // then
-          fileExist <- Files.exists(original.toPath)
-          assetDir  <- StorageService.getAssetDirectory(asset)
-        } yield assertTrue(
-          fileExist,
-          original.filename == s"${assetId.toString}.txt.orig",
-          original.toPath.parent.contains(assetDir)
-        )
-      }
-    },
     test("should return the path of the folder where the asset is stored") {
       for {
         assetPath <- ZIO.serviceWith[StorageConfig](_.assetPath)

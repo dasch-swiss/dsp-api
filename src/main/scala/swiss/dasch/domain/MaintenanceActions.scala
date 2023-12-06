@@ -74,7 +74,7 @@ final case class MaintenanceActionsLive(
 
     def checkIsImageIfNeeded(path: file.Path) = {
       val shouldNotCheckImages = ZIO.succeed(!imagesOnly)
-      shouldNotCheckImages || FileFilters.isImage(path)
+      shouldNotCheckImages || FileFilters.isStillImage(path)
     }
 
     FileFilters.isNonHiddenRegularFile(path) &&

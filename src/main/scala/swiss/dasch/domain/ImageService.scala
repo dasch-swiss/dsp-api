@@ -68,7 +68,7 @@ final case class ImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoS
     )
 
   override def needsTopLeftCorrection(image: Path): IO[IOException, Boolean] =
-    FileFilters.isImage(image) &&
+    FileFilters.isStillImage(image) &&
       sipiClient
         .queryImageFile(image)
         .map(_.stdOut.split('\n'))

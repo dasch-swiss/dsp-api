@@ -5,7 +5,7 @@
 
 package swiss.dasch.domain
 
-import org.apache.commons.io.FilenameUtils
+import swiss.dasch.domain.PathOps.fileExtension
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
 import zio.nio.file.{Files, Path}
@@ -17,11 +17,13 @@ object FileFilters {
 
   val isJpeg2000: FileFilter = hasFileExtension(Jpx.allExtensions)
 
-  val isImage: FileFilter = hasFileExtension(SipiImageFormat.allExtensions)
+  val isStillImage: FileFilter = hasFileExtension(SupportedFileType.StillImage.extensions)
 
-  val isVideo: FileFilter = hasFileExtension(SipiVideoFormat.allExtensions)
+  val isMovingImage: FileFilter = hasFileExtension(SupportedFileType.MovingImage.extensions)
 
-  val isOther: FileFilter = hasFileExtension(SipiOtherFormat.allExtensions)
+  val isOther: FileFilter = hasFileExtension(SupportedFileType.Other.extensions)
+
+  val isSupported: FileFilter = hasFileExtension(SupportedFileType.values.map(_.extensions).reduce(_ ++ _))
 
   val isNonHiddenRegularFile: FileFilter = (path: Path) => Files.isRegularFile(path) && Files.isHidden(path).negate
 
@@ -29,8 +31,6 @@ object FileFilters {
 
   def hasFileExtension(extension: String): FileFilter = hasFileExtension(List(extension))
 
-  def hasFileExtension(extension: List[String]): FileFilter = (path: Path) =>
-    isNonHiddenRegularFile(path) &&
-      ZIO.succeed(extension.contains(FilenameUtils.getExtension(path.filename.toString).toLowerCase))
-
+  def hasFileExtension(extension: Seq[String]): FileFilter = (path: Path) =>
+    isNonHiddenRegularFile(path) && ZIO.succeed(extension.exists(_.equalsIgnoreCase(path.fileExtension)))
 }

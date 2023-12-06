@@ -28,9 +28,9 @@ private object AssetInfoFileContent {
     derivativeChecksum: Sha256Hash
   ): AssetInfoFileContent =
     AssetInfoFileContent(
-      asset.derivativeFilename,
-      asset.originalInternalFilename,
-      asset.originalFilename.value,
+      asset.derivative.filename,
+      asset.original.internalFilename.toString,
+      asset.original.originalFilename.toString,
       originalChecksum.toString,
       derivativeChecksum.toString
     )
@@ -138,7 +138,7 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
   override def createAssetInfo(asset: Asset): Task[Unit] = for {
     assetDir           <- storageService.getAssetDirectory(asset.ref)
     infoFile            = assetDir / infoFilename(asset.ref)
-    checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.toPath)
+    checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file.toPath)
     checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative.toPath)
     content             = AssetInfoFileContent.make(asset, checksumOriginal, checksumDerivative)
     _                  <- Files.createFile(infoFile)

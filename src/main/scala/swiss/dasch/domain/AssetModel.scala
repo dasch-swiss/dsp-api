@@ -9,9 +9,10 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.MatchesRegex
 import eu.timepit.refined.types.string.NonEmptyString
-import org.apache.commons.io.FilenameUtils
 import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
+import swiss.dasch.domain.PathOps.fileExtension
 import swiss.dasch.domain.SipiImageFormat.Jpx
+import swiss.dasch.domain.SupportedFileType.Other
 import swiss.dasch.infrastructure.Base62
 import zio.json.JsonCodec
 import zio.nio.file.Path
@@ -44,34 +45,26 @@ object AssetRef {
   def makeNew(project: ProjectShortcode): UIO[AssetRef] = AssetId.makeNew.map(id => AssetRef(id, project))
 }
 
-sealed trait Asset {
-  def id: AssetId
-  def belongsToProject: ProjectShortcode
-  def ref: AssetRef = AssetRef(id, belongsToProject)
-  def originalFilename: NonEmptyString
-  def original: OriginalFile
-  def derivative: DerivativeFile
+private final case class Original(file: OriginalFile, originalFilename: NonEmptyString) {
+  def internalFilename: NonEmptyString = file.filename
+}
 
-  final def originalInternalFilename: String = original.filename
-  final def derivativeFilename: String       = derivative.filename
+sealed trait Asset {
+  def ref: AssetRef
+  def original: Original
+  def derivative: DerivativeFile
+  final def id: AssetId                        = ref.id
+  final def belongsToProject: ProjectShortcode = ref.belongsToProject
 }
 
 object Asset {
-  final case class ImageAsset(
-    id: AssetId,
-    belongsToProject: ProjectShortcode,
-    originalFilename: NonEmptyString,
-    original: OriginalFile,
-    derivative: JpxDerivativeFile
-  ) extends Asset
+  final case class StillImageAsset(ref: AssetRef, original: Original, derivative: JpxDerivativeFile) extends Asset
+  final case class OtherAsset(ref: AssetRef, original: Original, derivative: DerivativeFile)         extends Asset
 
-  def makeImageAsset(
-    assetRef: AssetRef,
-    originalFilename: NonEmptyString,
-    original: OriginalFile,
-    derivative: JpxDerivativeFile
-  ): Asset.ImageAsset =
-    Asset.ImageAsset(assetRef.id, assetRef.belongsToProject, originalFilename, original, derivative)
+  def makeStillImage(assetRef: AssetRef, original: Original, derivative: JpxDerivativeFile): StillImageAsset =
+    StillImageAsset(assetRef, original, derivative)
+  def makeOther(assetRef: AssetRef, original: Original, derivative: DerivativeFile): OtherAsset =
+    OtherAsset(assetRef, original, derivative)
 }
 
 def hasAssetIdInFilename(file: Path): Option[Path] = AssetId.makeFromPath(file).map(_ => file)
@@ -93,7 +86,7 @@ object OriginalFile {
   }
 
   extension (file: OriginalFile) {
-    def filename: String = file.filename.toString
+    def filename: NonEmptyString = NonEmptyString.unsafeFrom(file.filename.toString)
   }
 
   extension (file: OriginalFile) {
@@ -102,26 +95,33 @@ object OriginalFile {
 }
 
 sealed trait DerivativeFile(file: Path) {
-  def from(file: Path): Option[DerivativeFile]
-
   final def toPath: Path     = file
   final def filename: String = file.filename.toString
   final def assetId: AssetId = AssetId.makeFromPath(file).head
 }
 
 object DerivativeFile {
-  final case class JpxDerivativeFile private (file: Path) extends DerivativeFile(file) {
-    override def from(file: Path): Option[JpxDerivativeFile] = JpxDerivativeFile.from(file)
-  }
+  final case class JpxDerivativeFile private (file: Path) extends DerivativeFile(file)
 
   object JpxDerivativeFile {
     def from(file: Path): Option[JpxDerivativeFile] =
       file match {
         case hidden if hidden.filename.toString.startsWith(".") => None
-        case derivative if Jpx.acceptsExtension(FilenameUtils.getExtension(file.filename.toString)) =>
+        case derivative if Jpx.acceptsExtension(file.fileExtension) =>
           hasAssetIdInFilename(derivative).map(JpxDerivativeFile(_))
         case _ => None
       }
     def unsafeFrom(file: Path): JpxDerivativeFile = from(file).getOrElse(throw new Exception("Not a derivative file"))
+  }
+  final case class OtherDerivativeFile private (file: Path) extends DerivativeFile(file)
+  object OtherDerivativeFile {
+    def from(file: Path): Option[OtherDerivativeFile] =
+      file match {
+        case hidden if hidden.filename.toString.startsWith(".") => None
+        case other if Other.extensions.contains(other.filename.fileExtension) =>
+          hasAssetIdInFilename(other).map(OtherDerivativeFile(_))
+        case _ => None
+      }
+    def unsafeFrom(file: Path): OtherDerivativeFile = from(file).getOrElse(throw new Exception("Not a derivative file"))
   }
 }
