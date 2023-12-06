@@ -9,7 +9,6 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -34,6 +33,8 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -657,10 +658,15 @@ case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
   requestingUser: UserADM,
   apiRequestID: UUID,
-  isBulkUpload: Boolean
+  ingestMode: AssetIngestMode = AssetInTemp
 ) extends ResourcesResponderRequestV2
 
 object CreateResourceRequestV2 {
+  sealed trait AssetIngestMode
+  object AssetIngestMode {
+    case object AssetIngested extends AssetIngestMode
+    case object AssetInTemp   extends AssetIngestMode
+  }
 
   /**
    * Converts JSON-LD input to a [[CreateResourceRequestV2]].
@@ -674,7 +680,7 @@ object CreateResourceRequestV2 {
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    isBulkUpload: Boolean
+    ingestMode: AssetIngestMode = AssetInTemp
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
@@ -844,7 +850,7 @@ object CreateResourceRequestV2 {
         ),
         requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
         apiRequestID = apiRequestID,
-        isBulkUpload = isBulkUpload
+        ingestMode = ingestMode
       )
     }
 }

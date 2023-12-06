@@ -11,7 +11,6 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
-
 import dsp.errors.*
 import dsp.valueobjects.Iri
 import dsp.valueobjects.UuidUtil
@@ -45,6 +44,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
@@ -369,16 +369,17 @@ final case class ResourcesResponderV2Live(
                     )
     } yield taskResult
 
-    if (createResourceRequestV2.isBulkUpload) triplestoreUpdateFuture
-    else {
+    createResourceRequestV2.ingestMode match {
+      case AssetIngestMode.AssetIngested => triplestoreUpdateFuture
       // If the request includes file values, tell Sipi to move the files to permanent storage if the update
       // succeeded, or to delete the temporary files if the update failed.
-      val fileValues = Seq(createResourceRequestV2.createResource)
-        .flatMap(_.flatValues)
-        .map(_.valueContent)
-        .filter(_.isInstanceOf[FileValueContentV2])
-        .map(_.asInstanceOf[FileValueContentV2])
-      resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValues, createResourceRequestV2.requestingUser)
+      case AssetIngestMode.AssetInTemp =>
+        val fileValues = Seq(createResourceRequestV2.createResource)
+          .flatMap(_.flatValues)
+          .map(_.valueContent)
+          .filter(_.isInstanceOf[FileValueContentV2])
+          .map(_.asInstanceOf[FileValueContentV2])
+        resourceUtilV2.doSipiPostUpdate(triplestoreUpdateFuture, fileValues, createResourceRequestV2.requestingUser)
     }
   }
 

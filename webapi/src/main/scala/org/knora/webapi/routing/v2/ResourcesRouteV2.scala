@@ -12,7 +12,6 @@ import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import java.time.Instant
-
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.*
@@ -27,6 +26,10 @@ import org.knora.webapi.messages.ValuesValidator.arkTimestampToInstant
 import org.knora.webapi.messages.ValuesValidator.xsdDateTimeStampToInstant
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode.{
+  AssetInTemp,
+  AssetIngested
+}
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.routing.Authenticator
@@ -100,8 +103,9 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
             requestingUser <- Authenticator.getUserADM(requestContext)
             apiRequestId   <- RouteUtilZ.randomUuid()
             header          = "X-Asset-Ingested"
-            isBulkUpload    = requestContext.request.headers.exists(_.name == header)
-            requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser, isBulkUpload)
+            ingestMode = if (requestContext.request.headers.exists(_.name == header)) AssetIngested
+                         else AssetInTemp
+            requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser, ingestMode)
             // check for each value which represents a file value if the file's MIME type is allowed
             _ <- checkMimeTypesForFileValueContents(requestMessage.createResource.flatValues)
           } yield requestMessage
