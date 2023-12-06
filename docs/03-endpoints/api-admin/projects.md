@@ -784,6 +784,7 @@ Example response:
 Permissions: ProjectAdmin
 
 Request definition:
+
 - `GET /admin/projects/shortcode/{shortcode}/RestrictedViewSettings`
 - `GET /admin/projects/shortname/{shortname}/RestrictedViewSettings`
 - `GET /admin/projects/iri/{iri}/RestrictedViewSettings`
@@ -831,12 +832,14 @@ size.
 Permissions: ProjectAdmin/SystemAdmin
 
 Request definition:
+
 - `POST /admin/projects/iri/{iri}/RestrictedViewSettings`
 - `POST /admin/projects/shortcode/{shortcode}/RestrictedViewSettings`
 
 Description: Set the project's restricted view
 
 Required payload:
+
 - `size`
 
 Example request:
@@ -862,6 +865,8 @@ Example response:
 ```
 
 Operates on the following properties:
- - `knora-admin:projectRestrictedViewSize`: the IIIF size value
- - `knora-admin:projectRestrictedViewWatermark`: the path to the watermark image. **Currently not used!**
 
+- `knora-admin:projectRestrictedViewSize`: the IIIF size value
+- `knora-admin:projectRestrictedViewWatermark`: the path to the watermark image. **Currently not used!**
+
+Note: Restricted view settings only take effect, if a user has "Restricted View" permission on an image.
