@@ -5,6 +5,8 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
 import sttp.tapir.Schema
 import zio.NonEmptyChunk
 import zio.json.*
@@ -42,6 +44,9 @@ object KnoraProject {
 
     implicit val codec: JsonCodec[ProjectIri] =
       JsonCodec[String].transformOrFail(ProjectIri.from(_).toEitherWith(e => e.head.getMessage), _.value)
+
+    implicit val tapirCodec: Codec[String, ProjectIri, CodecFormat.TextPlain] =
+      Codec.string.mapEither(str => ProjectIri.from(str).toEitherWith(e => e.head.getMessage))(_.value)
 
     def unsafeFrom(str: String): ProjectIri = from(str).fold(e => throw e.head, identity)
 

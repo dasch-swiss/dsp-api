@@ -8,7 +8,6 @@ package org.knora.webapi.slice.common.api
 import sttp.model.HeaderNames
 import sttp.model.MediaType
 import sttp.tapir.Codec
-import sttp.tapir.Codec.PlainCodec
 import sttp.tapir.CodecFormat
 import sttp.tapir.DecodeResult
 import sttp.tapir.EndpointIO
@@ -17,12 +16,10 @@ import sttp.tapir.Validator
 import sttp.tapir.header
 import sttp.tapir.query
 
-import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.JsonLdRendering
 import org.knora.webapi.MarkupRendering
 import org.knora.webapi.Rendering
-import org.knora.webapi.messages.util.rdf.JsonLD
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 
@@ -121,13 +118,14 @@ object ApiV2 {
       }
 
     // RdfFormat input
-    val defaultRdfFormat: RdfFormat = JsonLD
     private val rdfFormat: EndpointIO.Header[RdfFormat] = header[Option[MediaType]](HeaderNames.Accept)
       .description(
         s"""The RDF format to be used for the request. Valid values are: ${RdfFormat.values}
-           |If not specified or unknown, the fallback RDF format $defaultRdfFormat will be used.""".stripMargin
+           |If not specified or unknown, the fallback RDF format ${RdfFormat.default} will be used.""".stripMargin
       )
-      .mapDecode(s => DecodeResult.Value(s.map(RdfFormat.from).getOrElse(defaultRdfFormat)))(it => Some(it.mediaType))
+      .mapDecode(s => DecodeResult.Value(s.flatMap(RdfFormat.from).getOrElse(RdfFormat.default)))(it =>
+        Some(it.mediaType)
+      )
       .validate(Validator.pass[RdfFormat])
 
     // FormatOptions input
@@ -140,17 +138,14 @@ object ApiV2 {
   }
 
   private object Codecs {
-    private def codecFromStringCodec[A](f: String => Either[String, A], g: A => String): PlainCodec[A] =
-      Codec.string.mapDecode(f(_).fold(e => DecodeResult.Error(e, BadRequestException(e)), DecodeResult.Value(_)))(g)
-
     // Codec for ApiV2Schema
     implicit val apiV2SchemaListCodec: Codec[List[String], Option[ApiV2Schema], CodecFormat.TextPlain] =
-      Codec.listHeadOption(codecFromStringCodec(ApiV2Schema.from, _.name))
+      Codec.listHeadOption(Codec.string.mapEither(ApiV2Schema.from)(_.name))
 
     // Codecs for Rendering (JsonLdRendering and MarkupRendering)
     implicit val jsonLdRenderingListCodec: Codec[List[String], Option[JsonLdRendering], CodecFormat.TextPlain] =
-      Codec.listHeadOption(codecFromStringCodec(JsonLdRendering.from, _.name))
+      Codec.listHeadOption(Codec.string.mapEither(JsonLdRendering.from)(_.name))
     implicit val markupRenderingListCode: Codec[List[String], Option[MarkupRendering], CodecFormat.TextPlain] =
-      Codec.listHeadOption(codecFromStringCodec(MarkupRendering.from, _.name))
+      Codec.listHeadOption(Codec.string.mapEither(MarkupRendering.from)(_.name))
   }
 }

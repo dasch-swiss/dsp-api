@@ -25,7 +25,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.Rendering
 import org.knora.webapi.SchemaOptions
-import org.knora.webapi.slice.common.api.ApiV2
 
 /**
  * A trait for supported RDF formats.
@@ -57,11 +56,12 @@ sealed trait QuadFormat extends NonJsonLD
 
 object RdfFormat {
 
+  val default: RdfFormat = JsonLD
+
   val values: Seq[RdfFormat] = Seq(JsonLD, Turtle, TriG, RdfXml, NQuads)
 
-  def from(mediaType: model.MediaType): RdfFormat = values
+  def from(mediaType: model.MediaType): Option[RdfFormat] = values
     .find(_.mediaType.equalsIgnoreParameters(mediaType))
-    .getOrElse(ApiV2.Inputs.defaultRdfFormat)
 
   /**
    * Converts a [[MediaType]] to an [[RdfFormat]].

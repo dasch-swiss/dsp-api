@@ -18,6 +18,7 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anonymousUser
+import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 class SearchResponderV2Spec extends CoreSpec {
@@ -151,60 +152,84 @@ class SearchResponderV2Spec extends CoreSpec {
     }
 
     "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
-      val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.searchResourcesByLabelV2(
-          searchValue = "Narrenschiff",
-          offset = 0,
-          limitToProject = None,
-          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-          targetSchema = ApiV2Complex,
-          requestingUser = anonymousUser
-        )
-      )
+      val actual = UnsafeZioRun.runOrThrow {
+        for {
+          limitToResourceClass <- IriConverter
+                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+                                    .mapAttempt(_.toOntologySchema(ApiV2Complex))
+                                    .map(Some(_))
+          result <- SearchResponderV2.searchResourcesByLabelV2(
+                      searchValue = "Narrenschiff",
+                      offset = 0,
+                      limitToProject = None,
+                      limitToResourceClass,
+                      targetSchema = ApiV2Complex,
+                      requestingUser = anonymousUser
+                    )
+        } yield result
+      }
 
-      assert(result.resources.size == 3)
+      assert(actual.resources.size == 3)
     }
 
     "perform a search by label for incunabula:book that contain 'Das Narrenschiff'" in {
-      val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.searchResourcesByLabelV2(
-          searchValue = "Narrenschiff",
-          offset = 0,
-          limitToProject = None,
-          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-          targetSchema = ApiV2Complex,
-          requestingUser = anonymousUser
-        )
-      )
+      val actual = UnsafeZioRun.runOrThrow {
+        for {
+          limitToResourceClass <- IriConverter
+                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+                                    .mapAttempt(_.toOntologySchema(ApiV2Complex))
+                                    .map(Some(_))
+          result <- SearchResponderV2.searchResourcesByLabelV2(
+                      searchValue = "Narrenschiff",
+                      offset = 0,
+                      limitToProject = None,
+                      limitToResourceClass,
+                      targetSchema = ApiV2Complex,
+                      requestingUser = anonymousUser
+                    )
+        } yield result
+      }
 
-      assert(result.resources.size == 3)
+      assert(actual.resources.size == 3)
     }
 
     "perform a count search query by label for incunabula:book that contain 'Narrenschiff'" in {
 
-      val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.searchResourcesByLabelCountV2(
-          searchValue = "Narrenschiff",
-          limitToProject = None,
-          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
-        )
-      )
+      val actual = UnsafeZioRun.runOrThrow {
+        for {
+          limitToResourceClass <- IriConverter
+                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+                                    .mapAttempt(_.toOntologySchema(ApiV2Complex))
+                                    .map(Some(_))
+          result <- SearchResponderV2.searchResourcesByLabelCountV2(
+                      searchValue = "Narrenschiff",
+                      limitToProject = None,
+                      limitToResourceClass
+                    )
+        } yield result
+      }
 
-      assert(result.numberOfResources == 3)
+      assert(actual.numberOfResources == 3)
 
     }
 
     "perform a a count search query by label for incunabula:book that contain 'Passio sancti Meynrhadi martyris et heremite'" in {
 
-      val result = UnsafeZioRun.runOrThrow(
-        SearchResponderV2.searchResourcesByLabelCountV2(
-          searchValue = "Passio sancti Meynrhadi martyris et heremite",
-          limitToProject = None,
-          limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
-        )
-      )
+      val actual = UnsafeZioRun.runOrThrow {
+        for {
+          limitToResourceClass <- IriConverter
+                                    .asSmartIri("http://www.knora.org/ontology/0803/incunabula#book")
+                                    .mapAttempt(_.toOntologySchema(ApiV2Complex))
+                                    .map(Some(_))
+          result <- SearchResponderV2.searchResourcesByLabelCountV2(
+                      searchValue = "Passio sancti Meynrhadi martyris et heremite",
+                      limitToProject = None,
+                      limitToResourceClass
+                    )
+        } yield result
+      }
 
-      assert(result.numberOfResources == 1)
+      assert(actual.numberOfResources == 1)
     }
 
     "search by project and resource class" in {

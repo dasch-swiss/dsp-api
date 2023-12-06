@@ -109,7 +109,6 @@ private final case class ApiRoutesImpl(
                 PermissionsRouteADM(routeData, runtime).makeRoute ~
                 RejectingRoute(appConfig, runtime).makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~
-                SearchRouteV2(appConfig.v2.fulltextSearch.searchValueMinLength).makeRoute ~
                 StandoffRouteV2().makeRoute ~
                 StoreRouteADM(routeData, runtime).makeRoute ~
                 UsersRouteADM().makeRoute ~
