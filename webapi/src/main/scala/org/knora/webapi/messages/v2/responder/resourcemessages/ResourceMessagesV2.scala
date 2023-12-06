@@ -656,7 +656,8 @@ case class CreateResourceV2(
 case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
   requestingUser: UserADM,
-  apiRequestID: UUID
+  apiRequestID: UUID,
+  isBulkUpload: Boolean
 ) extends ResourcesResponderRequestV2
 
 object CreateResourceRequestV2 {
@@ -672,7 +673,8 @@ object CreateResourceRequestV2 {
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    isBulkUpload: Boolean
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
@@ -841,7 +843,8 @@ object CreateResourceRequestV2 {
           creationDate = creationDate
         ),
         requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
-        apiRequestID = apiRequestID
+        apiRequestID = apiRequestID,
+        isBulkUpload = isBulkUpload
       )
     }
 }
