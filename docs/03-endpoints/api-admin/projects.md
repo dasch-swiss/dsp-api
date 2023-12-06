@@ -869,7 +869,4 @@ Operates on the following properties:
 - `knora-admin:projectRestrictedViewSize`: the IIIF size value
 - `knora-admin:projectRestrictedViewWatermark`: the path to the watermark image. **Currently not used!**
 
-Caveat: The restricted view settings only take effect
-for user groups that have restricted view permissions (or no permissions at all)
-on the `knora-api:hasStillImageFileValue` value of StillImageFile resources.
-User groups with view permission or higher will see the image in full resolution.
+Note: Restricted view settings only take effect, if a user has "Restricted View" permission on an image.
