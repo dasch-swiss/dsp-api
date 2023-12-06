@@ -230,7 +230,7 @@ object GravsearchMainQueryGenerator {
     dependentResourceIris: Set[IriRef],
     valueObjectIris: Set[IRI],
     targetSchema: ApiV2Schema,
-    schemaOptions: Set[SchemaOption]
+    schemaOptions: Set[Rendering]
   ): ConstructQuery = {
     import GravsearchConstants.*
 

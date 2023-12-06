@@ -19,8 +19,6 @@ import org.knora.webapi.util.FileUtil
  */
 class KnoraResponseV2Spec() extends CoreSpec {
 
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
   private val turtle =
     """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;
       |  <http://example.org/foo#hasBar> [ a <http://example.org/foo#Bar>;
@@ -121,7 +119,7 @@ class KnoraResponseV2Spec() extends CoreSpec {
     override protected def toJsonLDDocument(
       targetSchema: ApiV2Schema,
       appConfig: AppConfig,
-      schemaOptions: Set[SchemaOption]
+      schemaOptions: Set[Rendering]
     ): JsonLDDocument = jsonLDDocument
   }
 
@@ -177,59 +175,38 @@ class KnoraResponseV2Spec() extends CoreSpec {
       )
 
       // Parse the Turtle to an RDF4J Model.
-      val parsedTurtle: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
+      val parsedTurtle: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
 
       // Read an isomorphic Turtle file and parse it to an RDF4J Model.
       val expectedTurtle: String =
         FileUtil.readTextFile(
           Paths.get("..", "test_data/generated_test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")
         )
-      val parsedExpectedTurtle: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
+      val parsedExpectedTurtle: RdfModel = RdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
 
       // Compare the two models.
       parsedTurtle should ===(parsedExpectedTurtle)
     }
 
     "convert a hierarchical JsonLDDocument to a flat one" in {
-      val jsonLDTestResponse = JsonLDTestResponse(hierarchicalJsonLD)
+      val actual = JsonLDTestResponse(hierarchicalJsonLD)
+        .format(JsonLD, ApiV2Complex, Set(JsonLdRendering.Flat), appConfig)
 
-      val jsonLDResponseStr: String = jsonLDTestResponse.format(
-        rdfFormat = JsonLD,
-        targetSchema = ApiV2Complex,
-        schemaOptions = Set(FlatJsonLD),
-        appConfig = appConfig
-      )
-
-      val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-      assert(jsonLDResponseDoc.body == flatJsonLD.body)
+      assert(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
     }
 
     "convert Turtle to a hierarchical JSON-LD document" in {
-      val turtleTestResponse = TurtleTestResponse(turtle)
+      val actual = TurtleTestResponse(turtle)
+        .format(JsonLD, InternalSchema, Set(JsonLdRendering.Hierarchical), appConfig)
 
-      val jsonLDResponseStr: String = turtleTestResponse.format(
-        rdfFormat = JsonLD,
-        targetSchema = InternalSchema,
-        schemaOptions = Set(HierarchicalJsonLD),
-        appConfig = appConfig
-      )
-
-      val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-      assert(jsonLDResponseDoc.body == hierarchicalJsonLD.body)
+      assert(JsonLDUtil.parseJsonLD(actual).body == hierarchicalJsonLD.body)
     }
 
     "convert Turtle to a flat JSON-LD document" in {
-      val turtleTestResponse = TurtleTestResponse(turtle)
+      val actual = TurtleTestResponse(turtle)
+        .format(JsonLD, InternalSchema, Set(JsonLdRendering.Flat), appConfig)
 
-      val jsonLDResponseStr: String = turtleTestResponse.format(
-        rdfFormat = JsonLD,
-        targetSchema = InternalSchema,
-        schemaOptions = Set(FlatJsonLD),
-        appConfig = appConfig
-      )
-
-      val jsonLDResponseDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDResponseStr)
-      assert(jsonLDResponseDoc.body == flatJsonLD.body)
+      assert(JsonLDUtil.parseJsonLD(actual).body == flatJsonLD.body)
     }
   }
 }

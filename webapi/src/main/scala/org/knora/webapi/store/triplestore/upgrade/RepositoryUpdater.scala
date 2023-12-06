@@ -50,8 +50,6 @@ object RepositoryUpdater {
 
   sealed abstract private class RepositoryUpdaterImpl(triplestoreService: TriplestoreService)
       extends RepositoryUpdater {
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
     // A SPARQL query to find out the knora-base version in a repository.
     private val knoraBaseVersionQuery =
       """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -238,7 +236,7 @@ object RepositoryUpdater {
     ): UIO[Unit] = ZIO.attempt {
       // Parse the input file.
       log.info("Reading repository file...")
-      val model = rdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = NQuads)
+      val model = RdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = NQuads)
       log.info(s"Read ${model.size} statements.")
 
       // Run the update plugins.
@@ -253,7 +251,7 @@ object RepositoryUpdater {
 
       // Write the output file.
       log.info(s"Writing output file (${model.size} statements)...")
-      rdfFormatUtil.rdfModelToFile(
+      RdfFormatUtil.rdfModelToFile(
         rdfModel = model,
         file = transformedRepositoryFile,
         rdfFormat = NQuads
@@ -301,7 +299,7 @@ object RepositoryUpdater {
      */
     private def readResourceIntoModel(filename: String, rdfFormat: NonJsonLD): RdfModel = {
       val fileContent: String = FileUtil.readTextResource(filename)
-      rdfFormatUtil.parseToRdfModel(fileContent, rdfFormat)
+      RdfFormatUtil.parseToRdfModel(fileContent, rdfFormat)
     }
   }
 }

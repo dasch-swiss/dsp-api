@@ -15,11 +15,10 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1322.
  */
 class UpgradePluginPR1322() extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   // IRI objects representing the IRIs used in this transformation.
-  private val ValueHasUUIDIri: IriNode      = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUUID)
-  private val ValueCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
-  private val PreviousValueIri: IriNode     = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
+  private val ValueHasUUIDIri: IriNode      = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUUID)
+  private val ValueCreationDateIri: IriNode = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
+  private val PreviousValueIri: IriNode     = JenaNodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
 
   override def transform(model: RdfModel): Unit =
     // Add a random UUID to each current value version.
@@ -27,7 +26,7 @@ class UpgradePluginPR1322() extends UpgradePlugin {
       model.add(
         subj = valueIri,
         pred = ValueHasUUIDIri,
-        obj = nodeFactory.makeStringLiteral(UuidUtil.makeRandomBase64EncodedUuid)
+        obj = JenaNodeFactory.makeStringLiteral(UuidUtil.makeRandomBase64EncodedUuid)
       )
     }
 

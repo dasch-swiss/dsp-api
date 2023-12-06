@@ -15,7 +15,6 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1921.
  */
 class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   // Group descriptions without language attribute get language attribute defined in DEFAULT_LANG
   private val DEFAULT_LANG = "en"
 
@@ -24,18 +23,18 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
     val newPredicateLabel: IriNode =
-      nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")
+      JenaNodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")
 
     def updateGroupDescription(statement: Statement, languageTag: Option[String]): Unit =
       languageTag match {
         // the group description did not have a language attribute
         case Some(lang) =>
           val groupDescriptionWithLanguage: RdfLiteral =
-            nodeFactory.makeStringWithLanguage(statement.obj.stringValue, lang)
+            JenaNodeFactory.makeStringWithLanguage(statement.obj.stringValue, lang)
 
           statementsToRemove += statement
 
-          statementsToAdd += nodeFactory.makeStatement(
+          statementsToAdd += JenaNodeFactory.makeStatement(
             subj = statement.subj,
             pred = newPredicateLabel,
             obj = groupDescriptionWithLanguage,
@@ -50,7 +49,7 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
         case None =>
           statementsToRemove += statement
 
-          statementsToAdd += nodeFactory.makeStatement(
+          statementsToAdd += JenaNodeFactory.makeStatement(
             subj = statement.subj,
             pred = newPredicateLabel,
             obj = statement.obj,
