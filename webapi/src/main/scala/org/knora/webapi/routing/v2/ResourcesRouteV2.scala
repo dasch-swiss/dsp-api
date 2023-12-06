@@ -99,7 +99,7 @@ final case class ResourcesRouteV2(appConfig: AppConfig)(
             requestDoc     <- RouteUtilV2.parseJsonLd(jsonRequest)
             requestingUser <- Authenticator.getUserADM(requestContext)
             apiRequestId   <- RouteUtilZ.randomUuid()
-            header          = "X-Bulk-Upload"
+            header          = "X-Asset-Ingested"
             isBulkUpload    = requestContext.request.headers.exists(_.name == header)
             requestMessage <- CreateResourceRequestV2.fromJsonLd(requestDoc, apiRequestId, requestingUser, isBulkUpload)
             // check for each value which represents a file value if the file's MIME type is allowed
