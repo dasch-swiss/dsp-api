@@ -4,8 +4,8 @@
  */
 
 package swiss.dasch.domain
+
 import swiss.dasch.domain.PathOps.fileExtension
-import zio.*
 import zio.nio.file.Path
 
 private val archive = Seq("7z", "gz", "gzip", "tar", "tar.gz", "tgz", "z", "zip")
@@ -24,10 +24,12 @@ enum SupportedFileType(val extensions: Seq[String]) {
   case StillImage  extends SupportedFileType(SipiImageFormat.allExtensions)
   case MovingImage extends SupportedFileType(Seq("mp4"))
   case Other       extends SupportedFileType(archive ++ audio ++ office ++ tables ++ text)
+
+  def acceptsExtension(extension: String): Boolean = extensions.exists(extension.equalsIgnoreCase)
 }
 
 object SupportedFileType {
 
   def fromPath(path: Path): Option[SupportedFileType] =
-    SupportedFileType.values.find(_.extensions.exists(path.fileExtension.equalsIgnoreCase(_)))
+    SupportedFileType.values.find(_.acceptsExtension(path.fileExtension))
 }

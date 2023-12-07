@@ -118,7 +118,7 @@ object DerivativeFile {
     def from(file: Path): Option[OtherDerivativeFile] =
       file match {
         case hidden if hidden.filename.toString.startsWith(".") => None
-        case other if Other.extensions.contains(other.filename.fileExtension) =>
+        case other if Other.acceptsExtension(other.filename.fileExtension) =>
           hasAssetIdInFilename(other).map(OtherDerivativeFile(_))
         case _ => None
       }

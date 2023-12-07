@@ -174,6 +174,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     FileChecksumServiceLive.layer,
     ImageServiceLive.layer,
     ImportServiceLive.layer,
+    IngestService.layer,
     ProjectServiceLive.layer,
     ProjectsEndpoints.layer,
     ProjectsEndpointsHandler.layer,

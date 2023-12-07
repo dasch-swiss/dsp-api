@@ -49,12 +49,6 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
         actual   <- StorageService.getTempDirectory()
       } yield assertTrue(expected == actual)
     },
-    test("should return bulk ingest import folder") {
-      for {
-        expected <- ZIO.serviceWith[StorageConfig](_.tempPath)
-        actual   <- StorageService.getBulkIngestImportFolder(existingProject)
-      } yield assertTrue(actual == expected / "import" / existingProject.value)
-    },
     test("should return project directory") {
       for {
         expected <- ZIO.serviceWith[StorageConfig](_.assetPath).map(_ / existingProject.toString)
