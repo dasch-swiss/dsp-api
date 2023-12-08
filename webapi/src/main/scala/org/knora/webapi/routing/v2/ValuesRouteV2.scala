@@ -9,13 +9,13 @@ import org.apache.pekko.http.scaladsl.server.Directives.*
 import org.apache.pekko.http.scaladsl.server.PathMatcher
 import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
-
 import dsp.errors.BadRequestException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.ValuesResponderV2
@@ -83,8 +83,11 @@ final case class ValuesRouteV2()(
             for {
               requestingUser <- Authenticator.getUserADM(ctx)
               apiRequestId   <- Random.nextUUID
-              valueToCreate  <- CreateValueV2.fromJsonLd(jsonLdString, requestingUser)
-              response       <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
+              header          = "X-Asset-Ingested"
+              ingestMode = if (ctx.request.headers.exists(_.name == header)) AssetIngested
+                           else AssetInTemp
+              valueToCreate <- CreateValueV2.fromJsonLd(ingestMode, jsonLdString, requestingUser)
+              response      <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
             } yield response,
             ctx
           )

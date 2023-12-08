@@ -784,7 +784,7 @@ object CreateResourceRequestV2 {
                                            )
                                        }
 
-                  valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser)
+                  valueContent <- ValueContentV2.fromJsonLdObject(ingestMode, valueJsonLDObject, requestingUser)
 
                   maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
                                            .mapError(BadRequestException(_))
