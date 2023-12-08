@@ -44,7 +44,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
@@ -370,11 +370,11 @@ final case class ResourcesResponderV2Live(
                     )
     } yield taskResult
 
-    createResourceRequestV2.ingestMode match {
-      case AssetIngestMode.AssetIngested => triplestoreUpdateFuture
+    createResourceRequestV2.ingestState match {
+      case AssetIngestState.AssetIngested => triplestoreUpdateFuture
       // If the request includes file values, tell Sipi to move the files to permanent storage if the update
       // succeeded, or to delete the temporary files if the update failed.
-      case AssetIngestMode.AssetInTemp =>
+      case AssetIngestState.AssetInTemp =>
         val fileValues = Seq(createResourceRequestV2.createResource)
           .flatMap(_.flatValues)
           .map(_.valueContent)

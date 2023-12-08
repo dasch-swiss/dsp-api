@@ -37,8 +37,8 @@ import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode.AssetInTemp
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
@@ -585,6 +585,7 @@ case class ReadOtherValueV2(
 /**
  * Represents a Knora value to be created in an existing resource.
  *
+ * @param ingestState indicates the state of the file, either ingested or in temp folder
  * @param resourceIri       the resource the new value should be attached to.
  * @param resourceClassIri  the resource class that the client believes the resource belongs to.
  * @param propertyIri       the property of the new value. If the client wants to create a link, this must be a link value property.
@@ -596,7 +597,7 @@ case class ReadOtherValueV2(
  * @param permissions       the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(
-  ingestMode: AssetIngestMode = AssetInTemp,
+  ingestState: AssetIngestState = AssetInTemp,
   resourceIri: IRI,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
@@ -615,12 +616,13 @@ object CreateValueV2 {
   /**
    * Converts JSON-LD input to a [[CreateValueV2]].
    *
+   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @param jsonLdString  JSON-LD input as String.
    * @param requestingUser       the user making the request.
    * @return a case class instance representing the input.
    */
   def fromJsonLd(
-    ingestMode: AssetIngestMode,
+    ingestState: AssetIngestState,
     jsonLdString: String,
     requestingUser: UserADM
   ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] =
@@ -641,7 +643,7 @@ object CreateValueV2 {
           jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
             case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
               for {
-                valueContent <- ValueContentV2.fromJsonLdObject(ingestMode, jsonLdObject, requestingUser)
+                valueContent <- ValueContentV2.fromJsonLdObject(ingestState, jsonLdObject, requestingUser)
 
                 // Get and validate the custom value IRI if provided.
                 maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
@@ -688,7 +690,7 @@ object CreateValueV2 {
                     jsonLdObject.maybeStringWithValidation(HasPermissions, validationFun)
                   }
               } yield CreateValueV2(
-                ingestMode,
+                ingestState,
                 resourceIri = resourceIri.toString,
                 resourceClassIri = resourceClassIri,
                 propertyIri = propertyIri,
@@ -757,7 +759,7 @@ object UpdateValueV2 {
         maybeNewIri: Option[SmartIri]
       ) =
         for {
-          valueContent <- ValueContentV2.fromJsonLdObject(AssetIngestMode.AssetInTemp, jsonLDObject, requestingUser)
+          valueContent <- ValueContentV2.fromJsonLdObject(AssetIngestState.AssetInTemp, jsonLDObject, requestingUser)
           maybePermissions <-
             ZIO.attempt {
               val validationFun: (String, => Nothing) => String =
@@ -1046,12 +1048,13 @@ object ValueContentV2 {
   /**
    * Converts a JSON-LD object to a [[ValueContentV2]].
    *
+   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @param jsonLdObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]].
    */
   def fromJsonLdObject(
-    ingestMode: AssetIngestMode,
+    ingestState: AssetIngestState,
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM
   ): ZIO[SipiService & StringFormatter & MessageRelay, Throwable, ValueContentV2] =

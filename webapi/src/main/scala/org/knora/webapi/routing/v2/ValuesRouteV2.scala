@@ -16,7 +16,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.ValuesResponderV2
@@ -85,9 +85,9 @@ final case class ValuesRouteV2()(
               requestingUser <- Authenticator.getUserADM(ctx)
               apiRequestId   <- Random.nextUUID
               header          = "X-Asset-Ingested"
-              ingestMode = if (ctx.request.headers.exists(_.name == header)) AssetIngested
-                           else AssetInTemp
-              valueToCreate <- CreateValueV2.fromJsonLd(ingestMode, jsonLdString, requestingUser)
+              ingestState = if (ctx.request.headers.exists(_.name == header)) AssetIngested
+                            else AssetInTemp
+              valueToCreate <- CreateValueV2.fromJsonLd(ingestState, jsonLdString, requestingUser)
               response      <- ValuesResponderV2.createValueV2(valueToCreate, requestingUser, apiRequestId)
             } yield response,
             ctx

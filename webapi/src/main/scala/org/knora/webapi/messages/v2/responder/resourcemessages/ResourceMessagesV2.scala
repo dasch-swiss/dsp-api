@@ -34,8 +34,8 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode.AssetInTemp
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -659,14 +659,14 @@ case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
   requestingUser: UserADM,
   apiRequestID: UUID,
-  ingestMode: AssetIngestMode = AssetInTemp
+  ingestState: AssetIngestState = AssetInTemp
 ) extends ResourcesResponderRequestV2
 
 object CreateResourceRequestV2 {
-  sealed trait AssetIngestMode
-  object AssetIngestMode {
-    case object AssetIngested extends AssetIngestMode
-    case object AssetInTemp   extends AssetIngestMode
+  sealed trait AssetIngestState
+  object AssetIngestState {
+    case object AssetIngested extends AssetIngestState
+    case object AssetInTemp   extends AssetIngestState
   }
 
   /**
@@ -675,13 +675,14 @@ object CreateResourceRequestV2 {
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
+   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @return a case class instance representing the input.
    */
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    ingestMode: AssetIngestMode = AssetInTemp
+    ingestState: AssetIngestState = AssetInTemp
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
@@ -785,7 +786,7 @@ object CreateResourceRequestV2 {
                                            )
                                        }
 
-                  valueContent <- ValueContentV2.fromJsonLdObject(ingestMode, valueJsonLDObject, requestingUser)
+                  valueContent <- ValueContentV2.fromJsonLdObject(ingestState, valueJsonLDObject, requestingUser)
 
                   maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
                                            .mapError(BadRequestException(_))
@@ -851,7 +852,7 @@ object CreateResourceRequestV2 {
         ),
         requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
         apiRequestID = apiRequestID,
-        ingestMode = ingestMode
+        ingestState = ingestState
       )
     }
 }
