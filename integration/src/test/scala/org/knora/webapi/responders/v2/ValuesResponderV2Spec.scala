@@ -26,6 +26,7 @@ import org.knora.webapi.messages.util.DatePrecisionYear
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -457,7 +458,8 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
       val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intVal           = IntegerValueContentV2(ApiV2Complex, 4)
-      val duplicateValue   = CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal)
+      val duplicateValue =
+        CreateValueV2(AssetIngestMode.AssetInTemp, resourceIri, resourceClassIri, propertyIri, intVal)
 
       val actual = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID))
       assertFailsWithA[DuplicateValueException](actual)

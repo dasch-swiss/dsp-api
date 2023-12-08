@@ -9,6 +9,7 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
@@ -37,6 +38,7 @@ import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestMode.AssetInTemp
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
@@ -594,7 +596,7 @@ case class ReadOtherValueV2(
  * @param permissions       the permissions to be given to the new value. If not provided, these will be taken from defaults.
  */
 case class CreateValueV2(
-  ingestMode: AssetIngestMode,
+  ingestMode: AssetIngestMode = AssetInTemp,
   resourceIri: IRI,
   resourceClassIri: SmartIri,
   propertyIri: SmartIri,
