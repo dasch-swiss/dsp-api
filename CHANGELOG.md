@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.4.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.3.3...v0.4.0) (2023-12-07)
+
+
+### Enhancements
+
+* Add bulk-ingest support for other file types DEV-2975  ([#134](https://github.com/dasch-swiss/dsp-ingest/issues/134)) ([a3a9463](https://github.com/dasch-swiss/dsp-ingest/commit/a3a946328767ead4b87e0e7e035c97ebbc3206d7))
+
+
+### Bug Fixes
+
+* Ingest fails when mapping file folder does not exist (DEV-3055) ([#130](https://github.com/dasch-swiss/dsp-ingest/issues/130)) ([e496a1b](https://github.com/dasch-swiss/dsp-ingest/commit/e496a1b8501c664f321abacf6633538f67965e46))
+
+
+### Maintenance
+
+* Add justfile for task automation ([#131](https://github.com/dasch-swiss/dsp-ingest/issues/131)) ([c8828fd](https://github.com/dasch-swiss/dsp-ingest/commit/c8828fdf45a80c32ef39729c9fa404bdbfd22d18))
+* Create stubs for ingesting other file types than images ([#124](https://github.com/dasch-swiss/dsp-ingest/issues/124)) ([9f49897](https://github.com/dasch-swiss/dsp-ingest/commit/9f498975e4a4e000a48e7689994d86aeff59603e))
+* Extract IngestService ([#135](https://github.com/dasch-swiss/dsp-ingest/issues/135)) ([8be5370](https://github.com/dasch-swiss/dsp-ingest/commit/8be537056ec1d3f514a279b0e80fe2d055de9fee))
+* Merge ComplexAsset with Asset ([#132](https://github.com/dasch-swiss/dsp-ingest/issues/132)) ([a4659be](https://github.com/dasch-swiss/dsp-ingest/commit/a4659becf36e8495aea46f1234f1ee1c2c4a732d))
+* Minor dependency updates ([#126](https://github.com/dasch-swiss/dsp-ingest/issues/126)) ([98d94dc](https://github.com/dasch-swiss/dsp-ingest/commit/98d94dc742240d444a3b64d82f60ed46d9975845))
+* Patch dependency updates ([#125](https://github.com/dasch-swiss/dsp-ingest/issues/125)) ([f4e6834](https://github.com/dasch-swiss/dsp-ingest/commit/f4e6834986eebee87a3c155f019bf20b54865f1d))
+* RC Dependency updates ([#127](https://github.com/dasch-swiss/dsp-ingest/issues/127)) ([66208c2](https://github.com/dasch-swiss/dsp-ingest/commit/66208c21b3a0f2823a24e7727793ea806246e507))
+* Remove AssetRef inheritance with Asset ([#129](https://github.com/dasch-swiss/dsp-ingest/issues/129)) ([c0bf10f](https://github.com/dasch-swiss/dsp-ingest/commit/c0bf10f9e59478c6a0001181554a9f749ebf10d9))
+
 ## [0.3.3](https://github.com/dasch-swiss/dsp-ingest/compare/v0.3.2...v0.3.3) (2023-11-20)
 
 
