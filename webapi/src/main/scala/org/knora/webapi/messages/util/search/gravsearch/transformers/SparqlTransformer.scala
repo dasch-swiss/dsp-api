@@ -51,16 +51,6 @@ object SparqlTransformer {
   }
 
   /**
-   * Creates a unique variable name representing the `rdf:type` of an entity with a given base class.
-   *
-   * @param base         the entity to use to create the variable base name.
-   * @param baseClassIri a base class of the entity's type.
-   * @return a unique variable.
-   */
-  def createUniqueVariableNameForEntityAndBaseClass(base: Entity, baseClassIri: IriRef): QueryVariable =
-    QueryVariable(escapeEntityForVariable(base) + "__subClassOf__" + escapeEntityForVariable(baseClassIri))
-
-  /**
    * Create a unique variable from a whole statement.
    *
    * @param baseStatement the statement to be used to create the variable base name.
