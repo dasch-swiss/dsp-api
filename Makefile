@@ -248,15 +248,15 @@ init-db-from-test-dump: ## init local database with data from local dump file of
 	@echo $@
 	${MAKE} init-db-from-dump-file DUMP=db.test.dasch.swiss.trig
 
-.PHONY: init-db-from-staging
-init-db-from-staging: ## init local database with data from staging server. Use as `make init-db-from-staging PW=database-password`
+.PHONY: init-db-from-stage
+init-db-from-stage: ## init local database with data from stage server. Use as `make init-db-from-stage PW=database-password`
 	@echo $@
-	${MAKE} init-db-from-env ENV=db.staging.dasch.swiss
+	${MAKE} init-db-from-env ENV=db.stage.dasch.swiss
 
-.PHONY: init-db-from-staging-dump
-init-db-from-staging-dump: ## init local database with data from local dump file of staging server. Use as `make init-db-from-staging-dump`
+.PHONY: init-db-from-stage-dump
+init-db-from-stage-dump: ## init local database with data from local dump file of stage server. Use as `make init-db-from-stage-dump`
 	@echo $@
-	${MAKE} init-db-from-dump-file DUMP=db.staging.dasch.swiss.trig
+	${MAKE} init-db-from-dump-file DUMP=db.stage.dasch.swiss.trig
 
 .PHONY: init-db-from-prod
 init-db-from-prod: ## init local database with data from prod server. Use as `make init-db-from-prod PW=database-password`
