@@ -19,15 +19,6 @@ class SelectTransformer(
   implicit val stringFormatter: StringFormatter
 ) extends WhereTransformer {
 
-  /**
-   * Transforms a [[StatementPattern]] in a SELECT's WHERE clause into zero or more statement patterns.
-   *
-   * @param statementPattern the statement to be transformed.
-   * @return the result of the transformation.
-   */
-  def transformStatementInSelect(statementPattern: StatementPattern): Task[Seq[StatementPattern]] =
-    ZIO.succeed(Seq(statementPattern))
-
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
@@ -47,5 +38,5 @@ class SelectTransformer(
    *
    * @return the FROM clause to be used, if any.
    */
-  def getFromClause: Task[Option[FromClause]] = ZIO.succeed(None)
+  def getFromClause: Task[Option[FromClause]] = ZIO.none
 }
