@@ -59,44 +59,6 @@ class SparqlTransformerSpec extends CoreSpec {
       generatedQueryVar should ===(QueryVariable("linkingProp1__hasLinkToValue"))
     }
 
-    "optimise knora-base:isDeleted" in {
-      val typeStatement = StatementPattern(
-        subj = QueryVariable("foo"),
-        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef(thingIRI)
-      )
-      val isDeletedStatement = StatementPattern(
-        subj = QueryVariable("foo"),
-        pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-        obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-      )
-      val linkStatement = StatementPattern(
-        subj = QueryVariable("foo"),
-        pred = IriRef(hasOtherThingIRI),
-        obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri)
-      )
-      val patterns: Seq[StatementPattern] = Seq(
-        typeStatement,
-        isDeletedStatement,
-        linkStatement
-      )
-      val optimisedPatterns = SparqlTransformer.optimiseIsDeletedWithFilter(patterns)
-      val expectedPatterns = Seq(
-        typeStatement,
-        linkStatement,
-        FilterNotExistsPattern(
-          Seq(
-            StatementPattern(
-              subj = QueryVariable("foo"),
-              pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-            )
-          )
-        )
-      )
-      optimisedPatterns should ===(expectedPatterns)
-    }
-
     "move a BIND pattern to the beginning of a block" in {
       val typeStatement = StatementPattern(
         subj = QueryVariable("foo"),

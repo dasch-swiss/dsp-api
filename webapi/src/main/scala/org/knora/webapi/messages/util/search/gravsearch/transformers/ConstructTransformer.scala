@@ -38,9 +38,7 @@ final case class ConstructTransformer(
     optimisedPatterns <-
       ZIO.attempt(
         SparqlTransformer.moveBindToBeginning(
-          SparqlTransformer.optimiseIsDeletedWithFilter(
-            SparqlTransformer.moveLuceneToBeginning(patterns)
-          )
+          SparqlTransformer.moveLuceneToBeginning(patterns)
         )
       )
     transformedPatterns <- ZIO.foreach(optimisedPatterns)(transformPattern(_, limit))

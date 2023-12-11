@@ -8,10 +8,7 @@ package org.knora.webapi.messages.util.search.gravsearch.transformers
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
 import org.knora.webapi.*
-import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
 
 object SparqlTransformer {
@@ -85,44 +82,6 @@ object SparqlTransformer {
    */
   def createUniqueVariableFromStatementForLinkValue(baseStatement: StatementPattern): QueryVariable =
     createUniqueVariableFromStatement(baseStatement, "LinkValue")
-
-  /**
-   * Optimises a query by replacing `knora-base:isDeleted false` with a `FILTER NOT EXISTS` pattern
-   * placed at the end of the block.
-   *
-   * @param patterns the block of patterns to be optimised.
-   * @return the result of the optimisation.
-   */
-  def optimiseIsDeletedWithFilter(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    // Separate the knora-base:isDeleted statements from the rest of the block.
-    val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-      case StatementPattern(
-            _,
-            IriRef(SmartIri(OntologyConstants.KnoraBase.IsDeleted), _),
-            XsdLiteral("false", SmartIri(OntologyConstants.Xsd.Boolean))
-          ) =>
-        true
-      case _ => false
-    }
-
-    // Replace the knora-base:isDeleted statements with FILTER NOT EXISTS patterns.
-    val filterPatterns: Seq[FilterNotExistsPattern] = isDeletedPatterns.collect {
-      case statementPattern: StatementPattern =>
-        FilterNotExistsPattern(
-          Seq(
-            StatementPattern(
-              subj = statementPattern.subj,
-              pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
-              obj = XsdLiteral(value = "true", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
-            )
-          )
-        )
-    }
-
-    otherPatterns ++ filterPatterns
-  }
 
   /**
    * Optimises a query by moving BIND patterns to the beginning of a block.
