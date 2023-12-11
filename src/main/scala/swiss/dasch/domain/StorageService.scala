@@ -15,7 +15,7 @@ import zio.stream.ZStream
 import java.io.IOException
 import java.nio.file.StandardOpenOption.*
 import java.nio.file.attribute.FileAttribute
-import java.nio.file.{CopyOption, OpenOption, StandardOpenOption}
+import java.nio.file.{CopyOption, DirectoryNotEmptyException, OpenOption, StandardOpenOption}
 import java.text.ParseException
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZoneOffset}
@@ -30,8 +30,24 @@ trait StorageService {
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit]
   def copyFile(source: Path, target: Path, copyOption: CopyOption*): IO[IOException, Unit]
   def createDirectories(path: Path, attrs: FileAttribute[_]*): IO[IOException, Unit]
-  def delete(path: Path): IO[IOException, Unit]
-  def deleteRecursive(path: Path): IO[IOException, Long]
+
+  /**
+   * Deletes a file.
+   *
+   * @param file the path to the file to delete
+   */
+  def delete(file: Path): IO[IOException, Unit]
+
+  /**
+   * Deletes a file tree recursively.
+   *
+   * @param directory the root of the file tree to delete
+   * @return the number of files deleted
+   */
+  def deleteRecursive(directory: Path): IO[IOException, Long]
+
+  def deleteDirectoryIfEmpty(directory: Path): IO[IOException, Unit]
+
 }
 
 object StorageService {
@@ -121,7 +137,15 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
 
   override def deleteRecursive(path: Path): IO[IOException, Long] =
     Files.deleteRecursive(path)
+
+  override def deleteDirectoryIfEmpty(directory: Path): IO[IOException, Unit] =
+    Files
+      .delete(directory)
+      .catchSome { case _: DirectoryNotEmptyException => ZIO.unit }
+      .whenZIO(Files.isDirectory(directory))
+      .unit
 }
+
 object StorageServiceLive {
   val layer: URLayer[StorageConfig, StorageService] = ZLayer.derive[StorageServiceLive]
 }

@@ -5,15 +5,14 @@
 
 package swiss.dasch.domain
 
-import swiss.dasch.config.Configuration.{SipiConfig, StorageConfig}
 import swiss.dasch.domain.SipiCommand.{FormatArgument, QueryArgument, TopLeftArgument}
+import swiss.dasch.infrastructure.{CommandExecutor, ProcessOutput}
 import zio.*
 import zio.metrics.Metric
 import zio.nio.file.Path
 
 import java.io.IOException
 import java.time.temporal.ChronoUnit
-import scala.sys.process.{ProcessLogger, stringToProcess}
 
 sealed trait SipiCommand {
   def flag(): String
@@ -67,90 +66,62 @@ object SipiCommand {
   }
 }
 
-final case class SipiOutput(stdOut: String, stdErr: String)
 trait SipiClient {
 
-  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[SipiOutput]
+  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[ProcessOutput]
 
-  def queryImageFile(file: Path): IO[IOException, SipiOutput]
+  def queryImageFile(file: Path): IO[IOException, ProcessOutput]
 
   def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat
-  ): UIO[SipiOutput]
+  ): UIO[ProcessOutput]
 }
 
 object SipiClient {
 
-  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): RIO[SipiClient, SipiOutput] =
+  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): RIO[SipiClient, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClient](_.applyTopLeftCorrection(fileIn, fileOut))
 
-  def queryImageFile(file: Path): ZIO[SipiClient, IOException, SipiOutput] =
+  def queryImageFile(file: Path): ZIO[SipiClient, IOException, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClient](_.queryImageFile(file))
 
   def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat
-  ): RIO[SipiClient, SipiOutput] =
+  ): RIO[SipiClient, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClient](_.transcodeImageFile(fileIn, fileOut, outputFormat))
 }
 
-final case class SipiClientLive(prefix: String) extends SipiClient {
+final case class SipiClientLive(executor: CommandExecutor) extends SipiClient {
 
-  private val timer = Metric.timer("sipi_command_duration", ChronoUnit.MILLIS, Chunk.iterate(1.0, 6)(_ * 10))
+  private val sipiPrefix = "/sipi/sipi"
+  private val timer      = Metric.timer("sipi_command_duration", ChronoUnit.MILLIS, Chunk.iterate(1.0, 6)(_ * 10))
 
-  private def execute(command: SipiCommand): UIO[SipiOutput] =
-    command
-      .render()
-      .map(prefix + " " + _)
-      .flatMap { cmd =>
-        val timerTagged = timer.tagged("command", command.flag())
-        val logger      = new InMemoryProcessLogger
-        ZIO.logInfo(s"Running sipi \n$cmd") *>
-          (ZIO.succeed(cmd ! logger) @@ timerTagged.trackDuration)
-            .as(logger.getOutput)
-            .tap(out => ZIO.logDebug(out.toString))
-      }
-      .logError
+  private def execute(command: SipiCommand) =
+    for {
+      sipiParams <- command.render()
+      cmd        <- executor.buildCommand(sipiPrefix, sipiParams)
+      timerTagged = timer.tagged("command", command.flag())
+      out        <- executor.execute(cmd).orDie @@ timerTagged.trackDuration
+    } yield out
 
-  override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[SipiOutput] =
+  override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[ProcessOutput] =
     execute(TopLeftArgument(fileIn, fileOut))
 
   override def transcodeImageFile(
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat
-  ): UIO[SipiOutput] =
+  ): UIO[ProcessOutput] =
     execute(FormatArgument(outputFormat, fileIn, fileOut))
 
-  override def queryImageFile(file: Path): UIO[SipiOutput] =
+  override def queryImageFile(file: Path): UIO[ProcessOutput] =
     execute(QueryArgument(file))
 }
 
-final private class InMemoryProcessLogger extends ProcessLogger {
-  private val sbOut                    = new StringBuilder
-  private val sbErr                    = new StringBuilder
-  override def out(s: => String): Unit = sbOut.append(s + "\n")
-  override def err(s: => String): Unit = sbErr.append(s + "\n")
-  override def buffer[T](f: => T): T   = f
-  def getOutput: SipiOutput            = SipiOutput(sbOut.toString(), sbErr.toString())
-}
-
 object SipiClientLive {
-
-  private val sipiPrefix = "/sipi/sipi"
-
-  private def dockerPrefix(assetPath: Path) =
-    s"docker run --entrypoint $sipiPrefix -v $assetPath:$assetPath daschswiss/knora-sipi:latest"
-
-  val layer: URLayer[SipiConfig with StorageConfig, SipiClient] = ZLayer.fromZIO {
-    for {
-      config            <- ZIO.service[SipiConfig]
-      absoluteAssetPath <- ZIO.serviceWithZIO[StorageConfig](_.assetPath.toAbsolutePath).orDie
-      prefix = if (config.useLocalDev) { dockerPrefix(absoluteAssetPath) }
-               else { sipiPrefix }
-    } yield SipiClientLive(prefix)
-  }
+  val layer = ZLayer.derive[SipiClientLive]
 }

@@ -6,44 +6,58 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
-import zio.*
+import swiss.dasch.domain.Asset.MovingImageAsset
+import zio.json.interop.refined.{decodeRefined, encodeRefined}
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.nio.file.{Files, Path}
-import zio.prelude.Validation
 import zio.stream.ZStream
+import zio.{Task, UIO, ZIO, ZLayer}
 
 final private case class AssetInfoFileContent(
-  internalFilename: String,
-  originalInternalFilename: String,
-  originalFilename: String,
-  checksumOriginal: String,
-  checksumDerivative: String
+  internalFilename: NonEmptyString,
+  originalInternalFilename: NonEmptyString,
+  originalFilename: NonEmptyString,
+  checksumOriginal: Sha256Hash,
+  checksumDerivative: Sha256Hash,
+  width: Option[Int] = None,
+  height: Option[Int] = None,
+  duration: Option[Double] = None,
+  fps: Option[Double] = None
 ) {
-  def withDerivativeChecksum(checksum: Sha256Hash): AssetInfoFileContent = copy(checksumDerivative = checksum.toString)
+  def withDerivativeChecksum(checksum: Sha256Hash): AssetInfoFileContent = copy(checksumDerivative = checksum)
 }
 private object AssetInfoFileContent {
   def make(
     asset: Asset,
     originalChecksum: Sha256Hash,
-    derivativeChecksum: Sha256Hash
+    derivativeChecksum: Sha256Hash,
+    metadata: Option[MovingImageMetadata]
   ): AssetInfoFileContent =
     AssetInfoFileContent(
       asset.derivative.filename,
-      asset.original.internalFilename.toString,
-      asset.original.originalFilename.toString,
-      originalChecksum.toString,
-      derivativeChecksum.toString
+      asset.original.internalFilename,
+      asset.original.originalFilename,
+      originalChecksum,
+      derivativeChecksum,
+      metadata.map(_.width),
+      metadata.map(_.height),
+      metadata.map(_.duration),
+      metadata.map(_.fps)
     )
 
   given codec: JsonCodec[AssetInfoFileContent] = DeriveJsonCodec.gen[AssetInfoFileContent]
 }
 
-final case class FileAndChecksum(file: Path, checksum: Sha256Hash)
+final case class FileAndChecksum(file: Path, checksum: Sha256Hash) {
+  lazy val filename: NonEmptyString = NonEmptyString.unsafeFrom(file.filename.toString)
+}
+
 final case class AssetInfo(
-  asset: AssetRef,
+  assetRef: AssetRef,
   original: FileAndChecksum,
   originalFilename: NonEmptyString,
-  derivative: FileAndChecksum
+  derivative: FileAndChecksum,
+  movingImageMetadata: Option[MovingImageMetadata] = None
 )
 
 trait AssetInfoService {
@@ -71,9 +85,9 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
   override def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo] =
     for {
       content   <- storageService.loadJsonFile[AssetInfoFileContent](infoFile)
-      assetMaybe = AssetId.makeFromPath(Path(content.internalFilename)).map(id => AssetRef(id, shortcode))
+      assetMaybe = AssetId.makeFromPath(Path(content.internalFilename.toString)).map(id => AssetRef(id, shortcode))
       assetInfo <- assetMaybe match {
-                     case Some(asset) => toAssetInfo(content, infoFile.parent.orNull, asset)
+                     case Some(asset) => ZIO.succeed(toAssetInfo(content, infoFile.parent.orNull, asset))
                      case None        => ZIO.fail(IllegalArgumentException(s"Unable to parse asset id from $infoFile"))
                    }
     } yield assetInfo
@@ -88,33 +102,27 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
   private def infoFilename(id: AssetId): String     = s"$id.info"
 
   private def parseAssetInfoFile(asset: AssetRef, infoFile: Path): Task[AssetInfo] =
-    storageService.loadJsonFile[AssetInfoFileContent](infoFile).flatMap(toAssetInfo(_, infoFile.parent.orNull, asset))
+    storageService.loadJsonFile[AssetInfoFileContent](infoFile).map(toAssetInfo(_, infoFile.parent.orNull, asset))
 
   private def toAssetInfo(
     raw: AssetInfoFileContent,
     infoFileDirectory: Path,
     asset: AssetRef
-  ): Task[AssetInfo] =
-    Validation
-      .validateWith(
-        Validation.fromEither(Sha256Hash.make(raw.checksumOriginal)),
-        Validation.fromEither(Sha256Hash.make(raw.checksumDerivative)),
-        Validation.fromEither(NonEmptyString.from(raw.originalFilename))
-      ) {
-        (
-          origChecksum,
-          derivativeChecksum,
-          origFilename
-        ) =>
-          AssetInfo(
-            asset = asset,
-            original = FileAndChecksum(infoFileDirectory / raw.originalInternalFilename, origChecksum),
-            originalFilename = origFilename,
-            derivative = FileAndChecksum(infoFileDirectory / raw.internalFilename, derivativeChecksum)
-          )
-      }
-      .toZIO
-      .mapError(e => new IllegalArgumentException(s"Invalid asset info file content $raw, $infoFileDirectory, $e"))
+  ): AssetInfo = {
+    val movingImageMetadata = for {
+      width    <- raw.width
+      height   <- raw.height
+      duration <- raw.duration
+      fps      <- raw.fps
+    } yield MovingImageMetadata(width, height, duration, fps)
+    AssetInfo(
+      assetRef = asset,
+      original = FileAndChecksum(infoFileDirectory / raw.originalInternalFilename.toString, raw.checksumOriginal),
+      originalFilename = raw.originalFilename,
+      derivative = FileAndChecksum(infoFileDirectory / raw.internalFilename.toString, raw.checksumDerivative),
+      movingImageMetadata = movingImageMetadata
+    )
+  }
 
   override def findAllInPath(path: Path, shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo] =
     StorageService
@@ -140,9 +148,13 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
     infoFile            = assetDir / infoFilename(asset.ref)
     checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file.toPath)
     checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative.toPath)
-    content             = AssetInfoFileContent.make(asset, checksumOriginal, checksumDerivative)
-    _                  <- Files.createFile(infoFile)
-    _                  <- storageService.saveJsonFile(infoFile, content)
+    metadata = asset match {
+                 case mi: MovingImageAsset => Some(mi.metadata)
+                 case _                    => None
+               }
+    content = AssetInfoFileContent.make(asset, checksumOriginal, checksumDerivative, metadata)
+    _      <- Files.createFile(infoFile)
+    _      <- storageService.saveJsonFile(infoFile, content)
   } yield ()
 }
 

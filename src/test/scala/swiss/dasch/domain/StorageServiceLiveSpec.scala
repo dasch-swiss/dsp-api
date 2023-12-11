@@ -61,7 +61,7 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
       for {
         projectPath <- ZIO.serviceWith[StorageConfig](_.assetPath).map(_ / asset.belongsToProject.toString)
         expected = AssetInfo(
-                     asset = asset,
+                     assetRef = asset,
                      original = FileAndChecksum(
                        projectPath / "fg" / "il" / s"${asset.id.toString}.jp2.orig",
                        "fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c".toSha256Hash

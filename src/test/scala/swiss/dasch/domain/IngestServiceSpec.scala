@@ -7,6 +7,7 @@ package swiss.dasch.domain
 
 import swiss.dasch.api.SipiClientMock
 import swiss.dasch.config.Configuration.StorageConfig
+import swiss.dasch.infrastructure.CommandExecutorLive
 import swiss.dasch.test.SpecConfigurations
 import zio.ZIO
 import zio.nio.file.Files
@@ -35,23 +36,26 @@ object IngestServiceSpec extends ZIOSpecDefault {
         asset.belongsToProject == shortcode,
         info.originalFilename.toString == fileToIngest.filename.toString,
         info.originalFilename == asset.original.originalFilename,
-        info.asset == asset.ref,
+        info.assetRef == asset.ref,
         info.original.checksum == checksum,
-        info.original.file.filename.toString == originalFilename,
-        info.original.file.filename.toString == asset.original.internalFilename.toString,
+        info.original.filename.toString == originalFilename,
+        info.original.filename == asset.original.internalFilename,
         info.derivative.checksum == checksum,
-        info.derivative.file.filename.toString == derivativeFilename,
-        info.derivative.file.filename.toString == asset.derivative.filename,
+        info.derivative.filename.toString == derivativeFilename,
+        info.derivative.filename == asset.derivative.filename,
         originalExists,
         derivativeExists
       )
     }
   }).provide(
-    IngestService.layer,
-    StorageServiceLive.layer,
-    ImageServiceLive.layer,
-    SipiClientMock.layer,
     AssetInfoServiceLive.layer,
-    SpecConfigurations.storageConfigLayer
+    CommandExecutorLive.layer,
+    StillImageServiceLive.layer,
+    IngestService.layer,
+    MovingImageService.layer,
+    SipiClientMock.layer,
+    SpecConfigurations.sipiConfigLayer,
+    SpecConfigurations.storageConfigLayer,
+    StorageServiceLive.layer
   )
 }

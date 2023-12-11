@@ -5,18 +5,16 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.refineV
+import eu.timepit.refined.api.{Refined, RefinedTypeOps}
 import eu.timepit.refined.string.MatchesRegex
 import zio.*
 import zio.nio.file.Path
 
 import java.io.{FileInputStream, FileNotFoundException}
 
-opaque type Sha256Hash = String Refined MatchesRegex["^[A-Fa-f0-9]{64}$"]
-object Sha256Hash {
-  def make(value: String): Either[String, Sha256Hash] = refineV(value)
-}
+type Sha256Hash = String Refined MatchesRegex["^[A-Fa-f0-9]{64}$"]
+object Sha256Hash extends RefinedTypeOps[Sha256Hash, String]
+
 final case class ChecksumResult(file: Path, checksumMatches: Boolean)
 
 trait FileChecksumService {
@@ -45,7 +43,7 @@ object FileChecksumService {
     }) digest.update(buffer, 0, bytesRead)
     val sb = new StringBuilder
     for (byte <- digest.digest()) sb.append(String.format("%02x", Byte.box(byte)))
-    ZIO.fromEither(Sha256Hash.make(sb.toString())).mapError(IllegalStateException(_)).orDie
+    ZIO.fromEither(Sha256Hash.from(sb.toString())).mapError(IllegalStateException(_)).orDie
   }
 }
 

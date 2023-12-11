@@ -59,10 +59,22 @@ sealed trait Asset {
 
 object Asset {
   final case class StillImageAsset(ref: AssetRef, original: Original, derivative: JpxDerivativeFile) extends Asset
-  final case class OtherAsset(ref: AssetRef, original: Original, derivative: DerivativeFile)         extends Asset
+  final case class MovingImageAsset(
+    ref: AssetRef,
+    original: Original,
+    derivative: DerivativeFile,
+    metadata: MovingImageMetadata
+  ) extends Asset
+  final case class OtherAsset(ref: AssetRef, original: Original, derivative: DerivativeFile) extends Asset
 
   def makeStillImage(assetRef: AssetRef, original: Original, derivative: JpxDerivativeFile): StillImageAsset =
     StillImageAsset(assetRef, original, derivative)
+  def makeMovingImageAsset(
+    assetRef: AssetRef,
+    original: Original,
+    derivative: DerivativeFile,
+    metadata: MovingImageMetadata
+  ): MovingImageAsset = MovingImageAsset(assetRef, original, derivative, metadata)
   def makeOther(assetRef: AssetRef, original: Original, derivative: DerivativeFile): OtherAsset =
     OtherAsset(assetRef, original, derivative)
 }
@@ -95,9 +107,9 @@ object OriginalFile {
 }
 
 sealed trait DerivativeFile(file: Path) {
-  final def toPath: Path     = file
-  final def filename: String = file.filename.toString
-  final def assetId: AssetId = AssetId.makeFromPath(file).head
+  final def toPath: Path             = file
+  final def filename: NonEmptyString = NonEmptyString.unsafeFrom(file.filename.toString)
+  final def assetId: AssetId         = AssetId.makeFromPath(file).head
 }
 
 object DerivativeFile {
@@ -123,5 +135,18 @@ object DerivativeFile {
         case _ => None
       }
     def unsafeFrom(file: Path): OtherDerivativeFile = from(file).getOrElse(throw new Exception("Not a derivative file"))
+  }
+
+  final case class MovingImageDerivativeFile private (file: Path) extends DerivativeFile(file)
+  object MovingImageDerivativeFile {
+    def from(file: Path): Option[MovingImageDerivativeFile] =
+      file match {
+        case hidden if hidden.filename.toString.startsWith(".") => None
+        case other if SupportedFileType.MovingImage.acceptsExtension(other.filename.fileExtension) =>
+          hasAssetIdInFilename(other).map(MovingImageDerivativeFile(_))
+        case _ => None
+      }
+    def unsafeFrom(file: Path): MovingImageDerivativeFile =
+      from(file).getOrElse(throw new Exception("Not a derivative file"))
   }
 }

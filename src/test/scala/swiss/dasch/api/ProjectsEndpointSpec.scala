@@ -9,6 +9,7 @@ import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
+import swiss.dasch.infrastructure.CommandExecutorLive
 import swiss.dasch.test.SpecConstants.Projects.{emptyProject, existingProject, nonExistentProject}
 import swiss.dasch.test.{SpecConfigurations, SpecPaths}
 import zio.http.*
@@ -171,10 +172,12 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     AuthServiceLive.layer,
     BaseEndpoints.layer,
     BulkIngestServiceLive.layer,
+    CommandExecutorLive.layer,
     FileChecksumServiceLive.layer,
-    ImageServiceLive.layer,
+    StillImageServiceLive.layer,
     ImportServiceLive.layer,
     IngestService.layer,
+    MovingImageService.layer,
     ProjectServiceLive.layer,
     ProjectsEndpoints.layer,
     ProjectsEndpointsHandler.layer,
@@ -182,6 +185,7 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     SipiClientMock.layer,
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.jwtConfigDisableAuthLayer,
+    SpecConfigurations.sipiConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer
   )

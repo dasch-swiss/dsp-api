@@ -7,18 +7,18 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
-import swiss.dasch.domain.Asset.{OtherAsset, StillImageAsset}
+import swiss.dasch.domain.Asset.{MovingImageAsset, OtherAsset, StillImageAsset}
 import swiss.dasch.domain.DerivativeFile.OtherDerivativeFile
 import swiss.dasch.domain.PathOps.fileExtension
-import zio.nio.file.Path
+import zio.nio.file.{Files, Path}
 import zio.{IO, Task, ZIO, ZLayer}
 
 import java.io.IOException
 
 final case class IngestService(
   storage: StorageService,
-  imageService: ImageService,
-  sipiClient: SipiClient,
+  stillImageService: StillImageService,
+  movingImageService: MovingImageService,
   assetInfo: AssetInfoService
 ) {
 
@@ -28,21 +28,25 @@ final case class IngestService(
       _ <- ZIO.unlessZIO(FileFilters.isSupported(fileToIngest))(
              ZIO.fail(new IllegalArgumentException(s"File $fileToIngest is not a supported file."))
            )
-      assetRef <- AssetRef.makeNew(project)
-      assetDir <- ensureAssetDirectoryExists(assetRef)
+      ref      <- AssetRef.makeNew(project)
+      assetDir <- ensureAssetDirectoryExists(ref)
+      asset    <- ingestAsset(fileToIngest, ref, assetDir).tapError(_ => tryCleanup(ref, assetDir).logError.ignore)
+      _        <- ZIO.logInfo(s"Successfully ingesting file $fileToIngest as ${asset.ref}")
+    } yield asset
+
+  private def ingestAsset(fileToIngest: Path, assetRef: AssetRef, assetDir: Path) =
+    for {
       original <- createOriginalFileInAssetDir(fileToIngest, assetRef, assetDir)
       asset <- ZIO
                  .fromOption(SupportedFileType.fromPath(fileToIngest))
                  .orElseFail(new IllegalArgumentException("Unsupported file type."))
                  .flatMap {
-                   case SupportedFileType.StillImage => handleImageFile(original, assetRef)
-                   case SupportedFileType.Other      => handleOtherFile(original, assetRef, assetDir)
-                   case SupportedFileType.MovingImage =>
-                     ZIO.fail(new NotImplementedError("Video files are not supported yet."))
+                   case SupportedFileType.StillImage  => handleImageFile(original, assetRef)
+                   case SupportedFileType.Other       => handleOtherFile(original, assetRef, assetDir)
+                   case SupportedFileType.MovingImage => handleMovingImageFile(original, assetRef)
                  }
       _ <- assetInfo.createAssetInfo(asset)
       _ <- storage.delete(fileToIngest)
-      _ <- ZIO.logInfo(s"Finished ingesting file $fileToIngest")
     } yield asset
 
   private def ensureAssetDirectoryExists(assetRef: AssetRef): IO[IOException, Path] =
@@ -59,7 +63,7 @@ final case class IngestService(
 
   private def handleImageFile(original: Original, assetRef: AssetRef): Task[StillImageAsset] =
     ZIO.logInfo(s"Creating derivative for image $original, $assetRef") *>
-      imageService
+      stillImageService
         .createDerivative(original.file)
         .map(derivative => Asset.makeStillImage(assetRef, original, derivative))
 
@@ -70,6 +74,23 @@ final case class IngestService(
       val derivative     = OtherDerivativeFile.unsafeFrom(derivativePath)
       storage.copyFile(original.file.toPath, derivativePath).as(Asset.makeOther(assetRef, original, derivative))
     }
+
+  private def handleMovingImageFile(original: Original, assetRef: AssetRef): Task[MovingImageAsset] =
+    ZIO.logInfo(s"Creating derivative for moving image $original, $assetRef") *> {
+      for {
+        derivative <- movingImageService.createDerivative(original, assetRef)
+        _          <- movingImageService.extractKeyFrames(derivative, assetRef)
+        meta       <- movingImageService.extractMetadata(derivative, assetRef)
+      } yield Asset.makeMovingImageAsset(assetRef, original, derivative, meta)
+    }
+
+  private def tryCleanup(assetRef: AssetRef, assetDir: Path): IO[IOException, Unit] =
+    // remove all files and folders which start with the asset id and remove empty assetDir
+    ZIO.logInfo(s"Failed ingest for $assetRef cleaning up in directory $assetDir") *>
+      StorageService
+        .findInPath(assetDir, p => ZIO.succeed(p.filename.toString.startsWith(assetRef.id.toString)), maxDepth = 1)
+        .mapZIO(p => ZIO.ifZIO(Files.isDirectory(p))(storage.deleteRecursive(p).unit, storage.delete(p)))
+        .runDrain *> storage.deleteDirectoryIfEmpty(assetDir) *> storage.deleteDirectoryIfEmpty(assetDir.parent.head)
 }
 
 object IngestService {

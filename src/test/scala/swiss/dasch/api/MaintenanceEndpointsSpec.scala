@@ -163,7 +163,7 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
       AssetInfoServiceLive.layer,
       AuthServiceLive.layer,
       FileChecksumServiceLive.layer,
-      ImageServiceLive.layer,
+      StillImageServiceLive.layer,
       BaseEndpoints.layer,
       MaintenanceActionsLive.layer,
       MaintenanceEndpoints.layer,

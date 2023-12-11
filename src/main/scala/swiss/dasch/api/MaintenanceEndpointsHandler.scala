@@ -15,7 +15,7 @@ final case class MaintenanceEndpointsHandler(
   projectService: ProjectService,
   fileChecksumService: FileChecksumService,
   sipiClient: SipiClient,
-  imageService: ImageService
+  imageService: StillImageService
 ) extends HandlerFunctions {
 
   val applyTopLeftCorrectionEndpoint: ZServerEndpoint[Any, Any] =

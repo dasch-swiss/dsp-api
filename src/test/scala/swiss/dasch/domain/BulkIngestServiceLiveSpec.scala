@@ -6,6 +6,7 @@
 package swiss.dasch.domain
 
 import swiss.dasch.api.SipiClientMock
+import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConfigurations
 import zio.nio.file.Files
 import zio.test.{ZIOSpecDefault, assertTrue}
@@ -55,11 +56,13 @@ object BulkIngestServiceLiveSpec extends ZIOSpecDefault {
   ).provide(
     AssetInfoServiceLive.layer,
     BulkIngestServiceLive.layer,
-    ImageServiceLive.layer,
+    CommandExecutorMock.layer,
     IngestService.layer,
+    MovingImageService.layer,
     SipiClientMock.layer,
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.storageConfigLayer,
+    StillImageServiceLive.layer,
     StorageServiceLive.layer
   )
 }

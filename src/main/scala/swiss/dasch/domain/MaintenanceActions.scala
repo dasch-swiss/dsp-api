@@ -14,8 +14,8 @@ import zio.json.{DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder}
 import zio.nio.file
 import zio.nio.file.{Files, Path}
 import zio.stream.{ZSink, ZStream}
-
 import DerivativeFile.JpxDerivativeFile
+import eu.timepit.refined.types.string.NonEmptyString
 
 import java.io.IOException
 
@@ -40,7 +40,7 @@ object MaintenanceActions {
 }
 
 final case class MaintenanceActionsLive(
-  imageService: ImageService,
+  imageService: StillImageService,
   projectService: ProjectService,
   sipiClient: SipiClient,
   storageService: StorageService
@@ -276,11 +276,11 @@ final case class MaintenanceActionsLive(
       checksumOriginal   <- FileChecksumService.createSha256Hash(c.originalPath)
       checksumDerivative <- FileChecksumService.createSha256Hash(c.jpxPath)
     } yield AssetInfoFileContent(
-      internalFilename = c.jpxPath.filename.toString,
-      originalInternalFilename = c.originalPath.filename.toString,
-      originalFilename = c.originalFilename,
-      checksumOriginal = checksumOriginal.toString,
-      checksumDerivative = checksumDerivative.toString
+      internalFilename = NonEmptyString.unsafeFrom(c.jpxPath.filename.toString),
+      originalInternalFilename = NonEmptyString.unsafeFrom(c.originalPath.filename.toString),
+      originalFilename = NonEmptyString.unsafeFrom(c.originalFilename),
+      checksumOriginal = checksumOriginal,
+      checksumDerivative = checksumDerivative
     )
 }
 object MaintenanceActionsLive {

@@ -11,6 +11,7 @@ import eu.timepit.refined.numeric.*
 import eu.timepit.refined.numeric.Greater.greaterValidate
 import swiss.dasch.api.SipiClientMockMethodInvocation.ApplyTopLeftCorrection
 import swiss.dasch.api.{SipiClientMock, SipiClientMockMethodInvocation}
+import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
 import swiss.dasch.domain.Exif.Image.OrientationValue
 import swiss.dasch.domain.RefinedHelper.positiveFrom
 import swiss.dasch.test.SpecConfigurations
@@ -19,8 +20,6 @@ import zio.Exit
 import zio.nio.file.{Files, Path}
 import zio.test.*
 import zio.test.Assertion.{equalTo, fails, hasMessage, isSubtype}
-
-import DerivativeFile.JpxDerivativeFile
 
 import java.io.IOException
 
@@ -42,14 +41,15 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           _ <- StorageService.saveJsonFile[AssetInfoFileContent](
                  infoFile,
                  AssetInfoFileContent(
-                   internalFilename = info.derivative.file.filename.toString,
-                   originalInternalFilename = info.original.file.filename.toString,
-                   originalFilename = info.originalFilename.toString,
-                   checksumOriginal = info.original.checksum.toString,
-                   checksumDerivative = "this-should-be-updated"
+                   internalFilename = info.derivative.filename,
+                   originalInternalFilename = info.original.filename,
+                   originalFilename = info.originalFilename,
+                   checksumOriginal = info.original.checksum,
+                   checksumDerivative = // this should not be updated
+                     Sha256Hash.unsafeFrom("3c9194324cc5921bef9a19fc8f9f7874114904cc25d43801cdb9364cfa363412")
                  )
                )
-          _                 <- ImageService.applyTopLeftCorrection(image)
+          _                 <- StillImageService.applyTopLeftCorrection(image)
           backupExists      <- Files.exists(backup)
           correctionApplied <- SipiClientMock.wasInvoked(ApplyTopLeftCorrection(image, image))
           checksumUpdated   <- FileChecksumService.verifyChecksumDerivative(asset)
@@ -60,7 +60,7 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           _                    <- SipiClientMock.setOrientation(OrientationValue.Horizontal)
           image                <- imageFile
           backup               <- backupFile
-          _                    <- ImageService.applyTopLeftCorrection(image)
+          _                    <- StillImageService.applyTopLeftCorrection(image)
           backupNotCreated     <- Files.exists(backup).negate
           correctionNotApplied <- SipiClientMock.wasInvoked(ApplyTopLeftCorrection(image, image)).negate
         } yield assertTrue(backupNotCreated, correctionNotApplied)
@@ -72,7 +72,7 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           _          <- Files.createDirectories(assetDir)
           image       = assetDir / s"$assetId.jp2.orig"
           _          <- Files.createFile(image)
-          derivative <- ImageService.createDerivative(OriginalFile.unsafeFrom(image))
+          derivative <- StillImageService.createDerivative(OriginalFile.unsafeFrom(image))
           fileExists <- Files.exists(derivative.toPath)
         } yield assertTrue(fileExists, derivative.toPath.filename.toString == s"$assetId.jpx")
       },
@@ -84,19 +84,19 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
           _        <- Files.createDirectories(assetDir)
           image     = assetDir / s"$assetId.jp2.orig"
           _        <- Files.createFile(image)
-          actual   <- ImageService.createDerivative(OriginalFile.unsafeFrom(image)).exit
+          actual   <- StillImageService.createDerivative(OriginalFile.unsafeFrom(image)).exit
         } yield assertTrue(actual.isFailure)
       },
       test("getDimensions should return Dimensions if Sipi returns them") {
         val dim = Dimensions(positiveFrom(100), positiveFrom(100))
         for {
           _      <- SipiClientMock.setQueryImageDimensions(dim)
-          actual <- ImageService.getDimensions(JpxDerivativeFile.unsafeFrom(Path("images/some-file.jp2")))
+          actual <- StillImageService.getDimensions(JpxDerivativeFile.unsafeFrom(Path("images/some-file.jp2")))
         } yield assertTrue(actual == dim)
       },
       test("getDimensions should fail Dimensions if Sipi does not return them") {
         for {
-          actual <- ImageService.getDimensions(JpxDerivativeFile.unsafeFrom(Path("images/some-file.jp2"))).exit
+          actual <- StillImageService.getDimensions(JpxDerivativeFile.unsafeFrom(Path("images/some-file.jp2"))).exit
         } yield assert(actual)(
           fails(isSubtype[IOException](hasMessage(equalTo("Could not get dimensions from 'images/some-file.jp2'"))))
         )
@@ -104,7 +104,7 @@ object ImageServiceLiveSpec extends ZIOSpecDefault {
     ).provide(
       AssetInfoServiceLive.layer,
       FileChecksumServiceLive.layer,
-      ImageServiceLive.layer,
+      StillImageServiceLive.layer,
       SipiClientMock.layer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer

@@ -6,8 +6,9 @@
 package swiss.dasch.api
 
 import swiss.dasch.api.SipiClientMockMethodInvocation.*
+import swiss.dasch.domain.*
 import swiss.dasch.domain.Exif.Image.OrientationValue
-import swiss.dasch.domain.{Dimensions, Exif, SipiClient, SipiImageFormat, SipiOutput}
+import swiss.dasch.infrastructure.ProcessOutput
 import zio.*
 import zio.nio.file.*
 
@@ -26,7 +27,7 @@ object SipiClientMockMethodInvocation {
 
 final case class SipiClientMock(
   invocations: Ref[List[SipiClientMockMethodInvocation]],
-  queryImageFileReturnValue: Ref[SipiOutput],
+  queryImageFileReturnValue: Ref[ProcessOutput],
   dontTranscode: Ref[Boolean]
 ) extends SipiClient {
 
@@ -34,22 +35,22 @@ final case class SipiClientMock(
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat
-  ): UIO[SipiOutput] =
+  ): UIO[ProcessOutput] =
     ZIO.ifZIO(dontTranscode.get)(
-      onTrue = ZIO.succeed(SipiOutput("", "")),
+      onTrue = ZIO.succeed(ProcessOutput("", "", 0)),
       onFalse = Files.copy(fileIn, fileOut, StandardCopyOption.REPLACE_EXISTING).orDie *>
         invocations
           .update(_.appended(TranscodeImageFile(fileIn, fileOut, outputFormat)))
-          .as(SipiOutput("", ""))
+          .as(ProcessOutput("", "", 0))
     )
 
-  override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[SipiOutput] =
+  override def applyTopLeftCorrection(fileIn: Path, fileOut: Path): UIO[ProcessOutput] =
     Files.copy(fileIn, fileOut, StandardCopyOption.REPLACE_EXISTING).orDie *>
       invocations
         .update(_.appended(ApplyTopLeftCorrection(fileIn, fileOut)))
-        .as(SipiOutput("", ""))
+        .as(ProcessOutput("", "", 0))
 
-  override def queryImageFile(file: Path): UIO[SipiOutput] = for {
+  override def queryImageFile(file: Path): UIO[ProcessOutput] = for {
     response <- queryImageFileReturnValue.get
     _        <- invocations.update(_.appended(QueryImageFile(file)))
   } yield response
@@ -62,18 +63,19 @@ final case class SipiClientMock(
   def noInteractions(): UIO[Boolean] = getInvocations().map(_.isEmpty)
 
   def setQueryImageFileOrientation(orientation: OrientationValue): UIO[Unit] = queryImageFileReturnValue.set(
-    SipiOutput(s"Exif.Image.Orientation                       0x0112 Short       ${orientation.value}", "")
+    ProcessOutput(s"Exif.Image.Orientation                       0x0112 Short       ${orientation.value}", "", 0)
   )
 
   def setQueryImageDimensions(dimension: Dimensions): UIO[Unit] = queryImageFileReturnValue.set(
-    SipiOutput(
+    ProcessOutput(
       s"""
          |
          |SipiImage with the following parameters:
          |nx    = ${dimension.width} 
          |ny    = ${dimension.height}
          |""".stripMargin,
-      ""
+      "",
+      0
     )
   )
 
@@ -85,13 +87,13 @@ object SipiClientMock {
     fileIn: Path,
     fileOut: Path,
     outputFormat: SipiImageFormat
-  ): RIO[SipiClientMock, SipiOutput] =
+  ): RIO[SipiClientMock, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClientMock](_.transcodeImageFile(fileIn, fileOut, outputFormat))
 
-  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): RIO[SipiClientMock, SipiOutput] =
+  def applyTopLeftCorrection(fileIn: Path, fileOut: Path): RIO[SipiClientMock, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClientMock](_.applyTopLeftCorrection(fileIn, fileOut))
 
-  def queryImageFile(file: Path): RIO[SipiClientMock, SipiOutput] =
+  def queryImageFile(file: Path): RIO[SipiClientMock, ProcessOutput] =
     ZIO.serviceWithZIO[SipiClientMock](_.queryImageFile(file))
 
   def getInvocations(): RIO[SipiClientMock, List[SipiClientMockMethodInvocation]] =
@@ -114,7 +116,7 @@ object SipiClientMock {
 
   val layer: ULayer[SipiClientMock] = ZLayer.fromZIO(for {
     invocations  <- Ref.make(List.empty[SipiClientMockMethodInvocation])
-    querySipiOut <- Ref.make[SipiOutput](SipiOutput("", ""))
+    querySipiOut <- Ref.make[ProcessOutput](ProcessOutput("", "", 0))
     failSilently <- Ref.make[Boolean](false)
   } yield SipiClientMock(invocations, querySipiOut, failSilently))
 }
