@@ -16,11 +16,19 @@ import java.nio.file.attribute.FileAttribute
 trait BulkIngestService {
 
   def startBulkIngest(shortcode: ProjectShortcode): Task[IngestResult]
+  def finalizeBulkIngest(shortcode: ProjectShortcode): Task[Unit]
+  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): Task[Option[String]]
 }
 
 object BulkIngestService {
   def startBulkIngest(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, IngestResult] =
     ZIO.serviceWithZIO[BulkIngestService](_.startBulkIngest(shortcode))
+
+  def finalizeBulkIngest(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, Unit] =
+    ZIO.serviceWithZIO[BulkIngestService](_.finalizeBulkIngest(shortcode))
+
+  def getBulkIngestMappingCsv(shortcode: ProjectShortcode): ZIO[BulkIngestService, Throwable, Option[String]] =
+    ZIO.serviceWithZIO[BulkIngestService](_.getBulkIngestMappingCsv(shortcode))
 }
 
 case class IngestResult(success: Int = 0, failed: Int = 0) {
@@ -68,13 +76,16 @@ final case class BulkIngestServiceLive(
     storage.getTempDirectory().map(_ / "import" / shortcode.toString)
 
   private def createMappingFile(project: ProjectShortcode, importDir: Path): IO[IOException, Path] = {
-    val mappingFile = importDir.parent.head / s"mapping-$project.csv"
+    val mappingFile = getMappingCsvFile(importDir, project)
     ZIO
       .unlessZIO(Files.exists(mappingFile))(
         Files.createFile(mappingFile) *> Files.writeLines(mappingFile, List("original,derivative"))
       )
       .as(mappingFile)
   }
+
+  private def getMappingCsvFile(importDir: _root_.zio.nio.file.Path, project: ProjectShortcode) =
+    importDir.parent.head / s"mapping-$project.csv"
 
   private def ingestFileAndUpdateMapping(project: ProjectShortcode, importDir: Path, mappingFile: Path, file: Path) =
     ingestService
@@ -92,6 +103,25 @@ final case class BulkIngestServiceLive(
       val line                     = s"$ingestedFileRelativePath,$derivativeFilename"
       Files.writeLines(csv, Seq(line), openOptions = Set(StandardOpenOption.APPEND))
     }
+
+  override def finalizeBulkIngest(shortcode: ProjectShortcode): Task[Unit] = for {
+    _         <- ZIO.logInfo(s"Finalizing bulk ingest for project $shortcode")
+    importDir <- getImportFolder(shortcode)
+    mappingCsv = getMappingCsvFile(importDir, shortcode)
+    _         <- storage.deleteRecursive(importDir)
+    _         <- storage.delete(mappingCsv)
+    _         <- ZIO.logInfo(s"Finished finalizing bulk ingest for project $shortcode")
+  } yield ()
+
+  override def getBulkIngestMappingCsv(shortcode: ProjectShortcode): Task[Option[String]] =
+    for {
+      importDir <- getImportFolder(shortcode)
+      mappingCsv = getMappingCsvFile(importDir, shortcode)
+      mapping <- ZIO.ifZIO(Files.exists(mappingCsv))(
+                   Files.readAllLines(mappingCsv).map(it => Some(it.mkString("\n"))),
+                   ZIO.none
+                 )
+    } yield mapping
 }
 
 object BulkIngestServiceLive {

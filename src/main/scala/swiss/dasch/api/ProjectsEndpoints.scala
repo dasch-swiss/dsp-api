@@ -131,6 +131,27 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     )
     .tag(projects)
 
+  val postBulkIngestFinalize = base.secureEndpoint.post
+    .in(projects / shortcodePathVar / "bulk-ingest" / "finalize")
+    .out(jsonBody[ProjectResponse].example(ProjectResponse("0001")))
+    .description(
+      "Finalizes the bulk ingest. " +
+        "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
+        "This will remove also the mapping.csv file."
+    )
+    .tag(projects)
+
+  val getBulkIngestMappingCsv = base.secureEndpoint.get
+    .in(projects / shortcodePathVar / "bulk-ingest" / "mapping.csv")
+    .description(
+      "Get the current result of the bulk ingest, may be incomplete. " +
+        "The result is a csv with the following structure: " +
+        "original,derivative"
+    )
+    .out(stringBody)
+    .out(header(HeaderNames.ContentType, "text/csv"))
+    .tag(projects)
+
   val postExport = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "export")
     .out(header[String]("Content-Disposition"))
@@ -151,6 +172,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       getProjectByShortcodeEndpoint,
       getProjectsChecksumReport,
       postBulkIngest,
+      getBulkIngestMappingCsv,
       postExport,
       getImport
     )

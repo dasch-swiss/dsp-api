@@ -31,6 +31,7 @@ trait StorageService {
   def copyFile(source: Path, target: Path, copyOption: CopyOption*): IO[IOException, Unit]
   def createDirectories(path: Path, attrs: FileAttribute[_]*): IO[IOException, Unit]
   def delete(path: Path): IO[IOException, Unit]
+  def deleteRecursive(path: Path): IO[IOException, Long]
 }
 
 object StorageService {
@@ -117,6 +118,9 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
 
   override def delete(path: Path): IO[IOException, Unit] =
     Files.delete(path)
+
+  override def deleteRecursive(path: Path): IO[IOException, Long] =
+    Files.deleteRecursive(path)
 }
 object StorageServiceLive {
   val layer: URLayer[StorageConfig, StorageService] = ZLayer.derive[StorageServiceLive]
