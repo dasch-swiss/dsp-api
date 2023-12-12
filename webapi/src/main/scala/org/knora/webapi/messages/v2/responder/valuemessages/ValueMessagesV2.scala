@@ -12,6 +12,7 @@ import java.util.UUID
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
 import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
@@ -1063,6 +1064,8 @@ object ValueContentV2 {
         valueType <-
           ZIO.attempt(jsonLdObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr))
 
+        shortcode <- ZIO.fromOption(valueType.getProjectCode).orElseFail(NotFoundException("Sortcode not found."))
+
         valueContent <-
           valueType.toString match {
             case TextValue                   => TextValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
@@ -1080,32 +1083,32 @@ object ValueContentV2 {
             case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
             case StillImageFileValue =>
               for {
-                info    <- getFilenameAndMetadata(jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
                 content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case DocumentFileValue =>
               for {
-                info    <- getFilenameAndMetadata(jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
                 content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case TextFileValue =>
               for {
-                info    <- getFilenameAndMetadata(jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
                 content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case AudioFileValue =>
               for {
-                info    <- getFilenameAndMetadata(jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
                 content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case MovingImageFileValue =>
               for {
-                info    <- getFilenameAndMetadata(jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
                 content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case ArchiveFileValue =>
               for {
-                info    <- getFilenameAndMetadata(jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
                 content <- ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case other => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
@@ -1115,7 +1118,9 @@ object ValueContentV2 {
 
   private final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
 
-  private def getFilenameAndMetadata(
+  private def getFileInfo(
+    shortcode: String,
+    ingestState: AssetIngestState,
     jsonLdObject: JsonLDObject
   ): ZIO[SipiService, Throwable, FileInfo] =
     for {
@@ -1124,7 +1129,12 @@ object ValueContentV2 {
                               (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
                             jsonLdObject.requireStringWithValidation(FileValueHasFilename, validationFun)
                           }
-      metadata <- SipiService.getFileMetadata(s"/tmp/$internalFilename")
+      metadata <- ingestState match {
+                    case AssetIngestState.AssetIngested =>
+                      SipiService.getFileMetadata(s"/$shortcode/$internalFilename/knora.json")
+                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadata(s"/tmp/$internalFilename")
+                  }
+
     } yield FileInfo(internalFilename, metadata)
 }
 
