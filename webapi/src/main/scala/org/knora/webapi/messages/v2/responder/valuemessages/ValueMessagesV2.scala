@@ -12,7 +12,6 @@ import java.util.UUID
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
 import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
@@ -635,6 +634,8 @@ object CreateValueV2 {
                          .mapError(BadRequestException(_))
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
+        shortcode = resourceIri.getProjectCode.get
+
         // Get the resource class.
         resourceClassIri <-
           jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
@@ -644,7 +645,7 @@ object CreateValueV2 {
           jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
             case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
               for {
-                valueContent <- ValueContentV2.fromJsonLdObject(ingestState, jsonLdObject, requestingUser)
+                valueContent <- ValueContentV2.fromJsonLdObject(ingestState, jsonLdObject, requestingUser, shortcode)
 
                 // Get and validate the custom value IRI if provided.
                 maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
@@ -653,7 +654,7 @@ object CreateValueV2 {
                                            definedNewIri.foreach(
                                              stringFormatter.validateCustomValueIri(
                                                _,
-                                               resourceIri.getProjectCode.get,
+                                               shortcode,
                                                resourceIri.getResourceID.get
                                              )
                                            )
@@ -760,13 +761,15 @@ object UpdateValueV2 {
         maybeNewIri: Option[SmartIri]
       ) =
         for {
-          valueContent <- ValueContentV2.fromJsonLdObject(AssetIngestState.AssetInTemp, jsonLDObject, requestingUser)
           maybePermissions <-
             ZIO.attempt {
               val validationFun: (String, => Nothing) => String =
                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
+          shortcode = resourceIri.getProjectCode.get
+          valueContent <-
+            ValueContentV2.fromJsonLdObject(AssetIngestState.AssetInTemp, jsonLDObject, requestingUser, shortcode)
         } yield UpdateValueContentV2(
           resourceIri = resourceIri.toString,
           resourceClassIri = resourceClassIri,
@@ -1057,14 +1060,13 @@ object ValueContentV2 {
   def fromJsonLdObject(
     ingestState: AssetIngestState,
     jsonLdObject: JsonLDObject,
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    shortcode: String
   ): ZIO[SipiService & StringFormatter & MessageRelay, Throwable, ValueContentV2] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       for {
         valueType <-
           ZIO.attempt(jsonLdObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr))
-
-        shortcode <- ZIO.fromOption(valueType.getProjectCode).orElseFail(NotFoundException("Sortcode not found."))
 
         valueContent <-
           valueType.toString match {

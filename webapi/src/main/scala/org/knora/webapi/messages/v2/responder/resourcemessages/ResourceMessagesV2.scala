@@ -786,7 +786,12 @@ object CreateResourceRequestV2 {
                                            )
                                        }
 
-                  valueContent <- ValueContentV2.fromJsonLdObject(ingestState, valueJsonLDObject, requestingUser)
+                  valueContent <- ValueContentV2.fromJsonLdObject(
+                                    ingestState,
+                                    valueJsonLDObject,
+                                    requestingUser,
+                                    projectInfoResponse.project.shortcode
+                                  )
 
                   maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
                                            .mapError(BadRequestException(_))
