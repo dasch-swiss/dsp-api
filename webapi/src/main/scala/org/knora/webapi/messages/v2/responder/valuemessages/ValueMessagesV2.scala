@@ -1080,40 +1080,44 @@ object ValueContentV2 {
             case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
             case StillImageFileValue =>
               for {
-                params  <- getFilenameAndMetadata(jsonLdObject)
-                content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, params._1, params._2)
+                info    <- getFilenameAndMetadata(jsonLdObject)
+                content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case DocumentFileValue =>
               for {
-                params  <- getFilenameAndMetadata(jsonLdObject)
-                content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, params._1, params._2)
+                info    <- getFilenameAndMetadata(jsonLdObject)
+                content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case TextFileValue =>
               for {
-                params  <- getFilenameAndMetadata(jsonLdObject)
-                content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, params._1, params._2)
+                info    <- getFilenameAndMetadata(jsonLdObject)
+                content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case AudioFileValue =>
               for {
-                params  <- getFilenameAndMetadata(jsonLdObject)
-                content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, params._1, params._2)
+                info    <- getFilenameAndMetadata(jsonLdObject)
+                content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case MovingImageFileValue =>
               for {
-                params  <- getFilenameAndMetadata(jsonLdObject)
-                content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, params._1, params._2)
+                info    <- getFilenameAndMetadata(jsonLdObject)
+                content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case ArchiveFileValue =>
               for {
-                params  <- getFilenameAndMetadata(jsonLdObject)
-                content <- ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, params._1, params._2)
+                info    <- getFilenameAndMetadata(jsonLdObject)
+                content <- ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case other => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
           }
       } yield valueContent
     }
 
-  private def getFilenameAndMetadata(jsonLdObject: JsonLDObject) =
+  private final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
+
+  private def getFilenameAndMetadata(
+    jsonLdObject: JsonLDObject
+  ): ZIO[SipiService, Throwable, FileInfo] =
     for {
       internalFilename <- ZIO.attempt {
                             val validationFun: (IRI, => Nothing) => IRI =
@@ -1121,7 +1125,7 @@ object ValueContentV2 {
                             jsonLdObject.requireStringWithValidation(FileValueHasFilename, validationFun)
                           }
       metadata <- SipiService.getFileMetadata(s"/tmp/$internalFilename")
-    } yield (internalFilename, metadata)
+    } yield FileInfo(internalFilename, metadata)
 }
 
 /**
