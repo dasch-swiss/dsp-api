@@ -13,6 +13,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.MessageRelay
@@ -168,7 +169,7 @@ trait SearchResponderV2 {
    * @return a [[ResourceCountV2]] representing the resources that have been found.
    */
   def searchResourcesByLabelCountV2(
-    searchValue: IRI,
+    searchValue: String,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri]
   ): Task[ResourceCountV2]
@@ -185,7 +186,7 @@ trait SearchResponderV2 {
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
   def searchResourcesByLabelV2(
-    searchValue: IRI,
+    searchValue: String,
     offset: RuntimeFlags,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri],
@@ -225,11 +226,13 @@ final case class SearchResponderV2Live(
   private val sparqlTransformerLive: OntologyInferencer,
   private val gravsearchTypeInspectionRunner: GravsearchTypeInspectionRunner,
   private val inferenceOptimizationService: InferenceOptimizationService,
-  implicit private val stringFormatter: StringFormatter,
+  private val stringFormatter: StringFormatter,
   private val iriConverter: IriConverter,
   private val constructTransformer: ConstructTransformer
 ) extends SearchResponderV2
     with LazyLogging {
+
+  private implicit val sf: StringFormatter = stringFormatter
 
   /**
    * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
@@ -250,6 +253,10 @@ final case class SearchResponderV2Live(
     limitToStandoffClass: Option[SmartIri]
   ): Task[ResourceCountV2] =
     for {
+      _                    <- ensureIsFulltextSearch(searchValue)
+      searchValue          <- validateSearchString(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       countSparql <- ZIO.attempt(
                        sparql.v2.txt
                          .searchFulltext(
@@ -299,6 +306,10 @@ final case class SearchResponderV2Live(
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
     for {
+      _                    <- ensureIsFulltextSearch(searchValue)
+      searchValue          <- validateSearchString(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      limitToStandoffClass <- ZIO.foreach(limitToStandoffClass)(ensureStandoffClass)
       searchSparql <-
         ZIO.attempt(
           sparql.v2.txt
@@ -849,14 +860,17 @@ final case class SearchResponderV2Live(
   }
 
   override def searchResourcesByLabelCountV2(
-    searchValue: IRI,
+    searchValue: String,
     limitToProject: Option[ProjectIri],
     limitToResourceClass: Option[SmartIri]
-  ): Task[ResourceCountV2] = {
-    val searchTerm = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
-    val countSparql =
-      SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
+  ): Task[ResourceCountV2] =
     for {
+      searchValue          <- validateSearchString(searchValue)
+      _                    <- ensureIsFulltextSearch(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+      countSparql =
+        SearchQueries.selectCountByLabel(searchTerm, limitToProject.map(_.value), limitToResourceClass.map(_.toString))
       countResponse <- triplestore.query(countSparql)
 
       count <- // query response should contain one result with one row with the name "count"
@@ -870,6 +884,36 @@ final case class SearchResponderV2Live(
           .as(countResponse.results.bindings.head.rowMap("count"))
 
     } yield ResourceCountV2(count.toInt)
+
+  private def ensureResourceClassIri(resourceClassIri: SmartIri): Task[SmartIri] = {
+    val errMsg = s"Resource class IRI <$resourceClassIri> is not a valid Knora API v2 entity IRI"
+    if (resourceClassIri.isKnoraApiV2EntityIri) {
+      iriConverter.asInternalSmartIri(resourceClassIri).orElseFail(BadRequestException(errMsg))
+    } else { ZIO.fail(BadRequestException(errMsg)) }
+  }
+
+  private def ensureStandoffClass(standoffClassIri: SmartIri): Task[SmartIri] = {
+    val errMsg = s"Invalid standoff class IRI: $standoffClassIri"
+    if (standoffClassIri.isApiV2ComplexSchema) {
+      iriConverter.asInternalSmartIri(standoffClassIri).orElseFail(BadRequestException(errMsg))
+    } else { ZIO.fail(BadRequestException(errMsg)) }
+  }
+
+  private def ensureIsFulltextSearch(searchStr: String) =
+    ZIO
+      .fail(BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route"))
+      .when(searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname))
+
+  private def validateSearchString(searchStr: String) = {
+    val searchValueMinLength = appConfig.v2.fulltextSearch.searchValueMinLength
+    ZIO
+      .fromOption(Iri.toSparqlEncodedString(searchStr))
+      .orElseFail(throw BadRequestException(s"Invalid search string: '$searchStr'"))
+      .filterOrElseWith(_.length >= searchValueMinLength) { it =>
+        val errorMsg =
+          s"A search value is expected to have at least length of $searchValueMinLength, but '$it' given of length ${it.length}."
+        ZIO.fail(BadRequestException(errorMsg))
+      }
   }
 
   override def searchResourcesByLabelV2(
@@ -882,15 +926,18 @@ final case class SearchResponderV2Live(
   ): Task[ReadResourcesSequenceV2] = {
     val searchLimit  = appConfig.v2.resourcesSequence.resultsPerPage
     val searchOffset = offset * appConfig.v2.resourcesSequence.resultsPerPage
-    val searchTerm   = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
-    val searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
-      searchTerm,
-      limitToResourceClass.map(_.toIri),
-      limitToProject.map(_.value),
-      searchLimit,
-      searchOffset
-    )
     for {
+      searchValue          <- validateSearchString(searchValue)
+      _                    <- ensureIsFulltextSearch(searchValue)
+      limitToResourceClass <- ZIO.foreach(limitToResourceClass)(ensureResourceClassIri)
+      searchTerm            = MatchStringWhileTyping(searchValue).generateLiteralForLuceneIndexWithoutExactSequence
+      searchResourceByLabelSparql = SearchQueries.constructSearchByLabel(
+                                      searchTerm,
+                                      limitToResourceClass.map(_.toIri),
+                                      limitToProject.map(_.value),
+                                      searchLimit,
+                                      searchOffset
+                                    )
       searchResourceByLabelResponse <- triplestore.query(searchResourceByLabelSparql).flatMap(_.asExtended)
 
       // collect the IRIs of main resources returned
@@ -1012,42 +1059,5 @@ final case class SearchResponderV2Live(
 }
 
 object SearchResponderV2Live {
-  val layer: ZLayer[
-    AppConfig & TriplestoreService & MessageRelay & ConstructResponseUtilV2 & OntologyCache & StandoffTagUtilV2 &
-      QueryTraverser & OntologyInferencer & GravsearchTypeInspectionRunner & InferenceOptimizationService &
-      IriConverter & ConstructTransformer & StringFormatter,
-    Nothing,
-    SearchResponderV2Live
-  ] =
-    ZLayer.fromZIO(
-      for {
-        appConfig                    <- ZIO.service[AppConfig]
-        triplestoreService           <- ZIO.service[TriplestoreService]
-        messageRelay                 <- ZIO.service[MessageRelay]
-        constructResponseUtilV2      <- ZIO.service[ConstructResponseUtilV2]
-        ontologyCache                <- ZIO.service[OntologyCache]
-        standoffTagUtilV2            <- ZIO.service[StandoffTagUtilV2]
-        queryTraverser               <- ZIO.service[QueryTraverser]
-        sparqlTransformerLive        <- ZIO.service[OntologyInferencer]
-        stringFormatter              <- ZIO.service[StringFormatter]
-        typeInspectionRunner         <- ZIO.service[GravsearchTypeInspectionRunner]
-        inferenceOptimizationService <- ZIO.service[InferenceOptimizationService]
-        iriConverter                 <- ZIO.service[IriConverter]
-        constructTransformer         <- ZIO.service[ConstructTransformer]
-      } yield new SearchResponderV2Live(
-        appConfig,
-        triplestoreService,
-        messageRelay,
-        constructResponseUtilV2,
-        ontologyCache,
-        standoffTagUtilV2,
-        queryTraverser,
-        sparqlTransformerLive,
-        typeInspectionRunner,
-        inferenceOptimizationService,
-        stringFormatter,
-        iriConverter,
-        constructTransformer
-      )
-    )
+  val layer = ZLayer.derive[SearchResponderV2Live]
 }

@@ -1,5 +1,28 @@
 # Changelog
 
+## [30.6.0](https://github.com/dasch-swiss/dsp-api/compare/v30.5.2...v30.6.0) (2023-12-06)
+
+
+### Maintenance
+
+* Bump Sipi version to 3.8.7 ([#2951](https://github.com/dasch-swiss/dsp-api/issues/2951)) ([5b3436b](https://github.com/dasch-swiss/dsp-api/commit/5b3436bb3ba0531b97a11d98eba865fb5f51ec55))
+* Dependency updates ([#2956](https://github.com/dasch-swiss/dsp-api/issues/2956)) ([1e14a88](https://github.com/dasch-swiss/dsp-api/commit/1e14a880b882ed696ec77c9ecf5e56fbf90cb21c))
+* Minor dependency updates ([#2955](https://github.com/dasch-swiss/dsp-api/issues/2955)) ([8c2afcd](https://github.com/dasch-swiss/dsp-api/commit/8c2afcdbb20ca6250528844190577d57c809ef0c))
+* Patch dependency updates ([#2954](https://github.com/dasch-swiss/dsp-api/issues/2954)) ([1c37768](https://github.com/dasch-swiss/dsp-api/commit/1c37768ec020d927bad328958c6cbb586e969e23))
+* Simplify RDF handling ([#2952](https://github.com/dasch-swiss/dsp-api/issues/2952)) ([25099ef](https://github.com/dasch-swiss/dsp-api/commit/25099ef5aeaf412fd9b9f3baa7d3f9cbae1e9f8f))
+* Update apache-jena-fuseki to v2.1.4 ([#2959](https://github.com/dasch-swiss/dsp-api/issues/2959)) ([a8a7c61](https://github.com/dasch-swiss/dsp-api/commit/a8a7c61fb685817504798898205de83ef5eecc3c))
+
+
+### Documentation
+
+* Clarify setting of restricted view of images (DEV-2961) ([#2950](https://github.com/dasch-swiss/dsp-api/issues/2950)) ([e4ca484](https://github.com/dasch-swiss/dsp-api/commit/e4ca484194a98a2b540ab0490c81fe4630456974))
+
+
+### Enhancements
+
+* Add http metrics for gravsearch endpoints (DEV-2936) ([#2946](https://github.com/dasch-swiss/dsp-api/issues/2946)) ([7ca5946](https://github.com/dasch-swiss/dsp-api/commit/7ca5946cac968123bd11df328997b210d1ace0c7))
+* Add http metrics to all search endpoints by migrating to tapir DEV-2936 ([#2958](https://github.com/dasch-swiss/dsp-api/issues/2958)) ([20f8d5c](https://github.com/dasch-swiss/dsp-api/commit/20f8d5ce77b80e1d9303f730cd545b17fa471089))
+
 ## [30.5.2](https://github.com/dasch-swiss/dsp-api/compare/v30.5.1...v30.5.2) (2023-11-22)
 
 

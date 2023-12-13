@@ -34,9 +34,6 @@ object KnoraResponseRenderer {
   final case class FormatOptions(rdfFormat: RdfFormat, schema: ApiV2Schema, rendering: Set[Rendering]) {
     lazy val schemaRendering: SchemaRendering = SchemaRendering(schema, rendering)
   }
-  object FormatOptions {
-    def from(f: RdfFormat, s: SchemaRendering): FormatOptions = FormatOptions(f, s.schema, s.rendering)
-  }
 
   val layer = ZLayer.derive[KnoraResponseRenderer]
 }

@@ -176,6 +176,15 @@ object Iri {
     else None
 
   /**
+   */
+  final case class SimpleIri private (value: String) extends Iri
+  object SimpleIri {
+    def from(value: String): Either[String, Iri] =
+      if (isIri(value)) Right(SimpleIri(value))
+      else Left(s"Invalid IRI: $value")
+  }
+
+  /**
    * GroupIri value object.
    */
   sealed abstract case class GroupIri private (value: String) extends Iri
