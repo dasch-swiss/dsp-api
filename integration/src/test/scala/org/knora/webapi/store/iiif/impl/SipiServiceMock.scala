@@ -27,7 +27,7 @@ case class SipiServiceMock() extends SipiService {
    */
   private val FAILURE_FILENAME: String = "failure.jp2"
 
-  override def getFileMetadata(ignoredByMock: String): Task[FileMetadataSipiResponse] =
+  override def getFileMetadata(ignoredByMock: String, requestingUser: UserADM): Task[FileMetadataSipiResponse] =
     ZIO.succeed(
       FileMetadataSipiResponse(
         originalFilename = Some("test2.tiff"),

@@ -35,7 +35,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.*
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
@@ -73,9 +72,9 @@ final case class SipiServiceLive(
    * @param filePath the path to the file.
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
+  override def getFileMetadata(filePath: String, requestingUser: UserADM): Task[FileMetadataSipiResponse] =
     for {
-      jwt     <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
+      jwt     <- jwtService.createJwt(requestingUser)
       bodyStr <- doSipiRequest(new HttpGet(s"${sipiConfig.internalBaseUrl}$filePath/knora.json?token=${jwt.jwtString}"))
       res <- ZIO
                .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])

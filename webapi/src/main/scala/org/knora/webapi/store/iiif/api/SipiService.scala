@@ -67,7 +67,7 @@ trait SipiService {
    * @param filePath the path to the file.
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse]
+  def getFileMetadata(filePath: String, requestingUser: UserADM): Task[FileMetadataSipiResponse]
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.

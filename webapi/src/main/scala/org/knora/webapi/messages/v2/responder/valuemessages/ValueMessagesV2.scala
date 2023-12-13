@@ -1086,32 +1086,32 @@ object ValueContentV2 {
             case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
             case StillImageFileValue =>
               for {
-                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject, requestingUser)
                 content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case DocumentFileValue =>
               for {
-                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject, requestingUser)
                 content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case TextFileValue =>
               for {
-                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject, requestingUser)
                 content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case AudioFileValue =>
               for {
-                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject, requestingUser)
                 content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case MovingImageFileValue =>
               for {
-                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject, requestingUser)
                 content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case ArchiveFileValue =>
               for {
-                info    <- getFileInfo(shortcode, ingestState, jsonLdObject)
+                info    <- getFileInfo(shortcode, ingestState, jsonLdObject, requestingUser)
                 content <- ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
               } yield content
             case other => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
@@ -1124,7 +1124,8 @@ object ValueContentV2 {
   private[valuemessages] def getFileInfo(
     shortcode: String,
     ingestState: AssetIngestState,
-    jsonLdObject: JsonLDObject
+    jsonLdObject: JsonLDObject,
+    requestingUser: UserADM
   ): ZIO[SipiService, Throwable, FileInfo] =
     for {
       internalFilename <- ZIO.attempt {
@@ -1134,8 +1135,9 @@ object ValueContentV2 {
                           }
       metadata <- ingestState match {
                     case AssetIngestState.AssetIngested =>
-                      SipiService.getFileMetadata(s"/$shortcode/$internalFilename")
-                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadata(s"/tmp/$internalFilename")
+                      SipiService.getFileMetadata(s"/$shortcode/$internalFilename", requestingUser)
+                    case AssetIngestState.AssetInTemp =>
+                      SipiService.getFileMetadata(s"/tmp/$internalFilename", requestingUser)
                   }
 
     } yield FileInfo(internalFilename, metadata)
