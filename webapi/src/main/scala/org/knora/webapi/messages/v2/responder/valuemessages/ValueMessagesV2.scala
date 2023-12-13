@@ -768,7 +768,7 @@ object UpdateValueV2 {
                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
-          shortcode = resourceIri.getProjectCode.get
+          shortcode <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
           valueContent <-
             ValueContentV2.fromJsonLdObject(AssetIngestState.AssetInTemp, jsonLDObject, requestingUser, shortcode)
         } yield UpdateValueContentV2(
