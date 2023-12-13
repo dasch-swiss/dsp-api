@@ -1134,7 +1134,7 @@ object ValueContentV2 {
                           }
       metadata <- ingestState match {
                     case AssetIngestState.AssetIngested =>
-                      SipiService.getFileMetadata(s"/$shortcode/$internalFilename/knora.json")
+                      SipiService.getFileMetadata(s"/$shortcode/$internalFilename")
                     case AssetIngestState.AssetInTemp => SipiService.getFileMetadata(s"/tmp/$internalFilename")
                   }
 
