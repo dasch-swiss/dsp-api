@@ -44,6 +44,7 @@ import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 import org.knora.webapi.util.ZScopedJavaIoStreams
+import org.knora.webapi.messages.util.KnoraSystemInstances
 
 /**
  * Makes requests to Sipi.
@@ -73,12 +74,13 @@ final case class SipiServiceLive(
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
   override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
-    doSipiRequest(new HttpGet(sipiConfig.internalBaseUrl + filePath + "/knora.json"))
-      .flatMap(bodyStr =>
-        ZIO
-          .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
-          .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
-      )
+    for {
+      jwt     <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
+      bodyStr <- doSipiRequest(new HttpGet(s"${sipiConfig.internalBaseUrl}$filePath/knora.json?token=${jwt.jwtString}"))
+      res <- ZIO
+               .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
+               .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
+    } yield res
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.
