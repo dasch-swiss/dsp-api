@@ -75,7 +75,10 @@ object MaintenanceEndpointsSpec extends ZIOSpecDefault {
         def loadAssetInfo(asset: AssetRef) = StorageService.getAssetDirectory(asset).flatMap {
           // Since the create original maintenance action is forked into the background
           // we need to wait (i.e. `awaitTrue') for the file to be created.
-          assetDir => awaitTrue(Files.exists(assetDir / s"${asset.id}.info")) *> AssetInfoService.findByAssetRef(asset)
+          assetDir =>
+            awaitTrue(Files.exists(assetDir / s"${asset.id}.info")) *> AssetInfoService
+              .findByAssetRef(asset)
+              .someOrFail(IllegalStateException("Asset info not found"))
         }
 
         val assetJpx    = AssetRef("aaaa-a-jpx-without-orig".toAssetId, existingProject)

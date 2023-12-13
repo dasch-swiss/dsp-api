@@ -13,8 +13,13 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.*
 import sttp.tapir.{CodecFormat, EndpointInput}
 import swiss.dasch.api.ProjectsEndpoints.shortcodePathVar
-import swiss.dasch.api.ProjectsEndpointsResponses.{AssetCheckResultResponse, ProjectResponse, UploadResponse}
-import swiss.dasch.domain.{AssetInfo, ChecksumResult, ProjectShortcode, Report}
+import swiss.dasch.api.ProjectsEndpointsResponses.{
+  AssetCheckResultResponse,
+  AssetInfoResponse,
+  ProjectResponse,
+  UploadResponse
+}
+import swiss.dasch.domain.*
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.schema.{DeriveSchema, Schema}
 import zio.{Chunk, ZLayer}
@@ -50,7 +55,7 @@ object ProjectsEndpointsResponses {
 
     def make(assetInfo: AssetInfo, results: Chunk[ChecksumResult]): AssetCheckResultEntry =
       AssetCheckResultEntry(
-        assetInfo.assetRef.id.toString,
+        assetInfo.assetRef.id.value,
         assetInfo.originalFilename.toString,
         results.map(SingleFileCheckResultResponse.make).toList
       )
@@ -91,6 +96,46 @@ object ProjectsEndpointsResponses {
     }
   }
 
+  final case class AssetInfoResponse(
+    internalFilename: String,
+    originalInternalFilename: String,
+    originalFilename: String,
+    checksumOriginal: String,
+    checksumDerivative: String,
+    width: Option[Int] = None,
+    height: Option[Int] = None,
+    duration: Option[Double] = None,
+    fps: Option[Double] = None
+  )
+  object AssetInfoResponse {
+
+    def from(assetInfo: AssetInfo): AssetInfoResponse = {
+      val dim = assetInfo.metadata match {
+        case MovingImageMetadata(d, _, _) => Some(d)
+        case d: Dimensions                => Some(d)
+        case _                            => None
+      }
+      val movingImageMeta = assetInfo.metadata match {
+        case m: MovingImageMetadata => Some(m)
+        case _                      => None
+      }
+      AssetInfoResponse(
+        assetInfo.derivative.filename.toString,
+        assetInfo.original.filename.toString,
+        assetInfo.originalFilename.toString,
+        assetInfo.original.checksum.toString,
+        assetInfo.derivative.checksum.toString,
+        dim.map(_.width.value),
+        dim.map(_.height.value),
+        movingImageMeta.map(_.duration),
+        movingImageMeta.map(_.fps)
+      )
+    }
+
+    given codec: JsonCodec[AssetInfoResponse] = DeriveJsonCodec.gen[AssetInfoResponse]
+    given schema: Schema[AssetInfoResponse]   = DeriveSchema.gen[AssetInfoResponse]
+  }
+
   case class UploadResponse(status: String = "ok")
 
   object UploadResponse {
@@ -119,6 +164,11 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     .in(projects / shortcodePathVar / "checksumreport")
     .out(jsonBody[AssetCheckResultResponse])
     .tag(projects)
+
+  val getProjectsAssetsInfo = base.secureEndpoint.get
+    .in(projects / shortcodePathVar / "assets" / path[AssetId]("assetId"))
+    .out(jsonBody[AssetInfoResponse])
+    .tag(projects ++ "assets")
 
   val postBulkIngest = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest")
@@ -171,6 +221,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       getProjectsEndpoint,
       getProjectByShortcodeEndpoint,
       getProjectsChecksumReport,
+      getProjectsAssetsInfo,
       postBulkIngest,
       getBulkIngestMappingCsv,
       postExport,

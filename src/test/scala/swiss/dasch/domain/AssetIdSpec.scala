@@ -16,24 +16,24 @@ object AssetIdSpec extends ZIOSpecDefault {
   val spec = suite("AssetIdSpec")(
     test("AssetId should be created from a valid string") {
       val valid = Gen.stringBounded(4, 20)(validCharacters)
-      check(valid)(s => assertTrue(AssetId.make(s).exists(_.toString == s)))
+      check(valid)(s => assertTrue(AssetId.from(s).exists(_.toString == s)))
     },
     test("AssetId should not be created from an String containing invalid characters") {
       val invalid = Gen.stringBounded(1, 20)(
         Gen.fromIterable(List('/', '!', '$', '%', '&', '(', ')', '=', '?', ' ', '+', '*', '#', '@', '€', '£', '§'))
       )
-      check(invalid)(s => assertTrue(AssetId.make(s).isLeft))
+      check(invalid)(s => assertTrue(AssetId.from(s).isLeft))
     },
     test("AssetId should not be created from a String shorter than four characters") {
       val validButTooShort = Gen.stringBounded(0, 3)(validCharacters)
-      check(validButTooShort)(s => assertTrue(AssetId.make(s).isLeft))
+      check(validButTooShort)(s => assertTrue(AssetId.from(s).isLeft))
     },
     test("AssetId.makeNew should create a UUID in Base 62 encoding") {
       val uuid = "4sAf4AmPeeg-ZjDn3Tot1Zt"
       for {
         _  <- Random.setSeed(1977)
         id <- AssetId.makeNew
-      } yield assertTrue(id.toString == uuid)
+      } yield assertTrue(id.value == uuid)
     }
   )
 }

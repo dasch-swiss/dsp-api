@@ -39,7 +39,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
                            |""".stripMargin)
                  )
             // when
-            actual <- AssetInfoService.findByAssetRef(assetRef)
+            actual <- AssetInfoService.findByAssetRef(assetRef).map(_.head)
             // then
           } yield assertTrue(
             actual.assetRef == assetRef,
@@ -48,7 +48,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
             actual.original.checksum == checksumOriginal,
             actual.derivative.file == assetDir / s"${assetRef.id}.jp2",
             actual.derivative.checksum == checksumDerivative,
-            actual.movingImageMetadata.isEmpty
+            actual.metadata == EmptyMetadata
           )
         }
       },
@@ -79,7 +79,7 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
                            |}
                            |""".stripMargin)
                  )
-            actual <- AssetInfoService.findByAssetRef(assetRef)
+            actual <- AssetInfoService.findByAssetRef(assetRef).map(_.head)
           } yield assertTrue(
             actual.assetRef == assetRef,
             actual.originalFilename == NonEmptyString.unsafeFrom("250x250.jp2"),
@@ -87,9 +87,8 @@ object AssetInfoServiceSpec extends ZIOSpecDefault {
             actual.original.checksum == checksumOriginal,
             actual.derivative.file == assetDir / s"${assetRef.id}.jp2",
             actual.derivative.checksum == checksumDerivative,
-            actual.movingImageMetadata.contains(
-              MovingImageMetadata(width = 640, height = 480, duration = 3.14, fps = 60)
-            )
+            actual.metadata ==
+              MovingImageMetadata(Dimensions.unsafeFrom(640, 480), duration = 3.14, fps = 60)
           )
         }
       }

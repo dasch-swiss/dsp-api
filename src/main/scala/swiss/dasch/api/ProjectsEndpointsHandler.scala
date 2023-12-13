@@ -10,7 +10,12 @@ import sttp.model.headers.ContentRange
 import sttp.tapir.ztapir.ZServerEndpoint
 import swiss.dasch.api.*
 import swiss.dasch.api.ApiProblem.{BadRequest, InternalServerError}
-import swiss.dasch.api.ProjectsEndpointsResponses.{AssetCheckResultResponse, ProjectResponse, UploadResponse}
+import swiss.dasch.api.ProjectsEndpointsResponses.{
+  AssetCheckResultResponse,
+  AssetInfoResponse,
+  ProjectResponse,
+  UploadResponse
+}
 import swiss.dasch.domain.*
 import zio.stream.ZStream
 import zio.{ZIO, ZLayer, stream}
@@ -20,7 +25,8 @@ final case class ProjectsEndpointsHandler(
   importService: ImportService,
   projectEndpoints: ProjectsEndpoints,
   projectService: ProjectService,
-  reportService: ReportService
+  reportService: ReportService,
+  assetInfoService: AssetInfoService
 ) extends HandlerFunctions {
 
   val getProjectsEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsEndpoint
@@ -47,7 +53,7 @@ final case class ProjectsEndpointsHandler(
           )
     )
 
-  val getProjectChecksumReportEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsChecksumReport
+  private val getProjectChecksumReportEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsChecksumReport
     .serverLogic(_ =>
       shortcode =>
         reportService
@@ -59,17 +65,31 @@ final case class ProjectsEndpointsHandler(
           )
     )
 
-  val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
+  private val getProjectsAssetsInfoEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.getProjectsAssetsInfo
+    .serverLogic(_ =>
+      (shortcode, assetId) => {
+        val ref = AssetRef(assetId, shortcode)
+        assetInfoService
+          .findByAssetRef(ref)
+          .some
+          .mapBoth(
+            assetRefNotFoundOrServerError(_, ref),
+            AssetInfoResponse.from
+          )
+      }
+    )
+
+  private val postBulkIngestEndpoint: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngest
     .serverLogic(_ =>
       code => bulkIngestService.startBulkIngest(code).logError.forkDaemon.as(ProjectResponse.make(code))
     )
 
-  val postBulkIngestEndpointFinalize: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngestFinalize
+  private val postBulkIngestEndpointFinalize: ZServerEndpoint[Any, Any] = projectEndpoints.postBulkIngestFinalize
     .serverLogic(_ =>
       code => bulkIngestService.finalizeBulkIngest(code).logError.forkDaemon.as(ProjectResponse.make(code))
     )
 
-  val getBulkIngestMappingCsvEndpoint: ZServerEndpoint[Any, Any] =
+  private val getBulkIngestMappingCsvEndpoint: ZServerEndpoint[Any, Any] =
     projectEndpoints.getBulkIngestMappingCsv
       .serverLogic(_ =>
         code =>
@@ -82,7 +102,7 @@ final case class ProjectsEndpointsHandler(
             )
       )
 
-  val postExportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postExport
+  private val postExportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.postExport
     .serverLogic(_ =>
       shortcode =>
         projectService
@@ -99,7 +119,7 @@ final case class ProjectsEndpointsHandler(
           )
     )
 
-  val getImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.getImport
+  private val getImportEndpoint: ZServerEndpoint[Any, ZioStreams] = projectEndpoints.getImport
     .serverLogic(_ =>
       (shortcode, stream) =>
         importService
@@ -120,6 +140,7 @@ final case class ProjectsEndpointsHandler(
       getProjectsEndpoint,
       getProjectByShortcodeEndpoint,
       getProjectChecksumReportEndpoint,
+      getProjectsAssetsInfoEndpoint,
       postBulkIngestEndpoint,
       postBulkIngestEndpointFinalize,
       getBulkIngestMappingCsvEndpoint,

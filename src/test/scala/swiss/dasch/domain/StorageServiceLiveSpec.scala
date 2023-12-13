@@ -63,17 +63,17 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
         expected = AssetInfo(
                      assetRef = asset,
                      original = FileAndChecksum(
-                       projectPath / "fg" / "il" / s"${asset.id.toString}.jp2.orig",
+                       projectPath / "fg" / "il" / s"${asset.id.value}.jp2.orig",
                        "fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c".toSha256Hash
                      ),
                      originalFilename = name,
                      derivative = FileAndChecksum(
-                       projectPath / "fg" / "il" / s"${asset.id.toString}.jp2",
+                       projectPath / "fg" / "il" / s"${asset.id.value}.jp2",
                        "0ce405c9b183fb0d0a9998e9a49e39c93b699e0f8e2a9ac3496c349e5cea09cc".toSha256Hash
                      )
                    )
         actual <- AssetInfoService.findByAssetRef(asset)
-      } yield assertTrue(expected == actual)
+      } yield assertTrue(actual.contains(expected))
     },
     suite("create temp directory scoped")(
       test("should create a temp directory") {

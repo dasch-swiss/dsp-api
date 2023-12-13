@@ -55,7 +55,11 @@ final case class FileChecksumServiceLive(assetInfos: AssetInfoService) extends F
     verifyChecksum(asset, _.derivative)
 
   private def verifyChecksum(assetRef: AssetRef, checksumAndFile: AssetInfo => FileAndChecksum): Task[Boolean] =
-    assetInfos.findByAssetRef(assetRef).map(checksumAndFile).flatMap(verifyChecksum)
+    assetInfos
+      .findByAssetRef(assetRef)
+      .someOrFail(new NoSuchElementException(s"Asset $assetRef not found."))
+      .map(checksumAndFile)
+      .flatMap(verifyChecksum)
 
   private def verifyChecksum(fileAndChecksum: FileAndChecksum): Task[Boolean] =
     FileChecksumService

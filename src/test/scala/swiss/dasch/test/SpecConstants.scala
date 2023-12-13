@@ -23,10 +23,8 @@ object SpecConstants {
   }
   extension (s: String) {
     def toProjectShortcode: ProjectShortcode = ProjectShortcode.unsafeFrom(s)
-    def toAssetId: AssetId = AssetId
-      .make(s)
-      .fold(err => throw new IllegalArgumentException(err), identity)
-    def toSha256Hash: Sha256Hash = Sha256Hash.unsafeFrom(s)
+    def toAssetId: AssetId                   = AssetId.unsafeFrom(s)
+    def toSha256Hash: Sha256Hash             = Sha256Hash.unsafeFrom(s)
     def toNonEmptyString: NonEmptyString =
       NonEmptyString.unsafeFrom(s)
   }

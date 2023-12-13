@@ -70,7 +70,7 @@ final case class MaintenanceActionsLive(
   }
 
   private def originalNotPresent(imagesOnly: Boolean)(path: file.Path): IO[IOException, Boolean] = {
-    lazy val assetId = AssetId.makeFromPath(path).map(_.toString).getOrElse("unknown-asset-id")
+    lazy val assetId = AssetId.fromPath(path).map(_.toString).getOrElse("unknown-asset-id")
 
     def checkIsImageIfNeeded(path: file.Path) = {
       val shouldNotCheckImages = ZIO.succeed(!imagesOnly)
@@ -162,7 +162,7 @@ final case class MaintenanceActionsLive(
       // must be a .bak file
       bakFile <- ZIO.succeed(path).whenZIO(FileFilters.isBakFile(path)).some
       // must have an AssetId
-      assetId <- ZIO.fromOption(AssetId.makeFromPath(bakFile))
+      assetId <- ZIO.fromOption(AssetId.fromPath(bakFile))
       // must have a corresponding Jpeg2000 derivative
       bakFilename        = bakFile.filename.toString
       derivativeFilename = bakFilename.substring(0, bakFilename.length - ".bak".length)
@@ -211,7 +211,7 @@ final case class MaintenanceActionsLive(
     jpxPath: Path,
     mapping: Map[String, String]
   ): ZStream[Any, Throwable, CreateOriginalFor] =
-    AssetId.makeFromPath(jpxPath) match {
+    AssetId.fromPath(jpxPath) match {
       case Some(assetId) => filterWithoutOriginal(assetId, jpxPath, mapping)
       case None          => ZStream.logWarning(s"Not an assetId: $jpxPath") *> ZStream.empty
     }

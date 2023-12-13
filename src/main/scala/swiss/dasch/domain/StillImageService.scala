@@ -8,20 +8,12 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.refineV
+import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
 import swiss.dasch.domain.SipiImageFormat.Jpx
 import zio.*
-import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.nio.file.{Files, Path}
-import zio.json.interop.refined.*
-
-import DerivativeFile.JpxDerivativeFile
 
 import java.io.IOException
-
-final case class Dimensions(width: Int Refined Positive, height: Int Refined Positive)
-object Dimensions {
-  given codec: JsonCodec[Dimensions] = DeriveJsonCodec.gen[Dimensions]
-}
 
 trait StillImageService {
 

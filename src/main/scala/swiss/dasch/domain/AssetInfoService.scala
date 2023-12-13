@@ -6,7 +6,6 @@
 package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
-import swiss.dasch.domain.Asset.MovingImageAsset
 import zio.json.interop.refined.{decodeRefined, encodeRefined}
 import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.nio.file.{Files, Path}
@@ -31,19 +30,33 @@ private object AssetInfoFileContent {
     asset: Asset,
     originalChecksum: Sha256Hash,
     derivativeChecksum: Sha256Hash,
-    metadata: Option[MovingImageMetadata]
-  ): AssetInfoFileContent =
+    metadata: AssetMetadata
+  ): AssetInfoFileContent = {
+    val dim = metadata match {
+      case MovingImageMetadata(d, _, _) => Some(d)
+      case d: Dimensions                => Some(d)
+      case _                            => None
+    }
+    val duration = metadata match {
+      case MovingImageMetadata(_, duration, _) => Some(duration)
+      case _                                   => None
+    }
+    val fps = metadata match {
+      case MovingImageMetadata(_, _, fps) => Some(fps)
+      case _                              => None
+    }
     AssetInfoFileContent(
       asset.derivative.filename,
       asset.original.internalFilename,
       asset.original.originalFilename,
       originalChecksum,
       derivativeChecksum,
-      metadata.map(_.width),
-      metadata.map(_.height),
-      metadata.map(_.duration),
-      metadata.map(_.fps)
+      dim.map(_.width.value),
+      dim.map(_.height.value),
+      duration,
+      fps
     )
+  }
 
   given codec: JsonCodec[AssetInfoFileContent] = DeriveJsonCodec.gen[AssetInfoFileContent]
 }
@@ -57,19 +70,19 @@ final case class AssetInfo(
   original: FileAndChecksum,
   originalFilename: NonEmptyString,
   derivative: FileAndChecksum,
-  movingImageMetadata: Option[MovingImageMetadata] = None
+  metadata: AssetMetadata = EmptyMetadata
 )
 
 trait AssetInfoService {
   def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo]
   def getInfoFilePath(asset: AssetRef): UIO[Path]
-  def findByAssetRef(asset: AssetRef): Task[AssetInfo]
+  def findByAssetRef(asset: AssetRef): Task[Option[AssetInfo]]
   def findAllInPath(path: Path, shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo]
   def updateAssetInfoForDerivative(derivative: Path): Task[Unit]
   def createAssetInfo(asset: Asset): Task[Unit]
 }
 object AssetInfoService {
-  def findByAssetRef(asset: AssetRef): ZIO[AssetInfoService, Throwable, AssetInfo] =
+  def findByAssetRef(asset: AssetRef): ZIO[AssetInfoService, Throwable, Option[AssetInfo]] =
     ZIO.serviceWithZIO[AssetInfoService](_.findByAssetRef(asset))
   def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): ZIO[AssetInfoService, Throwable, AssetInfo] =
     ZIO.serviceWithZIO[AssetInfoService](_.loadFromFilesystem(infoFile, shortcode))
@@ -81,46 +94,54 @@ object AssetInfoService {
     ZIO.serviceWithZIO[AssetInfoService](_.createAssetInfo(asset))
 }
 
-final case class AssetInfoServiceLive(storageService: StorageService) extends AssetInfoService {
+final case class AssetInfoServiceLive(storage: StorageService) extends AssetInfoService {
   override def loadFromFilesystem(infoFile: Path, shortcode: ProjectShortcode): Task[AssetInfo] =
     for {
-      content   <- storageService.loadJsonFile[AssetInfoFileContent](infoFile)
-      assetMaybe = AssetId.makeFromPath(Path(content.internalFilename.toString)).map(id => AssetRef(id, shortcode))
+      content   <- storage.loadJsonFile[AssetInfoFileContent](infoFile)
+      assetMaybe = AssetId.fromPath(Path(content.internalFilename.toString)).map(id => AssetRef(id, shortcode))
       assetInfo <- assetMaybe match {
                      case Some(asset) => ZIO.succeed(toAssetInfo(content, infoFile.parent.orNull, asset))
                      case None        => ZIO.fail(IllegalArgumentException(s"Unable to parse asset id from $infoFile"))
                    }
     } yield assetInfo
 
-  override def findByAssetRef(asset: AssetRef): Task[AssetInfo] =
-    getInfoFilePath(asset).flatMap(parseAssetInfoFile(asset, _))
+  override def findByAssetRef(asset: AssetRef): Task[Option[AssetInfo]] =
+    for {
+      infoFile <- getInfoFilePath(asset)
+      info     <- ZIO.whenZIO(storage.fileExists(infoFile))(parseAssetInfoFile(asset, infoFile))
+    } yield info
 
   def getInfoFilePath(asset: AssetRef): UIO[Path] =
-    storageService.getAssetDirectory(asset).map(_ / infoFilename(asset))
+    storage.getAssetDirectory(asset).map(_ / infoFilename(asset))
 
   private def infoFilename(asset: AssetRef): String = infoFilename(asset.id)
   private def infoFilename(id: AssetId): String     = s"$id.info"
 
   private def parseAssetInfoFile(asset: AssetRef, infoFile: Path): Task[AssetInfo] =
-    storageService.loadJsonFile[AssetInfoFileContent](infoFile).map(toAssetInfo(_, infoFile.parent.orNull, asset))
+    storage.loadJsonFile[AssetInfoFileContent](infoFile).map(toAssetInfo(_, infoFile.parent.orNull, asset))
 
   private def toAssetInfo(
     raw: AssetInfoFileContent,
     infoFileDirectory: Path,
     asset: AssetRef
   ): AssetInfo = {
+    val dimensions = for {
+      width  <- raw.width
+      height <- raw.height
+      dim    <- Dimensions.from(width, height).toOption
+    } yield dim
     val movingImageMetadata = for {
-      width    <- raw.width
-      height   <- raw.height
+      dim      <- dimensions
       duration <- raw.duration
       fps      <- raw.fps
-    } yield MovingImageMetadata(width, height, duration, fps)
+    } yield MovingImageMetadata(dim, duration, fps)
+    val metadata = movingImageMetadata.orElse(dimensions).getOrElse(EmptyMetadata)
     AssetInfo(
       assetRef = asset,
       original = FileAndChecksum(infoFileDirectory / raw.originalInternalFilename.toString, raw.checksumOriginal),
       originalFilename = raw.originalFilename,
       derivative = FileAndChecksum(infoFileDirectory / raw.internalFilename.toString, raw.checksumDerivative),
-      movingImageMetadata = movingImageMetadata
+      metadata = metadata
     )
   }
 
@@ -131,30 +152,26 @@ final case class AssetInfoServiceLive(storageService: StorageService) extends As
 
   override def updateAssetInfoForDerivative(derivative: Path): Task[Unit] = for {
     assetId <- ZIO
-                 .fromOption(AssetId.makeFromPath(derivative))
+                 .fromOption(AssetId.fromPath(derivative))
                  .orElseFail(IllegalArgumentException(s"Unable to parse asset id from $derivative"))
     infoFile = derivative.parent.map(_ / infoFilename(assetId)).orNull
     _       <- ZIO.whenZIO(Files.exists(infoFile))(updateDerivativeChecksum(infoFile, derivative))
   } yield ()
 
   private def updateDerivativeChecksum(infoFile: Path, derivative: Path) = for {
-    content     <- storageService.loadJsonFile[AssetInfoFileContent](infoFile)
+    content     <- storage.loadJsonFile[AssetInfoFileContent](infoFile)
     newChecksum <- FileChecksumService.createSha256Hash(derivative)
-    _           <- storageService.saveJsonFile(infoFile, content.withDerivativeChecksum(newChecksum))
+    _           <- storage.saveJsonFile(infoFile, content.withDerivativeChecksum(newChecksum))
   } yield ()
 
   override def createAssetInfo(asset: Asset): Task[Unit] = for {
-    assetDir           <- storageService.getAssetDirectory(asset.ref)
+    assetDir           <- storage.getAssetDirectory(asset.ref)
     infoFile            = assetDir / infoFilename(asset.ref)
     checksumOriginal   <- FileChecksumService.createSha256Hash(asset.original.file.toPath)
     checksumDerivative <- FileChecksumService.createSha256Hash(asset.derivative.toPath)
-    metadata = asset match {
-                 case mi: MovingImageAsset => Some(mi.metadata)
-                 case _                    => None
-               }
-    content = AssetInfoFileContent.make(asset, checksumOriginal, checksumDerivative, metadata)
-    _      <- Files.createFile(infoFile)
-    _      <- storageService.saveJsonFile(infoFile, content)
+    content             = AssetInfoFileContent.make(asset, checksumOriginal, checksumDerivative, asset.metadata)
+    _                  <- Files.createFile(infoFile)
+    _                  <- storage.saveJsonFile(infoFile, content)
   } yield ()
 }
 
