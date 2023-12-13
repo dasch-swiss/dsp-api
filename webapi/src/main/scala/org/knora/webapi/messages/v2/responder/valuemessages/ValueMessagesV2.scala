@@ -9,10 +9,7 @@ import zio.*
 
 import java.time.Instant
 import java.util.UUID
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.errors.NotImplementedException
+import dsp.errors.{AssertionException, BadRequestException, NotFoundException, NotImplementedException}
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
@@ -634,7 +631,7 @@ object CreateValueV2 {
                          .mapError(BadRequestException(_))
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
-        shortcode = resourceIri.getProjectCode.get
+        shortcode <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
 
         // Get the resource class.
         resourceClassIri <-
