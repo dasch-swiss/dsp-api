@@ -1,23 +1,28 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
+import zio.Scope
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
+import zio.nio.file.Path
+import zio.test.Spec
+import zio.test.TestEnvironment
+import zio.test.ZIOSpecDefault
+import zio.test.*
+
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{
-  DeleteTemporaryFileRequest,
-  IIIFServiceStatusResponse,
-  MoveTemporaryFileToPermanentStorageRequest,
-  SipiGetTextFileRequest,
-  SipiGetTextFileResponse
-}
+import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusResponse
+import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
+import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
+import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
 import org.knora.webapi.slice.admin.domain.service.Asset
-import org.knora.webapi.store.iiif.api.{FileMetadataSipiResponse, SipiService}
-import zio.{Scope, Task, ZIO, ZLayer}
-import zio.nio.file.Path
-import zio.test.{Spec, TestEnvironment, ZIOSpecDefault}
-import zio.test.*
+import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
+import org.knora.webapi.store.iiif.api.SipiService
 
 object ValuesV2Spec extends ZIOSpecDefault {
   private val json =
