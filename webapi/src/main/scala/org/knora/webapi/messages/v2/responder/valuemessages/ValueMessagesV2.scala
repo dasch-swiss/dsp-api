@@ -1119,9 +1119,9 @@ object ValueContentV2 {
       } yield valueContent
     }
 
-  private final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
+  private[valuemessages] final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
 
-  private def getFileInfo(
+  private[valuemessages] def getFileInfo(
     shortcode: String,
     ingestState: AssetIngestState,
     jsonLdObject: JsonLDObject
