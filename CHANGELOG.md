@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.4.0...v0.5.0) (2023-12-15)
+
+
+### Enhancements
+
+* Add asset info endpoint and image meta data extraction ([#139](https://github.com/dasch-swiss/dsp-ingest/issues/139)) ([a6578da](https://github.com/dasch-swiss/dsp-ingest/commit/a6578dade1a9945b8564b9b0dc5ba10127a7ca76))
+* Add get mapping.csv and finalize endpoints ([#137](https://github.com/dasch-swiss/dsp-ingest/issues/137)) ([aac2747](https://github.com/dasch-swiss/dsp-ingest/commit/aac27472e86b496f4da07a3d39358b4b74e9fc37))
+* Add moving image support (metadata and keyframe extraction) ([#136](https://github.com/dasch-swiss/dsp-ingest/issues/136)) ([191ce7d](https://github.com/dasch-swiss/dsp-ingest/commit/191ce7ddbfdbfaa447a17423250b1a1a10e2c2d9))
+* Add openapi documentation generation (DEV-3071) ([#143](https://github.com/dasch-swiss/dsp-ingest/issues/143)) ([7272b78](https://github.com/dasch-swiss/dsp-ingest/commit/7272b784be2fb8a1ba2498efe819dce7b6eeab61))
+
+
+### Maintenance
+
+* Minor dependency updates ([#142](https://github.com/dasch-swiss/dsp-ingest/issues/142)) ([e4bac59](https://github.com/dasch-swiss/dsp-ingest/commit/e4bac5983837e30c6a23fe6c87e29ffa81e394b2))
+* Patch dependency updates ([#141](https://github.com/dasch-swiss/dsp-ingest/issues/141)) ([52591c2](https://github.com/dasch-swiss/dsp-ingest/commit/52591c2e1f58e8925bb5a66649c75073c13da5df))
+
 ## [0.4.0](https://github.com/dasch-swiss/dsp-ingest/compare/v0.3.3...v0.4.0) (2023-12-07)
 
 
