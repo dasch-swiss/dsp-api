@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
-val tapirVersion                = "1.9.3"
+val tapirVersion                = "1.9.5"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "3.0.7"
 val zioHttpVersion              = "3.0.0-RC4"
@@ -18,7 +18,7 @@ val zioMetricsConnectorsVersion = "2.3.0"
 val zioMockVersion              = "1.0.0-RC12"
 val zioNioVersion               = "2.0.2"
 val zioPreludeVersion           = "1.0.0-RC21"
-val zioVersion                  = "2.0.19"
+val zioVersion                  = "2.0.20"
 
 val gitCommit  = ("git rev-parse HEAD" !!).trim
 val gitVersion = ("git describe --tag --dirty --abbrev=7 --always  " !!).trim
