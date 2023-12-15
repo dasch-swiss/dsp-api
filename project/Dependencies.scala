@@ -75,7 +75,7 @@ object Dependencies {
 
   // input validation
   val commonsValidator =
-    "commons-validator" % "commons-validator" % "1.7" exclude ("commons-logging", "commons-logging")
+    "commons-validator" % "commons-validator" % "1.8.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
