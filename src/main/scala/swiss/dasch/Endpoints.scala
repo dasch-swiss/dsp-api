@@ -17,9 +17,9 @@ final case class Endpoints(
   private val projects: ProjectsEndpointsHandler,
   private val maintenance: MaintenanceEndpointsHandler
 ) {
+  val api = monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints
 
   val endpoints: List[ZServerEndpoint[Any, ZioStreams]] = {
-    val api  = monitoring.endpoints ++ projects.endpoints ++ maintenance.endpoints
     val docs = createDocs(api)
     api ++ docs
   }

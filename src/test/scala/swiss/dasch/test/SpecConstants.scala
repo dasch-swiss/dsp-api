@@ -25,7 +25,6 @@ object SpecConstants {
     def toProjectShortcode: ProjectShortcode = ProjectShortcode.unsafeFrom(s)
     def toAssetId: AssetId                   = AssetId.unsafeFrom(s)
     def toSha256Hash: Sha256Hash             = Sha256Hash.unsafeFrom(s)
-    def toNonEmptyString: NonEmptyString =
-      NonEmptyString.unsafeFrom(s)
+    def toNonEmptyString: NonEmptyString     = NonEmptyString.unsafeFrom(s)
   }
 }

@@ -6,6 +6,7 @@ nav:
       - API documentation:
           - Projects Endpoints: api-endpoints-projects.md
           - Monitoring Endpoints: api-endpoints-monitoring.md
+          - Maintenance Endpoints: api-endpoints-maintenance.md
           - Authentication: api-authentication.md
       - Service documentation:
           - Configuration: service-configuration.md
@@ -14,7 +15,7 @@ nav:
 plugins:
   - include-markdown
   - search
-  - git-revision-date
+  - git-revision-date-localized
   - neoteroi.mkdocsoad:
       use_pymdownx: true
 

@@ -168,7 +168,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
   val getProjectsAssetsInfo = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "assets" / path[AssetId]("assetId"))
     .out(jsonBody[AssetInfoResponse])
-    .tag(projects ++ "assets")
+    .tag("assets")
 
   val postBulkIngest = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest")
@@ -179,7 +179,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
         "Currently only supports ingest of images. " +
         "The files are expected to be in the `tmp/<project_shortcode>` directory."
     )
-    .tag(projects)
+    .tag("bulk-ingest")
 
   val postBulkIngestFinalize = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "bulk-ingest" / "finalize")
@@ -189,7 +189,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
         "This will remove the files from the `tmp/<project_shortcode>` directory and the directory itself. " +
         "This will remove also the mapping.csv file."
     )
-    .tag(projects)
+    .tag("bulk-ingest")
 
   val getBulkIngestMappingCsv = base.secureEndpoint.get
     .in(projects / shortcodePathVar / "bulk-ingest" / "mapping.csv")
@@ -200,21 +200,21 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
     )
     .out(stringBody)
     .out(header(HeaderNames.ContentType, "text/csv"))
-    .tag(projects)
+    .tag("bulk-ingest")
 
   val postExport = base.secureEndpoint.post
     .in(projects / shortcodePathVar / "export")
     .out(header[String]("Content-Disposition"))
     .out(header[String]("Content-Type"))
     .out(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
-    .tag(projects)
+    .tag("import/export")
 
   val getImport = base.secureEndpoint
     .in(projects / shortcodePathVar / "import")
     .in(streamBinaryBody(ZioStreams)(CodecFormat.Zip()))
     .in(header("Content-Type", "application/zip"))
     .out(jsonBody[UploadResponse])
-    .tag(projects)
+    .tag("import/export")
 
   val endpoints =
     List(
@@ -223,6 +223,7 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
       getProjectsChecksumReport,
       getProjectsAssetsInfo,
       postBulkIngest,
+      postBulkIngestFinalize,
       getBulkIngestMappingCsv,
       postExport,
       getImport

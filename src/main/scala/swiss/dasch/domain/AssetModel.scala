@@ -91,6 +91,7 @@ object Asset {
     derivative: DerivativeFile,
     metadata: MovingImageMetadata
   ): MovingImageAsset = MovingImageAsset(assetRef, original, derivative, metadata)
+
   def makeOther(assetRef: AssetRef, original: Original, derivative: DerivativeFile): OtherAsset =
     OtherAsset(assetRef, original, derivative)
 }
