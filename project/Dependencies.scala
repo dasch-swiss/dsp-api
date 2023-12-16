@@ -24,7 +24,7 @@ object Dependencies {
   val ZioConfigVersion            = "3.0.7"
   val ZioLoggingVersion           = "2.1.16"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.2.1"
+  val ZioMetricsConnectorsVersion = "2.3.0"
   val ZioPreludeVersion           = "1.0.0-RC21"
   val ZioSchemaVersion            = "0.2.0"
   val ZioVersion                  = "2.0.20"
@@ -70,8 +70,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.6" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.6" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.7.0" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.7.0" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
