@@ -100,7 +100,9 @@ function pre_flight(prefix, identifier, cookie)
     local token = auth_get_jwt_decoded()
     if token["sub"] == "http://rdfh.ch/users/root" then
         log("pre_flight - always allow access for root user", server.loglevel.LOG_DEBUG)
-        return `allow`, filepath
+        return 'allow', filepath
+    else
+        log("pre_flight - user: " .. token["sub"], server.loglevel.LOG_DEBUG)
     end
 
     if prefix == "tmp" then
