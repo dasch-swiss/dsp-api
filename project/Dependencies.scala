@@ -69,20 +69,20 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.9" // the logging interface
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20.1"
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.21"
   val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.7.0" // Scala 3 compatible
   val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.7.0" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
-    "commons-validator" % "commons-validator" % "1.7" exclude ("commons-logging", "commons-logging")
+    "commons-validator" % "commons-validator" % "1.8.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.2.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.76"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.77"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
@@ -93,7 +93,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.1"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.8"
