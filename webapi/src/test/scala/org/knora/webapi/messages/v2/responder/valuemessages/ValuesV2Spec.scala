@@ -22,7 +22,6 @@ import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusResponse
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
@@ -44,15 +43,9 @@ object ValuesV2Spec extends ZIOSpecDefault {
       test("Expect file to be not ingested and in `tmp` folder") {
         for {
           info <- ValueContentV2
-                    .getFileInfo(
-                      "0001",
-                      AssetIngestState.AssetInTemp,
-                      JsonLDUtil.parseJsonLD(json).body,
-                      KnoraSystemInstances.Users.SystemUser
-                    )
+                    .getFileInfo("0001", AssetIngestState.AssetInTemp, JsonLDUtil.parseJsonLD(json).body)
                     .provide(ZLayer.succeed(new SipiService {
-                      override def getFileMetadata(filePath: String, requestingUser: UserADM)
-                        : Task[FileMetadataSipiResponse] =
+                      override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
                         if (filePath.startsWith("/tmp")) ZIO.succeed(response)
                         else ZIO.fail(AssertionException(filePath))
 
@@ -73,15 +66,9 @@ object ValuesV2Spec extends ZIOSpecDefault {
       test("Expect file to be already ingested and in project folder") {
         for {
           info <- ValueContentV2
-                    .getFileInfo(
-                      "0001",
-                      AssetIngestState.AssetIngested,
-                      JsonLDUtil.parseJsonLD(json).body,
-                      KnoraSystemInstances.Users.SystemUser
-                    )
+                    .getFileInfo("0001", AssetIngestState.AssetIngested, JsonLDUtil.parseJsonLD(json).body)
                     .provide(ZLayer.succeed(new SipiService {
-                      override def getFileMetadata(filePath: String, requestingUser: UserADM)
-                        : Task[FileMetadataSipiResponse] =
+                      override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
                         if (filePath.startsWith("/0001")) ZIO.succeed(response)
                         else ZIO.fail(AssertionException(filePath))
 
