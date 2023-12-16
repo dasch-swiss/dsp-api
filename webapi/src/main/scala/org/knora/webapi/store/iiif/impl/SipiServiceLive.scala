@@ -19,6 +19,7 @@ import org.apache.http.config.SocketConfig
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json.*
@@ -76,7 +77,9 @@ final case class SipiServiceLive(
   override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
     for {
       jwt     <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
-      bodyStr <- doSipiRequest(new HttpGet(s"${sipiConfig.internalBaseUrl}$filePath/knora.json?token=${jwt.jwtString}"))
+      request  = new HttpGet(s"${sipiConfig.internalBaseUrl}$filePath/knora.json")
+      _        = request.addHeader(new BasicHeader("Authorization", s"Bearer ${jwt.jwtString}"))
+      bodyStr <- doSipiRequest(request)
       res <- ZIO
                .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
                .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
