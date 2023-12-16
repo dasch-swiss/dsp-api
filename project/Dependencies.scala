@@ -17,17 +17,17 @@ object Dependencies {
 
   val ScalaVersion = "2.13.12"
 
-  val PekkoActorVersion = "1.0.1"
+  val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.0"
   val JenaVersion       = "4.10.0"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioLoggingVersion           = "2.1.16"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.2.1"
+  val ZioMetricsConnectorsVersion = "2.3.0"
   val ZioPreludeVersion           = "1.0.0-RC21"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.19"
+  val ZioVersion                  = "2.0.20"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -70,8 +70,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.21"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.6" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.6" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.7.0" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.7.0" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -121,7 +121,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.9.3"
+  val tapirVersion = "1.9.5"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -129,7 +129,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.3"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.5"
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
