@@ -505,6 +505,41 @@ class KnoraSipiIntegrationV2ITSpec
       assert(savedImage.internalFilename == uploadedFile.filename)
     }
 
+    "create a resource with a still image file that has already been ingested" in {
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      // Create the resource in the API.
+      val jsonLdEntity = UploadFileRequest
+        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
+        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~>
+        addHeader("X-Asset-Ingested", "true")
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      // Get the resource from the API.
+      val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
+      checkResponseOK(getRequest)
+    }
+
+    "not create a resource with a still image file that has already been ingested if the header is not provided" in {
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      // Create the resource in the API.
+      val jsonLdEntity = UploadFileRequest
+        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
+        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password)) // no X-Asset-Ingested header
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
+      // Get the resource from the API.
+      val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
+      checkResponseOK(getRequest)
+    }
+
     "reject an image file with the wrong file extension" in {
       val exception = intercept[BadRequestException] {
         uploadToSipi(
