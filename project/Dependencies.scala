@@ -17,17 +17,17 @@ object Dependencies {
 
   val ScalaVersion = "2.13.12"
 
-  val PekkoActorVersion = "1.0.1"
+  val PekkoActorVersion = "1.0.2"
   val PekkoHttpVersion  = "1.0.0"
   val JenaVersion       = "4.10.0"
 
   val ZioConfigVersion            = "3.0.7"
   val ZioLoggingVersion           = "2.1.16"
   val ZioNioVersion               = "2.0.2"
-  val ZioMetricsConnectorsVersion = "2.2.1"
+  val ZioMetricsConnectorsVersion = "2.3.0"
   val ZioPreludeVersion           = "1.0.0-RC21"
   val ZioSchemaVersion            = "0.2.0"
-  val ZioVersion                  = "2.0.19"
+  val ZioVersion                  = "2.0.20"
 
   // ZIO - all Scala 3 compatible
   val zio                   = "dev.zio"                       %% "zio"                       % ZioVersion
@@ -69,20 +69,20 @@ object Dependencies {
   val slf4jApi     = "org.slf4j"                   % "slf4j-api"     % "2.0.9" // the logging interface
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.20.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.6.6" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.6.6" // Scala 3 incompatible
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.21"
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.7.0" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.7.0" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
-    "commons-validator" % "commons-validator" % "1.7" exclude ("commons-logging", "commons-logging")
+    "commons-validator" % "commons-validator" % "1.8.0" exclude ("commons-logging", "commons-logging")
 
   // authentication
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "6.2.0" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.76"
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.77"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
@@ -93,7 +93,7 @@ object Dependencies {
   // other
   val diff           = "com.sksamuel.diff" % "diff"             % "1.1.11"
   val gwtServlet     = "com.google.gwt"    % "gwt-servlet"      % "2.10.0"
-  val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.1"
+  val icu4j          = "com.ibm.icu"       % "icu4j"            % "74.2"
   val jakartaJSON    = "org.glassfish"     % "jakarta.json"     % "2.0.1"
   val jodd           = "org.jodd"          % "jodd"             % "3.2.7"
   val rdf4jClient    = "org.eclipse.rdf4j" % "rdf4j-client"     % "4.3.8"
@@ -121,7 +121,7 @@ object Dependencies {
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.14.0"
 
-  val tapirVersion = "1.9.3"
+  val tapirVersion = "1.9.5"
 
   val tapir = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-pekko-http-server" % tapirVersion,
@@ -129,7 +129,7 @@ object Dependencies {
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio"          % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-spray"        % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.3"
+    "com.softwaremill.sttp.tapir" %% "tapir-refined"           % "1.9.5"
   )
   val metrics = Seq(
     "dev.zio"                     %% "zio-metrics-connectors"            % ZioMetricsConnectorsVersion,
