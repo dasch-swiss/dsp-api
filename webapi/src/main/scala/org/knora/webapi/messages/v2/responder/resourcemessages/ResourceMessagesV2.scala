@@ -786,19 +786,11 @@ object CreateResourceRequestV2 {
                                            )
                                        }
                   fileInfo <- ValueContentV2
-                                .getFileInfo(
-                                  projectInfoResponse.project.shortcode,
-                                  AssetIngestState.AssetInTemp,
-                                  valueJsonLDObject
-                                )
+                                .getFileInfo(projectInfoResponse.project.shortcode, ingestState, valueJsonLDObject)
                                 .option
 
-                  valueContent <- ValueContentV2.fromJsonLdObject(
-                                    ingestState,
-                                    valueJsonLDObject,
-                                    requestingUser,
-                                    fileInfo
-                                  )
+                  valueContent <-
+                    ValueContentV2.fromJsonLdObject(ingestState, valueJsonLDObject, requestingUser, fileInfo)
 
                   maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
                                            .mapError(BadRequestException(_))
