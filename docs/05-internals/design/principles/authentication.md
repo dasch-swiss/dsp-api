@@ -8,10 +8,10 @@
 ## Scope
 
 Authentication is the process of making sure that if someone is
-accessing something then this someone is actually also the someone he
-pretends to be. The process of making sure that someone is authorized,
-i.e. has the permission to access something, is handled as described in
-[Authorisation](../../../02-dsp-ontologies/knora-base.md#authorisation)).
+accessing something then this someone is actually also the person they
+pretend to be. The process of making sure that someone is authorized,
+(i.e. has the permission to access something, is handled as described
+in [Authorisation](../../../02-dsp-ontologies/knora-base.md#authorisation)).
 
 ## Implementation
 
@@ -25,12 +25,6 @@ All routes are always accessible and if there are no credentials
 provided, a default user is assumed. If credentials are sent and they
 are not correct (e.g., wrong username, password incorrect, token
 expired), then the request will end in an error message.
-
-There are some differences in `V1` and `V2` of the API regarding
-authentication. They differ mainly in the format of the response and
-that creation of session cookies are only supported in `V1` and tokens
-in `V2`. After login via either version, all routes (`V1` and `V2`) are
-accessible.
 
 ## Skipping Authentication
 
