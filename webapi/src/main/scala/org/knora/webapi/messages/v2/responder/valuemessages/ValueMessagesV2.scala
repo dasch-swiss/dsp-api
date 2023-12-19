@@ -12,6 +12,7 @@ import java.util.UUID
 
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
 import dsp.errors.NotImplementedException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
@@ -37,10 +38,13 @@ import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -583,6 +587,7 @@ case class ReadOtherValueV2(
 /**
  * Represents a Knora value to be created in an existing resource.
  *
+ * @param ingestState indicates the state of the file, either ingested or in temp folder
  * @param resourceIri       the resource the new value should be attached to.
  * @param resourceClassIri  the resource class that the client believes the resource belongs to.
  * @param propertyIri       the property of the new value. If the client wants to create a link, this must be a link value property.
@@ -601,7 +606,8 @@ case class CreateValueV2(
   valueIri: Option[SmartIri] = None,
   valueUUID: Option[UUID] = None,
   valueCreationDate: Option[Instant] = None,
-  permissions: Option[String] = None
+  permissions: Option[String] = None,
+  ingestState: AssetIngestState = AssetInTemp
 ) extends IOValueV2
 
 /**
@@ -612,11 +618,13 @@ object CreateValueV2 {
   /**
    * Converts JSON-LD input to a [[CreateValueV2]].
    *
+   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @param jsonLdString  JSON-LD input as String.
    * @param requestingUser       the user making the request.
    * @return a case class instance representing the input.
    */
   def fromJsonLd(
+    ingestState: AssetIngestState,
     jsonLdString: String,
     requestingUser: UserADM
   ): ZIO[SipiService & StringFormatter & IriConverter & MessageRelay, Throwable, CreateValueV2] =
@@ -628,6 +636,8 @@ object CreateValueV2 {
                          .mapError(BadRequestException(_))
                          .flatMap(RouteUtilZ.ensureIsKnoraResourceIri)
 
+        shortcode <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
+
         // Get the resource class.
         resourceClassIri <-
           jsonLDDocument.body.getRequiredTypeAsKnoraApiV2ComplexTypeIri.mapError(BadRequestException(_))
@@ -637,7 +647,9 @@ object CreateValueV2 {
           jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
             case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
               for {
-                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser)
+                fileInfo <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject).option
+                valueContent <-
+                  ValueContentV2.fromJsonLdObject(ingestState, jsonLdObject, requestingUser, fileInfo)
 
                 // Get and validate the custom value IRI if provided.
                 maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
@@ -646,7 +658,7 @@ object CreateValueV2 {
                                            definedNewIri.foreach(
                                              stringFormatter.validateCustomValueIri(
                                                _,
-                                               resourceIri.getProjectCode.get,
+                                               shortcode,
                                                resourceIri.getResourceID.get
                                              )
                                            )
@@ -691,7 +703,8 @@ object CreateValueV2 {
                 valueIri = maybeCustomValueIri,
                 valueUUID = maybeCustomUUID,
                 valueCreationDate = maybeCreationDate,
-                permissions = maybePermissions
+                permissions = maybePermissions,
+                ingestState = ingestState
               )
           }
       } yield createValue
@@ -752,13 +765,21 @@ object UpdateValueV2 {
         maybeNewIri: Option[SmartIri]
       ) =
         for {
-          valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser)
           maybePermissions <-
             ZIO.attempt {
               val validationFun: (String, => Nothing) => String =
                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
+          shortcode <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
+          fileInfo  <- ValueContentV2.getFileInfo(shortcode, AssetIngestState.AssetInTemp, jsonLDObject).option
+          valueContent <-
+            ValueContentV2.fromJsonLdObject(
+              AssetIngestState.AssetInTemp,
+              jsonLDObject,
+              requestingUser,
+              fileInfo
+            )
         } yield UpdateValueContentV2(
           resourceIri = resourceIri.toString,
           resourceClassIri = resourceClassIri,
@@ -1041,14 +1062,17 @@ object ValueContentV2 {
   /**
    * Converts a JSON-LD object to a [[ValueContentV2]].
    *
+   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @param jsonLdObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]].
    */
   def fromJsonLdObject(
+    ingestState: AssetIngestState,
     jsonLdObject: JsonLDObject,
-    requestingUser: UserADM
-  ): ZIO[SipiService & StringFormatter & MessageRelay, Throwable, ValueContentV2] =
+    requestingUser: UserADM,
+    fileInfo: Option[FileInfo]
+  ): ZIO[StringFormatter & MessageRelay, Throwable, ValueContentV2] =
     ZIO.serviceWithZIO[StringFormatter] { stringFormatter =>
       for {
         valueType <-
@@ -1069,17 +1093,67 @@ object ValueContentV2 {
             case UriValue                    => UriValueContentV2.fromJsonLdObject(jsonLdObject)
             case GeonameValue                => GeonameValueContentV2.fromJsonLdObject(jsonLdObject)
             case ColorValue                  => ColorValueContentV2.fromJsonLdObject(jsonLdObject)
-            case StillImageFileValue         => StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            case DocumentFileValue           => DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            case TextFileValue               => TextFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            case AudioFileValue              => AudioFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            case MovingImageFileValue        => MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            case ArchiveFileValue            => ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject)
-            case other                       => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
+            case StillImageFileValue =>
+              for {
+                info <-
+                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for StillImageFileValue"))
+                content <- StillImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
+              } yield content
+            case DocumentFileValue =>
+              for {
+                info <-
+                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for DocumentFileValue"))
+                content <- DocumentFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
+              } yield content
+            case TextFileValue =>
+              for {
+                info    <- ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for TextFileValue"))
+                content <- TextFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
+              } yield content
+            case AudioFileValue =>
+              for {
+                info <-
+                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for AudioFileValue"))
+                content <- AudioFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
+              } yield content
+            case MovingImageFileValue =>
+              for {
+                info <- ZIO
+                          .fromOption(fileInfo)
+                          .orElseFail(BadRequestException("No file info found for MovingImageFileValue"))
+                content <- MovingImageFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
+              } yield content
+            case ArchiveFileValue =>
+              for {
+                info <-
+                  ZIO.fromOption(fileInfo).orElseFail(BadRequestException("No file info found for ArchiveFileValue"))
+                content <- ArchiveFileValueContentV2.fromJsonLdObject(jsonLdObject, info.filename, info.metadata)
+              } yield content
+            case other => ZIO.fail(NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other"))
           }
-
       } yield valueContent
     }
+
+  final case class FileInfo(filename: IRI, metadata: FileMetadataSipiResponse)
+
+  def getFileInfo(
+    shortcode: String,
+    ingestState: AssetIngestState,
+    jsonLdObject: JsonLDObject
+  ): ZIO[SipiService, Throwable, FileInfo] =
+    for {
+      internalFilename <- ZIO.attempt {
+                            val validationFun: (IRI, => Nothing) => IRI =
+                              (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
+                            jsonLdObject.requireStringWithValidation(FileValueHasFilename, validationFun)
+                          }
+      metadata <- ingestState match {
+                    case AssetIngestState.AssetIngested =>
+                      SipiService.getFileMetadata(internalFilename, Shortcode.unsafeFrom(shortcode))
+                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromTemp(internalFilename)
+                  }
+
+    } yield FileInfo(internalFilename, metadata)
 }
 
 /**
@@ -2566,33 +2640,6 @@ case class FileValueV2(
 )
 
 /**
- * Holds a [[FileValueV2]] and the metadata that Sipi returned about the file.
- *
- * @param fileValue        a [[FileValueV2]].
- * @param sipiFileMetadata the metadata that Sipi returned about the file.
- */
-case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: FileMetadataSipiResponse)
-
-/**
- * Constructs [[FileValueWithSipiMetadata]] objects based on JSON-LD input.
- */
-object FileValueWithSipiMetadata {
-  def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
-  ): ZIO[SipiService, Throwable, FileValueWithSipiMetadata] =
-    for {
-      // The submitted value provides only Sipi's internal filename for the file.
-      internalFilename <- ZIO.attempt {
-                            val validationFun: (String, => Nothing) => String =
-                              (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                            jsonLDObject.requireStringWithValidation(FileValueHasFilename, validationFun)
-                          }
-      meta     <- SipiService.getFileMetadata(s"/tmp/$internalFilename")
-      fileValue = FileValueV2(internalFilename, meta.internalMimeType, meta.originalFilename, meta.originalMimeType)
-    } yield FileValueWithSipiMetadata(fileValue, meta)
-}
-
-/**
  * A trait for case classes representing different types of file values.
  */
 sealed trait FileValueContentV2 extends ValueContentV2 {
@@ -2702,16 +2749,18 @@ case class StillImageFileValueContentV2(
  */
 object StillImageFileValueContentV2 {
   def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
-  ): ZIO[SipiService & StringFormatter, Throwable, StillImageFileValueContentV2] =
+    jsonLDObject: JsonLDObject,
+    internalFilename: String,
+    metadata: FileMetadataSipiResponse
+  ): ZIO[StringFormatter, Throwable, StillImageFileValueContentV2] =
     for {
-      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject)
-      comment                   <- JsonLDUtil.getComment(jsonLDObject)
+      comment <- JsonLDUtil.getComment(jsonLDObject)
     } yield StillImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
-      fileValue = fileValueWithSipiMetadata.fileValue,
-      dimX = fileValueWithSipiMetadata.sipiFileMetadata.width.getOrElse(0),
-      dimY = fileValueWithSipiMetadata.sipiFileMetadata.height.getOrElse(0),
+      fileValue =
+        FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      dimX = metadata.width.getOrElse(0),
+      dimY = metadata.height.getOrElse(0),
       comment = comment
     )
 }
@@ -2850,17 +2899,19 @@ case class ArchiveFileValueContentV2(
  */
 object DocumentFileValueContentV2 {
   def fromJsonLdObject(
-    jsonLdObject: JsonLDObject
-  ): ZIO[SipiService & StringFormatter, Throwable, DocumentFileValueContentV2] =
+    jsonLdObject: JsonLDObject,
+    internalFilename: String,
+    metadata: FileMetadataSipiResponse
+  ): ZIO[StringFormatter, Throwable, DocumentFileValueContentV2] =
     for {
-      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject)
-      comment                   <- JsonLDUtil.getComment(jsonLdObject)
+      comment <- JsonLDUtil.getComment(jsonLdObject)
     } yield DocumentFileValueContentV2(
       ontologySchema = ApiV2Complex,
-      fileValue = fileValueWithSipiMetadata.fileValue,
-      pageCount = fileValueWithSipiMetadata.sipiFileMetadata.numpages,
-      dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
-      dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
+      fileValue =
+        FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      pageCount = metadata.numpages,
+      dimX = metadata.width,
+      dimY = metadata.height,
       comment
     )
 }
@@ -2870,12 +2921,17 @@ object DocumentFileValueContentV2 {
  */
 object ArchiveFileValueContentV2 {
   def fromJsonLdObject(
-    jsonLdObject: JsonLDObject
-  ): ZIO[SipiService & StringFormatter, Throwable, ArchiveFileValueContentV2] =
+    jsonLdObject: JsonLDObject,
+    internalFilename: String,
+    metadata: FileMetadataSipiResponse
+  ): ZIO[StringFormatter, Throwable, ArchiveFileValueContentV2] =
     for {
-      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLdObject)
-      comment                   <- JsonLDUtil.getComment(jsonLdObject)
-    } yield ArchiveFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
+      comment <- JsonLDUtil.getComment(jsonLdObject)
+    } yield ArchiveFileValueContentV2(
+      ApiV2Complex,
+      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      comment
+    )
 }
 
 /**
@@ -2942,11 +2998,16 @@ case class TextFileValueContentV2(
  */
 object TextFileValueContentV2 {
   def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
-  ): ZIO[SipiService & StringFormatter, Throwable, TextFileValueContentV2] = for {
-    fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject)
-    comment                   <- JsonLDUtil.getComment(jsonLDObject)
-  } yield TextFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
+    jsonLDObject: JsonLDObject,
+    internalFilename: String,
+    metadata: FileMetadataSipiResponse
+  ): ZIO[StringFormatter, Throwable, TextFileValueContentV2] = for {
+    comment <- JsonLDUtil.getComment(jsonLDObject)
+  } yield TextFileValueContentV2(
+    ApiV2Complex,
+    FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+    comment
+  )
 }
 
 /**
@@ -3013,12 +3074,17 @@ case class AudioFileValueContentV2(
  */
 object AudioFileValueContentV2 {
   def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
-  ): ZIO[SipiService & StringFormatter, Throwable, AudioFileValueContentV2] =
+    jsonLDObject: JsonLDObject,
+    internalFilename: String,
+    metadata: FileMetadataSipiResponse
+  ): ZIO[StringFormatter, Throwable, AudioFileValueContentV2] =
     for {
-      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject)
-      comment                   <- JsonLDUtil.getComment(jsonLDObject)
-    } yield AudioFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
+      comment <- JsonLDUtil.getComment(jsonLDObject)
+    } yield AudioFileValueContentV2(
+      ApiV2Complex,
+      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      comment
+    )
 }
 
 /**
@@ -3087,12 +3153,17 @@ case class MovingImageFileValueContentV2(
  */
 object MovingImageFileValueContentV2 {
   def fromJsonLdObject(
-    jsonLDObject: JsonLDObject
-  ): ZIO[SipiService & StringFormatter, Throwable, MovingImageFileValueContentV2] =
+    jsonLDObject: JsonLDObject,
+    internalFilename: String,
+    metadata: FileMetadataSipiResponse
+  ): ZIO[StringFormatter, Throwable, MovingImageFileValueContentV2] =
     for {
-      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLdObject(jsonLDObject)
-      comment                   <- JsonLDUtil.getComment(jsonLDObject)
-    } yield MovingImageFileValueContentV2(ApiV2Complex, fileValueWithSipiMetadata.fileValue, comment)
+      comment <- JsonLDUtil.getComment(jsonLDObject)
+    } yield MovingImageFileValueContentV2(
+      ApiV2Complex,
+      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      comment
+    )
 }
 
 /**

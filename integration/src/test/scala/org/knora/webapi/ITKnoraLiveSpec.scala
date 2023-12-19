@@ -31,6 +31,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.LogAspect
@@ -81,6 +82,9 @@ abstract class ITKnoraLiveSpec
     router <- ZIO.service[core.AppRouter]
     config <- ZIO.service[AppConfig]
   } yield (router, config)
+
+  def copyFileToImageFolderInContainer(prefix: String, filename: String) =
+    UnsafeZioRun.runOrThrow(SipiTestContainer.copyFileToImageFolderInContainer(prefix, filename))
 
   /**
    * Create router and config by unsafe running them.

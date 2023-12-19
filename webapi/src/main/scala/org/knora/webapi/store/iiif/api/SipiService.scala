@@ -14,6 +14,7 @@ import zio.nio.file.Path
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.errors.SipiException
 
@@ -62,12 +63,21 @@ object FileMetadataSipiResponse {
 trait SipiService {
 
   /**
-   * Asks Sipi for metadata about a file, served from the 'knora.json' route.
+   * Asks Sipi for metadata about a file in the tmp folder, served from the 'knora.json' route.
    *
-   * @param filePath the path to the file.
+   * @param filename the path to the file.
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse]
+  def getFileMetadataFromTemp(filename: String): Task[FileMetadataSipiResponse]
+
+  /**
+   * Asks Sipi for metadata about a file in permanent location, served from the 'knora.json' route.
+   *
+   * @param filename the path to the file.
+   * @param shortcode the shortcode of the project.
+   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
+   */
+  def getFileMetadata(filename: String, shortcode: Shortcode): Task[FileMetadataSipiResponse]
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.

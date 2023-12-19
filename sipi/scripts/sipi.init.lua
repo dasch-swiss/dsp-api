@@ -96,8 +96,15 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     log("pre_flight - filepath: " .. filepath, server.loglevel.LOG_DEBUG)
+
     if prefix == "tmp" then
         log("pre_flight - always allow access to tmp folder", server.loglevel.LOG_DEBUG)
+        return 'allow', filepath
+    end
+
+    local token, error = auth_get_jwt_decoded()
+    if error == nil and token ~= nil and token["sub"] == "http://www.knora.org/ontology/knora-admin#SystemUser" then
+        log("pre_flight - always allow access for system user", server.loglevel.LOG_DEBUG)
         return 'allow', filepath
     end
 

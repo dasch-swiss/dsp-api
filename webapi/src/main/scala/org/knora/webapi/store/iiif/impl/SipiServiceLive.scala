@@ -19,6 +19,7 @@ import org.apache.http.config.SocketConfig
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.http.message.BasicHeader
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import spray.json.*
@@ -35,9 +36,11 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.*
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
+import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -69,16 +72,32 @@ final case class SipiServiceLive(
   /**
    * Asks Sipi for metadata about a file, served from the 'knora.json' route.
    *
-   * @param filePath the path to the file.
+   * @param filename the file name
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  override def getFileMetadata(filePath: String): Task[FileMetadataSipiResponse] =
-    doSipiRequest(new HttpGet(sipiConfig.internalBaseUrl + filePath + "/knora.json"))
-      .flatMap(bodyStr =>
-        ZIO
-          .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
-          .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
-      )
+  override def getFileMetadataFromTemp(filename: String): Task[FileMetadataSipiResponse] =
+    getFileMetadataFromUrl(s"${sipiConfig.internalBaseUrl}/tmp/$filename/knora.json")
+
+  /**
+   * Asks Sipi for metadata about a file in permanent location, served from the 'knora.json' route.
+   *
+   * @param filename  the path to the file.
+   * @param shortcode the shortcode of the project.
+   * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
+   */
+  override def getFileMetadata(filename: String, shortcode: KnoraProject.Shortcode): Task[FileMetadataSipiResponse] =
+    getFileMetadataFromUrl(s"${sipiConfig.internalBaseUrl}/${shortcode.value}/$filename/knora.json")
+
+  private def getFileMetadataFromUrl(url: String): Task[FileMetadataSipiResponse] =
+    for {
+      jwt     <- jwtService.createJwt(KnoraSystemInstances.Users.SystemUser)
+      request  = new HttpGet(url)
+      _        = request.addHeader(new BasicHeader("Authorization", s"Bearer ${jwt.jwtString}"))
+      bodyStr <- doSipiRequest(request)
+      res <- ZIO
+               .fromEither(bodyStr.fromJson[FileMetadataSipiResponse])
+               .mapError(e => SipiException(s"Invalid response from Sipi: $e, $bodyStr"))
+    } yield res
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.

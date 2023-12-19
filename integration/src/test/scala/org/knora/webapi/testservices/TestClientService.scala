@@ -148,6 +148,9 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
           .mapError(error =>
             throw AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request, \n RESPONSE: $error")
           )
+      _ <- ZIO
+             .fail(AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request, \n RESPONSE: $body"))
+             .when(response.status.isFailure())
     } yield body
 
   /**

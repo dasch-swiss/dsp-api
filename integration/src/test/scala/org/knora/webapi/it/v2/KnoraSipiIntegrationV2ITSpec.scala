@@ -5,7 +5,9 @@
 
 package org.knora.webapi.it.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -29,10 +31,6 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
-
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -503,6 +501,38 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedImage = savedValueToSavedImage(savedValueObj)
       assert(savedImage.internalFilename == uploadedFile.filename)
+    }
+
+    "create a resource with a still image file that has already been ingested" in {
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      // Create the resource in the API.
+      val jsonLdEntity = UploadFileRequest
+        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
+        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~>
+        addHeader("X-Asset-Ingested", "true")
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      // Get the resource from the API.
+      val resIri     = UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString
+      val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resIri, "UTF-8")}")
+      checkResponseOK(getRequest)
+    }
+
+    "not create a resource with a still image file that has already been ingested if the header is not provided" in {
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
+      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      // Create the resource in the API.
+      val jsonLdEntity = UploadFileRequest
+        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
+        .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
+        addCredentials(BasicHttpCredentials(anythingUserEmail, password)) // no X-Asset-Ingested header
+      val res = singleAwaitingRequest(request)
+      assert(res.status == StatusCodes.BadRequest)
     }
 
     "reject an image file with the wrong file extension" in {

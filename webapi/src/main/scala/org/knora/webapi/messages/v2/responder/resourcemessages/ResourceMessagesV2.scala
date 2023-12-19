@@ -34,6 +34,8 @@ import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder.*
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
@@ -656,10 +658,16 @@ case class CreateResourceV2(
 case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
   requestingUser: UserADM,
-  apiRequestID: UUID
+  apiRequestID: UUID,
+  ingestState: AssetIngestState = AssetInTemp
 ) extends ResourcesResponderRequestV2
 
 object CreateResourceRequestV2 {
+  sealed trait AssetIngestState
+  object AssetIngestState {
+    case object AssetIngested extends AssetIngestState
+    case object AssetInTemp   extends AssetIngestState
+  }
 
   /**
    * Converts JSON-LD input to a [[CreateResourceRequestV2]].
@@ -667,12 +675,14 @@ object CreateResourceRequestV2 {
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
+   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @return a case class instance representing the input.
    */
   def fromJsonLd(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    ingestState: AssetIngestState = AssetInTemp
   ): ZIO[IriConverter & SipiService & StringFormatter & MessageRelay, Throwable, CreateResourceRequestV2] =
     ZIO.serviceWithZIO[StringFormatter] { implicit stringFormatter =>
       val validationFun: (String, => Nothing) => String =
@@ -775,8 +785,12 @@ object CreateResourceRequestV2 {
                                              )
                                            )
                                        }
+                  fileInfo <- ValueContentV2
+                                .getFileInfo(projectInfoResponse.project.shortcode, ingestState, valueJsonLDObject)
+                                .option
 
-                  valueContent <- ValueContentV2.fromJsonLdObject(valueJsonLDObject, requestingUser)
+                  valueContent <-
+                    ValueContentV2.fromJsonLdObject(ingestState, valueJsonLDObject, requestingUser, fileInfo)
 
                   maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
                                            .mapError(BadRequestException(_))
@@ -841,7 +855,8 @@ object CreateResourceRequestV2 {
           creationDate = creationDate
         ),
         requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
-        apiRequestID = apiRequestID
+        apiRequestID = apiRequestID,
+        ingestState = ingestState
       )
     }
 }
