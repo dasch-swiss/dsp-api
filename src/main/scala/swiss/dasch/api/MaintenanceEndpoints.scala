@@ -55,11 +55,18 @@ final case class MaintenanceEndpoints(base: BaseEndpoints) {
     .out(statusCode(StatusCode.Accepted))
     .tag(maintenance)
 
+  val extractImageMetadataAndAddToInfoFileEndpoint = base.secureEndpoint.post
+    .in(maintenance / "extract-image-metadata-and-add-to-info-file")
+    .out(stringBody)
+    .out(statusCode(StatusCode.Accepted))
+    .tag(maintenance)
+
   val endpoints = List(
     applyTopLeftCorrectionEndpoint,
     createOriginalsEndpoint,
     needsTopLeftCorrectionEndpoint,
-    needsOriginalsEndpoint
+    needsOriginalsEndpoint,
+    extractImageMetadataAndAddToInfoFileEndpoint
   )
 }
 

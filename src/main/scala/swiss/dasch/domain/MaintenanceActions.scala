@@ -5,22 +5,23 @@
 
 package swiss.dasch.domain
 
+import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
 import swiss.dasch.domain
+import swiss.dasch.domain.DerivativeFile.JpxDerivativeFile
 import swiss.dasch.domain.FileFilters.isJpeg2000
 import swiss.dasch.domain.SipiImageFormat.Tif
 import zio.*
+import zio.json.interop.refined.*
 import zio.json.{DeriveJsonCodec, EncoderOps, JsonCodec, JsonEncoder}
 import zio.nio.file
 import zio.nio.file.{Files, Path}
 import zio.stream.{ZSink, ZStream}
-import DerivativeFile.JpxDerivativeFile
-import eu.timepit.refined.types.string.NonEmptyString
 
 import java.io.IOException
 
-import zio.json.interop.refined._
 trait MaintenanceActions {
+  def extractImageMetadataAndAddToInfoFile(): Task[Unit]
   def createNeedsOriginalsReport(imagesOnly: Boolean): Task[Unit]
   def createNeedsTopLeftCorrectionReport(): Task[Unit]
   def createWasTopLeftCorrectionAppliedReport(): Task[Unit]
@@ -28,23 +29,40 @@ trait MaintenanceActions {
   def createOriginals(projectPath: Path, mapping: Map[String, String]): Task[Int]
 }
 
-object MaintenanceActions {
-  def createNeedsOriginalsReport(imagesOnly: Boolean): ZIO[MaintenanceActions, Throwable, Unit] =
-    ZIO.serviceWithZIO[MaintenanceActions](_.createNeedsOriginalsReport(imagesOnly))
-  def createNeedsTopLeftCorrectionReport(): ZIO[MaintenanceActions, Throwable, Unit] =
-    ZIO.serviceWithZIO[MaintenanceActions](_.createNeedsTopLeftCorrectionReport())
-  def applyTopLeftCorrections(projectPath: Path): ZIO[MaintenanceActions, Throwable, Int] =
-    ZIO.serviceWithZIO[MaintenanceActions](_.applyTopLeftCorrections(projectPath))
-  def createOriginals(projectPath: Path, mapping: Map[String, String]): ZIO[MaintenanceActions, Throwable, Int] =
-    ZIO.serviceWithZIO[MaintenanceActions](_.createOriginals(projectPath, mapping))
-}
-
 final case class MaintenanceActionsLive(
+  assetInfoService: AssetInfoService,
   imageService: StillImageService,
   projectService: ProjectService,
   sipiClient: SipiClient,
   storageService: StorageService
 ) extends MaintenanceActions {
+
+  override def extractImageMetadataAndAddToInfoFile(): Task[Unit] = {
+    def updateSingleFile(path: Path, shortcode: ProjectShortcode): Task[Unit] =
+      for {
+        jpx <- ZIO
+                 .fromOption(JpxDerivativeFile.from(path))
+                 .orElseFail(new Exception(s"Is not a jpx file: $path"))
+        id <- ZIO
+                .fromOption(AssetId.fromPath(path))
+                .orElseFail(new Exception(s"Could not get asset id from path $path"))
+        dim <- imageService.getDimensions(jpx)
+        _   <- assetInfoService.updateStillImageMetadata(AssetRef(id, shortcode), dim)
+      } yield ()
+
+    for {
+      projectShortcodes <- projectService.listAllProjects()
+      assetDir          <- storageService.getAssetDirectory()
+      _ <- ZIO.foreachDiscard(projectShortcodes) { shortcode =>
+             Files
+               .walk(assetDir / s"$shortcode")
+               .filterZIO(FileFilters.isJpeg2000)
+               .mapZIOPar(8)(updateSingleFile(_, shortcode).logError)
+               .runDrain
+           }
+      _ <- ZIO.logInfo(s"Finished extract StillImage metadata")
+    } yield ()
+  }
 
   def createNeedsOriginalsReport(imagesOnly: Boolean): Task[Unit] = {
     val reportName = if (imagesOnly) "needsOriginals_images_only" else "needsOriginals"

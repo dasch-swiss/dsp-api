@@ -82,13 +82,25 @@ final case class MaintenanceEndpointsHandler(
             .as("work in progress")
       )
 
+  val extractImageMetadataAndAddToInfoFileEndpoint: ZServerEndpoint[Any, Any] =
+    maintenanceEndpoints.extractImageMetadataAndAddToInfoFileEndpoint
+      .serverLogic(_ =>
+        _ =>
+          maintenanceActions
+            .extractImageMetadataAndAddToInfoFile()
+            .forkDaemon
+            .logError
+            .as("work in progress")
+      )
+
   val endpoints: List[ZServerEndpoint[Any, Any]] =
     List(
       applyTopLeftCorrectionEndpoint,
       createOriginalsEndpoint,
       needsOriginalsEndpoint,
       needsTopLeftCorrectionEndpoint,
-      wasTopLeftCorrectionAppliedEndpoint
+      wasTopLeftCorrectionAppliedEndpoint,
+      extractImageMetadataAndAddToInfoFileEndpoint
     )
 }
 

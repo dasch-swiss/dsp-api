@@ -13,6 +13,7 @@ import zio.json.{DeriveJsonCodec, JsonCodec}
 
 sealed trait AssetMetadata
 
+type StillImageMetadata = Dimensions
 final case class Dimensions(width: Int Refined Positive, height: Int Refined Positive) extends AssetMetadata
 object Dimensions {
   given codec: JsonCodec[Dimensions] = DeriveJsonCodec.gen[Dimensions]
