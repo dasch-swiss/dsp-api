@@ -533,11 +533,8 @@ class KnoraSipiIntegrationV2ITSpec
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
       val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
         addCredentials(BasicHttpCredentials(anythingUserEmail, password)) // no X-Asset-Ingested header
-      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
-      // Get the resource from the API.
-      val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
-      checkResponseOK(getRequest)
+      val res = singleAwaitingRequest(request)
+      assert(res.status == StatusCodes.InternalServerError)
     }
 
     "reject an image file with the wrong file extension" in {
