@@ -108,7 +108,7 @@ trait ResourceUtilV2 {
     fileValues: Seq[FileValueContentV2],
     requestingUser: UserADM
   ): Task[T]
-  def doSipiPostUpdate[T <: UpdateResultInProject](
+  final def doSipiPostUpdate[T <: UpdateResultInProject](
     updateTask: Task[T],
     fileValue: FileValueContentV2,
     requestingUser: UserADM
