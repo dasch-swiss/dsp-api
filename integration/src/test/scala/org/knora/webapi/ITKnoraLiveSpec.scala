@@ -31,6 +31,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.LogAspect
@@ -38,7 +39,6 @@ import org.knora.webapi.util.LogAspect
 import pekko.http.scaladsl.client.RequestBuilding
 import pekko.http.scaladsl.model._
 import pekko.testkit.TestKitBase
-import org.knora.webapi.testcontainers.SipiTestContainer
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack and
@@ -84,16 +84,7 @@ abstract class ITKnoraLiveSpec
   } yield (router, config)
 
   def copyFileToImageFolderInContainer(prefix: String, filename: String) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe
-        .run(
-          for {
-            sipiTestContainer <- ZIO.service[SipiTestContainer]
-            _                 <- sipiTestContainer.copyFileToImageFolderInContainer(prefix, filename)
-          } yield ()
-        )
-        .getOrThrowFiberFailure()
-    }
+    UnsafeZioRun.runOrThrow(SipiTestContainer.copyFileToImageFolderInContainer(prefix, filename))
 
   /**
    * Create router and config by unsafe running them.
