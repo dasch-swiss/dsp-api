@@ -517,9 +517,9 @@ class KnoraSipiIntegrationV2ITSpec
         addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~>
         addHeader("X-Asset-Ingested", "true")
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-      stillImageResourceIri.set(UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString)
       // Get the resource from the API.
-      val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
+      val resIri     = UnsafeZioRun.runOrThrow(responseJsonDoc.body.getRequiredIdValueAsKnoraDataIri).toString
+      val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resIri, "UTF-8")}")
       checkResponseOK(getRequest)
     }
 
