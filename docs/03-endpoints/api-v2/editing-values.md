@@ -174,13 +174,14 @@ Use the predicate `knora-api:valueAsString` of `knora-api:TextValue`:
 
 ### Creating a Text Value with Standoff Markup
 
-Currently, the only way to create a text value with standoff markup 
-is to submit it in XML format using an XML-to-standoff mapping. 
+Currently, the only way to create a text value with standoff markup
+is to submit it in XML format using an XML-to-standoff mapping.
 See [here](text/overview.md) for more detials.
 
 #### Creating a Text Value with Standard Mapping
 
-To create a value with the standard mapping (`http://rdfh.ch/standoff/mappings/StandardMapping`), we can make an XML document like this:
+To create a value with the standard mapping (`http://rdfh.ch/standoff/mappings/StandardMapping`), we can make an XML
+document like this:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -215,17 +216,22 @@ Note that quotation marks and line breaks in the XML must be escaped, and that t
 
 To create a text value with custom mapping, the following steps are required:
 
-1. Optionally, an XSL transformation resource (`kb:XSLTransformation`) can be created that may be defined as the default transformation of the mapping.
+1. Optionally, an XSL transformation resource (`kb:XSLTransformation`) can be created that may be defined as the default
+   transformation of the mapping.
 2. The mapping resource (`kb:XMLToStandoffMapping`) must be created, if it does not already exist.
 3. The text value can be created as in the example above, using the mapping resource IRI in `kb:textValueHasMapping`.
 
-The `kb:XSLTransformation` resource is a subclass of `kb:TextRepresentation`, so it has a `kb:hasTextFileValue` pointing to a `kb:TextFileValue`
+The `kb:XSLTransformation` resource is a subclass of `kb:TextRepresentation`, so it has a `kb:hasTextFileValue` pointing
+to a `kb:TextFileValue`
 which represents the XSLT file stored in SIPI. For more Details, see [Creating File Values](#creating-file-values).
 
-The `kb:XMLToStandoffMapping` resource requires the mapping XML as specified [here](text/custom-standoff.md#creating-a-custom-mapping).
-If an XSL transformation has been defined, the IRI the transformation can be placed in the `<defaultXSLTransformation>` tag of the mapping XML.
+The `kb:XMLToStandoffMapping` resource requires the mapping XML as
+specified [here](text/custom-standoff.md#creating-a-custom-mapping).
+If an XSL transformation has been defined, the IRI the transformation can be placed in the `<defaultXSLTransformation>`
+tag of the mapping XML.
 
-If a mapping has been defined, then requesting the text value will return both the `kb:textValueAsXml` and the `kb:textValueAsHtml` properties,
+If a mapping has been defined, then requesting the text value will return both the `kb:textValueAsXml` and
+the `kb:textValueAsHtml` properties,
 where the XML can be used for editing the value, while the HTML can be used to display it.
 If no mapping has been defined, only `kb:textValueAsXml` can be returned.
 
@@ -238,13 +244,15 @@ the following types of files:
 * Images: JPEG, JPEG2000, TIFF, or PNG which are stored internally as JPEG2000
 * Documents: PDF
 * Audio: MPEG or Waveform audio file format (.wav, .x-wav, .vnd.wave)
-* Text files: CSV, ODD, RNG, TXT, XLS, XLSX, XML, XSD, XSL  
+* Text files: CSV, ODD, RNG, TXT, XLS, XLSX, XML, XSD, XSL
 * Video files: MP4
 * Archive files: ZIP, TAR, GZIP
 
 Support for other types of files will be added in the future.
 
 The following sections describe the steps for creating a file value.
+
+Files can be ingested into DSP using SIPI or DSP-INGEST (experimental).
 
 ### Upload Files to Sipi
 
@@ -291,6 +299,13 @@ have:
 In the case of an image file, the client may now wish to get a thumbnail of each uploaded image, to allow the user to
 confirm that the correct files have been uploaded. This can be done by adding IIIF parameters to `temporaryBaseIIIFUrl`.
 For example, to get a JPG thumbnail image that is 150 pixels wide, you would add `/full/150,/0/default.jpg`.
+
+### Upload Files to DSP-INGEST
+
+Support for DSP-INGEST is in its early stage and currently mainly intended for ingesting large amounts of data.
+When a file has been ingested through DSP-INGEST,
+it is necessary to send the header `X-Asset-Ingested`
+along with the request to create the file value resource in DSP-API.
 
 ### Submit A File Value to Knora
 
