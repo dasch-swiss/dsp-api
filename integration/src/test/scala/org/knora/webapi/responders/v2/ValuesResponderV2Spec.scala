@@ -5,7 +5,7 @@
 
 package org.knora.webapi.responders.v2
 
-import org.apache.pekko
+import org.apache.pekko.testkit.ImplicitSender
 
 import java.time.Instant
 import java.util.UUID
@@ -39,8 +39,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
-
-import pekko.testkit.ImplicitSender
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -459,7 +457,7 @@ class ValuesResponderV2Spec extends CoreSpec with ImplicitSender {
       val propertyIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intVal           = IntegerValueContentV2(ApiV2Complex, 4)
       val duplicateValue =
-        CreateValueV2(AssetIngestState.AssetInTemp, resourceIri, resourceClassIri, propertyIri, intVal)
+        CreateValueV2(resourceIri, resourceClassIri, propertyIri, intVal, ingestState = AssetIngestState.AssetInTemp)
 
       val actual = UnsafeZioRun.run(ValuesResponderV2.createValueV2(duplicateValue, anythingUser1, randomUUID))
       assertFailsWithA[DuplicateValueException](actual)

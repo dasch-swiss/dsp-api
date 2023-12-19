@@ -785,12 +785,19 @@ object CreateResourceRequestV2 {
                                              )
                                            )
                                        }
+                  fileInfo <- ValueContentV2
+                                .getFileInfo(
+                                  projectInfoResponse.project.shortcode,
+                                  AssetIngestState.AssetInTemp,
+                                  valueJsonLDObject
+                                )
+                                .option
 
                   valueContent <- ValueContentV2.fromJsonLdObject(
                                     ingestState,
                                     valueJsonLDObject,
                                     requestingUser,
-                                    projectInfoResponse.project.shortcode
+                                    fileInfo
                                   )
 
                   maybeCustomValueIri <- valueJsonLDObject.getIdValueAsKnoraDataIri
