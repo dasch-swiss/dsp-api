@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import sttp.capabilities.zio.ZioStreams
+import sttp.client3.SttpBackend
 import sttp.client3.UriContext
 import sttp.client3.asStreamAlways
 import sttp.client3.basicRequest
@@ -38,27 +39,29 @@ trait DspIngestClient {
 
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
 }
+
 final case class DspIngestClientLive(
   jwtService: JwtService,
-  dspIngestConfig: DspIngestConfig
+  dspIngestConfig: DspIngestConfig,
+  sttpBackend: SttpBackend[Task, ZioStreams]
 ) extends DspIngestClient {
 
   private def projectsPath(shortcode: Shortcode) = s"${dspIngestConfig.baseUrl}/projects/${shortcode.value}"
+  
+  private val authenticatedRequest =
+    jwtService.createJwtForDspIngest().map(token => basicRequest.auth.bearer(token.jwtString))
 
   def exportProject(shortcode: Shortcode): ZIO[Scope, Throwable, Path] =
     for {
-      token     <- jwtService.createJwtForDspIngest()
-      tempdir   <- Files.createTempDirectoryScoped(Some("export"), List.empty)
-      exportFile = tempdir / "export.zip"
-      response <- {
-        val request = basicRequest.auth
-          .bearer(token.jwtString)
-          .post(uri"${projectsPath(shortcode)}/export")
-          .readTimeout(30.minutes)
-          .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
-        HttpClientZioBackend.scoped().flatMap(request.send(_))
-      }
-      _ <- ZIO.logInfo(s"Response from ingest :${response.code}")
+      tempDir   <- Files.createTempDirectoryScoped(Some("export"), List.empty)
+      exportFile = tempDir / "export.zip"
+      request <- authenticatedRequest.map {
+                   _.post(uri"${projectsPath(shortcode)}/export")
+                     .readTimeout(30.minutes)
+                     .response(asStreamAlways(ZioStreams)(_.run(ZSink.fromFile(exportFile.toFile))))
+                 }
+      response <- request.send(backend = sttpBackend)
+      _        <- ZIO.logInfo(s"Response from ingest :${response.code}")
     } yield exportFile
 
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path] = ZIO.scoped {
@@ -81,5 +84,5 @@ final case class DspIngestClientLive(
 }
 
 object DspIngestClientLive {
-  val layer = ZLayer.fromFunction(DspIngestClientLive.apply _)
+  val layer = HttpClientZioBackend.layer().orDie >>> ZLayer.derive[DspIngestClientLive]
 }
