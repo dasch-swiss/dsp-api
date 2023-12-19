@@ -2625,29 +2625,6 @@ case class FileValueV2(
 )
 
 /**
- * Holds a [[FileValueV2]] and the metadata that Sipi returned about the file.
- *
- * @param fileValue        a [[FileValueV2]].
- * @param sipiFileMetadata the metadata that Sipi returned about the file.
- */
-case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: FileMetadataSipiResponse)
-
-/**
- * Constructs [[FileValueWithSipiMetadata]] objects based on JSON-LD input.
- */
-object FileValueWithSipiMetadata {
-  def fromJsonLdObject(
-    internalFilename: String,
-    metadata: FileMetadataSipiResponse
-  ): FileValueWithSipiMetadata = {
-    val fileValue =
-      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType)
-
-    FileValueWithSipiMetadata(fileValue, metadata)
-  }
-}
-
-/**
  * A trait for case classes representing different types of file values.
  */
 sealed trait FileValueContentV2 extends ValueContentV2 {
@@ -2763,12 +2740,12 @@ object StillImageFileValueContentV2 {
   ): ZIO[SipiService & StringFormatter, Throwable, StillImageFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLDObject)
-      value    = FileValueWithSipiMetadata.fromJsonLdObject(internalFilename, metadata)
     } yield StillImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
-      fileValue = value.fileValue,
-      dimX = value.sipiFileMetadata.width.getOrElse(0),
-      dimY = value.sipiFileMetadata.height.getOrElse(0),
+      fileValue =
+        FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      dimX = metadata.width.getOrElse(0),
+      dimY = metadata.height.getOrElse(0),
       comment = comment
     )
 }
@@ -2913,13 +2890,13 @@ object DocumentFileValueContentV2 {
   ): ZIO[SipiService & StringFormatter, Throwable, DocumentFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLdObject)
-      value    = FileValueWithSipiMetadata.fromJsonLdObject(internalFilename, metadata)
     } yield DocumentFileValueContentV2(
       ontologySchema = ApiV2Complex,
-      fileValue = value.fileValue,
-      pageCount = value.sipiFileMetadata.numpages,
-      dimX = value.sipiFileMetadata.width,
-      dimY = value.sipiFileMetadata.height,
+      fileValue =
+        FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      pageCount = metadata.numpages,
+      dimX = metadata.width,
+      dimY = metadata.height,
       comment
     )
 }
@@ -2935,8 +2912,11 @@ object ArchiveFileValueContentV2 {
   ): ZIO[SipiService & StringFormatter, Throwable, ArchiveFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLdObject)
-      value    = FileValueWithSipiMetadata.fromJsonLdObject(internalFilename, metadata)
-    } yield ArchiveFileValueContentV2(ApiV2Complex, value.fileValue, comment)
+    } yield ArchiveFileValueContentV2(
+      ApiV2Complex,
+      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      comment
+    )
 }
 
 /**
@@ -3008,8 +2988,11 @@ object TextFileValueContentV2 {
     metadata: FileMetadataSipiResponse
   ): ZIO[SipiService & StringFormatter, Throwable, TextFileValueContentV2] = for {
     comment <- JsonLDUtil.getComment(jsonLDObject)
-    value    = FileValueWithSipiMetadata.fromJsonLdObject(internalFilename, metadata)
-  } yield TextFileValueContentV2(ApiV2Complex, value.fileValue, comment)
+  } yield TextFileValueContentV2(
+    ApiV2Complex,
+    FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+    comment
+  )
 }
 
 /**
@@ -3082,8 +3065,11 @@ object AudioFileValueContentV2 {
   ): ZIO[SipiService & StringFormatter, Throwable, AudioFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLDObject)
-      value    = FileValueWithSipiMetadata.fromJsonLdObject(internalFilename, metadata)
-    } yield AudioFileValueContentV2(ApiV2Complex, value.fileValue, comment)
+    } yield AudioFileValueContentV2(
+      ApiV2Complex,
+      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      comment
+    )
 }
 
 /**
@@ -3158,8 +3144,11 @@ object MovingImageFileValueContentV2 {
   ): ZIO[SipiService & StringFormatter, Throwable, MovingImageFileValueContentV2] =
     for {
       comment <- JsonLDUtil.getComment(jsonLDObject)
-      value    = FileValueWithSipiMetadata.fromJsonLdObject(internalFilename, metadata)
-    } yield MovingImageFileValueContentV2(ApiV2Complex, value.fileValue, comment)
+    } yield MovingImageFileValueContentV2(
+      ApiV2Complex,
+      FileValueV2(internalFilename, metadata.internalMimeType, metadata.originalFilename, metadata.originalMimeType),
+      comment
+    )
 }
 
 /**
