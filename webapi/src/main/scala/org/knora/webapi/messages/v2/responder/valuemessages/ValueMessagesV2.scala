@@ -44,6 +44,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
@@ -1148,7 +1149,7 @@ object ValueContentV2 {
                           }
       metadata <- ingestState match {
                     case AssetIngestState.AssetIngested =>
-                      SipiService.getFileMetadataFromTemp(s"/$shortcode/$internalFilename")
+                      SipiService.getFileMetadata(internalFilename, Shortcode.unsafeFrom(shortcode))
                     case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromTemp(internalFilename)
                   }
 
