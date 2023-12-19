@@ -43,33 +43,40 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
   private val testProject      = Shortcode.unsafeFrom(testShortCodeStr)
   private val testContent      = "testContent".getBytes()
   private val expectedPath     = s"/projects/$testShortCodeStr/export"
+
+  private val exportProjectSuite = suite("exportProject")(test("should download a project export") {
+    ZIO.scoped {
+      for {
+        // given
+        wiremock <- ZIO.service[WireMockServer]
+        _ = wiremock.stubFor(
+              WireMock
+                .post(urlPathEqualTo(expectedPath))
+                .willReturn(
+                  aResponse()
+                    .withHeader("Content-Type", "application/zip")
+                    .withHeader("Content-Disposition", s"export-$testShortCodeStr.zip")
+                    .withBody(testContent)
+                    .withStatus(200)
+                )
+            )
+        mockJwt <- JwtService.createJwtForDspIngest()
+
+        // when
+        path <- DspIngestClient.exportProject(testProject)
+
+        // then
+        _ = wiremock.verify(
+              postRequestedFor(urlPathEqualTo(expectedPath))
+                .withHeader("Authorization", equalTo(s"Bearer ${mockJwt.jwtString}"))
+            )
+        contentIsDownloaded <- Files.readAllBytes(path).map(_.toArray).map(_ sameElements testContent)
+      } yield assertTrue(contentIsDownloaded)
+    }
+  })
+
   override def spec: Spec[TestEnvironment & Scope, Any] =
-    suite("DspIngestClientLive")(test("should download a project export") {
-      ZIO.scoped {
-        for {
-          wiremock <- ZIO.service[WireMockServer]
-          _ = wiremock.stubFor(
-                WireMock
-                  .post(urlPathEqualTo(expectedPath))
-                  .willReturn(
-                    aResponse()
-                      .withHeader("Content-Type", "application/zip")
-                      .withHeader("Content-Disposition", s"export-$testShortCodeStr.zip")
-                      .withBody(testContent)
-                      .withStatus(200)
-                  )
-              )
-          path                <- DspIngestClient.exportProject(testProject)
-          contentIsDownloaded <- Files.readAllBytes(path).map(_.toArray).map(_ sameElements testContent)
-          // Verify the request is valid
-          mockJwt <- ZIO.serviceWithZIO[JwtService](_.createJwtForDspIngest())
-          _ = wiremock.verify(
-                postRequestedFor(urlPathEqualTo(expectedPath))
-                  .withHeader("Authorization", equalTo(s"Bearer ${mockJwt.jwtString}"))
-              )
-        } yield assertTrue(contentIsDownloaded)
-      }
-    }).provide(
+    suite("DspIngestClientLive")(exportProjectSuite).provide(
       DspIngestClientLive.layer,
       dspIngestConfigLayer,
       mockJwtServiceLayer,
