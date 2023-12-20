@@ -23,9 +23,7 @@ final case class UsersADMRestServiceLive(
 ) extends UsersADMRestService {
 
   override def listAllUsers(user: UserADM): Task[UsersGetResponseADM] =
-    for {
-      result <- responder.getAllUserADMRequest(user)
-    } yield result
+    responder.getAllUserADMRequest(user)
 }
 
 object UsersADMRestServiceLive {
