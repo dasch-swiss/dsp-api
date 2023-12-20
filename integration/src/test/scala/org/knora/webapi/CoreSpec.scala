@@ -6,7 +6,6 @@
 package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
-import org.apache.pekko
 import org.apache.pekko.actor
 import org.apache.pekko.testkit.ImplicitSender
 import org.apache.pekko.testkit.TestKitBase
