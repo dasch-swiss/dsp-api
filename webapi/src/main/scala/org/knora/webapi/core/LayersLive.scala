@@ -31,6 +31,7 @@ import org.knora.webapi.slice.admin.api.*
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.api.service.ProjectsADMRestServiceLive
+import org.knora.webapi.slice.admin.api.service.UsersADMRestServiceLive
 import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.common.api.*
@@ -151,6 +152,9 @@ object LayersLive {
       StringFormatter.live,
       TapirToPekkoInterpreter.layer,
       TriplestoreServiceLive.layer,
+      UsersADMRestServiceLive.layer,
+      UsersEndpoints.layer,
+      UsersEndpointsHandler.layer,
       UsersResponderADMLive.layer,
       ValuesResponderV2Live.layer
     )

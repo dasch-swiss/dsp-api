@@ -1,0 +1,30 @@
+package org.knora.webapi.slice.admin.api
+
+import zio.ZLayer
+
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
+import org.knora.webapi.slice.admin.api.service.UsersADMRestService
+import org.knora.webapi.slice.common.api.HandlerMapper
+import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
+
+case class UsersEndpointsHandler(
+  usersEndpoints: UsersEndpoints,
+  restService: UsersADMRestService,
+  mapper: HandlerMapper
+) {
+
+  val getUsersHandler =
+    SecuredEndpointAndZioHandler[
+      Unit,
+      UsersGetResponseADM
+    ](usersEndpoints.getUsers, user => { case (_: Unit) => restService.listAllUsers(user) })
+
+//  private val handlers        = List().map(mapper.mapEndpointAndHandler)
+  private val securedHandlers = List(getUsersHandler).map(mapper.mapEndpointAndHandler(_))
+
+  val allHanders = /* handlers ++ */ securedHandlers
+}
+
+object UsersEndpointsHandler {
+  val layer = ZLayer.derive[UsersEndpointsHandler]
+}
