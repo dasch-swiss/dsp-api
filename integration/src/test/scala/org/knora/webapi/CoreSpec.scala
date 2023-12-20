@@ -7,6 +7,9 @@ package org.knora.webapi
 
 import com.typesafe.scalalogging.Logger
 import org.apache.pekko
+import org.apache.pekko.actor
+import org.apache.pekko.testkit.ImplicitSender
+import org.apache.pekko.testkit.TestKitBase
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -25,10 +28,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.util.LogAspect
 
-import pekko.actor
-import pekko.testkit.ImplicitSender
-import pekko.testkit.TestKitBase
-
 abstract class CoreSpec
     extends AnyWordSpec
     with TestKitBase
@@ -38,6 +37,7 @@ abstract class CoreSpec
     with ImplicitSender {
 
   /**
+   * lay
    * The `Environment` that we require to exist at startup.
    * Can be overriden in specs that need other implementations.
    */

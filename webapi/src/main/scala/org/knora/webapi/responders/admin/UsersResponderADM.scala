@@ -8,6 +8,7 @@ package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import zio.*
+import zio.macros.accessible
 
 import java.util.UUID
 
@@ -51,7 +52,10 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Provides information about Knora users to other responders.
  */
-trait UsersResponderADM
+@accessible
+trait UsersResponderADM {
+  def getAllUserADMRequest(requestingUser: UserADM): Task[UsersGetResponseADM]
+}
 
 final case class UsersResponderADMLive(
   appConfig: AppConfig,
@@ -251,7 +255,7 @@ final case class UsersResponderADMLive(
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseADM]].
    */
-  private def getAllUserADMRequest(requestingUser: UserADM): Task[UsersGetResponseADM] =
+  def getAllUserADMRequest(requestingUser: UserADM): Task[UsersGetResponseADM] =
     for {
       maybeUsersListToReturn <- getAllUserADM(requestingUser)
 
