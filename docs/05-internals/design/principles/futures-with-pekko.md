@@ -134,7 +134,7 @@ comprehension, you'll already implicitly have a `Future` object.
 
 ## Using `recover` on Futures
 
-By using `recover` on a  `Future`, an apt error message can be thrown if
+By using `recover` on a `Future`, an apt error message can be thrown if
 the `Future` fails. This is particularly useful when an an error message
 should be made more clear depending on the context the `Future` is used
 in.
