@@ -66,7 +66,7 @@ A number of core settings is additionally configurable through system environmen
 In `application.conf` the setting `app.routes-to-reject` contains a list
 of strings, representing routes which should be rejected.
 
-For Example, the string `"v1/users"` would lead to rejection of any
+For Example, the string `"v2/users"` would lead to rejection of any
 route which contains this string.
 
 ## Startup Flags

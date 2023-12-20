@@ -20,52 +20,62 @@
 
 - `GET: /admin/groups/<groupIri>/members` : return all group members
 
-
 ## Group Operations
 
 ### Create Group
 
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
-/ hasProjectAllGroupAdminPermission
+  / hasProjectAllGroupAdminPermission
 - Required information: name (unique inside project), project IRI
 - Optional information: group descriptions
 - Returns information about the newly created group
-- TypeScript Docs: groupFormats - CreateGroupApiRequestV1
 - POST: `/admin/groups`
 - BODY:
 
 ```json
     {
-      "name": "NewGroup",
-      "descriptions": [
-        {"value": "NewGroupDescription", "language": "en"},
-        {"value": "NeueGruppenBeschreibung", "language": "de"}
-      ],
-      "project": "http://rdfh.ch/projects/00FF",
-      "status": true,
-      "selfjoin": false
+  "name": "NewGroup",
+  "descriptions": [
+    {
+      "value": "NewGroupDescription",
+      "language": "en"
+    },
+    {
+      "value": "NeueGruppenBeschreibung",
+      "language": "de"
     }
+  ],
+  "project": "http://rdfh.ch/projects/00FF",
+  "status": true,
+  "selfjoin": false
+}
 ```
 
-Additionally, each group can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) 
+Additionally, each group can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data)
+form)
 specified by the `id` in the request body as below:
 
 ```json
-    { 
-      "id": "http://rdfh.ch/groups/00FF/a95UWs71KUklnFOe1rcw1w",  
-      "name": "GroupWithCustomIRI",
-      "descriptions": [{"value": "A new group with a custom IRI", "language": "en"}],
-      "project": "http://rdfh.ch/projects/00FF",
-      "status": true,
-      "selfjoin": false
+    {
+  "id": "http://rdfh.ch/groups/00FF/a95UWs71KUklnFOe1rcw1w",
+  "name": "GroupWithCustomIRI",
+  "descriptions": [
+    {
+      "value": "A new group with a custom IRI",
+      "language": "en"
     }
+  ],
+  "project": "http://rdfh.ch/projects/00FF",
+  "status": true,
+  "selfjoin": false
+}
 ```
 
 ### Update group information
 
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
-/ hasProjectAllGroupAdminPermission /
-hasProjectRestrictedGroupAdminPermission (for this group)
+  / hasProjectAllGroupAdminPermission /
+  hasProjectRestrictedGroupAdminPermission (for this group)
 - Changeable information: `name`, `descriptions`, `selfjoin`
 - TypeScript Docs: groupFormats - ChangeGroupApiRequestADM
 - PUT: `/admin/groups/<groupIri>`
@@ -74,7 +84,12 @@ hasProjectRestrictedGroupAdminPermission (for this group)
 ```json
 {
   "name": "UpdatedGroupName",
-  "descriptions": [{"value": "UpdatedGroupDescription", "language": "en"}],
+  "descriptions": [
+    {
+      "value": "UpdatedGroupDescription",
+      "language": "en"
+    }
+  ],
   "selfjoin": false
 }
 ```
@@ -97,7 +112,7 @@ hasProjectRestrictedGroupAdminPermission (for this group)
 
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
 - Remark: The same as changing the groups `status` to
-`false`. To un-delete, set `status` to `true`.
+  `false`. To un-delete, set `status` to `true`.
 - DELETE: `/admin/groups/<groupIri>`
 
 Example Group Information stored in admin named graph: :

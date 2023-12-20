@@ -19,7 +19,7 @@ brevity, we omit the prefix in this document.
 ## Properties
 
 ### guiOrder
- 
+
 `guiOrder` can be attached to a cardinality
 in a resource class, to indicate the order in which properties
 should be displayed in the GUI. The object is a non-negative
@@ -112,7 +112,7 @@ recording.
 
 `List` is a GUI element for selecting an item in a hierarchical list (see
 [ListValue](knora-base.md#listvalue)). A property definition that
-uses this element must also contain this `guiAttribute` predicate: 
+uses this element must also contain this `guiAttribute` predicate:
 
 `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
 `knora-base:ListNode` that is the root node of a hierarchical list.
@@ -122,7 +122,7 @@ uses this element must also contain this `guiAttribute` predicate:
 `Pulldown` is a GUI element for selecting an item in a flat list (see
 [ListValue](knora-base.md#listvalue)) using a pull-down menu. A
 property definition that uses this element must also contain this
-`guiAttribute` predicate: 
+`guiAttribute` predicate:
 
 `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
 `knora-base:ListNode` that is the root node of a hierarchical list.
@@ -143,14 +143,7 @@ definition that uses this element must also contain this
 
 ### Searchbox
 
-`Searchbox` is a GUI element for searching for a resource by matching text in its
-`rdfs:label`. For DSP-API v1, a property definition that uses this
-element may also contain this `guiAttribute` predicate:
-
-`"numprops=N"`, where `N` is an integer specifying the number of
-describing properties to be returned for each found resource.
-
-For DSP-API v2, the `guiAttribute` has no effect.
+`Searchbox` is a GUI element for searching for a resource by matching text in its `rdfs:label`.
 
 ### SimpleText
 
@@ -158,10 +151,10 @@ For DSP-API v2, the `guiAttribute` has no effect.
 property definition that uses this element may also contain a
 `guiAttribute` predicate with one or both of the following objects:
 
--   `"size=N"`, where `N` is an integer specifying the size of the
-text field.
--   `"maxlength=N"`, where `N` is an integer specifying the maximum
-length of the string to be input.
+- `"size=N"`, where `N` is an integer specifying the size of the
+  text field.
+- `"maxlength=N"`, where `N` is an integer specifying the maximum
+  length of the string to be input.
 
 ### Slider
 
@@ -169,10 +162,10 @@ length of the string to be input.
 property definition that uses this element must also contain a
 `guiAttribute` predicate with both of the following objects:
 
--   `"min=N"`, where `N` is an integer specifying the minimum value
-of the input.
--   `"max=N"`, where `N` is an integer specifying the maximum value 
-of the input.
+- `"min=N"`, where `N` is an integer specifying the minimum value
+  of the input.
+- `"max=N"`, where `N` is an integer specifying the maximum value
+  of the input.
 
 ### Spinbox
 
@@ -180,10 +173,10 @@ of the input.
 property definition that uses this element may also contain a
 `guiAttribute` predicate with one or both of the following objects:
 
--   `"min=N"`, where `N` is an integer specifying the minimum value
-of the input.
--   `"max=N"`, where `N` is an integer specifying the maximum value
-of the input.
+- `"min=N"`, where `N` is an integer specifying the minimum value
+  of the input.
+- `"max=N"`, where `N` is an integer specifying the maximum value
+  of the input.
 
 ### Textarea
 
@@ -191,14 +184,14 @@ of the input.
 definition that uses this element may also contain a `guiAttribute`
 predicate with one or more of the following objects:
 
--   `"width=N"`, where `N` is a percentage of the window width (an
-integer followed by `%`).
--   `"cols=N"`, where `N` is an integer representing the number of
-colums in the text entry box.
--   `"rows=N"`, where `N` is an integer specifying the height of the
-text entry box in rows.
--   `"wrap=W"`, where `W` is `soft` or `hard` (see
-[wrap](https://www.w3.org/TR/html5/sec-forms.html#element-attrdef-textarea-wrap)).
+- `"width=N"`, where `N` is a percentage of the window width (an
+  integer followed by `%`).
+- `"cols=N"`, where `N` is an integer representing the number of
+  colums in the text entry box.
+- `"rows=N"`, where `N` is an integer specifying the height of the
+  text entry box in rows.
+- `"wrap=W"`, where `W` is `soft` or `hard` (see
+  [wrap](https://www.w3.org/TR/html5/sec-forms.html#element-attrdef-textarea-wrap)).
 
 ### Checkbox
 

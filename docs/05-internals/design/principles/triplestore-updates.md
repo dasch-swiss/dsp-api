@@ -11,11 +11,11 @@
 
 The supported update operations are:
 
-  - Create a new resource with its initial values.
-  - Add a new value.
-  - Change a value.
-  - Delete a value (i.e. mark it as deleted).
-  - Delete a resource (i.e. mark it as deleted).
+- Create a new resource with its initial values.
+- Add a new value.
+- Change a value.
+- Delete a value (i.e. mark it as deleted).
+- Delete a resource (i.e. mark it as deleted).
 
 Users must be able to edit the same data concurrently.
 
@@ -38,8 +38,9 @@ this coordination.)
 We can assume that each SPARQL update operation will run in its own
 database transaction with an isolation level of 'read committed'.
 We cannot assume that it is possible to run more than one SPARQL update
-in a single database transaction. The [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/) does not provide a way to do this, and currently it 
-can be done only by embedding the triplestore in the application and 
+in a single database transaction. The [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/) does not provide a
+way to do this, and currently it
+can be done only by embedding the triplestore in the application and
 using a vendor-specific API, but we cannot require this in Knora.)
 
 ### Permissions
@@ -210,11 +211,9 @@ given the same permissions as the text value containing the reference.
 
 ### Responsibilities of Responders
 
-The resources responder (`ResourcesResponderV1` in API v1, `ResourcesResponderV2`
-in API v2) has sole responsibility for generating SPARQL to
-create and updating resources, and the values responder (`ValuesResponderV1`
-or `ValuesResponderV2`) has sole responsibility for generating SPARQL to create
-and update values. When a new resource is created with its values, the values responder
+The resources responder (`ResourcesResponderV2`) has sole responsibility for generating SPARQL to
+create and updating resources, and the values responder (`ValuesResponderV2`) has sole responsibility for generating
+SPARQL to create and update values. When a new resource is created with its values, the values responder
 generates SPARQL statements that can be included in the `INSERT`
 clause of a SPARQL update to create the values, and
 the resources responder adds these statements to the SPARQL update that
@@ -245,11 +244,11 @@ transaction.
 
 Knora enforces consistency constraints using three redundant mechanisms:
 
-1.  By doing pre-update checks using SPARQL SELECT queries and cached
-    ontology data.
-2.  By doing checks in the `WHERE` clauses of SPARQL updates.
-3.  **Deprecated**: By using GraphDB's built-in consistency checker (see
-    [Consistency Checking](consistency-checking.md)).
+1. By doing pre-update checks using SPARQL SELECT queries and cached
+   ontology data.
+2. By doing checks in the `WHERE` clauses of SPARQL updates.
+3. **Deprecated**: By using GraphDB's built-in consistency checker (see
+   [Consistency Checking](consistency-checking.md)).
 
 We take the view that redundant consistency checks are a good thing.
 
@@ -409,17 +408,17 @@ application will then need to do a SELECT query using the query in
 [Finding a value IRI in a value's version history](#finding-a-value-iri-in-a-values-version-history).
 In the case of concurrent updates, there are two possibilities:
 
-1.  Users A and B are looking at version 1. User A submits an update and
-    it succeeds, creating version 2, which user A verifies using a
-    SELECT. User B then submits an update to version 1 but it fails,
-    because version 1 is no longer the latest version. User B's SELECT
-    will find that user B's new value IRI is absent from the value's
-    version history.
-2.  Users A and B are looking at version 1. User A submits an update and
-    it succeeds, creating version 2. Before User A has time to do a
-    SELECT, user B reads the new value and updates it again. Both users
-    then do a SELECT, and find that both their new value IRIs are
-    present in the value's version history.
+1. Users A and B are looking at version 1. User A submits an update and
+   it succeeds, creating version 2, which user A verifies using a
+   SELECT. User B then submits an update to version 1 but it fails,
+   because version 1 is no longer the latest version. User B's SELECT
+   will find that user B's new value IRI is absent from the value's
+   version history.
+2. Users A and B are looking at version 1. User A submits an update and
+   it succeeds, creating version 2. Before User A has time to do a
+   SELECT, user B reads the new value and updates it again. Both users
+   then do a SELECT, and find that both their new value IRIs are
+   present in the value's version history.
 
 ### Getting all versions of a value
 
