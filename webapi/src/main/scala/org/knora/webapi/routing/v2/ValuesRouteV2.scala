@@ -17,7 +17,6 @@ import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.responders.v2.ValuesResponderV2
