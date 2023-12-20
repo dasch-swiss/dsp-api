@@ -5,7 +5,10 @@
 
 package org.knora.webapi.routing.admin
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.RequestContext
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import dsp.errors.BadRequestException
@@ -24,11 +27,6 @@ import org.knora.webapi.routing.RouteUtilADM.getIriUserUuid
 import org.knora.webapi.routing.RouteUtilADM.getUserUuid
 import org.knora.webapi.routing.RouteUtilADM.runJsonRouteZ
 
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.RequestContext
-import pekko.http.scaladsl.server.Route
-
 /**
  * Provides an pekko-http-routing function for API routes that deal with users.
  */
@@ -39,8 +37,7 @@ final case class UsersRouteADM()(
   private val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   def makeRoute: Route =
-    getUsers() ~
-      addUser() ~
+    addUser() ~
       getUserByIri() ~
       getUserByEmail() ~
       getUserByUsername() ~
