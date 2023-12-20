@@ -31,8 +31,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.*
+import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.util.standoff.StandoffStringUtil
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -647,9 +647,8 @@ object CreateValueV2 {
           jsonLDDocument.body.getRequiredResourcePropertyApiV2ComplexValue.mapError(BadRequestException(_)).flatMap {
             case (propertyIri: SmartIri, jsonLdObject: JsonLDObject) =>
               for {
-                fileInfo <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject).option
-                valueContent <-
-                  ValueContentV2.fromJsonLdObject(ingestState, jsonLdObject, requestingUser, fileInfo)
+                fileInfo     <- ValueContentV2.getFileInfo(shortcode, ingestState, jsonLdObject).option
+                valueContent <- ValueContentV2.fromJsonLdObject(jsonLdObject, requestingUser, fileInfo)
 
                 // Get and validate the custom value IRI if provided.
                 maybeCustomValueIri <- jsonLdObject.getIdValueAsKnoraDataIri
@@ -771,15 +770,9 @@ object UpdateValueV2 {
                 (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
               jsonLDObject.maybeStringWithValidation(HasPermissions, validationFun)
             }
-          shortcode <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
-          fileInfo  <- ValueContentV2.getFileInfo(shortcode, AssetIngestState.AssetInTemp, jsonLDObject).option
-          valueContent <-
-            ValueContentV2.fromJsonLdObject(
-              AssetIngestState.AssetInTemp,
-              jsonLDObject,
-              requestingUser,
-              fileInfo
-            )
+          shortcode    <- ZIO.fromOption(resourceIri.getProjectCode).orElseFail(NotFoundException("Shortcode not found."))
+          fileInfo     <- ValueContentV2.getFileInfo(shortcode, AssetIngestState.AssetInTemp, jsonLDObject).option
+          valueContent <- ValueContentV2.fromJsonLdObject(jsonLDObject, requestingUser, fileInfo)
         } yield UpdateValueContentV2(
           resourceIri = resourceIri.toString,
           resourceClassIri = resourceClassIri,
@@ -1068,7 +1061,6 @@ object ValueContentV2 {
    * @return a [[ValueContentV2]].
    */
   def fromJsonLdObject(
-    ingestState: AssetIngestState,
     jsonLdObject: JsonLDObject,
     requestingUser: UserADM,
     fileInfo: Option[FileInfo]
