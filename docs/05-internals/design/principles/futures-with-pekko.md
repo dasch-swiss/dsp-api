@@ -23,7 +23,8 @@ The rest of that page is well worth reading to get an overview of how
 futures work and what you can do with them.
 
 In [Pekko](http://pekko.apache.org/), one of the standard patterns for
-communication between actors is the [ask pattern](https://pekko.apache.org/docs/pekko/current/actors.html?language=scala#ask-send-and-receive-future),
+communication between actors is
+the [ask pattern](https://pekko.apache.org/docs/pekko/current/actors.html?language=scala#ask-send-and-receive-future),
 in which you send a message to an actor and you expect a reply. When you
 call the `ask` function (which can be written as a question mark, `?`,
 which acts as an infix operator), it immediately returns a `Future`,
@@ -40,8 +41,8 @@ will be called when it completes (perhaps by another thread), like this:
 
 ```scala
 future.onComplete {
-    case Success(result) => println(result)
-    case Failure(ex) => ex.printStackTrace()
+  case Success(result) => println(result)
+  case Failure(ex) => ex.printStackTrace()
 }
 ```
 
@@ -67,10 +68,10 @@ val fooFuture = (fooActor ? GetFoo("foo")).mapTo[Foo]
 val barFuture = (barActor ? GetBar("bar")).mapTo[Bar]
 
 val totalFuture = for {
-    foo: Foo <- fooFuture
-    bar: Bar <- barFuture
+  foo: Foo <- fooFuture
+  bar: Bar <- barFuture
 
-    total = foo.getCount + bar.getCount
+  total = foo.getCount + bar.getCount
 } yield total
 ```
 
@@ -102,10 +103,11 @@ correctly:
 
 ```scala
 private def doFooQuery(iri: IRI): Future[String] = {
-    for {
-        queryResponse <- (storeManager ? SparqlSelectRequest(queries.sparql.v1.txt.getFoo(iri).toString())).mapTo[SparqlSelectResponse]
-        ...
-   } yield ...
+  for {
+    queryResponse <- (storeManager ? SparqlSelectRequest(queries.sparql.v1.txt.getFoo(iri).toString())).mapTo[SparqlSelectResponse]
+    ...
+  } yield
+...
 }
 ```
 
@@ -118,11 +120,12 @@ throws an exception, it won't be caught here. Instead, you can do this:
 
 ```scala
 private def doFooQuery(iri: IRI): Future[String] = {
-    for {
-        queryString <- Future(queries.sparql.v1.txt.getFoo(iri).toString())
-        queryResponse <- (storeManager ? SparqlSelectRequest(queryString)).mapTo[SparqlSelectResponse]
-        ...
-   } yield ...
+  for {
+    queryString <- Future(queries.sparql.v1.txt.getFoo(iri).toString())
+    queryResponse <- (storeManager ? SparqlSelectRequest(queryString)).mapTo[SparqlSelectResponse]
+    ...
+  } yield
+...
 }
 ```
 
@@ -149,23 +152,26 @@ sense for the operation the client actually executed. We can do this by
 calling `recover` on a `Future`.
 
 ```scala
-private def mySpecialResourceRequest(iri: IRI, userProfile: UserProfileV1): Future[...] = {
+private def mySpecialResourceRequest(iri: IRI, userProfile: UserProfileV1): Future[
+...] =
+{
 
-    val resourceRequestFuture = for {
-        resResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = iri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
-    } yield resResponse
+  val resourceRequestFuture = for {
+    resResponse: ResourceFullResponseV1 <- (responderManager ? ResourceFullGetRequestV1(iri = iri, userProfile = userProfile, getIncoming = false)).mapTo[ResourceFullResponseV1]
+  } yield resResponse
 
-    val resourceRequestFutureRecovered = resourceRequestFuture.recover {
-        case notFound: NotFoundException => throw BadRequestException(s"Special resource handling failed because the resource could not be found: ${notFound.message}")
-    }
+  val resourceRequestFutureRecovered = resourceRequestFuture.recover {
+    case notFound: NotFoundException => throw BadRequestException(s"Special resource handling failed because the resource could not be found: ${notFound.message}")
+  }
 
-    for {
+  for {
 
-        res <- resourceRequestFutureRecovered
+    res <- resourceRequestFutureRecovered
 
-        ...
+    ...
 
-    } yield ...
+  } yield
+...
 
 }   
 ```
@@ -179,31 +185,30 @@ looked at.
 In the current design, Knora almost never blocks to wait
 for a future to complete. The normal flow of control works like this:
 
-1.  Incoming HTTP requests are handled by an actor called
-    `KnoraService`, which delegates them to routing functions (in
-    the `routing` package).
-2.  For each request, a routing function gets an Pekko HTTP
-    `RequestContext`, and calls `RouteUtilV1.runJsonRoute` (in API v1)
-    or `RouteUtilV2.runRdfRouteWithFuture` (in API v2) to send a
-    message to a supervisor actor to fulfil the request. This creates
-    a `Future` that will complete when the relevant responder sends
-    its reply. The routing utility registers a callback on this `Future`
-    to handle the reply message when it becomes available.
-3.  The supervisor forwards the message to be handled by the appropriate
-    responder.
-4.  The responder's `receive` method receives the message, and calls
-    some private method that produces a reply message inside a `Future`.
-    This may involve sending messages to other actors using `ask`,
-    getting futures back, and combining them into a single future
-    containing the reply message.
-5.  The responder passes that future to `ActorUtils.future2Message`,
-    which registers a callback on it. When the future completes (perhaps
-    in another thread), the callback sends the reply message. In the
-    meantime, the responder doesn't block, so it can start handling the
-    next request.
-6.  When the responder's reply becomes available, the routing utility's
-    callback registered in (2) calls `complete` on the `RequestContext`, which
-    sends an HTTP response to the client.
+1. Incoming HTTP requests are handled by an actor called
+   `KnoraService`, which delegates them to routing functions (in
+   the `routing` package).
+2. For each request, a routing function gets an Pekko HTTP
+   `RequestContext`, and calls `RouteUtilV2.runRdfRouteWithFuture` (in API v2) to send a
+   message to a supervisor actor to fulfil the request. This creates
+   a `Future` that will complete when the relevant responder sends
+   its reply. The routing utility registers a callback on this `Future`
+   to handle the reply message when it becomes available.
+3. The supervisor forwards the message to be handled by the appropriate
+   responder.
+4. The responder's `receive` method receives the message, and calls
+   some private method that produces a reply message inside a `Future`.
+   This may involve sending messages to other actors using `ask`,
+   getting futures back, and combining them into a single future
+   containing the reply message.
+5. The responder passes that future to `ActorUtils.future2Message`,
+   which registers a callback on it. When the future completes (perhaps
+   in another thread), the callback sends the reply message. In the
+   meantime, the responder doesn't block, so it can start handling the
+   next request.
+6. When the responder's reply becomes available, the routing utility's
+   callback registered in (2) calls `complete` on the `RequestContext`, which
+   sends an HTTP response to the client.
 
 The basic rule of thumb is this: if you're writing a method in an actor,
 and anything in the method needs to come from a future (e.g. because you
@@ -223,16 +228,16 @@ future value is already present:
 
 ```scala
 def getTotalOfFooAndBar(howToGetFoo: String): Future[Int] = {
-    for {
-        foo <- howToGetFoo match {
-            case "askForIt" => (fooActor ? GetFoo("foo")).mapTo[Foo]
-            case "createIt" => FastFuture.successful(new Foo())
-        }
+  for {
+    foo <- howToGetFoo match {
+      case "askForIt" => (fooActor ? GetFoo("foo")).mapTo[Foo]
+      case "createIt" => FastFuture.successful(new Foo())
+    }
 
-        bar <- (barActor ? GetBar("bar")).mapTo[Bar]
+    bar <- (barActor ? GetBar("bar")).mapTo[Bar]
 
-        total = foo.getCount + bar.getCount
-    } yield total
+    total = foo.getCount + bar.getCount
+  } yield total
 }
 ```
 
@@ -240,14 +245,14 @@ def getTotalOfFooAndBar(howToGetFoo: String): Future[Int] = {
 
 Here are some basic rules for writing `for`-comprehensions:
 
-1.  The first line of a `for`-comprehension has to be a "generator",
-    i.e. it has to use the `<-` operator. If you want to write an
-    assignment (using `=`) as the first line, the workaround is to wrap
-    the right-hand side in a monad (like `Future`) and use `<-` instead.
-2.  Assignments (using `=`) are written without `val`.
-3.  You're not allowed to write statements that throw away their return
-    values, so if you want to call something like `println` that returns
-    `Unit`, you have to assign its return value to `_`.
+1. The first line of a `for`-comprehension has to be a "generator",
+   i.e. it has to use the `<-` operator. If you want to write an
+   assignment (using `=`) as the first line, the workaround is to wrap
+   the right-hand side in a monad (like `Future`) and use `<-` instead.
+2. Assignments (using `=`) are written without `val`.
+3. You're not allowed to write statements that throw away their return
+   values, so if you want to call something like `println` that returns
+   `Unit`, you have to assign its return value to `_`.
 
 The `yield` returns an object of the same type as the generators, which
 all have to produce the same type (e.g. `Future`).

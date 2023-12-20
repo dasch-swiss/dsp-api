@@ -5,14 +5,6 @@
 
 # Introduction: Using API v2
 
-Version 2 of the DSP-API aims to make both the response and request
-formats more generic and consistent. Version 1 was basically the result
-of the reimplementation of the existing API of the SALSAH prototype.
-Since the development of this prototype has a long history and the
-specification of API V1 was an evolving process, V1 has various
-inconsistencies and peculiarities. With V2, we would like to offer a
-format that is consistent and hence easier to use for a client.
-
 ## API v2 Path Segment
 
 Every request to API v2 includes `v2` as a path segment, e.g.
@@ -111,8 +103,8 @@ complex schema is used by default in the response, unless the request specifical
 asks for the simple schema. The client can specify the desired schema by using
 an HTTP header or a URL parameter:
 
-  - the HTTP header `X-Knora-Accept-Schema`
-  - the URL parameter `schema`
+- the HTTP header `X-Knora-Accept-Schema`
+- the URL parameter `schema`
 
 Both the HTTP header and the URL parameter accept the values `simple` or
 `complex`.

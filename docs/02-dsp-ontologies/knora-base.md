@@ -49,8 +49,10 @@ the `kb:isInProject` property, as described in
 
 ### Ontologies
 
-Each user-created ontology must be defined as an `owl:Ontology` with the properties `rdfs:label` and `kb:attachedToProject`. 
-Since [DSP-API v20](https://github.com/dasch-swiss/dsp-api/releases/tag/v20.0.0) `kb:lastModificationDate` property is also required. 
+Each user-created ontology must be defined as an `owl:Ontology` with the properties `rdfs:label`
+and `kb:attachedToProject`.
+Since [DSP-API v20](https://github.com/dasch-swiss/dsp-api/releases/tag/v20.0.0) `kb:lastModificationDate` property is
+also required.
 
 ### Resources
 
@@ -147,8 +149,7 @@ property, which its subclasses override:
 There are two ways for a project to design classes for representations. The simpler way is to create a resource class
 that represents a thing in the world (such as `ex:Painting`) and also belongs to a subclass of `Representation`. This is
 adequate if the class can have only one type of file attached to it. For example, if paintings are represented only by
-still images, `ex:Painting` could be a subclass of `StillImageRepresentation`. This is the only approach supported in
-DSP-API v1.
+still images, `ex:Painting` could be a subclass of `StillImageRepresentation`.
 
 The more flexible approach, which is supported by DSP-API v2, is for each `ex:Painting` to
 link (using `kb:hasRepresentation` or a subproperty) to other resources containing files that represent the painting.
@@ -576,31 +577,31 @@ as the `kb:LinkValue`.
 #### isPartOf
 
 A special case of linked resources are _part-of related resources_, i.e. a resource consisting of several other
-resources. In order to create a part-of relation between two resources, the resource that is part of another resource 
+resources. In order to create a part-of relation between two resources, the resource that is part of another resource
 needs to have a property that is either `kb:isPartOf` or a subproperty thereof.
-`kb:isPartOf` itself is a subproperty of `kb:hasLinkTo`. Same as described above for link properties, a corresponding 
-part-of value property is created automatically. This value property has the same name as the part-of property with 
-`Value` appended. For example, if in an ontology `data` a property `data:partOf` was defined, the corresponding value 
-property would be named `data:partOfValue`. This newly created property `data:partOfValue` is defined as a subproperty 
+`kb:isPartOf` itself is a subproperty of `kb:hasLinkTo`. Same as described above for link properties, a corresponding
+part-of value property is created automatically. This value property has the same name as the part-of property with
+`Value` appended. For example, if in an ontology `data` a property `data:partOf` was defined, the corresponding value
+property would be named `data:partOfValue`. This newly created property `data:partOfValue` is defined as a subproperty
 of `kb:isPartOfValue`.
 
-Part-of relations are recommended for resources of type `kb:StillImageRepresentation`. In that case, the resource that 
-is part of another resource needs to have a property `kb:seqnum` or a subproperty thereof, with an integer as value. A 
+Part-of relations are recommended for resources of type `kb:StillImageRepresentation`. In that case, the resource that
+is part of another resource needs to have a property `kb:seqnum` or a subproperty thereof, with an integer as value. A
 client can then use this information to leaf through the parts of the compound resource (p.ex. to leaf through the pages
 of a book like in [this](../01-introduction/example-project.md#resource-classes) example).
 
 #### isSequenceOf
 
 Similar to `kb:isPartOf` for `kb:StillImageRepresentations`, part-whole-relations can be defined for resources that have
-a time dimension by using `kb:isSequenceOf`. You can use it for video or audio resources that are subtypes of 
+a time dimension by using `kb:isSequenceOf`. You can use it for video or audio resources that are subtypes of
 `kb:MovingImageRepresentation` and `kb:AudioRepresentation`.
 
-`kb:isSequenceOf` is intended to be used in combination with the property `kb:hasSequenceBounds` which points to a 
-`kb:IntervalValue`. This defines the start and end point of the subseqence in relation to the entire audio/video 
+`kb:isSequenceOf` is intended to be used in combination with the property `kb:hasSequenceBounds` which points to a
+`kb:IntervalValue`. This defines the start and end point of the subseqence in relation to the entire audio/video
 resource as an [interval](#intervalvalue). When the properties are used in this combination, a dedicated behavior in the
 frontend allows to display the sequences alongside the main resource.
 
-There is an important difference between `kb:isSequenceOf` and `kb:isPartOf`: For `kb:isPartOf`, each part *is a* 
+There is an important difference between `kb:isSequenceOf` and `kb:isPartOf`: For `kb:isPartOf`, each part *is a*
 `kb:StillImageRepresentation` and the whole consists of multiple such parts. In `kb:isSequenceOf` on the other hand, the
 whole is one `kb:MovingImageRepresentation` or `kb:AudioRepresentation`. The parts only define which sub-sequence of
 this representation they are.
@@ -609,14 +610,16 @@ this representation they are.
 
 DSP-API is designed to be able to store text with markup, which can indicate formatting and structure, as well as the
 complex observations involved in transcribing handwritten manuscripts. One popular way of representing text in the
-humanities is to encode it in XML using the Text Encoding Initiative ([TEI](http://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html))
+humanities is to encode it in XML using the Text Encoding
+Initiative ([TEI](http://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html))
 guidelines. In DSP-API, a TEI/XML document can be stored as a file with attached metadata, but this is not recommended,
 because it does not allow to perform searches across multiple documents.
 
 The recommended way to store text with markup in DSP-API is to use the built-in support for "standoff" markup, which
 is stored separately from the text. This has some advantages over embedded markup such as XML. While XML requires markup
 to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations
-(see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
+(
+see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
 A standoff tag can be attached to any substring in the text by giving its start and end positions. Unlike in corpus
 linguistics, we do not use any tokenisation resulting in a form of predefined segmentation, which would limit the user's
 ability to freely annotate any ranges in the text.
@@ -644,22 +647,29 @@ end positions of a substring in the text that has a particular attribute. The OW
 
 - `standoffTagHasStart` (1): The index of the first character in the text that has the attribute.
 - `standoffTagHasEnd` (1): The index of the last character in the text that has the attribute, plus 1.
-- `standoffTagHasUUID` (1): A UUID identifying this instance and those corresponding to it in later versions of the `TextValue` it belongs to.
-  The UUID is a means to maintain a reference to a particular range of a text also when new versions are made and standoff
-tag IRIs change.
+- `standoffTagHasUUID` (1): A UUID identifying this instance and those corresponding to it in later versions of
+  the `TextValue` it belongs to.
+  The UUID is a means to maintain a reference to a particular range of a text also when new versions are made and
+  standoff
+  tag IRIs change.
 - `standoffTagHasOriginalXMLID` (0-1): The original ID of the XML element that the standoff tag represents, if any.
-- `standoffTagHasStartIndex` (1): The start index of the standoff tag. Start indexes are numbered from 0 within the context of a particular text.
+- `standoffTagHasStartIndex` (1): The start index of the standoff tag. Start indexes are numbered from 0 within the
+  context of a particular text.
   When several standoff tags share the same start position, they can be nested correctly with this information when
-transforming them to XML.
-- `standoffTagHasEndIndex` (1): The end index of the standoff tag. Start indexes are numbered from 0 within the context of a particular text. 
-  When several standoff tags share the same end position, they can be nested correctly with this information when transforming
-them to XML.
-- `standoffTagHasStartParent` (0-1): Points to the parent standoff tag. This corresponds to the original nesting of tags in XML. If a standoff tag has no parent, it represents the XML root element.
+  transforming them to XML.
+- `standoffTagHasEndIndex` (1): The end index of the standoff tag. Start indexes are numbered from 0 within the context
+  of a particular text.
+  When several standoff tags share the same end position, they can be nested correctly with this information when
+  transforming
+  them to XML.
+- `standoffTagHasStartParent` (0-1): Points to the parent standoff tag. This corresponds to the original nesting of tags
+  in XML. If a standoff tag has no parent, it represents the XML root element.
   If the original XML element is a CLIX tag, it represents the start of a virtual (non syntactical) hierarchy.
-- `standoffTagHasEndParent` (0-1): Points to the parent standoff tag if the original XML element is a CLIX tag and represents the end of a virtual (non syntactical) hierarchy.
+- `standoffTagHasEndParent` (0-1): Points to the parent standoff tag if the original XML element is a CLIX tag and
+  represents the end of a virtual (non syntactical) hierarchy.
 
 The `StandoffTag` class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are
-currently provided in `standoff-onto.ttl`, and more will be added to support TEI semantics. 
+currently provided in `standoff-onto.ttl`, and more will be added to support TEI semantics.
 Projects are able to define their own custom standoff tag classes (direct subclasses of `StandoffTag`
 or one of the standoff data type classes or subclasses of one of the standoff classes defined in `standoff-onto.ttl`).
 
@@ -667,7 +677,8 @@ or one of the standoff data type classes or subclasses of one of the standoff cl
 
 ##### Standoff Data Type Tags
 
-Associates data in some Knora value type with a substring in a text. Standoff data type tags are subclasses of `ValueBase` classes.
+Associates data in some Knora value type with a substring in a text. Standoff data type tags are subclasses
+of `ValueBase` classes.
 
 - `StandoffLinkTag` Indicates that a substring refers to another `kb:Resource`. See [StandoffLinkTag](#standofflinktag).
 - `StandoffInternalReferenceTag` Indicates that a substring refers to another standoff tag in the same text value.
@@ -705,7 +716,8 @@ discussed in [Links Between Resources](#links-between-resources). In this case, 
 always `kb:hasStandoffLinkTo`, and the link value property (which points to the `LinkValue`) is always
 `kb:hasStandoffLinkToValue`.
 
-DSP-API automatically updates direct links and reifications for standoff resource references when text values are updated.
+DSP-API automatically updates direct links and reifications for standoff resource references when text values are
+updated.
 To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to
 a given target resource. It stores this number as the reference count of the `LinkValue` (see
 [LinkValue](#linkvalue)) describing the direct link. Each time this number changes, it makes a new version of
@@ -716,24 +728,32 @@ For example, if `data:R1` is a resource with a text value in which the resource 
 could contain the following triples:
 
 ```turtle
-data:R1 ex:hasComment data:V1 .
 
-data:V1 rdf:type kb:TextValue ;
-    kb:valueHasString "This link is internal." ;
+data:R1
+    ex:hasComment data:V1 .
+
+data:V1
+    rdf:type            kb:TextValue ;
+    kb:valueHasString   "This link is internal." ;
     kb:valueHasStandoff data:SO1 .
 
-data:SO1 rdf:type kb:StandoffLinkTag ;
+data:SO1
+    rdf:type                kb:StandoffLinkTag ;
     kb:standoffTagHasStart: 5 ;
-    kb:standoffTagHasEnd: 9 ;
-    kb:standoffTagHasLink data:R2 .
+    kb:standoffTagHasEnd:   9 ;
+    kb:standoffTagHasLink   data:R2 .
 
-data:R1 kb:hasStandoffLinkTo data:R2 .
-data:R1 kb:hasStandoffLinkToValue data:LV1 .
+data:R1
+    kb:hasStandoffLinkTo data:R2 .
 
-data:LV1 rdf:type kb:LinkValue ;
-    rdf:subject data:R1 ;
-    rdf:predicate kb:hasStandoffLinkTo ;
-    rdf:object data:R2 ;
+data:R1
+    kb:hasStandoffLinkToValue data:LV1 .
+
+data:LV1
+    rdf:type            kb:LinkValue ;
+    rdf:subject         data:R1 ;
+    rdf:predicate       kb:hasStandoffLinkTo ;
+    rdf:object          data:R2 ;
     kb:valueHasRefCount 1 .
 ```
 
@@ -751,14 +771,15 @@ the user has permission to see the source and target resources.
 Internal links in a `TextValue` can be represented using the data type standoff class `StandoffInternalReferenceTag` or
 a subclass of it. It has the following property:
 
-`standoffTagHasInternalReference` (1): Points to a `StandoffTag` that belongs to the same `TextValue`. It has an `objectClassConstraint` of `StandoffTag`.
+`standoffTagHasInternalReference` (1): Points to a `StandoffTag` that belongs to the same `TextValue`. It has
+an `objectClassConstraint` of `StandoffTag`.
 
 For links to a `kb:Resource`, see [StandoffLinkTag](#standofflinktag).
 
 #### Mapping to Create Standoff From XML
 
 A mapping allows for the conversion of an XML document to RDF-standoff and back. A mapping defines one-to-one relations
-between XML elements (with or without a class) and attributes and standoff classes and properties (see 
+between XML elements (with or without a class) and attributes and standoff classes and properties (see
 [XML to Standoff Mapping](../03-endpoints/api-v2/text/custom-standoff.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains one or more `kb:MappingElement`.
@@ -766,24 +787,32 @@ A `kb:MappingElement` maps an XML element (including attributes) to a standoff c
 following properties:
 
 - `mappingHasXMLTagname` (1): The name of the XML element that is mapped to a standoff class.
-- `mappingHasXMLNamespace` (1): The XML namespace of the XML element that is mapped to a standoff class. If no namespace is given, `noNamespace` is used.
+- `mappingHasXMLNamespace` (1): The XML namespace of the XML element that is mapped to a standoff class. If no namespace
+  is given, `noNamespace` is used.
 - `mappingHasXMLClass` (1): The name of the class of the XML element. If it has no class, `noClass` is used.
 - `mappingHasStandoffClass` (1): The standoff class the XML element is mapped to.
 - `mappingHasXMLAttribute` (0-n): Maps XML attributes to standoff properties using `MappingXMLAttribute`. See below.
-- `mappingHasStandoffDataTypeClass` (0-1): Indicates the standoff data type class of the standoff class the XML element is mapped to.
-- `mappingElementRequiresSeparator` (1): Indicates if there should be an invisible word separator inserted after the XML element in the RDF-standoff representation.
+- `mappingHasStandoffDataTypeClass` (0-1): Indicates the standoff data type class of the standoff class the XML element
+  is mapped to.
+- `mappingElementRequiresSeparator` (1): Indicates if there should be an invisible word separator inserted after the XML
+  element in the RDF-standoff representation.
   Once the markup is stripped, text segments that belonged to different elements may be concatenated.
 
 A `MappingXMLAttribute` has the following properties:
+
 - `mappingHasXMLAttributename`: The name of the XML attribute that is mapped to a standoff property.
-- `mappingHasXMLNamespace`: The namespace of the XML attribute that is mapped to a standoff property. If no namespace is given, `noNamespace` is used.
+- `mappingHasXMLNamespace`: The namespace of the XML attribute that is mapped to a standoff property. If no namespace is
+  given, `noNamespace` is used.
 - `mappingHasStandoffProperty`: The standoff property the XML attribute is mapped to.
 
-DSP-API includes a standard mapping used by the DSP APP. It has the IRI `http://rdfh.ch/standoff/mappings/StandardMapping` and defines mappings for a few elements used to write texts with simple markup.
+DSP-API includes a standard mapping used by the DSP APP. It has the
+IRI `http://rdfh.ch/standoff/mappings/StandardMapping` and defines mappings for a few elements used to write texts with
+simple markup.
 
 #### Standoff in Digital Editions
 
-DSP-API's standoff is designed to make it possible to convert XML documents to standoff and back. One application for this
+DSP-API's standoff is designed to make it possible to convert XML documents to standoff and back. One application for
+this
 feature is an editing workflow in which an editor works in an XML editor, and the resulting XML documents are converted
 to standoff and stored in the DSP, where they can be searched and annotated.
 
@@ -803,11 +832,14 @@ markup to be represented in XML. When non-hierarchical markup is converted to st
 end position of the standoff tag have indexes and parent indexes.
 
 To support these features, a standoff tag can have these additional properties:
+
 - `standoffTagHasStartIndex` (0-1): The index of the start position.
 - `standoffTagHasEndIndex` (0-1): The index of the end position, if this is a non-hierarchical tag.
 - `standoffTagHasStartParent` (0-1): The IRI of the tag, if any, that contains the start position.
-- `standoffTagHasEndParent` (0-1): The IRI of the tag, if any, that contains the end position, if this is a non-hierarchical tag.
-- `standoffTagHasUUID` (0-1): A UUID that can be used to annotate a standoff tag that may be present in different versions of a text,
+- `standoffTagHasEndParent` (0-1): The IRI of the tag, if any, that contains the end position, if this is a
+  non-hierarchical tag.
+- `standoffTagHasUUID` (0-1): A UUID that can be used to annotate a standoff tag that may be present in different
+  versions of a text,
   or in different layers of a text (such as a diplomatic transcription and an edited critical text).
 
 #### Querying Standoff in SPARQL
