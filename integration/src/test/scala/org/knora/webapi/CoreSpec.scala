@@ -36,7 +36,6 @@ abstract class CoreSpec
     with ImplicitSender {
 
   /**
-   * lay
    * The `Environment` that we require to exist at startup.
    * Can be overriden in specs that need other implementations.
    */
