@@ -6,8 +6,8 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, get, post, postRequestedFor, urlEqualTo, urlPathEqualTo}
 import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, MappingBuilder, ResponseDefinitionBuilder, WireMock}
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, get, post, postRequestedFor, urlEqualTo, urlPathEqualTo}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.knora.webapi.IRI
@@ -16,12 +16,12 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.{Jwt, JwtService}
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.{dspIngestConfigLayer, mockJwtServiceLayer}
-import org.knora.webapi.slice.admin.domain.service.WireMockServer.TestPort
+import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
 import spray.json.JsValue
+import zio.{Console, Random, Scope, Task, UIO, ULayer, URIO, ZIO, ZLayer}
 import zio.json.{EncoderOps, JsonEncoder}
 import zio.nio.file.Files
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
-import zio.{Console, Random, Scope, Task, UIO, ULayer, URIO, ZIO, ZLayer}
 
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
@@ -33,7 +33,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
   private val exportProjectSuite = suite("exportProject")(test("should download a project export") {
     for {
       // given
-      _ <- WireMockServer.stub.postResponse(
+      _ <- HttpMockServer.stub.postResponse(
              expectedUrl,
              aResponse()
                .withHeader("Content-Type", "application/zip")
@@ -47,7 +47,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
       path <- DspIngestClient.exportProject(testProject)
 
       // then
-      _ <- WireMockServer.verify.request(
+      _ <- HttpMockServer.verify.request(
              postRequestedFor(urlPathEqualTo(expectedUrl))
                .withHeader("Authorization", equalTo(s"Bearer ${mockJwt.jwtString}"))
            )
@@ -61,7 +61,7 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
       dspIngestConfigLayer,
       mockJwtServiceLayer,
       TestPort.random,
-      WireMockServer.layer
+      HttpMockServer.layer
     ) @@ TestAspect.sequential
 }
 
@@ -83,7 +83,7 @@ object DspIngestClientLiveSpecLayers {
   )
 }
 
-object WireMockServer {
+object HttpMockServer {
   object verify {
     def request(
       requestPattern: RequestPatternBuilder,
