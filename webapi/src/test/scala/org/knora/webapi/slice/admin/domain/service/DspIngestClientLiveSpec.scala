@@ -16,7 +16,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.{Jwt, JwtService}
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.{dspIngestConfigLayer, mockJwtServiceLayer}
+import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.{dspIngestConfigLayer, jwtServiceMockLayer}
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
 import spray.json.JsValue
 import zio.json.{DeriveJsonEncoder, EncoderOps, JsonEncoder}
@@ -26,39 +26,40 @@ import zio.{Console, Random, Scope, Task, UIO, ULayer, URIO, ZIO, ZLayer}
 
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
-  private val testShortCodeStr = "0001"
-  private val testProject      = Shortcode.unsafeFrom(testShortCodeStr)
+  private val testShortcodeStr = "0001"
+  private val testShortcode    = Shortcode.unsafeFrom(testShortcodeStr)
   private val testContent      = "testContent".getBytes()
-  private val expectedUrl      = s"/projects/$testShortCodeStr/export"
 
   private val exportProjectSuite = suite("exportProject")(test("should download a project export") {
+    val expectedUrl = s"/projects/$testShortcodeStr/export"
     for {
       // given
       _ <- HttpMockServer.stub.postResponse(
              expectedUrl,
              aResponse()
                .withHeader("Content-Type", "application/zip")
-               .withHeader("Content-Disposition", s"export-$testShortCodeStr.zip")
+               .withHeader("Content-Disposition", s"export-$testShortcodeStr.zip")
                .withBody(testContent)
                .withStatus(200)
            )
-      mockJwt <- JwtService.createJwtForDspIngest()
 
       // when
-      path <- DspIngestClient.exportProject(testProject)
+      path <- DspIngestClient.exportProject(testShortcode)
 
       // then
+      mockJwt <- JwtService.createJwtForDspIngest().map(_.jwtString)
       _ <- HttpMockServer.verify.request(
              postRequestedFor(urlPathEqualTo(expectedUrl))
-               .withHeader("Authorization", equalTo(s"Bearer ${mockJwt.jwtString}"))
+               .withHeader("Authorization", equalTo(s"Bearer $mockJwt"))
            )
       contentIsDownloaded <- Files.readAllBytes(path).map(_.toArray).map(_ sameElements testContent)
     } yield assertTrue(contentIsDownloaded)
   })
 
   private val getAssetInfoSuite = suite("getAssetInfo")(test("should return the assetInfo") {
-    val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
     implicit val encoder: JsonEncoder[AssetInfoResponse] = DeriveJsonEncoder.gen[AssetInfoResponse]
+    val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
+    val expectedUrl                                      = s"/projects/$testShortcodeStr/assets/$assetId"
     val expected = AssetInfoResponse(
       internalFilename = s"$assetId.txt",
       originalInternalFilename = s"$assetId.txt.orig",
@@ -70,40 +71,43 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
     )
     for {
       // given
-      _       <- HttpMockServer.stub.getResponseJsonBody(s"/projects/$testShortCodeStr/assets/$assetId", 200, expected)
-      mockJwt <- JwtService.createJwtForDspIngest()
+      _ <- HttpMockServer.stub.getResponseJsonBody(expectedUrl, 200, expected)
 
       // when
-      assetInfo <- DspIngestClient.getAssetInfo(testProject, assetId)
+      assetInfo <- DspIngestClient.getAssetInfo(testShortcode, assetId)
 
       // then
+      mockJwt <- JwtService.createJwtForDspIngest().map(_.jwtString)
       _ <- HttpMockServer.verify.request(
-             getRequestedFor(urlPathEqualTo(s"/projects/$testShortCodeStr/assets/$assetId"))
-               .withHeader("Authorization", equalTo(s"Bearer ${mockJwt.jwtString}"))
+             getRequestedFor(urlPathEqualTo(expectedUrl))
+               .withHeader("Authorization", equalTo(s"Bearer $mockJwt"))
            )
     } yield assertTrue(assetInfo == expected)
   })
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
-    suite("DspIngestClientLive")(exportProjectSuite, getAssetInfoSuite).provideSome[Scope](
+    suite("DspIngestClientLive")(
+      exportProjectSuite,
+      getAssetInfoSuite
+    ).provideSome[Scope](
       DspIngestClientLive.layer,
-      dspIngestConfigLayer,
-      mockJwtServiceLayer,
+      HttpMockServer.layer,
       TestPort.random,
-      HttpMockServer.layer
+      dspIngestConfigLayer,
+      jwtServiceMockLayer
     ) @@ TestAspect.sequential
 }
 
 object DspIngestClientLiveSpecLayers {
-  val mockJwtServiceLayer: ULayer[JwtService] = ZLayer.succeed(new JwtService {
-    override def createJwt(user: UserADM, content: Map[String, JsValue]): UIO[Jwt] =
-      throw new UnsupportedOperationException("not implemented")
-    override def createJwtForDspIngest(): UIO[Jwt] = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
-    override def validateToken(token: String): Task[Boolean] =
-      throw new UnsupportedOperationException("not implemented")
-    override def extractUserIriFromToken(token: String): Task[Option[IRI]] =
-      throw new UnsupportedOperationException("not implemented")
-  })
+  val jwtServiceMockLayer: ULayer[JwtService] = ZLayer.succeed {
+    val unsupported = ZIO.die(new UnsupportedOperationException("not implemented"))
+    new JwtService {
+      override def createJwtForDspIngest(): UIO[Jwt]                                 = ZIO.succeed(Jwt("mock-jwt-string-value", Long.MaxValue))
+      override def createJwt(user: UserADM, content: Map[String, JsValue]): UIO[Jwt] = unsupported
+      override def validateToken(token: String): Task[Boolean]                       = unsupported
+      override def extractUserIriFromToken(token: String): Task[Option[IRI]]         = unsupported
+    }
+  }
 
   val dspIngestConfigLayer: ZLayer[TestPort, Nothing, DspIngestConfig] = ZLayer.fromZIO(
     ZIO
