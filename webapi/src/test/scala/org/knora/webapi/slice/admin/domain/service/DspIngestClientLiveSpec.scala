@@ -6,22 +6,23 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, get, getRequestedFor, post, postRequestedFor, urlEqualTo, urlPathEqualTo}
 import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, MappingBuilder, ResponseDefinitionBuilder, WireMock}
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, get, post, postRequestedFor, urlEqualTo, urlPathEqualTo}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.{Jwt, JwtService}
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.{dspIngestConfigLayer, mockJwtServiceLayer}
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
 import spray.json.JsValue
-import zio.{Console, Random, Scope, Task, UIO, ULayer, URIO, ZIO, ZLayer}
-import zio.json.{EncoderOps, JsonEncoder}
+import zio.json.{DeriveJsonEncoder, EncoderOps, JsonEncoder}
 import zio.nio.file.Files
 import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
+import zio.{Console, Random, Scope, Task, UIO, ULayer, URIO, ZIO, ZLayer}
 
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
@@ -55,8 +56,36 @@ object DspIngestClientLiveSpec extends ZIOSpecDefault {
     } yield assertTrue(contentIsDownloaded)
   })
 
+  private val getAssetInfoSuite = suite("getAssetInfo")(test("should return the assetInfo") {
+    val assetId                                          = AssetId.unsafeFrom("4sAf4AmPeeg-ZjDn3Tot1Zt")
+    implicit val encoder: JsonEncoder[AssetInfoResponse] = DeriveJsonEncoder.gen[AssetInfoResponse]
+    val expected = AssetInfoResponse(
+      internalFilename = s"$assetId.txt",
+      originalInternalFilename = s"$assetId.txt.orig",
+      originalFilename = "test.txt",
+      checksumOriginal = "bfd3192ea04d5f42d79836cf3b8fbf17007bab71",
+      checksumDerivative = "17bab70071fbf8b3fc63897d24f5d40ae2913dfb",
+      internalMimeType = Some("text/plain"),
+      originalMimeType = Some("text/plain")
+    )
+    for {
+      // given
+      _       <- HttpMockServer.stub.getResponseJsonBody(s"/projects/$testShortCodeStr/assets/$assetId", 200, expected)
+      mockJwt <- JwtService.createJwtForDspIngest()
+
+      // when
+      assetInfo <- DspIngestClient.getAssetInfo(testProject, assetId)
+
+      // then
+      _ <- HttpMockServer.verify.request(
+             getRequestedFor(urlPathEqualTo(s"/projects/$testShortCodeStr/assets/$assetId"))
+               .withHeader("Authorization", equalTo(s"Bearer ${mockJwt.jwtString}"))
+           )
+    } yield assertTrue(assetInfo == expected)
+  })
+
   override def spec: Spec[TestEnvironment & Scope, Any] =
-    suite("DspIngestClientLive")(exportProjectSuite).provideSome[Scope](
+    suite("DspIngestClientLive")(exportProjectSuite, getAssetInfoSuite).provideSome[Scope](
       DspIngestClientLive.layer,
       dspIngestConfigLayer,
       mockJwtServiceLayer,
