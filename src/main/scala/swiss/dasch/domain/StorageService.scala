@@ -28,6 +28,17 @@ trait StorageService {
   def fileExists(path: Path): IO[IOException, Boolean]
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]
+
+  /**
+   * Saves an A as json in a file.
+   * The file is created if it does not exist, otherwise it is overwritten.
+   *
+   * @param file the path to the file to save
+   * @param content the content to save
+   * @param encoder the encoder to use to encode the content
+   * @tparam A the type of the content, must have a corresponding [[JsonDecoder]]
+   * @return a task that completes when the file is saved
+   */
   def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit]
   def copyFile(source: Path, target: Path, copyOption: CopyOption*): IO[IOException, Unit]
   def createDirectories(path: Path, attrs: FileAttribute[_]*): IO[IOException, Unit]
@@ -126,7 +137,7 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
 
   override def saveJsonFile[A](file: Path, content: A)(implicit encoder: JsonEncoder[A]): Task[Unit] = {
     val bytes = Chunk.fromIterable((content.toJsonPretty + "\n").getBytes)
-    Files.writeBytes(file, bytes, CREATE, WRITE, TRUNCATE_EXISTING)
+    Files.writeBytes(file, bytes, WRITE, CREATE, TRUNCATE_EXISTING)
   }
 
   override def copyFile(source: Path, target: Path, copyOption: CopyOption*): IO[IOException, Unit] =

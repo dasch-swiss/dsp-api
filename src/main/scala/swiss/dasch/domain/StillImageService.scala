@@ -15,7 +15,11 @@ import zio.nio.file.{Files, Path}
 
 import java.io.IOException
 
-trait StillImageService {
+final case class StillImageService(
+  sipiClient: SipiClient,
+  assetInfos: AssetInfoService,
+  mimeTypeGuesser: MimeTypeGuesser
+) {
 
   /**
    * Apply top left correction to the image if needed.
@@ -25,33 +29,11 @@ trait StillImageService {
    * Updates the asset info for the derivative.
    *
    * @param image
-   *   the image to apply the correction to
+   * the image to apply the correction to
    * @return
-   *   the path to the corrected image or None if no correction was needed
+   * the path to the corrected image or None if no correction was needed
    */
-  def applyTopLeftCorrection(image: Path): Task[Option[Path]]
-
-  def needsTopLeftCorrection(image: Path): IO[IOException, Boolean]
-
-  def createDerivative(original: OriginalFile): Task[JpxDerivativeFile]
-
-  def getDimensions(file: JpxDerivativeFile): Task[Dimensions]
-}
-
-object StillImageService {
-  def applyTopLeftCorrection(image: Path): ZIO[StillImageService, Throwable, Option[Path]] =
-    ZIO.serviceWithZIO[StillImageService](_.applyTopLeftCorrection(image))
-  def needsTopLeftCorrection(image: Path): ZIO[StillImageService, IOException, Boolean] =
-    ZIO.serviceWithZIO[StillImageService](_.needsTopLeftCorrection(image))
-  def createDerivative(original: OriginalFile): ZIO[StillImageService, Throwable, JpxDerivativeFile] =
-    ZIO.serviceWithZIO[StillImageService](_.createDerivative(original))
-  def getDimensions(file: JpxDerivativeFile): ZIO[StillImageService, Throwable, Dimensions] =
-    ZIO.serviceWithZIO[StillImageService](_.getDimensions(file))
-}
-
-final case class StillImageServiceLive(sipiClient: SipiClient, assetInfos: AssetInfoService) extends StillImageService {
-
-  override def applyTopLeftCorrection(image: Path): Task[Option[Path]] =
+  def applyTopLeftCorrection(image: Path): Task[Option[Path]] =
     ZIO.whenZIO(needsTopLeftCorrection(image))(
       ZIO.logInfo(s"Applying top left correction to $image") *>
         Files.copy(image, image.parent.map(_ / s"${image.filename}.bak").orNull) *>
@@ -59,7 +41,7 @@ final case class StillImageServiceLive(sipiClient: SipiClient, assetInfos: Asset
         assetInfos.updateAssetInfoForDerivative(image).as(image)
     )
 
-  override def needsTopLeftCorrection(image: Path): IO[IOException, Boolean] =
+  def needsTopLeftCorrection(image: Path): IO[IOException, Boolean] =
     FileFilters.isStillImage(image) &&
       sipiClient
         .queryImageFile(image)
@@ -71,7 +53,7 @@ final case class StillImageServiceLive(sipiClient: SipiClient, assetInfos: Asset
             .exists(_.lastOption.exists(_ != Exif.Image.OrientationValue.Horizontal.value))
         }
 
-  override def createDerivative(original: OriginalFile): Task[JpxDerivativeFile] = {
+  def createDerivative(original: OriginalFile): Task[JpxDerivativeFile] = {
     val imagePath      = original.toPath
     val derivativePath = imagePath.parent.head / s"${original.assetId}.${Jpx.extension}"
     ZIO.logInfo(s"Creating derivative for $imagePath") *>
@@ -82,7 +64,13 @@ final case class StillImageServiceLive(sipiClient: SipiClient, assetInfos: Asset
         .as(JpxDerivativeFile.unsafeFrom(derivativePath))
   }
 
-  override def getDimensions(derivative: JpxDerivativeFile): Task[Dimensions] = {
+  def extractMetadata(original: Original, derivative: JpxDerivativeFile): Task[StillImageMetadata] = for {
+    dim               <- getDimensions(derivative)
+    originalMimeType   = mimeTypeGuesser.guess(Path(original.originalFilename.value))
+    derivativeMimeType = mimeTypeGuesser.guess(derivative.file)
+  } yield StillImageMetadata(dim, derivativeMimeType, originalMimeType)
+
+  def getDimensions(derivative: JpxDerivativeFile): Task[Dimensions] = {
     val path = derivative.toPath
     sipiClient
       .queryImageFile(path)
@@ -106,6 +94,19 @@ final case class StillImageServiceLive(sipiClient: SipiClient, assetInfos: Asset
   }
 }
 
-object StillImageServiceLive {
-  val layer = ZLayer.derive[StillImageServiceLive]
+object StillImageService {
+
+  def applyTopLeftCorrection(image: Path): ZIO[StillImageService, Throwable, Option[Path]] =
+    ZIO.serviceWithZIO[StillImageService](_.applyTopLeftCorrection(image))
+
+  def needsTopLeftCorrection(image: Path): ZIO[StillImageService, IOException, Boolean] =
+    ZIO.serviceWithZIO[StillImageService](_.needsTopLeftCorrection(image))
+
+  def createDerivative(original: OriginalFile): ZIO[StillImageService, Throwable, JpxDerivativeFile] =
+    ZIO.serviceWithZIO[StillImageService](_.createDerivative(original))
+
+  def getDimensions(file: JpxDerivativeFile): ZIO[StillImageService, Throwable, Dimensions] =
+    ZIO.serviceWithZIO[StillImageService](_.getDimensions(file))
+
+  val layer = ZLayer.derive[StillImageService]
 }

@@ -43,6 +43,7 @@ object Main extends ZIOAppDefault {
         MaintenanceEndpoints.layer,
         MaintenanceEndpointsHandler.layer,
         Metrics.layer,
+        MimeTypeGuesser.layer,
         MonitoringEndpoints.layer,
         MonitoringEndpointsHandler.layer,
         MovingImageService.layer,
@@ -51,7 +52,7 @@ object Main extends ZIOAppDefault {
         ProjectsEndpointsHandler.layer,
         ReportServiceLive.layer,
         SipiClientLive.layer,
-        StillImageServiceLive.layer,
+        StillImageService.layer,
         StorageServiceLive.layer
 //        ZLayer.Debug.mermaid ,
       )

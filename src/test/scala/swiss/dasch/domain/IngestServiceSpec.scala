@@ -34,6 +34,8 @@ object IngestServiceSpec extends ZIOSpecDefault {
         derivativeExists  <- Files.exists(assetDir / derivativeFilename)
       } yield assertTrue(
         asset.belongsToProject == shortcode,
+        asset.metadata.originalMimeType.map(_.value).contains("text/csv"),
+        asset.metadata.internalMimeType.map(_.value).contains("text/csv"),
         info.originalFilename.toString == fileToIngest.filename.toString,
         info.originalFilename == asset.original.originalFilename,
         info.assetRef == asset.ref,
@@ -50,8 +52,9 @@ object IngestServiceSpec extends ZIOSpecDefault {
   }).provide(
     AssetInfoServiceLive.layer,
     CommandExecutorLive.layer,
-    StillImageServiceLive.layer,
+    StillImageService.layer,
     IngestService.layer,
+    MimeTypeGuesser.layer,
     MovingImageService.layer,
     SipiClientMock.layer,
     SpecConfigurations.sipiConfigLayer,

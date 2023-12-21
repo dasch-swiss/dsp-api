@@ -12,7 +12,7 @@ import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
 import zio.nio.file.Path
 import zio.{Task, ZIO, ZLayer}
 
-case class MovingImageService(storage: StorageService, executor: CommandExecutor) {
+case class MovingImageService(storage: StorageService, executor: CommandExecutor, mimeTypeGuesser: MimeTypeGuesser) {
 
   def createDerivative(original: Original, assetRef: AssetRef): Task[MovingImageDerivativeFile] =
     for {
@@ -20,7 +20,7 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
       assetDir      <- storage.getAssetDirectory(assetRef)
       derivativePath = assetDir / s"${assetRef.id}.$fileExtension"
       derivative     = MovingImageDerivativeFile.unsafeFrom(derivativePath)
-      _             <- storage.copyFile(original.file.toPath, derivativePath).as(Asset.makeOther(assetRef, original, derivative))
+      _             <- storage.copyFile(original.file.toPath, derivativePath)
     } yield derivative
 
   private def ensureSupportedFileType(file: Path | String) = {
@@ -42,50 +42,63 @@ case class MovingImageService(storage: StorageService, executor: CommandExecutor
       _       <- executor.executeOrFail(cmd)
     } yield ()
 
-  def extractMetadata(file: MovingImageDerivativeFile, assetRef: AssetRef): Task[MovingImageMetadata] =
+  def extractMetadata(
+    original: Original,
+    derivative: MovingImageDerivativeFile,
+    assetRef: AssetRef
+  ): Task[MovingImageMetadata] =
     for {
-      _       <- ZIO.logInfo(s"Extracting metadata for $file, $assetRef")
-      absPath <- file.toPath.toAbsolutePath
-      cmd <-
-        executor.buildCommand(
-          "ffprobe",
-          s"-v error -select_streams v:0 -show_entries stream=width,height,duration,r_frame_rate -print_format json -i $absPath"
-        )
-      metadata <- executor.executeOrFail(cmd).flatMap(out => parseMetadata(out.stdout))
-    } yield metadata
+      _                          <- ZIO.logInfo(s"Extracting metadata for $derivative, $assetRef")
+      ffprobeInfo                <- extractWithFfprobe(derivative)
+      (dimensions, duration, fps) = ffprobeInfo
+      derivativeMimeType          = mimeTypeGuesser.guess(derivative.toPath)
+      originalMimeType            = mimeTypeGuesser.guess(Path(original.originalFilename.value))
+    } yield MovingImageMetadata(dimensions, duration, fps, derivativeMimeType, originalMimeType)
+
+  private def extractWithFfprobe(derivative: MovingImageDerivativeFile) = for {
+    absPath <- derivative.toPath.toAbsolutePath
+    cmd <-
+      executor.buildCommand(
+        "ffprobe",
+        s"-v error -select_streams v:0 -show_entries stream=width,height,duration,r_frame_rate -print_format json -i $absPath"
+      )
+    outStr <- executor.executeOrFail(cmd).map(_.stdout)
+    ffprobeOut <- ZIO
+                    .succeed(outStr.fromJson[FfprobeOut].toOption.flatMap(extractDimDurFps))
+                    .someOrFail(new RuntimeException(s"Failed parsing metadata: $outStr"))
+  } yield ffprobeOut
+
+  private def extractDimDurFps(ffprobeOut: FfprobeOut): Option[(Dimensions, DurationSecs, Fps)] =
+    // Convert the the first present stream stream to [[MovingImageMetadata]].
+    // Assumes only a single stream and ignore other streams if present.
+    ffprobeOut.streams.headOption.flatMap { stream =>
+      // The frame rate is given as a fraction, e.g. 30000/1001
+      // See ffprobe documentation https://ffmpeg.org/doxygen/1.0/structAVStream.html#d63fb11cc1415e278e09ddc676e8a1ad
+      // Convert this fraction to a double value.
+      val fpsFraction = stream.r_frame_rate.split("/")
+      if (fpsFraction.length != 2) {
+        None
+      } else {
+        for {
+          dim         <- Dimensions.from(stream.width, stream.height).toOption
+          duration    <- DurationSecs.from(stream.duration).toOption
+          numerator   <- fpsFraction(0).trim.toDoubleOption
+          denominator <- fpsFraction(1).trim.toDoubleOption.filter(_ != 0)
+          fps         <- Fps.from(numerator / denominator).toOption
+        } yield (dim, duration, fps)
+      }
+    }
 
   final case class FfprobeStream(width: Int, height: Int, duration: Double, r_frame_rate: String)
   object FfprobeStream {
     implicit val decoder: JsonDecoder[FfprobeStream] = DeriveJsonDecoder.gen[FfprobeStream]
   }
 
-  final case class FfprobeOut(streams: Array[FfprobeStream]) {
-    def toMetadata: Option[MovingImageMetadata] =
-      // Convert the the first present stream stream to [[MovingImageMetadata]].
-      // Assumes only a single stream and ignore other streams if present.
-      streams.headOption.flatMap { stream =>
-        // The frame rate is given as a fraction, e.g. 30000/1001
-        // See ffprobe documentation https://ffmpeg.org/doxygen/1.0/structAVStream.html#d63fb11cc1415e278e09ddc676e8a1ad
-        // Convert this fraction to a double value.
-        val fpsFraction = stream.r_frame_rate.split("/")
-        if (fpsFraction.length == 2) {
-          for {
-            numerator   <- fpsFraction(0).trim.toDoubleOption
-            denominator <- fpsFraction(1).trim.toDoubleOption.filter(_ != 0)
-            fps          = numerator / denominator
-            dim         <- Dimensions.from(stream.width, stream.height).toOption
-          } yield MovingImageMetadata(dim, stream.duration, fps)
-        } else { None }
-      }
-  }
+  final case class FfprobeOut(streams: Array[FfprobeStream]) {}
   object FfprobeOut {
     implicit val decoder: JsonDecoder[FfprobeOut] = DeriveJsonDecoder.gen[FfprobeOut]
   }
 
-  private def parseMetadata(ffprobeJson: String) =
-    ZIO
-      .fromOption(ffprobeJson.fromJson[FfprobeOut].toOption.flatMap(_.toMetadata))
-      .orElseFail(new RuntimeException(s"Failed parsing metadata: $ffprobeJson"))
 }
 
 object MovingImageService {
@@ -99,10 +112,11 @@ object MovingImageService {
     ZIO.serviceWithZIO(_.extractKeyFrames(file, assetRef))
 
   def extractMetadata(
+    original: Original,
     file: MovingImageDerivativeFile,
     assetRef: AssetRef
   ): ZIO[MovingImageService, Throwable, MovingImageMetadata] =
-    ZIO.serviceWithZIO[MovingImageService](_.extractMetadata(file, assetRef))
+    ZIO.serviceWithZIO[MovingImageService](_.extractMetadata(original, file, assetRef))
 
   val layer = ZLayer.derive[MovingImageService]
 }

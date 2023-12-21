@@ -83,10 +83,16 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
                )
              )
         // when
-        metadata <- MovingImageService.extractMetadata(d, c.assetRef)
+        metadata <- MovingImageService.extractMetadata(c.original, d, c.assetRef)
         // then
       } yield assertTrue(
-        metadata == MovingImageMetadata(Dimensions.unsafeFrom(1280, 720), duration = 170.84, fps = 25.0)
+        metadata == MovingImageMetadata(
+          Dimensions.unsafeFrom(1280, 720),
+          duration = DurationSecs.unsafeFrom(170.84),
+          fps = Fps.unsafeFrom(25.0),
+          Some(MimeType.unsafeFrom("video/mp4")),
+          Some(MimeType.unsafeFrom("video/mp4"))
+        )
       )
     },
     test("given invalid metadata it should not extract") {
@@ -129,7 +135,7 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
           d <- MovingImageService.createDerivative(c.original, c.assetRef)
           _ <- CommandExecutorMock.setOutput(processOutput)
           // when
-          exit <- MovingImageService.extractMetadata(d, c.assetRef).exit
+          exit <- MovingImageService.extractMetadata(c.original, d, c.assetRef).exit
           // then
         } yield assertTrue(exit.isFailure)
       }
@@ -138,9 +144,10 @@ object MovingImageServiceSpec extends ZIOSpecDefault {
 
   val spec = suite("MovingImageService")(createDerivativeSuite, extractMetaDataSuite)
     .provide(
-      StorageServiceLive.layer,
-      SpecConfigurations.storageConfigLayer,
+      CommandExecutorMock.layer,
+      MimeTypeGuesser.layer,
       MovingImageService.layer,
-      CommandExecutorMock.layer
+      SpecConfigurations.storageConfigLayer,
+      StorageServiceLive.layer
     )
 }

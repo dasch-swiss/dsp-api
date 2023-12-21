@@ -31,6 +31,11 @@ object SupportedFileTypeSpec extends ZIOSpecDefault {
         assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.StillImage))
       }
     },
+    test("All still images which are supported by Sipi are supported") {
+      val sipiExtensions      = SipiImageFormat.allExtensions.toSet
+      val supportedExtensions = SupportedFileType.StillImage.extensions.toSet
+      assertTrue(sipiExtensions == supportedExtensions)
+    },
     test("All valid extensions for MovingImage are supported") {
       val imageExt = Seq("mp4")
       check(Gen.fromIterable(withUpperCase(imageExt))) { ext =>

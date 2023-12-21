@@ -105,20 +105,15 @@ object ProjectsEndpointsResponses {
     width: Option[Int] = None,
     height: Option[Int] = None,
     duration: Option[Double] = None,
-    fps: Option[Double] = None
+    fps: Option[Double] = None,
+    internalMimeType: Option[String] = None,
+    originalMimeType: Option[String] = None
   )
   object AssetInfoResponse {
 
     def from(assetInfo: AssetInfo): AssetInfoResponse = {
-      val dim = assetInfo.metadata match {
-        case MovingImageMetadata(d, _, _) => Some(d)
-        case d: Dimensions                => Some(d)
-        case _                            => None
-      }
-      val movingImageMeta = assetInfo.metadata match {
-        case m: MovingImageMetadata => Some(m)
-        case _                      => None
-      }
+      val metadata = assetInfo.metadata
+      val dim      = metadata.dimensionsOpt
       AssetInfoResponse(
         assetInfo.derivative.filename.toString,
         assetInfo.original.filename.toString,
@@ -127,8 +122,10 @@ object ProjectsEndpointsResponses {
         assetInfo.derivative.checksum.toString,
         dim.map(_.width.value),
         dim.map(_.height.value),
-        movingImageMeta.map(_.duration),
-        movingImageMeta.map(_.fps)
+        metadata.durationOpt.map(_.value),
+        metadata.fpsOpt.map(_.value),
+        metadata.internalMimeType.map(_.stringValue),
+        metadata.originalMimeType.map(_.stringValue)
       )
     }
 

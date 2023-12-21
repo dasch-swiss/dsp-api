@@ -6,7 +6,7 @@
 package swiss.dasch.api
 
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
-import swiss.dasch.api.ProjectsEndpointsResponses.ProjectResponse
+import swiss.dasch.api.ProjectsEndpointsResponses.{AssetInfoResponse, ProjectResponse}
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.domain.*
 import swiss.dasch.infrastructure.CommandExecutorLive
@@ -151,9 +151,127 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     )
   }
 
+  private val assetInfoSuite =
+    suite("/projects/<shortcode>/asset/<assetId>")(
+      test("given the project folder does not exist should return Not Found") {
+        val req = Request
+          .get(URL(Root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
+          .addHeader("Authorization", "Bearer fakeToken")
+        executeRequest(req).map(response => assertTrue(response.status == Status.NotFound))
+      },
+      test("given the project folder exists but the asset info file does not exist should return Not Found") {
+        val req = Request
+          .get(URL(Root / "projects" / "0666" / "assets" / "7l5QJAtPnv5-lLmBPfO7U40"))
+          .addHeader("Authorization", "Bearer fakeToken")
+        StorageService.getProjectDirectory(ProjectShortcode.unsafeFrom("0666")).tap(Files.createDirectories(_)) *>
+          executeRequest(req).map(response => assertTrue(response.status == Status.NotFound))
+      },
+      test("given a basic asset info file exists it should return the info") {
+        for {
+          ref <- AssetInfoFileTestHelper.createInfoFile("txt", "txt").map { case (assetRef, _) => assetRef }
+          req = Request
+                  .get(URL(Root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
+                  .addHeader("Authorization", "Bearer fakeToken")
+          // when
+          response <- executeRequest(req)
+          // then
+          body <- response.body.asString
+          info  = body.fromJson[AssetInfoResponse].getOrElse(throw new Exception("Invalid response"))
+        } yield assertTrue(
+          response.status == Status.Ok,
+          info == AssetInfoResponse(
+            internalFilename = s"${ref.id}.txt",
+            originalInternalFilename = s"${ref.id}.txt.orig",
+            originalFilename = "test.txt",
+            checksumOriginal = AssetInfoFileTestHelper.testChecksumOriginal.value,
+            checksumDerivative = AssetInfoFileTestHelper.testChecksumDerivative.value
+          )
+        )
+      },
+      test("given a still image asset info file exists it should return the info") {
+        for {
+          ref <- AssetInfoFileTestHelper
+                   .createInfoFile(
+                     originalFileExt = "png",
+                     derivativeFileExt = "jpx",
+                     customJsonProps = Some("""
+                                              |"width": 640,
+                                              |"height": 480,
+                                              |"internalMimeType": "image/jpx",
+                                              |"originalMimeType": "image/png"
+                                              |""".stripMargin)
+                   )
+                   .map { case (assetRef, _) => assetRef }
+          req = Request
+                  .get(URL(Root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
+                  .addHeader("Authorization", "Bearer fakeToken")
+          // when
+          response <- executeRequest(req)
+          // then
+          body <- response.body.asString
+          info  = body.fromJson[AssetInfoResponse].getOrElse(throw new Exception("Invalid response"))
+        } yield assertTrue(
+          response.status == Status.Ok,
+          info == AssetInfoResponse(
+            internalFilename = s"${ref.id}.jpx",
+            originalInternalFilename = s"${ref.id}.png.orig",
+            originalFilename = "test.png",
+            checksumOriginal = AssetInfoFileTestHelper.testChecksumOriginal.value,
+            checksumDerivative = AssetInfoFileTestHelper.testChecksumDerivative.value,
+            width = Some(640),
+            height = Some(480),
+            internalMimeType = Some("image/jpx"),
+            originalMimeType = Some("image/png")
+          )
+        )
+      },
+      test("given a moving image asset info file exists it should return the info") {
+        for {
+          ref <- AssetInfoFileTestHelper
+                   .createInfoFile(
+                     originalFileExt = "mp4",
+                     derivativeFileExt = "mp4",
+                     customJsonProps = Some("""
+                                              |"width": 640,
+                                              |"height": 480,
+                                              |"fps": 60,
+                                              |"duration": 3.14,
+                                              |"internalMimeType": "video/mp4",
+                                              |"originalMimeType": "video/mp4"
+                                              |""".stripMargin)
+                   )
+                   .map { case (assetRef, _) => assetRef }
+          req = Request
+                  .get(URL(Root / "projects" / ref.belongsToProject.value / "assets" / ref.id.value))
+                  .addHeader("Authorization", "Bearer fakeToken")
+          // when
+          response <- executeRequest(req)
+          // then
+          body <- response.body.asString
+          info  = body.fromJson[AssetInfoResponse].getOrElse(throw new Exception("Invalid response"))
+        } yield assertTrue(
+          response.status == Status.Ok,
+          info == AssetInfoResponse(
+            internalFilename = s"${ref.id}.mp4",
+            originalInternalFilename = s"${ref.id}.mp4.orig",
+            originalFilename = "test.mp4",
+            checksumOriginal = AssetInfoFileTestHelper.testChecksumOriginal.value,
+            checksumDerivative = AssetInfoFileTestHelper.testChecksumDerivative.value,
+            width = Some(640),
+            height = Some(480),
+            duration = Some(3.14),
+            fps = Some(60),
+            internalMimeType = Some("video/mp4"),
+            originalMimeType = Some("video/mp4")
+          )
+        )
+      }
+    )
+
   val spec = suite("ProjectsEndpoint")(
     projectExportSuite,
     projectImportSuite,
+    assetInfoSuite,
     test("GET /projects should list non-empty project in test folders") {
       val req = Request.get(URL(Root / "projects")).addHeader("Authorization", "Bearer fakeToken")
       for {
@@ -174,9 +292,10 @@ object ProjectsEndpointSpec extends ZIOSpecDefault {
     BulkIngestServiceLive.layer,
     CommandExecutorLive.layer,
     FileChecksumServiceLive.layer,
-    StillImageServiceLive.layer,
+    StillImageService.layer,
     ImportServiceLive.layer,
     IngestService.layer,
+    MimeTypeGuesser.layer,
     MovingImageService.layer,
     ProjectServiceLive.layer,
     ProjectsEndpoints.layer,

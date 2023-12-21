@@ -43,7 +43,7 @@ object AssetRef {
   def makeNew(project: ProjectShortcode): UIO[AssetRef] = AssetId.makeNew.map(id => AssetRef(id, project))
 }
 
-private final case class Original(file: OriginalFile, originalFilename: NonEmptyString) {
+final case class Original(file: OriginalFile, originalFilename: NonEmptyString) {
   def internalFilename: NonEmptyString = file.filename
 }
 
@@ -61,7 +61,7 @@ object Asset {
     ref: AssetRef,
     original: Original,
     derivative: JpxDerivativeFile,
-    metadata: Dimensions
+    metadata: StillImageMetadata
   ) extends Asset
 
   final case class MovingImageAsset(
@@ -74,14 +74,15 @@ object Asset {
   final case class OtherAsset(
     ref: AssetRef,
     original: Original,
-    derivative: DerivativeFile
-  ) extends Asset { override val metadata: AssetMetadata = EmptyMetadata }
+    derivative: DerivativeFile,
+    metadata: OtherMetadata
+  ) extends Asset
 
   def makeStillImage(
     assetRef: AssetRef,
     original: Original,
     derivative: JpxDerivativeFile,
-    metadata: Dimensions
+    metadata: StillImageMetadata
   ): StillImageAsset =
     StillImageAsset(assetRef, original, derivative, metadata)
 
@@ -92,8 +93,14 @@ object Asset {
     metadata: MovingImageMetadata
   ): MovingImageAsset = MovingImageAsset(assetRef, original, derivative, metadata)
 
-  def makeOther(assetRef: AssetRef, original: Original, derivative: DerivativeFile): OtherAsset =
-    OtherAsset(assetRef, original, derivative)
+  def makeOther(
+    assetRef: AssetRef,
+    original: Original,
+    derivative: DerivativeFile,
+    internalMimeType: Option[MimeType],
+    originalMimeType: Option[MimeType]
+  ): OtherAsset =
+    OtherAsset(assetRef, original, derivative, OtherMetadata(internalMimeType, originalMimeType))
 }
 
 def hasAssetIdInFilename(file: Path): Option[Path] = AssetId.fromPath(file).map(_ => file)

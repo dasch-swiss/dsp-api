@@ -5,7 +5,6 @@
 
 package swiss.dasch.domain
 
-import eu.timepit.refined.types.string.NonEmptyString
 import swiss.dasch.config.Configuration
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.test.SpecConfigurations
@@ -54,26 +53,6 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
         expected <- ZIO.serviceWith[StorageConfig](_.assetPath).map(_ / existingProject.toString)
         actual   <- StorageService.getProjectDirectory(existingProject)
       } yield assertTrue(expected == actual)
-    },
-    test("should load asset info file") {
-      val asset = AssetRef("FGiLaT4zzuV-CqwbEDFAFeS".toAssetId, "0001".toProjectShortcode)
-      val name  = NonEmptyString.unsafeFrom("250x250.jp2")
-      for {
-        projectPath <- ZIO.serviceWith[StorageConfig](_.assetPath).map(_ / asset.belongsToProject.toString)
-        expected = AssetInfo(
-                     assetRef = asset,
-                     original = FileAndChecksum(
-                       projectPath / "fg" / "il" / s"${asset.id.value}.jp2.orig",
-                       "fb252a4fb3d90ce4ebc7e123d54a4112398a7994541b11aab5e4230eac01a61c".toSha256Hash
-                     ),
-                     originalFilename = name,
-                     derivative = FileAndChecksum(
-                       projectPath / "fg" / "il" / s"${asset.id.value}.jp2",
-                       "0ce405c9b183fb0d0a9998e9a49e39c93b699e0f8e2a9ac3496c349e5cea09cc".toSha256Hash
-                     )
-                   )
-        actual <- AssetInfoService.findByAssetRef(asset)
-      } yield assertTrue(actual.contains(expected))
     },
     suite("create temp directory scoped")(
       test("should create a temp directory") {
@@ -151,5 +130,5 @@ object StorageServiceLiveSpec extends ZIOSpecDefault {
         }
       }
     )
-  ).provide(AssetInfoServiceLive.layer, StorageServiceLive.layer, SpecConfigurations.storageConfigLayer)
+  ).provide(StorageServiceLive.layer, SpecConfigurations.storageConfigLayer)
 }

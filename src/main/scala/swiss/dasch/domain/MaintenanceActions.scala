@@ -46,8 +46,12 @@ final case class MaintenanceActionsLive(
         id <- ZIO
                 .fromOption(AssetId.fromPath(path))
                 .orElseFail(new Exception(s"Could not get asset id from path $path"))
-        dim <- imageService.getDimensions(jpx)
-        _   <- assetInfoService.updateStillImageMetadata(AssetRef(id, shortcode), dim)
+        ref         = AssetRef(id, shortcode)
+        info       <- assetInfoService.findByAssetRef(ref).someOrFail(new Exception(s"Could not find info file for $ref"))
+        dim        <- imageService.getDimensions(jpx)
+        oldMetadata = info.metadata
+        newMetadata = StillImageMetadata(dim, oldMetadata.internalMimeType, oldMetadata.originalMimeType)
+        _          <- assetInfoService.save(info.copy(metadata = newMetadata))
       } yield ()
 
     for {
