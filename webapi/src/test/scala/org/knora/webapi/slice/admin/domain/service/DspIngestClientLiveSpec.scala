@@ -6,23 +6,50 @@
 package org.knora.webapi.slice.admin.domain.service
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, get, getRequestedFor, post, postRequestedFor, urlEqualTo, urlPathEqualTo}
-import com.github.tomakehurst.wiremock.client.{CountMatchingStrategy, MappingBuilder, ResponseDefinitionBuilder, WireMock}
+import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
+import com.github.tomakehurst.wiremock.client.MappingBuilder
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import spray.json.JsValue
+import zio.Console
+import zio.Random
+import zio.Scope
+import zio.Task
+import zio.UIO
+import zio.ULayer
+import zio.URIO
+import zio.ZIO
+import zio.ZLayer
+import zio.json.DeriveJsonEncoder
+import zio.json.EncoderOps
+import zio.json.JsonEncoder
+import zio.nio.file.Files
+import zio.test.Spec
+import zio.test.TestAspect
+import zio.test.TestEnvironment
+import zio.test.ZIOSpecDefault
+import zio.test.assertTrue
+
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.routing.{Jwt, JwtService}
+import org.knora.webapi.routing.Jwt
+import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.{dspIngestConfigLayer, jwtServiceMockLayer}
+import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
+import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.jwtServiceMockLayer
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort
-import spray.json.JsValue
-import zio.json.{DeriveJsonEncoder, EncoderOps, JsonEncoder}
-import zio.nio.file.Files
-import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
-import zio.{Console, Random, Scope, Task, UIO, ULayer, URIO, ZIO, ZLayer}
 
 object DspIngestClientLiveSpec extends ZIOSpecDefault {
 
