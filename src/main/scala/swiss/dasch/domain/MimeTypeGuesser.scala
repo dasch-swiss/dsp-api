@@ -20,8 +20,8 @@ object MimeType {
 
   def from(str: String): Either[String, MimeType] =
     Option(str)
-      .toRight("Mime type cannot be null")
-      .flatMap(it => NonEmptyString.from(it).left.map(_ => "Mime type cannot be empty"))
+      .toRight("MIME type cannot be null")
+      .flatMap(it => NonEmptyString.from(it).left.map(_ => "MIME type cannot be empty"))
       .map(MimeType.apply)
 }
 
