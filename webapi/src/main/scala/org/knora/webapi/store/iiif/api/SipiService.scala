@@ -14,6 +14,7 @@ import zio.nio.file.Path
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -68,16 +69,16 @@ trait SipiService {
    * @param filename the path to the file.
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  def getFileMetadataFromTemp(filename: String): Task[FileMetadataSipiResponse]
+  def getFileMetadataFromSipiTemp(filename: String): Task[FileMetadataSipiResponse]
 
   /**
-   * Asks Sipi for metadata about a file in permanent location, served from the 'knora.json' route.
+   * Asks dsp-ingest for metadata about a file in permanent location, served from the 'knora.json' route.
    *
-   * @param filename the path to the file.
    * @param shortcode the shortcode of the project.
+   * @param assetId for the file.
    * @return a [[FileMetadataSipiResponse]] containing the requested metadata.
    */
-  def getFileMetadata(filename: String, shortcode: Shortcode): Task[FileMetadataSipiResponse]
+  def getFileMetadataFromDspIngestApi(shortcode: Shortcode, assetId: AssetId): Task[FileMetadataSipiResponse]
 
   /**
    * Asks Sipi to move a file from temporary storage to permanent storage.
@@ -111,10 +112,12 @@ trait SipiService {
 
   /**
    * Downloads an asset from Sipi.
-   * @param asset The asset to download.
+   *
+   * @param asset     The asset to download.
    * @param targetDir The target directory in which the asset should be stored.
-   * @param user The user who is downloading the asset.
+   * @param user      The user who is downloading the asset.
    * @return The path to the downloaded asset. If the asset could not be downloaded, [[None]] is returned.
    */
   def downloadAsset(asset: Asset, targetDir: Path, user: UserADM): Task[Option[Path]]
+
 }

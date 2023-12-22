@@ -210,6 +210,7 @@ object LayersTest {
         with StringFormatter
     ](
       AppConfigForTestContainers.testcontainers,
+      DspIngestClientLive.layer,
       FusekiTestContainer.layer,
       SipiTestContainer.layer,
       SipiServiceLive.layer,

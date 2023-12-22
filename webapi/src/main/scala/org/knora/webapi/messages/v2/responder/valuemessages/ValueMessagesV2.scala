@@ -44,6 +44,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.*
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.RouteUtilZ
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
@@ -1055,7 +1056,6 @@ object ValueContentV2 {
   /**
    * Converts a JSON-LD object to a [[ValueContentV2]].
    *
-   * @param ingestState indicates the state of the file, either ingested or in temp folder
    * @param jsonLdObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]].
@@ -1134,17 +1134,18 @@ object ValueContentV2 {
     jsonLdObject: JsonLDObject
   ): ZIO[SipiService, Throwable, FileInfo] =
     for {
-      internalFilename <- ZIO.attempt {
-                            val validationFun: (IRI, => Nothing) => IRI =
-                              (s, errorFun) => Iri.toSparqlEncodedString(s).getOrElse(errorFun)
-                            jsonLdObject.requireStringWithValidation(FileValueHasFilename, validationFun)
-                          }
+      internalFilename <- {
+        val fileNameEncoded = jsonLdObject
+          .getRequiredString(FileValueHasFilename)
+          .flatMap(it => Iri.toSparqlEncodedString(it).toRight(s"$FileValueHasFilename is invalid."))
+        ZIO.fromEither(fileNameEncoded).mapError(BadRequestException(_))
+      }
       metadata <- ingestState match {
                     case AssetIngestState.AssetIngested =>
-                      SipiService.getFileMetadata(internalFilename, Shortcode.unsafeFrom(shortcode))
-                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromTemp(internalFilename)
+                      val assetId = AssetId.unsafeFrom(internalFilename.substring(0, internalFilename.indexOf('.')))
+                      SipiService.getFileMetadataFromDspIngestApi(Shortcode.unsafeFrom(shortcode), assetId)
+                    case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromSipiTemp(internalFilename)
                   }
-
     } yield FileInfo(internalFilename, metadata)
 }
 
