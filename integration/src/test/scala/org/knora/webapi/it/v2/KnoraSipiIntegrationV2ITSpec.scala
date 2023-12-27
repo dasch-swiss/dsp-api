@@ -8,6 +8,7 @@ package org.knora.webapi.it.v2
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import zio.nio.file.Path
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -507,12 +508,13 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
+      val basePath  = Path("sipi/testfiles")
       val shortcode = Shortcode.unsafeFrom("0001")
       val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
       UnsafeZioRun.runOrThrow(
-        SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.jp2") *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.info") *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.png.orig")
+        SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / s"$assetId.jp2") *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / s"$assetId.info") *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / s"$assetId.png.orig")
       )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
@@ -529,15 +531,13 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      UnsafeZioRun.runOrThrow(
-        SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom("0001"), "De6XyNL4H71-D9QxghOuOPJ.jp2")
-      )
-      UnsafeZioRun.runOrThrow(
-        SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom("0001"), "De6XyNL4H71-D9QxghOuOPJ.info")
-      )
-      UnsafeZioRun.runOrThrow(
-        SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom("0001"), "De6XyNL4H71-D9QxghOuOPJ.png.orig")
-      )
+      UnsafeZioRun.runOrThrow {
+        val basePath  = Path("sipi/testfiles")
+        val shortcode = Shortcode.unsafeFrom("0001")
+        SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / "De6XyNL4H71-D9QxghOuOPJ.jp2") *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / "De6XyNL4H71-D9QxghOuOPJ.info") *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      }
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")

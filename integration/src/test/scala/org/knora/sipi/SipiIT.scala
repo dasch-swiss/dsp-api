@@ -28,6 +28,7 @@ import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.routing.JwtServiceLive
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testcontainers.SipiTestContainer
 
@@ -37,8 +38,10 @@ object SipiIT extends ZIOSpecDefault {
   private val infoTestfile  = "FGiLaT4zzuV-CqwbEDFAFeS.info"
   private val origTestfile  = "FGiLaT4zzuV-CqwbEDFAFeS.jp2.orig"
   private val prefix        = "0001"
-  private def copyTestFilesToSipi = ZIO.foreach(List(imageTestfile, infoTestfile, origTestfile))(
-    SipiTestContainer.copyFileToImageFolderInContainer(prefix, _)
+
+  private def copyTestFilesToSipi = ZIO.foreach(List(imageTestfile, infoTestfile, origTestfile))(filename =>
+    SharedVolumes.Images
+      .copyFileToAssetFolder(Shortcode.unsafeFrom(prefix), zio.nio.file.Path(s"sipi/testfiles/$filename"))
   )
 
   private def getWithoutAuthorization(path: Path) =
@@ -295,7 +298,7 @@ object SipiIT extends ZIOSpecDefault {
       }
     )
       .provideSomeLayerShared[Scope with Client with WireMockServer](
-        SharedVolumes.Images.layer >>> SipiTestContainer.layer
+        SharedVolumes.Images.layer >+> SipiTestContainer.layer
       )
       .provideSomeLayerShared[Scope with Client](MockDspApiServer.layer)
       .provideSomeLayer[Scope](Client.default) @@ TestAspect.sequential

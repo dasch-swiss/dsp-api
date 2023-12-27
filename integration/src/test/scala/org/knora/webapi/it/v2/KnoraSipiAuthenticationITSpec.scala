@@ -8,6 +8,7 @@ package org.knora.webapi.it.v2
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import zio.nio.file.Path
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -69,7 +70,9 @@ class KnoraSipiAuthenticationITSpec
       //
       val shortcode = Shortcode.unsafeFrom("0001")
       val assetId   = AssetId.unsafeFrom("B1D0OkEgfFp-Cew2Seur7Wi")
-      UnsafeZioRun.runOrThrow(SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.jp2"))
+      UnsafeZioRun.runOrThrow(
+        SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(s"sipi/testfiles/$assetId.jp2"))
+      )
 
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
       val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())

@@ -7,15 +7,12 @@ package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.MountableFile
-import zio.Task
 import zio.URIO
 import zio.URLayer
 import zio.ZIO
 import zio.ZLayer
 import zio.http
 import zio.http.URL
-import zio.nio.file.Path
 
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -25,21 +22,6 @@ import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
 
 final class SipiTestContainer
     extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${BuildInfo.version}") {
-
-  def copyFileToImageFolderInContainer(prefix: String, filename: String): Task[Unit] = {
-    val seg01  = filename.substring(0, 2).toLowerCase()
-    val seg02  = filename.substring(2, 4).toLowerCase()
-    val target = Path(s"/sipi/images/$prefix/$seg01/$seg02/$filename")
-    copyTestFileToContainer(filename, target)
-  }
-
-  def copyTestFileToContainer(file: String, target: Path): Task[Unit] = {
-    val resourceName  = s"sipi/testfiles/$file"
-    val mountableFile = MountableFile.forClasspathResource(resourceName, 777)
-    ZIO.attemptBlockingIO(copyFileToContainer(mountableFile, target.toFile.toString)) <* ZIO.logInfo(
-      s"copied $resourceName to $target"
-    )
-  }
 
   def sipiBaseUrl: URL = {
     val urlString = s"http://${SipiTestContainer.localHostAddress}:$getFirstMappedPort"
@@ -68,12 +50,6 @@ object SipiTestContainer {
 
   def resolveUrl(path: http.Path): URIO[SipiTestContainer, URL] =
     ZIO.serviceWith[SipiTestContainer](_.sipiBaseUrl.path(path))
-
-  def copyFileToImageFolderInContainer(prefix: String, filename: String): ZIO[SipiTestContainer, Throwable, Unit] =
-    ZIO.serviceWithZIO[SipiTestContainer](_.copyFileToImageFolderInContainer(prefix, filename))
-
-  def copyTestFileToContainer(file: String, target: Path): ZIO[SipiTestContainer, Throwable, Unit] =
-    ZIO.serviceWithZIO[SipiTestContainer](_.copyTestFileToContainer(file, target))
 
   def make(imagesVolume: SharedVolumes.Images): SipiTestContainer =
     new SipiTestContainer()
