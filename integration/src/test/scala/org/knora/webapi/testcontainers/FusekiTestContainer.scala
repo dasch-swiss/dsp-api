@@ -6,11 +6,10 @@
 package org.knora.webapi.testcontainers
 
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.DockerImageName
+import zio.Task
+import zio.ULayer
 import zio.ZIO
-import zio._
 import zio.http.URL
-import zio.macros.accessible
 import zio.nio.file.Files
 import zio.nio.file.Path
 
@@ -22,9 +21,9 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 
 import org.knora.webapi.http.version.BuildInfo
+import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
 
-@accessible
-trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {
+final class FusekiTestContainer extends GenericContainer[FusekiTestContainer](BuildInfo.fuseki) {
 
   def baseUrl: URL = {
     val urlString = s"http://$getHost:$getFirstMappedPort"
@@ -59,24 +58,16 @@ trait FusekiTestContainer extends GenericContainer[FusekiTestContainer] {
 }
 
 object FusekiTestContainer {
-  def apply(dockerImageName: DockerImageName): FusekiTestContainer =
-    new GenericContainer[FusekiTestContainer](dockerImageName) with FusekiTestContainer
-
-  def apply(): FusekiTestContainer =
-    new GenericContainer[FusekiTestContainer](DockerImageName.parse(BuildInfo.fuseki)) with FusekiTestContainer
 
   val adminPassword = "test"
 
-  private val acquire: Task[FusekiTestContainer] = {
-    val container = FusekiTestContainer()
-      .withExposedPorts(3030)
-      .withEnv("ADMIN_PASSWORD", adminPassword)
-      .withEnv("JVM_ARGS", "-Xmx3G")
-    ZIO.attemptBlocking(container.start()).as(container).orDie <* ZIO.logInfo(">>> Acquire Fuseki TestContainer <<<")
-  }
+  def initializeWithDataset(repositoryName: String): ZIO[FusekiTestContainer, Throwable, Unit] =
+    ZIO.serviceWithZIO[FusekiTestContainer](_.initializeWithDataset(repositoryName))
 
-  private def release(container: FusekiTestContainer): UIO[Unit] =
-    ZIO.attemptBlocking(container.stop()).logError.ignore <* ZIO.logInfo(">>> Release Fuseki TestContainer <<<")
+  def make: FusekiTestContainer = new FusekiTestContainer()
+    .withExposedPorts(3030)
+    .withEnv("ADMIN_PASSWORD", adminPassword)
+    .withEnv("JVM_ARGS", "-Xmx3G")
 
-  val layer: ULayer[FusekiTestContainer] = ZLayer.scoped(ZIO.acquireRelease(acquire)(release)).orDie
+  val layer: ULayer[FusekiTestContainer] = make.toLayer
 }
