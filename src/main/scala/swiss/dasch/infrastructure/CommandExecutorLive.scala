@@ -7,6 +7,7 @@ package swiss.dasch.infrastructure
 
 import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.StorageService
+import swiss.dasch.version.BuildInfo
 import zio.{IO, UIO, ZIO, ZLayer}
 
 import java.io.IOException
@@ -62,7 +63,9 @@ final case class CommandExecutorLive(sipiConfig: SipiConfig, storageService: Sto
     if (sipiConfig.useLocalDev) {
       for {
         assetDir <- storageService.getAssetDirectory().flatMap(_.toAbsolutePath).orDie
-      } yield Command(s"docker run --entrypoint $command -v $assetDir:$assetDir daschswiss/knora-sipi:latest $params")
+      } yield Command(
+        s"docker run --entrypoint $command -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.sipiVersion} $params"
+      )
     } else {
       ZIO.succeed(Command(s"$command $params"))
     }

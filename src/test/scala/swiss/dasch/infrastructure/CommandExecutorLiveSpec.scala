@@ -8,6 +8,7 @@ package swiss.dasch.infrastructure
 import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.{StorageService, StorageServiceLive}
 import swiss.dasch.test.SpecConfigurations
+import swiss.dasch.version.BuildInfo
 import zio.ZLayer
 import zio.test.{ZIOSpecDefault, assertTrue}
 
@@ -20,7 +21,7 @@ object CommandExecutorLiveSpec extends ZIOSpecDefault {
         cmd      <- CommandExecutor.buildCommand("customCommand", "customParams").provideSome[StorageService](devLayer)
         assetDir <- StorageService.getAssetDirectory().flatMap(_.toAbsolutePath)
         expected =
-          s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:latest customParams"
+          s"docker run --entrypoint customCommand -v $assetDir:$assetDir daschswiss/knora-sipi:${BuildInfo.sipiVersion} customParams"
       } yield assertTrue(cmd.cmd == expected)
     },
     test("buildCommand without docker when useLocalDev is false") {

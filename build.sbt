@@ -8,6 +8,7 @@ addCommandAlias("fmtCheck", "scalafmtCheck; Test / scalafmtCheck;")
 addCommandAlias("headerCreateAll", "; all root/headerCreate Test/headerCreate")
 addCommandAlias("headerCheckAll", "; all root/headerCheck Test/headerCheck")
 
+val sipiVersion                 = "v30.6.0"
 val tapirVersion                = "1.9.5"
 val testContainersVersion       = "0.40.15"
 val zioConfigVersion            = "3.0.7"
@@ -53,6 +54,7 @@ lazy val root = (project in file("."))
       version,
       scalaVersion,
       sbtVersion,
+      BuildInfoKey("sipiVersion", sipiVersion),
       BuildInfoKey.action("gitCommit")(gitCommit)
     ),
     buildInfoOptions += BuildInfoOption.BuildTime,
@@ -108,7 +110,7 @@ lazy val root = (project in file("."))
     dockerExposedPorts                   := Seq(3340),
     Docker / defaultLinuxInstallLocation := "/sipi",
     dockerUpdateLatest                   := true,
-    dockerBaseImage                      := "daschswiss/knora-sipi:latest",
+    dockerBaseImage                      := s"daschswiss/knora-sipi:$sipiVersion",
     dockerBuildxPlatforms                := Seq("linux/arm64/v8", "linux/amd64"),
     dockerCommands += Cmd(
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
