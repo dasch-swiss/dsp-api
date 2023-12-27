@@ -509,11 +509,11 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
-      val shortcode   = Shortcode.unsafeFrom("0001")
-      val assetId     = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
-      val classLoader = getClass.getClassLoader
+      val shortcode = Shortcode.unsafeFrom("0001")
+      val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
       val files = List("jp2", "info", "png.orig")
-        .map(ext => classLoader.getResource(s"sipi/testfiles/$assetId.$ext").toURI)
+        .map(ext => s"/sipi/testfiles/$assetId.$ext")
+        .map(getClass.getResource(_).toURI)
       UnsafeZioRun.runOrThrow(
         ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(source)))
       )
@@ -532,11 +532,11 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      val shortcode   = Shortcode.unsafeFrom("0001")
-      val assetId     = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
-      val classLoader = getClass.getClassLoader
+      val shortcode = Shortcode.unsafeFrom("0001")
+      val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
       val files = List("jp2", "info", "png.orig")
-        .map(ext => classLoader.getResource(s"sipi/testfiles/$assetId.$ext").toURI)
+        .map(ext => s"/sipi/testfiles/$assetId.$ext")
+        .map(getClass.getResource(_).toURI)
       UnsafeZioRun.runOrThrow(
         ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(source)))
       )
