@@ -16,7 +16,7 @@ object SharedVolumes {
 
   final case class Images(hostPath: String) extends AnyVal
   object Images {
-    def copyFileToAssetFolder(shortcode: Shortcode, source: Path): ZIO[Images, IOException, Unit] =
+    def copyFileToAssetFolder(shortcode: Shortcode, source: Path): ZIO[Images, IOException, Unit] = {
       ZIO.fail(new FileNotFoundException(s"File not found $source")).whenZIO(Files.notExists(source)) *>
         ZIO.serviceWithZIO[SharedVolumes.Images] { imagesVolume =>
           val filename = source.filename.toString()
@@ -26,6 +26,7 @@ object SharedVolumes {
           Files.createDirectories(target.parent.head) *>
             Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
         }
+    }.logError
 
     val layer: ULayer[Images] =
       ZLayer
