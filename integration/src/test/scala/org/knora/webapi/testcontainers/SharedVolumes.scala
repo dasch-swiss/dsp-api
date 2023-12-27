@@ -1,16 +1,11 @@
 package org.knora.webapi.testcontainers
 
-import zio.ULayer
-import zio.ZIO
-import zio.ZLayer
-import zio.nio.file.Files
-import zio.nio.file.Path
-
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.nio.file.StandardCopyOption
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import zio.nio.file.{Files, Path}
+import zio.{ULayer, ZIO, ZLayer}
+
+import java.io.{FileNotFoundException, IOException}
+import java.nio.file.StandardCopyOption
 
 object SharedVolumes {
 
@@ -29,7 +24,7 @@ object SharedVolumes {
               Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
           )
           .unit
-          .orElseFail(new FileNotFoundException(s"File not found: $source"))
+          .orElseFail(new FileNotFoundException(s"Images.copyFileToAssetFolder error: file not found $source"))
           .logError
       }
 
