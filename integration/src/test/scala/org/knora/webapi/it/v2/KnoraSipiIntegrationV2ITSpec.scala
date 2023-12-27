@@ -508,13 +508,12 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
-      val basePath  = Path("sipi/testfiles")
       val shortcode = Shortcode.unsafeFrom("0001")
       val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
       UnsafeZioRun.runOrThrow(
-        SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / s"$assetId.jp2") *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / s"$assetId.info") *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / s"$assetId.png.orig")
+        SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(s"sipi/testfiles/$assetId.jp2")) *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(s"sipi/testfiles/$assetId.info")) *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(s"sipi/testfiles/$assetId.png.orig"))
       )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
@@ -532,11 +531,10 @@ class KnoraSipiIntegrationV2ITSpec
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
       UnsafeZioRun.runOrThrow {
-        val basePath  = Path("sipi/testfiles")
         val shortcode = Shortcode.unsafeFrom("0001")
-        SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / "De6XyNL4H71-D9QxghOuOPJ.jp2") *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / "De6XyNL4H71-D9QxghOuOPJ.info") *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, basePath / "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+        SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path("sipi/testfiles/De6XyNL4H71-D9QxghOuOPJ.jp2")) *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path("sipi/testfiles/De6XyNL4H71-D9QxghOuOPJ.info")) *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path("sipi/testfiles/De6XyNL4H71-D9QxghOuOPJ.png.orig"))
       }
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
