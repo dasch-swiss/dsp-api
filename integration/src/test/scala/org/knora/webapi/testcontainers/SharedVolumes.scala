@@ -23,14 +23,8 @@ object SharedVolumes {
         val seg02    = filename.substring(2, 4).toLowerCase()
         val target   = Path(s"${imagesVolume.hostPath}/${shortcode.value}/$seg01/$seg02/$filename")
         val source   = Path(this.getClass.getClassLoader.getResource(file.toString()).toURI)
-        ZIO
-          .whenZIO(Files.exists(source))(
-            Files.createDirectories(target.parent.head) *>
-              Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
-          )
-          .unit
-          .orElseFail(new FileNotFoundException(s"Images.copyFileToAssetFolder error: file not found $source"))
-          .logError
+        Files.createDirectories(target.parent.head) *>
+          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
       }
 
     val layer: ULayer[Images] =
