@@ -6,7 +6,6 @@ import zio.ZLayer
 import zio.nio.file.Files
 import zio.nio.file.Path
 
-import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.file.StandardCopyOption
 
