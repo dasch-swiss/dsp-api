@@ -5,24 +5,15 @@
 
 package org.knora.webapi.testcontainers
 
-import org.testcontainers.containers.BindMode
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.MountableFile
-import zio.Task
-import zio.URIO
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-import zio.http
-import zio.http.URL
-import zio.nio.file.Path
-
-import java.net.Inet6Address
-import java.net.InetAddress
-import java.nio.file.Paths
-
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
+import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.utility.MountableFile
+import zio.http.URL
+import zio.nio.file.Path
+import zio.{Task, URIO, URLayer, ZIO, ZLayer, http}
+
+import java.net.{Inet6Address, InetAddress}
 
 final class SipiTestContainer
     extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${BuildInfo.version}") {
@@ -76,10 +67,7 @@ object SipiTestContainer {
   def copyTestFileToContainer(file: String, target: Path): ZIO[SipiTestContainer, Throwable, Unit] =
     ZIO.serviceWithZIO[SipiTestContainer](_.copyTestFileToContainer(file, target))
 
-  def make(imagesVolume: SharedVolumes.Images): SipiTestContainer = {
-    val incunabulaImageDirPath =
-      Paths.get("..", "sipi/images/0001/b1/d0/B1D0OkEgfFp-Cew2Seur7Wi.jp2")
-
+  def make(imagesVolume: SharedVolumes.Images): SipiTestContainer =
     new SipiTestContainer()
       .withExposedPorts(1024)
       .withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST", "0.0.0.0")
@@ -97,14 +85,8 @@ object SipiTestContainer {
         "/sipi/config/sipi.docker-config.lua",
         BindMode.READ_ONLY
       )
-//      .withFileSystemBind(
-//        incunabulaImageDirPath.toString,
-//        s"$imagesDir/0001/b1/d0/B1D0OkEgfFp-Cew2Seur7Wi.jp2",
-//        BindMode.READ_ONLY
-//      )
       .withFileSystemBind(imagesVolume.hostPath, imagesDir, BindMode.READ_WRITE)
       .withLogConsumer(frame => print("SIPI:" + frame.getUtf8String))
-  }
 
   private val initSipi = ZLayer.fromZIO(
     for {

@@ -5,24 +5,21 @@
 
 package org.knora.webapi.it.v2
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.routing.{Authenticator, UnsafeZioRun}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.testcontainers.SharedVolumes
 
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.model.headers.BasicHttpCredentials
-import pekko.http.scaladsl.unmarshalling.Unmarshal
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -65,6 +62,10 @@ class KnoraSipiAuthenticationITSpec
     }
 
     "successfully get an image with provided credentials inside cookie" in {
+      //
+      val shortcode = Shortcode.unsafeFrom("0001")
+      val assetId   = AssetId.unsafeFrom("B1D0OkEgfFp-Cew2Seur7Wi")
+      UnsafeZioRun.runOrThrow(SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.jp2"))
 
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
       val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
@@ -72,7 +73,7 @@ class KnoraSipiAuthenticationITSpec
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =
-        Get(s"$baseInternalSipiUrl/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
+        Get(s"$baseInternalSipiUrl/0001/$assetId.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)
     }

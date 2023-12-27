@@ -5,37 +5,31 @@
 
 package org.knora.webapi.it.v2
 
+import dsp.errors.{AssertionException, BadRequestException}
+import dsp.valueobjects.Iri
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
-import zio.ZIO
-import zio.nio.file.Files
-import zio.nio.file.Path
-
-import java.net.URLEncoder
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
+
+import java.net.URLEncoder
+import java.nio.file.Paths
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -123,18 +117,6 @@ class KnoraSipiIntegrationV2ITSpec
   private val thingDocumentIRI = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
 
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
-
-  private def copyFileToImageFolderInContainer(shortcode: String, filename: String) =
-    UnsafeZioRun.runOrThrow(
-      ZIO.serviceWithZIO[SharedVolumes.Images] { img =>
-        val seg01  = filename.substring(0, 2).toLowerCase()
-        val seg02  = filename.substring(2, 4).toLowerCase()
-        val target = Path(s"${img.hostPath}/$shortcode/$seg01/$seg02/$filename")
-        val source = Path(s"src/test/resources/sipi/testfiles/$filename")
-        Files.createDirectories(target.parent.head) *>
-          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
-      }
-    )
 
   /**
    * Represents the information that Knora returns about an image file value that was created.
@@ -521,12 +503,16 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      val shortcode = Shortcode.unsafeFrom("0001")
+      val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
+      UnsafeZioRun.runOrThrow(
+        SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.jp2") *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.info") *>
+          SharedVolumes.Images.copyFileToAssetFolder(shortcode, s"$assetId.png.orig")
+      )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
+        .make(fileType = FileType.StillImageFile(), internalFilename = s"$assetId.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
       val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
         addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~>
@@ -539,9 +525,15 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.jp2")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.info")
-      copyFileToImageFolderInContainer("0001", "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      UnsafeZioRun.runOrThrow(
+        SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom("0001"), "De6XyNL4H71-D9QxghOuOPJ.jp2")
+      )
+      UnsafeZioRun.runOrThrow(
+        SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom("0001"), "De6XyNL4H71-D9QxghOuOPJ.info")
+      )
+      UnsafeZioRun.runOrThrow(
+        SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom("0001"), "De6XyNL4H71-D9QxghOuOPJ.png.orig")
+      )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
