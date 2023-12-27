@@ -1,16 +1,11 @@
 package org.knora.webapi.testcontainers
 
-import org.testcontainers.containers.BindMode
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.MountableFile
-import zio.Task
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
-import zio.nio.file.Path
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
+import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.utility.MountableFile
+import zio.{Task, URLayer, ZIO, ZLayer}
+import zio.nio.file.Path
 
 final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest") {
 
@@ -36,7 +31,7 @@ object DspIngestTestContainer {
 
   def make(imagesVolume: SharedVolumes.Images): DspIngestTestContainer = {
     val port = 3340
-    val container = new DspIngestTestContainer()
+    new DspIngestTestContainer()
       .withExposedPorts(port)
       .withEnv("SERVICE_PORT", s"$port")
       .withEnv("SERVICE_LOG_FORMAT", "text")
@@ -48,8 +43,6 @@ object DspIngestTestContainer {
       .withEnv("SIPI_USE_LOCAL_DEV", "false")
       .withEnv("JWT_DISABLE_AUTH", "true")
       .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
-    container.setPortBindings(java.util.List.of(s"$port:$port"))
-    container
   }
 
   private val initDspIngest = ZLayer.fromZIO(
