@@ -5,15 +5,23 @@
 
 package org.knora.webapi.testcontainers
 
-import org.knora.webapi.http.version.BuildInfo
-import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
-import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.MountableFile
+import zio.Task
+import zio.URIO
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+import zio.http
 import zio.http.URL
 import zio.nio.file.Path
-import zio.{Task, URIO, URLayer, ZIO, ZLayer, http}
 
-import java.net.{Inet6Address, InetAddress}
+import java.net.Inet6Address
+import java.net.InetAddress
+
+import org.knora.webapi.http.version.BuildInfo
+import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
 
 final class SipiTestContainer
     extends GenericContainer[SipiTestContainer](s"daschswiss/knora-sipi:${BuildInfo.version}") {

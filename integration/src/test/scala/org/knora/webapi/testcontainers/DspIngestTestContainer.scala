@@ -1,11 +1,16 @@
 package org.knora.webapi.testcontainers
 
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.utility.MountableFile
+import zio.Task
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+import zio.nio.file.Path
+
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
-import org.testcontainers.containers.{BindMode, GenericContainer}
-import org.testcontainers.utility.MountableFile
-import zio.{Task, URLayer, ZIO, ZLayer}
-import zio.nio.file.Path
 
 final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest") {
 
