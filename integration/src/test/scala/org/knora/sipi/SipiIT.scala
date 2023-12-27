@@ -15,6 +15,7 @@ import zio._
 import zio.http._
 import zio.json.DecoderOps
 import zio.json.ast.Json
+import zio.nio.file
 import zio.test._
 
 import scala.util.Failure
@@ -39,10 +40,11 @@ object SipiIT extends ZIOSpecDefault {
   private val origTestfile  = "FGiLaT4zzuV-CqwbEDFAFeS.jp2.orig"
   private val prefix        = "0001"
 
-  private def copyTestFilesToSipi = ZIO.foreach(List(imageTestfile, infoTestfile, origTestfile))(filename =>
-    SharedVolumes.Images
-      .copyFileToAssetFolder(Shortcode.unsafeFrom(prefix), zio.nio.file.Path(s"sipi/testfiles/$filename"))
-  )
+  private def copyTestFilesToSipi = ZIO.foreach(List(imageTestfile, infoTestfile, origTestfile)) { filename =>
+    val classLoader = getClass.getClassLoader
+    val source      = classLoader.getResource(s"sipi/testfiles/$filename").toURI
+    SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom(prefix), file.Path(source))
+  }
 
   private def getWithoutAuthorization(path: Path) =
     SipiTestContainer

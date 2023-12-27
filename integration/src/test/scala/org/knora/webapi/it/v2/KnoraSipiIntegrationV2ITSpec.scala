@@ -8,6 +8,7 @@ package org.knora.webapi.it.v2
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import zio.ZIO
 import zio.nio.file.Path
 
 import java.net.URLEncoder
@@ -508,12 +509,13 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
-      val shortcode = Shortcode.unsafeFrom("0001")
-      val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
+      val shortcode   = Shortcode.unsafeFrom("0001")
+      val assetId     = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
+      val classLoader = getClass.getClassLoader
+      val files = List("jp2", "info", "png.orig")
+        .map(ext => classLoader.getResource(s"sipi/testfiles/$assetId.$ext").toURI)
       UnsafeZioRun.runOrThrow(
-        SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(s"sipi/testfiles/$assetId.jp2")) *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(s"sipi/testfiles/$assetId.info")) *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(s"sipi/testfiles/$assetId.png.orig"))
+        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(source)))
       )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
@@ -530,12 +532,14 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      UnsafeZioRun.runOrThrow {
-        val shortcode = Shortcode.unsafeFrom("0001")
-        SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path("sipi/testfiles/De6XyNL4H71-D9QxghOuOPJ.jp2")) *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path("sipi/testfiles/De6XyNL4H71-D9QxghOuOPJ.info")) *>
-          SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path("sipi/testfiles/De6XyNL4H71-D9QxghOuOPJ.png.orig"))
-      }
+      val shortcode   = Shortcode.unsafeFrom("0001")
+      val assetId     = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
+      val classLoader = getClass.getClassLoader
+      val files = List("jp2", "info", "png.orig")
+        .map(ext => classLoader.getResource(s"sipi/testfiles/$assetId.$ext").toURI)
+      UnsafeZioRun.runOrThrow(
+        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(source)))
+      )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
