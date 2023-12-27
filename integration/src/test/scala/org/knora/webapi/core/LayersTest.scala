@@ -33,16 +33,16 @@ import org.knora.webapi.slice.resourceinfo.ResourceInfoLayers
 import org.knora.webapi.slice.resourceinfo.api.service.RestResourceInfoService
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.slice.search.api.SearchApiRoutes
-import org.knora.webapi.store.cache.{CacheServiceRequestMessageHandler, CacheServiceRequestMessageHandlerLive}
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.{IIIFRequestMessageHandler, IIIFRequestMessageHandlerLive}
+import org.knora.webapi.store.cache.{CacheServiceRequestMessageHandler, CacheServiceRequestMessageHandlerLive}
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.store.iiif.impl.{SipiServiceLive, SipiServiceMock}
+import org.knora.webapi.store.iiif.{IIIFRequestMessageHandler, IIIFRequestMessageHandlerLive}
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.{DspIngestTestContainer, FusekiTestContainer, SipiTestContainer}
+import org.knora.webapi.testcontainers.{DspIngestTestContainer, FusekiTestContainer, SharedVolumes, SipiTestContainer}
 import org.knora.webapi.testservices.TestClientService
 import zio._
 
@@ -55,6 +55,7 @@ object LayersTest {
   type DefaultTestEnvironmentWithSipi = DefaultTestEnvironmentWithoutSipi
     with SipiTestContainer
     with DspIngestTestContainer
+    with SharedVolumes.Images
 
   type CommonR0 = ActorSystem with AppConfigurations with SipiService with JwtService with StringFormatter
   type CommonR =
@@ -190,6 +191,7 @@ object LayersTest {
         with DspIngestTestContainer
         with FusekiTestContainer
         with JwtService
+        with SharedVolumes.Images
         with SipiService
         with SipiTestContainer
         with StringFormatter
@@ -201,6 +203,7 @@ object LayersTest {
       SipiTestContainer.layer,
       SipiServiceLive.layer,
       JwtServiceLive.layer,
+      SharedVolumes.Images.layer,
       StringFormatter.test
     )
 

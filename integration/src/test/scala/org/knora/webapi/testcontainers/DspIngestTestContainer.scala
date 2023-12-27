@@ -1,14 +1,11 @@
 package org.knora.webapi.testcontainers
 
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.MountableFile
-import zio.Task
-import zio.ULayer
-import zio.ZIO
-import zio.nio.file.Path
-
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.testcontainers.TestContainerOps.StartableOps
+import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.utility.MountableFile
+import zio.nio.file.Path
+import zio.{Task, URLayer, ZIO, ZLayer}
 
 final class DspIngestTestContainer extends GenericContainer[DspIngestTestContainer](s"daschswiss/dsp-ingest:latest") {
 
@@ -29,23 +26,33 @@ final class DspIngestTestContainer extends GenericContainer[DspIngestTestContain
 
 object DspIngestTestContainer {
 
-  private val assetDir: Path = Path("/opt/images")
+  private val assetDir = "/opt/images"
+  private val tempDir  = "/opt/temp"
 
-  private val tempDir: Path = Path("/opt/temp")
-
-  def make: DspIngestTestContainer = {
+  def make(imagesVolume: SharedVolumes.Images): DspIngestTestContainer = {
     val port = 3340
-    new DspIngestTestContainer()
+    val container = new DspIngestTestContainer()
       .withExposedPorts(port)
       .withEnv("SERVICE_PORT", s"$port")
       .withEnv("SERVICE_LOG_FORMAT", "text")
       .withEnv("JWT_AUDIENCE", s"http://localhost:$port")
       .withEnv("JWT_ISSUER", "0.0.0.0:3333")
-      .withEnv("STORAGE_ASSET_DIR", s"$assetDir")
-      .withEnv("STORAGE_TEMP_DIR", s"$tempDir")
+      .withEnv("STORAGE_ASSET_DIR", assetDir)
+      .withEnv("STORAGE_TEMP_DIR", tempDir)
       .withEnv("JWT_SECRET", "UP 4888, nice 4-8-4 steam engine")
       .withEnv("SIPI_USE_LOCAL_DEV", "false")
+      .withEnv("JWT_DISABLE_AUTH", "true")
+      .withFileSystemBind(imagesVolume.hostPath, assetDir, BindMode.READ_WRITE)
+    container.setPortBindings(java.util.List.of(s"$port:$port"))
+    container
   }
 
-  val layer: ULayer[DspIngestTestContainer] = make.toLayer
+  private val initDspIngest = ZLayer.fromZIO(
+    ZIO.serviceWithZIO[DspIngestTestContainer] { it =>
+      ZIO.attemptBlocking(it.execInContainer("mkdir", s"$tempDir")).orDie
+    }
+  )
+
+  val layer: URLayer[SharedVolumes.Images, DspIngestTestContainer] =
+    ZLayer.scoped(ZIO.service[SharedVolumes.Images].flatMap(make(_).toZio)) >+> initDspIngest
 }

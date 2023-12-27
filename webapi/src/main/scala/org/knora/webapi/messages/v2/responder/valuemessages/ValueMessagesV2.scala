@@ -1143,7 +1143,7 @@ object ValueContentV2 {
       metadata <- ingestState match {
                     case AssetIngestState.AssetIngested =>
                       val assetId = AssetId.unsafeFrom(internalFilename.substring(0, internalFilename.indexOf('.')))
-                      SipiService.getFileMetadataFromDspIngestApi(Shortcode.unsafeFrom(shortcode), assetId)
+                      SipiService.getFileMetadataFromDspIngestApi(Shortcode.unsafeFrom(shortcode), assetId).logError
                     case AssetIngestState.AssetInTemp => SipiService.getFileMetadataFromSipiTemp(internalFilename)
                   }
     } yield FileInfo(internalFilename, metadata)

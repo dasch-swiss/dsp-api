@@ -94,7 +94,7 @@ final case class DspIngestClientLive(
   override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
     for {
       request  <- authenticatedRequest.map(_.get(uri"${projectsPath(shortcode)}/assets/$assetId"))
-      response <- ZIO.blocking(request.send(backend = sttpBackend))
+      response <- ZIO.blocking(request.send(backend = sttpBackend)).logError
       result <- ZIO
                   .fromEither(response.body.flatMap(str => str.fromJson[AssetInfoResponse]))
                   .mapError(err => new IOException(s"Error parsing response: $err"))

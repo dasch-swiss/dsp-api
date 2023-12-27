@@ -11,7 +11,7 @@ import org.testcontainers.containers.{BindMode, GenericContainer}
 import org.testcontainers.utility.MountableFile
 import zio.http.URL
 import zio.nio.file.Path
-import zio.{Task, ULayer, URIO, ZIO, ZLayer, http}
+import zio.{Task, URIO, URLayer, ZIO, ZLayer, http}
 
 import java.net.{Inet6Address, InetAddress}
 import java.nio.file.Paths
@@ -45,6 +45,8 @@ final class SipiTestContainer
 
 object SipiTestContainer {
 
+  private val imagesDir = "/sipi/images"
+
   val localHostAddress: String = {
     val localhost = InetAddress.getLocalHost
     if (localhost.isInstanceOf[Inet6Address]) {
@@ -66,7 +68,7 @@ object SipiTestContainer {
   def copyTestFileToContainer(file: String, target: Path): ZIO[SipiTestContainer, Throwable, Unit] =
     ZIO.serviceWithZIO[SipiTestContainer](_.copyTestFileToContainer(file, target))
 
-  def make: SipiTestContainer = {
+  def make(imagesVolume: SharedVolumes.Images): SipiTestContainer = {
     val incunabulaImageDirPath =
       Paths.get("..", "sipi/images/0001/b1/d0/B1D0OkEgfFp-Cew2Seur7Wi.jp2")
 
@@ -87,11 +89,12 @@ object SipiTestContainer {
         "/sipi/config/sipi.docker-config.lua",
         BindMode.READ_ONLY
       )
-      .withFileSystemBind(
-        incunabulaImageDirPath.toString,
-        "/sipi/images/0001/b1/d0/B1D0OkEgfFp-Cew2Seur7Wi.jp2",
-        BindMode.READ_ONLY
-      )
+//      .withFileSystemBind(
+//        incunabulaImageDirPath.toString,
+//        s"$imagesDir/0001/b1/d0/B1D0OkEgfFp-Cew2Seur7Wi.jp2",
+//        BindMode.READ_ONLY
+//      )
+      .withFileSystemBind(imagesVolume.hostPath, imagesDir, BindMode.READ_WRITE)
       .withLogConsumer(frame => print("SIPI:" + frame.getUtf8String))
   }
 
@@ -99,12 +102,15 @@ object SipiTestContainer {
     for {
       container <- ZIO.service[SipiTestContainer]
       _ <- ZIO.attemptBlocking {
-             container.execInContainer("mkdir", "/sipi/images/tmp")
-             container.execInContainer("chmod", "777", "/sipi/images/tmp")
+             container.execInContainer("mkdir", s"$imagesDir/tmp")
+             container.execInContainer("chmod", "777", s"$imagesDir/tmp")
            }
 
     } yield container
   )
 
-  val layer: ULayer[SipiTestContainer] = (make.toLayer >>> initSipi).orDie
+  val layer: URLayer[SharedVolumes.Images, SipiTestContainer] = {
+    val container = ZLayer.scoped(ZIO.service[SharedVolumes.Images].flatMap(make(_).toZio))
+    (container >>> initSipi).orDie
+  }
 }

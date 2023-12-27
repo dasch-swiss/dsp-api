@@ -5,40 +5,32 @@
 
 package org.knora.webapi
 
-import com.typesafe.scalalogging.LazyLogging
-import com.typesafe.scalalogging.Logger
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.apache.pekko
+import org.apache.pekko.http.scaladsl.client.RequestBuilding
+import org.apache.pekko.http.scaladsl.model._
+import org.apache.pekko.testkit.TestKitBase
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithSipi
+import org.knora.webapi.core.{AppRouter, AppServer, TestStartupUtils}
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.testcontainers.SharedVolumes
+import org.knora.webapi.testservices.{FileToUpload, TestClientService}
+import org.knora.webapi.util.LogAspect
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import spray.json._
 import zio._
+import zio.nio.file.{Files, Path}
 
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.AppServer
-import org.knora.webapi.core.LayersTest.DefaultTestEnvironmentWithSipi
-import org.knora.webapi.core.TestStartupUtils
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.testcontainers.SipiTestContainer
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.util.LogAspect
-
-import pekko.http.scaladsl.client.RequestBuilding
-import pekko.http.scaladsl.model._
-import pekko.testkit.TestKitBase
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
  * This class can be used in End-to-End testing. It starts the DSP stack and
@@ -83,8 +75,6 @@ abstract class ITKnoraLiveSpec
     config <- ZIO.service[AppConfig]
   } yield (router, config)
 
-  def copyFileToImageFolderInContainer(prefix: String, filename: String) =
-    UnsafeZioRun.runOrThrow(SipiTestContainer.copyFileToImageFolderInContainer(prefix, filename))
 
   /**
    * Create router and config by unsafe running them.

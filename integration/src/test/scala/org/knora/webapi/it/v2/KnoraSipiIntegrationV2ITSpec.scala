@@ -10,10 +10,9 @@ import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
 
 import java.net.URLEncoder
-import java.nio.file.Paths
+import java.nio.file.{Paths, StandardCopyOption}
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -29,8 +28,11 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
+import zio.ZIO
+import zio.nio.file.{Files, Path}
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -118,6 +120,18 @@ class KnoraSipiIntegrationV2ITSpec
   private val thingDocumentIRI = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
 
   private val validationFun: (String, => Nothing) => String = (s, e) => Iri.validateAndEscapeIri(s).getOrElse(e)
+
+  private def copyFileToImageFolderInContainer(shortcode: String, filename: String) =
+    UnsafeZioRun.runOrThrow(
+      ZIO.serviceWithZIO[SharedVolumes.Images] { img =>
+        val seg01  = filename.substring(0, 2).toLowerCase()
+        val seg02  = filename.substring(2, 4).toLowerCase()
+        val target = Path(s"${img.hostPath}/$shortcode/$seg01/$seg02/$filename")
+        val source = Path(s"src/test/resources/sipi/testfiles/$filename")
+        Files.createDirectories(target.parent.head) *>
+          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
+      }
+    )
 
   /**
    * Represents the information that Knora returns about an image file value that was created.

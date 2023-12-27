@@ -5,15 +5,13 @@
 
 package org.knora.webapi.config
 
+import org.knora.webapi.testcontainers.{FusekiTestContainer, SharedVolumes, SipiTestContainer}
 import zio._
 import zio.test._
 
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
-
 object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
 
-  def spec = suite("AppConfigForTestContainersSpec")(
+  def spec: Spec[Scope, Nothing] = suite("AppConfigForTestContainersSpec")(
     test("successfully provide the adapted application configuration for using with test containers") {
       for {
         appConfig     <- ZIO.service[AppConfig]
@@ -22,9 +20,10 @@ object AppConfigForTestContainersZSpec extends ZIOSpecDefault {
         assertTrue(appConfig.sipi.internalPort == sipiContainer.getFirstMappedPort)
       }
     }
-  ).provide(
+  ).provideSome[Scope](
     AppConfigForTestContainers.testcontainers,
-    SipiTestContainer.layer,
-    FusekiTestContainer.layer
+    FusekiTestContainer.layer,
+    SharedVolumes.Images.layer,
+    SipiTestContainer.layer
   )
 }
