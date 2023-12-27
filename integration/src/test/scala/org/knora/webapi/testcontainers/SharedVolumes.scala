@@ -1,7 +1,8 @@
 package org.knora.webapi.testcontainers
 
+import zio.ULayer
+import zio.ZLayer
 import zio.nio.file.Files
-import zio.{ULayer, ZLayer}
 
 object SharedVolumes {
 

@@ -8,11 +8,16 @@ package org.knora.webapi.it.v2
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import zio.ZIO
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.net.URLEncoder
-import java.nio.file.{Paths, StandardCopyOption}
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
@@ -31,8 +36,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
-import zio.ZIO
-import zio.nio.file.{Files, Path}
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
