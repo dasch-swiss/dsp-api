@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.admin.permissions
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import org.knora.webapi.core.MessageRelay
@@ -15,10 +17,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
 
 final case class CreatePermissionRouteADM(
   private val routeData: KnoraRouteData,
@@ -32,21 +30,7 @@ final case class CreatePermissionRouteADM(
    * Returns the route.
    */
   override def makeRoute: Route =
-    createAdministrativePermission() ~
-      createDefaultObjectAccessPermission()
-
-  /**
-   * Create a new administrative permission
-   */
-  private def createAdministrativePermission(): Route =
-    path(permissionsBasePath / "ap") {
-      post {
-        entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => ctx =>
-          val task = getUserUuid(ctx).map(r => AdministrativePermissionCreateRequestADM(apiRequest, r.user, r.uuid))
-          runJsonRouteZ(task, ctx)
-        }
-      }
-    }
+    createDefaultObjectAccessPermission()
 
   /**
    * Create default object access permission

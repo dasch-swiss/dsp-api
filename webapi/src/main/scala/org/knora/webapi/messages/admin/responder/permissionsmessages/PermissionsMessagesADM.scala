@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.*
 
 import java.util.UUID
@@ -23,8 +23,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
-
-import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

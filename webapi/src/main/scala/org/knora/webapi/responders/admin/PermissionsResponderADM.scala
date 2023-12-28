@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
 import zio.*
+import zio.macros.accessible
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
@@ -47,6 +48,7 @@ import org.knora.webapi.util.ZioHelper
 /**
  * Provides information about permissions to other responders.
  */
+@accessible
 trait PermissionsResponderADM {
 
   /**
@@ -57,6 +59,20 @@ trait PermissionsResponderADM {
    * @return a the user's resulting set of administrative permissions for each project.
    */
   def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Task[Map[IRI, Set[PermissionADM]]]
+
+  /**
+   * Adds a new administrative permission (internal use).
+   *
+   * @param createRequest  the administrative permission to add.
+   * @param requestingUser the requesting user.
+   * @param apiRequestID   the API request ID.
+   * @return an optional [[AdministrativePermissionADM]]
+   */
+  def createAdministrativePermission(
+    createRequest: CreateAdministrativePermissionAPIRequestADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[AdministrativePermissionCreateResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -99,7 +115,7 @@ final case class PermissionsResponderADMLive(
           requestingUser,
           apiRequestID
         ) =>
-      administrativePermissionCreateRequestADM(
+      createAdministrativePermission(
         newAdministrativePermission.prepareHasPermissions,
         requestingUser,
         apiRequestID
@@ -593,30 +609,13 @@ final case class PermissionsResponderADMLive(
                }
     } yield result
 
-  /**
-   * Adds a new administrative permission (internal use).
-   *
-   * @param createRequest        the administrative permission to add.
-   * @param requestingUser       the requesting user.
-   * @param apiRequestID         the API request ID.
-   * @return an optional [[AdministrativePermissionADM]]
-   */
-  private def administrativePermissionCreateRequestADM(
+  override def createAdministrativePermission(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[AdministrativePermissionCreateResponseADM] = {
-    logger.debug("administrativePermissionCreateRequestADM")
-
-    /**
-     * The actual change project task run with an IRI lock.
-     */
-    def createPermissionTask(
-      createRequest: CreateAdministrativePermissionAPIRequestADM,
-      requestingUser: UserADM
-    ): Task[AdministrativePermissionCreateResponseADM] =
+    val createAdministrativePermissionTask =
       for {
-
         // does the permission already exist
         checkResult <- administrativePermissionForProjectGroupGetADM(createRequest.forProject, createRequest.forGroup)
 
@@ -686,19 +685,10 @@ final case class PermissionsResponderADMLive(
         _ <- triplestore.query(Update(createAdministrativePermissionSparql))
 
         // try to retrieve the newly created permission
-        maybePermission <-
-          administrativePermissionForIriGetRequestADM(
-            administrativePermissionIri = newPermissionIri,
-            requestingUser = requestingUser
-          )
-        newAdminPermission: AdministrativePermissionADM = maybePermission.administrativePermission
-      } yield AdministrativePermissionCreateResponseADM(administrativePermission = newAdminPermission)
+        created <- administrativePermissionForIriGetRequestADM(newPermissionIri, requestingUser)
+      } yield AdministrativePermissionCreateResponseADM(created.administrativePermission)
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      PERMISSIONS_GLOBAL_LOCK_IRI,
-      createPermissionTask(createRequest, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createAdministrativePermissionTask)
   }
 
   ///////////////////////////////////////////////////////////////////////////
