@@ -1,13 +1,17 @@
 package org.knora.webapi.testcontainers
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import zio.nio.file.{Files, Path}
-import zio.{ULayer, ZIO, ZLayer}
+import zio.ULayer
+import zio.ZIO
+import zio.ZLayer
+import zio.nio.file.Files
+import zio.nio.file.Path
 
 import java.io.FileNotFoundException
 import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.PosixFilePermissions
 import java.nio.file.attribute.PosixFilePermissions.asFileAttribute
+
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 
 object SharedVolumes {
 

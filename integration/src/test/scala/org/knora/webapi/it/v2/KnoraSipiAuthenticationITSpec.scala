@@ -8,7 +8,6 @@ package org.knora.webapi.it.v2
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
-import zio.nio.file.Path
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -22,9 +21,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.testcontainers.SharedVolumes
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
