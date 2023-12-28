@@ -723,7 +723,7 @@ final case class ProjectsResponderADMLive(
                        PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
                        PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
                      )
-                   ).prepareHasPermissions,
+                   ),
                    requestingUser = requestingUser,
                    apiRequestID = UUID.randomUUID()
                  )
@@ -741,7 +741,7 @@ final case class ProjectsResponderADMLive(
                        PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
                        PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
                      )
-                   ).prepareHasPermissions,
+                   ),
                    requestingUser = requestingUser,
                    apiRequestID = UUID.randomUUID()
                  )

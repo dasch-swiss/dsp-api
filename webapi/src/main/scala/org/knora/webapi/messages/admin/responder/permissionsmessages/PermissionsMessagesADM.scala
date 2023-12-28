@@ -45,9 +45,7 @@ case class CreateAdministrativePermissionAPIRequestADM(
 ) extends PermissionsADMJsonProtocol {
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-  id.foreach { iri =>
-    if (PermissionIri.from(iri).isLeft) throw BadRequestException(s"Invalid permission IRI $iri is given.")
-  }
+  id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
 
   def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
 
@@ -85,9 +83,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
 ) extends PermissionsADMJsonProtocol {
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-  id.foreach { iri =>
-    if (PermissionIri.from(iri).isLeft) throw BadRequestException(s"Invalid permission IRI $iri is given.")
-  }
+  id.foreach(iri => PermissionIri.from(iri).fold(msg => throw BadRequestException(msg), _ => ()))
 
   def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
 
@@ -129,11 +125,6 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
   }
 
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
-
-  def prepareHasPermissions: CreateDefaultObjectAccessPermissionAPIRequestADM =
-    copy(
-      hasPermissions = PermissionsMessagesUtilADM.verifyHasPermissionsDOAP(hasPermissions)
-    )
 }
 
 /**
@@ -268,8 +259,7 @@ case class PermissionChangeGroupRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!PermissionIri.from(permissionIri).isRight)
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
+  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
 }
 
 /**
@@ -287,8 +277,7 @@ case class PermissionChangeHasPermissionsRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!PermissionIri.from(permissionIri).isRight)
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
+  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
 }
 
 /**
@@ -306,8 +295,7 @@ case class PermissionChangeResourceClassRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!PermissionIri.from(permissionIri).isRight)
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
+  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
 }
 
 /**
@@ -325,8 +313,7 @@ case class PermissionChangePropertyRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!PermissionIri.from(permissionIri).isRight)
-    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
+  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
 }
 
 // Administrative Permissions
@@ -344,8 +331,7 @@ case class AdministrativePermissionForIriGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (PermissionIri.from(administrativePermissionIri).isLeft)
-    throw BadRequestException(s"Invalid permission IRI $administrativePermissionIri given.")
+  PermissionIri.from(administrativePermissionIri).fold(msg => throw BadRequestException(msg), _ => ())
 }
 
 /**

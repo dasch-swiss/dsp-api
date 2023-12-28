@@ -1695,17 +1695,6 @@ class StringFormatter private (
   }
 
   /**
-   * Creates a new permission IRI based on a UUID.
-   *
-   * @param shortcode the required project shortcode.
-   * @return the IRI of the permission object.
-   */
-  def makeRandomPermissionIri(shortcode: String): IRI = {
-    val knoraPermissionUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
-  }
-
-  /**
    * Validates a custom value IRI, throwing [[BadRequestException]] if the IRI is not valid.
    *
    * @param customValueIri the custom value IRI to be validated.

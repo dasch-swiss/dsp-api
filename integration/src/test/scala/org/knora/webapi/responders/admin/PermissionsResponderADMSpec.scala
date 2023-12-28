@@ -426,7 +426,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -448,7 +448,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -469,7 +469,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             forProject = SharedTestDataADM.imagesProjectIri,
             forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
             hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -493,7 +493,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             forProject = SharedTestDataADM.imagesProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -515,7 +515,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             forProject = SharedTestDataADM2.incunabulaProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -541,7 +541,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
               PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
             )
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -566,7 +566,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             hasPermissions = Set(
               PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)
             )
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -593,7 +593,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
               PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
             )
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -624,7 +624,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             hasPermissions = hasPermissions
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -658,7 +658,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             hasPermissions = hasPermissions
-          ).prepareHasPermissions,
+          ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )

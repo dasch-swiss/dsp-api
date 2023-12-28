@@ -5,46 +5,37 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.{MessageHandler, MessageRelay}
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import org.knora.webapi.messages.{OntologyConstants, ResponderRequest, SmartIri, StringFormatter}
+import org.knora.webapi.responders.{IriLocker, IriService, Responder}
+import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.{ProjectIri, Shortcode}
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Select, Update}
+import org.knora.webapi.util.ZioHelper
 import zio.*
 import zio.macros.accessible
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
-
-import dsp.errors.*
-import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.MessageHandler
-import org.knora.webapi.core.MessageRelay
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.responders.IriService
-import org.knora.webapi.responders.Responder
-import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.PermissionIri
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
-import org.knora.webapi.util.ZioHelper
 
 /**
  * Provides information about permissions to other responders.
@@ -110,6 +101,22 @@ trait PermissionsResponderADM {
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionDeleteResponseADM]
+
+  def createDefaultObjectAccessPermission(
+    createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
+    user: UserADM,
+    apiRequestID: UUID
+  ): Task[DefaultObjectAccessPermissionCreateResponseADM]
+
+  /**
+   * For default object access permission, we need to make sure that the value given for the permissionCode matches
+   * the value of name parameter.
+   * This method, validates the content of hasPermissions collection by verifying that both permissionCode and name
+   * indicate the same type of permission.
+   *
+   * @param hasPermissions Set of the permissions.
+   */
+  def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]]
 }
 
 final case class PermissionsResponderADMLive(
@@ -117,6 +124,7 @@ final case class PermissionsResponderADMLive(
   iriService: IriService,
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
+  projectRepo: KnoraProjectRepo,
   implicit val stringFormatter: StringFormatter
 ) extends PermissionsResponderADM
     with MessageHandler
@@ -200,15 +208,8 @@ final case class PermissionsResponderADMLive(
         PropertyEntityType,
         targetUser
       )
-    case DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest,
-          _,
-          apiRequestID
-        ) =>
-      defaultObjectAccessPermissionCreateRequestADM(
-        createRequest.prepareHasPermissions,
-        apiRequestID
-      )
+    case DefaultObjectAccessPermissionCreateRequestADM(createRequest, user, apiRequestID) =>
+      createDefaultObjectAccessPermission(createRequest, user, apiRequestID)
     case PermissionsForProjectGetRequestADM(projectIri, _, _) =>
       permissionsForProjectGetRequestADM(projectIri)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
@@ -684,7 +685,7 @@ final case class PermissionsResponderADMLive(
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
-                              stringFormatter.makeRandomPermissionIri(project.shortcode)
+                              PermissionIri.makeNew(Shortcode.unsafeFrom(project.shortcode)).value
                             )
 
         // Create the administrative permission.
@@ -1397,18 +1398,24 @@ final case class PermissionsResponderADMLive(
                }
     } yield result
 
-  private def defaultObjectAccessPermissionCreateRequestADM(
+  override def createDefaultObjectAccessPermission(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
+    user: UserADM,
     apiRequestID: UUID
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] = {
 
     /**
      * The actual change project task run with an IRI lock.
      */
-    def createPermissionTask(
-      createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM
-    ): Task[DefaultObjectAccessPermissionCreateResponseADM] =
+    val createPermissionTask =
       for {
+        projectIri <- ZIO
+                        .fromEither(ProjectIri.from(createRequest.forProject).toEither)
+                        .mapError(_.map(_.getMessage).mkString(","))
+                        .mapError(BadRequestException.apply)
+        project <- projectRepo
+                     .findById(projectIri)
+                     .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
         checkResult <- defaultObjectAccessPermissionGetADM(
                          createRequest.forProject,
                          createRequest.forGroup,
@@ -1439,27 +1446,10 @@ final case class PermissionsResponderADMLive(
               case None => ()
             }
 
-        // get project
-        maybeProject <-
-          messageRelay
-            .ask[Option[ProjectADM]](
-              ProjectGetADM(
-                identifier = IriIdentifier
-                  .fromString(createRequest.forProject)
-                  .getOrElseWith(e => throw BadRequestException(e.head.getMessage))
-              )
-            )
-
-        // if it doesnt exist then throw an error
-        project: ProjectADM =
-          maybeProject.getOrElse(
-            throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request.")
-          )
-
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri <- iriService.checkOrCreateEntityIri(
                               customPermissionIri,
-                              stringFormatter.makeRandomPermissionIri(project.shortcode)
+                              PermissionIri.makeNew(project.shortcode).value
                             )
         // verify group, if any given.
         // Is a group given that is not a built-in one?
@@ -1488,17 +1478,18 @@ final case class PermissionsResponderADMLive(
           }
 
         // Create the default object access permission.
+        permissions <- verifyHasPermissionsDOAP(createRequest.hasPermissions)
         createNewDefaultObjectAccessPermissionSparqlString = sparql.admin.txt.createNewDefaultObjectAccessPermission(
                                                                AdminConstants.permissionsDataNamedGraph.value,
                                                                permissionIri = newPermissionIri,
                                                                permissionClassIri =
                                                                  OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
-                                                               projectIri = project.id,
+                                                               projectIri = project.id.value,
                                                                maybeGroupIri = maybeGroupIri,
                                                                maybeResourceClassIri = createRequest.forResourceClass,
                                                                maybePropertyIri = createRequest.forProperty,
                                                                permissions = PermissionUtilADM.formatPermissionADMs(
-                                                                 createRequest.hasPermissions,
+                                                                 permissions,
                                                                  PermissionType.OAP
                                                                )
                                                              )
@@ -1526,9 +1517,71 @@ final case class PermissionsResponderADMLive(
     IriLocker.runWithIriLock(
       apiRequestID,
       PERMISSIONS_GLOBAL_LOCK_IRI,
-      createPermissionTask(createRequest)
+      createPermissionTask
     )
   }
+
+  override def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]] = ZIO.attempt {
+    validateDOAPHasPermissions(hasPermissions)
+    hasPermissions.map { permission =>
+      val code: Int = permission.permissionCode match {
+        case None       => PermissionTypeAndCodes(permission.name)
+        case Some(code) => code
+      }
+      val name = permission.name.isEmpty match {
+        case true =>
+          val nameCodeSet: Option[(String, Int)] = PermissionTypeAndCodes.find { case (_, code) =>
+            code == permission.permissionCode.get
+          }
+          nameCodeSet.get._1
+        case false => permission.name
+      }
+      PermissionADM(
+        name = name,
+        additionalInformation = permission.additionalInformation,
+        permissionCode = Some(code)
+      )
+    }
+  }
+
+  /**
+   * Validates the parameters of the `hasPermissions` collections of a DOAP.
+   *
+   * @param hasPermissions       Set of the permissions.
+   */
+  private def validateDOAPHasPermissions(hasPermissions: Set[PermissionADM]): Unit =
+    hasPermissions.foreach { permission =>
+      if (permission.additionalInformation.isEmpty) {
+        throw BadRequestException(s"additionalInformation of a default object access permission type cannot be empty.")
+      }
+      if (permission.name.nonEmpty && !EntityPermissionAbbreviations.contains(permission.name))
+        throw BadRequestException(
+          s"Invalid value for name parameter of hasPermissions: ${permission.name}, it should be one of " +
+            s"${EntityPermissionAbbreviations.toString}"
+        )
+      if (permission.permissionCode.nonEmpty) {
+        val code = permission.permissionCode.get
+        if (!PermissionTypeAndCodes.values.toSet.contains(code)) {
+          throw BadRequestException(
+            s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
+              s"${PermissionTypeAndCodes.values.toString}"
+          )
+        }
+      }
+      if (permission.permissionCode.isEmpty && permission.name.isEmpty) {
+        throw BadRequestException(
+          s"One of permission code or permission name must be provided for a default object access permission."
+        )
+      }
+      if (permission.permissionCode.nonEmpty && permission.name.nonEmpty) {
+        val code = permission.permissionCode.get
+        if (PermissionTypeAndCodes(permission.name) != code) {
+          throw BadRequestException(
+            s"Given permission code $code and permission name ${permission.name} are not consistent."
+          )
+        }
+      }
+    }
 
   /**
    * Gets all permissions defined inside a project.
@@ -1711,11 +1764,8 @@ final case class PermissionsResponderADMLive(
                         )
                       case doap: DefaultObjectAccessPermissionADM =>
                         // No. It is a default object access permission.
-                        val verifiedPermissions =
-                          PermissionsMessagesUtilADM.verifyHasPermissionsDOAP(
-                            changeHasPermissionsRequest.hasPermissions
-                          )
                         for {
+                          verifiedPermissions <- verifyHasPermissionsDOAP(changeHasPermissionsRequest.hasPermissions)
                           formattedPermissions <-
                             ZIO.attempt(
                               PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.OAP)
@@ -2115,16 +2165,17 @@ final case class PermissionsResponderADMLive(
 
 object PermissionsResponderADMLive {
   val layer: URLayer[
-    StringFormatter & TriplestoreService & MessageRelay & IriService & AppConfig,
+    AppConfig & IriService & KnoraProjectRepo & MessageRelay & StringFormatter & TriplestoreService,
     PermissionsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
-      config  <- ZIO.service[AppConfig]
-      iriS    <- ZIO.service[IriService]
+      ac      <- ZIO.service[AppConfig]
+      is      <- ZIO.service[IriService]
+      kpr     <- ZIO.service[KnoraProjectRepo]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(PermissionsResponderADMLive(config, iriS, mr, ts, sf))
+      handler <- mr.subscribe(PermissionsResponderADMLive(ac, is, mr, ts, kpr, sf))
     } yield handler
   }
 }

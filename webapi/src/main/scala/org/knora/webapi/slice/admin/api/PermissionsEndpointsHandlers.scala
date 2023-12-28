@@ -11,6 +11,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
@@ -60,12 +62,24 @@ final case class PermissionsEndpointsHandlers(
       }
     )
 
+  private val postPermissionsDoapHandler =
+    SecuredEndpointAndZioHandler[
+      CreateDefaultObjectAccessPermissionAPIRequestADM,
+      DefaultObjectAccessPermissionCreateResponseADM
+    ](
+      permissionsEndpoints.postPermissionsDoap,
+      user => { case (request: CreateDefaultObjectAccessPermissionAPIRequestADM) =>
+        restService.createDefaultObjectAccessPermission(request, user)
+      }
+    )
+
   private val securedHandlers =
     List(
       postPermissionsApHandler,
       getPermissionsApByProjectIriHandler,
       getPermissionsApByProjectAndGroupIriHandler,
-      deletePermissionHandler
+      deletePermissionHandler,
+      postPermissionsDoapHandler
     ).map(mapper.mapEndpointAndHandler(_))
 
   val allHanders = securedHandlers

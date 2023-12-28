@@ -5,11 +5,11 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
-import sttp.tapir.Codec
-import sttp.tapir.CodecFormat
-
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.UuidUtil
+import org.knora.webapi.messages.StringFormatter.IriDomain
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import sttp.tapir.{Codec, CodecFormat}
 
 final case class PermissionIri private (value: String) extends AnyVal
 
@@ -17,6 +17,17 @@ object PermissionIri {
 
   implicit val tapirCodec: Codec[String, PermissionIri, CodecFormat.TextPlain] =
     Codec.string.mapEither(PermissionIri.from)(_.value)
+
+  /**
+   * Creates a new permission IRI based on a UUID.
+   *
+   * @param shortcode the required project shortcode.
+   * @return the IRI of the permission object.
+   */
+  def makeNew(shortcode: Shortcode): PermissionIri = {
+    val knoraPermissionUuid = UuidUtil.makeRandomBase64EncodedUuid
+    unsafeFrom(s"http://$IriDomain/permissions/${shortcode.value}/$knoraPermissionUuid")
+  }
 
   def unsafeFrom(value: String): PermissionIri =
     from(value).fold(msg => throw new IllegalArgumentException(msg), identity)

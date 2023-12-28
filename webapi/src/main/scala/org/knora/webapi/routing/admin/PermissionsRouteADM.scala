@@ -23,12 +23,9 @@ final case class PermissionsRouteADM(
   private val routeData: KnoraRouteData,
   override protected implicit val runtime: Runtime[routing.Authenticator & StringFormatter & MessageRelay]
 ) extends KnoraRoute(routeData, runtime) {
-  private val createPermissionRoute: CreatePermissionRouteADM = CreatePermissionRouteADM(routeData, runtime)
+
   private val getPermissionRoute: GetPermissionsRouteADM      = GetPermissionsRouteADM(routeData, runtime)
   private val updatePermissionRoute: UpdatePermissionRouteADM = UpdatePermissionRouteADM(routeData, runtime)
 
-  override def makeRoute: Route =
-    createPermissionRoute.makeRoute ~
-      getPermissionRoute.makeRoute ~
-      updatePermissionRoute.makeRoute
+  override def makeRoute: Route = getPermissionRoute.makeRoute ~ updatePermissionRoute.makeRoute
 }

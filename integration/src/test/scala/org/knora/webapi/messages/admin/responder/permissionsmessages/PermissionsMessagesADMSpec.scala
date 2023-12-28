@@ -5,19 +5,21 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import java.util.UUID
-
-import dsp.errors.BadRequestException
-import dsp.errors.ForbiddenException
+import dsp.errors.{BadRequestException, ForbiddenException}
 import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
+import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.sharedtestdata._
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
+
+import java.util.UUID
 
 /**
  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
@@ -461,7 +463,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = forProject,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -477,7 +479,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(groupIri),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -494,7 +496,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -511,7 +513,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -526,7 +528,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM]
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -535,28 +537,17 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     }
 
     "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with invalid name" in {
-      val invalidName = "invalid"
       val hasPermissions = Set(
         PermissionADM(
-          name = invalidName,
+          name = "invalid",
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
           permissionCode = Some(8)
         )
       )
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
-            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-            hasPermissions = hasPermissions
-          ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(
-        caught.getMessage ===
-          s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
+      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      assertFailsWithA[BadRequestException](
+        exit,
+        "Invalid value for name parameter of hasPermissions: invalid, it should be one of " +
           s"${EntityPermissionAbbreviations.toString}"
       )
     }
@@ -570,20 +561,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           permissionCode = Some(invalidCode)
         )
       )
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
-            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-            hasPermissions = hasPermissions
-          ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(
-        caught.getMessage ===
-          s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
+
+      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      assertFailsWithA[BadRequestException](
+        exit,
+        s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
           s"${PermissionTypeAndCodes.values.toString}"
       )
     }
@@ -598,18 +580,12 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           permissionCode = Some(code)
         )
       )
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
-            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-            hasPermissions = hasPermissions
-          ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID()
-        )
+
+      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      assertFailsWithA[BadRequestException](
+        exit,
+        s"Given permission code $code and permission name $name are not consistent."
       )
-      assert(caught.getMessage === s"Given permission code $code and permission name $name are not consistent.")
     }
 
     "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission without any code or name" in {
@@ -621,20 +597,11 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           permissionCode = None
         )
       )
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
-            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-            hasPermissions = hasPermissions
-          ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(
-        caught.getMessage ===
-          s"One of permission code or permission name must be provided for a default object access permission."
+
+      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      assertFailsWithA[BadRequestException](
+        exit,
+        s"One of permission code or permission name must be provided for a default object access permission."
       )
     }
 
@@ -647,20 +614,10 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           permissionCode = Some(8)
         )
       )
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
-            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-            hasPermissions = hasPermissions
-          ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(
-        caught.getMessage ===
-          s"additionalInformation of a default object access permission type cannot be empty."
+      val exit = UnsafeZioRun.run(PermissionsResponderADM.verifyHasPermissionsDOAP(hasPermissions))
+      assertFailsWithA[BadRequestException](
+        exit,
+        s"additionalInformation of a default object access permission type cannot be empty."
       )
     }
 
@@ -671,7 +628,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.anythingUser2,
           apiRequestID = UUID.randomUUID()
         )
@@ -687,7 +644,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -703,7 +660,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -718,7 +675,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = anythingProjectIri,
             forProperty = Some(SharedTestDataADM.customValueIRI),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -733,7 +690,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
             forProject = anythingProjectIri,
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -747,7 +704,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ).prepareHasPermissions,
+          ),
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -891,7 +848,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "not update permission group if invalid group IRI given" in {
@@ -919,7 +876,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "not update hasPermissions set of a permission if invalid empty set given" in {
@@ -947,7 +904,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "not update resource class of a doap if invalid resource class IRI is given" in {
@@ -975,7 +932,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
     "not update property of a doap if invalid property IRI is given" in {

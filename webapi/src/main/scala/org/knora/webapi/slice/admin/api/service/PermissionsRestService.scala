@@ -5,25 +5,15 @@
 
 package org.knora.webapi.slice.admin.api.service
 
-import zio.Random
-import zio.Task
-import zio.ZLayer
-
-import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
+import dsp.errors.{BadRequestException, NotFoundException}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionCreateResponseADM, AdministrativePermissionGetResponseADM, AdministrativePermissionsForProjectGetResponseADM, CreateAdministrativePermissionAPIRequestADM, CreateDefaultObjectAccessPermissionAPIRequestADM, DefaultObjectAccessPermissionCreateResponseADM, PermissionDeleteResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.PermissionIri
+import org.knora.webapi.slice.admin.domain.model.{GroupIri, KnoraProject, PermissionIri}
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import zio.{Random, Task, ZLayer}
 
 final case class PermissionsRestService(
   responder: PermissionsResponderADM,
@@ -62,9 +52,20 @@ final case class PermissionsRestService(
   } yield result
 
   def deletePermission(permissionIri: PermissionIri, user: UserADM): Task[PermissionDeleteResponseADM] = for {
+    _      <- auth.ensureSystemAdmin(user)
     uuid   <- Random.nextUUID
     result <- responder.deletePermission(permissionIri, user, uuid)
   } yield result
+
+  def createDefaultObjectAccessPermission(
+    request: CreateDefaultObjectAccessPermissionAPIRequestADM,
+    user: UserADM
+  ): Task[DefaultObjectAccessPermissionCreateResponseADM] =
+    for {
+      _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
+      uuid   <- Random.nextUUID
+      result <- responder.createDefaultObjectAccessPermission(request, user, uuid)
+    } yield result
 
   def getPermissionsApByProjectAndGroupIri(
     projectIri: ProjectIri,
