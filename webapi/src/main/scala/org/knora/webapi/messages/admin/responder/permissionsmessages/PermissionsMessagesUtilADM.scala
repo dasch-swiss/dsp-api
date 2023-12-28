@@ -28,8 +28,6 @@ object PermissionsMessagesUtilADM {
   // Helper Methods //
   ////////////////////
 
-
-
   /**
    * For administrative permission we only need the name parameter of each PermissionADM given in hasPermissions collection.
    * This method, validates the content of hasPermissions collection by only keeping the values of name params.
@@ -50,8 +48,6 @@ object PermissionsMessagesUtilADM {
     }
     updatedPermissions
   }
-
-
 
   def checkPermissionIri(iri: IRI): IRI = PermissionIri.from(iri).fold(e => throw BadRequestException(e), _.value)
 }

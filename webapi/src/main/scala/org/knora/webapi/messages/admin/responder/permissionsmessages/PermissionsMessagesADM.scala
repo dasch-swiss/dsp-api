@@ -419,33 +419,6 @@ case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: 
 // Default Object Access Permissions
 
 /**
- * A message that requests all default object access permissions defined inside a project.
- * A successful response will be a list of [[DefaultObjectAccessPermissionADM]].
- *
- * @param projectIri     the project for which the default object access permissions are queried.
- * @param requestingUser the user initiating this request.
- * @param apiRequestID   the API request ID.
- */
-case class DefaultObjectAccessPermissionsForProjectGetRequestADM(
-  projectIri: IRI,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  Iri
-    .validateAndEscapeProjectIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-  ) {
-    // not a system or project admin
-    throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
-  }
-}
-
-/**
  * A message that requests an object access permission identified by project and either group / resource class / property.
  * A successful response will be a [[DefaultObjectAccessPermissionGetResponseADM]].
  *

@@ -5,7 +5,10 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import dsp.errors.{BadRequestException, ForbiddenException}
+import java.util.UUID
+
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.OntologyConstants
@@ -18,8 +21,6 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2._
 import org.knora.webapi.sharedtestdata._
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
-
-import java.util.UUID
 
 /**
  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
@@ -298,29 +299,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       assert(
         caught.getMessage === s"Default object access permissions can only be queried by system and project admin."
       )
-    }
-
-    "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionsForProjectGetRequestADM is not valid" in {
-      val projectIri = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionsForProjectGetRequestADM(
-          projectIri = projectIri,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === s"Invalid project IRI $projectIri")
-    }
-
-    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsForProjectGetRequestADM is not System or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        DefaultObjectAccessPermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
     }
 
     "return 'BadRequest' if the supplied permission IRI for DefaultObjectAccessPermissionForIriGetRequestADM is not valid" in {

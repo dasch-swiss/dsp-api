@@ -5,37 +5,51 @@
 
 package org.knora.webapi.responders.admin
 import com.typesafe.scalalogging.LazyLogging
-import dsp.errors.*
-import org.knora.webapi.*
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.{MessageHandler, MessageRelay}
-import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
-import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.*
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.twirl.queries.sparql
-import org.knora.webapi.messages.util.PermissionUtilADM
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.{OntologyConstants, ResponderRequest, SmartIri, StringFormatter}
-import org.knora.webapi.responders.{IriLocker, IriService, Responder}
-import org.knora.webapi.slice.admin.AdminConstants
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.{ProjectIri, Shortcode}
-import org.knora.webapi.slice.admin.domain.model.PermissionIri
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.{Ask, Construct, Select, Update}
-import org.knora.webapi.util.ZioHelper
 import zio.*
 import zio.macros.accessible
 
 import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
+
+import dsp.errors.*
+import org.knora.webapi.*
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.MessageHandler
+import org.knora.webapi.core.MessageRelay
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
+import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.twirl.queries.sparql
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.IriService
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
+import org.knora.webapi.util.ZioHelper
 
 /**
  * Provides information about permissions to other responders.
@@ -117,6 +131,16 @@ trait PermissionsResponderADM {
    * @param hasPermissions Set of the permissions.
    */
   def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]]
+
+  /**
+   * Gets all IRI's of all default object access permissions defined inside a project.
+   *
+   * @param projectIri the IRI of the project.
+   * @return a list of IRIs of [[DefaultObjectAccessPermissionADM]] objects.
+   */
+  def getPermissionsDaopByProjectIri(
+    projectIri: ProjectIri
+  ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -165,8 +189,6 @@ final case class PermissionsResponderADMLive(
       objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
     case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
       objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
-    case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, _, _) =>
-      defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri)
     case DefaultObjectAccessPermissionForIriGetRequestADM(
           defaultObjectAccessPermissionIri,
           requestingUser,
@@ -818,18 +840,12 @@ final case class PermissionsResponderADMLive(
   // DEFAULT OBJECT ACCESS PERMISSIONS
   ///////////////////////////////////////////////////////////////////////////
 
-  /**
-   * Gets all IRI's of all default object access permissions defined inside a project.
-   *
-   * @param projectIri     the IRI of the project.
-   * @return a list of IRIs of [[DefaultObjectAccessPermissionADM]] objects.
-   */
-  private def defaultObjectAccessPermissionsForProjectGetRequestADM(
-    projectIri: IRI
+  override def getPermissionsDaopByProjectIri(
+    projectIri: ProjectIri
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       permissionsQueryResponse <-
-        triplestore.query(Select(sparql.admin.txt.getDefaultObjectAccessPermissionsForProject(projectIri)))
+        triplestore.query(Select(sparql.admin.txt.getDefaultObjectAccessPermissionsForProject(projectIri.value)))
 
       /* extract response rows */
       permissionsQueryResponseRows = permissionsQueryResponse.results.bindings

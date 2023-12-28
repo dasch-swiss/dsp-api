@@ -5,11 +5,13 @@
 
 package org.knora.webapi.slice.admin.domain.model
 
+import sttp.tapir.Codec
+import sttp.tapir.CodecFormat
+
 import dsp.valueobjects.Iri.isIri
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import sttp.tapir.{Codec, CodecFormat}
 
 final case class PermissionIri private (value: String) extends AnyVal
 

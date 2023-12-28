@@ -28,6 +28,7 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
@@ -329,16 +330,13 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask to query about default object access permissions " should {
 
       "return all DefaultObjectAccessPermissions for project" in {
-        appActor ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        expectMsg(
-          DefaultObjectAccessPermissionsForProjectGetResponseADM(
-            defaultObjectAccessPermissions = Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p)
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.getPermissionsDaopByProjectIri(
+            ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri)
           )
+        )
+        actual shouldEqual DefaultObjectAccessPermissionsForProjectGetResponseADM(
+          Seq(perm002_d2.p, perm0003_a4.p, perm002_d1.p)
         )
       }
 

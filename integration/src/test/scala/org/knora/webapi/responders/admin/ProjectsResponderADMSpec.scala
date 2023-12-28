@@ -213,13 +213,9 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         hasAPForProjectMember.size shouldBe 1
 
         // Check Default Object Access permissions
-        appActor ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
-          projectIri = received.project.id,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val receivedDoaps = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.getPermissionsDaopByProjectIri(ProjectIri.unsafeFrom(received.project.id))
         )
-        val receivedDoaps: DefaultObjectAccessPermissionsForProjectGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionsForProjectGetResponseADM]
 
         // Check Default Object Access permission of ProjectAdmin
         val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
