@@ -67,13 +67,11 @@ class KnoraSipiAuthenticationITSpec
     }
 
     "successfully get an image with provided credentials inside cookie" in {
-      //
-      val shortcode = Shortcode.unsafeFrom("0001")
       val assetId   = AssetId.unsafeFrom("B1D0OkEgfFp-Cew2Seur7Wi")
       UnsafeZioRun.runOrThrow {
         val classLoader = getClass.getClassLoader
         val source      = classLoader.getResource(s"sipi/testfiles/$assetId.jp2").toURI
-        SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(source))
+        SharedVolumes.Images.copyFileToAssetFolder0001(Path(source))
       }
 
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)

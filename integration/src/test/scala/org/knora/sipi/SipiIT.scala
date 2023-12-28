@@ -11,6 +11,13 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.newRequestPattern
+import org.knora.sipi.MockDspApiServer.verify._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.routing.{JwtService, JwtServiceLive}
+import org.knora.webapi.testcontainers.{SharedVolumes, SipiTestContainer}
 import zio._
 import zio.http._
 import zio.json.DecoderOps
@@ -18,20 +25,7 @@ import zio.json.ast.Json
 import zio.nio.file
 import zio.test._
 
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import org.knora.sipi.MockDspApiServer.verify._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.sipimessages._
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
-import org.knora.webapi.routing.JwtService
-import org.knora.webapi.routing.JwtServiceLive
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.testcontainers.SharedVolumes
-import org.knora.webapi.testcontainers.SipiTestContainer
+import scala.util.{Failure, Success, Try}
 
 object SipiIT extends ZIOSpecDefault {
 
@@ -43,7 +37,7 @@ object SipiIT extends ZIOSpecDefault {
   private def copyTestFilesToSipi = ZIO.foreach(List(imageTestfile, infoTestfile, origTestfile)) { filename =>
     val classLoader = getClass.getClassLoader
     val source      = classLoader.getResource(s"sipi/testfiles/$filename").toURI
-    SharedVolumes.Images.copyFileToAssetFolder(Shortcode.unsafeFrom(prefix), file.Path(source))
+    SharedVolumes.Images.copyFileToAssetFolder0001(file.Path(source))
   }
 
   private def getWithoutAuthorization(path: Path) =

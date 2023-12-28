@@ -5,9 +5,25 @@
 
 package org.knora.webapi.it.v2
 
+import dsp.errors.{AssertionException, BadRequestException}
+import dsp.valueobjects.Iri
 import org.apache.pekko.http.scaladsl.model._
 import org.apache.pekko.http.scaladsl.model.headers.BasicHttpCredentials
 import org.apache.pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models.filemodels._
+import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
+import org.knora.webapi.testcontainers.SharedVolumes
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.util.MutableTestIri
 import zio.ZIO
 import zio.nio.file.Path
 
@@ -15,27 +31,6 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
-import org.knora.webapi._
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.models.filemodels._
-import org.knora.webapi.routing.UnsafeZioRun
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.testcontainers.SharedVolumes
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.util.MutableTestIri
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
@@ -509,13 +504,12 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
-      val shortcode = Shortcode.unsafeFrom("0001")
-      val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
+      val assetId = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
       val files = List("jp2", "info", "png.orig")
         .map(ext => s"/sipi/testfiles/$assetId.$ext")
         .map(getClass.getResource(_).toURI)
       UnsafeZioRun.runOrThrow(
-        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(source)))
+        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder0001(Path(source)))
       )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
@@ -532,13 +526,12 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      val shortcode = Shortcode.unsafeFrom("0001")
-      val assetId   = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
+      val assetId = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
       val files = List("jp2", "info", "png.orig")
         .map(ext => s"/sipi/testfiles/$assetId.$ext")
         .map(getClass.getResource(_).toURI)
       UnsafeZioRun.runOrThrow(
-        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder(shortcode, Path(source)))
+        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder0001(Path(source)))
       )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
