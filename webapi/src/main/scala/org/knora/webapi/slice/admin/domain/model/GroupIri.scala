@@ -41,11 +41,15 @@ object GroupIri {
 
   def unsafeFrom(value: String): GroupIri = from(value).fold(e => throw new IllegalArgumentException(e), identity)
 
-  def from(value: String): Either[String, GroupIri] =
-    if (value.isEmpty) Left("Group IRI cannot be empty.")
-    else if (!(Iri.isIri(value) && (value.startsWith("http://rdfh.ch/groups/") || builtInGroups.contains(value))))
+  def from(value: String): Either[String, GroupIri] = value match {
+    case value if value.isEmpty =>
+      Left("Group IRI cannot be empty.")
+    case value if !Iri.isIri(value) =>
       Left("Group IRI is invalid.")
-    else if (UuidUtil.hasValidLength(value.split("/").last) && !UuidUtil.hasSupportedVersion(value))
+    case value if !(value.startsWith("http://rdfh.ch/groups/") || builtInGroups.contains(value)) =>
+      Left("Group IRI is invalid.")
+    case value if UuidUtil.hasValidLength(value.split("/").last) && !UuidUtil.hasSupportedVersion(value) =>
       Left("Invalid UUID used to create IRI. Only versions 4 and 5 are supported.")
-    else Right(GroupIri(value))
+    case _ => Right(GroupIri(value))
+  }
 }

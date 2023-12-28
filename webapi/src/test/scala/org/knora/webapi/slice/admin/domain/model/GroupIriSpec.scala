@@ -13,7 +13,8 @@ import dsp.valueobjects.IriSpec.groupIriWithUUIDVersion3
 import dsp.valueobjects.IriSpec.invalidIri
 
 object GroupIriSpec extends ZIOSpecDefault {
-  val validGroupIri = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+
+  private val validGroupIri = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
 
   override val spec: Spec[Any, Nothing] = suite("GroupIri from should")(
     test("pass an empty value and return an error") {

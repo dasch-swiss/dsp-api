@@ -1552,11 +1552,7 @@ final case class PermissionsResponderADMLive(
         newDefaultObjectAcessPermission
       )
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      PERMISSIONS_GLOBAL_LOCK_IRI,
-      createPermissionTask
-    )
+    IriLocker.runWithIriLock(apiRequestID, PERMISSIONS_GLOBAL_LOCK_IRI, createPermissionTask)
   }
 
   override def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Task[Set[PermissionADM]] = ZIO.attempt {
@@ -1653,10 +1649,7 @@ final case class PermissionsResponderADMLive(
     /* verify that the permission group is updated */
     val verifyPermissionGroupUpdate =
       for {
-        updatedPermission <- permissionGetADM(
-                               permissionIri = permissionIri.value,
-                               requestingUser = requestingUser
-                             )
+        updatedPermission <- permissionGetADM(permissionIri.value, requestingUser)
         _ = updatedPermission match {
               case ap: AdministrativePermissionADM =>
                 if (ap.forGroup != groupIri.value)

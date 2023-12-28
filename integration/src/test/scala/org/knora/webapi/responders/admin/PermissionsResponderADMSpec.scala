@@ -907,7 +907,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         assertFailsWithA[ForbiddenException](
           exit,
-          s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+          s"Permission ${permissionIri.value} can only be queried/updated/deleted by system or project admin."
         )
       }
 
