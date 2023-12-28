@@ -693,31 +693,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     }
   }
 
-  "get all project permissions" should {
-    "return 'BadRequest' if the supplied project IRI for PermissionsForProjectGetRequestADM is not valid" in {
-      val projectIri = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        PermissionsForProjectGetRequestADM(
-          projectIri = projectIri,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === s"Invalid project IRI $projectIri")
-    }
-
-    "return 'ForbiddenException' if the user requesting PermissionsForProjectGetRequestADM is not system or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        PermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === "Permissions can only be queried by system and project admin.")
-    }
-  }
-
   "querying the user's 'PermissionsDataADM' with 'hasPermissionFor'" should {
     "return true if the user is allowed to create a resource (root user)" in {
 

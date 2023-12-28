@@ -27,6 +27,7 @@ import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
@@ -77,7 +78,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataADM2.multiuserUser.projects_info.keys.toSeq,
           groupIris = SharedTestDataADM2.multiuserUser.groups,
-          isInProjectAdminGroups = Seq(SharedTestDataADM.incunabulaProjectIri, SharedTestDataADM.imagesProjectIri),
+          isInProjectAdminGroups = Seq(SharedTestDataADM.incunabulaProjectIri, imagesProjectIri),
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -121,7 +122,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataADM2.imagesUser01.projects_info.keys.toSeq,
           groupIris = SharedTestDataADM2.imagesUser01.groups,
-          isInProjectAdminGroups = Seq(SharedTestDataADM.imagesProjectIri),
+          isInProjectAdminGroups = Seq(imagesProjectIri),
           isInSystemAdminGroup = false,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -168,7 +169,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "return all AdministrativePermissions for project" in {
         val result = UnsafeZioRun.runOrThrow(
-          PermissionsResponderADM.getPermissionsApByProjectIri(SharedTestDataADM.imagesProjectIri)
+          PermissionsResponderADM.getPermissionsApByProjectIri(imagesProjectIri)
         )
         result shouldEqual AdministrativePermissionsForProjectGetResponseADM(
           Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p)
@@ -178,7 +179,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return AdministrativePermission for project and group" in {
         val result = UnsafeZioRun.runOrThrow(
           PermissionsResponderADM.getPermissionsApByProjectAndGroupIri(
-            SharedTestDataADM.imagesProjectIri,
+            imagesProjectIri,
             OntologyConstants.KnoraAdmin.ProjectMember
           )
         )
@@ -214,7 +215,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
         appActor ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
           ).prepareHasPermissions,
@@ -224,7 +225,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             DuplicateValueException(
-              s"An administrative permission for project: '${SharedTestDataADM.imagesProjectIri}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
+              s"An administrative permission for project: '${imagesProjectIri}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
                     .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
                 s"Use its IRI ${perm002_a1.iri} to modify it, if necessary."
@@ -332,7 +333,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "return all DefaultObjectAccessPermissions for project" in {
         val actual = UnsafeZioRun.runOrThrow(
           PermissionsResponderADM.getPermissionsDaopByProjectIri(
-            ProjectIri.unsafeFrom(SharedTestDataADM.imagesProjectIri)
+            ProjectIri.unsafeFrom(imagesProjectIri)
           )
         )
         actual shouldEqual DefaultObjectAccessPermissionsForProjectGetResponseADM(
@@ -464,7 +465,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "create a DefaultObjectAccessPermission for project and resource class" in {
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = imagesProjectIri,
             forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
             hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
           ),
@@ -473,7 +474,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.imagesProjectIri)
+        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
         assert(
           received.defaultObjectAccessPermission.forResourceClass
             .contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
@@ -488,7 +489,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "create a DefaultObjectAccessPermission for project and property" in {
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = imagesProjectIri,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
           ),
@@ -497,7 +498,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.imagesProjectIri)
+        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
         assert(
           received.defaultObjectAccessPermission.forProperty.contains(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY)
         )
@@ -619,7 +620,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = imagesProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             hasPermissions = hasPermissions
           ),
@@ -629,7 +630,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
         assert(received.defaultObjectAccessPermission.forGroup.contains(unknownUser))
-        assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.imagesProjectIri)
+        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
         assert(
           received.defaultObjectAccessPermission.hasPermissions
             .contains(PermissionADM.restrictedViewPermission(unknownUser))
@@ -653,7 +654,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.imagesProjectIri,
+            forProject = imagesProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             hasPermissions = hasPermissions
           ),
@@ -662,7 +663,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         )
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.imagesProjectIri)
+        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
         assert(received.defaultObjectAccessPermission.forGroup.contains(projectAdmin))
         assert(received.defaultObjectAccessPermission.hasPermissions.equals(expectedPermissions))
       }
@@ -671,22 +672,19 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask to get all permissions" should {
 
       "return all permissions for 'image' project" in {
-        appActor ! PermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.getPermissionsByProjectIri(ProjectIri.unsafeFrom(imagesProjectIri))
         )
-        val received: PermissionsForProjectGetResponseADM = expectMsgType[PermissionsForProjectGetResponseADM]
-        received.allPermissions.size should be(10)
+        actual.allPermissions.size should be(10)
       }
 
       "return all permissions for 'incunabula' project" in {
-        appActor ! PermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.incunabulaProjectIri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.getPermissionsByProjectIri(
+            ProjectIri.unsafeFrom(SharedTestDataADM.incunabulaProjectIri)
+          )
         )
-        expectMsg(
+        actual shouldEqual
           PermissionsForProjectGetResponseADM(allPermissions =
             Set(
               PermissionInfoADM(
@@ -719,7 +717,6 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
               )
             )
           )
-        )
       }
     }
 

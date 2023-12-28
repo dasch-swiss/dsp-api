@@ -141,6 +141,14 @@ trait PermissionsResponderADM {
   def getPermissionsDaopByProjectIri(
     projectIri: ProjectIri
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM]
+
+  /**
+   * Gets all permissions defined inside a project.
+   *
+   * @param projectIri the IRI of the project.
+   * @return a list of of [[PermissionInfoADM]] objects.
+   */
+  def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -232,8 +240,6 @@ final case class PermissionsResponderADMLive(
       )
     case DefaultObjectAccessPermissionCreateRequestADM(createRequest, user, apiRequestID) =>
       createDefaultObjectAccessPermission(createRequest, user, apiRequestID)
-    case PermissionsForProjectGetRequestADM(projectIri, _, _) =>
-      permissionsForProjectGetRequestADM(projectIri)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
     case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID) =>
@@ -1602,16 +1608,17 @@ final case class PermissionsResponderADMLive(
   /**
    * Gets all permissions defined inside a project.
    *
-   * @param projectIRI           the IRI of the project.
+   * @param projectIri           the IRI of the project.
    * @return a list of of [[PermissionInfoADM]] objects.
    */
-  private def permissionsForProjectGetRequestADM(projectIRI: IRI): Task[PermissionsForProjectGetResponseADM] =
+  override def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
     for {
-      permissionsQueryResponseStatements <- triplestore
-                                              .query(Construct(sparql.admin.txt.getProjectPermissions(projectIRI)))
-                                              .map(_.statements)
+      permissionsQueryResponseStatements <-
+        triplestore
+          .query(Construct(sparql.admin.txt.getProjectPermissions(projectIri.value)))
+          .map(_.statements)
       _ <- ZIO.when(permissionsQueryResponseStatements.isEmpty) {
-             ZIO.fail(NotFoundException(s"No permission could be found for $projectIRI."))
+             ZIO.fail(NotFoundException(s"No permission could be found for ${projectIri.value}."))
            }
       permissionsInfo =
         permissionsQueryResponseStatements.map { statement =>
@@ -1619,7 +1626,7 @@ final case class PermissionsResponderADMLive(
           val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
           PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
         }.toSet
-    } yield permissionsmessages.PermissionsForProjectGetResponseADM(permissionsInfo)
+    } yield PermissionsForProjectGetResponseADM(permissionsInfo)
 
   /**
    * Update a permission's group

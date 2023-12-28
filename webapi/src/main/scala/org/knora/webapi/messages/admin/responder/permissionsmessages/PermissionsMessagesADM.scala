@@ -218,33 +218,6 @@ case class PermissionDataGetADM(
 }
 
 /**
- * A message that requests all permissions defined inside a project.
- * A successful response will be a [[PermissionsForProjectGetResponseADM]].
- *
- * @param projectIri           the project for which the permissions are queried.
- * @param requestingUser       the user initiation the request.
- * @param apiRequestID         the API request ID.
- */
-case class PermissionsForProjectGetRequestADM(
-  projectIri: IRI,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  Iri
-    .validateAndEscapeProjectIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-  ) {
-    // not a system or project admin
-    throw ForbiddenException("Permissions can only be queried by system and project admin.")
-  }
-}
-
-/**
  * A message that requests update of a permission's group.
  * A successful response will be a [[PermissionItemADM]].
  *

@@ -15,6 +15,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefau
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -63,6 +64,14 @@ final case class PermissionsEndpointsHandlers(
       }
     )
 
+  private val getPermissionsByProjectIriHandler =
+    SecuredEndpointAndZioHandler[IriIdentifier, PermissionsForProjectGetResponseADM](
+      permissionsEndpoints.getPermissionsByProjectIri,
+      user => { case (projectIri: IriIdentifier) =>
+        restService.getPermissionsByProjectIri(projectIri.value, user)
+      }
+    )
+
   private val deletePermissionHandler =
     SecuredEndpointAndZioHandler[PermissionIri, PermissionDeleteResponseADM](
       permissionsEndpoints.deletePermission,
@@ -88,6 +97,7 @@ final case class PermissionsEndpointsHandlers(
       getPermissionsApByProjectIriHandler,
       getPermissionsApByProjectAndGroupIriHandler,
       getPermissionsDaopByProjectIriHandler,
+      getPermissionsByProjectIriHandler,
       deletePermissionHandler,
       postPermissionsDoapHandler
     ).map(mapper.mapEndpointAndHandler(_))
