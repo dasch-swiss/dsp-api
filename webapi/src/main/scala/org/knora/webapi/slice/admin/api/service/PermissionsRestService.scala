@@ -13,6 +13,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
@@ -47,6 +48,14 @@ final case class PermissionsRestService(
       .findById(projectIri)
       .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
       .flatMap(auth.ensureSystemAdminOrProjectAdmin(user, _))
+
+  def getPermissionsApByProjectIri(
+    value: KnoraProject.ProjectIri,
+    user: UserADM
+  ): Task[AdministrativePermissionsForProjectGetResponseADM] = for {
+    _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
+    result <- responder.getPermissionsApByProjectIri(value.value)
+  } yield result
 
   def getPermissionsApByProjectAndGroupIri(
     projectIri: KnoraProject.ProjectIri,

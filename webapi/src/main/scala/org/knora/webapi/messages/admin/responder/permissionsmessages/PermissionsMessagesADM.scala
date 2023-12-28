@@ -333,33 +333,6 @@ case class PermissionChangePropertyRequestADM(
 // Administrative Permissions
 
 /**
- * A message that requests all administrative permissions defined inside a project.
- * A successful response will be a [[AdministrativePermissionsForProjectGetResponseADM]].
- *
- * @param projectIri     the project for which the administrative permissions are queried.
- * @param requestingUser the user initiation the request.
- * @param apiRequestID   the API request ID.
- */
-case class AdministrativePermissionsForProjectGetRequestADM(
-  projectIri: IRI,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  Iri
-    .validateAndEscapeProjectIri(projectIri)
-    .getOrElse(throw BadRequestException(s"Invalid project IRI $projectIri"))
-
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-  ) {
-    // not a system or project admin
-    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
-  }
-}
-
-/**
  * A message that requests an administrative permission object identified through his IRI.
  * A successful response will be a [[AdministrativePermissionGetResponseADM]] object.
  *

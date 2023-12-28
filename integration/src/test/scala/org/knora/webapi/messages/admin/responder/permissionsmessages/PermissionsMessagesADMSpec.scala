@@ -25,28 +25,6 @@ import org.knora.webapi.sharedtestdata._
 class PermissionsMessagesADMSpec extends CoreSpec {
 
   "Administrative Permission Get Requests" should {
-    "return 'BadRequest' if the supplied project IRI for AdministrativePermissionsForProjectGetRequestADM is not valid" in {
-      val projectIri = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionsForProjectGetRequestADM(
-          projectIri = projectIri,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === s"Invalid project IRI $projectIri")
-    }
-
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionsForProjectGetRequestADM is not system or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        AdministrativePermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
-    }
 
     "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionForIriGetRequestADM is not valid" in {
       val permissionIri = "invalid-permission-IRI"

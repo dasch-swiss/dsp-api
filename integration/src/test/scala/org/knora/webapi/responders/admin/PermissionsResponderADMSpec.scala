@@ -164,15 +164,11 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask about administrative permissions " should {
 
       "return all AdministrativePermissions for project" in {
-        appActor ! AdministrativePermissionsForProjectGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val result = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.getPermissionsApByProjectIri(SharedTestDataADM.imagesProjectIri)
         )
-        expectMsg(
-          AdministrativePermissionsForProjectGetResponseADM(
-            Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p)
-          )
+        result shouldEqual AdministrativePermissionsForProjectGetResponseADM(
+          Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p)
         )
       }
 

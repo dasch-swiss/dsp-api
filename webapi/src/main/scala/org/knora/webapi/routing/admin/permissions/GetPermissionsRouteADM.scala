@@ -30,18 +30,8 @@ final case class GetPermissionsRouteADM(
    * Returns the route.
    */
   override def makeRoute: Route =
-    getAdministrativePermissionsForProject() ~
-      getDefaultObjectAccessPermissionsForProject() ~
+    getDefaultObjectAccessPermissionsForProject() ~
       getPermissionsForProject()
-
-  private def getAdministrativePermissionsForProject(): Route =
-    path(permissionsBasePath / "ap" / Segment) { projectIri =>
-      get { requestContext =>
-        val task = getUserUuid(requestContext)
-          .map(r => AdministrativePermissionsForProjectGetRequestADM(projectIri, r.user, r.uuid))
-        runJsonRouteZ(task, requestContext)
-      }
-    }
 
   private def getDefaultObjectAccessPermissionsForProject(): Route =
     path(permissionsBasePath / "doap" / Segment) { projectIri =>

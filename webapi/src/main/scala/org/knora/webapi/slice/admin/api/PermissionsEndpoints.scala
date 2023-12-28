@@ -12,6 +12,7 @@ import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
@@ -26,6 +27,11 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .description("Create a new administrative permission")
     .in(sprayJsonBody[CreateAdministrativePermissionAPIRequestADM])
     .out(sprayJsonBody[AdministrativePermissionCreateResponseADM])
+
+  val getPermissionsApByProjectIri = base.securedEndpoint.get
+    .in(permissionsBase / "ap" / projectIri)
+    .description("Get all administrative permissions for a project.")
+    .out(sprayJsonBody[AdministrativePermissionsForProjectGetResponseADM])
 
   private val groupIriPathVar = path[String].name("groupIri").description("The IRI of the group")
 

@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
@@ -191,15 +192,8 @@ class ProjectsResponderADMSpec extends CoreSpec with ImplicitSender {
         newProjectIri.set(received.project.id)
 
         // Check Administrative Permissions
-        appActor ! AdministrativePermissionsForProjectGetRequestADM(
-          projectIri = received.project.id,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        // Check Administrative Permission of ProjectAdmin
-        val receivedApAdmin: AdministrativePermissionsForProjectGetResponseADM =
-          expectMsgType[AdministrativePermissionsForProjectGetResponseADM]
+        val receivedApAdmin =
+          UnsafeZioRun.runOrThrow(PermissionsResponderADM.getPermissionsApByProjectIri(received.project.id))
 
         val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter { ap: AdministrativePermissionADM =>
           ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&

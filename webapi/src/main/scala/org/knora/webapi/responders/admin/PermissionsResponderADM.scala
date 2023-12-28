@@ -85,6 +85,14 @@ trait PermissionsResponderADM {
     projectIri: IRI,
     groupIri: IRI
   ): Task[AdministrativePermissionGetResponseADM]
+
+  /**
+   * Gets all administrative permissions defined inside a project.
+   *
+   * @param projectIRI the IRI of the project.
+   * @return a list of IRIs of [[AdministrativePermissionADM]] objects.
+   */
+  def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -114,8 +122,6 @@ final case class PermissionsResponderADMLive(
           _
         ) =>
       permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup)
-    case AdministrativePermissionsForProjectGetRequestADM(projectIri, _, _) =>
-      administrativePermissionsForProjectGetRequestADM(projectIri)
     case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, _) =>
       administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
     case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, _) =>
@@ -479,13 +485,7 @@ final case class PermissionsResponderADMLive(
     result
   }
 
-  /**
-   * Gets all administrative permissions defined inside a project.
-   *
-   * @param projectIRI     the IRI of the project.
-   * @return a list of IRIs of [[AdministrativePermissionADM]] objects.
-   */
-  private def administrativePermissionsForProjectGetRequestADM(projectIRI: IRI) =
+  override def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       permissionsQueryResponseRows <-
         triplestore
