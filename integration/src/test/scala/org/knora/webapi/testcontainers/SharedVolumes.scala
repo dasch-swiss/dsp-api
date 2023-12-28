@@ -20,17 +20,25 @@ object SharedVolumes {
           val seg01     = filename.substring(0, 2).toLowerCase()
           val seg02     = filename.substring(2, 4).toLowerCase()
           val targetDir = Path(s"${imagesVolume.hostPath}/${shortcode.value}/$seg01/$seg02")
-          Files.createDirectories(targetDir, asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx"))).logError *>
+          Files
+            .createDirectories(targetDir, asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx")))
+            .logError
+            .whenZIO(Files.notExists(targetDir)) *>
             Files.copy(source, targetDir / filename, StandardCopyOption.REPLACE_EXISTING)
         }
 
     val layer: ULayer[Images] =
-      ZLayer
-        .scoped(for {
+      ZLayer scoped {
+        val tmp = Option(System.getenv("RUNNER_TEMP")).getOrElse(System.getProperty("java.io.tmpdir"))
+        for {
           tmpPath <-
-            Files.createTempDirectoryScoped(None, Seq(asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx"))))
+            Files.createTempDirectoryScoped(
+              Path(tmp),
+              None,
+              Seq(asFileAttribute(PosixFilePermissions.fromString("rwxrwxrwx")))
+            )
           absDir <- tmpPath.toAbsolutePath.map(_.toString())
-        } yield Images(absDir))
-        .orDie
+        } yield Images(absDir)
+      }.orDie
   }
 }
