@@ -217,7 +217,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Docker / dockerRepository := Some("daschswiss"),
     Docker / packageName      := "knora-api",
     dockerUpdateLatest        := true,
-    dockerBaseImage           := "eclipse-temurin:17-jre-focal",
+    dockerBaseImage           := "eclipse-temurin:21-jre-jammy",
     dockerBuildxPlatforms     := Seq("linux/arm64/v8", "linux/amd64"),
     Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333, 3339),
