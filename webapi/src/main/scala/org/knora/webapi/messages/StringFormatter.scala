@@ -125,7 +125,7 @@ object StringFormatter {
   /**
    * The domain name used to construct Knora IRIs.
    */
-  private val IriDomain: String = "rdfh.ch"
+  val IriDomain: String = "rdfh.ch"
 
   /*
 
@@ -1671,17 +1671,6 @@ class StringFormatter private (
   def makeRandomProjectIri: IRI = {
     val uuid = UuidUtil.makeRandomBase64EncodedUuid
     s"http://$IriDomain/projects/$uuid"
-  }
-
-  /**
-   * Creates a new group IRI based on a UUID.
-   *
-   * @param shortcode the required project shortcode.
-   * @return a new group IRI.
-   */
-  def makeRandomGroupIri(shortcode: String): String = {
-    val knoraGroupUuid = UuidUtil.makeRandomBase64EncodedUuid
-    s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
   }
 
   /**
