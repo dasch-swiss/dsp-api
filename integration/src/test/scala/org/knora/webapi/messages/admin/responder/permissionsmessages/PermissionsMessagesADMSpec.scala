@@ -991,17 +991,5 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       )
       assert(caught.getMessage === s"Invalid property IRI $propertyIri is given.")
     }
-
-    "return 'BadRequest' if the supplied permission IRI for PermissionDeleteRequestADM is not valid" in {
-      val permissionIri = "invalid-permission-Iri"
-      val caught = intercept[BadRequestException](
-        PermissionDeleteRequestADM(
-          permissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
-    }
   }
 }

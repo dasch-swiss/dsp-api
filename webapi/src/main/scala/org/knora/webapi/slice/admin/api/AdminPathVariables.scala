@@ -21,12 +21,12 @@ object AdminPathVariables {
     path[GroupIri]
       .name("groupIri")
       .description("The IRI of a group. Must be URL-encoded.")
-      .example(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/qCSZzdAJCBqw_2snW5Q7NC"))
+      .example(GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ"))
 
   val permissionIri: EndpointInput.PathCapture[PermissionIri] =
     path[PermissionIri]("permissionIri")
       .description("The IRI of a permission. Must be URL-encoded.")
-      .example(PermissionIri.unsafeFrom("http://rdfh.ch/permissions/qCSZzdAJCBqw_2snW5Q7NC"))
+      .example(PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"))
 
   val projectIri: EndpointInput.PathCapture[IriIdentifier] =
     path[IriIdentifier]

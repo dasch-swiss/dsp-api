@@ -659,19 +659,6 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
   PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
 }
 
-/**
- * A message that requests deletion of a permission identified through its IRI.
- * A successful response will be [[PermissionDeleteResponseADM]] with deleted=true.
- *
- * @param permissionIri               the iri of the permission object.
- * @param requestingUser              the user initiating the request.
- * @param apiRequestID                the API request ID.
- */
-case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID)
-    extends PermissionsResponderRequestADM {
-  PermissionsMessagesUtilADM.checkPermissionIri(permissionIri)
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 

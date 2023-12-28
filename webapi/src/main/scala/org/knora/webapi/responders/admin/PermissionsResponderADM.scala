@@ -38,6 +38,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -105,7 +106,7 @@ trait PermissionsResponderADM {
    *         fails with a NotFoundException if no permission is found for the given IRI.
    */
   def deletePermission(
-    permissionIri: IRI,
+    permissionIri: PermissionIri,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionDeleteResponseADM]
@@ -245,8 +246,6 @@ final case class PermissionsResponderADMLive(
           apiRequestID
         ) =>
       permissionPropertyChangeRequestADM(permissionIri, changePermissionPropertyRequest, requestingUser, apiRequestID)
-    case PermissionDeleteRequestADM(permissionIri, requestingUser, apiRequestID) =>
-      deletePermission(permissionIri, requestingUser, apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -1915,11 +1914,11 @@ final case class PermissionsResponderADMLive(
   }
 
   override def deletePermission(
-    permissionIri: IRI,
+    permissionIri: PermissionIri,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionDeleteResponseADM] = {
-    val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionIriInternal = permissionIri.value.toSmartIri.toOntologySchema(InternalSchema).toString
     def permissionDeleteTask(): Task[PermissionDeleteResponseADM] =
       for {
         // check that there is a permission with a given IRI
@@ -1928,14 +1927,14 @@ final case class PermissionsResponderADMLive(
         _ <-
           ZIO
             .fail(UpdateNotPerformedException(s"Permission $permissionIriInternal is in use and cannot be deleted."))
-            .whenZIO(triplestore.query(Ask(sparql.admin.txt.isEntityUsed(permissionIri))))
+            .whenZIO(triplestore.query(Ask(sparql.admin.txt.isEntityUsed(permissionIri.value))))
         _          <- deletePermission(permissionIriInternal)
         sf          = StringFormatter.getGeneralInstance
-        iriExternal = sf.toSmartIri(permissionIri).toOntologySchema(ApiV2Complex).toString
+        iriExternal = sf.toSmartIri(permissionIri.value).toOntologySchema(ApiV2Complex).toString
 
       } yield PermissionDeleteResponseADM(iriExternal, deleted = true)
 
-    IriLocker.runWithIriLock(apiRequestID, permissionIri, permissionDeleteTask())
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionDeleteTask())
   }
 
   /**

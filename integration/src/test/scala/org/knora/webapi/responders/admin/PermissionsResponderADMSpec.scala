@@ -28,6 +28,8 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
+import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.
@@ -1414,40 +1416,33 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "ask to delete a permission" should {
       "throw BadRequestException if given IRI is not a permission IRI" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/RkVssk8XRVO9hZ3VR5IpLA"
-        appActor ! PermissionDeleteRequestADM(
-          permissionIri = permissionIri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/RkVssk8XRVO9hZ3VR5IpLA")
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM.deletePermission(permissionIri, rootUser, UUID.randomUUID())
         )
-        expectMsg(Failure(NotFoundException(s"Permission with given IRI: $permissionIri not found.")))
+        assertFailsWithA[NotFoundException](
+          exit,
+          s"Permission with given IRI: ${permissionIri.value} not found."
+        )
       }
 
       "throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
-        appActor ! PermissionDeleteRequestADM(
-          permissionIri = permissionIri,
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM.deletePermission(permissionIri, SharedTestDataADM.imagesUser02, UUID.randomUUID())
         )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
-            )
-          )
+        assertFailsWithA[ForbiddenException](
+          exit,
+          s"Permission ${permissionIri.value} can only be queried/updated/deleted by system or project admin."
         )
       }
 
       "erase a permission with given IRI" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
-        appActor ! PermissionDeleteRequestADM(
-          permissionIri = permissionIri,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.deletePermission(permissionIri, rootUser, UUID.randomUUID())
         )
-        val received: PermissionDeleteResponseADM = expectMsgType[PermissionDeleteResponseADM]
-        assert(received.deleted)
+        assert(actual.deleted)
       }
     }
   }

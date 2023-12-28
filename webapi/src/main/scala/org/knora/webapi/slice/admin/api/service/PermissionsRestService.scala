@@ -20,6 +20,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -46,14 +47,14 @@ final case class PermissionsRestService(
     _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
   } yield ()
 
-  private def ensureProjectIriExistsAndUserHasAccess(projectIri: KnoraProject.ProjectIri, user: UserADM): Task[Unit] =
+  private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: UserADM): Task[Unit] =
     projectRepo
       .findById(projectIri)
       .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
       .flatMap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   def getPermissionsApByProjectIri(
-    value: KnoraProject.ProjectIri,
+    value: ProjectIri,
     user: UserADM
   ): Task[AdministrativePermissionsForProjectGetResponseADM] = for {
     _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
@@ -62,11 +63,11 @@ final case class PermissionsRestService(
 
   def deletePermission(permissionIri: PermissionIri, user: UserADM): Task[PermissionDeleteResponseADM] = for {
     uuid   <- Random.nextUUID
-    result <- responder.deletePermission(permissionIri.value, user, uuid)
+    result <- responder.deletePermission(permissionIri, user, uuid)
   } yield result
 
   def getPermissionsApByProjectAndGroupIri(
-    projectIri: KnoraProject.ProjectIri,
+    projectIri: ProjectIri,
     groupIri: GroupIri,
     user: UserADM
   ): Task[AdministrativePermissionGetResponseADM] = for {
