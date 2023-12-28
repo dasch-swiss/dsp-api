@@ -40,6 +40,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
@@ -149,6 +150,23 @@ trait PermissionsResponderADM {
    * @return a list of of [[PermissionInfoADM]] objects.
    */
   def getPermissionsByProjectIri(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM]
+
+  /**
+   * Update a permission's group
+   *
+   * @param permissionIri                the IRI of the permission.
+   * @param changePermissionGroupRequest the request to change group.
+   * @param requestingUser               the [[UserADM]] of the requesting user.
+   * @param apiRequestID                 the API request ID.
+   * @return [[PermissionGetResponseADM]].
+   *         fails with an UpdateNotPerformedException if something has gone wrong.
+   */
+  def updatePermissionsGroup(
+    permissionIri: PermissionIri,
+    groupIri: GroupIri,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[PermissionGetResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -242,8 +260,6 @@ final case class PermissionsResponderADMLive(
       createDefaultObjectAccessPermission(createRequest, user, apiRequestID)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
-    case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID) =>
-      permissionGroupChangeRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID)
     case PermissionChangeHasPermissionsRequestADM(
           permissionIri,
           changePermissionHasPermissionsRequest,
@@ -1628,44 +1644,34 @@ final case class PermissionsResponderADMLive(
         }.toSet
     } yield PermissionsForProjectGetResponseADM(permissionsInfo)
 
-  /**
-   * Update a permission's group
-   *
-   * @param permissionIri                the IRI of the permission.
-   * @param changePermissionGroupRequest the request to change group.
-   * @param requestingUser               the [[UserADM]] of the requesting user.
-   * @param apiRequestID                 the API request ID.
-   * @return [[PermissionGetResponseADM]].
-   *         fails with an UpdateNotPerformedException if something has gone wrong.
-   */
-  private def permissionGroupChangeRequestADM(
-    permissionIri: IRI,
-    changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
+  override def updatePermissionsGroup(
+    permissionIri: PermissionIri,
+    groupIri: GroupIri,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM] = {
     /* verify that the permission group is updated */
-    def verifyPermissionGroupUpdate: Task[PermissionItemADM] =
+    val verifyPermissionGroupUpdate =
       for {
         updatedPermission <- permissionGetADM(
-                               permissionIri = permissionIri,
+                               permissionIri = permissionIri.value,
                                requestingUser = requestingUser
                              )
         _ = updatedPermission match {
               case ap: AdministrativePermissionADM =>
-                if (ap.forGroup != changePermissionGroupRequest.forGroup)
+                if (ap.forGroup != groupIri.value)
                   throw UpdateNotPerformedException(
-                    s"The group of permission $permissionIri was not updated. Please report this as a bug."
+                    s"The group of permission ${permissionIri.value} was not updated. Please report this as a bug."
                   )
               case doap: DefaultObjectAccessPermissionADM =>
-                if (doap.forGroup.get != changePermissionGroupRequest.forGroup) {
+                if (doap.forGroup.get != groupIri.value) {
                   throw UpdateNotPerformedException(
-                    s"The group of permission $permissionIri was not updated. Please report this as a bug."
+                    s"The group of permission ${permissionIri.value} was not updated. Please report this as a bug."
                   )
                 } else {
                   if (doap.forProperty.isDefined || doap.forResourceClass.isDefined)
                     throw UpdateNotPerformedException(
-                      s"The $permissionIri is not correctly updated. Please report this as a bug."
+                      s"The ${permissionIri.value} is not correctly updated. Please report this as a bug."
                     )
                 }
             }
@@ -1674,23 +1680,16 @@ final case class PermissionsResponderADMLive(
     /**
      * The actual task run with an IRI lock.
      */
-    def permissionGroupChangeTask(
-      permissioniri: IRI,
-      changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-      requestingUser: UserADM
-    ): Task[PermissionGetResponseADM] =
+    val permissionGroupChangeTask: Task[PermissionGetResponseADM] =
       for {
         // get permission
-        permission <- permissionGetADM(permissioniri, requestingUser)
+        permission <- permissionGetADM(permissionIri.value, requestingUser)
         response <- permission match {
                       // Is permission an administrative permission?
                       case ap: AdministrativePermissionADM =>
                         // Yes. Update the group
                         for {
-                          _ <- updatePermission(
-                                 permissionIri = ap.iri,
-                                 maybeGroup = Some(changePermissionGroupRequest.forGroup)
-                               )
+                          _                 <- updatePermission(permissionIri = ap.iri, maybeGroup = Some(groupIri.value))
                           updatedPermission <- verifyPermissionGroupUpdate
                         } yield AdministrativePermissionGetResponseADM(
                           updatedPermission.asInstanceOf[AdministrativePermissionADM]
@@ -1699,10 +1698,7 @@ final case class PermissionsResponderADMLive(
                         // No. It is a default object access permission
                         for {
                           // if a doap permission has a group defined, it cannot have either resourceClass or property
-                          _ <- updatePermission(
-                                 permissionIri = doap.iri,
-                                 maybeGroup = Some(changePermissionGroupRequest.forGroup)
-                               )
+                          _                 <- updatePermission(permissionIri = doap.iri, maybeGroup = Some(groupIri.value))
                           updatedPermission <- verifyPermissionGroupUpdate
                         } yield DefaultObjectAccessPermissionGetResponseADM(
                           updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
@@ -1710,11 +1706,7 @@ final case class PermissionsResponderADMLive(
                     }
       } yield response
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      permissionIri,
-      permissionGroupChangeTask(permissionIri, changePermissionGroupRequest, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionGroupChangeTask)
   }
 
   /**

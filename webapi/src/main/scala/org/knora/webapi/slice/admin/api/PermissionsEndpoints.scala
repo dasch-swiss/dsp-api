@@ -13,11 +13,13 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
@@ -65,6 +67,12 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .description("Create a new default object access permission")
     .in(sprayJsonBody[CreateDefaultObjectAccessPermissionAPIRequestADM])
     .out(sprayJsonBody[DefaultObjectAccessPermissionCreateResponseADM])
+
+  val putPermissionsProjectIriGroup = base.securedEndpoint.put
+    .in(permissionsBase / permissionIri / "group")
+    .description("Update a permission's group")
+    .in(sprayJsonBody[ChangePermissionGroupApiRequestADM])
+    .out(sprayJsonBody[PermissionGetResponseADM])
 }
 
 object PermissionsEndpoints {

@@ -7,6 +7,7 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.Random
 import zio.Task
+import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.BadRequestException
@@ -14,10 +15,13 @@ import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
@@ -86,7 +90,22 @@ final case class PermissionsRestService(
       result <- responder.createDefaultObjectAccessPermission(request, user, uuid)
     } yield result
 
-  def getPermissionsDaopByProjectIri(projectIri: ProjectIri, user: UserADM) =
+  def updatePermissionGroup(
+    permissionIri: PermissionIri,
+    request: ChangePermissionGroupApiRequestADM,
+    user: UserADM
+  ): Task[PermissionGetResponseADM] =
+    for {
+      _        <- auth.ensureSystemAdmin(user)
+      groupIri <- ZIO.fromEither(GroupIri.from(request.forGroup)).mapError(BadRequestException(_))
+      uuid     <- Random.nextUUID
+      result   <- responder.updatePermissionsGroup(permissionIri, groupIri, user, uuid)
+    } yield result
+
+  def getPermissionsDaopByProjectIri(
+    projectIri: ProjectIri,
+    user: UserADM
+  ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
       result <- responder.getPermissionsDaopByProjectIri(projectIri)

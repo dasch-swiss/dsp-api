@@ -12,11 +12,9 @@ import zio.*
 
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionHasPermissionsApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionPropertyApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionResourceClassApiRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionChangeGroupRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionChangeHasPermissionsRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionChangePropertyRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionChangeResourceClassRequestADM
@@ -42,24 +40,9 @@ final case class PermissionsRouteADM(
    * Returns the route.
    */
   override def makeRoute: Route =
-    updatePermissionGroup() ~
-      updatePermissionHasPermissions() ~
+    updatePermissionHasPermissions() ~
       updatePermissionResourceClass() ~
       updatePermissionProperty()
-
-  /**
-   * Update a permission's group
-   */
-  private def updatePermissionGroup(): Route =
-    path(permissionsBase / Segment / "group") { iri =>
-      put {
-        entity(as[ChangePermissionGroupApiRequestADM]) { apiRequest => ctx =>
-          val task = getIriUserUuid(iri, ctx)
-            .map(r => PermissionChangeGroupRequestADM(r.iri, apiRequest, r.user, r.uuid))
-          runJsonRouteZ(task, ctx)
-        }
-      }
-    }
 
   /**
    * Update a permission's set of hasPermissions.

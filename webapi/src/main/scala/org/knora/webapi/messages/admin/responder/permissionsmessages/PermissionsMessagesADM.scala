@@ -218,24 +218,6 @@ case class PermissionDataGetADM(
 }
 
 /**
- * A message that requests update of a permission's group.
- * A successful response will be a [[PermissionItemADM]].
- *
- * @param permissionIri                the IRI of the permission to be updated.
- * @param changePermissionGroupRequest the request to update permission's group.
- * @param requestingUser               the user initiation the request.
- * @param apiRequestID                 the API request ID.
- */
-case class PermissionChangeGroupRequestADM(
-  permissionIri: IRI,
-  changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
-}
-
-/**
  * A message that requests update of a permission's hasPermissions property.
  * A successful response will be a [[PermissionItemADM]].
  *
@@ -632,7 +614,7 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 }
 
-abstract class PermissionGetResponseADM() extends KnoraResponseADM with PermissionsADMJsonProtocol
+sealed trait PermissionGetResponseADM extends KnoraResponseADM with PermissionsADMJsonProtocol
 
 /**
  * Represents an answer to a request for getting a default object access permission.
@@ -1110,6 +1092,18 @@ trait PermissionsADMJsonProtocol
   implicit val defaultObjectAccessPermissionGetResponseADMFormat
     : RootJsonFormat[DefaultObjectAccessPermissionGetResponseADM] =
     jsonFormat(DefaultObjectAccessPermissionGetResponseADM, "default_object_access_permission")
+
+  implicit val permissionGetResponseADMFormat: RootJsonFormat[PermissionGetResponseADM] =
+    new RootJsonFormat[PermissionGetResponseADM] {
+      def write(response: PermissionGetResponseADM): JsValue =
+        response match {
+          case admin: AdministrativePermissionGetResponseADM =>
+            administrativePermissionGetResponseADMFormat.write(admin)
+          case default: DefaultObjectAccessPermissionGetResponseADM =>
+            defaultObjectAccessPermissionGetResponseADMFormat.write(default)
+        }
+      def read(json: JsValue): PermissionGetResponseADM = throw new UnsupportedOperationException("Not implemented.")
+    }
 
   implicit val createAdministrativePermissionAPIRequestADMFormat
     : RootJsonFormat[CreateAdministrativePermissionAPIRequestADM] = rootFormat(

@@ -28,7 +28,9 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
@@ -885,92 +887,64 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "ask to update group of a permission" should {
       "update group of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
-        appActor ! PermissionChangeGroupRequestADM(
-          permissionIri = permissionIri,
-          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            forGroup = newGroupIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
+        val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID())
         )
-        val received: AdministrativePermissionGetResponseADM = expectMsgType[AdministrativePermissionGetResponseADM]
-        val ap                                               = received.administrativePermission
-        assert(ap.iri == permissionIri)
-        assert(ap.forGroup == newGroupIri)
+        val ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
+        assert(ap.iri == permissionIri.value)
+        assert(ap.forGroup == newGroupIri.value)
       }
 
       "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
-        appActor ! PermissionChangeGroupRequestADM(
-          permissionIri = permissionIri,
-          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            forGroup = newGroupIri
-          ),
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ")
+        val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionsGroup(permissionIri, newGroupIri, imagesUser02, UUID.randomUUID())
         )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
-            )
-          )
+        assertFailsWithA[ForbiddenException](
+          exit,
+          s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
         )
       }
 
       "update group of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
-        val newGroupIri   = "http://rdfh.ch/groups/00FF/images-reviewer"
-        appActor ! PermissionChangeGroupRequestADM(
-          permissionIri = permissionIri,
-          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            forGroup = newGroupIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA")
+        val newGroupIri   = GroupIri.unsafeFrom("http://rdfh.ch/groups/00FF/images-reviewer")
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID())
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
-        assert(doap.iri == permissionIri)
-        assert(doap.forGroup.contains(newGroupIri))
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
+        assert(doap.iri == permissionIri.value)
+        assert(doap.forGroup.contains(newGroupIri.value))
       }
 
       "update group of a default object access permission, resource class must be deleted" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
-        appActor ! PermissionChangeGroupRequestADM(
-          permissionIri = permissionIri,
-          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            forGroup = projectMember
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA")
+        val newGroupIri   = GroupIri.unsafeFrom(projectMember)
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID())
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
-        assert(doap.iri == permissionIri)
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
+        assert(doap.iri == permissionIri.value)
         assert(doap.forGroup.contains(projectMember))
         assert(doap.forResourceClass.isEmpty)
       }
 
       "update group of a default object access permission, property must be deleted" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
-        appActor ! PermissionChangeGroupRequestADM(
-          permissionIri = permissionIri,
-          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            forGroup = projectMember
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val permissionIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw")
+        val newGroupIri   = GroupIri.unsafeFrom(projectMember)
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionsGroup(permissionIri, newGroupIri, rootUser, UUID.randomUUID())
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
-        assert(doap.iri == permissionIri)
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
+        assert(doap.iri == permissionIri.value)
         assert(doap.forGroup.contains(projectMember))
         assert(doap.forProperty.isEmpty)
       }

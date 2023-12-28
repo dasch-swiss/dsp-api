@@ -10,11 +10,13 @@ import zio.ZLayer
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
@@ -91,6 +93,17 @@ final case class PermissionsEndpointsHandlers(
       }
     )
 
+  private val putPermissionsProjectIriGroupHandler =
+    SecuredEndpointAndZioHandler[
+      (PermissionIri, ChangePermissionGroupApiRequestADM),
+      PermissionGetResponseADM
+    ](
+      permissionsEndpoints.putPermissionsProjectIriGroup,
+      user => { case (permissionIri: PermissionIri, request: ChangePermissionGroupApiRequestADM) =>
+        restService.updatePermissionGroup(permissionIri, request, user)
+      }
+    )
+
   private val securedHandlers =
     List(
       postPermissionsApHandler,
@@ -98,6 +111,7 @@ final case class PermissionsEndpointsHandlers(
       getPermissionsApByProjectAndGroupIriHandler,
       getPermissionsDaopByProjectIriHandler,
       getPermissionsByProjectIriHandler,
+      putPermissionsProjectIriGroupHandler,
       deletePermissionHandler,
       postPermissionsDoapHandler
     ).map(mapper.mapEndpointAndHandler(_))
