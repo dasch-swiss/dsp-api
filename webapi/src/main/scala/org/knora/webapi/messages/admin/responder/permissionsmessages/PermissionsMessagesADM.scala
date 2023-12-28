@@ -24,6 +24,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -44,9 +45,8 @@ case class CreateAdministrativePermissionAPIRequestADM(
 ) extends PermissionsADMJsonProtocol {
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-  id match {
-    case Some(iri) => sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
-    case None      => None
+  id.foreach { iri =>
+    if (PermissionIri.from(iri).isLeft) throw BadRequestException(s"Invalid permission IRI $iri is given.")
   }
 
   def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
@@ -85,9 +85,8 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
 ) extends PermissionsADMJsonProtocol {
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-  id match {
-    case Some(iri) => sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
-    case None      => None
+  id.foreach { iri =>
+    if (PermissionIri.from(iri).isLeft) throw BadRequestException(s"Invalid permission IRI $iri is given.")
   }
 
   def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
@@ -269,7 +268,7 @@ case class PermissionChangeGroupRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!Iri.isPermissionIri(permissionIri))
+  if (!PermissionIri.from(permissionIri).isRight)
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
 }
 
@@ -288,7 +287,7 @@ case class PermissionChangeHasPermissionsRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!Iri.isPermissionIri(permissionIri))
+  if (!PermissionIri.from(permissionIri).isRight)
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
 }
 
@@ -307,7 +306,7 @@ case class PermissionChangeResourceClassRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!Iri.isPermissionIri(permissionIri))
+  if (!PermissionIri.from(permissionIri).isRight)
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
 }
 
@@ -326,7 +325,7 @@ case class PermissionChangePropertyRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  if (!Iri.isPermissionIri(permissionIri))
+  if (!PermissionIri.from(permissionIri).isRight)
     throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
 }
 
@@ -345,7 +344,8 @@ case class AdministrativePermissionForIriGetRequestADM(
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
-  PermissionsMessagesUtilADM.checkPermissionIri(administrativePermissionIri)
+  if (PermissionIri.from(administrativePermissionIri).isLeft)
+    throw BadRequestException(s"Invalid permission IRI $administrativePermissionIri given.")
 }
 
 /**

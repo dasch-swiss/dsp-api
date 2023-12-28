@@ -11,9 +11,11 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
@@ -35,10 +37,7 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val getPermissionsApByProjectIriHandler =
-    SecuredEndpointAndZioHandler[
-      IriIdentifier,
-      AdministrativePermissionsForProjectGetResponseADM
-    ](
+    SecuredEndpointAndZioHandler[IriIdentifier, AdministrativePermissionsForProjectGetResponseADM](
       permissionsEndpoints.getPermissionsApByProjectIri,
       user => { case (projectIri: IriIdentifier) =>
         restService.getPermissionsApByProjectIri(projectIri.value, user)
@@ -46,19 +45,28 @@ final case class PermissionsEndpointsHandlers(
     )
 
   private val getPermissionsApByProjectAndGroupIriHandler =
-    SecuredEndpointAndZioHandler[
-      (IriIdentifier, GroupIri),
-      AdministrativePermissionGetResponseADM
-    ](
+    SecuredEndpointAndZioHandler[(IriIdentifier, GroupIri), AdministrativePermissionGetResponseADM](
       permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
       user => { case (projectIri: IriIdentifier, groupIri: GroupIri) =>
         restService.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri, user)
       }
     )
 
+  private val deletePermissionHandler =
+    SecuredEndpointAndZioHandler[PermissionIri, PermissionDeleteResponseADM](
+      permissionsEndpoints.deletePermission,
+      user => { case (permissionIri: PermissionIri) =>
+        restService.deletePermission(permissionIri, user)
+      }
+    )
+
   private val securedHandlers =
-    List(postPermissionsApHandler, getPermissionsApByProjectIriHandler, getPermissionsApByProjectAndGroupIriHandler)
-      .map(mapper.mapEndpointAndHandler(_))
+    List(
+      postPermissionsApHandler,
+      getPermissionsApByProjectIriHandler,
+      getPermissionsApByProjectAndGroupIriHandler,
+      deletePermissionHandler
+    ).map(mapper.mapEndpointAndHandler(_))
 
   val allHanders = securedHandlers
 }

@@ -9,7 +9,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.*
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.admin.domain.model.PermissionIri
 
 /**
  * Providing helper methods.
@@ -119,8 +119,5 @@ object PermissionsMessagesUtilADM {
     }
   }
 
-  def checkPermissionIri(iri: IRI): IRI = {
-    implicit val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-    sf.validatePermissionIri(iri).fold(e => throw BadRequestException(e), v => v)
-  }
+  def checkPermissionIri(iri: IRI): IRI = PermissionIri.from(iri).fold(e => throw BadRequestException(e), _.value)
 }

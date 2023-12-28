@@ -93,6 +93,22 @@ trait PermissionsResponderADM {
    * @return a list of IRIs of [[AdministrativePermissionADM]] objects.
    */
   def getPermissionsApByProjectIri(projectIRI: IRI): Task[AdministrativePermissionsForProjectGetResponseADM]
+
+  /**
+   * Delete a permission.
+   *
+   * @param permissionIri  the IRI of the permission.
+   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @param apiRequestID   the API request ID.
+   * @return [[PermissionDeleteResponseADM]].
+   *         fails with an UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
+   *         fails with a NotFoundException if no permission is found for the given IRI.
+   */
+  def deletePermission(
+    permissionIri: IRI,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[PermissionDeleteResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -230,7 +246,7 @@ final case class PermissionsResponderADMLive(
         ) =>
       permissionPropertyChangeRequestADM(permissionIri, changePermissionPropertyRequest, requestingUser, apiRequestID)
     case PermissionDeleteRequestADM(permissionIri, requestingUser, apiRequestID) =>
-      permissionDeleteRequestADM(permissionIri, requestingUser, apiRequestID)
+      deletePermission(permissionIri, requestingUser, apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -1898,17 +1914,7 @@ final case class PermissionsResponderADMLive(
     )
   }
 
-  /**
-   * Delete a permission.
-   *
-   * @param permissionIri                   the IRI of the permission.
-   * @param requestingUser                  the [[UserADM]] of the requesting user.
-   * @param apiRequestID                    the API request ID.
-   * @return [[PermissionDeleteResponseADM]].
-   *         fails with an UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
-   *         fails with a NotFoundException if no permission is found for the given IRI.
-   */
-  private def permissionDeleteRequestADM(
+  override def deletePermission(
     permissionIri: IRI,
     requestingUser: UserADM,
     apiRequestID: UUID

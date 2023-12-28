@@ -19,7 +19,6 @@ import scala.util.matching.Regex
 
 import dsp.errors.*
 import dsp.valueobjects.Iri
-import dsp.valueobjects.IriErrorMessages
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
@@ -1520,17 +1519,6 @@ class StringFormatter private (
       case ApiV2OntologyUrlPathRegex(_, _, ontologyName, _) if !isBuiltInOntologyName(ontologyName) => true
       case _                                                                                        => false
     }
-
-  /**
-   * Given the permission IRI, checks if it is in a valid format.
-   *
-   * @param iri the permission's IRI.
-   * @return either the IRI or the error message.
-   */
-  def validatePermissionIri(iri: IRI): Either[String, IRI] =
-    if (Iri.isPermissionIri(iri) && UuidUtil.hasSupportedVersion(iri)) Right(iri)
-    else if (Iri.isPermissionIri(iri) && !UuidUtil.hasSupportedVersion(iri)) Left(IriErrorMessages.UuidVersionInvalid)
-    else Left(s"Invalid permission IRI: $iri.")
 
   /**
    * Given an email address, checks if it is in a valid format.

@@ -102,14 +102,6 @@ object Iri {
   }
 
   /**
-   * Returns `true` if an IRI string looks like a Knora permission IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isPermissionIri(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://rdfh.ch/permissions/")
-
-  /**
    * Makes a string safe to be entered in the triplestore by escaping special chars.
    *
    * @param s a string.

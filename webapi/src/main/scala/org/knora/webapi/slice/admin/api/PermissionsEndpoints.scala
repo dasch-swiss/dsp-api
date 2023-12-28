@@ -14,8 +14,10 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDeleteResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
+import org.knora.webapi.slice.admin.api.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -39,6 +41,10 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .description("Get all administrative permissions for a project and a group.")
     .out(sprayJsonBody[AdministrativePermissionGetResponseADM])
 
+  val deletePermission = base.securedEndpoint.delete
+    .in(permissionsBase / permissionIri)
+    .description("Delete an permission.")
+    .out(sprayJsonBody[PermissionDeleteResponseADM])
 }
 
 object PermissionsEndpoints {

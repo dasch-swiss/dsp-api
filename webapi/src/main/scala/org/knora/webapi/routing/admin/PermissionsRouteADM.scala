@@ -5,7 +5,8 @@
 
 package org.knora.webapi.routing.admin
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import org.knora.webapi.core.MessageRelay
@@ -14,9 +15,6 @@ import org.knora.webapi.routing
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.admin.permissions.*
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.Route
 
 /**
  * Provides an pekko-http-routing function for API routes that deal with permissions.
@@ -28,11 +26,9 @@ final case class PermissionsRouteADM(
   private val createPermissionRoute: CreatePermissionRouteADM = CreatePermissionRouteADM(routeData, runtime)
   private val getPermissionRoute: GetPermissionsRouteADM      = GetPermissionsRouteADM(routeData, runtime)
   private val updatePermissionRoute: UpdatePermissionRouteADM = UpdatePermissionRouteADM(routeData, runtime)
-  private val deletePermissionRoute: DeletePermissionRouteADM = DeletePermissionRouteADM(routeData, runtime)
 
   override def makeRoute: Route =
     createPermissionRoute.makeRoute ~
       getPermissionRoute.makeRoute ~
-      updatePermissionRoute.makeRoute ~
-      deletePermissionRoute.makeRoute
+      updatePermissionRoute.makeRoute
 }
