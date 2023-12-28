@@ -20,7 +20,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
 
-object AuthorizationRestServiceSpec$ extends ZIOSpecDefault {
+object AuthorizationRestServiceSpec extends ZIOSpecDefault {
 
   private val activeNormalUser =
     UserADM("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
