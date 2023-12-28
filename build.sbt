@@ -116,9 +116,14 @@ lazy val root = (project in file("."))
       """HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=30s \
         |CMD curl -sS --fail 'http://localhost:3340/health' || exit 1""".stripMargin
     ),
+    // Install Temurin Java 21 https://adoptium.net/de/installation/linux/
     dockerCommands += Cmd(
       "RUN",
-      "apt-get update && apt-get install -y openjdk-17-jre-headless && apt-get clean"
+      "apt install -y wget apt-transport-https && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null"
+    ),
+    dockerCommands += Cmd(
+      "RUN",
+      "echo \"deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main\" | tee /etc/apt/sources.list.d/adoptium.list && apt update && apt upgrade -y && apt install -y temurin-21-jre && apt clean"
     ),
     dockerCommands := dockerCommands.value.filterNot {
       case Cmd("USER", args @ _*) => true
