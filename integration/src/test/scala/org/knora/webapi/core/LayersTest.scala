@@ -73,11 +73,12 @@ object LayersTest {
   type DefaultTestEnvironmentWithoutSipi = LayersLive.DspEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
-  type CommonR0 = ActorSystem with AppConfigurations with SipiService with JwtService with StringFormatter
+  type CommonR0 = ActorSystem with AppConfigurations with JwtService with SipiService with StringFormatter
   type CommonR =
     ApiRoutes
       with AppRouter
       with Authenticator
+      with AuthorizationRestService
       with CacheService
       with CacheServiceRequestMessageHandler
       with CardinalityHandler
@@ -98,6 +99,7 @@ object LayersTest {
       with MessageRelay
       with OntologyCache
       with OntologyHelpers
+      with OntologyInferencer
       with OntologyRepo
       with OntologyResponderV2
       with PermissionUtilADM
@@ -114,12 +116,10 @@ object LayersTest {
       with ResourceUtilV2
       with ResourcesResponderV2
       with RestCardinalityService
-      with AuthorizationRestService
       with RestResourceInfoService
       with SearchApiRoutes
       with SearchResponderV2
       with SipiResponderADM
-      with OntologyInferencer
       with StandoffResponderV2
       with StandoffTagUtilV2
       with State
@@ -135,6 +135,7 @@ object LayersTest {
       ApiRoutes.layer,
       AppRouter.layer,
       AuthenticatorLive.layer,
+      AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
@@ -186,7 +187,6 @@ object LayersTest {
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
-      AuthorizationRestServiceLive.layer,
       SearchApiRoutes.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,

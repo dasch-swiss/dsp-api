@@ -71,13 +71,13 @@ object LayersLive {
     ActorSystem & ApiRoutes & AppConfigurations & AppRouter & Authenticator & CacheService &
       CacheServiceRequestMessageHandler & CardinalityHandler & CardinalityService & ConstructResponseUtilV2 &
       ConstructTransformer & GravsearchTypeInspectionRunner & GroupsResponderADM & HttpServer &
-      IIIFRequestMessageHandler & SipiService & InferenceOptimizationService & IriService & IriConverter & JwtService &
+      IIIFRequestMessageHandler & InferenceOptimizationService & IriConverter & IriService & JwtService & SipiService &
       KnoraProjectRepo & ListsResponderADM & ListsResponderV2 & MessageRelay & OntologyCache & OntologyHelpers &
-      OntologyRepo & OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PredicateObjectMapper &
+      OntologyRepo & OntologyResponderV2 & PermissionsResponderADM & PermissionUtilADM & PredicateObjectMapper &
       ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
-      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & AuthorizationRestService & RestResourceInfoService &
-      SearchApiRoutes & SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
+      AuthorizationRestService & ResourcesResponderV2 & ResourceUtilV2 & RestCardinalityService & RestResourceInfoService &
+      OntologyInferencer & SearchApiRoutes & SearchResponderV2 & SipiResponderADM & StandoffResponderV2 & StandoffTagUtilV2 & State &
       StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
   /**
@@ -91,6 +91,7 @@ object LayersLive {
       AppConfig.layer,
       AppRouter.layer,
       AuthenticatorLive.layer,
+      AuthorizationRestServiceLive.layer,
       BaseEndpoints.layer,
       CacheServiceInMemImpl.layer,
       CacheServiceRequestMessageHandlerLive.layer,
@@ -143,7 +144,6 @@ object LayersLive {
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
-      AuthorizationRestServiceLive.layer,
       RestResourceInfoServiceLive.layer,
       SearchApiRoutes.layer,
       SearchResponderV2Live.layer,
