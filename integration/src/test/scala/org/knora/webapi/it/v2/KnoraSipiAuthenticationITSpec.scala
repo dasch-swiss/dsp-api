@@ -67,20 +67,13 @@ class KnoraSipiAuthenticationITSpec
     }
 
     "successfully get an image with provided credentials inside cookie" in {
-      val assetId   = AssetId.unsafeFrom("B1D0OkEgfFp-Cew2Seur7Wi")
-      UnsafeZioRun.runOrThrow {
-        val classLoader = getClass.getClassLoader
-        val source      = classLoader.getResource(s"sipi/testfiles/$assetId.jp2").toURI
-        SharedVolumes.Images.copyFileToAssetFolder0001(Path(source))
-      }
-
       // using cookie to authenticate when accessing sipi (test for cookie parsing in sipi)
       val KnoraAuthenticationCookieName = UnsafeZioRun.runOrThrow(Authenticator.calculateCookieName())
       val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, loginToken)
 
       // Request the permanently stored image from Sipi.
       val sipiGetImageRequest =
-        Get(s"$baseInternalSipiUrl/0001/$assetId.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
+        Get(s"$baseInternalSipiUrl/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2/full/max/0/default.jpg") ~> addHeader(cookieHeader)
       val response = singleAwaitingRequest(sipiGetImageRequest)
       assert(response.status === StatusCodes.OK)
     }

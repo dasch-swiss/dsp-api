@@ -20,12 +20,8 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.routing.UnsafeZioRun
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
-import org.knora.webapi.testcontainers.SharedVolumes
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
-import zio.ZIO
-import zio.nio.file.Path
 
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -504,16 +500,9 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "create a resource with a still image file that has already been ingested" in {
-      val assetId = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
-      val files = List("jp2", "info", "png.orig")
-        .map(ext => s"/sipi/testfiles/$assetId.$ext")
-        .map(getClass.getResource(_).toURI)
-      UnsafeZioRun.runOrThrow(
-        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder0001(Path(source)))
-      )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.StillImageFile(), internalFilename = s"$assetId.jp2")
+        .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")
         .toJsonLd(className = Some("ThingPicture"), ontologyName = "anything")
       val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~>
         addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~>
@@ -526,13 +515,6 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "not create a resource with a still image file that has already been ingested if the header is not provided" in {
-      val assetId = AssetId.unsafeFrom("De6XyNL4H71-D9QxghOuOPJ")
-      val files = List("jp2", "info", "png.orig")
-        .map(ext => s"/sipi/testfiles/$assetId.$ext")
-        .map(getClass.getResource(_).toURI)
-      UnsafeZioRun.runOrThrow(
-        ZIO.foreach(files)(source => SharedVolumes.Images.copyFileToAssetFolder0001(Path(source)))
-      )
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.StillImageFile(), internalFilename = "De6XyNL4H71-D9QxghOuOPJ.jp2")

@@ -22,7 +22,6 @@ import zio._
 import zio.http._
 import zio.json.DecoderOps
 import zio.json.ast.Json
-import zio.nio.file
 import zio.test._
 
 import scala.util.{Failure, Success, Try}
@@ -33,12 +32,6 @@ object SipiIT extends ZIOSpecDefault {
   private val infoTestfile  = "FGiLaT4zzuV-CqwbEDFAFeS.info"
   private val origTestfile  = "FGiLaT4zzuV-CqwbEDFAFeS.jp2.orig"
   private val prefix        = "0001"
-
-  private def copyTestFilesToSipi = ZIO.foreach(List(imageTestfile, infoTestfile, origTestfile)) { filename =>
-    val classLoader = getClass.getClassLoader
-    val source      = classLoader.getResource(s"sipi/testfiles/$filename").toURI
-    SharedVolumes.Images.copyFileToAssetFolder0001(file.Path(source))
-  }
 
   private def getWithoutAuthorization(path: Path) =
     SipiTestContainer
@@ -62,7 +55,6 @@ object SipiIT extends ZIOSpecDefault {
       ) {
         for {
           jwt <- getToken
-          _   <- copyTestFilesToSipi
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           response <-
             SipiTestContainer
@@ -96,7 +88,6 @@ object SipiIT extends ZIOSpecDefault {
       ) {
         for {
           jwt <- getToken
-          _   <- copyTestFilesToSipi
           _   <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, 2)
           response <-
             SipiTestContainer
@@ -139,7 +130,6 @@ object SipiIT extends ZIOSpecDefault {
                  |}""".stripMargin.fromJson[Json]
             for {
               _        <- MockDspApiServer.resetAndAllowWithPermissionCode(prefix, imageTestfile, permissionCode = 2)
-              _        <- copyTestFilesToSipi
               response <- getWithoutAuthorization(Root / prefix / imageTestfile / "knora.json")
               json     <- response.body.asString.map(_.fromJson[Json])
               expected <- SipiTestContainer.portAndHost.map { case (port, host) => expectedJson(port, host) }
@@ -173,7 +163,6 @@ object SipiIT extends ZIOSpecDefault {
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-              _        <- copyTestFilesToSipi
               response <- getWithoutAuthorization(Root / prefix / imageTestfile / "file")
             } yield assertTrue(
               response.status == Status.Ok,
@@ -189,7 +178,6 @@ object SipiIT extends ZIOSpecDefault {
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-              _        <- copyTestFilesToSipi
               response <- getWithoutAuthorization(Root / prefix / imageTestfile / "file")
             } yield assertTrue(
               response.status == Status.Unauthorized,
@@ -204,7 +192,6 @@ object SipiIT extends ZIOSpecDefault {
             val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
             for {
               server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
-              _        <- copyTestFilesToSipi
               response <- getWithoutAuthorization(Root / prefix / imageTestfile / "file")
             } yield assertTrue(
               response.status == Status.NotFound,
@@ -239,7 +226,6 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            _        <- copyTestFilesToSipi
             response <- getWithoutAuthorization(Root / prefix / imageTestfile / "full/max/0/default.jp2")
           } yield assertTrue(
             response.status == Status.Ok,
@@ -255,7 +241,6 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 200, dspApiResponse)
-            _        <- copyTestFilesToSipi
             response <- getWithoutAuthorization(Root / prefix / imageTestfile / "full/max/0/default.jp2")
           } yield assertTrue(
             response.status == Status.Unauthorized,
@@ -270,7 +255,6 @@ object SipiIT extends ZIOSpecDefault {
           val dspApiPermissionPath = s"/admin/files/$prefix/$imageTestfile"
           for {
             server   <- MockDspApiServer.resetAndStubGetResponse(dspApiPermissionPath, 404)
-            _        <- copyTestFilesToSipi
             response <- getWithoutAuthorization(Root / prefix / imageTestfile / "full/max/0/default.jp2")
           } yield assertTrue(
             response.status == Status.NotFound,
