@@ -17,10 +17,10 @@ import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemAdmin
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.slice.common.api.RestPermissionService
-import org.knora.webapi.slice.common.api.RestPermissionServiceLive
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.AuthorizationRestServiceLive
 
-object RestPermissionServiceSpec extends ZIOSpecDefault {
+object AuthorizationRestServiceSpec$ extends ZIOSpecDefault {
 
   private val activeNormalUser =
     UserADM("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
@@ -35,11 +35,11 @@ object RestPermissionServiceSpec extends ZIOSpecDefault {
   val spec: Spec[Any, ForbiddenException]#ZSpec[Any, ForbiddenException, TestSuccess] = suite("RestPermissionService")(
     suite("given an inactive system admin")(
       test("isSystemAdmin should return true") {
-        assertTrue(RestPermissionService.isSystemAdmin(inactiveSystemAdmin))
+        assertTrue(AuthorizationRestService.isSystemAdmin(inactiveSystemAdmin))
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
-          actual <- RestPermissionService.ensureSystemAdmin(inactiveSystemAdmin).exit
+          actual <- AuthorizationRestService.ensureSystemAdmin(inactiveSystemAdmin).exit
         } yield assertTrue(
           actual == Exit.fail(ForbiddenException("The account with username 'username' is not active."))
         )
@@ -47,21 +47,21 @@ object RestPermissionServiceSpec extends ZIOSpecDefault {
     ),
     suite("given a active system admin")(
       test("isSystemAdmin should return true") {
-        assertTrue(RestPermissionService.isSystemAdmin(activeSystemAdmin))
+        assertTrue(AuthorizationRestService.isSystemAdmin(activeSystemAdmin))
       },
       test("when ensureSystemAdmin succeed") {
         for {
-          _ <- RestPermissionService.ensureSystemAdmin(activeSystemAdmin)
+          _ <- AuthorizationRestService.ensureSystemAdmin(activeSystemAdmin)
         } yield assertCompletes
       }
     ),
     suite("given an inactive normal user")(
       test("isSystemAdmin should return false") {
-        assertTrue(!RestPermissionService.isSystemAdmin(inactiveNormalUser))
+        assertTrue(!AuthorizationRestService.isSystemAdmin(inactiveNormalUser))
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
-          actual <- RestPermissionService.ensureSystemAdmin(inactiveNormalUser).exit
+          actual <- AuthorizationRestService.ensureSystemAdmin(inactiveNormalUser).exit
         } yield assertTrue(
           actual == Exit.fail(ForbiddenException("The account with username 'username' is not active."))
         )
@@ -69,11 +69,11 @@ object RestPermissionServiceSpec extends ZIOSpecDefault {
     ),
     suite("given an active normal user")(
       test("isSystemAdmin should return false") {
-        assertTrue(!RestPermissionService.isSystemAdmin(activeNormalUser))
+        assertTrue(!AuthorizationRestService.isSystemAdmin(activeNormalUser))
       },
       test("when ensureSystemAdmin fail with a ForbiddenException") {
         for {
-          actual <- RestPermissionService.ensureSystemAdmin(activeNormalUser).exit
+          actual <- AuthorizationRestService.ensureSystemAdmin(activeNormalUser).exit
         } yield assertTrue(
           actual == Exit.fail(
             ForbiddenException(
@@ -83,5 +83,5 @@ object RestPermissionServiceSpec extends ZIOSpecDefault {
         )
       }
     )
-  ).provide(RestPermissionServiceLive.layer)
+  ).provide(AuthorizationRestServiceLive.layer)
 }

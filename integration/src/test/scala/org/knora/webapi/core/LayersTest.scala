@@ -114,7 +114,7 @@ object LayersTest {
       with ResourceUtilV2
       with ResourcesResponderV2
       with RestCardinalityService
-      with RestPermissionService
+      with AuthorizationRestService
       with RestResourceInfoService
       with SearchApiRoutes
       with SearchResponderV2
@@ -186,7 +186,7 @@ object LayersTest {
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
-      RestPermissionServiceLive.layer,
+      AuthorizationRestServiceLive.layer,
       SearchApiRoutes.layer,
       SearchResponderV2Live.layer,
       SipiResponderADMLive.layer,

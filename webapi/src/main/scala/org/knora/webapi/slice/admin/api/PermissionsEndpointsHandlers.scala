@@ -8,7 +8,9 @@ package org.knora.webapi.slice.admin.api
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionCreateResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
@@ -19,10 +21,7 @@ final case class PermissionsEndpointsHandlers(
   mapper: HandlerMapper
 ) {
 
-  private val postPermissionsApHandler: SecuredEndpointAndZioHandler[
-    CreateAdministrativePermissionAPIRequestADM,
-    AdministrativePermissionCreateResponseADM
-  ] =
+  private val postPermissionsApHandler =
     SecuredEndpointAndZioHandler[
       CreateAdministrativePermissionAPIRequestADM,
       AdministrativePermissionCreateResponseADM
@@ -33,7 +32,18 @@ final case class PermissionsEndpointsHandlers(
       }
     )
 
-  private val securedHandlers = List(postPermissionsApHandler)
+  private val getPermissionsApByProjectAndGroupIriHandler =
+    SecuredEndpointAndZioHandler[
+      (IriIdentifier, String),
+      AdministrativePermissionGetResponseADM
+    ](
+      permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
+      user => { case (projectIri: IriIdentifier, groupIri: String) =>
+        restService.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri, user)
+      }
+    )
+
+  private val securedHandlers = List(postPermissionsApHandler, getPermissionsApByProjectAndGroupIriHandler)
     .map(mapper.mapEndpointAndHandler(_))
 
   val allHanders = securedHandlers

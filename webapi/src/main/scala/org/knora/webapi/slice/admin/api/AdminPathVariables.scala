@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.routing
+package org.knora.webapi.slice.admin.api
 
 import sttp.tapir.CodecFormat.TextPlain
 import sttp.tapir.*
@@ -13,7 +13,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentif
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
 
-object PathVariables {
+object AdminPathVariables {
 
   val projectIri: EndpointInput.PathCapture[IriIdentifier] =
     path[IriIdentifier]

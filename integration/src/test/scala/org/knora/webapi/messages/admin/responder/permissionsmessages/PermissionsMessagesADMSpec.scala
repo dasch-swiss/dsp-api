@@ -48,17 +48,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
     }
 
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetRequestADM is not system or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        AdministrativePermissionForProjectGroupGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
-          requestingUser = SharedTestDataADM.imagesUser02
-        )
-      )
-      assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
-    }
-
     "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionForIriGetRequestADM is not valid" in {
       val permissionIri = "invalid-permission-IRI"
       val caught = intercept[BadRequestException](

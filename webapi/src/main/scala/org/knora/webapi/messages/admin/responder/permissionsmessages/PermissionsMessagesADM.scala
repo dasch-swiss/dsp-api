@@ -401,27 +401,6 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupI
 }
 
 /**
- * A message that requests an administrative permission object identified by project and group.
- * A successful response will be an [[AdministrativePermissionGetResponseADM]] object.
- *
- * @param projectIri
- * @param groupIri
- * @param requestingUser
- */
-case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM)
-    extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(projectIri)
-    && !requestingUser.isSystemUser
-  ) {
-    // not a system admin
-    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
-  }
-}
-
-/**
  * Create a single [[AdministrativePermissionADM]].
  *
  * @param createRequest        the API create request payload.

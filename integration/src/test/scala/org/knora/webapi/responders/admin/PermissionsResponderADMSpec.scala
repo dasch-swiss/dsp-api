@@ -5,7 +5,8 @@
 
 package org.knora.webapi.responders.admin
 
-import org.apache.pekko
+import org.apache.pekko.actor.Status.Failure
+import org.apache.pekko.testkit.ImplicitSender
 
 import java.util.UUID
 import scala.collection.Map
@@ -27,9 +28,6 @@ import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
-
-import pekko.actor.Status.Failure
-import pekko.testkit.ImplicitSender
 
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.
@@ -179,12 +177,13 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "return AdministrativePermission for project and group" in {
-        appActor ! AdministrativePermissionForProjectGroupGetRequestADM(
-          projectIri = SharedTestDataADM.imagesProjectIri,
-          groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
-          requestingUser = rootUser
+        val result = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.getPermissionsApByProjectAndGroupIri(
+            SharedTestDataADM.imagesProjectIri,
+            OntologyConstants.KnoraAdmin.ProjectMember
+          )
         )
-        expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
+        result shouldEqual AdministrativePermissionGetResponseADM(perm002_a1.p)
       }
 
       "return AdministrativePermission for IRI" in {

@@ -27,7 +27,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Status
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectExportService
 import org.knora.webapi.slice.admin.domain.service.ProjectImportService
-import org.knora.webapi.slice.common.api.RestPermissionService
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 
 @accessible
 trait ProjectADMRestService {
@@ -80,7 +80,7 @@ final case class ProjectsADMRestServiceLive(
   projectRepo: KnoraProjectRepo,
   projectExportService: ProjectExportService,
   projectImportService: ProjectImportService,
-  permissionService: RestPermissionService
+  permissionService: AuthorizationRestService
 ) extends ProjectADMRestService {
 
   /**
@@ -172,7 +172,7 @@ final case class ProjectsADMRestServiceLive(
   def getAllProjectData(id: IriIdentifier, user: UserADM): Task[ProjectDataGetResponseADM] =
     for {
       project <- projectRepo.findById(id).some.orElseFail(NotFoundException(s"Project ${id.value} not found."))
-      _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
+      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
       result  <- projectExportService.exportProjectTriples(project).map(_.toFile.toPath)
     } yield ProjectDataGetResponseADM(result)
 
@@ -257,7 +257,7 @@ final case class ProjectsADMRestServiceLive(
     for {
       size    <- ZIO.fromEither(RestrictedViewSize.make(setSizeReq.size)).mapError(BadRequestException(_))
       project <- projectRepo.findById(id).someOrFail(NotFoundException(s"Project '${getId(id)}' not found."))
-      _       <- permissionService.ensureSystemOrProjectAdmin(user, project)
+      _       <- permissionService.ensureSystemAdminOrProjectAdmin(user, project)
       _       <- projectRepo.setProjectRestrictedViewSize(project, size)
     } yield ProjectRestrictedViewSizeResponseADM(size)
 
@@ -296,7 +296,7 @@ final case class ProjectsADMRestServiceLive(
 
 object ProjectsADMRestServiceLive {
   val layer: URLayer[
-    ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectImportService & RestPermissionService,
+    ProjectsResponderADM & KnoraProjectRepo & ProjectExportService & ProjectImportService & AuthorizationRestService,
     ProjectsADMRestServiceLive
   ] = ZLayer.fromFunction(ProjectsADMRestServiceLive.apply _)
 }

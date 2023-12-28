@@ -5,7 +5,9 @@
 
 package org.knora.webapi.routing.admin.permissions
 
-import org.apache.pekko
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.PathMatcher
+import org.apache.pekko.http.scaladsl.server.Route
 import zio.*
 
 import org.knora.webapi.core.MessageRelay
@@ -15,10 +17,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM.*
-
-import pekko.http.scaladsl.server.Directives.*
-import pekko.http.scaladsl.server.PathMatcher
-import pekko.http.scaladsl.server.Route
 
 final case class GetPermissionsRouteADM(
   private val routeData: KnoraRouteData,
@@ -32,20 +30,9 @@ final case class GetPermissionsRouteADM(
    * Returns the route.
    */
   override def makeRoute: Route =
-    getAdministrativePermissionForProjectGroup() ~
-      getAdministrativePermissionsForProject() ~
+    getAdministrativePermissionsForProject() ~
       getDefaultObjectAccessPermissionsForProject() ~
       getPermissionsForProject()
-
-  private def getAdministrativePermissionForProjectGroup(): Route =
-    path(permissionsBasePath / "ap" / Segment / Segment) { (projectIri, groupIri) =>
-      get { requestContext =>
-        val task = Authenticator
-          .getUserADM(requestContext)
-          .map(AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, _))
-        runJsonRouteZ(task, requestContext)
-      }
-    }
 
   private def getAdministrativePermissionsForProject(): Route =
     path(permissionsBasePath / "ap" / Segment) { projectIri =>

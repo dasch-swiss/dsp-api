@@ -76,7 +76,7 @@ object LayersLive {
       OntologyRepo & OntologyResponderV2 & PermissionUtilADM & PermissionsResponderADM & PredicateObjectMapper &
       ProjectADMRestService & ProjectADMService & ProjectExportService & ProjectExportStorageService &
       ProjectImportService & ProjectsResponderADM & QueryTraverser & RepositoryUpdater & ResourceUtilV2 &
-      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & RestPermissionService & RestResourceInfoService &
+      ResourceUtilV2 & ResourcesResponderV2 & RestCardinalityService & AuthorizationRestService & RestResourceInfoService &
       SearchApiRoutes & SearchResponderV2 & SipiResponderADM & OntologyInferencer & StandoffResponderV2 & StandoffTagUtilV2 & State &
       StoresResponderADM & StringFormatter & TriplestoreService & UsersResponderADM & ValuesResponderV2
 
@@ -143,7 +143,7 @@ object LayersLive {
       ResourceUtilV2Live.layer,
       ResourcesResponderV2Live.layer,
       RestCardinalityServiceLive.layer,
-      RestPermissionServiceLive.layer,
+      AuthorizationRestServiceLive.layer,
       RestResourceInfoServiceLive.layer,
       SearchApiRoutes.layer,
       SearchResponderV2Live.layer,

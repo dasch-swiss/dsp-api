@@ -73,6 +73,18 @@ trait PermissionsResponderADM {
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[AdministrativePermissionCreateResponseADM]
+
+  /**
+   * Gets a single administrative permission identified by project and group.
+   *
+   * @param projectIri the project.
+   * @param groupIri   the group.
+   * @return an [[AdministrativePermissionGetResponseADM]]
+   */
+  def getPermissionsApByProjectAndGroupIri(
+    projectIri: IRI,
+    groupIri: IRI
+  ): Task[AdministrativePermissionGetResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -108,8 +120,6 @@ final case class PermissionsResponderADMLive(
       administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
     case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, _) =>
       administrativePermissionForProjectGroupGetADM(projectIri, groupIri)
-    case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, _) =>
-      administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri)
     case AdministrativePermissionCreateRequestADM(
           newAdministrativePermission,
           requestingUser,
@@ -587,14 +597,7 @@ final case class PermissionsResponderADMLive(
         }
     } yield permission
 
-  /**
-   * Gets a single administrative permission identified by project and group.
-   *
-   * @param projectIri     the project.
-   * @param groupIri       the group.
-   * @return an [[AdministrativePermissionGetResponseADM]]
-   */
-  private def administrativePermissionForProjectGroupGetRequestADM(
+  override def getPermissionsApByProjectAndGroupIri(
     projectIri: IRI,
     groupIri: IRI
   ): Task[AdministrativePermissionGetResponseADM] =
