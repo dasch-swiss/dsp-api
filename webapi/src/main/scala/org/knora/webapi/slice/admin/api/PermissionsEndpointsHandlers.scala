@@ -13,6 +13,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.slice.admin.api.service.PermissionsRestService
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 
@@ -46,11 +47,11 @@ final case class PermissionsEndpointsHandlers(
 
   private val getPermissionsApByProjectAndGroupIriHandler =
     SecuredEndpointAndZioHandler[
-      (IriIdentifier, String),
+      (IriIdentifier, GroupIri),
       AdministrativePermissionGetResponseADM
     ](
       permissionsEndpoints.getPermissionsApByProjectAndGroupIri,
-      user => { case (projectIri: IriIdentifier, groupIri: String) =>
+      user => { case (projectIri: IriIdentifier, groupIri: GroupIri) =>
         restService.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri, user)
       }
     )

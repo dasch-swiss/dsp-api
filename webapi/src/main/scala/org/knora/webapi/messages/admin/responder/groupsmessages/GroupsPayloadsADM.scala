@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import dsp.valueobjects.Group.*
-import dsp.valueobjects.Iri.*
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 /**

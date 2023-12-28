@@ -82,14 +82,6 @@ object Iri {
     isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
 
   /**
-   * Returns `true` if an IRI string looks like a Knora group IRI.
-   *
-   * @param iri the IRI to be checked.
-   */
-  def isGroupIri(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
-
-  /**
    * Returns `true` if an IRI string looks like a Knora project IRI
    *
    * @param iri the IRI to be checked.
@@ -187,29 +179,6 @@ object Iri {
   /**
    * GroupIri value object.
    */
-  sealed abstract case class GroupIri private (value: String) extends Iri
-  object GroupIri { self =>
-    def make(value: String): Validation[Throwable, GroupIri] =
-      if (value.isEmpty) Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
-      else {
-        val isUuid: Boolean = UuidUtil.hasValidLength(value.split("/").last)
-
-        if (!isGroupIri(value))
-          Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-        else if (isUuid && !UuidUtil.hasSupportedVersion(value))
-          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
-        else
-          validateAndEscapeIri(value)
-            .mapError(_ => BadRequestException(IriErrorMessages.GroupIriInvalid))
-            .map(new GroupIri(_) {})
-      }
-
-    def make(value: Option[String]): Validation[Throwable, Option[GroupIri]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
-  }
 
   /**
    * ListIri value object.
@@ -326,8 +295,6 @@ object Iri {
 }
 
 object IriErrorMessages {
-  val GroupIriMissing    = "Group IRI cannot be empty."
-  val GroupIriInvalid    = "Group IRI is invalid."
   val ListIriMissing     = "List IRI cannot be empty."
   val ListIriInvalid     = "List IRI is invalid"
   val ProjectIriMissing  = "Project IRI cannot be empty."

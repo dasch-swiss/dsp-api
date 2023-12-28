@@ -7,7 +7,6 @@ package org.knora.webapi.messages
 
 import spray.json.*
 import zio.ZLayer
-import zio.prelude.Validation
 
 import java.time.*
 import java.time.temporal.ChronoField
@@ -623,9 +622,6 @@ class StringFormatter private (
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.
   private val ProjectIDPattern: String =
     """\p{XDigit}{4,4}"""
-
-  // A regex for matching a string containing the project ID.
-  private val ProjectIDRegex: Regex = ("^" + ProjectIDPattern + "$").r
 
   // A regex for the URL path of an API v2 ontology (built-in or project-specific).
   private val ApiV2OntologyUrlPathRegex: Regex = (
@@ -1524,16 +1520,6 @@ class StringFormatter private (
       case ApiV2OntologyUrlPathRegex(_, _, ontologyName, _) if !isBuiltInOntologyName(ontologyName) => true
       case _                                                                                        => false
     }
-
-  /**
-   * Given the group IRI, checks if it is in a valid format.
-   *
-   * @param iri the group's IRI.
-   * @return the IRI of the list.
-   */
-  def validateGroupIri(iri: IRI): Validation[ValidationException, IRI] =
-    if (Iri.isGroupIri(iri)) Validation.succeed(iri)
-    else Validation.fail(ValidationException(s"Invalid IRI: $iri"))
 
   /**
    * Given the permission IRI, checks if it is in a valid format.

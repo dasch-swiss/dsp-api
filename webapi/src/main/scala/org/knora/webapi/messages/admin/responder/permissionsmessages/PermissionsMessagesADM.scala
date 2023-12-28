@@ -23,6 +23,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJso
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -55,7 +56,7 @@ case class CreateAdministrativePermissionAPIRequestADM(
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
   if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(forGroup)) {
-    sf.validateGroupIri(forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI $forGroup"))
+    GroupIri.from(forGroup).getOrElse(throw BadRequestException(s"Invalid group IRI $forGroup"))
   }
 
   def prepareHasPermissions: CreateAdministrativePermissionAPIRequestADM =
@@ -101,8 +102,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
         throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
       else {
         if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
-          sf.validateGroupIri(iri)
-            .getOrElse(throw BadRequestException(s"Invalid group IRI ${forGroup.get}"))
+          GroupIri.from(iri).getOrElse(throw BadRequestException(s"Invalid group IRI ${forGroup.get}"))
         }
       }
     case None =>

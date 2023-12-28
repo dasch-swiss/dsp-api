@@ -17,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.admin.PermissionsResponderADM
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -59,11 +60,11 @@ final case class PermissionsRestService(
 
   def getPermissionsApByProjectAndGroupIri(
     projectIri: KnoraProject.ProjectIri,
-    groupIri: String,
+    groupIri: GroupIri,
     user: UserADM
   ): Task[AdministrativePermissionGetResponseADM] = for {
     _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-    result <- responder.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri)
+    result <- responder.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri.value)
   } yield result
 }
 

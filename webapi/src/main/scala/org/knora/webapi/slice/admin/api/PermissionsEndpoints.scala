@@ -15,6 +15,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
+import org.knora.webapi.slice.admin.api.AdminPathVariables.groupIri
 import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
@@ -33,10 +34,8 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .description("Get all administrative permissions for a project.")
     .out(sprayJsonBody[AdministrativePermissionsForProjectGetResponseADM])
 
-  private val groupIriPathVar = path[String].name("groupIri").description("The IRI of the group")
-
   val getPermissionsApByProjectAndGroupIri = base.securedEndpoint.get
-    .in(permissionsBase / "ap" / projectIri / groupIriPathVar)
+    .in(permissionsBase / "ap" / projectIri / groupIri)
     .description("Get all administrative permissions for a project and a group.")
     .out(sprayJsonBody[AdministrativePermissionGetResponseADM])
 

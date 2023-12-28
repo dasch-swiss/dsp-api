@@ -12,14 +12,21 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortnameIdentifier
+import org.knora.webapi.slice.admin.domain.model.GroupIri
 
 object AdminPathVariables {
+
+  val groupIri: EndpointInput.PathCapture[GroupIri] =
+    path[GroupIri]
+      .name("groupIri")
+      .description("The IRI of a group. Must be URL-encoded.")
+      .example(GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/qCSZzdAJCBqw_2snW5Q7NC"))
 
   val projectIri: EndpointInput.PathCapture[IriIdentifier] =
     path[IriIdentifier]
       .name("projectIri")
       .description("The IRI of a project. Must be URL-encoded.")
-      .example(IriIdentifier.fromString("http://rdfh.ch/projects/0001").fold(e => throw e.head, identity))
+      .example(IriIdentifier.unsafeFrom("http://rdfh.ch/projects/0001"))
 
   private val projectShortcodeCodec: Codec[String, ShortcodeIdentifier, TextPlain] =
     Codec.string.mapDecode(str =>
