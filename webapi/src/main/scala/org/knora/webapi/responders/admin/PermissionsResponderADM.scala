@@ -167,6 +167,23 @@ trait PermissionsResponderADM {
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM]
+
+  /**
+   * Update a permission's set of hasPermissions.
+   *
+   * @param permissionIri               the IRI of the permission.
+   * @param newHasPermissions           the request to change hasPermissions.
+   * @param requestingUser              the [[UserADM]] of the requesting user.
+   * @param apiRequestID                the API request ID.
+   * @return [[PermissionGetResponseADM]].
+   *         fails with an UpdateNotPerformedException if something has gone wrong.
+   */
+  def updatePermissionHasPermissions(
+    permissionIri: PermissionIri,
+    newHasPermissions: NonEmptyChunk[PermissionADM],
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[PermissionGetResponseADM]
 }
 
 final case class PermissionsResponderADMLive(
@@ -260,18 +277,6 @@ final case class PermissionsResponderADMLive(
       createDefaultObjectAccessPermission(createRequest, user, apiRequestID)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
-    case PermissionChangeHasPermissionsRequestADM(
-          permissionIri,
-          changePermissionHasPermissionsRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      permissionHasPermissionsChangeRequestADM(
-        permissionIri,
-        changePermissionHasPermissionsRequest,
-        requestingUser,
-        apiRequestID
-      )
     case PermissionChangeResourceClassRequestADM(
           permissionIri,
           changePermissionResourceClassRequest,
@@ -1706,19 +1711,19 @@ final case class PermissionsResponderADMLive(
    * Update a permission's set of hasPermissions.
    *
    * @param permissionIri               the IRI of the permission.
-   * @param changeHasPermissionsRequest the request to change hasPermissions.
+   * @param newHasPermissions           the request to change hasPermissions.
    * @param requestingUser              the [[UserADM]] of the requesting user.
    * @param apiRequestID                the API request ID.
    * @return [[PermissionGetResponseADM]].
    *         fails with an UpdateNotPerformedException if something has gone wrong.
    */
-  private def permissionHasPermissionsChangeRequestADM(
-    permissionIri: IRI,
-    changeHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
+  override def updatePermissionHasPermissions(
+    permissionIri: PermissionIri,
+    newHasPermissions: NonEmptyChunk[PermissionADM],
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionIriInternal = permissionIri.value.toSmartIri.toOntologySchema(InternalSchema).toString
     /*Verify that hasPermissions is updated successfully*/
     def verifyUpdateOfHasPermissions(expectedPermissions: Set[PermissionADM]): Task[PermissionItemADM] =
       for {
@@ -1744,12 +1749,7 @@ final case class PermissionsResponderADMLive(
     /**
      * The actual task run with an IRI lock.
      */
-    def permissionHasPermissionsChangeTask(
-      permissionIri: IRI,
-      changeHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-      requestingUser: UserADM
-    ): Task[PermissionGetResponseADM] = {
-      val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionHasPermissionsChangeTask =
       for {
         // get permission
         permission <- permissionGetADM(permissionIriInternal, requestingUser)
@@ -1758,7 +1758,7 @@ final case class PermissionsResponderADMLive(
                       case ap: AdministrativePermissionADM =>
                         // Yes.
                         val verifiedPermissions =
-                          PermissionsMessagesUtilADM.verifyHasPermissionsAP(changeHasPermissionsRequest.hasPermissions)
+                          PermissionsMessagesUtilADM.verifyHasPermissionsAP(newHasPermissions.toSet)
                         for {
                           formattedPermissions <-
                             ZIO.attempt(
@@ -1773,7 +1773,7 @@ final case class PermissionsResponderADMLive(
                       case doap: DefaultObjectAccessPermissionADM =>
                         // No. It is a default object access permission.
                         for {
-                          verifiedPermissions <- verifyHasPermissionsDOAP(changeHasPermissionsRequest.hasPermissions)
+                          verifiedPermissions <- verifyHasPermissionsDOAP(newHasPermissions.toSet)
                           formattedPermissions <-
                             ZIO.attempt(
                               PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.OAP)
@@ -1786,17 +1786,12 @@ final case class PermissionsResponderADMLive(
                         )
                       case _ =>
                         throw UpdateNotPerformedException(
-                          s"Permission $permissionIri was not updated. Please report this as a bug."
+                          s"Permission ${permissionIri.value} was not updated. Please report this as a bug."
                         )
                     }
       } yield response
-    }
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      permissionIri,
-      permissionHasPermissionsChangeTask(permissionIri, changeHasPermissionsRequest, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionHasPermissionsChangeTask)
   }
 
   /**
@@ -1817,7 +1812,7 @@ final case class PermissionsResponderADMLive(
   ): Task[PermissionGetResponseADM] = {
     val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
     /*Verify that resource class of doap is updated successfully*/
-    def verifyUpdateOfResourceClass: Task[PermissionItemADM] =
+    val verifyUpdateOfResourceClass =
       for {
         updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
 
@@ -1844,11 +1839,7 @@ final case class PermissionsResponderADMLive(
     /**
      * The actual task run with an IRI lock.
      */
-    def permissionResourceClassChangeTask(
-      permissionIri: IRI,
-      changePermissionResourceClass: ChangePermissionResourceClassApiRequestADM,
-      requestingUser: UserADM
-    ): Task[PermissionGetResponseADM] =
+    val permissionResourceClassChangeTask: Task[PermissionGetResponseADM] =
       for {
         // get permission
         permission <- permissionGetADM(permissionIri, requestingUser)
@@ -1878,11 +1869,7 @@ final case class PermissionsResponderADMLive(
                     }
       } yield response
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      permissionIri,
-      permissionResourceClassChangeTask(permissionIri, changePermissionResourceClass, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, permissionIri, permissionResourceClassChangeTask)
   }
 
   /**

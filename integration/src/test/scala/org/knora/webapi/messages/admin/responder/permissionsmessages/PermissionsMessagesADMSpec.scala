@@ -790,34 +790,6 @@ class PermissionsMessagesADMSpec extends CoreSpec {
       assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
     }
 
-    "not update hasPermissions set of a permission if invalid permission IRI given" in {
-      val permissionIri  = "invalid-permission-iri"
-      val hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
-      val caught = intercept[BadRequestException](
-        PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(hasPermissions),
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
-    }
-
-    "not update hasPermissions set of a permission if invalid empty set given" in {
-      val permissionIri  = SharedPermissionsTestData.perm001_d1.iri
-      val hasPermissions = Set.empty[PermissionADM]
-      val caught = intercept[BadRequestException](
-        PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(hasPermissions),
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === s"hasPermissions cannot be empty.")
-    }
-
     "not update resource class of a doap if invalid permission IRI given" in {
       val permissionIri    = "invalid-permission-iri"
       val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS

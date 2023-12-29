@@ -152,12 +152,7 @@ case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends Permissions
  */
 case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[PermissionADM])
     extends PermissionsADMJsonProtocol {
-  if (hasPermissions.isEmpty) {
-    throw BadRequestException(s"hasPermissions cannot be empty.")
-  }
-
   def toJsValue: JsValue = changePermissionHasPermissionsApiRequestADMFormat.write(this)
-
 }
 
 /**
@@ -216,24 +211,6 @@ case class PermissionDataGetADM(
 ) extends PermissionsResponderRequestADM {
 
   if (!requestingUser.isSystemUser) throw ForbiddenException("Permission data can only by queried by a SystemUser.")
-}
-
-/**
- * A message that requests update of a permission's hasPermissions property.
- * A successful response will be a [[PermissionItemADM]].
- *
- * @param permissionIri                         the IRI of the permission to be updated.
- * @param changePermissionHasPermissionsRequest the request to update hasPermissions.
- * @param requestingUser                        the user initiation the request.
- * @param apiRequestID                          the API request ID.
- */
-case class PermissionChangeHasPermissionsRequestADM(
-  permissionIri: IRI,
-  changePermissionHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
 }
 
 /**

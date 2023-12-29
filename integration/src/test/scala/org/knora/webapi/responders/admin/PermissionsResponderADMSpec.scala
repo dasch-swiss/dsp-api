@@ -7,6 +7,7 @@ package org.knora.webapi.responders.admin
 
 import org.apache.pekko.actor.Status.Failure
 import org.apache.pekko.testkit.ImplicitSender
+import zio.NonEmptyChunk
 
 import java.util.UUID
 import scala.collection.Map
@@ -227,7 +228,7 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         expectMsg(
           Failure(
             DuplicateValueException(
-              s"An administrative permission for project: '${imagesProjectIri}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
+              s"An administrative permission for project: '$imagesProjectIri' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
                     .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
                 s"Use its IRI ${perm002_a1.iri} to modify it, if necessary."
@@ -953,63 +954,62 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask to update hasPermissions of a permission" should {
       "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin" in {
         val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+        val hasPermissions = NonEmptyChunk(PermissionADM.ProjectResourceCreateAllPermission)
 
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              imagesUser02,
+              UUID.randomUUID()
             )
-          )
+        )
+
+        assertFailsWithA[ForbiddenException](
+          exit,
+          s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
         )
       }
 
       "update hasPermissions of an administrative permission" in {
         val permissionIri  = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val hasPermissions = NonEmptyChunk(PermissionADM.ProjectResourceCreateAllPermission)
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: AdministrativePermissionGetResponseADM = expectMsgType[AdministrativePermissionGetResponseADM]
-        val ap                                               = received.administrativePermission
+
+        val ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         assert(ap.iri == permissionIri)
         ap.hasPermissions.size should be(1)
-        assert(ap.hasPermissions.equals(hasPermissions))
+        assert(ap.hasPermissions.equals(hasPermissions.toSet))
       }
 
       "ignore irrelevant parameters given in ChangePermissionHasPermissionsApiRequestADM for an administrative permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/buxHAlz8SHuu0FuiLN_tKQ"
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
             additionalInformation = Some("aIRI"),
             permissionCode = Some(1)
           )
         )
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: AdministrativePermissionGetResponseADM = expectMsgType[AdministrativePermissionGetResponseADM]
-        val ap                                               = received.administrativePermission
+        val ap = actual.asInstanceOf[AdministrativePermissionGetResponseADM].administrativePermission
         assert(ap.iri == permissionIri)
         ap.hasPermissions.size should be(1)
         val expectedSetOfPermissions = Set(PermissionADM.ProjectAdminAllPermission)
@@ -1018,30 +1018,30 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
       "update hasPermissions of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM.changeRightsPermission(creator),
           PermissionADM.modifyPermission(projectMember)
         )
 
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
+
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         doap.hasPermissions.size should be(2)
-        assert(doap.hasPermissions.equals(hasPermissions))
+        assert(doap.hasPermissions.equals(hasPermissions.toSet))
       }
 
       "add missing name of the permission, if permissionCode of permission was given in hasPermissions of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = "",
             additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
@@ -1057,24 +1057,23 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           )
         )
 
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.hasPermissions.equals(expectedHasPermissions))
       }
 
       "add missing permissionCode of the permission, if name of permission was given in hasPermissions of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
@@ -1089,18 +1088,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             permissionCode = Some(7)
           )
         )
-
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.hasPermissions.equals(expectedHasPermissions))
       }
@@ -1109,32 +1106,32 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val code          = 1
         val name          = OntologyConstants.KnoraBase.DeletePermission
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = name,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = Some(code)
           )
         )
-
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        expectMsg(
-          Failure(BadRequestException(s"Given permission code $code and permission name $name are not consistent."))
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Given permission code $code and permission name $name are not consistent."
         )
-
       }
 
       "not update hasPermissions of a default object access permission, if an invalid name was given for a permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val name          = "invalidName"
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = name,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
@@ -1142,29 +1139,26 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           )
         )
 
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            BadRequestException(
-              s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
-                s"${EntityPermissionAbbreviations.toString}"
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
             )
-          )
         )
-
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
+            s"${EntityPermissionAbbreviations.toString}"
+        )
       }
 
       "not update hasPermissions of a default object access permission, if an invalid code was given for a permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val code          = 10
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
@@ -1172,28 +1166,25 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           )
         )
 
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            BadRequestException(
-              s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-                s"${PermissionTypeAndCodes.values.toString}"
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
             )
-          )
         )
-
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
+            s"${PermissionTypeAndCodes.values.toString}"
+        )
       }
 
       "not update hasPermissions of a default object access permission, if given name and project code are not consistent" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
-        val hasPermissions = Set(
+        val hasPermissions = NonEmptyChunk(
           PermissionADM(
             name = "",
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
@@ -1201,22 +1192,19 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
           )
         )
 
-        appActor ! PermissionChangeHasPermissionsRequestADM(
-          permissionIri = permissionIri,
-          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            BadRequestException(
-              s"One of permission code or permission name must be provided for a default object access permission."
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionHasPermissions(
+              PermissionIri.unsafeFrom(permissionIri),
+              hasPermissions,
+              rootUser,
+              UUID.randomUUID()
             )
-          )
         )
-
+        assertFailsWithA[BadRequestException](
+          exit,
+          s"One of permission code or permission name must be provided for a default object access permission."
+        )
       }
     }
     "ask to update resource class of a permission" should {

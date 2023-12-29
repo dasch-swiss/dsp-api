@@ -5,6 +5,7 @@
 
 package org.knora.webapi.slice.admin.api.service
 
+import zio.NonEmptyChunk
 import zio.Random
 import zio.Task
 import zio.ZIO
@@ -16,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionHasPermissionsApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
@@ -90,6 +92,22 @@ final case class PermissionsRestService(
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
       result <- responder.createDefaultObjectAccessPermission(request, user, uuid).flatMap(format.toExternal)
+    } yield result
+
+  def updatePermissionHasPermissions(
+    permissionIri: PermissionIri,
+    request: ChangePermissionHasPermissionsApiRequestADM,
+    user: UserADM
+  ): Task[PermissionGetResponseADM] =
+    for {
+      _    <- auth.ensureSystemAdmin(user)
+      uuid <- Random.nextUUID
+      newHasPermissions <- ZIO
+                             .fromOption(NonEmptyChunk.fromIterableOption(request.hasPermissions))
+                             .mapBoth(_ => BadRequestException("hasPermissions must not be empty"), identity)
+      result <- responder
+                  .updatePermissionHasPermissions(permissionIri, newHasPermissions, user, uuid)
+                  .flatMap(format.toExternal)
     } yield result
 
   def updatePermissionGroup(
