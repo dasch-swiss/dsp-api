@@ -30,6 +30,7 @@ import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.incunabulaMemberUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -1212,37 +1213,35 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri    = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
-        appActor ! PermissionChangeResourceClassRequestADM(
-          permissionIri = permissionIri,
-          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
-            forResourceClass = resourceClassIri
-          ),
-          requestingUser = SharedTestDataADM.incunabulaMemberUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionResourceClass(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+              incunabulaMemberUser,
+              UUID.randomUUID()
             )
-          )
+        )
+
+        assertFailsWithA[ForbiddenException](
+          exit,
+          s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
         )
       }
       "update resource class of a default object access permission" in {
         val permissionIri    = "http://rdfh.ch/permissions/00FF/sdHG20U6RoiwSu8MeAT1vA"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
-        appActor ! PermissionChangeResourceClassRequestADM(
-          permissionIri = permissionIri,
-          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
-            forResourceClass = resourceClassIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionResourceClass(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forResourceClass.contains(resourceClassIri))
       }
@@ -1250,18 +1249,16 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "update resource class of a default object access permission, and delete group" in {
         val permissionIri    = "http://rdfh.ch/permissions/00FF/Q3OMWyFqStGYK8EXmC7KhQ"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
-
-        appActor ! PermissionChangeResourceClassRequestADM(
-          permissionIri = permissionIri,
-          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
-            forResourceClass = resourceClassIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionResourceClass(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forResourceClass.contains(resourceClassIri))
         assert(doap.forGroup.isEmpty)
@@ -1270,22 +1267,19 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       "not update resource class of an administrative permission" in {
         val permissionIri    = "http://rdfh.ch/permissions/00FF/OySsjGn8QSqIpXUiSYnSSQ"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
-
-        appActor ! PermissionChangeResourceClassRequestADM(
-          permissionIri = permissionIri,
-          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
-            forResourceClass = resourceClassIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            BadRequestException(
-              s"Permission $permissionIri is of type administrative permission. " +
-                s"Only a default object access permission defined for a resource class can be updated."
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionResourceClass(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+              rootUser,
+              UUID.randomUUID()
             )
-          )
+        )
+        assertFailsWithA[ForbiddenException](
+          exit,
+          s"Permission $permissionIri is of type administrative permission. " +
+            s"Only a default object access permission defined for a resource class can be updated."
         )
       }
     }

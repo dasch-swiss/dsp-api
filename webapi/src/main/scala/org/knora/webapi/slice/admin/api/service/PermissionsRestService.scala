@@ -18,6 +18,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionHasPermissionsApiRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionResourceClassApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionCreateResponseADM
@@ -109,6 +110,18 @@ final case class PermissionsRestService(
                   .updatePermissionHasPermissions(permissionIri, newHasPermissions, user, uuid)
                   .flatMap(format.toExternal)
     } yield result
+
+  def updatePermissionResourceClass(
+    permissionIri: PermissionIri,
+    request: ChangePermissionResourceClassApiRequestADM,
+    user: UserADM
+  ): Task[PermissionGetResponseADM] = for {
+    _    <- auth.ensureSystemAdmin(user)
+    uuid <- Random.nextUUID
+    result <- responder
+                .updatePermissionResourceClass(permissionIri, request, user, uuid)
+                .flatMap(format.toExternal)
+  } yield result
 
   def updatePermissionGroup(
     permissionIri: PermissionIri,

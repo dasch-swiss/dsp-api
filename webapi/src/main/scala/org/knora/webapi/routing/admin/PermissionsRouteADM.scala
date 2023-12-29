@@ -13,9 +13,7 @@ import zio.*
 import org.knora.webapi.core.MessageRelay
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionPropertyApiRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionResourceClassApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionChangePropertyRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionChangeResourceClassRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -37,23 +35,7 @@ final case class PermissionsRouteADM(
   /**
    * Returns the route.
    */
-  override def makeRoute: Route =
-    updatePermissionResourceClass() ~
-      updatePermissionProperty()
-
-  /**
-   * Update a doap permission by setting it for a new resource class
-   */
-  private def updatePermissionResourceClass(): Route =
-    path(permissionsBase / Segment / "resourceClass") { iri =>
-      put {
-        entity(as[ChangePermissionResourceClassApiRequestADM]) { apiRequest => requestContext =>
-          val task = getIriUserUuid(iri, requestContext)
-            .map(r => PermissionChangeResourceClassRequestADM(r.iri, apiRequest, r.user, r.uuid))
-          runJsonRouteZ(task, requestContext)
-        }
-      }
-    }
+  override def makeRoute: Route = updatePermissionProperty()
 
   /**
    * Update a doap permission by setting it for a new property class

@@ -217,24 +217,6 @@ case class PermissionDataGetADM(
  * A message that requests update of a doap permission's resource class.
  * A successful response will be a [[PermissionItemADM]].
  *
- * @param permissionIri                        the IRI of the permission to be updated.
- * @param changePermissionResourceClassRequest the request to update permission's resource class.
- * @param requestingUser                       the user initiation the request.
- * @param apiRequestID                         the API request ID.
- */
-case class PermissionChangeResourceClassRequestADM(
-  permissionIri: IRI,
-  changePermissionResourceClassRequest: ChangePermissionResourceClassApiRequestADM,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
-}
-
-/**
- * A message that requests update of a doap permission's resource class.
- * A successful response will be a [[PermissionItemADM]].
- *
  * @param permissionIri                   the IRI of the permission to be updated.
  * @param changePermissionPropertyRequest the request to update permission's property.
  * @param requestingUser                  the user initiation the request.
