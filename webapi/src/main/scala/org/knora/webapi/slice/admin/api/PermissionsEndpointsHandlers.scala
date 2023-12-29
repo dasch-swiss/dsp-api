@@ -12,6 +12,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionHasPermissionsApiRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionPropertyApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionResourceClassApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
@@ -125,6 +126,14 @@ final case class PermissionsEndpointsHandlers(
       }
     )
 
+  private val putPermissionsProperty =
+    SecuredEndpointAndZioHandler[(PermissionIri, ChangePermissionPropertyApiRequestADM), PermissionGetResponseADM](
+      permissionsEndpoints.putPermissionsProperty,
+      user => { case (permissionIri: PermissionIri, request: ChangePermissionPropertyApiRequestADM) =>
+        restService.updatePermissionProperty(permissionIri, request, user)
+      }
+    )
+
   private val securedHandlers =
     List(
       postPermissionsApHandler,
@@ -134,6 +143,7 @@ final case class PermissionsEndpointsHandlers(
       getPermissionsByProjectIriHandler,
       putPermissionsProjectIriGroupHandler,
       putPermissionsHasPermissionsHandler,
+      putPermissionsProperty,
       putPermissionsResourceClass,
       deletePermissionHandler,
       postPermissionsDoapHandler

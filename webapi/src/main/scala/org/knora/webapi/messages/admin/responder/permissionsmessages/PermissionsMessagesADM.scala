@@ -213,24 +213,6 @@ case class PermissionDataGetADM(
   if (!requestingUser.isSystemUser) throw ForbiddenException("Permission data can only by queried by a SystemUser.")
 }
 
-/**
- * A message that requests update of a doap permission's resource class.
- * A successful response will be a [[PermissionItemADM]].
- *
- * @param permissionIri                   the IRI of the permission to be updated.
- * @param changePermissionPropertyRequest the request to update permission's property.
- * @param requestingUser                  the user initiation the request.
- * @param apiRequestID                    the API request ID.
- */
-case class PermissionChangePropertyRequestADM(
-  permissionIri: IRI,
-  changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  PermissionIri.from(permissionIri).fold(msg => throw BadRequestException(msg), _ => ())
-}
-
 // Administrative Permissions
 
 /**

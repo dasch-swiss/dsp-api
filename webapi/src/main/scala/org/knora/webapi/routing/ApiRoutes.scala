@@ -106,7 +106,6 @@ private final case class ApiRoutesImpl(
                 ListsRouteADM(routeData, runtime).makeRoute ~
                 ListsRouteV2().makeRoute ~
                 OntologiesRouteV2().makeRoute ~
-                PermissionsRouteADM(routeData, runtime).makeRoute ~
                 RejectingRoute(appConfig, runtime).makeRoute ~
                 ResourcesRouteV2(appConfig).makeRoute ~
                 StandoffRouteV2().makeRoute ~

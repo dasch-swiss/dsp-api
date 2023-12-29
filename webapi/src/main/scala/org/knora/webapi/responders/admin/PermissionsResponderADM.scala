@@ -155,7 +155,7 @@ trait PermissionsResponderADM {
    * Update a permission's group
    *
    * @param permissionIri                the IRI of the permission.
-   * @param changePermissionGroupRequest the request to change group.
+   * @param groupIri                     the [[GroupIri]] to change.
    * @param requestingUser               the [[UserADM]] of the requesting user.
    * @param apiRequestID                 the API request ID.
    * @return [[PermissionGetResponseADM]].
@@ -198,6 +198,23 @@ trait PermissionsResponderADM {
   def updatePermissionResourceClass(
     permissionIri: PermissionIri,
     changePermissionResourceClass: ChangePermissionResourceClassApiRequestADM,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Task[PermissionGetResponseADM]
+
+  /**
+   * Update a doap permission's property.
+   *
+   * @param permissionIri                   the IRI of the permission.
+   * @param changePermissionPropertyRequest the request to change hasPermissions.
+   * @param requestingUser                  the [[UserADM]] of the requesting user.
+   * @param apiRequestID                    the API request ID.
+   * @return [[PermissionGetResponseADM]].
+   *         fails with an UpdateNotPerformedException if something has gone wrong.
+   */
+  def updatePermissionProperty(
+    permissionIri: PermissionIri,
+    changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM]
@@ -294,13 +311,6 @@ final case class PermissionsResponderADMLive(
       createDefaultObjectAccessPermission(createRequest, user, apiRequestID)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
-    case PermissionChangePropertyRequestADM(
-          permissionIri,
-          changePermissionPropertyRequest,
-          requestingUser,
-          apiRequestID
-        ) =>
-      permissionPropertyChangeRequestADM(permissionIri, changePermissionPropertyRequest, requestingUser, apiRequestID)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
   }
 
@@ -1881,66 +1891,54 @@ final case class PermissionsResponderADMLive(
     IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionResourceClassChangeTask)
   }
 
-  /**
-   * Update a doap permission's property.
-   *
-   * @param permissionIri                   the IRI of the permission.
-   * @param changePermissionPropertyRequest the request to change hasPermissions.
-   * @param requestingUser                  the [[UserADM]] of the requesting user.
-   * @param apiRequestID                    the API request ID.
-   * @return [[PermissionGetResponseADM]].
-   *         fails with an UpdateNotPerformedException if something has gone wrong.
-   */
-  private def permissionPropertyChangeRequestADM(
-    permissionIri: IRI,
+  override def updatePermissionProperty(
+    permissionIri: PermissionIri,
     changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Task[PermissionGetResponseADM] = {
-    val permissionIriInternal = permissionIri.toSmartIri.toOntologySchema(InternalSchema).toString
+    val permissionIriInternal = permissionIri.value.toSmartIri.toOntologySchema(InternalSchema).toString
     /*Verify that property of doap is updated successfully*/
     def verifyUpdateOfProperty: Task[PermissionItemADM] =
       for {
         updatedPermission <- permissionGetADM(permissionIriInternal, requestingUser)
 
         /*Verify that update was successful*/
-        _ = updatedPermission match {
-              case doap: DefaultObjectAccessPermissionADM =>
-                if (doap.forProperty.get != changePermissionPropertyRequest.forProperty)
-                  throw UpdateNotPerformedException(
-                    s"The property of ${doap.iri} was not updated. Please report this as a bug."
-                  )
+        _ <- ZIO.attempt(updatedPermission match {
+               case doap: DefaultObjectAccessPermissionADM =>
+                 if (doap.forProperty.get != changePermissionPropertyRequest.forProperty)
+                   throw UpdateNotPerformedException(
+                     s"The property of ${doap.iri} was not updated. Please report this as a bug."
+                   )
 
-                if (doap.forGroup.isDefined)
-                  throw UpdateNotPerformedException(
-                    s"The $permissionIriInternal is not correctly updated. Please report this as a bug."
-                  )
+                 if (doap.forGroup.isDefined)
+                   throw UpdateNotPerformedException(
+                     s"The $permissionIriInternal is not correctly updated. Please report this as a bug."
+                   )
 
-              case _ =>
-                throw UpdateNotPerformedException(
-                  s"Incorrect permission type returned for $permissionIriInternal. Please report this as a bug."
-                )
-            }
+               case _ =>
+                 throw UpdateNotPerformedException(
+                   s"Incorrect permission type returned for $permissionIriInternal. Please report this as a bug."
+                 )
+             })
       } yield updatedPermission
 
     /**
      * The actual task run with an IRI lock.
      */
-    def permissionPropertyChangeTask(
-      permissionIri: IRI,
-      changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
-      requestingUser: UserADM
-    ): Task[PermissionGetResponseADM] =
+    val permissionPropertyChangeTask =
       for {
         // get permission
-        permission <- permissionGetADM(permissionIri, requestingUser)
+        permission <- permissionGetADM(permissionIri.value, requestingUser)
         response <- permission match {
                       // Is permission an administrative permission?
                       case ap: AdministrativePermissionADM =>
                         // Yes.
-                        throw BadRequestException(
-                          s"Permission ${ap.iri} is of type administrative permission. " +
-                            s"Only a default object access permission defined for a property can be updated."
+                        ZIO.fail(
+                          ForbiddenException(
+                            s"Permission ${ap.iri} is of type administrative permission. " +
+                              s"Only a default object access permission defined for a property can be updated."
+                          )
                         )
                       case doap: DefaultObjectAccessPermissionADM =>
                         // No. It is a default object access permission.
@@ -1954,17 +1952,15 @@ final case class PermissionsResponderADMLive(
                           updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
                         )
                       case _ =>
-                        throw UpdateNotPerformedException(
-                          s"Permission $permissionIri was not updated. Please report this as a bug."
+                        ZIO.fail(
+                          UpdateNotPerformedException(
+                            s"Permission $permissionIri was not updated. Please report this as a bug."
+                          )
                         )
                     }
       } yield response
 
-    IriLocker.runWithIriLock(
-      apiRequestID,
-      permissionIri,
-      permissionPropertyChangeTask(permissionIri, changePermissionPropertyRequest, requestingUser)
-    )
+    IriLocker.runWithIriLock(apiRequestID, permissionIri.value, permissionPropertyChangeTask)
   }
 
   override def deletePermission(

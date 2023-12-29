@@ -31,6 +31,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesProjectIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.imagesUser02
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.incunabulaMemberUser
+import org.knora.webapi.sharedtestdata.SharedTestDataADM.normalUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
@@ -157,11 +158,8 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     }
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
-
-        val permissionsResponder = getService[PermissionsResponderADM]
-
         val result: Map[IRI, Set[PermissionADM]] = UnsafeZioRun.runOrThrow(
-          permissionsResponder.userAdministrativePermissionsGetADM(
+          PermissionsResponderADM.userAdministrativePermissionsGetADM(
             multiuserUser.permissions.groupsPerProject
           )
         )
@@ -1288,58 +1286,53 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = "http://rdfh.ch/permissions/00FF/OySsjGn8QSqIpXUiSYnSSQ"
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
-        appActor ! PermissionChangePropertyRequestADM(
-          permissionIri = permissionIri,
-          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
-            forProperty = propertyIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            BadRequestException(
-              s"Permission $permissionIri is of type administrative permission. " +
-                s"Only a default object access permission defined for a property can be updated."
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionProperty(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionPropertyApiRequestADM(propertyIri),
+              rootUser,
+              UUID.randomUUID()
             )
-          )
+        )
+        assertFailsWithA[ForbiddenException](
+          exit,
+          s"Permission $permissionIri is of type administrative permission. " +
+            s"Only a default object access permission defined for a property can be updated."
         )
       }
       "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
         val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
-        appActor ! PermissionChangePropertyRequestADM(
-          permissionIri = permissionIri,
-          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
-            forProperty = propertyIri
-          ),
-          requestingUser = SharedTestDataADM.normalUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            ForbiddenException(
-              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM
+            .updatePermissionProperty(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionPropertyApiRequestADM(propertyIri),
+              normalUser,
+              UUID.randomUUID()
             )
-          )
+        )
+        assertFailsWithA[ForbiddenException](
+          exit,
+          s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
         )
       }
       "update property of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0000/KMjKHCNQQmC4uHPQwlEexw"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
-        appActor ! PermissionChangePropertyRequestADM(
-          permissionIri = permissionIri,
-          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
-            forProperty = propertyIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM
+            .updatePermissionProperty(
+              PermissionIri.unsafeFrom(permissionIri),
+              ChangePermissionPropertyApiRequestADM(propertyIri),
+              rootUser,
+              UUID.randomUUID()
+            )
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forProperty.contains(propertyIri))
       }
@@ -1348,17 +1341,15 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
         val permissionIri = "http://rdfh.ch/permissions/00FF/Mck2xJDjQ_Oimi_9z4aFaA"
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
-        appActor ! PermissionChangePropertyRequestADM(
-          permissionIri = permissionIri,
-          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
-            forProperty = propertyIri
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.updatePermissionProperty(
+            PermissionIri.unsafeFrom(permissionIri),
+            ChangePermissionPropertyApiRequestADM(propertyIri),
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        val doap = received.defaultObjectAccessPermission
+        val doap = actual.asInstanceOf[DefaultObjectAccessPermissionGetResponseADM].defaultObjectAccessPermission
         assert(doap.iri == permissionIri)
         assert(doap.forProperty.contains(propertyIri))
         assert(doap.forGroup.isEmpty)

@@ -15,6 +15,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Administrat
 import org.knora.webapi.messages.admin.responder.permissionsmessages.AdministrativePermissionsForProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionGroupApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionHasPermissionsApiRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionPropertyApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ChangePermissionResourceClassApiRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateAdministrativePermissionAPIRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.CreateDefaultObjectAccessPermissionAPIRequestADM
@@ -86,6 +87,12 @@ final case class PermissionsEndpoints(base: BaseEndpoints) extends PermissionsAD
     .in(permissionsBase / permissionIri / "resourceClass")
     .description("Update a permission's resource class")
     .in(sprayJsonBody[ChangePermissionResourceClassApiRequestADM])
+    .out(sprayJsonBody[PermissionGetResponseADM])
+
+  val putPermissionsProperty = base.securedEndpoint.put
+    .in(permissionsBase / permissionIri / "property")
+    .description("Update a permission's property")
+    .in(sprayJsonBody[ChangePermissionPropertyApiRequestADM])
     .out(sprayJsonBody[PermissionGetResponseADM])
 }
 
