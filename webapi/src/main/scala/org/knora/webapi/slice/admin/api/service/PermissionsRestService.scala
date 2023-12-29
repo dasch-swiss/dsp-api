@@ -31,11 +31,13 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 
 final case class PermissionsRestService(
   responder: PermissionsResponderADM,
   projectRepo: KnoraProjectRepo,
-  auth: AuthorizationRestService
+  auth: AuthorizationRestService,
+  format: KnoraResponseRenderer
 ) {
   def createAdministrativePermission(
     request: CreateAdministrativePermissionAPIRequestADM,
@@ -43,41 +45,41 @@ final case class PermissionsRestService(
   ): Task[AdministrativePermissionCreateResponseADM] = for {
     _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
     uuid   <- Random.nextUUID
-    result <- responder.createAdministrativePermission(request, user, uuid)
+    result <- responder.createAdministrativePermission(request, user, uuid).flatMap(format.toExternal)
   } yield result
 
-  private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: UserADM): Task[Unit] = for {
+  private def ensureProjectIriStrExistsAndUserHasAccess(projectIri: String, user: UserADM): Task[KnoraProject] = for {
     projectIri <- KnoraProject.ProjectIri
                     .from(projectIri)
                     .toZIO
                     .mapError(e => BadRequestException(s"Invalid projectIri: ${e.getMessage}"))
-    _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-  } yield ()
+    project <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+  } yield project
 
-  private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: UserADM): Task[Unit] =
+  private def ensureProjectIriExistsAndUserHasAccess(projectIri: ProjectIri, user: UserADM): Task[KnoraProject] =
     projectRepo
       .findById(projectIri)
       .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
-      .flatMap(auth.ensureSystemAdminOrProjectAdmin(user, _))
+      .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   def getPermissionsApByProjectIri(
     value: ProjectIri,
     user: UserADM
   ): Task[AdministrativePermissionsForProjectGetResponseADM] = for {
     _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
-    result <- responder.getPermissionsApByProjectIri(value.value)
+    result <- responder.getPermissionsApByProjectIri(value.value).flatMap(format.toExternal)
   } yield result
 
   def getPermissionsByProjectIri(projectIri: ProjectIri, user: UserADM): Task[PermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsByProjectIri(projectIri)
+      result <- responder.getPermissionsByProjectIri(projectIri).flatMap(format.toExternal)
     } yield result
 
   def deletePermission(permissionIri: PermissionIri, user: UserADM): Task[PermissionDeleteResponseADM] = for {
     _      <- auth.ensureSystemAdmin(user)
     uuid   <- Random.nextUUID
-    result <- responder.deletePermission(permissionIri, user, uuid)
+    result <- responder.deletePermission(permissionIri, user, uuid).flatMap(format.toExternal)
   } yield result
 
   def createDefaultObjectAccessPermission(
@@ -87,7 +89,7 @@ final case class PermissionsRestService(
     for {
       _      <- ensureProjectIriStrExistsAndUserHasAccess(request.forProject, user)
       uuid   <- Random.nextUUID
-      result <- responder.createDefaultObjectAccessPermission(request, user, uuid)
+      result <- responder.createDefaultObjectAccessPermission(request, user, uuid).flatMap(format.toExternal)
     } yield result
 
   def updatePermissionGroup(
@@ -99,7 +101,7 @@ final case class PermissionsRestService(
       _        <- auth.ensureSystemAdmin(user)
       groupIri <- ZIO.fromEither(GroupIri.from(request.forGroup)).mapError(BadRequestException(_))
       uuid     <- Random.nextUUID
-      result   <- responder.updatePermissionsGroup(permissionIri, groupIri, user, uuid)
+      result   <- responder.updatePermissionsGroup(permissionIri, groupIri, user, uuid).flatMap(format.toExternal)
     } yield result
 
   def getPermissionsDaopByProjectIri(
@@ -108,7 +110,7 @@ final case class PermissionsRestService(
   ): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsDaopByProjectIri(projectIri)
+      result <- responder.getPermissionsDaopByProjectIri(projectIri).flatMap(format.toExternal)
     } yield result
 
   def getPermissionsApByProjectAndGroupIri(
@@ -116,8 +118,9 @@ final case class PermissionsRestService(
     groupIri: GroupIri,
     user: UserADM
   ): Task[AdministrativePermissionGetResponseADM] = for {
-    _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-    result <- responder.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri.value)
+    _ <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+    result <-
+      responder.getPermissionsApByProjectAndGroupIri(projectIri.value, groupIri.value).flatMap(format.toExternal)
   } yield result
 }
 

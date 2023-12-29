@@ -18,7 +18,7 @@ import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.AdminKnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -584,7 +584,7 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
  * @param allPermissions the retrieved sequence of [[PermissionInfoADM]]
  */
 case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInfoADM])
-    extends KnoraResponseADM
+    extends AdminKnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
 }
@@ -597,7 +597,7 @@ case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInf
  */
 case class AdministrativePermissionsForProjectGetResponseADM(
   administrativePermissions: Seq[AdministrativePermissionADM]
-) extends KnoraResponseADM
+) extends AdminKnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
 }
@@ -610,12 +610,12 @@ case class AdministrativePermissionsForProjectGetResponseADM(
  */
 case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
   defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM]
-) extends KnoraResponseADM
+) extends AdminKnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 }
 
-sealed trait PermissionGetResponseADM extends KnoraResponseADM with PermissionsADMJsonProtocol
+sealed trait PermissionGetResponseADM extends AdminKnoraResponseADM with PermissionsADMJsonProtocol
 
 /**
  * Represents an answer to a request for getting a default object access permission.
@@ -643,7 +643,7 @@ case class AdministrativePermissionGetResponseADM(administrativePermission: Admi
  * @param administrativePermission the newly created [[AdministrativePermissionADM]].
  */
 case class AdministrativePermissionCreateResponseADM(administrativePermission: AdministrativePermissionADM)
-    extends KnoraResponseADM
+    extends AdminKnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 }
@@ -655,7 +655,7 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
  */
 case class DefaultObjectAccessPermissionCreateResponseADM(
   defaultObjectAccessPermission: DefaultObjectAccessPermissionADM
-) extends KnoraResponseADM
+) extends AdminKnoraResponseADM
     with PermissionsADMJsonProtocol {
   def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
 }
@@ -674,7 +674,7 @@ case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: St
  * @param deleted       status of delete operation.
  */
 case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
-    extends KnoraResponseADM
+    extends AdminKnoraResponseADM
     with PermissionsADMJsonProtocol {
 
   def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)

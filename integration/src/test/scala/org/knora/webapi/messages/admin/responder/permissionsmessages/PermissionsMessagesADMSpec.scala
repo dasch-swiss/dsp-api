@@ -79,7 +79,7 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid project IRI $forProject")
+      assert(caught.getMessage === "Project IRI is invalid.")
     }
 
     "return 'BadRequest' if the supplied group IRI for AdministrativePermissionCreateRequestADM is not valid" in {
