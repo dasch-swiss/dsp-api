@@ -480,30 +480,6 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
 }
 
 /**
- * Create a single [[DefaultObjectAccessPermissionADM]].
- *
- * @param createRequest  the create request.
- * @param requestingUser the requesting user.
- * @param apiRequestID   the API request ID.
- */
-case class DefaultObjectAccessPermissionCreateRequestADM(
-  createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  // check if the requesting user is allowed to add the default object access permission
-  // Allowed are SystemAdmin, ProjectAdmin and SystemUser
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
-    && !requestingUser.isSystemUser
-  ) {
-    // not a system admin
-    throw ForbiddenException("A new default object access permission can only be added by a system admin.")
-  }
-}
-
-/**
  * A message that requests a permission (doap or ap) by its IRI.
  * A successful response will be an [[PermissionGetResponseADM]] object.
  *

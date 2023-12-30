@@ -45,6 +45,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -226,6 +227,7 @@ final case class PermissionsResponderADMLive(
   messageRelay: MessageRelay,
   triplestore: TriplestoreService,
   projectRepo: KnoraProjectRepo,
+  auth: AuthorizationRestService,
   implicit val stringFormatter: StringFormatter
 ) extends PermissionsResponderADM
     with MessageHandler
@@ -307,8 +309,6 @@ final case class PermissionsResponderADMLive(
         PropertyEntityType,
         targetUser
       )
-    case DefaultObjectAccessPermissionCreateRequestADM(createRequest, user, apiRequestID) =>
-      createDefaultObjectAccessPermission(createRequest, user, apiRequestID)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
     case other => Responder.handleUnexpectedMessage(other, this.getClass.getName)
@@ -1474,6 +1474,7 @@ final case class PermissionsResponderADMLive(
         project <- projectRepo
                      .findById(projectIri)
                      .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
+        _ <- auth.ensureSystemAdminSystemUserOrProjectAdmin(user, project)
         checkResult <- defaultObjectAccessPermissionGetADM(
                          createRequest.forProject,
                          createRequest.forGroup,
@@ -2165,17 +2166,18 @@ final case class PermissionsResponderADMLive(
 
 object PermissionsResponderADMLive {
   val layer: URLayer[
-    AppConfig & IriService & KnoraProjectRepo & MessageRelay & StringFormatter & TriplestoreService,
+    AppConfig & AuthorizationRestService & IriService & KnoraProjectRepo & MessageRelay & StringFormatter & TriplestoreService,
     PermissionsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
+      au      <- ZIO.service[AuthorizationRestService]
       ac      <- ZIO.service[AppConfig]
       is      <- ZIO.service[IriService]
       kpr     <- ZIO.service[KnoraProjectRepo]
       mr      <- ZIO.service[MessageRelay]
       ts      <- ZIO.service[TriplestoreService]
       sf      <- ZIO.service[StringFormatter]
-      handler <- mr.subscribe(PermissionsResponderADMLive(ac, is, mr, ts, kpr, sf))
+      handler <- mr.subscribe(PermissionsResponderADMLive(ac, is, mr, ts, kpr, au, sf))
     } yield handler
   }
 }

@@ -181,6 +181,7 @@ final case class ProjectsResponderADMLive(
   private val iriService: IriService,
   private val projectService: ProjectADMService,
   private val cacheServiceSettings: CacheServiceSettings,
+  private val permissionsResponderADM: PermissionsResponderADM,
   implicit private val stringFormatter: StringFormatter
 ) extends ProjectsResponderADM
     with MessageHandler
@@ -713,39 +714,31 @@ final case class ProjectsResponderADMLive(
 
         // Give the admins of the new project rights to change rights, modify, delete, view,
         // and restricted view of all resources and values that belong to the project.
-        _ <- messageRelay
-               .ask[DefaultObjectAccessPermissionCreateResponseADM](
-                 DefaultObjectAccessPermissionCreateRequestADM(
-                   createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-                     forProject = projectIri,
-                     forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                     hasPermissions = Set(
-                       PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                       PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-                     )
-                   ),
-                   requestingUser = requestingUser,
-                   apiRequestID = UUID.randomUUID()
-                 )
-               )
+        groupAdmin <- ZIO.attempt(
+                        CreateDefaultObjectAccessPermissionAPIRequestADM(
+                          forProject = projectIri,
+                          forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                          hasPermissions = Set(
+                            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                            PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+                          )
+                        )
+                      )
+        _ <- permissionsResponderADM.createDefaultObjectAccessPermission(groupAdmin, requestingUser, UUID.randomUUID())
 
         // Give the members of the new project rights to modify, view, and restricted view of all resources and values
         // that belong to the project.
-        _ <- messageRelay
-               .ask[DefaultObjectAccessPermissionCreateResponseADM](
-                 DefaultObjectAccessPermissionCreateRequestADM(
-                   createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-                     forProject = projectIri,
-                     forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                     hasPermissions = Set(
-                       PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                       PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-                     )
-                   ),
-                   requestingUser = requestingUser,
-                   apiRequestID = UUID.randomUUID()
-                 )
-               )
+        groupMember <- ZIO.attempt(
+                         CreateDefaultObjectAccessPermissionAPIRequestADM(
+                           forProject = projectIri,
+                           forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                           hasPermissions = Set(
+                             PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                             PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+                           )
+                         )
+                       )
+        _ <- permissionsResponderADM.createDefaultObjectAccessPermission(groupMember, requestingUser, UUID.randomUUID())
       } yield ()
 
     def projectCreateTask(
@@ -888,7 +881,7 @@ final case class ProjectsResponderADMLive(
 
 object ProjectsResponderADMLive {
   val layer: URLayer[
-    MessageRelay & TriplestoreService & StringFormatter & ProjectADMService & IriService & AppConfig,
+    AppConfig & IriService & MessageRelay & PermissionsResponderADM & ProjectADMService & StringFormatter & TriplestoreService,
     ProjectsResponderADMLive
   ] = ZLayer.fromZIO {
     for {
@@ -898,7 +891,8 @@ object ProjectsResponderADMLive {
       sf      <- ZIO.service[StringFormatter]
       ts      <- ZIO.service[TriplestoreService]
       mr      <- ZIO.service[MessageRelay]
-      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, ps, c, sf))
+      pr      <- ZIO.service[PermissionsResponderADM]
+      handler <- mr.subscribe(ProjectsResponderADMLive(ts, mr, iris, ps, c, pr, sf))
     } yield handler
   }
 }

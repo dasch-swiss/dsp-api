@@ -435,83 +435,83 @@ class PermissionsMessagesADMSpec extends CoreSpec {
   "Default Object Access Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val forProject = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = forProject,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid project IRI $forProject")
+      assertFailsWithA[BadRequestException](exit, s"Invalid project IRI $forProject")
     }
 
     "return 'BadRequest' if the supplied group IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val groupIri = "invalid-group-iri"
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(groupIri),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid group IRI $groupIri")
+      assertFailsWithA[BadRequestException](exit, s"Invalid group IRI $groupIri")
     }
 
     "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
       val permissionIri = "invalid-permission-IRI"
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(permissionIri),
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
+      assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
     }
 
     "throw 'BadRequest' for DefaultObjectAccessPermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
       val permissionIRIWithUUIDVersion3 = "http://rdfh.ch/permissions/0001/Ul3IYhDMOQ2fyoVY0ePz0w"
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(permissionIRIWithUUIDVersion3),
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
+          SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === IriErrorMessages.UuidVersionInvalid)
+      assertFailsWithA[BadRequestException](exit, IriErrorMessages.UuidVersionInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM]
           ),
-          requestingUser = SharedTestDataADM.anythingAdminUser,
+          SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Permissions needs to be supplied.")
+      assertFailsWithA[BadRequestException](exit, "Permissions needs to be supplied.")
     }
 
     "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with invalid name" in {
@@ -600,95 +600,102 @@ class PermissionsMessagesADMSpec extends CoreSpec {
     }
 
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not system or project Admin" in {
-      val caught = intercept[ForbiddenException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
           ),
-          requestingUser = SharedTestDataADM.anythingUser2,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.anythingUser2,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "A new default object access permission can only be added by a system admin.")
+      assertFailsWithA[ForbiddenException](
+        exit,
+        "A new default object access permission can only be added by a system admin."
+      )
     }
 
     "return 'BadRequest' if the both group and resource class are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Not allowed to supply groupIri and resourceClassIri together.")
+      assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and resourceClassIri together.")
     }
 
     "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Not allowed to supply groupIri and propertyIri together.")
+      assertFailsWithA[BadRequestException](exit, "Not allowed to supply groupIri and propertyIri together.")
     }
 
     "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forProperty = Some(SharedTestDataADM.customValueIRI),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
+      assertFailsWithA[BadRequestException](exit, s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
     }
 
     "return 'BadRequest' if resourceClassIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid resource class IRI: $ANYTHING_THING_RESOURCE_CLASS_LocalHost")
+      assertFailsWithA[BadRequestException](
+        exit,
+        s"Invalid resource class IRI: $ANYTHING_THING_RESOURCE_CLASS_LocalHost"
+      )
     }
 
     "return 'BadRequest' if neither a group, nor a resource class, nor a property is supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
-      val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionCreateRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createDefaultObjectAccessPermission(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = anythingProjectIri,
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(
-        caught.getMessage === "Either a group, a resource class, a property, or a combination of resource class and property must be given."
+      assertFailsWithA[BadRequestException](
+        exit,
+        "Either a group, a resource class, a property, or a combination of resource class and property must be given."
       )
     }
   }

@@ -422,39 +422,41 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
     "ask to create a default object access permission" should {
 
       "create a DefaultObjectAccessPermission for project and group" in {
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM.anythingProjectIri,
-            forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
-            hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = SharedTestDataADM.anythingProjectIri,
+              forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
+              hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
+            ),
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: DefaultObjectAccessPermissionCreateResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.anythingProjectIri)
-        assert(received.defaultObjectAccessPermission.forGroup.contains(SharedTestDataADM.thingSearcherGroup.id))
+
+        assert(actual.defaultObjectAccessPermission.forProject == SharedTestDataADM.anythingProjectIri)
+        assert(actual.defaultObjectAccessPermission.forGroup.contains(SharedTestDataADM.thingSearcherGroup.id))
         assert(
-          received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
+          actual.defaultObjectAccessPermission.hasPermissions.contains(
+            PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)
+          )
         )
       }
 
       "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
         val customIri = "http://rdfh.ch/permissions/0001/4PnSvolsTEa86KJ2EG76SQ"
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some(customIri),
-            forProject = SharedTestDataADM.anythingProjectIri,
-            forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
-            hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val received = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+              id = Some(customIri),
+              forProject = SharedTestDataADM.anythingProjectIri,
+              forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
+              hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
+            ),
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: DefaultObjectAccessPermissionCreateResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
         assert(received.defaultObjectAccessPermission.iri == customIri)
         assert(received.defaultObjectAccessPermission.forGroup.contains(unknownUser))
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.anythingProjectIri)
@@ -465,150 +467,146 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
       }
 
       "create a DefaultObjectAccessPermission for project and resource class" in {
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = imagesProjectIri,
-            forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-            hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = imagesProjectIri,
+              forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
+              hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
+            ),
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: DefaultObjectAccessPermissionCreateResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
+        assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
         assert(
-          received.defaultObjectAccessPermission.forResourceClass
+          actual.defaultObjectAccessPermission.forResourceClass
             .contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
         )
         assert(
-          received.defaultObjectAccessPermission.hasPermissions
+          actual.defaultObjectAccessPermission.hasPermissions
             .contains(PermissionADM.modifyPermission(knownUser))
         )
-
       }
 
       "create a DefaultObjectAccessPermission for project and property" in {
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = imagesProjectIri,
-            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = imagesProjectIri,
+              forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+              hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
+            ),
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: DefaultObjectAccessPermissionCreateResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
+        assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
         assert(
-          received.defaultObjectAccessPermission.forProperty.contains(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY)
+          actual.defaultObjectAccessPermission.forProperty
+            .contains(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY)
         )
         assert(
-          received.defaultObjectAccessPermission.hasPermissions
+          actual.defaultObjectAccessPermission.hasPermissions
             .contains(PermissionADM.changeRightsPermission(creator))
         )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and group combination already exists" in {
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM2.incunabulaProjectIri,
-            forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
-                "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
-                s"Use its IRI ${perm003_d1.iri} to modify it, if necessary."
-            )
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = SharedTestDataADM2.incunabulaProjectIri,
+              forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+              hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+            ),
+            rootUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
+            "combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+                .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
+            s"Use its IRI ${perm003_d1.iri} to modify it, if necessary."
         )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and resourceClass combination already exists" in {
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM2.incunabulaProjectIri,
-            forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
-            hasPermissions = Set(
-              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-            )
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
-                "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
-                s"Use its IRI ${perm003_d2.iri} to modify it, if necessary."
-            )
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = SharedTestDataADM2.incunabulaProjectIri,
+              forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
+              hasPermissions = Set(
+                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+              )
+            ),
+            rootUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
+            "combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+                .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
+            s"Use its IRI ${perm003_d2.iri} to modify it, if necessary."
         )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and property combination already exists" in {
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM2.incunabulaProjectIri,
-            forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
-            hasPermissions = Set(
-              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)
-            )
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
-                "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
-                s"Use its IRI ${perm003_d4.iri} to modify it, if necessary."
-            )
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = SharedTestDataADM2.incunabulaProjectIri,
+              forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+              hasPermissions = Set(
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)
+              )
+            ),
+            rootUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
+            "combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+                .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
+            s"Use its IRI ${perm003_d4.iri} to modify it, if necessary."
         )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project, resource class, and property combination already exists" in {
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = SharedTestDataADM2.incunabulaProjectIri,
-            forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
-            forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
-            hasPermissions = Set(
-              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
-              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-            )
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
-                s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
-                "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
-                s"Use its IRI ${perm003_d5.iri} to modify it, if necessary."
-            )
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = SharedTestDataADM2.incunabulaProjectIri,
+              forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
+              forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+              hasPermissions = Set(
+                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+              )
+            ),
+            rootUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"A default object access permission for project: '${SharedTestDataADM2.incunabulaProjectIri}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
+            s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
+            "combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+                .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
+            s"Use its IRI ${perm003_d5.iri} to modify it, if necessary."
         )
       }
 
@@ -620,22 +618,23 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             permissionCode = Some(1)
           )
         )
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = imagesProjectIri,
-            forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = imagesProjectIri,
+              forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
+              hasPermissions = hasPermissions
+            ),
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: DefaultObjectAccessPermissionCreateResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forGroup.contains(unknownUser))
-        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
+        assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
+        assert(actual.defaultObjectAccessPermission.forGroup.contains(unknownUser))
         assert(
-          received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(unknownUser))
+          actual.defaultObjectAccessPermission.hasPermissions.contains(
+            PermissionADM.restrictedViewPermission(unknownUser)
+          )
         )
       }
 
@@ -654,20 +653,20 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             permissionCode = Some(7)
           )
         )
-        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
-          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = imagesProjectIri,
-            forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
-            hasPermissions = hasPermissions
-          ),
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createDefaultObjectAccessPermission(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = imagesProjectIri,
+              forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+              hasPermissions = hasPermissions
+            ),
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: DefaultObjectAccessPermissionCreateResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.forProject == imagesProjectIri)
-        assert(received.defaultObjectAccessPermission.forGroup.contains(projectAdmin))
-        assert(received.defaultObjectAccessPermission.hasPermissions.equals(expectedPermissions))
+        assert(actual.defaultObjectAccessPermission.forProject == imagesProjectIri)
+        assert(actual.defaultObjectAccessPermission.forGroup.contains(projectAdmin))
+        assert(actual.defaultObjectAccessPermission.hasPermissions.equals(expectedPermissions))
       }
     }
 
