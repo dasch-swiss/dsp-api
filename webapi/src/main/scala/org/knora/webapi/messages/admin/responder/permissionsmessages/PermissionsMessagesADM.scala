@@ -256,30 +256,6 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupI
   }
 }
 
-/**
- * Create a single [[AdministrativePermissionADM]].
- *
- * @param createRequest        the API create request payload.
- * @param requestingUser       the requesting user.
- * @param apiRequestID         the API request ID.
- */
-case class AdministrativePermissionCreateRequestADM(
-  createRequest: CreateAdministrativePermissionAPIRequestADM,
-  requestingUser: UserADM,
-  apiRequestID: UUID
-) extends PermissionsResponderRequestADM {
-  // check if the requesting user is allowed to add the administrative permission
-  // Allowed are SystemAdmin, ProjectAdmin and SystemUser
-  if (
-    !requestingUser.isSystemAdmin
-    && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
-    && !requestingUser.isSystemUser
-  ) {
-    // not a system admin
-    throw ForbiddenException("A new administrative permission can only be added by system or project admin.")
-  }
-}
-
 // Object Access Permissions
 
 /**

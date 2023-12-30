@@ -215,44 +215,43 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
 
     "asked to create an administrative permission" should {
       "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
-        appActor ! AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
-            forProject = imagesProjectIri,
-            forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-            hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-          ).prepareHasPermissions,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
-        )
-        expectMsg(
-          Failure(
-            DuplicateValueException(
-              s"An administrative permission for project: '$imagesProjectIri' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                    .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
-                s"Use its IRI ${perm002_a1.iri} to modify it, if necessary."
-            )
+        val exit = UnsafeZioRun.run(
+          PermissionsResponderADM.createAdministrativePermission(
+            CreateAdministrativePermissionAPIRequestADM(
+              forProject = imagesProjectIri,
+              forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+              hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+            ).prepareHasPermissions,
+            rootUser,
+            UUID.randomUUID()
           )
+        )
+        assertFailsWithA[DuplicateValueException](
+          exit,
+          s"An administrative permission for project: '$imagesProjectIri' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+                .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
+            s"Use its IRI ${perm002_a1.iri} to modify it, if necessary."
         )
       }
 
       "create and return an administrative permission with a custom IRI" in {
         val customIri = "http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q"
-        appActor ! AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some(customIri),
-            forProject = SharedTestDataADM.anythingProjectIri,
-            forGroup = SharedTestDataADM.thingSearcherGroup.id,
-            hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-          ).prepareHasPermissions,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createAdministrativePermission(
+            CreateAdministrativePermissionAPIRequestADM(
+              id = Some(customIri),
+              forProject = SharedTestDataADM.anythingProjectIri,
+              forGroup = SharedTestDataADM.thingSearcherGroup.id,
+              hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+            ).prepareHasPermissions,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: AdministrativePermissionCreateResponseADM =
-          expectMsgType[AdministrativePermissionCreateResponseADM]
-        assert(received.administrativePermission.iri == customIri)
-        assert(received.administrativePermission.forProject == SharedTestDataADM.anythingProjectIri)
-        assert(received.administrativePermission.forGroup == SharedTestDataADM.thingSearcherGroup.id)
+        assert(actual.administrativePermission.iri == customIri)
+        assert(actual.administrativePermission.forProject == SharedTestDataADM.anythingProjectIri)
+        assert(actual.administrativePermission.forGroup == SharedTestDataADM.thingSearcherGroup.id)
       }
 
       "create and return an administrative permission even if irrelevant values were given for name and code of its permission" in {
@@ -271,22 +270,22 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender {
             permissionCode = None
           )
         )
-        appActor ! AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some(customIri),
-            forProject = SharedTestDataADM.anythingProjectIri,
-            forGroup = OntologyConstants.KnoraAdmin.KnownUser,
-            hasPermissions = hasPermissions
-          ).prepareHasPermissions,
-          requestingUser = rootUser,
-          apiRequestID = UUID.randomUUID()
+        val actual = UnsafeZioRun.runOrThrow(
+          PermissionsResponderADM.createAdministrativePermission(
+            CreateAdministrativePermissionAPIRequestADM(
+              id = Some(customIri),
+              forProject = SharedTestDataADM.anythingProjectIri,
+              forGroup = OntologyConstants.KnoraAdmin.KnownUser,
+              hasPermissions = hasPermissions
+            ).prepareHasPermissions,
+            rootUser,
+            UUID.randomUUID()
+          )
         )
-        val received: AdministrativePermissionCreateResponseADM =
-          expectMsgType[AdministrativePermissionCreateResponseADM]
-        assert(received.administrativePermission.iri == customIri)
-        assert(received.administrativePermission.forGroup == knownUser)
-        assert(received.administrativePermission.forProject == SharedTestDataADM.anythingProjectIri)
-        assert(received.administrativePermission.hasPermissions.equals(expectedHasPermissions))
+        assert(actual.administrativePermission.iri == customIri)
+        assert(actual.administrativePermission.forGroup == knownUser)
+        assert(actual.administrativePermission.forProject == SharedTestDataADM.anythingProjectIri)
+        assert(actual.administrativePermission.hasPermissions.equals(expectedHasPermissions))
       }
     }
 

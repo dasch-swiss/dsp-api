@@ -684,33 +684,27 @@ final case class ProjectsResponderADMLive(
     def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI): Task[Unit] =
       for {
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
-        _ <- messageRelay
-               .ask[AdministrativePermissionCreateResponseADM](
-                 AdministrativePermissionCreateRequestADM(
-                   createRequest = CreateAdministrativePermissionAPIRequestADM(
-                     forProject = projectIri,
-                     forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
-                     hasPermissions =
-                       Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
-                   ).prepareHasPermissions,
-                   requestingUser = requestingUser,
-                   apiRequestID = UUID.randomUUID()
-                 )
-               )
+        _ <- permissionsResponderADM.createAdministrativePermission(
+               CreateAdministrativePermissionAPIRequestADM(
+                 forProject = projectIri,
+                 forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
+                 hasPermissions =
+                   Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+               ).prepareHasPermissions,
+               requestingUser,
+               UUID.randomUUID()
+             )
 
         // Give the members of the new project rights to create resources.
-        _ <- messageRelay
-               .ask[AdministrativePermissionCreateResponseADM](
-                 AdministrativePermissionCreateRequestADM(
-                   createRequest = CreateAdministrativePermissionAPIRequestADM(
-                     forProject = projectIri,
-                     forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-                     hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-                   ).prepareHasPermissions,
-                   requestingUser = requestingUser,
-                   apiRequestID = UUID.randomUUID()
-                 )
-               )
+        _ <- permissionsResponderADM.createAdministrativePermission(
+               CreateAdministrativePermissionAPIRequestADM(
+                 forProject = projectIri,
+                 forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+                 hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+               ).prepareHasPermissions,
+               requestingUser,
+               UUID.randomUUID()
+             )
 
         // Give the admins of the new project rights to change rights, modify, delete, view,
         // and restricted view of all resources and values that belong to the project.

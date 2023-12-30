@@ -68,68 +68,68 @@ class PermissionsMessagesADMSpec extends CoreSpec {
   "Administrative Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val forProject = "invalid-project-IRI"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createAdministrativePermission(
+          CreateAdministrativePermissionAPIRequestADM(
             forProject = forProject,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Project IRI is invalid.")
+      assertFailsWithA[BadRequestException](exit, "Project IRI is invalid.")
     }
 
     "return 'BadRequest' if the supplied group IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val groupIri = "invalid-group-iri"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createAdministrativePermission(
+          CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.anythingProjectIri,
             forGroup = groupIri,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid group IRI $groupIri")
+      assertFailsWithA[BadRequestException](exit, s"Invalid group IRI $groupIri")
     }
 
     "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val permissionIri = "invalid-permission-IRI"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createAdministrativePermission(
+          CreateAdministrativePermissionAPIRequestADM(
             id = Some(permissionIri),
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid permission IRI: $permissionIri.")
+      assertFailsWithA[BadRequestException](exit, s"Invalid permission IRI: $permissionIri.")
     }
 
     "throw 'BadRequest' for AdministrativePermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
       val permissionIRIWithUUIDVersion3 = "http://rdfh.ch/permissions/0001/Ul3IYhDMOQ2fyoVY0ePz0w"
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createAdministrativePermission(
+          CreateAdministrativePermissionAPIRequestADM(
             id = Some(permissionIRIWithUUIDVersion3),
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === IriErrorMessages.UuidVersionInvalid)
+      assertFailsWithA[BadRequestException](exit, IriErrorMessages.UuidVersionInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
@@ -141,51 +141,55 @@ class PermissionsMessagesADMSpec extends CoreSpec {
           permissionCode = None
         )
       )
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createAdministrativePermission(
+          CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(
-        caught.getMessage === s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
+      assertFailsWithA[BadRequestException](
+        exit,
+        s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
           s"${AdministrativePermissionAbbreviations.toString}"
       )
     }
 
     "return 'BadRequest' if the a permissions supplied for AdministrativePermissionCreateRequestADM had invalid name" in {
-      val caught = intercept[BadRequestException](
-        AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createAdministrativePermission(
+          CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set.empty[PermissionADM]
           ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesUser01,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Permissions needs to be supplied.")
+      assertFailsWithA[BadRequestException](exit, "Permissions needs to be supplied.")
     }
 
     "return 'ForbiddenException' if the user requesting AdministrativePermissionCreateRequestADM is not system or project admin" in {
-      val caught = intercept[ForbiddenException](
-        AdministrativePermissionCreateRequestADM(
-          createRequest = CreateAdministrativePermissionAPIRequestADM(
+      val exit = UnsafeZioRun.run(
+        PermissionsResponderADM.createAdministrativePermission(
+          CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.imagesProjectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          requestingUser = SharedTestDataADM.imagesReviewerUser,
-          apiRequestID = UUID.randomUUID()
+          SharedTestDataADM.imagesReviewerUser,
+          UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "A new administrative permission can only be added by system or project admin.")
+      assertFailsWithA[ForbiddenException](
+        exit,
+        "A new administrative permission can only be added by system or project admin."
+      )
     }
 
   }

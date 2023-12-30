@@ -254,16 +254,6 @@ final case class PermissionsResponderADMLive(
       administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
     case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, _) =>
       administrativePermissionForProjectGroupGetADM(projectIri, groupIri)
-    case AdministrativePermissionCreateRequestADM(
-          newAdministrativePermission,
-          requestingUser,
-          apiRequestID
-        ) =>
-      createAdministrativePermission(
-        newAdministrativePermission.prepareHasPermissions,
-        requestingUser,
-        apiRequestID
-      )
     case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) =>
       objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
     case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) =>
