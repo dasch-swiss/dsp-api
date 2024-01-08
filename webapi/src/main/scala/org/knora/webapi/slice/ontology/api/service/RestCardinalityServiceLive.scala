@@ -15,12 +15,12 @@ import dsp.errors.BadRequestException.invalidQueryParamValue
 import dsp.errors.BadRequestException.missingQueryParamValue
 import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDArray
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.JsonLDValue
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.classIriKey
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.newCardinalityKey
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityService.propertyIriKey

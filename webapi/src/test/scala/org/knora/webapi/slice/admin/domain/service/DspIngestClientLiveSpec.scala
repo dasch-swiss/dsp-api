@@ -42,11 +42,11 @@ import zio.test.assertTrue
 
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.Jwt
 import org.knora.webapi.routing.JwtService
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.dspIngestConfigLayer
 import org.knora.webapi.slice.admin.domain.service.DspIngestClientLiveSpecLayers.jwtServiceMockLayer
 import org.knora.webapi.slice.admin.domain.service.HttpMockServer.TestPort

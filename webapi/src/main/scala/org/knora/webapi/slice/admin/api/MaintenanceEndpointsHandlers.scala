@@ -7,9 +7,8 @@ package org.knora.webapi.slice.admin.api
 
 import zio.ZLayer
 import zio.json.ast.Json
-
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.service.MaintenanceRestService
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.common.api.HandlerMapper
 import org.knora.webapi.slice.common.api.SecuredEndpointAndZioHandler
 

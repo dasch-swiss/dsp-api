@@ -14,6 +14,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.Full
 import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * Utility functions for working with users.

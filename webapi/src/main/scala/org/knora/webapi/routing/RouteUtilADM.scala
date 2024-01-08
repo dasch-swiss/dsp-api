@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.*
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * Convenience methods for Knora Admin routes.

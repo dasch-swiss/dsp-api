@@ -16,10 +16,10 @@ import zio.mock.Proxy
 import java.util.UUID
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 object ProjectsResponderADMMock extends Mock[ProjectsResponderADM] {
 

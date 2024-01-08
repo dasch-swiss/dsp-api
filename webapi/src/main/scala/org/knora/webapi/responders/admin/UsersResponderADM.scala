@@ -42,6 +42,8 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.slice.admin.AdminConstants
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -1696,7 +1698,7 @@ final case class UsersResponderADMLive(
         projects <- ZioHelper.sequence(maybeProjectFutures).map(_.flatten)
 
         /* construct the user profile from the different parts */
-        user = UserADM(
+        user = model.UserADM(
                  id = userIri,
                  username = propsMap
                    .getOrElse(

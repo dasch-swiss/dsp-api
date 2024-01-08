@@ -12,8 +12,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.ontology.api.service.RestCardinalityServiceLiveSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder

@@ -27,7 +27,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
@@ -38,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2.AssetIngestState.AssetInTemp
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.resourceinfo.domain.IriConverter
 import org.knora.webapi.store.iiif.api.SipiService
 import org.knora.webapi.util.*

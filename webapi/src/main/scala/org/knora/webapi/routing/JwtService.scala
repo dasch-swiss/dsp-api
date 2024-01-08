@@ -32,8 +32,8 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.IRI
 import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.util.cache.CacheUtil
 
 case class Jwt(jwtString: String, expiration: Long)

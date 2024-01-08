@@ -18,9 +18,9 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.valueobjects.Iri
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.common.api.ApiV2
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.HandlerMapper

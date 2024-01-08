@@ -20,7 +20,6 @@ import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.search.*
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 
 import pekko.event.LogSource
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.

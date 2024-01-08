@@ -13,12 +13,12 @@ import java.util.UUID
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM2.anythingProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 sealed abstract case class DefineStandoffMapping private (
   mappingName: String,

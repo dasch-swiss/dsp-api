@@ -25,7 +25,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.FlatPredicateObjects
@@ -55,6 +54,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages.*
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ZioHelper
 

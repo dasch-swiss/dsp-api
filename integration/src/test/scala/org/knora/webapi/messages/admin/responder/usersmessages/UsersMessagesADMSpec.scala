@@ -14,6 +14,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * This spec is used to test the [[UserADM]] and [[UserIdentifierADM]] classes.
@@ -86,7 +89,7 @@ class UsersMessagesADMSpec extends CoreSpec {
     "allow checking the SCrypt passwords" in {
       val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
       val hp      = encoder.encode("123456")
-      val up = UserADM(
+      val up = model.UserADM(
         id = "something",
         username = "something",
         email = "something",
@@ -111,7 +114,7 @@ class UsersMessagesADMSpec extends CoreSpec {
     "allow checking the BCrypt passwords" in {
       val encoder = new BCryptPasswordEncoder()
       val hp      = encoder.encode("123456")
-      val up = UserADM(
+      val up = model.UserADM(
         id = "something",
         username = "something",
         email = "something",

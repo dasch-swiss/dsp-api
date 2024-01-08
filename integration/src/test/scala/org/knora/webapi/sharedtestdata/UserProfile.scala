@@ -8,7 +8,7 @@ package org.knora.webapi.sharedtestdata
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * Represents a user's profile.

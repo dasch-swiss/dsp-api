@@ -12,9 +12,8 @@ import org.apache.pekko.util.Timeout
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * A trait for objects that can generate case class instances based on JSON-LD input.

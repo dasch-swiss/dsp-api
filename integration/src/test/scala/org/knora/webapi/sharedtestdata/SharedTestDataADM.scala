@@ -15,9 +15,24 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * This object holds the same user which are loaded with 'test_data/project_data/admin-data.ttl'. Using this object
@@ -38,7 +53,7 @@ object SharedTestDataADM {
 
   /* represents the user profile of 'root' as found in admin-data.ttl */
   def rootUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/root",
       username = "root",
       email = "root@example.com",
@@ -60,7 +75,7 @@ object SharedTestDataADM {
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
   def superUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/superuser",
       username = "superuser",
       email = "super.user@example.com",
@@ -81,7 +96,7 @@ object SharedTestDataADM {
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
   def normalUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/normaluser",
       username = "normaluser",
       email = "normal.user@example.com",
@@ -98,7 +113,7 @@ object SharedTestDataADM {
 
   /* represents the user profile of 'inactive user' as found in admin-data.ttl */
   def inactiveUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/inactiveuser",
       username = "inactiveuser",
       email = "inactive.user@example.com",
@@ -118,7 +133,7 @@ object SharedTestDataADM {
 
   /* represents the 'multiuser' as found in admin-data.ttl */
   def multiuserUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/multiuser",
       username = "multiuser",
       email = "multi.user@example.com",
@@ -199,7 +214,7 @@ object SharedTestDataADM {
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/c266a56709",
       username = "user01.user1",
       email = "user01.user1@example.com",
@@ -229,7 +244,7 @@ object SharedTestDataADM {
 
   /* represents 'user02' as found in admin-data.ttl  */
   def imagesUser02: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/97cec4000f",
       username = "user02.user",
       email = "user02.user@example.com",
@@ -255,7 +270,7 @@ object SharedTestDataADM {
 
   /* represents 'images-reviewer-user' as found in admin-data.ttl  */
   def imagesReviewerUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/images-reviewer-user",
       username = "images-reviewer-user",
       email = "images-reviewer-user@example.com",
@@ -366,7 +381,7 @@ object SharedTestDataADM {
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/b83acc5f05",
       username = "user.test",
       email = "user.test@example.com",
@@ -396,7 +411,7 @@ object SharedTestDataADM {
 
   /* represents 'root_alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
   def incunabulaCreatorUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/91e19f1e01",
       username = "root_alt",
       email = "root-alt@example.com",
@@ -422,7 +437,7 @@ object SharedTestDataADM {
 
   /* represents 'root_alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
   def incunabulaMemberUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/incunabulaMemberUser",
       username = "incunabulaMemberUser",
       email = "test.user2@test.ch",
@@ -537,7 +552,7 @@ object SharedTestDataADM {
   val customListIRI: IRI = "http://rdfh.ch/lists/0001/qq54wdGKR0S5zsbR5-9wtg"
 
   def anythingAdminUser: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/AnythingAdminUser",
       username = "AnythingAdminUser",
       email = "anything.admin@example.org",
@@ -566,7 +581,7 @@ object SharedTestDataADM {
     )
 
   def anythingUser1: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
       username = "anything.user01",
       email = "anything.user01@example.org",
@@ -594,7 +609,7 @@ object SharedTestDataADM {
     )
 
   def anythingUser2: UserADM =
-    UserADM(
+    model.UserADM(
       id = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
       username = "anything.user02",
       email = "anything.user02@example.org",
@@ -685,7 +700,7 @@ object SharedTestDataADM {
   )
 
   /* represents the user profile of 'superuser' as found in admin-data.ttl */
-  def beolUser: UserADM = UserADM(
+  def beolUser: UserADM = model.UserADM(
     id = "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
     username = "beol",
     email = "beol@example.com",

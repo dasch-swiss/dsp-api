@@ -9,8 +9,8 @@ import zio.*
 import zio.macros.accessible
 
 import dsp.errors.ForbiddenException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.common.api.RestPermissionService.isActive
 import org.knora.webapi.slice.common.api.RestPermissionService.isSystemAdmin
 import org.knora.webapi.slice.common.api.RestPermissionService.isSystemOrProjectAdmin

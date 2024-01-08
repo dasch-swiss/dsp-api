@@ -16,8 +16,8 @@ import zio.ZLayer
 import scala.concurrent.Future
 
 import dsp.errors.RequestRejectedException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.routing.UnsafeZioRun
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.common.api.InputType.SecurityIn
 
 object InputType {

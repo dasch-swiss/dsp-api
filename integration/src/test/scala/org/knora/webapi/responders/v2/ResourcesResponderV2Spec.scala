@@ -23,7 +23,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.queries.sparql
 import org.knora.webapi.messages.util.CalendarNameGregorian
@@ -44,6 +43,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 import org.knora.webapi.util._
 
 import pekko.testkit.ImplicitSender
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser

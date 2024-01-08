@@ -13,7 +13,6 @@ import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
@@ -23,6 +22,7 @@ import org.knora.webapi.util.ZioScalaTestUtil.assertFailsWithA
 import org.knora.webapi.util.cache.CacheUtil
 
 import pekko.testkit.ImplicitSender
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 object AuthenticatorSpec {
   private val rootUser         = SharedTestDataADM.rootUser

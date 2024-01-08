@@ -5,7 +5,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * Holds an optional, mutable IRI for use in tests.

@@ -20,9 +20,9 @@ import java.net.PasswordAuthentication
 import java.net.http.HttpClient
 
 import org.knora.webapi.config.Triplestore
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 @accessible
 trait ProjectImportService {

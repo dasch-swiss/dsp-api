@@ -13,7 +13,6 @@ import dsp.valueobjects.Iri.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.IriIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.ShortcodeIdentifier
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.slice.admin.api.model.ProjectDataGetResponseADM
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
@@ -22,6 +21,7 @@ import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectS
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.api.service.ProjectADMRestService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 object ProjectADMRestServiceMock extends Mock[ProjectADMRestService] {
   object GetProjects      extends Effect[Unit, Throwable, ProjectsGetResponseADM]

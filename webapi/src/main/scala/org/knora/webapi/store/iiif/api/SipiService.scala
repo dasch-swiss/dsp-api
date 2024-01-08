@@ -10,12 +10,11 @@ import zio.json.DeriveJsonDecoder
 import zio.json.JsonDecoder
 import zio.macros.accessible
 import zio.nio.file.Path
-
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.*
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.slice.admin.api.model.MaintenanceRequests.AssetId
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.admin.domain.service.Asset
 import org.knora.webapi.store.iiif.errors.SipiException
 

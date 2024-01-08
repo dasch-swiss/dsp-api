@@ -19,7 +19,6 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -33,6 +32,7 @@ import pekko.http.scaladsl.model._
 import pekko.http.scaladsl.model.headers._
 import pekko.http.scaladsl.testkit.RouteTestTimeout
 import pekko.http.scaladsl.unmarshalling.Unmarshal
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * End-to-End (E2E) test specification for testing users endpoint.

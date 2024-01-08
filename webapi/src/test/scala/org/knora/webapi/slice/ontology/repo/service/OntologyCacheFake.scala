@@ -11,8 +11,8 @@ import zio.ZIO
 import zio.ZLayer
 
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.ontology.repo.model.OntologyCacheData
 
 case class OntologyCacheFake(ref: Ref[OntologyCacheData]) extends OntologyCache {

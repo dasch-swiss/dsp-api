@@ -24,7 +24,6 @@ import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM.*
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
@@ -41,6 +40,7 @@ import org.knora.webapi.slice.admin.AdminConstants
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.UserADM
 import org.knora.webapi.slice.admin.domain.service.ProjectADMService
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService

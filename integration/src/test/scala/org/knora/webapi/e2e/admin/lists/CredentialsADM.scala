@@ -7,9 +7,8 @@ package org.knora.webapi.e2e.admin.lists
 
 import org.apache.pekko
 
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-
 import pekko.http.scaladsl.model.headers.BasicHttpCredentials
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * Representing user's credentials

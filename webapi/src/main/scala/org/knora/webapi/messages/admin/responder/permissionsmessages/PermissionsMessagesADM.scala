@@ -20,11 +20,11 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

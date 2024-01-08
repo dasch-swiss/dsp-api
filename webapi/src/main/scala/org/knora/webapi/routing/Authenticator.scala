@@ -32,13 +32,14 @@ import org.knora.webapi.routing.Authenticator.BAD_CRED_NOT_VALID
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_INACTIVE
 import org.knora.webapi.routing.Authenticator.BAD_CRED_USER_NOT_FOUND
 import org.knora.webapi.util.cache.CacheUtil
-
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.model.headers
 import pekko.http.scaladsl.model.headers.HttpCookie
 import pekko.http.scaladsl.model.headers.HttpCookiePair
 import pekko.http.scaladsl.server.RequestContext
 import pekko.util.ByteString
+
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]

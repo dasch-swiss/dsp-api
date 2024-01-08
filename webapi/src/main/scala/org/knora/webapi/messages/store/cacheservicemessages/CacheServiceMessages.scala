@@ -8,9 +8,9 @@ package org.knora.webapi.messages.store.cacheservicemessages
 import org.knora.webapi.core.RelayedMessage
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.StoreRequest
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 sealed trait CacheServiceRequest extends StoreRequest with RelayedMessage
 

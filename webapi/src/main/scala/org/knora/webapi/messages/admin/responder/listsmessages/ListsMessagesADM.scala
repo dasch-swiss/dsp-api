@@ -25,8 +25,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /////////////// API requests
 

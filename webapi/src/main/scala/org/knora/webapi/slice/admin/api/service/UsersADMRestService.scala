@@ -7,10 +7,9 @@ package org.knora.webapi.slice.admin.api.service
 
 import zio.*
 import zio.macros.accessible
-
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersGetResponseADM
 import org.knora.webapi.responders.admin.UsersResponderADM
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 @accessible
 trait UsersADMRestService {

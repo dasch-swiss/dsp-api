@@ -33,7 +33,6 @@ import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ValuesValidator
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.*
 import org.knora.webapi.messages.util.rdf.*
 import org.knora.webapi.messages.v2.responder.*
@@ -44,6 +43,7 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 import pekko.actor.ActorRef
 import pekko.util.Timeout
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

@@ -23,11 +23,11 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponse
 import org.knora.webapi.messages.admin.responder.groupsmessages.MultipleGroupsGetRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.util.PermissionUtilADM.formatPermissionADMs
 import org.knora.webapi.messages.util.PermissionUtilADM.parsePermissions
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.

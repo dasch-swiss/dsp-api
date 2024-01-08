@@ -13,10 +13,10 @@ import zio.ZIO
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.config.JwtConfig
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import pekko.testkit.ImplicitSender
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 class JwtServiceSpec extends CoreSpec with ImplicitSender {
 

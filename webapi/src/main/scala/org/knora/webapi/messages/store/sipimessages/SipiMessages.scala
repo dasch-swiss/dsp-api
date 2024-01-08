@@ -9,11 +9,11 @@ import org.apache.pekko
 import spray.json.*
 
 import org.knora.webapi.core.RelayedMessage
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.traits.RequestWithSender
 
 import pekko.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.slice.admin.domain.model.UserADM
 
 /**
  * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.api.SipiService]]
