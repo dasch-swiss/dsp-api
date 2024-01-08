@@ -14,7 +14,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.slice.admin.domain.model
 import org.knora.webapi.slice.admin.domain.model.User
 
 /**
@@ -88,7 +87,7 @@ class UsersMessagesADMSpec extends CoreSpec {
     "allow checking the SCrypt passwords" in {
       val encoder = new SCryptPasswordEncoder(16384, 8, 1, 32, 64)
       val hp      = encoder.encode("123456")
-      val up = model.User(
+      val up = User(
         id = "something",
         username = "something",
         email = "something",
@@ -113,7 +112,7 @@ class UsersMessagesADMSpec extends CoreSpec {
     "allow checking the BCrypt passwords" in {
       val encoder = new BCryptPasswordEncoder()
       val hp      = encoder.encode("123456")
-      val up = model.User(
+      val up = User(
         id = "something",
         username = "something",
         email = "something",
