@@ -15,16 +15,15 @@ import zio.Chunk
 import zio.ZLayer
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.*
+import org.knora.webapi.slice.admin.api.AdminPathVariables.projectIri
+import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortcode
+import org.knora.webapi.slice.admin.api.AdminPathVariables.projectShortname
 import org.knora.webapi.slice.admin.api.model.ProjectExportInfoResponse
 import org.knora.webapi.slice.admin.api.model.ProjectImportResponse
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectCreateRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectSetRestrictedViewSizeRequest
 import org.knora.webapi.slice.admin.api.model.ProjectsEndpointsRequests.ProjectUpdateRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
-
-import AdminPathVariables.projectIri
-import AdminPathVariables.projectShortcode
-import AdminPathVariables.projectShortname
 
 final case class ProjectsEndpoints(
   baseEndpoints: BaseEndpoints
